@@ -1547,6 +1547,2471 @@ public final class InputProtos {
     // @@protoc_insertion_point(class_scope:hello.SensorSampleBatch)
   }
 
+  public interface SimpleSensorBatchOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional string device_id = 1;
+    /**
+     * <code>optional string device_id = 1;</code>
+     */
+    boolean hasDeviceId();
+    /**
+     * <code>optional string device_id = 1;</code>
+     */
+    java.lang.String getDeviceId();
+    /**
+     * <code>optional string device_id = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getDeviceIdBytes();
+
+    // repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;
+    /**
+     * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+     */
+    java.util.List<com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample> 
+        getSamplesList();
+    /**
+     * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+     */
+    com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample getSamples(int index);
+    /**
+     * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+     */
+    int getSamplesCount();
+    /**
+     * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+     */
+    java.util.List<? extends com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSampleOrBuilder> 
+        getSamplesOrBuilderList();
+    /**
+     * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+     */
+    com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSampleOrBuilder getSamplesOrBuilder(
+        int index);
+  }
+  /**
+   * Protobuf type {@code hello.SimpleSensorBatch}
+   */
+  public static final class SimpleSensorBatch extends
+      com.google.protobuf.GeneratedMessage
+      implements SimpleSensorBatchOrBuilder {
+    // Use SimpleSensorBatch.newBuilder() to construct.
+    private SimpleSensorBatch(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private SimpleSensorBatch(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final SimpleSensorBatch defaultInstance;
+    public static SimpleSensorBatch getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public SimpleSensorBatch getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private SimpleSensorBatch(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              deviceId_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                samples_ = new java.util.ArrayList<com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              samples_.add(input.readMessage(com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample.PARSER, extensionRegistry));
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          samples_ = java.util.Collections.unmodifiableList(samples_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.suripu.api.input.InputProtos.internal_static_hello_SimpleSensorBatch_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.suripu.api.input.InputProtos.internal_static_hello_SimpleSensorBatch_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.class, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<SimpleSensorBatch> PARSER =
+        new com.google.protobuf.AbstractParser<SimpleSensorBatch>() {
+      public SimpleSensorBatch parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new SimpleSensorBatch(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<SimpleSensorBatch> getParserForType() {
+      return PARSER;
+    }
+
+    public interface GpsInfoOrBuilder
+        extends com.google.protobuf.MessageOrBuilder {
+
+      // optional float latitude = 1;
+      /**
+       * <code>optional float latitude = 1;</code>
+       */
+      boolean hasLatitude();
+      /**
+       * <code>optional float latitude = 1;</code>
+       */
+      float getLatitude();
+
+      // optional float longitude = 2;
+      /**
+       * <code>optional float longitude = 2;</code>
+       */
+      boolean hasLongitude();
+      /**
+       * <code>optional float longitude = 2;</code>
+       */
+      float getLongitude();
+
+      // optional float accuracy = 3;
+      /**
+       * <code>optional float accuracy = 3;</code>
+       */
+      boolean hasAccuracy();
+      /**
+       * <code>optional float accuracy = 3;</code>
+       */
+      float getAccuracy();
+
+      // optional float speed = 4;
+      /**
+       * <code>optional float speed = 4;</code>
+       */
+      boolean hasSpeed();
+      /**
+       * <code>optional float speed = 4;</code>
+       */
+      float getSpeed();
+    }
+    /**
+     * Protobuf type {@code hello.SimpleSensorBatch.GpsInfo}
+     */
+    public static final class GpsInfo extends
+        com.google.protobuf.GeneratedMessage
+        implements GpsInfoOrBuilder {
+      // Use GpsInfo.newBuilder() to construct.
+      private GpsInfo(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+        super(builder);
+        this.unknownFields = builder.getUnknownFields();
+      }
+      private GpsInfo(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+      private static final GpsInfo defaultInstance;
+      public static GpsInfo getDefaultInstance() {
+        return defaultInstance;
+      }
+
+      public GpsInfo getDefaultInstanceForType() {
+        return defaultInstance;
+      }
+
+      private final com.google.protobuf.UnknownFieldSet unknownFields;
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+          getUnknownFields() {
+        return this.unknownFields;
+      }
+      private GpsInfo(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        initFields();
+        int mutable_bitField0_ = 0;
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              default: {
+                if (!parseUnknownField(input, unknownFields,
+                                       extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+              case 13: {
+                bitField0_ |= 0x00000001;
+                latitude_ = input.readFloat();
+                break;
+              }
+              case 21: {
+                bitField0_ |= 0x00000002;
+                longitude_ = input.readFloat();
+                break;
+              }
+              case 29: {
+                bitField0_ |= 0x00000004;
+                accuracy_ = input.readFloat();
+                break;
+              }
+              case 37: {
+                bitField0_ |= 0x00000008;
+                speed_ = input.readFloat();
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e.getMessage()).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_SimpleSensorBatch_GpsInfo_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_SimpleSensorBatch_GpsInfo_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.class, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.Builder.class);
+      }
+
+      public static com.google.protobuf.Parser<GpsInfo> PARSER =
+          new com.google.protobuf.AbstractParser<GpsInfo>() {
+        public GpsInfo parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GpsInfo(input, extensionRegistry);
+        }
+      };
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<GpsInfo> getParserForType() {
+        return PARSER;
+      }
+
+      private int bitField0_;
+      // optional float latitude = 1;
+      public static final int LATITUDE_FIELD_NUMBER = 1;
+      private float latitude_;
+      /**
+       * <code>optional float latitude = 1;</code>
+       */
+      public boolean hasLatitude() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional float latitude = 1;</code>
+       */
+      public float getLatitude() {
+        return latitude_;
+      }
+
+      // optional float longitude = 2;
+      public static final int LONGITUDE_FIELD_NUMBER = 2;
+      private float longitude_;
+      /**
+       * <code>optional float longitude = 2;</code>
+       */
+      public boolean hasLongitude() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional float longitude = 2;</code>
+       */
+      public float getLongitude() {
+        return longitude_;
+      }
+
+      // optional float accuracy = 3;
+      public static final int ACCURACY_FIELD_NUMBER = 3;
+      private float accuracy_;
+      /**
+       * <code>optional float accuracy = 3;</code>
+       */
+      public boolean hasAccuracy() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional float accuracy = 3;</code>
+       */
+      public float getAccuracy() {
+        return accuracy_;
+      }
+
+      // optional float speed = 4;
+      public static final int SPEED_FIELD_NUMBER = 4;
+      private float speed_;
+      /**
+       * <code>optional float speed = 4;</code>
+       */
+      public boolean hasSpeed() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional float speed = 4;</code>
+       */
+      public float getSpeed() {
+        return speed_;
+      }
+
+      private void initFields() {
+        latitude_ = 0F;
+        longitude_ = 0F;
+        accuracy_ = 0F;
+        speed_ = 0F;
+      }
+      private byte memoizedIsInitialized = -1;
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized != -1) return isInitialized == 1;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        getSerializedSize();
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          output.writeFloat(1, latitude_);
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          output.writeFloat(2, longitude_);
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          output.writeFloat(3, accuracy_);
+        }
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          output.writeFloat(4, speed_);
+        }
+        getUnknownFields().writeTo(output);
+      }
+
+      private int memoizedSerializedSize = -1;
+      public int getSerializedSize() {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeFloatSize(1, latitude_);
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeFloatSize(2, longitude_);
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeFloatSize(3, accuracy_);
+        }
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeFloatSize(4, speed_);
+        }
+        size += getUnknownFields().getSerializedSize();
+        memoizedSerializedSize = size;
+        return size;
+      }
+
+      private static final long serialVersionUID = 0L;
+      @java.lang.Override
+      protected java.lang.Object writeReplace()
+          throws java.io.ObjectStreamException {
+        return super.writeReplace();
+      }
+
+      public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+
+      public static Builder newBuilder() { return Builder.create(); }
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder(com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo prototype) {
+        return newBuilder().mergeFrom(prototype);
+      }
+      public Builder toBuilder() { return newBuilder(this); }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code hello.SimpleSensorBatch.GpsInfo}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessage.Builder<Builder>
+         implements com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfoOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return com.hello.suripu.api.input.InputProtos.internal_static_hello_SimpleSensorBatch_GpsInfo_descriptor;
+        }
+
+        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return com.hello.suripu.api.input.InputProtos.internal_static_hello_SimpleSensorBatch_GpsInfo_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.class, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.Builder.class);
+        }
+
+        // Construct using com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          }
+        }
+        private static Builder create() {
+          return new Builder();
+        }
+
+        public Builder clear() {
+          super.clear();
+          latitude_ = 0F;
+          bitField0_ = (bitField0_ & ~0x00000001);
+          longitude_ = 0F;
+          bitField0_ = (bitField0_ & ~0x00000002);
+          accuracy_ = 0F;
+          bitField0_ = (bitField0_ & ~0x00000004);
+          speed_ = 0F;
+          bitField0_ = (bitField0_ & ~0x00000008);
+          return this;
+        }
+
+        public Builder clone() {
+          return create().mergeFrom(buildPartial());
+        }
+
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return com.hello.suripu.api.input.InputProtos.internal_static_hello_SimpleSensorBatch_GpsInfo_descriptor;
+        }
+
+        public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo getDefaultInstanceForType() {
+          return com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.getDefaultInstance();
+        }
+
+        public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo build() {
+          com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo buildPartial() {
+          com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo result = new com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo(this);
+          int from_bitField0_ = bitField0_;
+          int to_bitField0_ = 0;
+          if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+            to_bitField0_ |= 0x00000001;
+          }
+          result.latitude_ = latitude_;
+          if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+            to_bitField0_ |= 0x00000002;
+          }
+          result.longitude_ = longitude_;
+          if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+            to_bitField0_ |= 0x00000004;
+          }
+          result.accuracy_ = accuracy_;
+          if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+            to_bitField0_ |= 0x00000008;
+          }
+          result.speed_ = speed_;
+          result.bitField0_ = to_bitField0_;
+          onBuilt();
+          return result;
+        }
+
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo) {
+            return mergeFrom((com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo other) {
+          if (other == com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.getDefaultInstance()) return this;
+          if (other.hasLatitude()) {
+            setLatitude(other.getLatitude());
+          }
+          if (other.hasLongitude()) {
+            setLongitude(other.getLongitude());
+          }
+          if (other.hasAccuracy()) {
+            setAccuracy(other.getAccuracy());
+          }
+          if (other.hasSpeed()) {
+            setSpeed(other.getSpeed());
+          }
+          this.mergeUnknownFields(other.getUnknownFields());
+          return this;
+        }
+
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo) e.getUnfinishedMessage();
+            throw e;
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+        private int bitField0_;
+
+        // optional float latitude = 1;
+        private float latitude_ ;
+        /**
+         * <code>optional float latitude = 1;</code>
+         */
+        public boolean hasLatitude() {
+          return ((bitField0_ & 0x00000001) == 0x00000001);
+        }
+        /**
+         * <code>optional float latitude = 1;</code>
+         */
+        public float getLatitude() {
+          return latitude_;
+        }
+        /**
+         * <code>optional float latitude = 1;</code>
+         */
+        public Builder setLatitude(float value) {
+          bitField0_ |= 0x00000001;
+          latitude_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional float latitude = 1;</code>
+         */
+        public Builder clearLatitude() {
+          bitField0_ = (bitField0_ & ~0x00000001);
+          latitude_ = 0F;
+          onChanged();
+          return this;
+        }
+
+        // optional float longitude = 2;
+        private float longitude_ ;
+        /**
+         * <code>optional float longitude = 2;</code>
+         */
+        public boolean hasLongitude() {
+          return ((bitField0_ & 0x00000002) == 0x00000002);
+        }
+        /**
+         * <code>optional float longitude = 2;</code>
+         */
+        public float getLongitude() {
+          return longitude_;
+        }
+        /**
+         * <code>optional float longitude = 2;</code>
+         */
+        public Builder setLongitude(float value) {
+          bitField0_ |= 0x00000002;
+          longitude_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional float longitude = 2;</code>
+         */
+        public Builder clearLongitude() {
+          bitField0_ = (bitField0_ & ~0x00000002);
+          longitude_ = 0F;
+          onChanged();
+          return this;
+        }
+
+        // optional float accuracy = 3;
+        private float accuracy_ ;
+        /**
+         * <code>optional float accuracy = 3;</code>
+         */
+        public boolean hasAccuracy() {
+          return ((bitField0_ & 0x00000004) == 0x00000004);
+        }
+        /**
+         * <code>optional float accuracy = 3;</code>
+         */
+        public float getAccuracy() {
+          return accuracy_;
+        }
+        /**
+         * <code>optional float accuracy = 3;</code>
+         */
+        public Builder setAccuracy(float value) {
+          bitField0_ |= 0x00000004;
+          accuracy_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional float accuracy = 3;</code>
+         */
+        public Builder clearAccuracy() {
+          bitField0_ = (bitField0_ & ~0x00000004);
+          accuracy_ = 0F;
+          onChanged();
+          return this;
+        }
+
+        // optional float speed = 4;
+        private float speed_ ;
+        /**
+         * <code>optional float speed = 4;</code>
+         */
+        public boolean hasSpeed() {
+          return ((bitField0_ & 0x00000008) == 0x00000008);
+        }
+        /**
+         * <code>optional float speed = 4;</code>
+         */
+        public float getSpeed() {
+          return speed_;
+        }
+        /**
+         * <code>optional float speed = 4;</code>
+         */
+        public Builder setSpeed(float value) {
+          bitField0_ |= 0x00000008;
+          speed_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional float speed = 4;</code>
+         */
+        public Builder clearSpeed() {
+          bitField0_ = (bitField0_ & ~0x00000008);
+          speed_ = 0F;
+          onChanged();
+          return this;
+        }
+
+        // @@protoc_insertion_point(builder_scope:hello.SimpleSensorBatch.GpsInfo)
+      }
+
+      static {
+        defaultInstance = new GpsInfo(true);
+        defaultInstance.initFields();
+      }
+
+      // @@protoc_insertion_point(class_scope:hello.SimpleSensorBatch.GpsInfo)
+    }
+
+    public interface SimpleSensorSampleOrBuilder
+        extends com.google.protobuf.MessageOrBuilder {
+
+      // optional int64 timestamp = 1;
+      /**
+       * <code>optional int64 timestamp = 1;</code>
+       */
+      boolean hasTimestamp();
+      /**
+       * <code>optional int64 timestamp = 1;</code>
+       */
+      long getTimestamp();
+
+      // optional float ambient_temperature = 2;
+      /**
+       * <code>optional float ambient_temperature = 2;</code>
+       */
+      boolean hasAmbientTemperature();
+      /**
+       * <code>optional float ambient_temperature = 2;</code>
+       */
+      float getAmbientTemperature();
+
+      // optional float ambient_humidity = 3;
+      /**
+       * <code>optional float ambient_humidity = 3;</code>
+       */
+      boolean hasAmbientHumidity();
+      /**
+       * <code>optional float ambient_humidity = 3;</code>
+       */
+      float getAmbientHumidity();
+
+      // optional float ambient_light = 4;
+      /**
+       * <code>optional float ambient_light = 4;</code>
+       */
+      boolean hasAmbientLight();
+      /**
+       * <code>optional float ambient_light = 4;</code>
+       */
+      float getAmbientLight();
+
+      // optional float ambient_decibels = 5;
+      /**
+       * <code>optional float ambient_decibels = 5;</code>
+       */
+      boolean hasAmbientDecibels();
+      /**
+       * <code>optional float ambient_decibels = 5;</code>
+       */
+      float getAmbientDecibels();
+
+      // optional float ambient_air_quality = 6;
+      /**
+       * <code>optional float ambient_air_quality = 6;</code>
+       */
+      boolean hasAmbientAirQuality();
+      /**
+       * <code>optional float ambient_air_quality = 6;</code>
+       */
+      float getAmbientAirQuality();
+
+      // optional .hello.SimpleSensorBatch.GpsInfo gps = 10;
+      /**
+       * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
+       */
+      boolean hasGps();
+      /**
+       * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
+       */
+      com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo getGps();
+      /**
+       * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
+       */
+      com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfoOrBuilder getGpsOrBuilder();
+    }
+    /**
+     * Protobuf type {@code hello.SimpleSensorBatch.SimpleSensorSample}
+     */
+    public static final class SimpleSensorSample extends
+        com.google.protobuf.GeneratedMessage
+        implements SimpleSensorSampleOrBuilder {
+      // Use SimpleSensorSample.newBuilder() to construct.
+      private SimpleSensorSample(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+        super(builder);
+        this.unknownFields = builder.getUnknownFields();
+      }
+      private SimpleSensorSample(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+      private static final SimpleSensorSample defaultInstance;
+      public static SimpleSensorSample getDefaultInstance() {
+        return defaultInstance;
+      }
+
+      public SimpleSensorSample getDefaultInstanceForType() {
+        return defaultInstance;
+      }
+
+      private final com.google.protobuf.UnknownFieldSet unknownFields;
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+          getUnknownFields() {
+        return this.unknownFields;
+      }
+      private SimpleSensorSample(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        initFields();
+        int mutable_bitField0_ = 0;
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              default: {
+                if (!parseUnknownField(input, unknownFields,
+                                       extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+              case 8: {
+                bitField0_ |= 0x00000001;
+                timestamp_ = input.readInt64();
+                break;
+              }
+              case 21: {
+                bitField0_ |= 0x00000002;
+                ambientTemperature_ = input.readFloat();
+                break;
+              }
+              case 29: {
+                bitField0_ |= 0x00000004;
+                ambientHumidity_ = input.readFloat();
+                break;
+              }
+              case 37: {
+                bitField0_ |= 0x00000008;
+                ambientLight_ = input.readFloat();
+                break;
+              }
+              case 45: {
+                bitField0_ |= 0x00000010;
+                ambientDecibels_ = input.readFloat();
+                break;
+              }
+              case 53: {
+                bitField0_ |= 0x00000020;
+                ambientAirQuality_ = input.readFloat();
+                break;
+              }
+              case 82: {
+                com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.Builder subBuilder = null;
+                if (((bitField0_ & 0x00000040) == 0x00000040)) {
+                  subBuilder = gps_.toBuilder();
+                }
+                gps_ = input.readMessage(com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.PARSER, extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(gps_);
+                  gps_ = subBuilder.buildPartial();
+                }
+                bitField0_ |= 0x00000040;
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e.getMessage()).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_SimpleSensorBatch_SimpleSensorSample_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_SimpleSensorBatch_SimpleSensorSample_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample.class, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample.Builder.class);
+      }
+
+      public static com.google.protobuf.Parser<SimpleSensorSample> PARSER =
+          new com.google.protobuf.AbstractParser<SimpleSensorSample>() {
+        public SimpleSensorSample parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new SimpleSensorSample(input, extensionRegistry);
+        }
+      };
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<SimpleSensorSample> getParserForType() {
+        return PARSER;
+      }
+
+      private int bitField0_;
+      // optional int64 timestamp = 1;
+      public static final int TIMESTAMP_FIELD_NUMBER = 1;
+      private long timestamp_;
+      /**
+       * <code>optional int64 timestamp = 1;</code>
+       */
+      public boolean hasTimestamp() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional int64 timestamp = 1;</code>
+       */
+      public long getTimestamp() {
+        return timestamp_;
+      }
+
+      // optional float ambient_temperature = 2;
+      public static final int AMBIENT_TEMPERATURE_FIELD_NUMBER = 2;
+      private float ambientTemperature_;
+      /**
+       * <code>optional float ambient_temperature = 2;</code>
+       */
+      public boolean hasAmbientTemperature() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional float ambient_temperature = 2;</code>
+       */
+      public float getAmbientTemperature() {
+        return ambientTemperature_;
+      }
+
+      // optional float ambient_humidity = 3;
+      public static final int AMBIENT_HUMIDITY_FIELD_NUMBER = 3;
+      private float ambientHumidity_;
+      /**
+       * <code>optional float ambient_humidity = 3;</code>
+       */
+      public boolean hasAmbientHumidity() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional float ambient_humidity = 3;</code>
+       */
+      public float getAmbientHumidity() {
+        return ambientHumidity_;
+      }
+
+      // optional float ambient_light = 4;
+      public static final int AMBIENT_LIGHT_FIELD_NUMBER = 4;
+      private float ambientLight_;
+      /**
+       * <code>optional float ambient_light = 4;</code>
+       */
+      public boolean hasAmbientLight() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional float ambient_light = 4;</code>
+       */
+      public float getAmbientLight() {
+        return ambientLight_;
+      }
+
+      // optional float ambient_decibels = 5;
+      public static final int AMBIENT_DECIBELS_FIELD_NUMBER = 5;
+      private float ambientDecibels_;
+      /**
+       * <code>optional float ambient_decibels = 5;</code>
+       */
+      public boolean hasAmbientDecibels() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional float ambient_decibels = 5;</code>
+       */
+      public float getAmbientDecibels() {
+        return ambientDecibels_;
+      }
+
+      // optional float ambient_air_quality = 6;
+      public static final int AMBIENT_AIR_QUALITY_FIELD_NUMBER = 6;
+      private float ambientAirQuality_;
+      /**
+       * <code>optional float ambient_air_quality = 6;</code>
+       */
+      public boolean hasAmbientAirQuality() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional float ambient_air_quality = 6;</code>
+       */
+      public float getAmbientAirQuality() {
+        return ambientAirQuality_;
+      }
+
+      // optional .hello.SimpleSensorBatch.GpsInfo gps = 10;
+      public static final int GPS_FIELD_NUMBER = 10;
+      private com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo gps_;
+      /**
+       * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
+       */
+      public boolean hasGps() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo getGps() {
+        return gps_;
+      }
+      /**
+       * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfoOrBuilder getGpsOrBuilder() {
+        return gps_;
+      }
+
+      private void initFields() {
+        timestamp_ = 0L;
+        ambientTemperature_ = 0F;
+        ambientHumidity_ = 0F;
+        ambientLight_ = 0F;
+        ambientDecibels_ = 0F;
+        ambientAirQuality_ = 0F;
+        gps_ = com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.getDefaultInstance();
+      }
+      private byte memoizedIsInitialized = -1;
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized != -1) return isInitialized == 1;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        getSerializedSize();
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          output.writeInt64(1, timestamp_);
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          output.writeFloat(2, ambientTemperature_);
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          output.writeFloat(3, ambientHumidity_);
+        }
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          output.writeFloat(4, ambientLight_);
+        }
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          output.writeFloat(5, ambientDecibels_);
+        }
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          output.writeFloat(6, ambientAirQuality_);
+        }
+        if (((bitField0_ & 0x00000040) == 0x00000040)) {
+          output.writeMessage(10, gps_);
+        }
+        getUnknownFields().writeTo(output);
+      }
+
+      private int memoizedSerializedSize = -1;
+      public int getSerializedSize() {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt64Size(1, timestamp_);
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeFloatSize(2, ambientTemperature_);
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeFloatSize(3, ambientHumidity_);
+        }
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeFloatSize(4, ambientLight_);
+        }
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeFloatSize(5, ambientDecibels_);
+        }
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeFloatSize(6, ambientAirQuality_);
+        }
+        if (((bitField0_ & 0x00000040) == 0x00000040)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(10, gps_);
+        }
+        size += getUnknownFields().getSerializedSize();
+        memoizedSerializedSize = size;
+        return size;
+      }
+
+      private static final long serialVersionUID = 0L;
+      @java.lang.Override
+      protected java.lang.Object writeReplace()
+          throws java.io.ObjectStreamException {
+        return super.writeReplace();
+      }
+
+      public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+
+      public static Builder newBuilder() { return Builder.create(); }
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder(com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample prototype) {
+        return newBuilder().mergeFrom(prototype);
+      }
+      public Builder toBuilder() { return newBuilder(this); }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code hello.SimpleSensorBatch.SimpleSensorSample}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessage.Builder<Builder>
+         implements com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSampleOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return com.hello.suripu.api.input.InputProtos.internal_static_hello_SimpleSensorBatch_SimpleSensorSample_descriptor;
+        }
+
+        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return com.hello.suripu.api.input.InputProtos.internal_static_hello_SimpleSensorBatch_SimpleSensorSample_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample.class, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample.Builder.class);
+        }
+
+        // Construct using com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+            getGpsFieldBuilder();
+          }
+        }
+        private static Builder create() {
+          return new Builder();
+        }
+
+        public Builder clear() {
+          super.clear();
+          timestamp_ = 0L;
+          bitField0_ = (bitField0_ & ~0x00000001);
+          ambientTemperature_ = 0F;
+          bitField0_ = (bitField0_ & ~0x00000002);
+          ambientHumidity_ = 0F;
+          bitField0_ = (bitField0_ & ~0x00000004);
+          ambientLight_ = 0F;
+          bitField0_ = (bitField0_ & ~0x00000008);
+          ambientDecibels_ = 0F;
+          bitField0_ = (bitField0_ & ~0x00000010);
+          ambientAirQuality_ = 0F;
+          bitField0_ = (bitField0_ & ~0x00000020);
+          if (gpsBuilder_ == null) {
+            gps_ = com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.getDefaultInstance();
+          } else {
+            gpsBuilder_.clear();
+          }
+          bitField0_ = (bitField0_ & ~0x00000040);
+          return this;
+        }
+
+        public Builder clone() {
+          return create().mergeFrom(buildPartial());
+        }
+
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return com.hello.suripu.api.input.InputProtos.internal_static_hello_SimpleSensorBatch_SimpleSensorSample_descriptor;
+        }
+
+        public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample getDefaultInstanceForType() {
+          return com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample.getDefaultInstance();
+        }
+
+        public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample build() {
+          com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample buildPartial() {
+          com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample result = new com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample(this);
+          int from_bitField0_ = bitField0_;
+          int to_bitField0_ = 0;
+          if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+            to_bitField0_ |= 0x00000001;
+          }
+          result.timestamp_ = timestamp_;
+          if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+            to_bitField0_ |= 0x00000002;
+          }
+          result.ambientTemperature_ = ambientTemperature_;
+          if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+            to_bitField0_ |= 0x00000004;
+          }
+          result.ambientHumidity_ = ambientHumidity_;
+          if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+            to_bitField0_ |= 0x00000008;
+          }
+          result.ambientLight_ = ambientLight_;
+          if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+            to_bitField0_ |= 0x00000010;
+          }
+          result.ambientDecibels_ = ambientDecibels_;
+          if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+            to_bitField0_ |= 0x00000020;
+          }
+          result.ambientAirQuality_ = ambientAirQuality_;
+          if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+            to_bitField0_ |= 0x00000040;
+          }
+          if (gpsBuilder_ == null) {
+            result.gps_ = gps_;
+          } else {
+            result.gps_ = gpsBuilder_.build();
+          }
+          result.bitField0_ = to_bitField0_;
+          onBuilt();
+          return result;
+        }
+
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample) {
+            return mergeFrom((com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample other) {
+          if (other == com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample.getDefaultInstance()) return this;
+          if (other.hasTimestamp()) {
+            setTimestamp(other.getTimestamp());
+          }
+          if (other.hasAmbientTemperature()) {
+            setAmbientTemperature(other.getAmbientTemperature());
+          }
+          if (other.hasAmbientHumidity()) {
+            setAmbientHumidity(other.getAmbientHumidity());
+          }
+          if (other.hasAmbientLight()) {
+            setAmbientLight(other.getAmbientLight());
+          }
+          if (other.hasAmbientDecibels()) {
+            setAmbientDecibels(other.getAmbientDecibels());
+          }
+          if (other.hasAmbientAirQuality()) {
+            setAmbientAirQuality(other.getAmbientAirQuality());
+          }
+          if (other.hasGps()) {
+            mergeGps(other.getGps());
+          }
+          this.mergeUnknownFields(other.getUnknownFields());
+          return this;
+        }
+
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample) e.getUnfinishedMessage();
+            throw e;
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+        private int bitField0_;
+
+        // optional int64 timestamp = 1;
+        private long timestamp_ ;
+        /**
+         * <code>optional int64 timestamp = 1;</code>
+         */
+        public boolean hasTimestamp() {
+          return ((bitField0_ & 0x00000001) == 0x00000001);
+        }
+        /**
+         * <code>optional int64 timestamp = 1;</code>
+         */
+        public long getTimestamp() {
+          return timestamp_;
+        }
+        /**
+         * <code>optional int64 timestamp = 1;</code>
+         */
+        public Builder setTimestamp(long value) {
+          bitField0_ |= 0x00000001;
+          timestamp_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int64 timestamp = 1;</code>
+         */
+        public Builder clearTimestamp() {
+          bitField0_ = (bitField0_ & ~0x00000001);
+          timestamp_ = 0L;
+          onChanged();
+          return this;
+        }
+
+        // optional float ambient_temperature = 2;
+        private float ambientTemperature_ ;
+        /**
+         * <code>optional float ambient_temperature = 2;</code>
+         */
+        public boolean hasAmbientTemperature() {
+          return ((bitField0_ & 0x00000002) == 0x00000002);
+        }
+        /**
+         * <code>optional float ambient_temperature = 2;</code>
+         */
+        public float getAmbientTemperature() {
+          return ambientTemperature_;
+        }
+        /**
+         * <code>optional float ambient_temperature = 2;</code>
+         */
+        public Builder setAmbientTemperature(float value) {
+          bitField0_ |= 0x00000002;
+          ambientTemperature_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional float ambient_temperature = 2;</code>
+         */
+        public Builder clearAmbientTemperature() {
+          bitField0_ = (bitField0_ & ~0x00000002);
+          ambientTemperature_ = 0F;
+          onChanged();
+          return this;
+        }
+
+        // optional float ambient_humidity = 3;
+        private float ambientHumidity_ ;
+        /**
+         * <code>optional float ambient_humidity = 3;</code>
+         */
+        public boolean hasAmbientHumidity() {
+          return ((bitField0_ & 0x00000004) == 0x00000004);
+        }
+        /**
+         * <code>optional float ambient_humidity = 3;</code>
+         */
+        public float getAmbientHumidity() {
+          return ambientHumidity_;
+        }
+        /**
+         * <code>optional float ambient_humidity = 3;</code>
+         */
+        public Builder setAmbientHumidity(float value) {
+          bitField0_ |= 0x00000004;
+          ambientHumidity_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional float ambient_humidity = 3;</code>
+         */
+        public Builder clearAmbientHumidity() {
+          bitField0_ = (bitField0_ & ~0x00000004);
+          ambientHumidity_ = 0F;
+          onChanged();
+          return this;
+        }
+
+        // optional float ambient_light = 4;
+        private float ambientLight_ ;
+        /**
+         * <code>optional float ambient_light = 4;</code>
+         */
+        public boolean hasAmbientLight() {
+          return ((bitField0_ & 0x00000008) == 0x00000008);
+        }
+        /**
+         * <code>optional float ambient_light = 4;</code>
+         */
+        public float getAmbientLight() {
+          return ambientLight_;
+        }
+        /**
+         * <code>optional float ambient_light = 4;</code>
+         */
+        public Builder setAmbientLight(float value) {
+          bitField0_ |= 0x00000008;
+          ambientLight_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional float ambient_light = 4;</code>
+         */
+        public Builder clearAmbientLight() {
+          bitField0_ = (bitField0_ & ~0x00000008);
+          ambientLight_ = 0F;
+          onChanged();
+          return this;
+        }
+
+        // optional float ambient_decibels = 5;
+        private float ambientDecibels_ ;
+        /**
+         * <code>optional float ambient_decibels = 5;</code>
+         */
+        public boolean hasAmbientDecibels() {
+          return ((bitField0_ & 0x00000010) == 0x00000010);
+        }
+        /**
+         * <code>optional float ambient_decibels = 5;</code>
+         */
+        public float getAmbientDecibels() {
+          return ambientDecibels_;
+        }
+        /**
+         * <code>optional float ambient_decibels = 5;</code>
+         */
+        public Builder setAmbientDecibels(float value) {
+          bitField0_ |= 0x00000010;
+          ambientDecibels_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional float ambient_decibels = 5;</code>
+         */
+        public Builder clearAmbientDecibels() {
+          bitField0_ = (bitField0_ & ~0x00000010);
+          ambientDecibels_ = 0F;
+          onChanged();
+          return this;
+        }
+
+        // optional float ambient_air_quality = 6;
+        private float ambientAirQuality_ ;
+        /**
+         * <code>optional float ambient_air_quality = 6;</code>
+         */
+        public boolean hasAmbientAirQuality() {
+          return ((bitField0_ & 0x00000020) == 0x00000020);
+        }
+        /**
+         * <code>optional float ambient_air_quality = 6;</code>
+         */
+        public float getAmbientAirQuality() {
+          return ambientAirQuality_;
+        }
+        /**
+         * <code>optional float ambient_air_quality = 6;</code>
+         */
+        public Builder setAmbientAirQuality(float value) {
+          bitField0_ |= 0x00000020;
+          ambientAirQuality_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional float ambient_air_quality = 6;</code>
+         */
+        public Builder clearAmbientAirQuality() {
+          bitField0_ = (bitField0_ & ~0x00000020);
+          ambientAirQuality_ = 0F;
+          onChanged();
+          return this;
+        }
+
+        // optional .hello.SimpleSensorBatch.GpsInfo gps = 10;
+        private com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo gps_ = com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.getDefaultInstance();
+        private com.google.protobuf.SingleFieldBuilder<
+            com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.Builder, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfoOrBuilder> gpsBuilder_;
+        /**
+         * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
+         */
+        public boolean hasGps() {
+          return ((bitField0_ & 0x00000040) == 0x00000040);
+        }
+        /**
+         * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
+         */
+        public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo getGps() {
+          if (gpsBuilder_ == null) {
+            return gps_;
+          } else {
+            return gpsBuilder_.getMessage();
+          }
+        }
+        /**
+         * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
+         */
+        public Builder setGps(com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo value) {
+          if (gpsBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            gps_ = value;
+            onChanged();
+          } else {
+            gpsBuilder_.setMessage(value);
+          }
+          bitField0_ |= 0x00000040;
+          return this;
+        }
+        /**
+         * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
+         */
+        public Builder setGps(
+            com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.Builder builderForValue) {
+          if (gpsBuilder_ == null) {
+            gps_ = builderForValue.build();
+            onChanged();
+          } else {
+            gpsBuilder_.setMessage(builderForValue.build());
+          }
+          bitField0_ |= 0x00000040;
+          return this;
+        }
+        /**
+         * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
+         */
+        public Builder mergeGps(com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo value) {
+          if (gpsBuilder_ == null) {
+            if (((bitField0_ & 0x00000040) == 0x00000040) &&
+                gps_ != com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.getDefaultInstance()) {
+              gps_ =
+                com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.newBuilder(gps_).mergeFrom(value).buildPartial();
+            } else {
+              gps_ = value;
+            }
+            onChanged();
+          } else {
+            gpsBuilder_.mergeFrom(value);
+          }
+          bitField0_ |= 0x00000040;
+          return this;
+        }
+        /**
+         * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
+         */
+        public Builder clearGps() {
+          if (gpsBuilder_ == null) {
+            gps_ = com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.getDefaultInstance();
+            onChanged();
+          } else {
+            gpsBuilder_.clear();
+          }
+          bitField0_ = (bitField0_ & ~0x00000040);
+          return this;
+        }
+        /**
+         * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
+         */
+        public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.Builder getGpsBuilder() {
+          bitField0_ |= 0x00000040;
+          onChanged();
+          return getGpsFieldBuilder().getBuilder();
+        }
+        /**
+         * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
+         */
+        public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfoOrBuilder getGpsOrBuilder() {
+          if (gpsBuilder_ != null) {
+            return gpsBuilder_.getMessageOrBuilder();
+          } else {
+            return gps_;
+          }
+        }
+        /**
+         * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
+         */
+        private com.google.protobuf.SingleFieldBuilder<
+            com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.Builder, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfoOrBuilder> 
+            getGpsFieldBuilder() {
+          if (gpsBuilder_ == null) {
+            gpsBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+                com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.Builder, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfoOrBuilder>(
+                    gps_,
+                    getParentForChildren(),
+                    isClean());
+            gps_ = null;
+          }
+          return gpsBuilder_;
+        }
+
+        // @@protoc_insertion_point(builder_scope:hello.SimpleSensorBatch.SimpleSensorSample)
+      }
+
+      static {
+        defaultInstance = new SimpleSensorSample(true);
+        defaultInstance.initFields();
+      }
+
+      // @@protoc_insertion_point(class_scope:hello.SimpleSensorBatch.SimpleSensorSample)
+    }
+
+    private int bitField0_;
+    // optional string device_id = 1;
+    public static final int DEVICE_ID_FIELD_NUMBER = 1;
+    private java.lang.Object deviceId_;
+    /**
+     * <code>optional string device_id = 1;</code>
+     */
+    public boolean hasDeviceId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string device_id = 1;</code>
+     */
+    public java.lang.String getDeviceId() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          deviceId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string device_id = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getDeviceIdBytes() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        deviceId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;
+    public static final int SAMPLES_FIELD_NUMBER = 2;
+    private java.util.List<com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample> samples_;
+    /**
+     * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+     */
+    public java.util.List<com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample> getSamplesList() {
+      return samples_;
+    }
+    /**
+     * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+     */
+    public java.util.List<? extends com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSampleOrBuilder> 
+        getSamplesOrBuilderList() {
+      return samples_;
+    }
+    /**
+     * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+     */
+    public int getSamplesCount() {
+      return samples_.size();
+    }
+    /**
+     * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+     */
+    public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample getSamples(int index) {
+      return samples_.get(index);
+    }
+    /**
+     * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+     */
+    public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSampleOrBuilder getSamplesOrBuilder(
+        int index) {
+      return samples_.get(index);
+    }
+
+    private void initFields() {
+      deviceId_ = "";
+      samples_ = java.util.Collections.emptyList();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getDeviceIdBytes());
+      }
+      for (int i = 0; i < samples_.size(); i++) {
+        output.writeMessage(2, samples_.get(i));
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getDeviceIdBytes());
+      }
+      for (int i = 0; i < samples_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, samples_.get(i));
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.input.InputProtos.SimpleSensorBatch parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.suripu.api.input.InputProtos.SimpleSensorBatch prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code hello.SimpleSensorBatch}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.input.InputProtos.SimpleSensorBatchOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_SimpleSensorBatch_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_SimpleSensorBatch_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.class, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.Builder.class);
+      }
+
+      // Construct using com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getSamplesFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        deviceId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (samplesBuilder_ == null) {
+          samples_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+        } else {
+          samplesBuilder_.clear();
+        }
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_SimpleSensorBatch_descriptor;
+      }
+
+      public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch getDefaultInstanceForType() {
+        return com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.getDefaultInstance();
+      }
+
+      public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch build() {
+        com.hello.suripu.api.input.InputProtos.SimpleSensorBatch result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch buildPartial() {
+        com.hello.suripu.api.input.InputProtos.SimpleSensorBatch result = new com.hello.suripu.api.input.InputProtos.SimpleSensorBatch(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.deviceId_ = deviceId_;
+        if (samplesBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+            samples_ = java.util.Collections.unmodifiableList(samples_);
+            bitField0_ = (bitField0_ & ~0x00000002);
+          }
+          result.samples_ = samples_;
+        } else {
+          result.samples_ = samplesBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.suripu.api.input.InputProtos.SimpleSensorBatch) {
+          return mergeFrom((com.hello.suripu.api.input.InputProtos.SimpleSensorBatch)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.suripu.api.input.InputProtos.SimpleSensorBatch other) {
+        if (other == com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.getDefaultInstance()) return this;
+        if (other.hasDeviceId()) {
+          bitField0_ |= 0x00000001;
+          deviceId_ = other.deviceId_;
+          onChanged();
+        }
+        if (samplesBuilder_ == null) {
+          if (!other.samples_.isEmpty()) {
+            if (samples_.isEmpty()) {
+              samples_ = other.samples_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+            } else {
+              ensureSamplesIsMutable();
+              samples_.addAll(other.samples_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.samples_.isEmpty()) {
+            if (samplesBuilder_.isEmpty()) {
+              samplesBuilder_.dispose();
+              samplesBuilder_ = null;
+              samples_ = other.samples_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+              samplesBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getSamplesFieldBuilder() : null;
+            } else {
+              samplesBuilder_.addAllMessages(other.samples_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.suripu.api.input.InputProtos.SimpleSensorBatch parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.suripu.api.input.InputProtos.SimpleSensorBatch) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional string device_id = 1;
+      private java.lang.Object deviceId_ = "";
+      /**
+       * <code>optional string device_id = 1;</code>
+       */
+      public boolean hasDeviceId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string device_id = 1;</code>
+       */
+      public java.lang.String getDeviceId() {
+        java.lang.Object ref = deviceId_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          deviceId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string device_id = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getDeviceIdBytes() {
+        java.lang.Object ref = deviceId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          deviceId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string device_id = 1;</code>
+       */
+      public Builder setDeviceId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        deviceId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string device_id = 1;</code>
+       */
+      public Builder clearDeviceId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        deviceId_ = getDefaultInstance().getDeviceId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string device_id = 1;</code>
+       */
+      public Builder setDeviceIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        deviceId_ = value;
+        onChanged();
+        return this;
+      }
+
+      // repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;
+      private java.util.List<com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample> samples_ =
+        java.util.Collections.emptyList();
+      private void ensureSamplesIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          samples_ = new java.util.ArrayList<com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample>(samples_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample.Builder, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSampleOrBuilder> samplesBuilder_;
+
+      /**
+       * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+       */
+      public java.util.List<com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample> getSamplesList() {
+        if (samplesBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(samples_);
+        } else {
+          return samplesBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+       */
+      public int getSamplesCount() {
+        if (samplesBuilder_ == null) {
+          return samples_.size();
+        } else {
+          return samplesBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample getSamples(int index) {
+        if (samplesBuilder_ == null) {
+          return samples_.get(index);
+        } else {
+          return samplesBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+       */
+      public Builder setSamples(
+          int index, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample value) {
+        if (samplesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureSamplesIsMutable();
+          samples_.set(index, value);
+          onChanged();
+        } else {
+          samplesBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+       */
+      public Builder setSamples(
+          int index, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample.Builder builderForValue) {
+        if (samplesBuilder_ == null) {
+          ensureSamplesIsMutable();
+          samples_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          samplesBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+       */
+      public Builder addSamples(com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample value) {
+        if (samplesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureSamplesIsMutable();
+          samples_.add(value);
+          onChanged();
+        } else {
+          samplesBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+       */
+      public Builder addSamples(
+          int index, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample value) {
+        if (samplesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureSamplesIsMutable();
+          samples_.add(index, value);
+          onChanged();
+        } else {
+          samplesBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+       */
+      public Builder addSamples(
+          com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample.Builder builderForValue) {
+        if (samplesBuilder_ == null) {
+          ensureSamplesIsMutable();
+          samples_.add(builderForValue.build());
+          onChanged();
+        } else {
+          samplesBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+       */
+      public Builder addSamples(
+          int index, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample.Builder builderForValue) {
+        if (samplesBuilder_ == null) {
+          ensureSamplesIsMutable();
+          samples_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          samplesBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+       */
+      public Builder addAllSamples(
+          java.lang.Iterable<? extends com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample> values) {
+        if (samplesBuilder_ == null) {
+          ensureSamplesIsMutable();
+          super.addAll(values, samples_);
+          onChanged();
+        } else {
+          samplesBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+       */
+      public Builder clearSamples() {
+        if (samplesBuilder_ == null) {
+          samples_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+          onChanged();
+        } else {
+          samplesBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+       */
+      public Builder removeSamples(int index) {
+        if (samplesBuilder_ == null) {
+          ensureSamplesIsMutable();
+          samples_.remove(index);
+          onChanged();
+        } else {
+          samplesBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample.Builder getSamplesBuilder(
+          int index) {
+        return getSamplesFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSampleOrBuilder getSamplesOrBuilder(
+          int index) {
+        if (samplesBuilder_ == null) {
+          return samples_.get(index);  } else {
+          return samplesBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+       */
+      public java.util.List<? extends com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSampleOrBuilder> 
+           getSamplesOrBuilderList() {
+        if (samplesBuilder_ != null) {
+          return samplesBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(samples_);
+        }
+      }
+      /**
+       * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample.Builder addSamplesBuilder() {
+        return getSamplesFieldBuilder().addBuilder(
+            com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample.Builder addSamplesBuilder(
+          int index) {
+        return getSamplesFieldBuilder().addBuilder(
+            index, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.SimpleSensorBatch.SimpleSensorSample samples = 2;</code>
+       */
+      public java.util.List<com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample.Builder> 
+           getSamplesBuilderList() {
+        return getSamplesFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample.Builder, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSampleOrBuilder> 
+          getSamplesFieldBuilder() {
+        if (samplesBuilder_ == null) {
+          samplesBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSample.Builder, com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.SimpleSensorSampleOrBuilder>(
+                  samples_,
+                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  getParentForChildren(),
+                  isClean());
+          samples_ = null;
+        }
+        return samplesBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:hello.SimpleSensorBatch)
+    }
+
+    static {
+      defaultInstance = new SimpleSensorBatch(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:hello.SimpleSensorBatch)
+  }
+
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_SensorSampleBatch_descriptor;
   private static
@@ -1557,6 +4022,21 @@ public final class InputProtos {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_SensorSampleBatch_SensorSample_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_hello_SimpleSensorBatch_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_hello_SimpleSensorBatch_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_hello_SimpleSensorBatch_GpsInfo_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_hello_SimpleSensorBatch_GpsInfo_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_hello_SimpleSensorBatch_SimpleSensorSample_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_hello_SimpleSensorBatch_SimpleSensorSample_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -1576,8 +4056,18 @@ public final class InputProtos {
       "\024\n\020AMBIENT_HUMIDITY\020\001\022\021\n\rAMBIENT_LIGHT\020\002" +
       "\022\024\n\020AMBIENT_DECIBELS\020\003\022\027\n\023AMBIENT_AIR_QU" +
       "ALITY\020\004\022\007\n\003GPS\020\005\022\026\n\022PHONE_ACCELERATION\020\006",
-      "\022\024\n\020PHONE_STEP_COUNT\020\007B+\n\032com.hello.suri" +
-      "pu.api.inputB\013InputProtosH\001"
+      "\022\024\n\020PHONE_STEP_COUNT\020\007\"\223\003\n\021SimpleSensorB" +
+      "atch\022\021\n\tdevice_id\030\001 \001(\t\022<\n\007samples\030\002 \003(\013" +
+      "2+.hello.SimpleSensorBatch.SimpleSensorS" +
+      "ample\032O\n\007GpsInfo\022\020\n\010latitude\030\001 \001(\002\022\021\n\tlo" +
+      "ngitude\030\002 \001(\002\022\020\n\010accuracy\030\003 \001(\002\022\r\n\005speed" +
+      "\030\004 \001(\002\032\333\001\n\022SimpleSensorSample\022\021\n\ttimesta" +
+      "mp\030\001 \001(\003\022\033\n\023ambient_temperature\030\002 \001(\002\022\030\n" +
+      "\020ambient_humidity\030\003 \001(\002\022\025\n\rambient_light" +
+      "\030\004 \001(\002\022\030\n\020ambient_decibels\030\005 \001(\002\022\033\n\023ambi" +
+      "ent_air_quality\030\006 \001(\002\022-\n\003gps\030\n \001(\0132 .hel",
+      "lo.SimpleSensorBatch.GpsInfoB+\n\032com.hell" +
+      "o.suripu.api.inputB\013InputProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -1596,6 +4086,24 @@ public final class InputProtos {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_SensorSampleBatch_SensorSample_descriptor,
               new java.lang.String[] { "SensorType", "Timestamp", "Value", });
+          internal_static_hello_SimpleSensorBatch_descriptor =
+            getDescriptor().getMessageTypes().get(1);
+          internal_static_hello_SimpleSensorBatch_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_SimpleSensorBatch_descriptor,
+              new java.lang.String[] { "DeviceId", "Samples", });
+          internal_static_hello_SimpleSensorBatch_GpsInfo_descriptor =
+            internal_static_hello_SimpleSensorBatch_descriptor.getNestedTypes().get(0);
+          internal_static_hello_SimpleSensorBatch_GpsInfo_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_SimpleSensorBatch_GpsInfo_descriptor,
+              new java.lang.String[] { "Latitude", "Longitude", "Accuracy", "Speed", });
+          internal_static_hello_SimpleSensorBatch_SimpleSensorSample_descriptor =
+            internal_static_hello_SimpleSensorBatch_descriptor.getNestedTypes().get(1);
+          internal_static_hello_SimpleSensorBatch_SimpleSensorSample_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_SimpleSensorBatch_SimpleSensorSample_descriptor,
+              new java.lang.String[] { "Timestamp", "AmbientTemperature", "AmbientHumidity", "AmbientLight", "AmbientDecibels", "AmbientAirQuality", "Gps", });
           return null;
         }
       };

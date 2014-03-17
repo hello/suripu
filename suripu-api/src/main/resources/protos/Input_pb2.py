@@ -13,7 +13,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='Input.proto',
   package='hello',
-  serialized_pb='\n\x0bInput.proto\x12\x05hello\"\x8f\x03\n\x11SensorSampleBatch\x12\x36\n\x07samples\x18\x01 \x03(\x0b\x32%.hello.SensorSampleBatch.SensorSample\x12\x11\n\tdevice_id\x18\x02 \x01(\t\x1a\xae\x02\n\x0cSensorSample\x12\x45\n\x0bsensor_type\x18\x01 \x01(\x0e\x32\x30.hello.SensorSampleBatch.SensorSample.SensorType\x12\x11\n\ttimestamp\x18\x02 \x01(\x05\x12\r\n\x05value\x18\x03 \x01(\x0c\"\xb4\x01\n\nSensorType\x12\x17\n\x13\x41MBIENT_TEMPERATURE\x10\x00\x12\x14\n\x10\x41MBIENT_HUMIDITY\x10\x01\x12\x11\n\rAMBIENT_LIGHT\x10\x02\x12\x14\n\x10\x41MBIENT_DECIBELS\x10\x03\x12\x17\n\x13\x41MBIENT_AIR_QUALITY\x10\x04\x12\x07\n\x03GPS\x10\x05\x12\x16\n\x12PHONE_ACCELERATION\x10\x06\x12\x14\n\x10PHONE_STEP_COUNT\x10\x07\x42+\n\x1a\x63om.hello.suripu.api.inputB\x0bInputProtosH\x01')
+  serialized_pb='\n\x0bInput.proto\x12\x05hello\"\x8f\x03\n\x11SensorSampleBatch\x12\x36\n\x07samples\x18\x01 \x03(\x0b\x32%.hello.SensorSampleBatch.SensorSample\x12\x11\n\tdevice_id\x18\x02 \x01(\t\x1a\xae\x02\n\x0cSensorSample\x12\x45\n\x0bsensor_type\x18\x01 \x01(\x0e\x32\x30.hello.SensorSampleBatch.SensorSample.SensorType\x12\x11\n\ttimestamp\x18\x02 \x01(\x05\x12\r\n\x05value\x18\x03 \x01(\x0c\"\xb4\x01\n\nSensorType\x12\x17\n\x13\x41MBIENT_TEMPERATURE\x10\x00\x12\x14\n\x10\x41MBIENT_HUMIDITY\x10\x01\x12\x11\n\rAMBIENT_LIGHT\x10\x02\x12\x14\n\x10\x41MBIENT_DECIBELS\x10\x03\x12\x17\n\x13\x41MBIENT_AIR_QUALITY\x10\x04\x12\x07\n\x03GPS\x10\x05\x12\x16\n\x12PHONE_ACCELERATION\x10\x06\x12\x14\n\x10PHONE_STEP_COUNT\x10\x07\"\x93\x03\n\x11SimpleSensorBatch\x12\x11\n\tdevice_id\x18\x01 \x01(\t\x12<\n\x07samples\x18\x02 \x03(\x0b\x32+.hello.SimpleSensorBatch.SimpleSensorSample\x1aO\n\x07GpsInfo\x12\x10\n\x08latitude\x18\x01 \x01(\x02\x12\x11\n\tlongitude\x18\x02 \x01(\x02\x12\x10\n\x08\x61\x63\x63uracy\x18\x03 \x01(\x02\x12\r\n\x05speed\x18\x04 \x01(\x02\x1a\xdb\x01\n\x12SimpleSensorSample\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\x1b\n\x13\x61mbient_temperature\x18\x02 \x01(\x02\x12\x18\n\x10\x61mbient_humidity\x18\x03 \x01(\x02\x12\x15\n\rambient_light\x18\x04 \x01(\x02\x12\x18\n\x10\x61mbient_decibels\x18\x05 \x01(\x02\x12\x1b\n\x13\x61mbient_air_quality\x18\x06 \x01(\x02\x12-\n\x03gps\x18\n \x01(\x0b\x32 .hello.SimpleSensorBatch.GpsInfoB+\n\x1a\x63om.hello.suripu.api.inputB\x0bInputProtosH\x01')
 
 
 
@@ -139,11 +139,168 @@ _SENSORSAMPLEBATCH = _descriptor.Descriptor(
   serialized_end=422,
 )
 
+
+_SIMPLESENSORBATCH_GPSINFO = _descriptor.Descriptor(
+  name='GpsInfo',
+  full_name='hello.SimpleSensorBatch.GpsInfo',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='latitude', full_name='hello.SimpleSensorBatch.GpsInfo.latitude', index=0,
+      number=1, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='longitude', full_name='hello.SimpleSensorBatch.GpsInfo.longitude', index=1,
+      number=2, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='accuracy', full_name='hello.SimpleSensorBatch.GpsInfo.accuracy', index=2,
+      number=3, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='speed', full_name='hello.SimpleSensorBatch.GpsInfo.speed', index=3,
+      number=4, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  extension_ranges=[],
+  serialized_start=527,
+  serialized_end=606,
+)
+
+_SIMPLESENSORBATCH_SIMPLESENSORSAMPLE = _descriptor.Descriptor(
+  name='SimpleSensorSample',
+  full_name='hello.SimpleSensorBatch.SimpleSensorSample',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='timestamp', full_name='hello.SimpleSensorBatch.SimpleSensorSample.timestamp', index=0,
+      number=1, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='ambient_temperature', full_name='hello.SimpleSensorBatch.SimpleSensorSample.ambient_temperature', index=1,
+      number=2, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='ambient_humidity', full_name='hello.SimpleSensorBatch.SimpleSensorSample.ambient_humidity', index=2,
+      number=3, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='ambient_light', full_name='hello.SimpleSensorBatch.SimpleSensorSample.ambient_light', index=3,
+      number=4, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='ambient_decibels', full_name='hello.SimpleSensorBatch.SimpleSensorSample.ambient_decibels', index=4,
+      number=5, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='ambient_air_quality', full_name='hello.SimpleSensorBatch.SimpleSensorSample.ambient_air_quality', index=5,
+      number=6, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='gps', full_name='hello.SimpleSensorBatch.SimpleSensorSample.gps', index=6,
+      number=10, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  extension_ranges=[],
+  serialized_start=609,
+  serialized_end=828,
+)
+
+_SIMPLESENSORBATCH = _descriptor.Descriptor(
+  name='SimpleSensorBatch',
+  full_name='hello.SimpleSensorBatch',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='device_id', full_name='hello.SimpleSensorBatch.device_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='samples', full_name='hello.SimpleSensorBatch.samples', index=1,
+      number=2, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[_SIMPLESENSORBATCH_GPSINFO, _SIMPLESENSORBATCH_SIMPLESENSORSAMPLE, ],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  extension_ranges=[],
+  serialized_start=425,
+  serialized_end=828,
+)
+
 _SENSORSAMPLEBATCH_SENSORSAMPLE.fields_by_name['sensor_type'].enum_type = _SENSORSAMPLEBATCH_SENSORSAMPLE_SENSORTYPE
 _SENSORSAMPLEBATCH_SENSORSAMPLE.containing_type = _SENSORSAMPLEBATCH;
 _SENSORSAMPLEBATCH_SENSORSAMPLE_SENSORTYPE.containing_type = _SENSORSAMPLEBATCH_SENSORSAMPLE;
 _SENSORSAMPLEBATCH.fields_by_name['samples'].message_type = _SENSORSAMPLEBATCH_SENSORSAMPLE
+_SIMPLESENSORBATCH_GPSINFO.containing_type = _SIMPLESENSORBATCH;
+_SIMPLESENSORBATCH_SIMPLESENSORSAMPLE.fields_by_name['gps'].message_type = _SIMPLESENSORBATCH_GPSINFO
+_SIMPLESENSORBATCH_SIMPLESENSORSAMPLE.containing_type = _SIMPLESENSORBATCH;
+_SIMPLESENSORBATCH.fields_by_name['samples'].message_type = _SIMPLESENSORBATCH_SIMPLESENSORSAMPLE
 DESCRIPTOR.message_types_by_name['SensorSampleBatch'] = _SENSORSAMPLEBATCH
+DESCRIPTOR.message_types_by_name['SimpleSensorBatch'] = _SIMPLESENSORBATCH
 
 class SensorSampleBatch(_message.Message):
   __metaclass__ = _reflection.GeneratedProtocolMessageType
@@ -156,6 +313,24 @@ class SensorSampleBatch(_message.Message):
   DESCRIPTOR = _SENSORSAMPLEBATCH
 
   # @@protoc_insertion_point(class_scope:hello.SensorSampleBatch)
+
+class SimpleSensorBatch(_message.Message):
+  __metaclass__ = _reflection.GeneratedProtocolMessageType
+
+  class GpsInfo(_message.Message):
+    __metaclass__ = _reflection.GeneratedProtocolMessageType
+    DESCRIPTOR = _SIMPLESENSORBATCH_GPSINFO
+
+    # @@protoc_insertion_point(class_scope:hello.SimpleSensorBatch.GpsInfo)
+
+  class SimpleSensorSample(_message.Message):
+    __metaclass__ = _reflection.GeneratedProtocolMessageType
+    DESCRIPTOR = _SIMPLESENSORBATCH_SIMPLESENSORSAMPLE
+
+    # @@protoc_insertion_point(class_scope:hello.SimpleSensorBatch.SimpleSensorSample)
+  DESCRIPTOR = _SIMPLESENSORBATCH
+
+  # @@protoc_insertion_point(class_scope:hello.SimpleSensorBatch)
 
 
 DESCRIPTOR.has_options = True
