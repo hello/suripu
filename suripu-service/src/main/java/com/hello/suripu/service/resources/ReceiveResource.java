@@ -32,9 +32,9 @@ public class ReceiveResource {
 
         for(InputProtos.SensorSampleBatch.SensorSample sample : batch.getSamplesList()) {
             sensor_ids.add(sample.getSensorType().getNumber());
-            DateTime dt = new DateTime((long) sample.getTimestamp(), DateTimeZone.UTC);
+            DateTime dt = new DateTime((long) sample.getTimestamp() * 1000, DateTimeZone.UTC);
             timestamps.add(dt);
-            values.add(sample.getValue());
+            values.add(Integer.valueOf(sample.getValue().toString()));
         }
 
         eventDAO.insertBatch(sensor_ids, deviceId, timestamps, values);

@@ -13,7 +13,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='Input.proto',
   package='hello',
-  serialized_pb='\n\x0bInput.proto\x12\x05hello\"\x8f\x03\n\x11SensorSampleBatch\x12\x36\n\x07samples\x18\x01 \x03(\x0b\x32%.hello.SensorSampleBatch.SensorSample\x12\x11\n\tdevice_id\x18\x02 \x01(\t\x1a\xae\x02\n\x0cSensorSample\x12\x45\n\x0bsensor_type\x18\x01 \x01(\x0e\x32\x30.hello.SensorSampleBatch.SensorSample.SensorType\x12\x11\n\ttimestamp\x18\x02 \x01(\x05\x12\r\n\x05value\x18\x03 \x01(\x05\"\xb4\x01\n\nSensorType\x12\x17\n\x13\x41MBIENT_TEMPERATURE\x10\x00\x12\x14\n\x10\x41MBIENT_HUMIDITY\x10\x01\x12\x11\n\rAMBIENT_LIGHT\x10\x02\x12\x14\n\x10\x41MBIENT_DECIBELS\x10\x03\x12\x17\n\x13\x41MBIENT_AIR_QUALITY\x10\x04\x12\x07\n\x03GPS\x10\x05\x12\x16\n\x12PHONE_ACCELERATION\x10\x06\x12\x14\n\x10PHONE_STEP_COUNT\x10\x07\x42+\n\x1a\x63om.hello.suripu.api.inputB\x0bInputProtosH\x01')
+  serialized_pb='\n\x0bInput.proto\x12\x05hello\"\x8f\x03\n\x11SensorSampleBatch\x12\x36\n\x07samples\x18\x01 \x03(\x0b\x32%.hello.SensorSampleBatch.SensorSample\x12\x11\n\tdevice_id\x18\x02 \x01(\t\x1a\xae\x02\n\x0cSensorSample\x12\x45\n\x0bsensor_type\x18\x01 \x01(\x0e\x32\x30.hello.SensorSampleBatch.SensorSample.SensorType\x12\x11\n\ttimestamp\x18\x02 \x01(\x05\x12\r\n\x05value\x18\x03 \x01(\x0c\"\xb4\x01\n\nSensorType\x12\x17\n\x13\x41MBIENT_TEMPERATURE\x10\x00\x12\x14\n\x10\x41MBIENT_HUMIDITY\x10\x01\x12\x11\n\rAMBIENT_LIGHT\x10\x02\x12\x14\n\x10\x41MBIENT_DECIBELS\x10\x03\x12\x17\n\x13\x41MBIENT_AIR_QUALITY\x10\x04\x12\x07\n\x03GPS\x10\x05\x12\x16\n\x12PHONE_ACCELERATION\x10\x06\x12\x14\n\x10PHONE_STEP_COUNT\x10\x07\x42+\n\x1a\x63om.hello.suripu.api.inputB\x0bInputProtosH\x01')
 
 
 
@@ -86,8 +86,8 @@ _SENSORSAMPLEBATCH_SENSORSAMPLE = _descriptor.Descriptor(
       options=None),
     _descriptor.FieldDescriptor(
       name='value', full_name='hello.SensorSampleBatch.SensorSample.value', index=2,
-      number=3, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
+      number=3, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value="",
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),

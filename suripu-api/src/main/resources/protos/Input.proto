@@ -20,7 +20,7 @@ message SensorSampleBatch {
 
         optional SensorType sensor_type = 1;
         optional int32 timestamp = 2;
-        optional int32 value = 3;
+        optional bytes value = 3;
 
     }
 

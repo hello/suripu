@@ -180,15 +180,15 @@ public final class InputProtos {
        */
       int getTimestamp();
 
-      // optional int32 value = 3;
+      // optional bytes value = 3;
       /**
-       * <code>optional int32 value = 3;</code>
+       * <code>optional bytes value = 3;</code>
        */
       boolean hasValue();
       /**
-       * <code>optional int32 value = 3;</code>
+       * <code>optional bytes value = 3;</code>
        */
-      int getValue();
+      com.google.protobuf.ByteString getValue();
     }
     /**
      * Protobuf type {@code hello.SensorSampleBatch.SensorSample}
@@ -257,9 +257,9 @@ public final class InputProtos {
                 timestamp_ = input.readInt32();
                 break;
               }
-              case 24: {
+              case 26: {
                 bitField0_ |= 0x00000004;
-                value_ = input.readInt32();
+                value_ = input.readBytes();
                 break;
               }
             }
@@ -470,26 +470,26 @@ public final class InputProtos {
         return timestamp_;
       }
 
-      // optional int32 value = 3;
+      // optional bytes value = 3;
       public static final int VALUE_FIELD_NUMBER = 3;
-      private int value_;
+      private com.google.protobuf.ByteString value_;
       /**
-       * <code>optional int32 value = 3;</code>
+       * <code>optional bytes value = 3;</code>
        */
       public boolean hasValue() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
-       * <code>optional int32 value = 3;</code>
+       * <code>optional bytes value = 3;</code>
        */
-      public int getValue() {
+      public com.google.protobuf.ByteString getValue() {
         return value_;
       }
 
       private void initFields() {
         sensorType_ = com.hello.suripu.api.input.InputProtos.SensorSampleBatch.SensorSample.SensorType.AMBIENT_TEMPERATURE;
         timestamp_ = 0;
-        value_ = 0;
+        value_ = com.google.protobuf.ByteString.EMPTY;
       }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
@@ -510,7 +510,7 @@ public final class InputProtos {
           output.writeInt32(2, timestamp_);
         }
         if (((bitField0_ & 0x00000004) == 0x00000004)) {
-          output.writeInt32(3, value_);
+          output.writeBytes(3, value_);
         }
         getUnknownFields().writeTo(output);
       }
@@ -531,7 +531,7 @@ public final class InputProtos {
         }
         if (((bitField0_ & 0x00000004) == 0x00000004)) {
           size += com.google.protobuf.CodedOutputStream
-            .computeInt32Size(3, value_);
+            .computeBytesSize(3, value_);
         }
         size += getUnknownFields().getSerializedSize();
         memoizedSerializedSize = size;
@@ -653,7 +653,7 @@ public final class InputProtos {
           bitField0_ = (bitField0_ & ~0x00000001);
           timestamp_ = 0;
           bitField0_ = (bitField0_ & ~0x00000002);
-          value_ = 0;
+          value_ = com.google.protobuf.ByteString.EMPTY;
           bitField0_ = (bitField0_ & ~0x00000004);
           return this;
         }
@@ -816,35 +816,38 @@ public final class InputProtos {
           return this;
         }
 
-        // optional int32 value = 3;
-        private int value_ ;
+        // optional bytes value = 3;
+        private com.google.protobuf.ByteString value_ = com.google.protobuf.ByteString.EMPTY;
         /**
-         * <code>optional int32 value = 3;</code>
+         * <code>optional bytes value = 3;</code>
          */
         public boolean hasValue() {
           return ((bitField0_ & 0x00000004) == 0x00000004);
         }
         /**
-         * <code>optional int32 value = 3;</code>
+         * <code>optional bytes value = 3;</code>
          */
-        public int getValue() {
+        public com.google.protobuf.ByteString getValue() {
           return value_;
         }
         /**
-         * <code>optional int32 value = 3;</code>
+         * <code>optional bytes value = 3;</code>
          */
-        public Builder setValue(int value) {
-          bitField0_ |= 0x00000004;
+        public Builder setValue(com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
           value_ = value;
           onChanged();
           return this;
         }
         /**
-         * <code>optional int32 value = 3;</code>
+         * <code>optional bytes value = 3;</code>
          */
         public Builder clearValue() {
           bitField0_ = (bitField0_ & ~0x00000004);
-          value_ = 0;
+          value_ = getDefaultInstance().getValue();
           onChanged();
           return this;
         }
@@ -1568,7 +1571,7 @@ public final class InputProtos {
       "Batch.SensorSample\022\021\n\tdevice_id\030\002 \001(\t\032\256\002" +
       "\n\014SensorSample\022E\n\013sensor_type\030\001 \001(\01620.he" +
       "llo.SensorSampleBatch.SensorSample.Senso" +
-      "rType\022\021\n\ttimestamp\030\002 \001(\005\022\r\n\005value\030\003 \001(\005\"" +
+      "rType\022\021\n\ttimestamp\030\002 \001(\005\022\r\n\005value\030\003 \001(\014\"" +
       "\264\001\n\nSensorType\022\027\n\023AMBIENT_TEMPERATURE\020\000\022" +
       "\024\n\020AMBIENT_HUMIDITY\020\001\022\021\n\rAMBIENT_LIGHT\020\002" +
       "\022\024\n\020AMBIENT_DECIBELS\020\003\022\027\n\023AMBIENT_AIR_QU" +
