@@ -39,3 +39,43 @@ message SensorSampleBatch {
     optional string device_id = 2;
 }
 ````
+
+
+
+Don't forget to create database/table
+
+````sql
+
+CREATE TABLE sensor_samples (
+    id BIGSERIAL PRIMARY KEY,
+    device_id BIGINT,
+    sensor_id INT,
+    ts TIMESTAMP,
+    val INT
+);
+
+CREATE UNIQUE INDEX uniq_sample on sensor_samples(device_id, ts);
+
+GRANT ALL PRIVILEGES ON sensor_samples TO ingress_user;
+GRANT ALL PRIVILEGES ON sensor_samples TO ingress_user;
+
+CREATE ROLE ingress_user WITH LOGIN ENCRYPTED PASSWORD 'hello ingress user' CREATEDB;
+ALTER ROLE ingress_user REPLICATION;
+````
+
+and change db config in surpipu.dev.yml
+
+```yaml
+database:
+  # the name of your JDBC driver
+  driverClass: org.postgresql.Driver
+
+  # the username
+  user: tim
+
+  # the password
+  password: hello ingress user
+
+  # the JDBC URL
+  url: jdbc:postgresql://localhost:5432/tim
+````
