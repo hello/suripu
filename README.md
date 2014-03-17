@@ -1,6 +1,7 @@
 Endpoints
 
     POST    /in (com.hello.suripu.service.resources.ReceiveResource)
+    POST    /in/simple (com.hello.suripu.service.resources.ReceiveResource)
     GET     /ping (com.hello.dropwizard.mikkusu.resources.PingResource)
     GET     /version (com.hello.dropwizard.mikkusu.resources.VersionResource)
 
@@ -37,6 +38,30 @@ message SensorSampleBatch {
 
     repeated SensorSample samples = 1;
     optional string device_id = 2;
+}
+
+message SimpleSensorBatch {
+    message GpsInfo {
+        optional float latitude = 1;
+        optional float longitude = 2;
+        optional float accuracy = 3;
+        optional float speed = 4;
+    }
+
+    message SimpleSensorSample {
+        optional int64 timestamp = 1;
+        optional float ambient_temperature = 2;
+        optional float ambient_humidity = 3;
+        optional float ambient_light = 4;
+        optional float ambient_decibels = 5;
+        optional float ambient_air_quality = 6;
+
+        optional GpsInfo gps = 10;
+    }
+
+    optional string device_id = 1;
+    repeated SimpleSensorSample samples = 2;
+
 }
 ````
 
