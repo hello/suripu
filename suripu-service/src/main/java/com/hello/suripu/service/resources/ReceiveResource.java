@@ -3,6 +3,7 @@ package com.hello.suripu.service.resources;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.service.db.EventDAO;
+import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.postgresql.util.PSQLException;
@@ -24,6 +25,7 @@ public class ReceiveResource {
     }
 
     @POST
+    @Timed
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     public Response receiveData(@Valid InputProtos.SensorSampleBatch batch) {
 
@@ -44,6 +46,7 @@ public class ReceiveResource {
     }
 
     @POST
+    @Timed
     @Path("/simple")
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     public Response receiveSimpleData(@Valid InputProtos.SimpleSensorBatch batch) {
