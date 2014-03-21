@@ -25,6 +25,29 @@ public class ClientDetails{
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hashCode(responseType, clientId, redirectUri, scopes, state, code, accountId, secret);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        final ClientDetails that = (ClientDetails) o;
+
+        return Objects.equal(this.responseType, that.responseType) &&
+                Objects.equal(this.clientId, that.clientId) &&
+                Objects.equal(this.redirectUri, that.redirectUri) &&
+                Objects.equal(this.scopes, that.scopes) &&
+                Objects.equal(this.state, that.state) &&
+                Objects.equal(this.code, that.code) &&
+                Objects.equal(this.accountId, that.accountId) &&
+                Objects.equal(this.secret, that.secret);
+    }
+
+
+    @Override
     public String toString() {
         return Objects.toStringHelper(ClientDetails.class)
                 .add("responseType", responseType)

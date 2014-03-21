@@ -20,4 +20,20 @@ public class ClientCredentials {
                 .add("token", token)
                 .toString();
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(scopes, token);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        final ClientCredentials that = (ClientCredentials) o;
+
+        return Objects.equal(this.scopes, that.scopes) &&
+                Objects.equal(this.token, that.token);
+    }
 }
