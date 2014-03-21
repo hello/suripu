@@ -1,10 +1,17 @@
-Endpoints
+Endpoints for receiving app
 
     POST    /in (com.hello.suripu.service.resources.ReceiveResource)
     POST    /in/simple (com.hello.suripu.service.resources.ReceiveResource)
     GET     /ping (com.hello.dropwizard.mikkusu.resources.PingResource)
     GET     /version (com.hello.dropwizard.mikkusu.resources.VersionResource)
 
+
+ Endpoints for API app
+
+     POST    /oauth (com.hello.suripu.app.resources.OAuthResource)
+     POST    /oauth/stuff (com.hello.suripu.app.resources.OAuthResource)
+     GET     /account (com.hello.suripu.app.resources.AccountResource)
+     GET     /history/{days} (com.hello.suripu.app.resources.HistoryResource)
 
 Protobuf definition:
 
