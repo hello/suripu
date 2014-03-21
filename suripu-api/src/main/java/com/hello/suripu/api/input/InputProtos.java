@@ -2398,6 +2398,26 @@ public final class InputProtos {
        */
       float getAmbientAirQuality();
 
+      // optional bytes device_data = 7;
+      /**
+       * <code>optional bytes device_data = 7;</code>
+       */
+      boolean hasDeviceData();
+      /**
+       * <code>optional bytes device_data = 7;</code>
+       */
+      com.google.protobuf.ByteString getDeviceData();
+
+      // optional bytes device_data_signature = 8;
+      /**
+       * <code>optional bytes device_data_signature = 8;</code>
+       */
+      boolean hasDeviceDataSignature();
+      /**
+       * <code>optional bytes device_data_signature = 8;</code>
+       */
+      com.google.protobuf.ByteString getDeviceDataSignature();
+
       // optional .hello.SimpleSensorBatch.GpsInfo gps = 10;
       /**
        * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
@@ -2493,9 +2513,19 @@ public final class InputProtos {
                 ambientAirQuality_ = input.readFloat();
                 break;
               }
+              case 58: {
+                bitField0_ |= 0x00000040;
+                deviceData_ = input.readBytes();
+                break;
+              }
+              case 66: {
+                bitField0_ |= 0x00000080;
+                deviceDataSignature_ = input.readBytes();
+                break;
+              }
               case 82: {
                 com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.Builder subBuilder = null;
-                if (((bitField0_ & 0x00000040) == 0x00000040)) {
+                if (((bitField0_ & 0x00000100) == 0x00000100)) {
                   subBuilder = gps_.toBuilder();
                 }
                 gps_ = input.readMessage(com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.PARSER, extensionRegistry);
@@ -2503,7 +2533,7 @@ public final class InputProtos {
                   subBuilder.mergeFrom(gps_);
                   gps_ = subBuilder.buildPartial();
                 }
-                bitField0_ |= 0x00000040;
+                bitField0_ |= 0x00000100;
                 break;
               }
             }
@@ -2642,6 +2672,38 @@ public final class InputProtos {
         return ambientAirQuality_;
       }
 
+      // optional bytes device_data = 7;
+      public static final int DEVICE_DATA_FIELD_NUMBER = 7;
+      private com.google.protobuf.ByteString deviceData_;
+      /**
+       * <code>optional bytes device_data = 7;</code>
+       */
+      public boolean hasDeviceData() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional bytes device_data = 7;</code>
+       */
+      public com.google.protobuf.ByteString getDeviceData() {
+        return deviceData_;
+      }
+
+      // optional bytes device_data_signature = 8;
+      public static final int DEVICE_DATA_SIGNATURE_FIELD_NUMBER = 8;
+      private com.google.protobuf.ByteString deviceDataSignature_;
+      /**
+       * <code>optional bytes device_data_signature = 8;</code>
+       */
+      public boolean hasDeviceDataSignature() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional bytes device_data_signature = 8;</code>
+       */
+      public com.google.protobuf.ByteString getDeviceDataSignature() {
+        return deviceDataSignature_;
+      }
+
       // optional .hello.SimpleSensorBatch.GpsInfo gps = 10;
       public static final int GPS_FIELD_NUMBER = 10;
       private com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo gps_;
@@ -2649,7 +2711,7 @@ public final class InputProtos {
        * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
        */
       public boolean hasGps() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
+        return ((bitField0_ & 0x00000100) == 0x00000100);
       }
       /**
        * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
@@ -2671,6 +2733,8 @@ public final class InputProtos {
         ambientLight_ = 0F;
         ambientDecibels_ = 0F;
         ambientAirQuality_ = 0F;
+        deviceData_ = com.google.protobuf.ByteString.EMPTY;
+        deviceDataSignature_ = com.google.protobuf.ByteString.EMPTY;
         gps_ = com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.getDefaultInstance();
       }
       private byte memoizedIsInitialized = -1;
@@ -2704,6 +2768,12 @@ public final class InputProtos {
           output.writeFloat(6, ambientAirQuality_);
         }
         if (((bitField0_ & 0x00000040) == 0x00000040)) {
+          output.writeBytes(7, deviceData_);
+        }
+        if (((bitField0_ & 0x00000080) == 0x00000080)) {
+          output.writeBytes(8, deviceDataSignature_);
+        }
+        if (((bitField0_ & 0x00000100) == 0x00000100)) {
           output.writeMessage(10, gps_);
         }
         getUnknownFields().writeTo(output);
@@ -2740,6 +2810,14 @@ public final class InputProtos {
             .computeFloatSize(6, ambientAirQuality_);
         }
         if (((bitField0_ & 0x00000040) == 0x00000040)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(7, deviceData_);
+        }
+        if (((bitField0_ & 0x00000080) == 0x00000080)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(8, deviceDataSignature_);
+        }
+        if (((bitField0_ & 0x00000100) == 0x00000100)) {
           size += com.google.protobuf.CodedOutputStream
             .computeMessageSize(10, gps_);
         }
@@ -2872,12 +2950,16 @@ public final class InputProtos {
           bitField0_ = (bitField0_ & ~0x00000010);
           ambientAirQuality_ = 0F;
           bitField0_ = (bitField0_ & ~0x00000020);
+          deviceData_ = com.google.protobuf.ByteString.EMPTY;
+          bitField0_ = (bitField0_ & ~0x00000040);
+          deviceDataSignature_ = com.google.protobuf.ByteString.EMPTY;
+          bitField0_ = (bitField0_ & ~0x00000080);
           if (gpsBuilder_ == null) {
             gps_ = com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.getDefaultInstance();
           } else {
             gpsBuilder_.clear();
           }
-          bitField0_ = (bitField0_ & ~0x00000040);
+          bitField0_ = (bitField0_ & ~0x00000100);
           return this;
         }
 
@@ -2933,6 +3015,14 @@ public final class InputProtos {
           if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
             to_bitField0_ |= 0x00000040;
           }
+          result.deviceData_ = deviceData_;
+          if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+            to_bitField0_ |= 0x00000080;
+          }
+          result.deviceDataSignature_ = deviceDataSignature_;
+          if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+            to_bitField0_ |= 0x00000100;
+          }
           if (gpsBuilder_ == null) {
             result.gps_ = gps_;
           } else {
@@ -2971,6 +3061,12 @@ public final class InputProtos {
           }
           if (other.hasAmbientAirQuality()) {
             setAmbientAirQuality(other.getAmbientAirQuality());
+          }
+          if (other.hasDeviceData()) {
+            setDeviceData(other.getDeviceData());
+          }
+          if (other.hasDeviceDataSignature()) {
+            setDeviceDataSignature(other.getDeviceDataSignature());
           }
           if (other.hasGps()) {
             mergeGps(other.getGps());
@@ -3200,6 +3296,78 @@ public final class InputProtos {
           return this;
         }
 
+        // optional bytes device_data = 7;
+        private com.google.protobuf.ByteString deviceData_ = com.google.protobuf.ByteString.EMPTY;
+        /**
+         * <code>optional bytes device_data = 7;</code>
+         */
+        public boolean hasDeviceData() {
+          return ((bitField0_ & 0x00000040) == 0x00000040);
+        }
+        /**
+         * <code>optional bytes device_data = 7;</code>
+         */
+        public com.google.protobuf.ByteString getDeviceData() {
+          return deviceData_;
+        }
+        /**
+         * <code>optional bytes device_data = 7;</code>
+         */
+        public Builder setDeviceData(com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000040;
+          deviceData_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional bytes device_data = 7;</code>
+         */
+        public Builder clearDeviceData() {
+          bitField0_ = (bitField0_ & ~0x00000040);
+          deviceData_ = getDefaultInstance().getDeviceData();
+          onChanged();
+          return this;
+        }
+
+        // optional bytes device_data_signature = 8;
+        private com.google.protobuf.ByteString deviceDataSignature_ = com.google.protobuf.ByteString.EMPTY;
+        /**
+         * <code>optional bytes device_data_signature = 8;</code>
+         */
+        public boolean hasDeviceDataSignature() {
+          return ((bitField0_ & 0x00000080) == 0x00000080);
+        }
+        /**
+         * <code>optional bytes device_data_signature = 8;</code>
+         */
+        public com.google.protobuf.ByteString getDeviceDataSignature() {
+          return deviceDataSignature_;
+        }
+        /**
+         * <code>optional bytes device_data_signature = 8;</code>
+         */
+        public Builder setDeviceDataSignature(com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+          deviceDataSignature_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional bytes device_data_signature = 8;</code>
+         */
+        public Builder clearDeviceDataSignature() {
+          bitField0_ = (bitField0_ & ~0x00000080);
+          deviceDataSignature_ = getDefaultInstance().getDeviceDataSignature();
+          onChanged();
+          return this;
+        }
+
         // optional .hello.SimpleSensorBatch.GpsInfo gps = 10;
         private com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo gps_ = com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.getDefaultInstance();
         private com.google.protobuf.SingleFieldBuilder<
@@ -3208,7 +3376,7 @@ public final class InputProtos {
          * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
          */
         public boolean hasGps() {
-          return ((bitField0_ & 0x00000040) == 0x00000040);
+          return ((bitField0_ & 0x00000100) == 0x00000100);
         }
         /**
          * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
@@ -3233,7 +3401,7 @@ public final class InputProtos {
           } else {
             gpsBuilder_.setMessage(value);
           }
-          bitField0_ |= 0x00000040;
+          bitField0_ |= 0x00000100;
           return this;
         }
         /**
@@ -3247,7 +3415,7 @@ public final class InputProtos {
           } else {
             gpsBuilder_.setMessage(builderForValue.build());
           }
-          bitField0_ |= 0x00000040;
+          bitField0_ |= 0x00000100;
           return this;
         }
         /**
@@ -3255,7 +3423,7 @@ public final class InputProtos {
          */
         public Builder mergeGps(com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo value) {
           if (gpsBuilder_ == null) {
-            if (((bitField0_ & 0x00000040) == 0x00000040) &&
+            if (((bitField0_ & 0x00000100) == 0x00000100) &&
                 gps_ != com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.getDefaultInstance()) {
               gps_ =
                 com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.newBuilder(gps_).mergeFrom(value).buildPartial();
@@ -3266,7 +3434,7 @@ public final class InputProtos {
           } else {
             gpsBuilder_.mergeFrom(value);
           }
-          bitField0_ |= 0x00000040;
+          bitField0_ |= 0x00000100;
           return this;
         }
         /**
@@ -3279,14 +3447,14 @@ public final class InputProtos {
           } else {
             gpsBuilder_.clear();
           }
-          bitField0_ = (bitField0_ & ~0x00000040);
+          bitField0_ = (bitField0_ & ~0x00000100);
           return this;
         }
         /**
          * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
          */
         public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.Builder getGpsBuilder() {
-          bitField0_ |= 0x00000040;
+          bitField0_ |= 0x00000100;
           onChanged();
           return getGpsFieldBuilder().getBuilder();
         }
@@ -4056,18 +4224,20 @@ public final class InputProtos {
       "\024\n\020AMBIENT_HUMIDITY\020\001\022\021\n\rAMBIENT_LIGHT\020\002" +
       "\022\024\n\020AMBIENT_DECIBELS\020\003\022\027\n\023AMBIENT_AIR_QU" +
       "ALITY\020\004\022\007\n\003GPS\020\005\022\026\n\022PHONE_ACCELERATION\020\006",
-      "\022\024\n\020PHONE_STEP_COUNT\020\007\"\223\003\n\021SimpleSensorB" +
+      "\022\024\n\020PHONE_STEP_COUNT\020\007\"\307\003\n\021SimpleSensorB" +
       "atch\022\021\n\tdevice_id\030\001 \001(\t\022<\n\007samples\030\002 \003(\013" +
       "2+.hello.SimpleSensorBatch.SimpleSensorS" +
       "ample\032O\n\007GpsInfo\022\020\n\010latitude\030\001 \001(\002\022\021\n\tlo" +
       "ngitude\030\002 \001(\002\022\020\n\010accuracy\030\003 \001(\002\022\r\n\005speed" +
-      "\030\004 \001(\002\032\333\001\n\022SimpleSensorSample\022\021\n\ttimesta" +
+      "\030\004 \001(\002\032\217\002\n\022SimpleSensorSample\022\021\n\ttimesta" +
       "mp\030\001 \001(\003\022\033\n\023ambient_temperature\030\002 \001(\002\022\030\n" +
       "\020ambient_humidity\030\003 \001(\002\022\025\n\rambient_light" +
       "\030\004 \001(\002\022\030\n\020ambient_decibels\030\005 \001(\002\022\033\n\023ambi" +
-      "ent_air_quality\030\006 \001(\002\022-\n\003gps\030\n \001(\0132 .hel",
-      "lo.SimpleSensorBatch.GpsInfoB+\n\032com.hell" +
-      "o.suripu.api.inputB\013InputProtosH\001"
+      "ent_air_quality\030\006 \001(\002\022\023\n\013device_data\030\007 \001",
+      "(\014\022\035\n\025device_data_signature\030\010 \001(\014\022-\n\003gps" +
+      "\030\n \001(\0132 .hello.SimpleSensorBatch.GpsInfo" +
+      "B+\n\032com.hello.suripu.api.inputB\013InputPro" +
+      "tosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -4103,7 +4273,7 @@ public final class InputProtos {
           internal_static_hello_SimpleSensorBatch_SimpleSensorSample_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_SimpleSensorBatch_SimpleSensorSample_descriptor,
-              new java.lang.String[] { "Timestamp", "AmbientTemperature", "AmbientHumidity", "AmbientLight", "AmbientDecibels", "AmbientAirQuality", "Gps", });
+              new java.lang.String[] { "Timestamp", "AmbientTemperature", "AmbientHumidity", "AmbientLight", "AmbientDecibels", "AmbientAirQuality", "DeviceData", "DeviceDataSignature", "Gps", });
           return null;
         }
       };

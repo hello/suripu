@@ -13,7 +13,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='Input.proto',
   package='hello',
-  serialized_pb='\n\x0bInput.proto\x12\x05hello\"\x8f\x03\n\x11SensorSampleBatch\x12\x36\n\x07samples\x18\x01 \x03(\x0b\x32%.hello.SensorSampleBatch.SensorSample\x12\x11\n\tdevice_id\x18\x02 \x01(\t\x1a\xae\x02\n\x0cSensorSample\x12\x45\n\x0bsensor_type\x18\x01 \x01(\x0e\x32\x30.hello.SensorSampleBatch.SensorSample.SensorType\x12\x11\n\ttimestamp\x18\x02 \x01(\x05\x12\r\n\x05value\x18\x03 \x01(\x0c\"\xb4\x01\n\nSensorType\x12\x17\n\x13\x41MBIENT_TEMPERATURE\x10\x00\x12\x14\n\x10\x41MBIENT_HUMIDITY\x10\x01\x12\x11\n\rAMBIENT_LIGHT\x10\x02\x12\x14\n\x10\x41MBIENT_DECIBELS\x10\x03\x12\x17\n\x13\x41MBIENT_AIR_QUALITY\x10\x04\x12\x07\n\x03GPS\x10\x05\x12\x16\n\x12PHONE_ACCELERATION\x10\x06\x12\x14\n\x10PHONE_STEP_COUNT\x10\x07\"\x93\x03\n\x11SimpleSensorBatch\x12\x11\n\tdevice_id\x18\x01 \x01(\t\x12<\n\x07samples\x18\x02 \x03(\x0b\x32+.hello.SimpleSensorBatch.SimpleSensorSample\x1aO\n\x07GpsInfo\x12\x10\n\x08latitude\x18\x01 \x01(\x02\x12\x11\n\tlongitude\x18\x02 \x01(\x02\x12\x10\n\x08\x61\x63\x63uracy\x18\x03 \x01(\x02\x12\r\n\x05speed\x18\x04 \x01(\x02\x1a\xdb\x01\n\x12SimpleSensorSample\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\x1b\n\x13\x61mbient_temperature\x18\x02 \x01(\x02\x12\x18\n\x10\x61mbient_humidity\x18\x03 \x01(\x02\x12\x15\n\rambient_light\x18\x04 \x01(\x02\x12\x18\n\x10\x61mbient_decibels\x18\x05 \x01(\x02\x12\x1b\n\x13\x61mbient_air_quality\x18\x06 \x01(\x02\x12-\n\x03gps\x18\n \x01(\x0b\x32 .hello.SimpleSensorBatch.GpsInfoB+\n\x1a\x63om.hello.suripu.api.inputB\x0bInputProtosH\x01')
+  serialized_pb='\n\x0bInput.proto\x12\x05hello\"\x8f\x03\n\x11SensorSampleBatch\x12\x36\n\x07samples\x18\x01 \x03(\x0b\x32%.hello.SensorSampleBatch.SensorSample\x12\x11\n\tdevice_id\x18\x02 \x01(\t\x1a\xae\x02\n\x0cSensorSample\x12\x45\n\x0bsensor_type\x18\x01 \x01(\x0e\x32\x30.hello.SensorSampleBatch.SensorSample.SensorType\x12\x11\n\ttimestamp\x18\x02 \x01(\x05\x12\r\n\x05value\x18\x03 \x01(\x0c\"\xb4\x01\n\nSensorType\x12\x17\n\x13\x41MBIENT_TEMPERATURE\x10\x00\x12\x14\n\x10\x41MBIENT_HUMIDITY\x10\x01\x12\x11\n\rAMBIENT_LIGHT\x10\x02\x12\x14\n\x10\x41MBIENT_DECIBELS\x10\x03\x12\x17\n\x13\x41MBIENT_AIR_QUALITY\x10\x04\x12\x07\n\x03GPS\x10\x05\x12\x16\n\x12PHONE_ACCELERATION\x10\x06\x12\x14\n\x10PHONE_STEP_COUNT\x10\x07\"\xc7\x03\n\x11SimpleSensorBatch\x12\x11\n\tdevice_id\x18\x01 \x01(\t\x12<\n\x07samples\x18\x02 \x03(\x0b\x32+.hello.SimpleSensorBatch.SimpleSensorSample\x1aO\n\x07GpsInfo\x12\x10\n\x08latitude\x18\x01 \x01(\x02\x12\x11\n\tlongitude\x18\x02 \x01(\x02\x12\x10\n\x08\x61\x63\x63uracy\x18\x03 \x01(\x02\x12\r\n\x05speed\x18\x04 \x01(\x02\x1a\x8f\x02\n\x12SimpleSensorSample\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\x1b\n\x13\x61mbient_temperature\x18\x02 \x01(\x02\x12\x18\n\x10\x61mbient_humidity\x18\x03 \x01(\x02\x12\x15\n\rambient_light\x18\x04 \x01(\x02\x12\x18\n\x10\x61mbient_decibels\x18\x05 \x01(\x02\x12\x1b\n\x13\x61mbient_air_quality\x18\x06 \x01(\x02\x12\x13\n\x0b\x64\x65vice_data\x18\x07 \x01(\x0c\x12\x1d\n\x15\x64\x65vice_data_signature\x18\x08 \x01(\x0c\x12-\n\x03gps\x18\n \x01(\x0b\x32 .hello.SimpleSensorBatch.GpsInfoB+\n\x1a\x63om.hello.suripu.api.inputB\x0bInputProtosH\x01')
 
 
 
@@ -238,7 +238,21 @@ _SIMPLESENSORBATCH_SIMPLESENSORSAMPLE = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='gps', full_name='hello.SimpleSensorBatch.SimpleSensorSample.gps', index=6,
+      name='device_data', full_name='hello.SimpleSensorBatch.SimpleSensorSample.device_data', index=6,
+      number=7, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value="",
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='device_data_signature', full_name='hello.SimpleSensorBatch.SimpleSensorSample.device_data_signature', index=7,
+      number=8, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value="",
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='gps', full_name='hello.SimpleSensorBatch.SimpleSensorSample.gps', index=8,
       number=10, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -254,7 +268,7 @@ _SIMPLESENSORBATCH_SIMPLESENSORSAMPLE = _descriptor.Descriptor(
   is_extendable=False,
   extension_ranges=[],
   serialized_start=609,
-  serialized_end=828,
+  serialized_end=880,
 )
 
 _SIMPLESENSORBATCH = _descriptor.Descriptor(
@@ -288,7 +302,7 @@ _SIMPLESENSORBATCH = _descriptor.Descriptor(
   is_extendable=False,
   extension_ranges=[],
   serialized_start=425,
-  serialized_end=828,
+  serialized_end=880,
 )
 
 _SENSORSAMPLEBATCH_SENSORSAMPLE.fields_by_name['sensor_type'].enum_type = _SENSORSAMPLEBATCH_SENSORSAMPLE_SENSORTYPE

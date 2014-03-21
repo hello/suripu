@@ -35,15 +35,14 @@ database:
 
   # the maximum lifetime of an idle connection
   closeConnectionIfIdleFor: 1 minute
+http:
 
-# Logging settings.
-logging:
+  # The port on which the HTTP server listens for service requests.
+  # Because Java cannot drop privileges in a POSIX system, these
+  # ports cannot be in the range 1-1024. A port value of 0 will
+  # make the OS use an arbitrary unused port.
+  port: 9999
 
-  # The default level of all loggers. Can be OFF, ERROR, WARN, INFO, DEBUG, TRACE, or ALL.
-  level: INFO
-
-  # Logger-specific levels.
-  loggers:
-
-    # Sets the level for 'com.example.app' to DEBUG.
-    com.hello.suripu: DEBUG
+  # The port on which the HTTP server listens for administrative
+  # requests. Subject to the same limitations as "port".
+  adminPort: 9998

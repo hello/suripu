@@ -11,6 +11,8 @@
     <modules>
         <module>suripu-service</module>
         <module>suripu-api</module>
+        <module>suripu-app</module>
+        <module>suripu-core</module>
     </modules>
 
 
