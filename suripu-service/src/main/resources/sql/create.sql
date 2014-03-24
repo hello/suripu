@@ -10,8 +10,7 @@ CREATE TABLE device_sensors (
 
 CREATE UNIQUE INDEX uniq_device_ts on device_sensors(device_id, ts);
 
-GRANT ALL PRIVILEGES ON sensor_samples TO ingress_user;
-GRANT ALL PRIVILEGES ON sensor_samples TO ingress_user;
+GRANT ALL PRIVILEGES ON device_sensors TO ingress_user;
 
 CREATE ROLE ingress_user WITH LOGIN ENCRYPTED PASSWORD 'hello ingress user' CREATEDB;
 ALTER ROLE ingress_user REPLICATION;
