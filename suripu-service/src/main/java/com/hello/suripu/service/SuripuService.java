@@ -7,7 +7,6 @@ import com.hello.suripu.service.configuration.SuripuConfiguration;
 import com.hello.suripu.service.db.EventDAO;
 import com.hello.suripu.service.db.JodaArgumentFactory;
 import com.hello.suripu.service.resources.ReceiveResource;
-import com.sun.tools.jdi.resources.jdi;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
