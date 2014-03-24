@@ -29,17 +29,16 @@ public class SuripuService extends Service<SuripuConfiguration> {
     @Override
     public void run(SuripuConfiguration config, Environment environment) throws Exception {
         environment.addProvider(new JacksonProtobufProvider());
-        final DBIFactory factory = new DBIFactory();
 
+        final DBIFactory factory = new DBIFactory();
         final DBI jdbi = factory.build(environment, config.getDatabaseConfiguration(), "postgresql");
         jdbi.registerArgumentFactory(new JodaArgumentFactory());
+
         final EventDAO dao = jdbi.onDemand(EventDAO.class);
 
         environment.addResource(new ReceiveResource(dao));
 
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());
-
-
     }
 }

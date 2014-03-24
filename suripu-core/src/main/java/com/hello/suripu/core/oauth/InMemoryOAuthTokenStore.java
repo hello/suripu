@@ -1,9 +1,11 @@
 package com.hello.suripu.core.oauth;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> {
@@ -16,7 +18,9 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
     @Override
     public AccessToken storeAccessToken(final ClientDetails clientDetails) throws ClientAuthenticationException {
         // TODO: Generate token here
-        final String token = "hello";
+        final String token = clientDetails.accountId.toString();
+
+        LOGGER.debug("Generated token for {} = {}", clientDetails.accountId, token);
         tokens.put(token, clientDetails);
         final AccessToken accessToken = new AccessToken(token);
         return accessToken;
@@ -25,15 +29,20 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
     @Override
     public Optional<ClientDetails> getClientDetailsByCredentials(final ClientCredentials credentials) {
 
-
-        final ClientDetails clientDetails = tokens.get(credentials.token);
+        final ClientDetails clientDetails = tokens.get(credentials.tokenOrCode);
         if(clientDetails == null) {
-            LOGGER.warn("{} was not found in our token store", credentials.token);
+            LOGGER.warn("{} was not found in our token store", credentials.tokenOrCode);
             return Optional.absent();
         }
 
-        // TODO implement real validation
-        if(clientDetails.scopes.length == 0) {
+        final Set<OAuthScope> requiredScopes = Sets.newHashSet(credentials.scopes);
+        final Set<OAuthScope> grantedScopes = Sets.newHashSet(clientDetails.scopes);
+
+        // Compute intersection of granted scopes to required scopes
+        if(Sets.intersection(grantedScopes, requiredScopes).size() == 0) {
+            LOGGER.debug("{}", requiredScopes);
+            LOGGER.debug("{}", grantedScopes);
+            LOGGER.warn("Scopes don't match", credentials.tokenOrCode);
             return Optional.absent();
         }
 
@@ -42,10 +51,10 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
 
     @Override
     public ClientCredentials storeAuthorizationCode(final ClientDetails clientDetails) throws ClientAuthenticationException {
-        //TODO : generate code here
+        // TODO : generate code here
         final String code = "my new code";
         codes.put(code, clientDetails);
-        OAuthScope[] scopes = new OAuthScope[1];
+        final OAuthScope[] scopes = new OAuthScope[1];
         scopes[0] = OAuthScope.USER_BASIC;
         final ClientCredentials creds = new ClientCredentials(scopes, code);
         return creds;

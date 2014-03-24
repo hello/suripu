@@ -3,6 +3,10 @@ package com.hello.suripu.app.resources;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.Record;
 import com.hello.suripu.core.db.TimeSerieDAO;
+import com.hello.suripu.core.oauth.ClientDetails;
+import com.hello.suripu.core.oauth.OAuthScope;
+import com.hello.suripu.core.oauth.Scope;
+import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -23,14 +27,17 @@ public class HistoryResource {
     }
 
     @GET
+    @Timed
     @Path("/{days}")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Record> getRecords(@PathParam("days") Integer numDays) {
+    public List<Record> getRecords(
+            @Scope({OAuthScope.USER_EXTENDED, OAuthScope.USER_BASIC}) final ClientDetails clientDetails,
+            @PathParam("days") final Integer numDays) {
 
         final DateTime now = DateTime.now(DateTimeZone.UTC);
         final DateTime then = now.minusDays(numDays);
 
-        ImmutableList<Record> records = timeSerieDAO.getHistoricalData(123L, then, now);
+        final ImmutableList<Record> records = timeSerieDAO.getHistoricalData(clientDetails.accountId, then, now);
         return records;
     }
 }

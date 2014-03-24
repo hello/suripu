@@ -1,5 +1,6 @@
 package com.hello.suripu.app;
 
+import com.google.common.base.Optional;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.resources.AccountResource;
 import com.hello.suripu.app.resources.HistoryResource;
@@ -31,10 +32,15 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final OAuthTokenStore<AccessToken,ClientDetails, ClientCredentials> tokenStore = new InMemoryOAuthTokenStore();
 
+        final AccountDAOImpl accountDAO = new AccountDAOImpl();
+        final Optional<Account> accountOptional = accountDAO.getById(1L);
+
         // Temporary, don't have a register page
-        final Account account = new Account("tim@sayhello.com");
-        OAuthScope[] scopes = new OAuthScope[1];
+        final Account account = accountOptional.get();
+        final OAuthScope[] scopes = new OAuthScope[2];
         scopes[0] = OAuthScope.USER_BASIC;
+        scopes[1] = OAuthScope.USER_EXTENDED;
+
         final ClientDetails clientDetails = new ClientDetails(
                 "responseType",
                 "clientId",
@@ -48,7 +54,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         tokenStore.storeAccessToken(clientDetails);
         tokenStore.storeAuthorizationCode(clientDetails);
-        final AccountDAOImpl accountDAO = new AccountDAOImpl();
+
 
         final DBIFactory factory = new DBIFactory();
 
@@ -56,10 +62,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         jdbi.registerArgumentFactory(new JodaArgumentFactory());
         final TimeSerieDAO timeSerieDAO = jdbi.onDemand(TimeSerieDAO.class);
 
-
-//        environment.addProvider(new OAuthProvider<ClientDetails>(new OAuthAuthenticator(tokenStore), "protected-resources"));
-
-        environment.addProvider(new OAuthProvider<ClientDetails>(new OAuthAuthenticator(tokenStore), "blah"));
+        environment.addProvider(new OAuthProvider<ClientDetails>(new OAuthAuthenticator(tokenStore), "protected-resources"));
 
         environment.addResource(new OAuthResource(tokenStore));
         environment.addResource(new AccountResource(accountDAO));
