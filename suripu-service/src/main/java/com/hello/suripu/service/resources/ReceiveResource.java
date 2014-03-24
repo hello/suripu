@@ -38,28 +38,6 @@ public class ReceiveResource {
     @POST
     @Timed
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
-    public Response receiveData(@Valid InputProtos.SensorSampleBatch batch) {
-
-        ArrayList<Integer> sensor_ids = new ArrayList<Integer>();
-        ArrayList<DateTime> timestamps = new ArrayList<DateTime>();
-        ArrayList<Integer> values = new ArrayList<Integer>();
-        Long deviceId = Long.parseLong(batch.getDeviceId());
-
-        for(InputProtos.SensorSampleBatch.SensorSample sample : batch.getSamplesList()) {
-            sensor_ids.add(sample.getSensorType().getNumber());
-            DateTime dt = new DateTime((long) sample.getTimestamp() * 1000, DateTimeZone.UTC);
-            timestamps.add(dt);
-            values.add(Integer.valueOf(sample.getValue().toString()));
-        }
-
-        eventDAO.insertBatch(sensor_ids, deviceId, timestamps, values);
-        return Response.ok().build();
-    }
-
-    @POST
-    @Timed
-    @Path("/simple")
-    @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     public Response receiveSimpleData(@Valid InputProtos.SimpleSensorBatch batch) {
 
         for(InputProtos.SimpleSensorBatch.SimpleSensorSample sample : batch.getSamplesList()) {
