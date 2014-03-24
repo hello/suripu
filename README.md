@@ -1,7 +1,6 @@
 Endpoints for receiving app
 
     POST    /in (com.hello.suripu.service.resources.ReceiveResource)
-    POST    /in/simple (com.hello.suripu.service.resources.ReceiveResource)
     GET     /ping (com.hello.dropwizard.mikkusu.resources.PingResource)
     GET     /version (com.hello.dropwizard.mikkusu.resources.VersionResource)
 
