@@ -7,18 +7,20 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> {
 
     private final ConcurrentHashMap<String, ClientDetails> tokens = new ConcurrentHashMap<String, ClientDetails>();
     private final ConcurrentHashMap<String, ClientDetails> codes = new ConcurrentHashMap<String, ClientDetails>();
+    private final AtomicLong currentId = new AtomicLong();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryOAuthTokenStore.class);
 
     @Override
     public AccessToken storeAccessToken(final ClientDetails clientDetails) throws ClientAuthenticationException {
         // TODO: Generate token here
-        final String token = clientDetails.accountId.toString();
+        final String token = String.valueOf(currentId.incrementAndGet());
 
         LOGGER.debug("Generated token for {} = {}", clientDetails.accountId, token);
         tokens.put(token, clientDetails);
