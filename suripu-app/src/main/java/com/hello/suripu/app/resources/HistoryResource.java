@@ -10,11 +10,9 @@ import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.ArrayList;
 import java.util.List;
 
 @Path("/history")
@@ -31,7 +29,7 @@ public class HistoryResource {
     @Path("/{days}")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Record> getRecords(
-            @Scope({OAuthScope.USER_EXTENDED, OAuthScope.USER_BASIC}) final ClientDetails clientDetails,
+            @Scope({OAuthScope.SENSORS_BASIC}) final ClientDetails clientDetails,
             @PathParam("days") final Integer numDays) {
 
         final DateTime now = DateTime.now(DateTimeZone.UTC);
@@ -39,5 +37,13 @@ public class HistoryResource {
 
         final ImmutableList<Record> records = timeSerieDAO.getHistoricalData(clientDetails.accountId, then, now);
         return records;
+    }
+
+    @GET
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Record> getRecordsBetween(@QueryParam("from") Long from, @QueryParam("to") Long to) {
+
+        return new ArrayList<Record>();
     }
 }
