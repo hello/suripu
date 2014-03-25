@@ -3,18 +3,23 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>com.hello.suripu</groupId>
         <artifactId>suripu-parent</artifactId>
+        <groupId>com.hello.suripu</groupId>
         <version>0.1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>suripu-service</artifactId>
+    <artifactId>suripu-app</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>com.hello.suripu</groupId>
-            <artifactId>suripu-api</artifactId>
+            <artifactId>suripu-core</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.hello.suripu</groupId>
+            <artifactId>suripu-service</artifactId>
             <version>0.1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
@@ -25,32 +30,12 @@
         <dependency>
             <groupId>com.yammer.dropwizard</groupId>
             <artifactId>dropwizard-core</artifactId>
-            <version>${dropwizard.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-testing</artifactId>
-            <version>${dropwizard.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-auth</artifactId>
-            <version>${dropwizard.version}</version>
+            <version>0.6.2</version>
         </dependency>
         <dependency>
             <groupId>com.yammer.dropwizard</groupId>
             <artifactId>dropwizard-jdbi</artifactId>
-            <version>${dropwizard.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.yammer.metrics</groupId>
-            <artifactId>metrics-graphite</artifactId>
-            <version>2.2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hello.dropwizard</groupId>
-            <artifactId>dropwizard-mikkusu</artifactId>
-            <version>0.0.1</version>
+            <version>0.6.2</version>
         </dependency>
     </dependencies>
     <build>
@@ -82,7 +67,7 @@
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.hello.suripu.service.SuripuService</mainClass>
+                                    <mainClass>com.hello.suripu.app.SuripuApp</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>

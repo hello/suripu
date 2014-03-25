@@ -1,15 +1,10 @@
 database:
-  # the name of your JDBC driver
   driverClass: org.postgresql.Driver
-
-  # the username
-  user: tim
-
-  # the password
+  user: ingress_user
   password: hello ingress user
-
-  # the JDBC URL
-  url: jdbc:postgresql://localhost:5432/tim
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
+  properties:
+    hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
   # any properties specific to your JDBC driver:
   properties:
@@ -47,7 +42,6 @@ logging:
 
     # Sets the level for 'com.example.app' to DEBUG.
     com.hello.suripu: DEBUG
-
 http:
     port: 5555
     adminPort: 5556

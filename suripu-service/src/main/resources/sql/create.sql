@@ -1,15 +1,32 @@
-CREATE TABLE sensor_samples (
+CREATE TABLE device_sensors (
     id BIGSERIAL PRIMARY KEY,
     device_id BIGINT,
-    sensor_id INT,
-    ts TIMESTAMP,
-    val INT
+    ambient_temp FLOAT,
+    ambient_light FLOAT,
+    ambient_humidity FLOAT,
+    ambient_air_quality FLOAT,
+    ts TIMESTAMP
 );
 
-CREATE UNIQUE INDEX uniq_sample on sensor_samples(device_id, ts);
+CREATE UNIQUE INDEX uniq_device_ts on device_sensors(device_id, ts);
 
-GRANT ALL PRIVILEGES ON sensor_samples TO ingress_user;
-GRANT ALL PRIVILEGES ON sensor_samples TO ingress_user;
+GRANT ALL PRIVILEGES ON device_sensors TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE device_sensors_id_seq TO ingress_user;
 
 CREATE ROLE ingress_user WITH LOGIN ENCRYPTED PASSWORD 'hello ingress user' CREATEDB;
 ALTER ROLE ingress_user REPLICATION;
+
+
+
+--CREATE TABLE sensor_samples (
+--    id BIGSERIAL PRIMARY KEY,
+--    device_id BIGINT,
+--    sensor_id INT,
+--    ts TIMESTAMP,
+--    val INT
+--);
+--
+--CREATE UNIQUE INDEX uniq_sample on sensor_samples(device_id, ts);
+--
+--GRANT ALL PRIVILEGES ON sensor_samples TO ingress_user;
+--GRANT ALL PRIVILEGES ON sensor_samples TO ingress_user;
