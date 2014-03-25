@@ -19,7 +19,6 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,9 +46,9 @@ public class ReceiveResource {
             // TODO: check for length and do not parse if payload has no device data
 
             final InputStream inputStream = new ByteArrayInputStream(deviceData);
-            final DataInputStream dataInputStream = new DataInputStream(inputStream);
+            final DataInputStream dataInputStream = new DataInputStream(inputStream); // Shall we consider the endian?
 
-            int temp, light, humidity, airQuality;
+            int temp, light, humidity, airQuality; // Should be double?
             long timestamp;
 
             try {
