@@ -35,6 +35,7 @@ message SimpleSensorBatch {
         optional float longitude = 2;
         optional float accuracy = 3;
         optional float speed = 4;
+        optional string provider = 5;
     }
 
     message SimpleSensorSample {
