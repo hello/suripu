@@ -77,6 +77,6 @@ public class AccountResource {
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
     public Registration fakeRegistration() {
-        return new Registration("tim", "bart", "tim@sayhello.com", "123456789", Gender.OTHER, 167.0f, 72.0f, "America/Los_Angeles");
+        return new Registration("tim", "bart", "tim@sayhello.com", "123456789", Gender.OTHER, 167.0f, 72.0f, 32, "America/Los_Angeles");
     }
 }

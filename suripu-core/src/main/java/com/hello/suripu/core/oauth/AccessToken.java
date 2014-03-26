@@ -1,9 +1,11 @@
 package com.hello.suripu.core.oauth;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 
 public class AccessToken {
 
+    @JsonProperty("token")
     public final String token;
 
     public AccessToken(final String token) {

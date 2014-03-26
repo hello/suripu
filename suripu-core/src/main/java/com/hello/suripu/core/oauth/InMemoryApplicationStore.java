@@ -1,0 +1,62 @@
+package com.hello.suripu.core.oauth;
+
+import com.google.common.base.Optional;
+import com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class InMemoryApplicationStore implements ApplicationStore<Application, ClientDetails>{
+
+    private final ConcurrentHashMap<String, Application> apps = new ConcurrentHashMap<String, Application>();
+    private final ConcurrentHashMap<Long, String> applicationToUserIds = new ConcurrentHashMap<Long, String>();
+
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryApplicationStore.class);
+
+    @Override
+    public void storeApplication(final Application application) {
+        apps.put(application.clientId, application);
+        LOGGER.debug("Registered application {}", application.clientId);
+    }
+
+    @Override
+    public void activateForAccountId(Application application, Long accountId) {
+        // TODO: make sure one account can have multiple applications installed
+        applicationToUserIds.put(accountId, application.clientId);
+    }
+
+    @Override
+    public Optional<Application> getApplication(final ClientDetails clientDetails, final Long accountId) {
+        if(!apps.containsKey(clientDetails.clientId)) {
+            return Optional.absent();
+        }
+
+        // TODO : check that this works with multiple applications
+        if(!applicationToUserIds.get(accountId).equals(clientDetails.clientId)) {
+            LOGGER.warn("User {} hasn't installed application with clientId = {}", accountId, clientDetails.clientId);
+            return Optional.absent();
+        }
+
+        final Application application = apps.get(clientDetails.clientId);
+
+        final Set<OAuthScope> requiredScopes = Sets.newHashSet(clientDetails.scopes);
+        final Set<OAuthScope> grantedScopes = Sets.newHashSet(application.scopes);
+
+        if(Sets.intersection(requiredScopes, grantedScopes).size() != grantedScopes.size()) {
+            LOGGER.warn("Scopes not matching required scopes");
+            return Optional.absent();
+        }
+
+        if(!application.clientSecret.equals(clientDetails.secret)) {
+            LOGGER.warn("Secrets not matching");
+            return Optional.absent();
+        }
+
+        return Optional.of(application);
+    }
+
+
+}

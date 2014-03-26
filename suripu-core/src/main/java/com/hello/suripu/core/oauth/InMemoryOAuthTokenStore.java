@@ -13,6 +13,7 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
 
     private final ConcurrentHashMap<String, ClientDetails> tokens = new ConcurrentHashMap<String, ClientDetails>();
     private final ConcurrentHashMap<String, ClientDetails> codes = new ConcurrentHashMap<String, ClientDetails>();
+
     private final AtomicLong currentId = new AtomicLong();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryOAuthTokenStore.class);
@@ -70,4 +71,6 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
         }
         return Optional.of(clientDetails);
     }
+
+
 }

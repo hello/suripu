@@ -30,6 +30,9 @@ public class Registration {
     @JsonProperty("tz")
     public final TimeZone timeZone;
 
+    @JsonProperty("age")
+    public final Integer age;
+
     @JsonCreator
     public Registration(
             @JsonProperty("firstname") final String firstname,
@@ -39,6 +42,7 @@ public class Registration {
             @JsonProperty("gender") final Gender gender,
             @JsonProperty("height") final float height,
             @JsonProperty("weight") final float weight,
+            @JsonProperty("age") final Integer age,
             @JsonProperty("tz") final String timeZone
     ) {
         this.firstname = firstname;
@@ -47,8 +51,8 @@ public class Registration {
         this.password = password;
         this.gender = gender;
         this.height = height;
-
         this.weight = weight;
+        this.age = age;
         this.timeZone = TimeZone.getTimeZone(timeZone);
     }
 }

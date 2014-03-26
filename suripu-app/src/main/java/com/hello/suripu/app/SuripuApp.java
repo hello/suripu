@@ -4,7 +4,10 @@ import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.resources.AccountResource;
 import com.hello.suripu.app.resources.HistoryResource;
 import com.hello.suripu.app.resources.OAuthResource;
-import com.hello.suripu.core.db.AccountDAOImpl;
+import com.hello.suripu.core.Account;
+import com.hello.suripu.core.Gender;
+import com.hello.suripu.core.Registration;
+import com.hello.suripu.core.db.InMemoryAccountDAOImpl;
 import com.hello.suripu.core.db.TimeSerieDAO;
 import com.hello.suripu.core.oauth.*;
 import com.hello.suripu.service.db.JodaArgumentFactory;
@@ -29,26 +32,62 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
 
         final OAuthTokenStore<AccessToken,ClientDetails, ClientCredentials> tokenStore = new InMemoryOAuthTokenStore();
-        final AccountDAOImpl accountDAO = new AccountDAOImpl();
+        final InMemoryAccountDAOImpl accountDAO = new InMemoryAccountDAOImpl();
 
-        final OAuthScope[] scopes = new OAuthScope[2];
-        scopes[0] = OAuthScope.USER_BASIC;
-        scopes[1] = OAuthScope.USER_EXTENDED;
+        // TODO : remove everything below once we have persistent data stores.
+        final Registration registration = new Registration(
+                "tim",
+                "bart",
+                "tim@sayhello.com",
+                "my secret password",
+                Gender.OTHER,
+                200.0f,
+                99.0f,
+                99,
+                "America/Los_Angeles"
+        );
+
+        final Account account = accountDAO.register(registration);
+
+        final OAuthScope[] scopes = new OAuthScope[]{
+                OAuthScope.SENSORS_EXTENDED,
+                OAuthScope.USER_BASIC,
+                OAuthScope.USER_EXTENDED,
+                OAuthScope.SENSORS_BASIC
+        };
 
         final ClientDetails clientDetails = new ClientDetails(
                 "responseType",
-                "clientId",
-                "redirectUri",
+                "123456ClientId",
+                "http://hello.com/oauth",
                 scopes,
                 "state",
                 "code",
                 1L,
-                "secret"
+                "654321ClientSecret"
+        );
+
+        final Application helloOAuthApplication = new Application(
+                1L,
+                "Hello OAuth Application",
+                "123456ClientId",
+                "654321ClientSecret",
+                "http://hello.com/oauth",
+                scopes,
+                666L,
+                "Official Hello Application",
+                Boolean.FALSE
         );
 
         tokenStore.storeAccessToken(clientDetails);
         tokenStore.storeAuthorizationCode(clientDetails);
 
+
+        final InMemoryApplicationStore applicationStore = new InMemoryApplicationStore();
+        applicationStore.storeApplication(helloOAuthApplication);
+        applicationStore.activateForAccountId(helloOAuthApplication, account.id);
+
+        // TODO : remove everything above once we have persistent data stores.
 
         final DBIFactory factory = new DBIFactory();
 
@@ -58,7 +97,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addProvider(new OAuthProvider<ClientDetails>(new OAuthAuthenticator(tokenStore), "protected-resources"));
 
-        environment.addResource(new OAuthResource(tokenStore));
+        environment.addResource(new OAuthResource(tokenStore, applicationStore, accountDAO));
         environment.addResource(new AccountResource(accountDAO, tokenStore));
         environment.addResource(new HistoryResource(timeSerieDAO));
     }
