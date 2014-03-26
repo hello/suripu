@@ -2,14 +2,22 @@ package com.hello.suripu.core.oauth;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import org.joda.time.DateTime;
 
 public class AccessToken {
 
-    @JsonProperty("token")
+    @JsonProperty("access_token")
     public final String token;
 
-    public AccessToken(final String token) {
+    @JsonProperty("token_type")
+    public final String tokenType = "Bearer";
+
+    @JsonProperty("issued_at")
+    public final Long issuedAt;
+
+    public AccessToken(final String token, final Long issuedAt) {
         this.token = token;
+        this.issuedAt = issuedAt;
     }
 
     @Override
@@ -31,6 +39,7 @@ public class AccessToken {
     public String toString() {
         return Objects.toStringHelper(AccessToken.class)
                 .add("token", token)
+                .add("token_type", token)
                 .toString();
     }
 }

@@ -2,6 +2,9 @@ package com.hello.suripu.service.resources;
 
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
+import com.hello.suripu.core.oauth.ClientDetails;
+import com.hello.suripu.core.oauth.OAuthScope;
+import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.service.db.EventDAO;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -37,7 +40,10 @@ public class ReceiveResource {
     @POST
     @Timed
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
-    public Response receiveSimpleData(@Valid InputProtos.SimpleSensorBatch batch) {
+    public Response receiveSimpleData(
+            @Valid InputProtos.SimpleSensorBatch batch,
+            @Scope({OAuthScope.SENSORS_WRITE}) ClientDetails clientDetails
+    ){
 
         for(InputProtos.SimpleSensorBatch.SimpleSensorSample sample : batch.getSamplesList()) {
             final Long deviceId = Long.parseLong(batch.getDeviceId());

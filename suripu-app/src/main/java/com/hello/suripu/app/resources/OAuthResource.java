@@ -14,7 +14,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 
-@Path("/oauth")
+@Path("/oauth2")
 public class OAuthResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OAuthResource.class);
@@ -33,6 +33,7 @@ public class OAuthResource {
     }
 
     @POST
+    @Path("/token")
     @Timed
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
@@ -44,7 +45,6 @@ public class OAuthResource {
                 @FormParam("client_secret") String clientSecret,
                 @FormParam("username") String username,
                 @FormParam("password") String password) {
-
 
         if(grantType == null) {
             return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
@@ -63,9 +63,24 @@ public class OAuthResource {
             }
 
             final Account account = accountOptional.get();
-            OAuthScope[] scopes = new OAuthScope[]{OAuthScope.USER_BASIC, OAuthScope.USER_EXTENDED, OAuthScope.SENSORS_EXTENDED, OAuthScope.SENSORS_BASIC};
+            final OAuthScope[] scopes = new OAuthScope[]{
+                    OAuthScope.USER_BASIC,
+                    OAuthScope.USER_EXTENDED,
+                    OAuthScope.SENSORS_BASIC,
+                    OAuthScope.SENSORS_EXTENDED
+            };
 
-            final ClientDetails details = new ClientDetails("password", clientId, redirectUri, scopes, "", code, account.id, clientSecret);
+            // Important : when using password flow, we should not send / nor expect the client_secret
+            final ClientDetails details = new ClientDetails(
+                    grantType.getType(),
+                    clientId,
+                    redirectUri,
+                    scopes,
+                    "",
+                    code,
+                    account.id,
+                    clientSecret
+            );
 
             final Optional<Application> applicationOptional = applicationStore.getApplication(details, account.id);
             if(!applicationOptional.isPresent()) {
@@ -82,16 +97,14 @@ public class OAuthResource {
                 return Response.serverError().build();
             }
 
+            LOGGER.debug("{}", accessToken);
             return Response.ok().entity(accessToken).build();
-
         }
 
         // We only support password grant at the moment
         return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
             .type(MediaType.TEXT_PLAIN_TYPE).build();
     }
-
-
 
     @GET
     @Path("/authorize")
@@ -111,7 +124,7 @@ public class OAuthResource {
         final OAuthScope[] scopes = new OAuthScope[1];
         scopes[0] = OAuthScope.USER_BASIC;
         final ClientDetails clientDetails = new ClientDetails(
-                "responseType",
+                GrantTypeParam.GrantType.AUTH_CODE,
                 clientId,
                 redirectUri,
                 scopes,

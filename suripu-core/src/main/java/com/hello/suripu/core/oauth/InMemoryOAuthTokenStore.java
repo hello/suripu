@@ -2,6 +2,7 @@ package com.hello.suripu.core.oauth;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +26,7 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
 
         LOGGER.debug("Generated token for {} = {}", clientDetails.accountId, token);
         tokens.put(token, clientDetails);
-        final AccessToken accessToken = new AccessToken(token);
+        final AccessToken accessToken = new AccessToken(token, DateTime.now().getMillis() / 1000);
         return accessToken;
     }
 
@@ -41,8 +42,9 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
         final Set<OAuthScope> requiredScopes = Sets.newHashSet(credentials.scopes);
         final Set<OAuthScope> grantedScopes = Sets.newHashSet(clientDetails.scopes);
 
-        // Compute intersection of granted scopes to required scopes
-        if(Sets.intersection(grantedScopes, requiredScopes).size() == 0) {
+
+        // Make sure we have all the permissions
+        if(!grantedScopes.containsAll(requiredScopes)) {
             LOGGER.debug("{}", requiredScopes);
             LOGGER.debug("{}", grantedScopes);
             LOGGER.warn("Scopes don't match", credentials.tokenOrCode);

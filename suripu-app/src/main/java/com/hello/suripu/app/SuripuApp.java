@@ -50,22 +50,11 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final Account account = accountDAO.register(registration);
 
         final OAuthScope[] scopes = new OAuthScope[]{
-                OAuthScope.SENSORS_EXTENDED,
                 OAuthScope.USER_BASIC,
                 OAuthScope.USER_EXTENDED,
-                OAuthScope.SENSORS_BASIC
+                OAuthScope.SENSORS_BASIC,
+                OAuthScope.SENSORS_EXTENDED,
         };
-
-        final ClientDetails clientDetails = new ClientDetails(
-                "responseType",
-                "123456ClientId",
-                "http://hello.com/oauth",
-                scopes,
-                "state",
-                "code",
-                1L,
-                "654321ClientSecret"
-        );
 
         final Application helloOAuthApplication = new Application(
                 1L,
@@ -78,10 +67,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 "Official Hello Application",
                 Boolean.FALSE
         );
-
-        tokenStore.storeAccessToken(clientDetails);
-        tokenStore.storeAuthorizationCode(clientDetails);
-
 
         final InMemoryApplicationStore applicationStore = new InMemoryApplicationStore();
         applicationStore.storeApplication(helloOAuthApplication);

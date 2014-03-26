@@ -57,7 +57,8 @@ public class AccountResource {
         scopes[1] = OAuthScope.USER_EXTENDED;
 
         try {
-            final AccessToken token = tokenStore.storeAccessToken(new ClientDetails("responseType",
+            final AccessToken token = tokenStore.storeAccessToken(
+                    new ClientDetails(GrantTypeParam.GrantType.AUTH_CODE,
                     "clientId",
                     "redirectUri",
                     scopes,

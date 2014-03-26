@@ -45,12 +45,13 @@ public class InMemoryApplicationStore implements ApplicationStore<Application, C
         final Set<OAuthScope> requiredScopes = Sets.newHashSet(clientDetails.scopes);
         final Set<OAuthScope> grantedScopes = Sets.newHashSet(application.scopes);
 
-        if(Sets.intersection(requiredScopes, grantedScopes).size() != grantedScopes.size()) {
+        if(!grantedScopes.containsAll(requiredScopes)) {
             LOGGER.warn("Scopes not matching required scopes");
             return Optional.absent();
         }
 
-        if(!application.clientSecret.equals(clientDetails.secret)) {
+        // We only need the client_secret when not using Password flow
+        if(clientDetails.responseType.equals("password") && !application.clientSecret.equals(clientDetails.secret)) {
             LOGGER.warn("Secrets not matching");
             return Optional.absent();
         }

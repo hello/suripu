@@ -4,7 +4,7 @@ import com.google.common.base.Objects;
 
 public class ClientDetails{
 
-    public final String responseType;
+    public final GrantTypeParam.GrantType responseType;
     public final String clientId;
     public final String redirectUri;
     public final OAuthScope[] scopes;
@@ -13,7 +13,7 @@ public class ClientDetails{
     public final Long accountId;
     public final String secret;
 
-    public ClientDetails(String responseType, String clientId, String redirectUri, OAuthScope[] scopes, String state, String code, Long accountId, String secret) {
+    public ClientDetails(GrantTypeParam.GrantType responseType, String clientId, String redirectUri, OAuthScope[] scopes, String state, String code, Long accountId, String secret) {
         this.responseType = responseType;
         this.clientId = clientId;
         this.redirectUri = redirectUri;
