@@ -16,7 +16,21 @@ GRANT ALL PRIVILEGES ON SEQUENCE device_sensors_id_seq TO ingress_user;
 CREATE ROLE ingress_user WITH LOGIN ENCRYPTED PASSWORD 'hello ingress user' CREATEDB;
 ALTER ROLE ingress_user REPLICATION;
 
+CREATE TABLE accounts (
+    id SERIAL PRIMARY KEY,
+    firstname VARCHAR (100),
+    lastname VARCHAR (100),
+    username VARCHAR (100),
+    email VARCHAR (255),
+    password_hash CHAR (60),
+    created TIMESTAMP,
+    height SMALLINT,
+    weight SMALLINT,
+    age SMALLINT,
+    tz VARCHAR (100)
+);
 
+CREATE UNIQUE INDEX uniq_email on accounts(email);
 
 --CREATE TABLE sensor_samples (
 --    id BIGSERIAL PRIMARY KEY,
