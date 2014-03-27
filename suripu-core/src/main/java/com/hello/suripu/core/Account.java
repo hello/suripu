@@ -23,6 +23,13 @@ public class Account {
     @JsonIgnore
     public final String password;
 
+    /**
+     * Account class
+     * @param id
+     * @param email
+     * @param password
+     * @param timeZone
+     */
     public Account(final Long id,final String email,  final String password, final TimeZone timeZone) {
         this.id = id;
         this.email = email;
@@ -30,6 +37,12 @@ public class Account {
         this.timeZone = timeZone;
     }
 
+    /**
+     * Transform registration to account
+     * @param registration
+     * @param id
+     * @return
+     */
     public static Account fromRegistration(final Registration registration, final Long id) {
         return new Account(id, registration.email, registration.password, registration.timeZone);
     }

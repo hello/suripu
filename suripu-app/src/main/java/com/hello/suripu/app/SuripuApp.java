@@ -7,7 +7,8 @@ import com.hello.suripu.app.resources.OAuthResource;
 import com.hello.suripu.core.Account;
 import com.hello.suripu.core.Gender;
 import com.hello.suripu.core.Registration;
-import com.hello.suripu.core.db.InMemoryAccountDAOImpl;
+import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.core.db.TimeSerieDAO;
 import com.hello.suripu.core.oauth.*;
 import com.hello.suripu.service.db.JodaArgumentFactory;
@@ -30,15 +31,19 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
     @Override
     public void run(SuripuAppConfiguration config, Environment environment) throws Exception {
 
-
-        final OAuthTokenStore<AccessToken,ClientDetails, ClientCredentials> tokenStore = new InMemoryOAuthTokenStore();
-        final InMemoryAccountDAOImpl accountDAO = new InMemoryAccountDAOImpl();
+        final DBIFactory factory = new DBIFactory();
+        final DBI jdbi = factory.build(environment, config.getDatabaseConfiguration(), "postgresql");
+        jdbi.registerArgumentFactory(new JodaArgumentFactory());
+        final TimeSerieDAO timeSerieDAO = jdbi.onDemand(TimeSerieDAO.class);
+        final AccountDAO accountDAO = jdbi.onDemand(AccountDAOImpl.class);
 
         // TODO : remove everything below once we have persistent data stores.
+        final OAuthTokenStore<AccessToken,ClientDetails, ClientCredentials> tokenStore = new InMemoryOAuthTokenStore();
+
         final Registration registration = new Registration(
-                "tim",
-                "bart",
-                "tim@sayhello.com",
+                "pang",
+                "wu",
+                "pang@sayhello.com",
                 "my secret password",
                 Gender.OTHER,
                 200.0f,
@@ -47,7 +52,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 "America/Los_Angeles"
         );
 
-        final Account account = accountDAO.register(registration);
+        final Registration securedRegistration = Registration.encryptPassword(registration);
+
+        final Account account = accountDAO.register(securedRegistration);
 
         final OAuthScope[] scopes = new OAuthScope[]{
                 OAuthScope.USER_BASIC,
@@ -74,11 +81,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         // TODO : remove everything above once we have persistent data stores.
 
-        final DBIFactory factory = new DBIFactory();
-
-        final DBI jdbi = factory.build(environment, config.getDatabaseConfiguration(), "postgresql");
-        jdbi.registerArgumentFactory(new JodaArgumentFactory());
-        final TimeSerieDAO timeSerieDAO = jdbi.onDemand(TimeSerieDAO.class);
 
         environment.addProvider(new OAuthProvider<ClientDetails>(new OAuthAuthenticator(tokenStore), "protected-resources"));
 

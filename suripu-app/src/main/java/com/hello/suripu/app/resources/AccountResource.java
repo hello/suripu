@@ -50,11 +50,10 @@ public class AccountResource {
     public AccessToken register(@Valid final Registration registration) {
         LOGGER.info("{}", registration.gender);
 
-        final Account account = accountDAO.register(registration);
+        final Registration securedRegistration = Registration.encryptPassword(registration);
+        final Account account = accountDAO.register(securedRegistration);
 
-        final OAuthScope[] scopes = new OAuthScope[2];
-        scopes[0] = OAuthScope.USER_BASIC;
-        scopes[1] = OAuthScope.USER_EXTENDED;
+        final OAuthScope[] scopes = new OAuthScope[]{OAuthScope.USER_BASIC, OAuthScope.USER_EXTENDED};
 
         try {
             final AccessToken token = tokenStore.storeAccessToken(

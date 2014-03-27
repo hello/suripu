@@ -59,8 +59,9 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
         // TODO : generate code here
         final String code = "my new code";
         codes.put(code, clientDetails);
-        final OAuthScope[] scopes = new OAuthScope[1];
-        scopes[0] = OAuthScope.USER_BASIC;
+
+        // TODO : read scopes from application table!
+        final OAuthScope[] scopes = new OAuthScope[]{OAuthScope.USER_BASIC};
         final ClientCredentials creds = new ClientCredentials(scopes, code);
         return creds;
     }
