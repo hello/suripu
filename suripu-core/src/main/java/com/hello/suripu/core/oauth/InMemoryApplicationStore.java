@@ -7,19 +7,25 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
-public class InMemoryApplicationStore implements ApplicationStore<Application, ClientDetails>{
+public class InMemoryApplicationStore implements ApplicationStore<Application, ApplicationRegistration, ClientDetails>{
 
     private final ConcurrentHashMap<String, Application> apps = new ConcurrentHashMap<String, Application>();
     private final ConcurrentHashMap<Long, String> applicationToUserIds = new ConcurrentHashMap<Long, String>();
 
+    private final AtomicLong id = new AtomicLong();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryApplicationStore.class);
 
     @Override
-    public void storeApplication(final Application application) {
-        apps.put(application.clientId, application);
-        LOGGER.debug("Registered application {}", application.clientId);
+    public void register(final ApplicationRegistration registration) {
+        LOGGER.debug("{}", registration);
+        final long appId = id.incrementAndGet();
+        final Application app = Application.fromApplicationRegistration(registration, id.get());
+
+        apps.put(registration.clientId, app);
+        LOGGER.debug("Registered application ({}) {}", app.id, app.clientId);
     }
 
     @Override

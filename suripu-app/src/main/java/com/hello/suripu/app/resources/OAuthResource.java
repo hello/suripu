@@ -9,7 +9,13 @@ import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.*;
+import javax.ws.rs.POST;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
@@ -19,12 +25,12 @@ public class OAuthResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OAuthResource.class);
     private final OAuthTokenStore<AccessToken,ClientDetails, ClientCredentials> tokenStore;
-    private final ApplicationStore<Application, ClientDetails> applicationStore;
+    private final ApplicationStore applicationStore;
     private final AccountDAO accountDAO;
 
     public OAuthResource(
             final OAuthTokenStore<AccessToken,ClientDetails, ClientCredentials> tokenStore,
-            final ApplicationStore<Application, ClientDetails> applicationStore,
+            final ApplicationStore<Application, ApplicationRegistration, ClientDetails> applicationStore,
             final AccountDAO accountDAO) {
 
         this.tokenStore = tokenStore;

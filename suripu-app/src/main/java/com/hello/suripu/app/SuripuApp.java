@@ -1,6 +1,7 @@
 package com.hello.suripu.app;
 
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
+import com.hello.suripu.app.resources.ApplicationResource;
 import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.app.resources.AccountResource;
 import com.hello.suripu.app.resources.HistoryResource;
@@ -127,6 +128,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new OAuthResource(tokenStore, applicationStore, accountDAO));
         environment.addResource(new AccountResource(accountDAO, tokenStore));
         environment.addResource(new HistoryResource(timeSerieDAO));
+        environment.addResource(new ApplicationResource(applicationStore));
         environment.addHealthCheck(new DBIHealthCheck(jdbi, "account-db", "SELECT * FROM accounts ORDER BY ID DESC LIMIT 1;"));
     }
 }
