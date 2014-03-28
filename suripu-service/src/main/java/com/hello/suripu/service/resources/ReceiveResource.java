@@ -42,8 +42,7 @@ public class ReceiveResource {
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     public Response receiveSimpleData(
             @Valid InputProtos.SimpleSensorBatch batch,
-            @Scope({OAuthScope.SENSORS_WRITE}) ClientDetails clientDetails
-    ){
+            @Scope({OAuthScope.SENSORS_WRITE}) ClientDetails clientDetails) {
 
         for(InputProtos.SimpleSensorBatch.SimpleSensorSample sample : batch.getSamplesList()) {
             final Long deviceId = Long.parseLong(batch.getDeviceId());
@@ -53,6 +52,9 @@ public class ReceiveResource {
 
             final InputStream inputStream = new ByteArrayInputStream(deviceData);
             final DataInputStream dataInputStream = new DataInputStream(inputStream); // Shall we consider the endian?
+
+            final int offsetMillis = 0;
+
 
             int temp, light, humidity, airQuality; // Should be double?
             long timestamp;
@@ -81,7 +83,7 @@ public class ReceiveResource {
             );
 
             try {
-                eventDAO.insert(deviceId, rounded, temp, light, humidity, airQuality);
+                eventDAO.insert(deviceId, rounded, offsetMillis, temp, light, humidity, airQuality);
             } catch (UnableToExecuteStatementException exception) {
                 Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
                 if (!matcher.find()) {

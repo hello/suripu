@@ -34,8 +34,14 @@ public class InMemoryApplicationStore implements ApplicationStore<Application, C
             return Optional.absent();
         }
 
+        final String applicationId = applicationToUserIds.get(accountId);
+        if(applicationId == null) {
+            LOGGER.warn("Application not found");
+            return Optional.absent();
+        }
+
         // TODO : check that this works with multiple applications
-        if(!applicationToUserIds.get(accountId).equals(clientDetails.clientId)) {
+        if(!applicationId.equals(clientDetails.clientId)) {
             LOGGER.warn("User {} hasn't installed application with clientId = {}", accountId, clientDetails.clientId);
             return Optional.absent();
         }

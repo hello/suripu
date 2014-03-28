@@ -8,6 +8,8 @@ import com.google.common.base.Objects;
 
 import java.util.TimeZone;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class Account {
 
     @JsonIgnore
@@ -21,19 +23,23 @@ public class Account {
     public final TimeZone timeZone;
 
     @JsonIgnore
-    public final String password;
+    public final String passwordHash;
 
     /**
      * Account class
      * @param id
      * @param email
-     * @param password
+     * @param passwordHash
      * @param timeZone
      */
-    public Account(final Long id,final String email,  final String password, final TimeZone timeZone) {
+    public Account(final Long id,final String email,  final String passwordHash, final TimeZone timeZone) {
+        checkNotNull(id, "ID can not be null");
+        checkNotNull(email, "Email can not be null");
+        checkNotNull(passwordHash, "passwordHash can not be null");
+        checkNotNull(timeZone, "timezone can not be null");
         this.id = id;
         this.email = email;
-        this.password = password;
+        this.passwordHash = passwordHash;
         this.timeZone = timeZone;
     }
 
@@ -52,7 +58,7 @@ public class Account {
         return Objects.toStringHelper(Account.class)
                 .add("id", id)
                 .add("email", email)
-                .add("password", password)
+                .add("passwordHash", passwordHash)
                 .add("timezone", timeZone.getDisplayName())
                 .toString();
     }

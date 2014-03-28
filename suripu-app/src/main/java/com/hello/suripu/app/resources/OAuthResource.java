@@ -47,6 +47,7 @@ public class OAuthResource {
                 @FormParam("password") String password) {
 
         if(grantType == null) {
+            LOGGER.error("GrantType is null");
             return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
                     .type(MediaType.TEXT_PLAIN_TYPE).build();
         }
@@ -56,8 +57,10 @@ public class OAuthResource {
                         .type(MediaType.TEXT_PLAIN_TYPE).build();
             }
 
-            Optional<Account> accountOptional = accountDAO.exists(username, password);
+
+            final Optional<Account> accountOptional = accountDAO.exists(username, password);
             if(!accountOptional.isPresent()) {
+                LOGGER.error("Account wasn't found", username, password);
                 return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
                         .type(MediaType.TEXT_PLAIN_TYPE).build();
             }
