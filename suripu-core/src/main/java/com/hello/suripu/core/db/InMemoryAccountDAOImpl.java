@@ -10,12 +10,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class InMemoryAccountDAOImpl implements AccountDAO {
+public class InMemoryAccountDAOImpl implements AccountDAO{
     final AtomicLong currentId = new AtomicLong();
     final Map<Long, Account> store = new HashMap<Long, Account>();
     private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryAccountDAOImpl.class);
 
-    @Override
+
     public Optional<Account> getById(final Long id) {
         if(!store.containsKey(id)) {
             return Optional.absent();
@@ -27,6 +27,11 @@ public class InMemoryAccountDAOImpl implements AccountDAO {
     }
 
     @Override
+    public Optional<Account> getByEmail(String email) {
+        return null;
+    }
+
+
     public Account register(final Registration registration) {
         long id = currentId.incrementAndGet();
         final Account account = Account.fromRegistration(registration, id);
@@ -35,10 +40,10 @@ public class InMemoryAccountDAOImpl implements AccountDAO {
         return account;
     }
 
-    @Override
+
     public Optional<Account> exists(final String email, final String password) {
         for(Map.Entry<Long, Account> entry : store.entrySet()) {
-            if (entry.getValue().email.equals(email) && entry.getValue().password.equals(password)) {
+            if (entry.getValue().email.equals(email) && entry.getValue().passwordHash.equals(password)) {
                 return Optional.of(entry.getValue());
             }
         }

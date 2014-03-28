@@ -5,7 +5,10 @@ import com.hello.suripu.core.Account;
 import com.hello.suripu.core.Registration;
 
 public interface AccountDAO {
-    Optional<Account> getById(Long id);
+
+    Optional<Account> getById(final Long id);
+    Optional<Account> getByEmail(final String email);
     Account register(Registration registration);
-    Optional<Account> exists(String email, String password);
+    Optional<Account> exists(final String email, final String password);
+
 }
