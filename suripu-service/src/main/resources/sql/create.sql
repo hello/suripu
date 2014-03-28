@@ -5,7 +5,8 @@ CREATE TABLE device_sensors (
     ambient_light FLOAT,
     ambient_humidity FLOAT,
     ambient_air_quality FLOAT,
-    ts TIMESTAMP
+    ts TIMESTAMP,
+    offset_millis INTEGER
 );
 
 CREATE UNIQUE INDEX uniq_device_ts on device_sensors(device_id, ts);
