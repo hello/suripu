@@ -2,14 +2,26 @@ package com.hello.suripu.app;
 
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.resources.ApplicationResource;
+import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.ApplicationsDAO;
+import com.hello.suripu.core.db.PostgresIntegerArrayArgumentFactory;
+import com.hello.suripu.core.db.TimeSerieDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.app.resources.AccountResource;
 import com.hello.suripu.app.resources.HistoryResource;
 import com.hello.suripu.app.resources.OAuthResource;
-import com.hello.suripu.core.db.AccountDAO;
-import com.hello.suripu.core.db.TimeSerieDAO;
+
+
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
-import com.hello.suripu.core.oauth.*;
+
+import com.hello.suripu.core.oauth.AccessToken;
+import com.hello.suripu.core.oauth.ClientDetails;
+import com.hello.suripu.core.oauth.ClientCredentials;
+import com.hello.suripu.core.oauth.OAuthTokenStore;
+import com.hello.suripu.core.oauth.OAuthProvider;
+import com.hello.suripu.core.oauth.OAuthAuthenticator;
+import com.hello.suripu.core.oauth.InMemoryOAuthTokenStore;
+import com.hello.suripu.core.oauth.PersistentApplicationStore;
 import com.hello.suripu.service.db.JodaArgumentFactory;
 import com.librato.metrics.LibratoReporter;
 import com.yammer.dropwizard.Service;
@@ -45,55 +57,17 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final DBI jdbi = factory.build(environment, config.getDatabaseConfiguration(), "postgresql");
         jdbi.registerArgumentFactory(new JodaArgumentFactory());
         jdbi.registerContainerFactory(new OptionalContainerFactory());
+        jdbi.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
+
 
         final TimeSerieDAO timeSerieDAO = jdbi.onDemand(TimeSerieDAO.class);
         final AccountDAO accountDAO = jdbi.onDemand(AccountDAOImpl.class);
+        final ApplicationsDAO applicationsDAO = jdbi.onDemand(ApplicationsDAO.class);
+        final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
 
         // TODO : remove everything below once we have persistent data stores.
         final OAuthTokenStore<AccessToken,ClientDetails, ClientCredentials> tokenStore = new InMemoryOAuthTokenStore();
-
-
-//        final Registration registration = new Registration(
-//                "pang",
-//                "wu",
-//                String.format("pang+%s@sayhello.com", next),
-//                "my secret password",
-//                Gender.OTHER,
-//                200.0f,
-//                99.0f,
-//                99,
-//                "America/Los_Angeles"
-//        );
-//
-//        final Registration securedRegistration = Registration.encryptPassword(registration);
-//        final Account account = accountDAO.register(securedRegistration);
-//
-//        final OAuthScope[] scopes = new OAuthScope[]{
-//                OAuthScope.USER_BASIC,
-//                OAuthScope.USER_EXTENDED,
-//                OAuthScope.SENSORS_BASIC,
-//                OAuthScope.SENSORS_EXTENDED,
-//        };
-//
-//        final Application helloOAuthApplication = new Application(
-//                1L,
-//                "Hello OAuth Application",
-//                "123456ClientId",
-//                "654321ClientSecret",
-//                "http://hello.com/oauth",
-//                scopes,
-//                666L,
-//                "Official Hello Application",
-//                Boolean.FALSE
-//        );
-//
-        final InMemoryApplicationStore applicationStore = new InMemoryApplicationStore();
-//        applicationStore.storeApplication(helloOAuthApplication);
-//        applicationStore.activateForAccountId(helloOAuthApplication, 52L);
-
         // TODO : remove everything above once we have persistent data stores.
-
-
 
         // TODO : move this in the configuration file
         final String libratoUsername= "tim@sayhello.com";

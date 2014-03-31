@@ -2,9 +2,13 @@ package com.hello.suripu.core.oauth;
 
 import com.google.common.base.Optional;
 
-public interface ApplicationStore<A, B, C> {
+import java.util.List;
 
-    Optional<A> getApplication(C clientDetails, Long accountId);
-    void register(B registration);
+public interface ApplicationStore<A, B> {
+
+    Optional<A> getApplicationById(Long applicationId);
+    Optional<A> getApplicationByClientId(String clientId);
+    A register(B registration);
     void activateForAccountId(A application, Long accountId);
+    List<A> getApplicationsByDevId(Long accountId);
 }

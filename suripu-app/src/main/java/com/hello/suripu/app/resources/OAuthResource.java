@@ -30,7 +30,7 @@ public class OAuthResource {
 
     public OAuthResource(
             final OAuthTokenStore<AccessToken,ClientDetails, ClientCredentials> tokenStore,
-            final ApplicationStore<Application, ApplicationRegistration, ClientDetails> applicationStore,
+            final ApplicationStore<Application, ApplicationRegistration> applicationStore,
             final AccountDAO accountDAO) {
 
         this.tokenStore = tokenStore;
@@ -91,7 +91,11 @@ public class OAuthResource {
                     clientSecret
             );
 
-            final Optional<Application> applicationOptional = applicationStore.getApplication(details, account.id);
+
+            // FIXME: this is confusing, are we checking for application, or for installed application for this user
+            // FIXME: if that's what we are doing, how did they get a token in the first place?
+            // TODO: BE SMARTER
+            final Optional<Application> applicationOptional = applicationStore.getApplicationByClientId(details.clientId);
             if(!applicationOptional.isPresent()) {
                 return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
                         .type(MediaType.TEXT_PLAIN_TYPE).build();

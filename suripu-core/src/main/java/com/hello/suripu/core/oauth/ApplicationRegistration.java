@@ -2,6 +2,8 @@ package com.hello.suripu.core.oauth;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 public class ApplicationRegistration {
 
@@ -27,6 +29,9 @@ public class ApplicationRegistration {
     @JsonProperty("description")
     public final String description;
 
+    @JsonProperty("created")
+    public final DateTime created;
+
     @JsonCreator
     public ApplicationRegistration(
             @JsonProperty("name") final String name,
@@ -37,6 +42,19 @@ public class ApplicationRegistration {
             @JsonProperty("dev_account_id") final Long developerAccountId,
             @JsonProperty("description") final String description
     ) {
+        this(name, clientId, clientSecret, redirectURI, scopes, developerAccountId, description, DateTime.now(DateTimeZone.UTC));
+    }
+
+    public ApplicationRegistration(
+        final String name,
+        final String clientId,
+        final String clientSecret,
+        final String redirectURI,
+        final OAuthScope[] scopes,
+        final Long developerAccountId,
+        final String description,
+        final DateTime created
+    ) {
         this.name = name;
         this.clientId = clientId;
         this.clientSecret = clientSecret;
@@ -44,5 +62,6 @@ public class ApplicationRegistration {
         this.scopes = scopes;
         this.developerAccountId = developerAccountId;
         this.description = description;
+        this.created = created;
     }
 }
