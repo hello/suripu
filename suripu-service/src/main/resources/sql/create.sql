@@ -33,6 +33,24 @@ CREATE TABLE accounts (
 
 CREATE UNIQUE INDEX uniq_email on accounts(email);
 
+
+CREATE TABLE oauth_applications (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR (100),
+    client_id VARCHAR (100),
+    client_secret VARCHAR (100),
+    redirect_uri VARCHAR (255),
+    scopes int[],
+    dev_account_id BIGINT,
+    description VARCHAR(255),
+    published boolean,
+    created TIMESTAMP default current_timestamp
+);
+
+CREATE UNIQUE INDEX uniq_client_id on oauth_applications(client_id);
+
+CREATE INDEX dev_account_id_idx on oauth_applications(dev_account_id);
+
 --CREATE TABLE sensor_samples (
 --    id BIGSERIAL PRIMARY KEY,
 --    device_id BIGINT,
