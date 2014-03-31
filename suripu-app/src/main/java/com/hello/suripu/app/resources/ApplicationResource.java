@@ -18,9 +18,9 @@ import java.util.List;
 @Path("applications")
 public class ApplicationResource {
 
-    private final ApplicationStore<Application, ApplicationRegistration, ClientDetails> applicationStore;
+    private final ApplicationStore<Application, ApplicationRegistration> applicationStore;
 
-    public ApplicationResource(final ApplicationStore<Application, ApplicationRegistration, ClientDetails> applicationStore) {
+    public ApplicationResource(final ApplicationStore<Application, ApplicationRegistration> applicationStore) {
         this.applicationStore = applicationStore;
     }
 
@@ -36,9 +36,9 @@ public class ApplicationResource {
     @GET
     @Path("/{dev_account_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ImmutableList<Application> getApplicationsByDeveloper(@PathParam("dev_account_id") final Long devAccountId) {
-        final List<Application> applications = new ArrayList<Application>();
-        return ImmutableList.copyOf(applications);
+    public List<Application> getApplicationsByDeveloper(@PathParam("dev_account_id") final Long devAccountId) {
+
+        return applicationStore.getApplicationsByDevId(devAccountId);
     }
 
 
