@@ -13,4 +13,8 @@ public enum OAuthScope {
     private OAuthScope(int value) {
         this.value = value;
     }
+
+    public int getValue() {
+        return value;
+    }
 }
