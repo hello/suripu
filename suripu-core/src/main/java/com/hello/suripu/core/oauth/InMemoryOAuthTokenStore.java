@@ -3,16 +3,18 @@ package com.hello.suripu.core.oauth;
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> {
 
-    private final ConcurrentHashMap<String, ClientDetails> tokens = new ConcurrentHashMap<String, ClientDetails>();
+    private final ConcurrentHashMap<String, AccessToken> tokens = new ConcurrentHashMap<String, AccessToken>();
     private final ConcurrentHashMap<String, ClientDetails> codes = new ConcurrentHashMap<String, ClientDetails>();
 
     private final AtomicLong currentId = new AtomicLong();
@@ -25,23 +27,31 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
         final String token = String.valueOf(currentId.incrementAndGet());
 
         LOGGER.debug("Generated token for {} = {}", clientDetails.accountId, token);
-        tokens.put(token, clientDetails);
-        final AccessToken accessToken = new AccessToken(token, DateTime.now().getMillis() / 1000);
+        AccessToken accessToken = new AccessToken(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                300L,
+                DateTime.now(DateTimeZone.UTC),
+                clientDetails.accountId,
+                clientDetails.accountId, // TODO : make this the APP_ID
+                clientDetails.scopes
+        );
+
+        tokens.put(token, accessToken);
         return accessToken;
     }
 
     @Override
-    public Optional<ClientDetails> getClientDetailsByCredentials(final ClientCredentials credentials) {
+    public Optional<AccessToken> getClientDetailsByToken(final ClientCredentials credentials) {
 
-        final ClientDetails clientDetails = tokens.get(credentials.tokenOrCode);
-        if(clientDetails == null) {
+        final AccessToken accessToken = tokens.get(credentials.tokenOrCode);
+        if(accessToken == null) {
             LOGGER.warn("{} was not found in our token store", credentials.tokenOrCode);
             return Optional.absent();
         }
 
         final Set<OAuthScope> requiredScopes = Sets.newHashSet(credentials.scopes);
-        final Set<OAuthScope> grantedScopes = Sets.newHashSet(clientDetails.scopes);
-
+        final Set<OAuthScope> grantedScopes = Sets.newHashSet(accessToken.scopes);
 
         // Make sure we have all the permissions
         if(!grantedScopes.containsAll(requiredScopes)) {
@@ -51,7 +61,7 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
             return Optional.absent();
         }
 
-        return Optional.of(clientDetails);
+        return Optional.of(accessToken);
     }
 
     @Override

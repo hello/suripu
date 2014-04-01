@@ -13,7 +13,15 @@ public class ClientDetails{
     public final Long accountId;
     public final String secret;
 
-    public ClientDetails(GrantTypeParam.GrantType responseType, String clientId, String redirectUri, OAuthScope[] scopes, String state, String code, Long accountId, String secret) {
+    public ClientDetails(
+            final GrantTypeParam.GrantType responseType,
+            final String clientId,
+            final String redirectUri,
+            final OAuthScope[] scopes,
+            final String state,
+            final String code,
+            final Long accountId,
+            final String secret) {
         this.responseType = responseType;
         this.clientId = clientId;
         this.redirectUri = redirectUri;

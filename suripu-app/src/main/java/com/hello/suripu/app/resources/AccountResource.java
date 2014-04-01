@@ -5,16 +5,28 @@ import com.hello.suripu.core.Account;
 import com.hello.suripu.core.Gender;
 import com.hello.suripu.core.Registration;
 import com.hello.suripu.core.db.AccountDAO;
-import com.hello.suripu.core.oauth.*;
+import com.hello.suripu.core.oauth.AccessToken;
+import com.hello.suripu.core.oauth.ClientAuthenticationException;
+import com.hello.suripu.core.oauth.ClientCredentials;
+import com.hello.suripu.core.oauth.ClientDetails;
+import com.hello.suripu.core.oauth.GrantTypeParam;
+import com.hello.suripu.core.oauth.OAuthScope;
+import com.hello.suripu.core.oauth.OAuthTokenStore;
+import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.validation.Valid;
-import javax.ws.rs.*;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.TimeZone;
 
 @Path("/account")
 public class AccountResource {
@@ -32,9 +44,9 @@ public class AccountResource {
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
     public Account getAccount(
-            @Scope({OAuthScope.USER_EXTENDED}) ClientDetails clientDetails) {
+            @Scope({OAuthScope.USER_EXTENDED}) AccessToken accessToken) {
 
-        final Optional<Account> account = accountDAO.getById(clientDetails.accountId);
+        final Optional<Account> account = accountDAO.getById(accessToken.accountId);
         if(!account.isPresent()) {
             LOGGER.warn("Account not present");
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());

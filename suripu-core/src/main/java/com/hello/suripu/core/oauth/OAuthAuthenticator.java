@@ -3,9 +3,12 @@ package com.hello.suripu.core.oauth;
 import com.google.common.base.Optional;
 import com.yammer.dropwizard.auth.AuthenticationException;
 import com.yammer.dropwizard.auth.Authenticator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class OAuthAuthenticator implements Authenticator<ClientCredentials, ClientDetails>{
+public class OAuthAuthenticator implements Authenticator<ClientCredentials, AccessToken>{
     private OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore;
+    private static final Logger LOGGER = LoggerFactory.getLogger(OAuthAuthenticator.class);
 
     public OAuthAuthenticator(OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore) {
         super();
@@ -19,7 +22,7 @@ public class OAuthAuthenticator implements Authenticator<ClientCredentials, Clie
      * com.yammer.dropwizard.auth.Authenticator#authenticate(java.lang.Object)
      */
     @Override
-    public Optional<ClientDetails> authenticate(ClientCredentials credentials) throws AuthenticationException {
+    public Optional<AccessToken> authenticate(ClientCredentials credentials) throws AuthenticationException {
 
 
 //        final String stuff = bearer;
@@ -28,6 +31,10 @@ public class OAuthAuthenticator implements Authenticator<ClientCredentials, Clie
      * data for the student that authorized the client application (which we
      * currently don't do)
      */
-        return tokenStore.getClientDetailsByCredentials(credentials);
+        Optional<AccessToken> token = tokenStore.getClientDetailsByToken(credentials);
+        if(!token.isPresent()) {
+            LOGGER.warn("Token was not present in OAuthAuthenticator");
+        }
+        return token;
     }
 }

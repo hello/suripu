@@ -4,7 +4,16 @@ package com.hello.suripu.app.resources;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.Account;
 import com.hello.suripu.core.db.AccountDAO;
-import com.hello.suripu.core.oauth.*;
+import com.hello.suripu.core.oauth.AccessToken;
+import com.hello.suripu.core.oauth.Application;
+import com.hello.suripu.core.oauth.ApplicationRegistration;
+import com.hello.suripu.core.oauth.ApplicationStore;
+import com.hello.suripu.core.oauth.ClientAuthenticationException;
+import com.hello.suripu.core.oauth.ClientCredentials;
+import com.hello.suripu.core.oauth.ClientDetails;
+import com.hello.suripu.core.oauth.GrantTypeParam;
+import com.hello.suripu.core.oauth.OAuthScope;
+import com.hello.suripu.core.oauth.OAuthTokenStore;
 import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,7 +99,6 @@ public class OAuthResource {
                     account.id,
                     clientSecret
             );
-
 
             // FIXME: this is confusing, are we checking for application, or for installed application for this user
             // FIXME: if that's what we are doing, how did they get a token in the first place?

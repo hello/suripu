@@ -3,6 +3,7 @@ package com.hello.suripu.app.resources;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.Record;
 import com.hello.suripu.core.db.TimeSerieDAO;
+import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.ClientDetails;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -29,13 +30,13 @@ public class HistoryResource {
     @Path("/{days}")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Record> getRecords(
-            @Scope({OAuthScope.SENSORS_BASIC}) final ClientDetails clientDetails,
+            @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
             @PathParam("days") final Integer numDays) {
 
         final DateTime now = DateTime.now(DateTimeZone.UTC);
         final DateTime then = now.minusDays(numDays);
 
-        final ImmutableList<Record> records = timeSerieDAO.getHistoricalData(clientDetails.accountId, then, now);
+        final ImmutableList<Record> records = timeSerieDAO.getHistoricalData(accessToken.accountId, then, now);
         return records;
     }
 

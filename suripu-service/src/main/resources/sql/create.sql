@@ -51,6 +51,25 @@ CREATE UNIQUE INDEX uniq_client_id on oauth_applications(client_id);
 
 CREATE INDEX dev_account_id_idx on oauth_applications(dev_account_id);
 
+
+
+CREATE TABLE oauth_tokens(
+    id BIGSERIAL PRIMARY KEY,
+    access_token UUID,
+    refresh_token UUID,
+    expires_in INTEGER,
+    created_at TIMESTAMP,
+    app_id INTEGER,
+    account_id INTEGER,
+    scopes int[]
+);
+
+
+CREATE UNIQUE INDEX uniq_access_token on oauth_tokens(access_token);
+CREATE UNIQUE INDEX uniq_refresh_token on oauth_tokens(refresh_token);
+
+-- TODO : create index for account_id
+
 --CREATE TABLE sensor_samples (
 --    id BIGSERIAL PRIMARY KEY,
 --    device_id BIGINT,
