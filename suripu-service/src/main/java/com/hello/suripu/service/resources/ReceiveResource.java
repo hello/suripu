@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.HEAD;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
@@ -49,12 +50,29 @@ public class ReceiveResource {
             @Valid InputProtos.SimpleSensorBatch batch,
             @Scope({OAuthScope.SENSORS_BASIC}) AccessToken accessToken) {
 
+        // TODO : remove this after alpha testing
 
-        final Optional<Long> deviceIdOptional = deviceDAO.getDeviceForAccountId(batch.getDeviceId());
+        try {
+            deviceDAO.registerDevice(accessToken.accountId, batch.getDeviceId());
+        } catch (UnableToExecuteStatementException exception) {
+            Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
+            if (!matcher.find()) {
+                LOGGER.error(exception.getMessage());
+                return Response.serverError().build();
+            }
+            LOGGER.warn("Duplicate entry for account_id: {} with device_id = {}", accessToken.accountId, batch.getDeviceId());
+        }
+
+        // TODO : END REMOVE
+
+
+
+        final Optional<Long> deviceIdOptional = deviceDAO.getDeviceForAccountId(accessToken.accountId, batch.getDeviceId());
         if(!deviceIdOptional.isPresent()) {
             LOGGER.warn("DeviceId: {} was not found", batch.getDeviceId());
             return Response.status(Response.Status.BAD_REQUEST).entity("Bad Request").type(MediaType.TEXT_PLAIN_TYPE).build();
         }
+
         for(InputProtos.SimpleSensorBatch.SimpleSensorSample sample : batch.getSamplesList()) {
 
 
@@ -92,6 +110,7 @@ public class ReceiveResource {
                     dateTime.getHourOfDay(),
                     dateTime.getMinuteOfHour(),
                     DateTimeZone.UTC // The two time zone need to be aligned.
+
             );
 
             try {
