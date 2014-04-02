@@ -9,3 +9,4 @@ logs
 .classpath
 .project
 .DS_Store
+*.dev.yml
