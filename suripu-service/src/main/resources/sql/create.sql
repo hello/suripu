@@ -78,6 +78,8 @@ CREATE TABLE account_device_map(
     created_at TIMESTAMP default current_timestamp
 );
 
+CREATE UNIQUE INDEX uniq_account_device on account_device_map(account_id, device_id);
+
 -- TODO : create index for account_id
 
 --CREATE TABLE sensor_samples (
