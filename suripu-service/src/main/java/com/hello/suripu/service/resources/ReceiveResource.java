@@ -1,6 +1,7 @@
 package com.hello.suripu.service.resources;
 
 import com.google.common.base.Optional;
+import com.google.common.io.LittleEndianDataInputStream;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -22,7 +23,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.regex.Matcher;
@@ -62,7 +62,7 @@ public class ReceiveResource {
             // TODO: check for length and do not parse if payload has no device data
 
             final InputStream inputStream = new ByteArrayInputStream(deviceData);
-            final DataInputStream dataInputStream = new DataInputStream(inputStream); // Shall we consider the endian?
+            final LittleEndianDataInputStream dataInputStream = new LittleEndianDataInputStream(inputStream);
 
             final int offsetMillis = 0;
 
