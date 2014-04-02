@@ -2,7 +2,8 @@ package com.hello.suripu.service.resources;
 
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
-import com.hello.suripu.core.oauth.ClientDetails;
+import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.service.db.EventDAO;
@@ -32,9 +33,11 @@ public class ReceiveResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReceiveResource.class);
 
     private final EventDAO eventDAO;
+    private final DeviceDAO deviceDAO;
 
-    public ReceiveResource(EventDAO eventDAO) {
+    public ReceiveResource(final EventDAO eventDAO, final DeviceDAO deviceDAO) {
         this.eventDAO = eventDAO;
+        this.deviceDAO = deviceDAO;
     }
 
     @POST
@@ -42,10 +45,10 @@ public class ReceiveResource {
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     public Response receiveSimpleData(
             @Valid InputProtos.SimpleSensorBatch batch,
-            @Scope({OAuthScope.SENSORS_WRITE}) ClientDetails clientDetails) {
+            @Scope({OAuthScope.SENSORS_BASIC}) AccessToken accessToken) {
 
         for(InputProtos.SimpleSensorBatch.SimpleSensorSample sample : batch.getSamplesList()) {
-            final Long deviceId = Long.parseLong(batch.getDeviceId());
+            final Long deviceId = deviceDAO.getDeviceForAccountId(batch.getDeviceId());
 
             byte[] deviceData = sample.getDeviceData().toByteArray();
             // TODO: check for length and do not parse if payload has no device data
