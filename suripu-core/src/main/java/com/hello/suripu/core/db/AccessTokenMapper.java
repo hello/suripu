@@ -29,8 +29,8 @@ public class AccessTokenMapper implements ResultSetMapper<AccessToken> {
                 UUID.fromString(r.getString("refresh_token")),
                 r.getLong("expires_in"),
                 new DateTime(r.getLong("created_at"), DateTimeZone.UTC),
-                r.getLong("app_id"),
                 r.getLong("account_id"),
+                r.getLong("app_id"),
                 s
         );
     }
