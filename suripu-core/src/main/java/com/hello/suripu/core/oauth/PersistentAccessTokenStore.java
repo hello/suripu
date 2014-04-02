@@ -35,10 +35,10 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         final AccessToken accessToken = new AccessToken(
                 accessTokenUUID,
                 refreshTokenUUID,
-                123L,
+                86400L * 90, // 90 days
                 DateTime.now(DateTimeZone.UTC),
-                clientDetails.appId.get(),
                 clientDetails.accountId,
+                clientDetails.appId.get(),
                 new OAuthScope[]{OAuthScope.SENSORS_BASIC}
         );
 
