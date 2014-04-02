@@ -107,7 +107,8 @@ public class ReceiveResource {
                     dateTime.getMonthOfYear(),
                     dateTime.getDayOfMonth(),
                     dateTime.getHourOfDay(),
-                    dateTime.getMinuteOfHour()
+                    dateTime.getMinuteOfHour(),
+                    DateTimeZone.UTC
             );
 
             try {
