@@ -68,6 +68,16 @@ CREATE TABLE oauth_tokens(
 CREATE UNIQUE INDEX uniq_access_token on oauth_tokens(access_token);
 CREATE UNIQUE INDEX uniq_refresh_token on oauth_tokens(refresh_token);
 
+
+
+
+CREATE TABLE account_device_map(
+    id SERIAL PRIMARY KEY,
+    account_id INTEGER,
+    device_id VARCHAR(100),
+    created_at TIMESTAMP default current_timestamp
+);
+
 -- TODO : create index for account_id
 
 --CREATE TABLE sensor_samples (
