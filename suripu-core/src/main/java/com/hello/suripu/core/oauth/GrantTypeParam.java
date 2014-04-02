@@ -25,7 +25,7 @@ public class GrantTypeParam {
         public static GrantType fromString(String text) {
             if (text != null) {
                 for (GrantType t : GrantType.values()) {
-                    if (text.equalsIgnoreCase(t.name)) {
+                    if (text.equalsIgnoreCase(t.name())) {
                         return t;
                     }
                 }
@@ -37,8 +37,8 @@ public class GrantTypeParam {
     }
 
     public GrantTypeParam(String grantType) throws WebApplicationException {
+        this.originalValue = grantType;
         try {
-            this.originalValue = grantType;
             this.type = GrantType.fromString(grantType);
         } catch (IllegalArgumentException e) {
             throw new WebApplicationException(
