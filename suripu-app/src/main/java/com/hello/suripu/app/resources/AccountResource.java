@@ -44,8 +44,9 @@ public class AccountResource {
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
     public Account getAccount(
-            @Scope({OAuthScope.USER_EXTENDED}) AccessToken accessToken) {
+            @Scope({OAuthScope.USER_EXTENDED}) final AccessToken accessToken) {
 
+        LOGGER.debug("{}", accessToken);
         final Optional<Account> account = accountDAO.getById(accessToken.accountId);
         if(!account.isPresent()) {
             LOGGER.warn("Account not present");
