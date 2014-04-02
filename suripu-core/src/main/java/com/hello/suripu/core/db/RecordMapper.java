@@ -15,9 +15,9 @@ public class RecordMapper implements ResultSetMapper<Record>{
                 r.getFloat("ambient_temp"),
                 r.getFloat("ambient_humidity"),
                 r.getFloat("ambient_air_quality"),
-                new DateTime(r.getTimestamp("ts"))
+                new DateTime(r.getTimestamp("ts")),
+                r.getInt("offset_millis")
         );
-
         return record;
     }
 }

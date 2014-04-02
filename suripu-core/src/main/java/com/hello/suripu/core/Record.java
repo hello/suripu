@@ -5,7 +5,7 @@ import org.joda.time.DateTime;
 
 public class Record {
 
-    @JsonProperty("temp")
+    @JsonProperty("temperature")
     public final float ambientTemperature;
 
     @JsonProperty("humidity")
@@ -14,13 +14,22 @@ public class Record {
     @JsonProperty("air_quality")
     public final float ambientAirQuality;
 
-    @JsonProperty("ts")
+    @JsonProperty("timestamp_utc")
     public final DateTime dateTime;
 
-    public Record(final float ambientTemperature, float ambientHumidity, float ambientAirQuality, final DateTime dateTime) {
+    @JsonProperty("offset_millis")
+    public final Long offsetMillis;
+
+    public Record(
+            final float ambientTemperature,
+            float ambientHumidity,
+            float ambientAirQuality,
+            final DateTime dateTime,
+            final long offsetMillis) {
         this.ambientTemperature = ambientTemperature;
         this.ambientHumidity = ambientHumidity;
         this.ambientAirQuality = ambientAirQuality;
         this.dateTime = dateTime;
+        this.offsetMillis = offsetMillis;
     }
 }

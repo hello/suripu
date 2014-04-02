@@ -2,30 +2,56 @@ package com.hello.suripu.app.resources;
 
 
 import com.google.common.base.Optional;
-import com.hello.suripu.core.oauth.*;
+import com.hello.suripu.core.Account;
+import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.oauth.AccessToken;
+import com.hello.suripu.core.oauth.Application;
+import com.hello.suripu.core.oauth.ApplicationRegistration;
+import com.hello.suripu.core.oauth.ApplicationStore;
+import com.hello.suripu.core.oauth.ClientAuthenticationException;
+import com.hello.suripu.core.oauth.ClientCredentials;
+import com.hello.suripu.core.oauth.ClientDetails;
+import com.hello.suripu.core.oauth.GrantTypeParam;
+import com.hello.suripu.core.oauth.OAuthScope;
+import com.hello.suripu.core.oauth.OAuthTokenStore;
 import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.*;
+import javax.ws.rs.POST;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 
-@Path("/oauth")
+@Path("/oauth2")
 public class OAuthResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OAuthResource.class);
     private final OAuthTokenStore<AccessToken,ClientDetails, ClientCredentials> tokenStore;
+    private final ApplicationStore applicationStore;
+    private final AccountDAO accountDAO;
 
-    public OAuthResource(OAuthTokenStore<AccessToken,ClientDetails, ClientCredentials> tokenStore) {
+    public OAuthResource(
+            final OAuthTokenStore<AccessToken,ClientDetails, ClientCredentials> tokenStore,
+            final ApplicationStore<Application, ApplicationRegistration> applicationStore,
+            final AccountDAO accountDAO) {
+
         this.tokenStore = tokenStore;
+        this.applicationStore = applicationStore;
+        this.accountDAO = accountDAO;
     }
 
     @POST
+    @Path("/token")
     @Timed
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response accessToken(
                 @FormParam("grant_type") GrantTypeParam grantType,
                 @FormParam("code") String code,
@@ -35,21 +61,70 @@ public class OAuthResource {
                 @FormParam("username") String username,
                 @FormParam("password") String password) {
 
-            final Optional<ClientDetails> opt = tokenStore.getClientDetailsByAuthorizationCode(code);
-
-            if (!opt.isPresent()) {
-                throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
-                        .type(MediaType.TEXT_PLAIN_TYPE).build());
+        if(grantType == null) {
+            LOGGER.error("GrantType is null");
+            return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
+                    .type(MediaType.TEXT_PLAIN_TYPE).build();
+        }
+        if(grantType.getType().equals(GrantTypeParam.GrantType.PASSWORD)) {
+            if(username == null || password == null) {
+                return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
+                        .type(MediaType.TEXT_PLAIN_TYPE).build();
             }
 
-            final ClientDetails clientDetails = opt.get();
-            LOGGER.debug(String.format("Handing out access token for client %s with secret %s", clientId, clientSecret));
+
+            final Optional<Account> accountOptional = accountDAO.exists(username, password);
+            if(!accountOptional.isPresent()) {
+                LOGGER.error("Account wasn't found", username, password);
+                return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
+                        .type(MediaType.TEXT_PLAIN_TYPE).build();
+            }
+
+            final Account account = accountOptional.get();
+            final OAuthScope[] scopes = new OAuthScope[]{
+                    OAuthScope.USER_BASIC,
+                    OAuthScope.USER_EXTENDED,
+                    OAuthScope.SENSORS_BASIC,
+                    OAuthScope.SENSORS_EXTENDED
+            };
+
+            // Important : when using password flow, we should not send / nor expect the client_secret
+            final ClientDetails details = new ClientDetails(
+                    grantType.getType(),
+                    clientId,
+                    redirectUri,
+                    scopes,
+                    "",
+                    code,
+                    account.id,
+                    clientSecret
+            );
+
+            // FIXME: this is confusing, are we checking for application, or for installed application for this user
+            // FIXME: if that's what we are doing, how did they get a token in the first place?
+            // TODO: BE SMARTER
+            final Optional<Application> applicationOptional = applicationStore.getApplicationByClientId(details.clientId);
+            if(!applicationOptional.isPresent()) {
+                return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
+                        .type(MediaType.TEXT_PLAIN_TYPE).build();
+            }
+
+            AccessToken accessToken = null;
+
             try {
-                return Response.ok().entity(tokenStore.storeAccessToken(clientDetails)).build();
-            } catch (ClientAuthenticationException exception) {
-                LOGGER.error(exception.getMessage());
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Server Error").build();
+                accessToken = tokenStore.storeAccessToken(details);
+            } catch (ClientAuthenticationException clientAuthenticationException) {
+                LOGGER.error(clientAuthenticationException.getMessage());
+                return Response.serverError().build();
             }
+
+            LOGGER.debug("{}", accessToken);
+            return Response.ok().entity(accessToken).build();
+        }
+
+        // We only support password grant at the moment
+        return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
+            .type(MediaType.TEXT_PLAIN_TYPE).build();
     }
 
     @GET
@@ -70,7 +145,7 @@ public class OAuthResource {
         final OAuthScope[] scopes = new OAuthScope[1];
         scopes[0] = OAuthScope.USER_BASIC;
         final ClientDetails clientDetails = new ClientDetails(
-                "responseType",
+                GrantTypeParam.GrantType.AUTH_CODE,
                 clientId,
                 redirectUri,
                 scopes,

@@ -1738,6 +1738,21 @@ public final class InputProtos {
        * <code>optional float speed = 4;</code>
        */
       float getSpeed();
+
+      // optional string provider = 5;
+      /**
+       * <code>optional string provider = 5;</code>
+       */
+      boolean hasProvider();
+      /**
+       * <code>optional string provider = 5;</code>
+       */
+      java.lang.String getProvider();
+      /**
+       * <code>optional string provider = 5;</code>
+       */
+      com.google.protobuf.ByteString
+          getProviderBytes();
     }
     /**
      * Protobuf type {@code hello.SimpleSensorBatch.GpsInfo}
@@ -1808,6 +1823,11 @@ public final class InputProtos {
               case 37: {
                 bitField0_ |= 0x00000008;
                 speed_ = input.readFloat();
+                break;
+              }
+              case 42: {
+                bitField0_ |= 0x00000010;
+                provider_ = input.readBytes();
                 break;
               }
             }
@@ -1914,11 +1934,55 @@ public final class InputProtos {
         return speed_;
       }
 
+      // optional string provider = 5;
+      public static final int PROVIDER_FIELD_NUMBER = 5;
+      private java.lang.Object provider_;
+      /**
+       * <code>optional string provider = 5;</code>
+       */
+      public boolean hasProvider() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional string provider = 5;</code>
+       */
+      public java.lang.String getProvider() {
+        java.lang.Object ref = provider_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            provider_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       * <code>optional string provider = 5;</code>
+       */
+      public com.google.protobuf.ByteString
+          getProviderBytes() {
+        java.lang.Object ref = provider_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          provider_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
       private void initFields() {
         latitude_ = 0F;
         longitude_ = 0F;
         accuracy_ = 0F;
         speed_ = 0F;
+        provider_ = "";
       }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
@@ -1944,6 +2008,9 @@ public final class InputProtos {
         if (((bitField0_ & 0x00000008) == 0x00000008)) {
           output.writeFloat(4, speed_);
         }
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          output.writeBytes(5, getProviderBytes());
+        }
         getUnknownFields().writeTo(output);
       }
 
@@ -1968,6 +2035,10 @@ public final class InputProtos {
         if (((bitField0_ & 0x00000008) == 0x00000008)) {
           size += com.google.protobuf.CodedOutputStream
             .computeFloatSize(4, speed_);
+        }
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(5, getProviderBytes());
         }
         size += getUnknownFields().getSerializedSize();
         memoizedSerializedSize = size;
@@ -2093,6 +2164,8 @@ public final class InputProtos {
           bitField0_ = (bitField0_ & ~0x00000004);
           speed_ = 0F;
           bitField0_ = (bitField0_ & ~0x00000008);
+          provider_ = "";
+          bitField0_ = (bitField0_ & ~0x00000010);
           return this;
         }
 
@@ -2137,6 +2210,10 @@ public final class InputProtos {
             to_bitField0_ |= 0x00000008;
           }
           result.speed_ = speed_;
+          if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+            to_bitField0_ |= 0x00000010;
+          }
+          result.provider_ = provider_;
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -2164,6 +2241,11 @@ public final class InputProtos {
           }
           if (other.hasSpeed()) {
             setSpeed(other.getSpeed());
+          }
+          if (other.hasProvider()) {
+            bitField0_ |= 0x00000010;
+            provider_ = other.provider_;
+            onChanged();
           }
           this.mergeUnknownFields(other.getUnknownFields());
           return this;
@@ -2324,6 +2406,80 @@ public final class InputProtos {
           return this;
         }
 
+        // optional string provider = 5;
+        private java.lang.Object provider_ = "";
+        /**
+         * <code>optional string provider = 5;</code>
+         */
+        public boolean hasProvider() {
+          return ((bitField0_ & 0x00000010) == 0x00000010);
+        }
+        /**
+         * <code>optional string provider = 5;</code>
+         */
+        public java.lang.String getProvider() {
+          java.lang.Object ref = provider_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
+                .toStringUtf8();
+            provider_ = s;
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         * <code>optional string provider = 5;</code>
+         */
+        public com.google.protobuf.ByteString
+            getProviderBytes() {
+          java.lang.Object ref = provider_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
+            provider_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         * <code>optional string provider = 5;</code>
+         */
+        public Builder setProvider(
+            java.lang.String value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+          provider_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string provider = 5;</code>
+         */
+        public Builder clearProvider() {
+          bitField0_ = (bitField0_ & ~0x00000010);
+          provider_ = getDefaultInstance().getProvider();
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string provider = 5;</code>
+         */
+        public Builder setProviderBytes(
+            com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+          provider_ = value;
+          onChanged();
+          return this;
+        }
+
         // @@protoc_insertion_point(builder_scope:hello.SimpleSensorBatch.GpsInfo)
       }
 
@@ -2351,30 +2507,54 @@ public final class InputProtos {
       // optional float ambient_temperature = 2;
       /**
        * <code>optional float ambient_temperature = 2;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       boolean hasAmbientTemperature();
       /**
        * <code>optional float ambient_temperature = 2;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       float getAmbientTemperature();
 
       // optional float ambient_humidity = 3;
       /**
        * <code>optional float ambient_humidity = 3;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       boolean hasAmbientHumidity();
       /**
        * <code>optional float ambient_humidity = 3;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       float getAmbientHumidity();
 
       // optional float ambient_light = 4;
       /**
        * <code>optional float ambient_light = 4;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       boolean hasAmbientLight();
       /**
        * <code>optional float ambient_light = 4;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       float getAmbientLight();
 
@@ -2391,20 +2571,34 @@ public final class InputProtos {
       // optional float ambient_air_quality = 6;
       /**
        * <code>optional float ambient_air_quality = 6;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       boolean hasAmbientAirQuality();
       /**
        * <code>optional float ambient_air_quality = 6;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       float getAmbientAirQuality();
 
       // optional bytes device_data = 7;
       /**
        * <code>optional bytes device_data = 7;</code>
+       *
+       * <pre>
+       * </pre>
        */
       boolean hasDeviceData();
       /**
        * <code>optional bytes device_data = 7;</code>
+       *
+       * <pre>
+       * </pre>
        */
       com.google.protobuf.ByteString getDeviceData();
 
@@ -2597,12 +2791,20 @@ public final class InputProtos {
       private float ambientTemperature_;
       /**
        * <code>optional float ambient_temperature = 2;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       public boolean hasAmbientTemperature() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
        * <code>optional float ambient_temperature = 2;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       public float getAmbientTemperature() {
         return ambientTemperature_;
@@ -2613,12 +2815,20 @@ public final class InputProtos {
       private float ambientHumidity_;
       /**
        * <code>optional float ambient_humidity = 3;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       public boolean hasAmbientHumidity() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
        * <code>optional float ambient_humidity = 3;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       public float getAmbientHumidity() {
         return ambientHumidity_;
@@ -2629,12 +2839,20 @@ public final class InputProtos {
       private float ambientLight_;
       /**
        * <code>optional float ambient_light = 4;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       public boolean hasAmbientLight() {
         return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
        * <code>optional float ambient_light = 4;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       public float getAmbientLight() {
         return ambientLight_;
@@ -2661,12 +2879,20 @@ public final class InputProtos {
       private float ambientAirQuality_;
       /**
        * <code>optional float ambient_air_quality = 6;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       public boolean hasAmbientAirQuality() {
         return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
        * <code>optional float ambient_air_quality = 6;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       public float getAmbientAirQuality() {
         return ambientAirQuality_;
@@ -2677,12 +2903,18 @@ public final class InputProtos {
       private com.google.protobuf.ByteString deviceData_;
       /**
        * <code>optional bytes device_data = 7;</code>
+       *
+       * <pre>
+       * </pre>
        */
       public boolean hasDeviceData() {
         return ((bitField0_ & 0x00000040) == 0x00000040);
       }
       /**
        * <code>optional bytes device_data = 7;</code>
+       *
+       * <pre>
+       * </pre>
        */
       public com.google.protobuf.ByteString getDeviceData() {
         return deviceData_;
@@ -3135,18 +3367,30 @@ public final class InputProtos {
         private float ambientTemperature_ ;
         /**
          * <code>optional float ambient_temperature = 2;</code>
+         *
+         * <pre>
+         * deprecated
+         * </pre>
          */
         public boolean hasAmbientTemperature() {
           return ((bitField0_ & 0x00000002) == 0x00000002);
         }
         /**
          * <code>optional float ambient_temperature = 2;</code>
+         *
+         * <pre>
+         * deprecated
+         * </pre>
          */
         public float getAmbientTemperature() {
           return ambientTemperature_;
         }
         /**
          * <code>optional float ambient_temperature = 2;</code>
+         *
+         * <pre>
+         * deprecated
+         * </pre>
          */
         public Builder setAmbientTemperature(float value) {
           bitField0_ |= 0x00000002;
@@ -3156,6 +3400,10 @@ public final class InputProtos {
         }
         /**
          * <code>optional float ambient_temperature = 2;</code>
+         *
+         * <pre>
+         * deprecated
+         * </pre>
          */
         public Builder clearAmbientTemperature() {
           bitField0_ = (bitField0_ & ~0x00000002);
@@ -3168,18 +3416,30 @@ public final class InputProtos {
         private float ambientHumidity_ ;
         /**
          * <code>optional float ambient_humidity = 3;</code>
+         *
+         * <pre>
+         * deprecated
+         * </pre>
          */
         public boolean hasAmbientHumidity() {
           return ((bitField0_ & 0x00000004) == 0x00000004);
         }
         /**
          * <code>optional float ambient_humidity = 3;</code>
+         *
+         * <pre>
+         * deprecated
+         * </pre>
          */
         public float getAmbientHumidity() {
           return ambientHumidity_;
         }
         /**
          * <code>optional float ambient_humidity = 3;</code>
+         *
+         * <pre>
+         * deprecated
+         * </pre>
          */
         public Builder setAmbientHumidity(float value) {
           bitField0_ |= 0x00000004;
@@ -3189,6 +3449,10 @@ public final class InputProtos {
         }
         /**
          * <code>optional float ambient_humidity = 3;</code>
+         *
+         * <pre>
+         * deprecated
+         * </pre>
          */
         public Builder clearAmbientHumidity() {
           bitField0_ = (bitField0_ & ~0x00000004);
@@ -3201,18 +3465,30 @@ public final class InputProtos {
         private float ambientLight_ ;
         /**
          * <code>optional float ambient_light = 4;</code>
+         *
+         * <pre>
+         * deprecated
+         * </pre>
          */
         public boolean hasAmbientLight() {
           return ((bitField0_ & 0x00000008) == 0x00000008);
         }
         /**
          * <code>optional float ambient_light = 4;</code>
+         *
+         * <pre>
+         * deprecated
+         * </pre>
          */
         public float getAmbientLight() {
           return ambientLight_;
         }
         /**
          * <code>optional float ambient_light = 4;</code>
+         *
+         * <pre>
+         * deprecated
+         * </pre>
          */
         public Builder setAmbientLight(float value) {
           bitField0_ |= 0x00000008;
@@ -3222,6 +3498,10 @@ public final class InputProtos {
         }
         /**
          * <code>optional float ambient_light = 4;</code>
+         *
+         * <pre>
+         * deprecated
+         * </pre>
          */
         public Builder clearAmbientLight() {
           bitField0_ = (bitField0_ & ~0x00000008);
@@ -3267,18 +3547,30 @@ public final class InputProtos {
         private float ambientAirQuality_ ;
         /**
          * <code>optional float ambient_air_quality = 6;</code>
+         *
+         * <pre>
+         * deprecated
+         * </pre>
          */
         public boolean hasAmbientAirQuality() {
           return ((bitField0_ & 0x00000020) == 0x00000020);
         }
         /**
          * <code>optional float ambient_air_quality = 6;</code>
+         *
+         * <pre>
+         * deprecated
+         * </pre>
          */
         public float getAmbientAirQuality() {
           return ambientAirQuality_;
         }
         /**
          * <code>optional float ambient_air_quality = 6;</code>
+         *
+         * <pre>
+         * deprecated
+         * </pre>
          */
         public Builder setAmbientAirQuality(float value) {
           bitField0_ |= 0x00000020;
@@ -3288,6 +3580,10 @@ public final class InputProtos {
         }
         /**
          * <code>optional float ambient_air_quality = 6;</code>
+         *
+         * <pre>
+         * deprecated
+         * </pre>
          */
         public Builder clearAmbientAirQuality() {
           bitField0_ = (bitField0_ & ~0x00000020);
@@ -3300,18 +3596,27 @@ public final class InputProtos {
         private com.google.protobuf.ByteString deviceData_ = com.google.protobuf.ByteString.EMPTY;
         /**
          * <code>optional bytes device_data = 7;</code>
+         *
+         * <pre>
+         * </pre>
          */
         public boolean hasDeviceData() {
           return ((bitField0_ & 0x00000040) == 0x00000040);
         }
         /**
          * <code>optional bytes device_data = 7;</code>
+         *
+         * <pre>
+         * </pre>
          */
         public com.google.protobuf.ByteString getDeviceData() {
           return deviceData_;
         }
         /**
          * <code>optional bytes device_data = 7;</code>
+         *
+         * <pre>
+         * </pre>
          */
         public Builder setDeviceData(com.google.protobuf.ByteString value) {
           if (value == null) {
@@ -3324,6 +3629,9 @@ public final class InputProtos {
         }
         /**
          * <code>optional bytes device_data = 7;</code>
+         *
+         * <pre>
+         * </pre>
          */
         public Builder clearDeviceData() {
           bitField0_ = (bitField0_ & ~0x00000040);
@@ -4224,20 +4532,20 @@ public final class InputProtos {
       "\024\n\020AMBIENT_HUMIDITY\020\001\022\021\n\rAMBIENT_LIGHT\020\002" +
       "\022\024\n\020AMBIENT_DECIBELS\020\003\022\027\n\023AMBIENT_AIR_QU" +
       "ALITY\020\004\022\007\n\003GPS\020\005\022\026\n\022PHONE_ACCELERATION\020\006",
-      "\022\024\n\020PHONE_STEP_COUNT\020\007\"\307\003\n\021SimpleSensorB" +
+      "\022\024\n\020PHONE_STEP_COUNT\020\007\"\331\003\n\021SimpleSensorB" +
       "atch\022\021\n\tdevice_id\030\001 \001(\t\022<\n\007samples\030\002 \003(\013" +
       "2+.hello.SimpleSensorBatch.SimpleSensorS" +
-      "ample\032O\n\007GpsInfo\022\020\n\010latitude\030\001 \001(\002\022\021\n\tlo" +
+      "ample\032a\n\007GpsInfo\022\020\n\010latitude\030\001 \001(\002\022\021\n\tlo" +
       "ngitude\030\002 \001(\002\022\020\n\010accuracy\030\003 \001(\002\022\r\n\005speed" +
-      "\030\004 \001(\002\032\217\002\n\022SimpleSensorSample\022\021\n\ttimesta" +
-      "mp\030\001 \001(\003\022\033\n\023ambient_temperature\030\002 \001(\002\022\030\n" +
-      "\020ambient_humidity\030\003 \001(\002\022\025\n\rambient_light" +
-      "\030\004 \001(\002\022\030\n\020ambient_decibels\030\005 \001(\002\022\033\n\023ambi" +
-      "ent_air_quality\030\006 \001(\002\022\023\n\013device_data\030\007 \001",
-      "(\014\022\035\n\025device_data_signature\030\010 \001(\014\022-\n\003gps" +
-      "\030\n \001(\0132 .hello.SimpleSensorBatch.GpsInfo" +
-      "B+\n\032com.hello.suripu.api.inputB\013InputPro" +
-      "tosH\001"
+      "\030\004 \001(\002\022\020\n\010provider\030\005 \001(\t\032\217\002\n\022SimpleSenso" +
+      "rSample\022\021\n\ttimestamp\030\001 \001(\003\022\033\n\023ambient_te" +
+      "mperature\030\002 \001(\002\022\030\n\020ambient_humidity\030\003 \001(" +
+      "\002\022\025\n\rambient_light\030\004 \001(\002\022\030\n\020ambient_deci" +
+      "bels\030\005 \001(\002\022\033\n\023ambient_air_quality\030\006 \001(\002\022",
+      "\023\n\013device_data\030\007 \001(\014\022\035\n\025device_data_sign" +
+      "ature\030\010 \001(\014\022-\n\003gps\030\n \001(\0132 .hello.SimpleS" +
+      "ensorBatch.GpsInfoB+\n\032com.hello.suripu.a" +
+      "pi.inputB\013InputProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -4267,7 +4575,7 @@ public final class InputProtos {
           internal_static_hello_SimpleSensorBatch_GpsInfo_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_SimpleSensorBatch_GpsInfo_descriptor,
-              new java.lang.String[] { "Latitude", "Longitude", "Accuracy", "Speed", });
+              new java.lang.String[] { "Latitude", "Longitude", "Accuracy", "Speed", "Provider", });
           internal_static_hello_SimpleSensorBatch_SimpleSensorSample_descriptor =
             internal_static_hello_SimpleSensorBatch_descriptor.getNestedTypes().get(1);
           internal_static_hello_SimpleSensorBatch_SimpleSensorSample_fieldAccessorTable = new

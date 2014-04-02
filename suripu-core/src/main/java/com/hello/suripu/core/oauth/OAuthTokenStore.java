@@ -18,7 +18,7 @@ public interface OAuthTokenStore<T, I, C> {
 
     T storeAccessToken(I clientDetails) throws ClientAuthenticationException;
 
-    Optional<I> getClientDetailsByCredentials(C credentials);
+    Optional<T> getClientDetailsByToken(C creds);
 
     C storeAuthorizationCode(I clientDetails) throws ClientAuthenticationException;
 
