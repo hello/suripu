@@ -108,7 +108,7 @@ public class OAuthResource {
                 return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
                         .type(MediaType.TEXT_PLAIN_TYPE).build();
             }
-
+            details.setAppId(applicationOptional.get().id);
             AccessToken accessToken = null;
 
             try {
