@@ -8,18 +8,18 @@ import com.hello.suripu.core.db.ApplicationsDAO;
 public class PersistentApplicationStore implements ApplicationStore<Application, ApplicationRegistration>{
 
     private final ApplicationsDAO applicationsDAO;
-    public PersistentApplicationStore(ApplicationsDAO applicationsDAO) {
+    public PersistentApplicationStore(final ApplicationsDAO applicationsDAO) {
          this.applicationsDAO = applicationsDAO;
     }
 
     @Override
-    public Optional<Application> getApplicationById(Long applicationId) {
+    public Optional<Application> getApplicationById(final Long applicationId) {
         Optional<Application> applicationOptional = applicationsDAO.getById(applicationId);
         return applicationOptional;
     }
 
     @Override
-    public Optional<Application> getApplicationByClientId(String clientId) {
+    public Optional<Application> getApplicationByClientId(final String clientId) {
         return applicationsDAO.getByClientId(clientId);
     }
 
@@ -31,12 +31,12 @@ public class PersistentApplicationStore implements ApplicationStore<Application,
     }
 
     @Override
-    public void activateForAccountId(Application application, Long accountId) {
+    public void activateForAccountId(final Application application, final Long accountId) {
         applicationsDAO.insertInstallation(application.id, accountId);
     }
 
     @Override
-    public ImmutableList<Application> getApplicationsByDevId(Long accountId) {
+    public ImmutableList<Application> getApplicationsByDevId(final Long accountId) {
         return applicationsDAO.getAllByDevId(accountId);
     }
 }
