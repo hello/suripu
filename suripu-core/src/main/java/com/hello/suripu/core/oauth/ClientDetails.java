@@ -1,6 +1,9 @@
 package com.hello.suripu.core.oauth;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ClientDetails{
 
@@ -12,6 +15,7 @@ public class ClientDetails{
     public final String code;
     public final Long accountId;
     public final String secret;
+    public Optional<Long> appId = Optional.absent();
 
     public ClientDetails(
             final GrantTypeParam.GrantType responseType,
@@ -30,6 +34,11 @@ public class ClientDetails{
         this.code = code;
         this.accountId = accountId;
         this.secret = secret;
+    }
+
+    public void setAppId(final Long appId) {
+        checkNotNull(appId, "AppId can not be null");
+        this.appId = Optional.of(appId);
     }
 
     @Override

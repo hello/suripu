@@ -21,6 +21,11 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
     @Override
     public AccessToken storeAccessToken(final ClientDetails clientDetails) throws ClientAuthenticationException {
 
+        if(!clientDetails.appId.isPresent()) {
+            LOGGER.error("ClientDetails should have appId");
+            throw new ClientAuthenticationException();
+        }
+
         final UUID accessTokenUUID = UUID.randomUUID();
         final UUID refreshTokenUUID = UUID.randomUUID();
 
@@ -32,7 +37,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
                 refreshTokenUUID,
                 123L,
                 DateTime.now(DateTimeZone.UTC),
-                100L, // TODO: appID
+                clientDetails.appId.get(),
                 clientDetails.accountId,
                 new OAuthScope[]{OAuthScope.SENSORS_BASIC}
         );
