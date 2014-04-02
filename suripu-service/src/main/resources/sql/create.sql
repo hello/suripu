@@ -1,3 +1,14 @@
+--DROP TABLE IF EXISTS device_sensors;
+--DROP TABLE IF EXISTS accounts;
+--DROP TABLE IF EXISTS oauth_applications;
+--DROP TABLE IF EXISTS oauth_tokens;
+--DROP TABLE IF EXISTS account_device_map;
+
+
+
+CREATE ROLE ingress_user WITH LOGIN ENCRYPTED PASSWORD 'hello ingress user' CREATEDB;
+ALTER ROLE ingress_user REPLICATION;
+
 CREATE TABLE device_sensors (
     id BIGSERIAL PRIMARY KEY,
     device_id BIGINT,
@@ -14,9 +25,6 @@ CREATE UNIQUE INDEX uniq_device_ts on device_sensors(device_id, ts);
 GRANT ALL PRIVILEGES ON device_sensors TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE device_sensors_id_seq TO ingress_user;
 
-CREATE ROLE ingress_user WITH LOGIN ENCRYPTED PASSWORD 'hello ingress user' CREATEDB;
-ALTER ROLE ingress_user REPLICATION;
-
 CREATE TABLE accounts (
     id SERIAL PRIMARY KEY,
     firstname VARCHAR (100),
@@ -32,6 +40,9 @@ CREATE TABLE accounts (
 );
 
 CREATE UNIQUE INDEX uniq_email on accounts(email);
+
+GRANT ALL PRIVILEGES ON accounts TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE accounts_id_seq TO ingress_user;
 
 
 CREATE TABLE oauth_applications (
@@ -52,6 +63,9 @@ CREATE UNIQUE INDEX uniq_client_id on oauth_applications(client_id);
 CREATE INDEX dev_account_id_idx on oauth_applications(dev_account_id);
 
 
+GRANT ALL PRIVILEGES ON oauth_applications TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE oauth_applications_id_seq TO ingress_user;
+
 
 CREATE TABLE oauth_tokens(
     id BIGSERIAL PRIMARY KEY,
@@ -69,7 +83,8 @@ CREATE UNIQUE INDEX uniq_access_token on oauth_tokens(access_token);
 CREATE UNIQUE INDEX uniq_refresh_token on oauth_tokens(refresh_token);
 
 
-
+GRANT ALL PRIVILEGES ON oauth_tokens TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE oauth_tokens_id_seq TO ingress_user;
 
 CREATE TABLE account_device_map(
     id SERIAL PRIMARY KEY,
@@ -80,17 +95,5 @@ CREATE TABLE account_device_map(
 
 CREATE UNIQUE INDEX uniq_account_device on account_device_map(account_id, device_id);
 
--- TODO : create index for account_id
-
---CREATE TABLE sensor_samples (
---    id BIGSERIAL PRIMARY KEY,
---    device_id BIGINT,
---    sensor_id INT,
---    ts TIMESTAMP,
---    val INT
---);
---
---CREATE UNIQUE INDEX uniq_sample on sensor_samples(device_id, ts);
---
---GRANT ALL PRIVILEGES ON sensor_samples TO ingress_user;
---GRANT ALL PRIVILEGES ON sensor_samples TO ingress_user;
+GRANT ALL PRIVILEGES ON account_device_map TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE account_device_map_id_seq TO ingress_user;
