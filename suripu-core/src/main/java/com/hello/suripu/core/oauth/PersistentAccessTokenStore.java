@@ -32,8 +32,8 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
                 refreshTokenUUID,
                 123L,
                 DateTime.now(DateTimeZone.UTC),
+                100L, // TODO: appID
                 clientDetails.accountId,
-                100L, // TODO: app id
                 new OAuthScope[]{OAuthScope.SENSORS_BASIC}
         );
 
