@@ -97,3 +97,17 @@ CREATE UNIQUE INDEX uniq_account_device on account_device_map(account_id, device
 
 GRANT ALL PRIVILEGES ON account_device_map TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE account_device_map_id_seq TO ingress_user;
+
+
+CREATE TABLE device_sound(
+    id BIGSERIAL PRIMARY KEY,
+    device_id INTEGER,
+    amplitude INTEGER,
+    ts TIMESTAMP,
+    offset_millis INTEGER
+);
+
+CREATE UNIQUE INDEX uniq_device_ts on device_sound(device_id, ts);
+
+GRANT ALL PRIVILEGES ON device_sound TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE device_sound_id_seq TO ingress_user;
