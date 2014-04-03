@@ -2612,6 +2612,16 @@ public final class InputProtos {
        */
       com.google.protobuf.ByteString getDeviceDataSignature();
 
+      // optional float sound_amplitude = 9;
+      /**
+       * <code>optional float sound_amplitude = 9;</code>
+       */
+      boolean hasSoundAmplitude();
+      /**
+       * <code>optional float sound_amplitude = 9;</code>
+       */
+      float getSoundAmplitude();
+
       // optional .hello.SimpleSensorBatch.GpsInfo gps = 10;
       /**
        * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
@@ -2625,6 +2635,16 @@ public final class InputProtos {
        * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
        */
       com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfoOrBuilder getGpsOrBuilder();
+
+      // optional int32 offset_millis = 11;
+      /**
+       * <code>optional int32 offset_millis = 11;</code>
+       */
+      boolean hasOffsetMillis();
+      /**
+       * <code>optional int32 offset_millis = 11;</code>
+       */
+      int getOffsetMillis();
     }
     /**
      * Protobuf type {@code hello.SimpleSensorBatch.SimpleSensorSample}
@@ -2717,9 +2737,14 @@ public final class InputProtos {
                 deviceDataSignature_ = input.readBytes();
                 break;
               }
+              case 77: {
+                bitField0_ |= 0x00000100;
+                soundAmplitude_ = input.readFloat();
+                break;
+              }
               case 82: {
                 com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.Builder subBuilder = null;
-                if (((bitField0_ & 0x00000100) == 0x00000100)) {
+                if (((bitField0_ & 0x00000200) == 0x00000200)) {
                   subBuilder = gps_.toBuilder();
                 }
                 gps_ = input.readMessage(com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.PARSER, extensionRegistry);
@@ -2727,7 +2752,12 @@ public final class InputProtos {
                   subBuilder.mergeFrom(gps_);
                   gps_ = subBuilder.buildPartial();
                 }
-                bitField0_ |= 0x00000100;
+                bitField0_ |= 0x00000200;
+                break;
+              }
+              case 88: {
+                bitField0_ |= 0x00000400;
+                offsetMillis_ = input.readInt32();
                 break;
               }
             }
@@ -2936,6 +2966,22 @@ public final class InputProtos {
         return deviceDataSignature_;
       }
 
+      // optional float sound_amplitude = 9;
+      public static final int SOUND_AMPLITUDE_FIELD_NUMBER = 9;
+      private float soundAmplitude_;
+      /**
+       * <code>optional float sound_amplitude = 9;</code>
+       */
+      public boolean hasSoundAmplitude() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional float sound_amplitude = 9;</code>
+       */
+      public float getSoundAmplitude() {
+        return soundAmplitude_;
+      }
+
       // optional .hello.SimpleSensorBatch.GpsInfo gps = 10;
       public static final int GPS_FIELD_NUMBER = 10;
       private com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo gps_;
@@ -2943,7 +2989,7 @@ public final class InputProtos {
        * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
        */
       public boolean hasGps() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
+        return ((bitField0_ & 0x00000200) == 0x00000200);
       }
       /**
        * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
@@ -2958,6 +3004,22 @@ public final class InputProtos {
         return gps_;
       }
 
+      // optional int32 offset_millis = 11;
+      public static final int OFFSET_MILLIS_FIELD_NUMBER = 11;
+      private int offsetMillis_;
+      /**
+       * <code>optional int32 offset_millis = 11;</code>
+       */
+      public boolean hasOffsetMillis() {
+        return ((bitField0_ & 0x00000400) == 0x00000400);
+      }
+      /**
+       * <code>optional int32 offset_millis = 11;</code>
+       */
+      public int getOffsetMillis() {
+        return offsetMillis_;
+      }
+
       private void initFields() {
         timestamp_ = 0L;
         ambientTemperature_ = 0F;
@@ -2967,7 +3029,9 @@ public final class InputProtos {
         ambientAirQuality_ = 0F;
         deviceData_ = com.google.protobuf.ByteString.EMPTY;
         deviceDataSignature_ = com.google.protobuf.ByteString.EMPTY;
+        soundAmplitude_ = 0F;
         gps_ = com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.getDefaultInstance();
+        offsetMillis_ = 0;
       }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
@@ -3006,7 +3070,13 @@ public final class InputProtos {
           output.writeBytes(8, deviceDataSignature_);
         }
         if (((bitField0_ & 0x00000100) == 0x00000100)) {
+          output.writeFloat(9, soundAmplitude_);
+        }
+        if (((bitField0_ & 0x00000200) == 0x00000200)) {
           output.writeMessage(10, gps_);
+        }
+        if (((bitField0_ & 0x00000400) == 0x00000400)) {
+          output.writeInt32(11, offsetMillis_);
         }
         getUnknownFields().writeTo(output);
       }
@@ -3051,7 +3121,15 @@ public final class InputProtos {
         }
         if (((bitField0_ & 0x00000100) == 0x00000100)) {
           size += com.google.protobuf.CodedOutputStream
+            .computeFloatSize(9, soundAmplitude_);
+        }
+        if (((bitField0_ & 0x00000200) == 0x00000200)) {
+          size += com.google.protobuf.CodedOutputStream
             .computeMessageSize(10, gps_);
+        }
+        if (((bitField0_ & 0x00000400) == 0x00000400)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(11, offsetMillis_);
         }
         size += getUnknownFields().getSerializedSize();
         memoizedSerializedSize = size;
@@ -3186,12 +3264,16 @@ public final class InputProtos {
           bitField0_ = (bitField0_ & ~0x00000040);
           deviceDataSignature_ = com.google.protobuf.ByteString.EMPTY;
           bitField0_ = (bitField0_ & ~0x00000080);
+          soundAmplitude_ = 0F;
+          bitField0_ = (bitField0_ & ~0x00000100);
           if (gpsBuilder_ == null) {
             gps_ = com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.getDefaultInstance();
           } else {
             gpsBuilder_.clear();
           }
-          bitField0_ = (bitField0_ & ~0x00000100);
+          bitField0_ = (bitField0_ & ~0x00000200);
+          offsetMillis_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000400);
           return this;
         }
 
@@ -3255,11 +3337,19 @@ public final class InputProtos {
           if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
             to_bitField0_ |= 0x00000100;
           }
+          result.soundAmplitude_ = soundAmplitude_;
+          if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+            to_bitField0_ |= 0x00000200;
+          }
           if (gpsBuilder_ == null) {
             result.gps_ = gps_;
           } else {
             result.gps_ = gpsBuilder_.build();
           }
+          if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
+            to_bitField0_ |= 0x00000400;
+          }
+          result.offsetMillis_ = offsetMillis_;
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -3300,8 +3390,14 @@ public final class InputProtos {
           if (other.hasDeviceDataSignature()) {
             setDeviceDataSignature(other.getDeviceDataSignature());
           }
+          if (other.hasSoundAmplitude()) {
+            setSoundAmplitude(other.getSoundAmplitude());
+          }
           if (other.hasGps()) {
             mergeGps(other.getGps());
+          }
+          if (other.hasOffsetMillis()) {
+            setOffsetMillis(other.getOffsetMillis());
           }
           this.mergeUnknownFields(other.getUnknownFields());
           return this;
@@ -3676,6 +3772,39 @@ public final class InputProtos {
           return this;
         }
 
+        // optional float sound_amplitude = 9;
+        private float soundAmplitude_ ;
+        /**
+         * <code>optional float sound_amplitude = 9;</code>
+         */
+        public boolean hasSoundAmplitude() {
+          return ((bitField0_ & 0x00000100) == 0x00000100);
+        }
+        /**
+         * <code>optional float sound_amplitude = 9;</code>
+         */
+        public float getSoundAmplitude() {
+          return soundAmplitude_;
+        }
+        /**
+         * <code>optional float sound_amplitude = 9;</code>
+         */
+        public Builder setSoundAmplitude(float value) {
+          bitField0_ |= 0x00000100;
+          soundAmplitude_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional float sound_amplitude = 9;</code>
+         */
+        public Builder clearSoundAmplitude() {
+          bitField0_ = (bitField0_ & ~0x00000100);
+          soundAmplitude_ = 0F;
+          onChanged();
+          return this;
+        }
+
         // optional .hello.SimpleSensorBatch.GpsInfo gps = 10;
         private com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo gps_ = com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.getDefaultInstance();
         private com.google.protobuf.SingleFieldBuilder<
@@ -3684,7 +3813,7 @@ public final class InputProtos {
          * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
          */
         public boolean hasGps() {
-          return ((bitField0_ & 0x00000100) == 0x00000100);
+          return ((bitField0_ & 0x00000200) == 0x00000200);
         }
         /**
          * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
@@ -3709,7 +3838,7 @@ public final class InputProtos {
           } else {
             gpsBuilder_.setMessage(value);
           }
-          bitField0_ |= 0x00000100;
+          bitField0_ |= 0x00000200;
           return this;
         }
         /**
@@ -3723,7 +3852,7 @@ public final class InputProtos {
           } else {
             gpsBuilder_.setMessage(builderForValue.build());
           }
-          bitField0_ |= 0x00000100;
+          bitField0_ |= 0x00000200;
           return this;
         }
         /**
@@ -3731,7 +3860,7 @@ public final class InputProtos {
          */
         public Builder mergeGps(com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo value) {
           if (gpsBuilder_ == null) {
-            if (((bitField0_ & 0x00000100) == 0x00000100) &&
+            if (((bitField0_ & 0x00000200) == 0x00000200) &&
                 gps_ != com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.getDefaultInstance()) {
               gps_ =
                 com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.newBuilder(gps_).mergeFrom(value).buildPartial();
@@ -3742,7 +3871,7 @@ public final class InputProtos {
           } else {
             gpsBuilder_.mergeFrom(value);
           }
-          bitField0_ |= 0x00000100;
+          bitField0_ |= 0x00000200;
           return this;
         }
         /**
@@ -3755,14 +3884,14 @@ public final class InputProtos {
           } else {
             gpsBuilder_.clear();
           }
-          bitField0_ = (bitField0_ & ~0x00000100);
+          bitField0_ = (bitField0_ & ~0x00000200);
           return this;
         }
         /**
          * <code>optional .hello.SimpleSensorBatch.GpsInfo gps = 10;</code>
          */
         public com.hello.suripu.api.input.InputProtos.SimpleSensorBatch.GpsInfo.Builder getGpsBuilder() {
-          bitField0_ |= 0x00000100;
+          bitField0_ |= 0x00000200;
           onChanged();
           return getGpsFieldBuilder().getBuilder();
         }
@@ -3791,6 +3920,39 @@ public final class InputProtos {
             gps_ = null;
           }
           return gpsBuilder_;
+        }
+
+        // optional int32 offset_millis = 11;
+        private int offsetMillis_ ;
+        /**
+         * <code>optional int32 offset_millis = 11;</code>
+         */
+        public boolean hasOffsetMillis() {
+          return ((bitField0_ & 0x00000400) == 0x00000400);
+        }
+        /**
+         * <code>optional int32 offset_millis = 11;</code>
+         */
+        public int getOffsetMillis() {
+          return offsetMillis_;
+        }
+        /**
+         * <code>optional int32 offset_millis = 11;</code>
+         */
+        public Builder setOffsetMillis(int value) {
+          bitField0_ |= 0x00000400;
+          offsetMillis_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int32 offset_millis = 11;</code>
+         */
+        public Builder clearOffsetMillis() {
+          bitField0_ = (bitField0_ & ~0x00000400);
+          offsetMillis_ = 0;
+          onChanged();
+          return this;
         }
 
         // @@protoc_insertion_point(builder_scope:hello.SimpleSensorBatch.SimpleSensorSample)
@@ -4532,20 +4694,21 @@ public final class InputProtos {
       "\024\n\020AMBIENT_HUMIDITY\020\001\022\021\n\rAMBIENT_LIGHT\020\002" +
       "\022\024\n\020AMBIENT_DECIBELS\020\003\022\027\n\023AMBIENT_AIR_QU" +
       "ALITY\020\004\022\007\n\003GPS\020\005\022\026\n\022PHONE_ACCELERATION\020\006",
-      "\022\024\n\020PHONE_STEP_COUNT\020\007\"\331\003\n\021SimpleSensorB" +
+      "\022\024\n\020PHONE_STEP_COUNT\020\007\"\211\004\n\021SimpleSensorB" +
       "atch\022\021\n\tdevice_id\030\001 \001(\t\022<\n\007samples\030\002 \003(\013" +
       "2+.hello.SimpleSensorBatch.SimpleSensorS" +
       "ample\032a\n\007GpsInfo\022\020\n\010latitude\030\001 \001(\002\022\021\n\tlo" +
       "ngitude\030\002 \001(\002\022\020\n\010accuracy\030\003 \001(\002\022\r\n\005speed" +
-      "\030\004 \001(\002\022\020\n\010provider\030\005 \001(\t\032\217\002\n\022SimpleSenso" +
+      "\030\004 \001(\002\022\020\n\010provider\030\005 \001(\t\032\277\002\n\022SimpleSenso" +
       "rSample\022\021\n\ttimestamp\030\001 \001(\003\022\033\n\023ambient_te" +
       "mperature\030\002 \001(\002\022\030\n\020ambient_humidity\030\003 \001(" +
       "\002\022\025\n\rambient_light\030\004 \001(\002\022\030\n\020ambient_deci" +
       "bels\030\005 \001(\002\022\033\n\023ambient_air_quality\030\006 \001(\002\022",
       "\023\n\013device_data\030\007 \001(\014\022\035\n\025device_data_sign" +
-      "ature\030\010 \001(\014\022-\n\003gps\030\n \001(\0132 .hello.SimpleS" +
-      "ensorBatch.GpsInfoB+\n\032com.hello.suripu.a" +
-      "pi.inputB\013InputProtosH\001"
+      "ature\030\010 \001(\014\022\027\n\017sound_amplitude\030\t \001(\002\022-\n\003" +
+      "gps\030\n \001(\0132 .hello.SimpleSensorBatch.GpsI" +
+      "nfo\022\025\n\roffset_millis\030\013 \001(\005B+\n\032com.hello." +
+      "suripu.api.inputB\013InputProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -4581,7 +4744,7 @@ public final class InputProtos {
           internal_static_hello_SimpleSensorBatch_SimpleSensorSample_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_SimpleSensorBatch_SimpleSensorSample_descriptor,
-              new java.lang.String[] { "Timestamp", "AmbientTemperature", "AmbientHumidity", "AmbientLight", "AmbientDecibels", "AmbientAirQuality", "DeviceData", "DeviceDataSignature", "Gps", });
+              new java.lang.String[] { "Timestamp", "AmbientTemperature", "AmbientHumidity", "AmbientLight", "AmbientDecibels", "AmbientAirQuality", "DeviceData", "DeviceDataSignature", "SoundAmplitude", "Gps", "OffsetMillis", });
           return null;
         }
       };
