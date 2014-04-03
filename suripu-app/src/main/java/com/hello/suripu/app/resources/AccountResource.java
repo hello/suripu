@@ -6,10 +6,8 @@ import com.hello.suripu.core.Gender;
 import com.hello.suripu.core.Registration;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.oauth.AccessToken;
-import com.hello.suripu.core.oauth.ClientAuthenticationException;
 import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
-import com.hello.suripu.core.oauth.GrantTypeParam;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.OAuthTokenStore;
 import com.hello.suripu.core.oauth.Scope;
@@ -18,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.validation.Valid;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -60,29 +57,12 @@ public class AccountResource {
     @Timed
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public AccessToken register(@Valid final Registration registration) {
+    public Response register(@Valid final Registration registration) {
         LOGGER.info("{}", registration.gender);
 
         final Registration securedRegistration = Registration.encryptPassword(registration);
         final Account account = accountDAO.register(securedRegistration);
-
-        final OAuthScope[] scopes = new OAuthScope[]{OAuthScope.USER_BASIC, OAuthScope.USER_EXTENDED};
-
-        try {
-            final AccessToken token = tokenStore.storeAccessToken(
-                    new ClientDetails(GrantTypeParam.GrantType.AUTH_CODE,
-                    "clientId",
-                    "redirectUri",
-                    scopes,
-                    "state",
-                    "code",
-                    1L,
-                    "secret"));
-            return token;
-
-        } catch (ClientAuthenticationException e) {
-            throw new WebApplicationException(Response.serverError().build());
-        }
+        return Response.ok().build();
     }
 
     @GET
@@ -90,6 +70,6 @@ public class AccountResource {
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
     public Registration fakeRegistration() {
-        return new Registration("tim", "bart", "tim@sayhello.com", "123456789", Gender.OTHER, 167.0f, 72.0f, 32, "America/Los_Angeles");
+        return new Registration("John", "Doe", "john@example.com", "123456789", Gender.OTHER, 167.0f, 72.0f, 32, "America/Los_Angeles");
     }
 }

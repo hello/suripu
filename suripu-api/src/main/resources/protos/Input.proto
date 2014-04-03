@@ -47,8 +47,10 @@ message SimpleSensorBatch {
         optional float ambient_air_quality = 6; // deprecated
         optional bytes device_data = 7;   //
         optional bytes device_data_signature = 8;
+        optional float sound_amplitude = 9;
 
         optional GpsInfo gps = 10;
+        optional int32 offset_millis = 11;
     }
 
     optional string device_id = 1;

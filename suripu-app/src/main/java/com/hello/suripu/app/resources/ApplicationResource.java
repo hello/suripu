@@ -28,8 +28,6 @@ public class ApplicationResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public Response register(@Valid final ApplicationRegistration applicationRegistration) {
-
-
         applicationStore.register(applicationRegistration);
         return Response.ok().build();
     }

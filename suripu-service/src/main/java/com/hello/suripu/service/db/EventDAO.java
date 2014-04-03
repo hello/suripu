@@ -26,4 +26,8 @@ public interface EventDAO {
             @Bind("ambient_light") float light,
             @Bind("ambient_humidity") float humidity,
             @Bind("ambient_air_quality") float air_quality);
+
+
+    @SqlUpdate("INSERT INTO device_sound (device_id, amplitude, ts, offset_millis) VALUES(:device_id, :amplitude, :ts, :offset);")
+    void insertSound(@Bind("device_id") Long deviceId, @Bind("amplitude") float amplitude, @Bind("ts") DateTime ts, @Bind("offset") int offset);
 }
