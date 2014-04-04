@@ -107,7 +107,7 @@ CREATE TABLE device_sound(
     offset_millis INTEGER
 );
 
-CREATE UNIQUE INDEX uniq_device_ts on device_sound(device_id, ts);
+CREATE UNIQUE INDEX uniq_device_ts_sound on device_sound(device_id, ts);
 
 GRANT ALL PRIVILEGES ON device_sound TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE device_sound_id_seq TO ingress_user;

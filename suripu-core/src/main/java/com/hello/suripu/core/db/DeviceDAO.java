@@ -16,4 +16,9 @@ public interface DeviceDAO {
     @GetGeneratedKeys
     @SqlUpdate("INSERT INTO account_device_map (account_id, device_id) VALUES(:account_id, :device_id)")
     Long registerDevice(@Bind("account_id") Long accountId, @Bind("device_id") String deviceId);
+
+    // TODO : make it work for when we own multiple devices
+    @SingleValueResult(Long.class)
+    @SqlQuery("SELECT id FROM account_device_map WHERE account_id = :account_id LIMIT 1;")
+    Optional<Long> getByAccountId(@Bind("account_id") Long accountId);
 }

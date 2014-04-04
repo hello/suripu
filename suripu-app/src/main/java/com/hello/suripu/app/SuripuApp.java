@@ -6,6 +6,7 @@ import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.core.db.ApplicationsDAO;
+import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.app.resources.AccountResource;
 import com.hello.suripu.app.resources.HistoryResource;
@@ -61,6 +62,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AccountDAO accountDAO = jdbi.onDemand(AccountDAOImpl.class);
         final ApplicationsDAO applicationsDAO = jdbi.onDemand(ApplicationsDAO.class);
         final AccessTokenDAO accessTokenDAO = jdbi.onDemand(AccessTokenDAO.class);
+        final DeviceDAO deviceDAO = jdbi.onDemand(DeviceDAO.class);
 
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
         final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO);
@@ -97,7 +99,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO));
         environment.addResource(new AccountResource(accountDAO, accessTokenStore));
-        environment.addResource(new HistoryResource(timeSerieDAO));
+        environment.addResource(new HistoryResource(timeSerieDAO, deviceDAO));
         environment.addResource(new ApplicationResource(applicationStore));
         environment.addHealthCheck(new DBIHealthCheck(jdbi, "account-db", "SELECT * FROM accounts ORDER BY ID DESC LIMIT 1;"));
     }
