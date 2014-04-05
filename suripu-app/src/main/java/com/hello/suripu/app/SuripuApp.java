@@ -65,7 +65,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final DeviceDAO deviceDAO = jdbi.onDemand(DeviceDAO.class);
 
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
-        final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO);
+        final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
 
         // TODO : move this in the configuration file
         final String libratoUsername= "tim@sayhello.com";
@@ -98,7 +98,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addProvider(new OAuthProvider<AccessToken>(new OAuthAuthenticator(accessTokenStore), "protected-resources"));
 
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO));
-        environment.addResource(new AccountResource(accountDAO, accessTokenStore));
+        environment.addResource(new AccountResource(accountDAO));
         environment.addResource(new HistoryResource(timeSerieDAO, deviceDAO));
         environment.addResource(new ApplicationResource(applicationStore));
         environment.addHealthCheck(new DBIHealthCheck(jdbi, "account-db", "SELECT * FROM accounts ORDER BY ID DESC LIMIT 1;"));
