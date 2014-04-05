@@ -31,7 +31,8 @@ public class ApplicationMapper implements ResultSetMapper<Application>{
                 r.getLong("dev_account_id"),
                 r.getString("description"),
                 r.getBoolean("published"),
-                new DateTime(r.getTimestamp("created"))
+                new DateTime(r.getTimestamp("created")),
+                r.getBoolean("internal_only")
         );
     }
 }
