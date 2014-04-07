@@ -84,7 +84,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         if(!grantedScopes.containsAll(requiredScopes)) {
             LOGGER.debug("{}", requiredScopes);
             LOGGER.debug("{}", grantedScopes);
-            LOGGER.warn("Scopes don't match", credentials.tokenOrCode);
+            LOGGER.warn("Scopes don't match for {}", credentials.tokenOrCode);
             return Optional.absent();
         }
 
