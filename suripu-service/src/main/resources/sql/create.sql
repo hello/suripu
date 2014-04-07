@@ -55,12 +55,14 @@ CREATE TABLE oauth_applications (
     dev_account_id BIGINT,
     description VARCHAR(255),
     published boolean,
-    created TIMESTAMP default current_timestamp
+    created TIMESTAMP default current_timestamp,
+    internal_only BOOLEAN default false
 );
 
 CREATE UNIQUE INDEX uniq_client_id on oauth_applications(client_id);
-
 CREATE INDEX dev_account_id_idx on oauth_applications(dev_account_id);
+
+-- alter table oauth_applications add column internal_only BOOLEAN DEFAULT FALSE;
 
 
 GRANT ALL PRIVILEGES ON oauth_applications TO ingress_user;

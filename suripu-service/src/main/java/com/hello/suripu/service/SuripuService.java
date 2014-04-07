@@ -4,6 +4,7 @@ import com.hello.dropwizard.mikkusu.helpers.JacksonProtobufProvider;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.core.db.AccessTokenDAO;
+import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.oauth.*;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
@@ -39,8 +40,11 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final EventDAO dao = jdbi.onDemand(EventDAO.class);
         final AccessTokenDAO accessTokenDAO = jdbi.onDemand(AccessTokenDAO.class);
         final DeviceDAO deviceDAO = jdbi.onDemand(DeviceDAO.class);
+        final ApplicationsDAO applicationsDAO = jdbi.onDemand(ApplicationsDAO.class);
 
-        final OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore = new PersistentAccessTokenStore(accessTokenDAO);
+        final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
+
+        final OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
 
         environment.addProvider(new OAuthProvider<AccessToken>(new OAuthAuthenticator(tokenStore), "protected-resources"));
 
