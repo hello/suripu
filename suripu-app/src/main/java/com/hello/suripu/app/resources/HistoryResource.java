@@ -61,7 +61,10 @@ public class HistoryResource {
     @GET
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Record> getRecordsBetween(@QueryParam("from") Long from, @QueryParam("to") Long to) {
+    public List<Record> getRecordsBetween(
+            @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
+            @QueryParam("from") Long from,
+            @QueryParam("to") Long to) {
 
         return new ArrayList<Record>();
     }
