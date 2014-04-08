@@ -32,6 +32,7 @@ public class AccessTokenMapper implements ResultSetMapper<AccessToken> {
                 r.getLong("account_id"),
                 r.getLong("app_id"),
                 s
+
         );
     }
 }

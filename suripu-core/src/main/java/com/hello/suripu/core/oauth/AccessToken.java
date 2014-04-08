@@ -36,7 +36,6 @@ public class AccessToken {
     @JsonIgnore
     public final OAuthScope[] scopes;
 
-
     @JsonProperty("access_token")
     public String serializeAccessToken() {
         return token.toString().replace("-", "");

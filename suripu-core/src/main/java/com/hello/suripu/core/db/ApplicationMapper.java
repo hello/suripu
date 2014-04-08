@@ -1,6 +1,7 @@
 package com.hello.suripu.core.db;
 
 import com.hello.suripu.core.oauth.Application;
+import com.hello.suripu.core.oauth.GrantTypeParam;
 import com.hello.suripu.core.oauth.OAuthScope;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.StatementContext;
@@ -32,7 +33,7 @@ public class ApplicationMapper implements ResultSetMapper<Application>{
                 r.getString("description"),
                 r.getBoolean("published"),
                 new DateTime(r.getTimestamp("created")),
-                r.getBoolean("internal_only")
+                GrantTypeParam.GrantType.values()[r.getInt("grant_type")]
         );
     }
 }
