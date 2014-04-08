@@ -77,7 +77,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final MetricPredicate predicate = new RegexMetricPredicate("(^com\\.hello\\..*|^org\\.eclipse\\.jetty\\.servlet)");
 
         final InetAddress addr = InetAddress.getLocalHost();
-        final String hostname = addr.getHostName();
+//        final String hostname = addr.getHostName();
+        final String hostname = "suripu-app"; // Consolidate all sources to come from a "single app". Cheaper :)
 
         LibratoReporter.enable(
                 LibratoReporter.builder(libratoUsername, libratoApiKey, hostname)
