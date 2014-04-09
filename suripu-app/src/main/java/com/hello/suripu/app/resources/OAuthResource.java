@@ -67,6 +67,7 @@ public class OAuthResource {
         }
         if(grantType.getType().equals(GrantTypeParam.GrantType.PASSWORD)) {
             if(username == null || password == null) {
+                LOGGER.error("username or password is null");
                 return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
                         .type(MediaType.TEXT_PLAIN_TYPE).build();
             }
@@ -104,11 +105,13 @@ public class OAuthResource {
             // TODO: BE SMARTER
             final Optional<Application> applicationOptional = applicationStore.getApplicationByClientId(details.clientId);
             if(!applicationOptional.isPresent()) {
+                LOGGER.error("application wasn't found for clientId : {}", details.clientId);
                 return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
                         .type(MediaType.TEXT_PLAIN_TYPE).build();
             }
 
-            if(!applicationOptional.get().grantType.equals(grantType)) {
+            if(!applicationOptional.get().grantType.equals(grantType.getType())) {
+                LOGGER.error("Grant types don't match : {} and {}", applicationOptional.get().grantType, grantType.getType());
                 return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
                         .type(MediaType.TEXT_PLAIN_TYPE).build();
             }
