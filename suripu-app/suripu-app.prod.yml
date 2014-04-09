@@ -1,3 +1,4 @@
+metrics_enabled: true
 database:
   driverClass: org.postgresql.Driver
   user: ingress_user

@@ -6,10 +6,7 @@ import com.hello.suripu.core.Gender;
 import com.hello.suripu.core.Registration;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.oauth.AccessToken;
-import com.hello.suripu.core.oauth.ClientCredentials;
-import com.hello.suripu.core.oauth.ClientDetails;
 import com.hello.suripu.core.oauth.OAuthScope;
-import com.hello.suripu.core.oauth.OAuthTokenStore;
 import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;
@@ -30,11 +27,9 @@ public class AccountResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountResource.class);
     private final AccountDAO accountDAO;
-    private final OAuthTokenStore<AccessToken,ClientDetails, ClientCredentials> tokenStore;
 
-    public AccountResource(final AccountDAO accountDAO, final OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore) {
+    public AccountResource(final AccountDAO accountDAO) {
         this.accountDAO = accountDAO;
-        this.tokenStore = tokenStore;
     }
 
     @GET

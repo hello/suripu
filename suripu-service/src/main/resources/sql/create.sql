@@ -55,12 +55,16 @@ CREATE TABLE oauth_applications (
     dev_account_id BIGINT,
     description VARCHAR(255),
     published boolean,
-    created TIMESTAMP default current_timestamp
+    created TIMESTAMP default current_timestamp,
+    grant_type INTEGER,
+    internal_only BOOLEAN default false
 );
 
 CREATE UNIQUE INDEX uniq_client_id on oauth_applications(client_id);
-
 CREATE INDEX dev_account_id_idx on oauth_applications(dev_account_id);
+
+-- alter table oauth_applications add column internal_only BOOLEAN DEFAULT FALSE;
+-- alter table oauth_applications add column grant_type INTEGER DEFAULT 2;
 
 
 GRANT ALL PRIVILEGES ON oauth_applications TO ingress_user;
@@ -111,3 +115,23 @@ CREATE UNIQUE INDEX uniq_device_ts_sound on device_sound(device_id, ts);
 
 GRANT ALL PRIVILEGES ON device_sound TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE device_sound_id_seq TO ingress_user;
+
+
+CREATE TABLE device_scores(
+    id BIGSERIAL PRIMARY KEY,
+    device_id INTEGER,
+    ambient_temp INTEGER,
+    ambient_air_quality INTEGER,
+    ambient_humidity INTEGER,
+    ambient_light INTEGER,
+    ts TIMESTAMP,
+    offset_millis INTEGER
+);
+
+CREATE TABLE account_scores(
+    id BIGSERIAL PRIMARY KEY,
+    account_id INTEGER,
+    score INTEGER,
+    ts TIMESTAMP,
+    offset_millis INTEGER
+);

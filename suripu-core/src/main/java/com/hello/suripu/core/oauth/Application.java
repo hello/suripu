@@ -36,6 +36,9 @@ public class Application {
     @JsonProperty("created")
     public final DateTime created;
 
+    @JsonIgnore
+    public final GrantTypeParam.GrantType grantType;
+
     public Application(
             final Long id,
             final String name,
@@ -46,7 +49,8 @@ public class Application {
             final Long developerAccountId,
             final String description,
             final Boolean published,
-            final DateTime created
+            final DateTime created,
+            final GrantTypeParam.GrantType grantType
     ) {
         this.id = id;
         this.name = name;
@@ -58,6 +62,7 @@ public class Application {
         this.description = description;
         this.published = published;
         this.created = created;
+        this.grantType = grantType;
     }
 
     public static Application fromApplicationRegistration(final ApplicationRegistration registration, Long id) {
@@ -71,7 +76,8 @@ public class Application {
                 registration.developerAccountId,
                 registration.description,
                 Boolean.FALSE, // Application aren't published by default.
-                DateTime.now()
+                DateTime.now(),
+                GrantTypeParam.GrantType.AUTH_CODE
         );
     }
 }
