@@ -14,6 +14,9 @@ public class Record {
     @JsonProperty("air_quality")
     public final float ambientAirQuality;
 
+    @JsonProperty("light")
+    public final float ambientLight;
+
     @JsonProperty("timestamp_utc")
     public final DateTime dateTime;
 
@@ -23,12 +26,14 @@ public class Record {
     public Record(
             final float ambientTemperature,
             float ambientHumidity,
+            final float ambientLight,
             float ambientAirQuality,
             final DateTime dateTime,
             final long offsetMillis) {
         this.ambientTemperature = ambientTemperature;
         this.ambientHumidity = ambientHumidity;
         this.ambientAirQuality = ambientAirQuality;
+        this.ambientLight = ambientLight;
         this.dateTime = dateTime;
         this.offsetMillis = offsetMillis;
     }

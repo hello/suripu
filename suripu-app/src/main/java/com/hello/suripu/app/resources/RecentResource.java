@@ -13,7 +13,7 @@ public class RecentResource {
     @GET
     @Timed
     public Record getRecent() {
-        return new Record(12.3f, 22.0f, 55.0f, DateTime.now(), 0);
+        return new Record(12.3f, 22.0f, 55.0f, 90, DateTime.now(), 0);
     }
 
 }

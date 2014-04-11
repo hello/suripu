@@ -2,6 +2,8 @@ package com.hello.suripu.core;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.joda.time.DateTime;
+import com.google.common.base.Objects;
+
 
 public class Score {
 
@@ -36,5 +38,18 @@ public class Score {
         this.airQuality = airQuality;
         this.light = light;
         this.dateTime = dateTime;
+    }
+
+    // TODO: add equals and hashcode method
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(Score.class)
+                .add("temperature", temperature)
+                .add("humidity", humidity)
+                .add("sound", sound)
+                .add("air_quality", airQuality)
+                .add("light", light)
+                .toString();
     }
 }

@@ -108,7 +108,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new AccountResource(accountDAO));
         environment.addResource(new HistoryResource(timeSerieDAO, deviceDAO));
         environment.addResource(new ApplicationResource(applicationStore));
-        environment.addResource(new ScoreResource());
+        environment.addResource(new ScoreResource(timeSerieDAO, deviceDAO));
         environment.addHealthCheck(new DBIHealthCheck(jdbi, "account-db", "SELECT * FROM accounts ORDER BY ID DESC LIMIT 1;"));
     }
 }
