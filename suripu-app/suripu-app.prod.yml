@@ -1,4 +1,9 @@
 metrics_enabled: true
+librato:
+  username: tim@sayhello.com
+  api_key: 64ab12d5c69fa2b6873b7ace11aba06f4d8c93fa9b0cd7012a0cd2ba2f9c53ac
+  reporting_interval_in_seconds: 30
+
 database:
   driverClass: org.postgresql.Driver
   user: ingress_user
