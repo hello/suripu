@@ -21,6 +21,15 @@ public class SuripuConfiguration extends Configuration {
 
     @Valid
     @NotNull
+    @JsonProperty("metrics_enabled")
+    private Boolean metricsEnabled;
+
+    public Boolean getMetricsEnabled() {
+        return metricsEnabled;
+    }
+
+    @Valid
+    @NotNull
     @JsonProperty("librato")
     private LibratoConfiguration librato;
 
