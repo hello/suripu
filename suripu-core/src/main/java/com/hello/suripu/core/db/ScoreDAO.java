@@ -14,7 +14,7 @@ public interface ScoreDAO {
     @SqlQuery("SELECT * FROM account_scores WHERE account_id = : account_id ORDER BY id desc LIMIT 7;")
     ImmutableList<Score> getRecentScores(@Bind("account_id") Long accountId);
 
-
+    //TODO : Add sound score!
     @SqlUpdate("INSERT INTO account_scores (account_id, ambient_temp, ambient_humidity, ambient_air_quality, ambient_light, ts, offset_millis) VALUES " +
             "(:account_id, :ambient_temp, :ambient_humidity, :ambient_air_quality, :ambient_light, :ts, :offset_millis);")
     void insertScore(@BindScore Score score);
