@@ -131,7 +131,16 @@ CREATE TABLE device_scores(
 CREATE TABLE account_scores(
     id BIGSERIAL PRIMARY KEY,
     account_id INTEGER,
-    score INTEGER,
+    ambient_temp INTEGER,
+    ambient_humidity INTEGER,
+    ambient_air_quality INTEGER,
+    ambient_light INTEGER,
     ts TIMESTAMP,
     offset_millis INTEGER
 );
+
+
+CREATE UNIQUE INDEX uniq_account_id_ts_account_scores on account_scores(account_id, ts);
+
+GRANT ALL PRIVILEGES ON account_scores TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE account_scores_id_seq TO ingress_user;

@@ -75,8 +75,8 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
 
         // Make sure we have all the permissions
         if(!grantedScopes.containsAll(requiredScopes)) {
-            LOGGER.debug("{}", requiredScopes);
-            LOGGER.debug("{}", grantedScopes);
+            LOGGER.debug("Required: {}", requiredScopes);
+            LOGGER.debug("Granted: {}", grantedScopes);
             LOGGER.warn("Scopes don't match for {}", credentials.tokenOrCode);
             return Optional.absent();
         }

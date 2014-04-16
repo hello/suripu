@@ -1,9 +1,10 @@
 package com.hello.suripu.app.resources;
 
 import com.google.common.base.Optional;
-import com.hello.suripu.core.Record;
 import com.hello.suripu.core.Score;
+import com.hello.suripu.core.SoundRecord;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.TimeSerieDAO;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -29,22 +30,12 @@ public class ScoreResource {
 
     private final TimeSerieDAO timeSerieDAO;
     private final DeviceDAO deviceDAO;
+    private final ScoreDAO scoreDAO;
 
-    public ScoreResource(final TimeSerieDAO timeSerieDAO, final DeviceDAO deviceDAO) {
+    public ScoreResource(final TimeSerieDAO timeSerieDAO, final DeviceDAO deviceDAO, final ScoreDAO scoreDAO) {
         this.timeSerieDAO = timeSerieDAO;
         this.deviceDAO = deviceDAO;
-    }
-
-
-    private int computeScore(List<Record> records) {
-        int score = 100;
-
-        for(Record record : records) {
-            if(record.ambientLight > 100000) {
-                score -= 1;
-            }
-        }
-        return Math.max(0, score);
+        this.scoreDAO = scoreDAO;
     }
 
     @GET
@@ -55,17 +46,78 @@ public class ScoreResource {
         if(!deviceIdOptional.isPresent()) {
             return Response.status(Response.Status.NOT_FOUND).entity("not found").build();
         }
-        DateTime now = DateTime.now(DateTimeZone.UTC);
-        DateTime then = now.minusDays(7);
 
-        List<Record> records = timeSerieDAO.getHistoricalData(deviceIdOptional.get(), now, then);
+        final DateTime now = DateTime.now(DateTimeZone.UTC);
+        final DateTime then = now.minusDays(2);
 
-        int computedScore = computeScore(records);
-        LOGGER.debug("Computed score = {}", computedScore);
+        final List<SoundRecord> soundRecords = timeSerieDAO.getAvgSoundData(deviceIdOptional.get(), then, now);
+        LOGGER.debug("Got {} records", soundRecords.size());
 
-        final Score score = new Score(98, 96, 60,50,computedScore, DateTime.now(DateTimeZone.UTC));
+        int soundScore = computeSoundScore(soundRecords);
+        final Score score = new Score.Builder()
+                .withAccountId(token.accountId)
+                .withSound(soundScore)
+                .build();
+
         LOGGER.debug(score.toString());
+
         return Response.ok().entity(score).build();
+    }
+
+    private int computeSoundScore(List<SoundRecord> soundRecords) {
+        if(soundRecords.isEmpty()) {
+            return 0;
+        }
+
+        int score = 100;
+        int sum = 0;
+
+        for(SoundRecord record : soundRecords) {
+            sum += Math.round(record.averageMaxAmplitude);
+        }
+
+        float mean = sum / soundRecords.size();
+
+        final List<Float> devsFromMean = new ArrayList<Float>(soundRecords.size());
+        final List<Float> squareDevsFromMean = new ArrayList<Float>(soundRecords.size());
+
+        for(SoundRecord record : soundRecords) {
+            devsFromMean.add(record.averageMaxAmplitude - mean);
+        }
+
+        for(Float sample: devsFromMean) {
+            squareDevsFromMean.add((float) Math.pow(sample, 2));
+        }
+
+        float sumDeviations = 0;
+        for(Float sample : squareDevsFromMean) {
+            sumDeviations += sample;
+        }
+
+        float stddev = (float) Math.sqrt(sumDeviations / (soundRecords.size() - 1));
+
+        for(SoundRecord soundRecord : soundRecords) {
+            if(Math.abs(soundRecord.averageMaxAmplitude - mean) > stddev * 0.75) {
+                score -= 1;
+            }
+        }
+
+        return score;
+    }
+    @GET
+    @Path("/recent")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getMostRecentScores(@Scope({OAuthScope.SCORE_READ}) final AccessToken token) {
+
+        final Optional<Long> deviceIdOptional = deviceDAO.getByAccountId(token.accountId);
+        if(!deviceIdOptional.isPresent()) {
+            LOGGER.debug("Didn't find deviceId");
+            return Response.status(Response.Status.NOT_FOUND).entity("not found").build();
+        }
+
+        final List<Score> scores = scoreDAO.getRecentScores(token.accountId);
+        LOGGER.debug("Found {} scores", scores.size());
+        return Response.ok().entity(scores).build();
     }
 
     @GET
@@ -78,7 +130,7 @@ public class ScoreResource {
         final List<Score> scores = new ArrayList<Score>(10);
 
         for(int i =0; i < 10; i ++) {
-            final Score score = new Score(98 + i, 96 + i,60 +i ,80 +i ,12 + i, DateTime.now(DateTimeZone.UTC));
+            final Score score = new Score(token.accountId, 98 + i, 96 + i,60 +i ,80 +i ,12 + i, DateTime.now(DateTimeZone.UTC));
             scores.add(score);
         }
 
