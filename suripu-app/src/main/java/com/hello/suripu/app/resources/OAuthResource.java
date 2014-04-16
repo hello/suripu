@@ -18,16 +18,15 @@ import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.POST;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.net.URI;
 
 @Path("/oauth2")
 public class OAuthResource {
@@ -68,6 +67,7 @@ public class OAuthResource {
         }
         if(grantType.getType().equals(GrantTypeParam.GrantType.PASSWORD)) {
             if(username == null || password == null) {
+                LOGGER.error("username or password is null");
                 return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
                         .type(MediaType.TEXT_PLAIN_TYPE).build();
             }
@@ -105,10 +105,17 @@ public class OAuthResource {
             // TODO: BE SMARTER
             final Optional<Application> applicationOptional = applicationStore.getApplicationByClientId(details.clientId);
             if(!applicationOptional.isPresent()) {
+                LOGGER.error("application wasn't found for clientId : {}", details.clientId);
                 return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
                         .type(MediaType.TEXT_PLAIN_TYPE).build();
             }
-            details.setAppId(applicationOptional.get().id);
+
+            if(!applicationOptional.get().grantType.equals(grantType.getType())) {
+                LOGGER.error("Grant types don't match : {} and {}", applicationOptional.get().grantType, grantType.getType());
+                return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
+                        .type(MediaType.TEXT_PLAIN_TYPE).build();
+            }
+            details.setApp(applicationOptional.get());
             AccessToken accessToken = null;
 
             try {
@@ -137,32 +144,34 @@ public class OAuthResource {
             @QueryParam("state") String state) {
 
 
-        // TODO : application store
-        // TODO : validate redirect_uri
-        // TODO : validate scope
-        // TODO : validate state
+        return Response.status(Response.Status.SERVICE_UNAVAILABLE).entity("service unavailable").build();
 
-        final OAuthScope[] scopes = new OAuthScope[1];
-        scopes[0] = OAuthScope.USER_BASIC;
-        final ClientDetails clientDetails = new ClientDetails(
-                GrantTypeParam.GrantType.AUTH_CODE,
-                clientId,
-                redirectUri,
-                scopes,
-                state,
-                "",
-                1L,
-                ""
-        );
-
-        ClientCredentials credentials;
-        try {
-            credentials = tokenStore.storeAuthorizationCode(clientDetails);
-        } catch (ClientAuthenticationException e) {
-            LOGGER.error(e.getMessage());
-            return Response.serverError().build();
-        }
-        final String uri = clientDetails.redirectUri + "?code=" + credentials.tokenOrCode;
-        return Response.temporaryRedirect(URI.create(uri)).build();
+//        // TODO : application store
+//        // TODO : validate redirect_uri
+//        // TODO : validate scope
+//        // TODO : validate state
+//
+//        final OAuthScope[] scopes = new OAuthScope[1];
+//        scopes[0] = OAuthScope.USER_BASIC;
+//        final ClientDetails clientDetails = new ClientDetails(
+//                GrantTypeParam.GrantType.AUTH_CODE,
+//                clientId,
+//                redirectUri,
+//                scopes,
+//                state,
+//                "",
+//                1L,
+//                ""
+//        );
+//
+//        ClientCredentials credentials;
+//        try {
+//            credentials = tokenStore.storeAuthorizationCode(clientDetails);
+//        } catch (ClientAuthenticationException e) {
+//            LOGGER.error(e.getMessage());
+//            return Response.serverError().build();
+//        }
+//        final String uri = clientDetails.redirectUri + "?code=" + credentials.tokenOrCode;
+//        return Response.temporaryRedirect(URI.create(uri)).build();
     }
 }

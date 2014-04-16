@@ -15,7 +15,7 @@ public class ClientDetails{
     public final String code;
     public final Long accountId;
     public final String secret;
-    public Optional<Long> appId = Optional.absent();
+    public Optional<Application> application = Optional.absent();
 
     public ClientDetails(
             final GrantTypeParam.GrantType responseType,
@@ -36,9 +36,9 @@ public class ClientDetails{
         this.secret = secret;
     }
 
-    public void setAppId(final Long appId) {
-        checkNotNull(appId, "AppId can not be null");
-        this.appId = Optional.of(appId);
+    public void setApp(final Application application) {
+        checkNotNull(application, "Application can not be null");
+        this.application = Optional.of(application);
     }
 
     @Override

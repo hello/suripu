@@ -23,6 +23,11 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
 
     @Override
     public AccessToken storeAccessToken(final ClientDetails clientDetails) throws ClientAuthenticationException {
+
+        if(!clientDetails.application.isPresent()) {
+            LOGGER.error("Application was not present");
+            throw new ClientAuthenticationException();
+        }
         // TODO: Generate token here
         final String token = String.valueOf(currentId.incrementAndGet());
 
@@ -33,7 +38,7 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
                 300L,
                 DateTime.now(DateTimeZone.UTC),
                 clientDetails.accountId,
-                clientDetails.accountId, // TODO : make this the APP_ID
+                clientDetails.application.get().id,
                 clientDetails.scopes
         );
 

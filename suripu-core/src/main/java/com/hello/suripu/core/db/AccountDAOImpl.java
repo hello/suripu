@@ -44,7 +44,7 @@ public abstract class AccountDAOImpl implements AccountDAO {
         }
 
         if(!accountOptional.isPresent()) {
-            LOGGER.warn("Account wasn't found.");
+            LOGGER.warn("Account wasn't found for email = {} and password = {}...", email, password.substring(0, 1));
             return Optional.absent();
         }
 

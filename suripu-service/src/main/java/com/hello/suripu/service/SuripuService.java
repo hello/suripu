@@ -4,8 +4,17 @@ import com.hello.dropwizard.mikkusu.helpers.JacksonProtobufProvider;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.core.db.AccessTokenDAO;
+import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.oauth.*;
+import com.hello.suripu.core.db.ScoreDAO;
+import com.hello.suripu.core.oauth.AccessToken;
+import com.hello.suripu.core.oauth.ClientCredentials;
+import com.hello.suripu.core.oauth.ClientDetails;
+import com.hello.suripu.core.oauth.OAuthAuthenticator;
+import com.hello.suripu.core.oauth.OAuthProvider;
+import com.hello.suripu.core.oauth.OAuthTokenStore;
+import com.hello.suripu.core.oauth.PersistentAccessTokenStore;
+import com.hello.suripu.core.oauth.PersistentApplicationStore;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
 import com.hello.suripu.service.db.EventDAO;
 import com.hello.suripu.service.db.JodaArgumentFactory;
@@ -39,12 +48,16 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final EventDAO dao = jdbi.onDemand(EventDAO.class);
         final AccessTokenDAO accessTokenDAO = jdbi.onDemand(AccessTokenDAO.class);
         final DeviceDAO deviceDAO = jdbi.onDemand(DeviceDAO.class);
+        final ApplicationsDAO applicationsDAO = jdbi.onDemand(ApplicationsDAO.class);
+        final ScoreDAO scoreDAO = jdbi.onDemand(ScoreDAO.class);
 
-        final OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore = new PersistentAccessTokenStore(accessTokenDAO);
+        final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
+
+        final OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
 
         environment.addProvider(new OAuthProvider<AccessToken>(new OAuthAuthenticator(tokenStore), "protected-resources"));
 
-        environment.addResource(new ReceiveResource(dao, deviceDAO));
+        environment.addResource(new ReceiveResource(dao, deviceDAO, scoreDAO));
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());
     }

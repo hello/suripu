@@ -2,6 +2,7 @@ package com.hello.suripu.app.resources;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.core.GroupedRecord;
 import com.hello.suripu.core.Record;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.TimeSerieDAO;
@@ -21,6 +22,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,9 +46,9 @@ public class HistoryResource {
     public List<Record> getRecords(
             @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
             @PathParam("days") final Integer numDays) {
-
+        LOGGER.debug("asking for {} days of recent history", numDays);
         final DateTime now = DateTime.now(DateTimeZone.UTC);
-        final DateTime then = now.minusDays(numDays);
+        final DateTime then = now.minusDays(60);
 
         final Optional<Long> deviceId = deviceDAO.getByAccountId(accessToken.accountId);
         LOGGER.debug("Account id = {}", accessToken.accountId);
@@ -55,14 +57,42 @@ public class HistoryResource {
         }
         LOGGER.debug("device = {}", deviceId.get());
         final ImmutableList<Record> records = timeSerieDAO.getHistoricalData(deviceId.get(), then, now);
+        LOGGER.debug("Found {} records in DB", records.size());
         return records;
     }
 
     @GET
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Record> getRecordsBetween(@QueryParam("from") Long from, @QueryParam("to") Long to) {
+    public List<Record> getRecordsBetween(
+            @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
+            @QueryParam("from") Long from,
+            @QueryParam("to") Long to) {
 
         return new ArrayList<Record>();
+    }
+
+
+    @GET
+    @Timed
+    @Path("/grouped/{num_days}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getGroupedSensorResults(
+            @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken token,
+            @PathParam("num_days") final Integer numDays) {
+
+        Optional<Long> optionalDeviceId = deviceDAO.getByAccountId(token.accountId);
+        if(!optionalDeviceId.isPresent()) {
+            LOGGER.warn("Device not found for account = {}", token.accountId);
+            return Response.status(Response.Status.NOT_FOUND).entity("not found").type(MediaType.TEXT_PLAIN).build();
+        }
+
+        final DateTime now = DateTime.now(DateTimeZone.UTC);
+        final DateTime then = now.minusDays(numDays);
+
+        final ImmutableList<Record> records = timeSerieDAO.getHistoricalData(optionalDeviceId.get(), then, now);
+
+        final GroupedRecord groupedRecord = GroupedRecord.fromRecords(records);
+        return Response.ok().entity(groupedRecord).build();
     }
 }

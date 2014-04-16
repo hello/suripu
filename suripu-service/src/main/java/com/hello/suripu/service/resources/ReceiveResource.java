@@ -4,7 +4,9 @@ import com.google.common.base.Optional;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
+import com.hello.suripu.core.Score;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -26,6 +28,8 @@ import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,10 +41,12 @@ public class ReceiveResource {
 
     private final EventDAO eventDAO;
     private final DeviceDAO deviceDAO;
+    private final ScoreDAO scoreDAO;
 
-    public ReceiveResource(final EventDAO eventDAO, final DeviceDAO deviceDAO) {
+    public ReceiveResource(final EventDAO eventDAO, final DeviceDAO deviceDAO, final ScoreDAO scoreDAO) {
         this.eventDAO = eventDAO;
         this.deviceDAO = deviceDAO;
+        this.scoreDAO = scoreDAO;
     }
 
     @POST
@@ -72,6 +78,13 @@ public class ReceiveResource {
             LOGGER.warn("DeviceId: {} was not found", batch.getDeviceId());
             return Response.status(Response.Status.BAD_REQUEST).entity("Bad Request").type(MediaType.TEXT_PLAIN_TYPE).build();
         }
+
+        final ArrayList<Integer> lightSamples = new ArrayList<Integer>(batch.getSamplesCount());
+        final ArrayList<Integer> tempSamples = new ArrayList<Integer>(batch.getSamplesCount());
+        final ArrayList<Integer> humiditySamples = new ArrayList<Integer>(batch.getSamplesCount());
+        final ArrayList<Integer> airQualitySamples = new ArrayList<Integer>(batch.getSamplesCount());
+
+        final ArrayList<DateTime> dateTimes = new ArrayList<DateTime>();
 
         for(InputProtos.SimpleSensorBatch.SimpleSensorSample sample : batch.getSamplesList()) {
 
@@ -129,6 +142,12 @@ public class ReceiveResource {
                     LOGGER.warn("Duplicate entry for {} with ts = {}", deviceIdOptional.get(), rounded);
                 }
 
+                // TODO: refactor this, this is ugly
+                lightSamples.add(light);
+                tempSamples.add(temp);
+                humiditySamples.add(humidity);
+                airQualitySamples.add(airQuality);
+                dateTimes.add(rounded);
             }
 
 
@@ -149,6 +168,78 @@ public class ReceiveResource {
 
         }
 
+
+        int lightScore = scoreLight(lightSamples);
+        int tempScore = scoreTemperatures(tempSamples);
+        int humidityScore = scoreHumidity(humiditySamples);
+        int airQualityScore = scoreAirQuality(airQualitySamples);
+
+        final Score score = new Score.Builder()
+                .withAccountId(accessToken.accountId)
+                .withLight(lightScore)
+                .withTemperature(tempScore)
+                .withHumidity(humidityScore)
+                .withAirQuality(airQualityScore)
+                .withSound(0)
+                .build();
+        scoreDAO.insertScore(score);
+
         return Response.ok().build();
+    }
+
+    private int scoreLight(List<Integer> items) {
+        // TODO : REAL SCORING
+        if(items.isEmpty()) {
+            return 0;
+        }
+
+        int sum = 0;
+        for(Integer i : items) {
+            sum += i;
+        }
+
+        return Math.round(sum / items.size());
+    }
+
+    private int scoreHumidity(List<Integer> items) {
+        // TODO : REAL SCORING
+        if(items.isEmpty()) {
+            return 0;
+        }
+
+        int sum = 0;
+        for(Integer i : items) {
+            sum += i;
+        }
+
+        return Math.round(sum / items.size());
+    }
+
+    private int scoreAirQuality(List<Integer> items) {
+        // TODO : REAL SCORING
+        if(items.isEmpty()) {
+            return 0;
+        }
+
+        int sum = 0;
+        for(Integer i : items) {
+            sum += i;
+        }
+
+        return Math.round(sum / items.size());
+    }
+
+    private int scoreTemperatures(List<Integer> items) {
+        // TODO : REAL SCORING
+        if(items.isEmpty()) {
+            return 0;
+        }
+
+        int sum = 0;
+        for(Integer i : items) {
+            sum += i;
+        }
+
+        return Math.round(sum / items.size());
     }
 }
