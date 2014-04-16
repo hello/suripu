@@ -46,9 +46,9 @@ public class HistoryResource {
     public List<Record> getRecords(
             @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
             @PathParam("days") final Integer numDays) {
-
+        LOGGER.debug("asking for {} days of recent history", numDays);
         final DateTime now = DateTime.now(DateTimeZone.UTC);
-        final DateTime then = now.minusDays(numDays);
+        final DateTime then = now.minusDays(60);
 
         final Optional<Long> deviceId = deviceDAO.getByAccountId(accessToken.accountId);
         LOGGER.debug("Account id = {}", accessToken.accountId);
@@ -57,6 +57,7 @@ public class HistoryResource {
         }
         LOGGER.debug("device = {}", deviceId.get());
         final ImmutableList<Record> records = timeSerieDAO.getHistoricalData(deviceId.get(), then, now);
+        LOGGER.debug("Found {} records in DB", records.size());
         return records;
     }
 
