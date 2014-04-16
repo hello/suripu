@@ -1,8 +1,10 @@
 package com.hello.suripu.app.resources;
 
 import com.google.common.base.Optional;
+import com.hello.suripu.core.Account;
 import com.hello.suripu.core.Score;
 import com.hello.suripu.core.SoundRecord;
+import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.TimeSerieDAO;
@@ -31,29 +33,47 @@ public class ScoreResource {
     private final TimeSerieDAO timeSerieDAO;
     private final DeviceDAO deviceDAO;
     private final ScoreDAO scoreDAO;
+    private final AccountDAO accountDAO;
 
-    public ScoreResource(final TimeSerieDAO timeSerieDAO, final DeviceDAO deviceDAO, final ScoreDAO scoreDAO) {
+    public ScoreResource(
+            final TimeSerieDAO timeSerieDAO,
+            final DeviceDAO deviceDAO,
+            final ScoreDAO scoreDAO,
+            final AccountDAO accountDAO) {
         this.timeSerieDAO = timeSerieDAO;
         this.deviceDAO = deviceDAO;
         this.scoreDAO = scoreDAO;
+        this.accountDAO = accountDAO;
     }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getMostRecent(@Scope({OAuthScope.SCORE_READ}) final AccessToken token) {
 
-        Optional<Long> deviceIdOptional = deviceDAO.getByAccountId(token.accountId);
+        final Optional<Long> deviceIdOptional = deviceDAO.getByAccountId(token.accountId);
         if(!deviceIdOptional.isPresent()) {
             return Response.status(Response.Status.NOT_FOUND).entity("not found").build();
         }
 
-        final DateTime now = DateTime.now(DateTimeZone.UTC);
-        final DateTime then = now.minusDays(2);
+        final Optional<Account> accountOptional = accountDAO.getById(token.accountId);
+        if(!accountOptional.isPresent()) {
+            LOGGER.error("This token ({}) has no account associated with it. Obviously should never happen.", token);
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
 
-        final List<SoundRecord> soundRecords = timeSerieDAO.getAvgSoundData(deviceIdOptional.get(), then, now);
+        final Account account = accountOptional.get();
+
+        final DateTime nowInAccountTz = DateTime.now(DateTimeZone.forTimeZone(account.timeZone));
+        final DateTime morning = nowInAccountTz.withTime(10,0,0,0);
+        final DateTime nightBefore = morning.minusHours(12); // 10PM the night before
+
+        final List<SoundRecord> soundRecords = timeSerieDAO.getAvgSoundData(deviceIdOptional.get(), nightBefore, morning);
         LOGGER.debug("Got {} records", soundRecords.size());
 
-        int soundScore = computeSoundScore(soundRecords);
+        LOGGER.debug("First datetime = {}", soundRecords.get(0).dateTime);
+        LOGGER.debug("Last datetime = {}", soundRecords.get(soundRecords.size() - 1).dateTime);
+
+        final int soundScore = computeSoundScore(soundRecords);
         final Score score = new Score.Builder()
                 .withAccountId(token.accountId)
                 .withSound(soundScore)
