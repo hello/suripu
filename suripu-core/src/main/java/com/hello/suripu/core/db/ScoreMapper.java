@@ -2,6 +2,7 @@ package com.hello.suripu.core.db;
 
 import com.hello.suripu.core.Score;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
@@ -20,7 +21,9 @@ public class ScoreMapper implements ResultSetMapper<Score> {
             0, // sound
             r.getInt("ambient_air_quality"),
             r.getInt("ambient_light"),
-            new DateTime(r.getTimestamp("ts"))
+
+            // The same as Record, create a timezone from offset or make an additional field?
+            new DateTime(r.getTimestamp("ts"), DateTimeZone.forOffsetMillis(r.getInt("offset_millis")))
         );
     }
 }
