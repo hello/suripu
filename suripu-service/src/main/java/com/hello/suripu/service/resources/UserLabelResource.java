@@ -41,7 +41,7 @@ public class UserLabelResource {
         try{
             DateTimeZone userLocalTimeZone = DateTimeZone.forOffsetMillis(sleepLabel.timeZoneOffset);
             DateTime userLocalDateTime = new DateTime(sleepLabel.dateUTC.getMillis(), userLocalTimeZone);
-            LOGGER.debug("Received sleep label for local time {}", userLocalDateTime.toString("MM/dd/yyyy HH:mm:ss Z"));
+            LOGGER.debug("Received sleep label for the night of {}", userLocalDateTime.toString("MM/dd/yyyy HH:mm:ss Z"));
 
             // Round on the user lcoal time instead of the UTC tme.
             userLocalDateTime = new DateTime(userLocalDateTime.getYear(),
