@@ -8,6 +8,9 @@ import com.hello.suripu.service.db.SleepLabel;
 import com.hello.suripu.service.db.SleepLabelDAO;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.skife.jdbi.v2.Transaction;
+import org.skife.jdbi.v2.TransactionIsolationLevel;
+import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +38,8 @@ public class UserLabelResource {
     @Path("/save")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response saveLabel(@Valid SleepLabel sleepLabel, @Scope({OAuthScope.SLEEP_LABEL_WRITE})AccessToken accessToken){
+    public Response saveLabel(@Valid final SleepLabel sleepLabel,
+                              @Scope({OAuthScope.SLEEP_LABEL_WRITE}) final AccessToken accessToken){
 
 
         try{
@@ -50,35 +54,47 @@ public class UserLabelResource {
                     0,
                     0,
                     userLocalTimeZone);
-            DateTime roundedUserLocalTimeInUTC = new DateTime(userLocalDateTime.getMillis(), DateTimeZone.UTC);
+            final DateTime roundedUserLocalTimeInUTC = new DateTime(userLocalDateTime.getMillis(), DateTimeZone.UTC);
 
-            Optional<SleepLabel> sleepLabelOptional = this.sleepLabelDAO.getLabelByAccountAndDate(
-                    accessToken.accountId,
-                    roundedUserLocalTimeInUTC,
-                    sleepLabel.timeZoneOffset
-            );
+            this.sleepLabelDAO.inTransaction(TransactionIsolationLevel.SERIALIZABLE ,new Transaction<Void, SleepLabelDAO>() {
 
-            if(sleepLabelOptional.isPresent()){
-                LOGGER.warn("Sleep label at {}, timezone {} found, label will be updated",
-                        roundedUserLocalTimeInUTC,
-                        sleepLabelOptional.get().timeZoneOffset);
-                this.sleepLabelDAO.updateBySleepLabelId(sleepLabelOptional.get().id,
-                        sleepLabelOptional.get().rating.ordinal(),
-                        sleepLabelOptional.get().sleepTimeUTC,
-                        sleepLabelOptional.get().wakeUpTimeUTC);
+                @Override
+                public Void inTransaction(SleepLabelDAO sleepLabelDAO, TransactionStatus transactionStatus)
+                        throws Exception {
 
-            }else{
-                this.sleepLabelDAO.insertLabel(accessToken.accountId,
-                        roundedUserLocalTimeInUTC,
-                        sleepLabel.rating.ordinal(),
-                        sleepLabel.sleepTimeUTC,
-                        sleepLabel.wakeUpTimeUTC,
-                        sleepLabel.timeZoneOffset
-                );
-                LOGGER.debug("Sleep label at {}, timezone {} created, ",
-                        roundedUserLocalTimeInUTC,
-                        sleepLabel.timeZoneOffset);
-            }
+                    Optional<SleepLabel> sleepLabelOptional = sleepLabelDAO.getByAccountAndDate(
+                            accessToken.accountId,
+                            roundedUserLocalTimeInUTC,
+                            sleepLabel.timeZoneOffset
+                    );
+
+                    if(sleepLabelOptional.isPresent()){
+                        LOGGER.warn("Sleep label at {}, timezone {} found, label will be updated",
+                                roundedUserLocalTimeInUTC,
+                                sleepLabelOptional.get().timeZoneOffset);
+                        sleepLabelDAO.updateBySleepLabelId(sleepLabelOptional.get().id,
+                                sleepLabelOptional.get().rating.ordinal(),
+                                sleepLabelOptional.get().sleepTimeUTC,
+                                sleepLabelOptional.get().wakeUpTimeUTC);
+
+                    }else{
+                        sleepLabelDAO.insert(accessToken.accountId,
+                                roundedUserLocalTimeInUTC,
+                                sleepLabel.rating.ordinal(),
+                                sleepLabel.sleepTimeUTC,
+                                sleepLabel.wakeUpTimeUTC,
+                                sleepLabel.timeZoneOffset
+                        );
+                        LOGGER.debug("Sleep label at {}, timezone {} created, ",
+                                roundedUserLocalTimeInUTC,
+                                sleepLabel.timeZoneOffset);
+                    }
+
+                    return null; // What??
+
+                }
+            });
+
         }catch (UnableToExecuteStatementException ex){
             LOGGER.error(ex.getMessage());
             return Response.serverError().build();
