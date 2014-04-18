@@ -16,19 +16,18 @@ public class ApplicationMapper implements ResultSetMapper<Application>{
     public Application map(int index, ResultSet r, StatementContext ctx) throws SQLException {
 
         final Array scopes = r.getArray("scopes");
+
         // TODO: Scopes is nullable, handle failure cases
         final Integer[] a = (Integer[]) scopes.getArray();
-        final OAuthScope[] s = new OAuthScope[a.length];
-        for(int i = 0; i < a.length; i ++) {
-            s[i] = OAuthScope.values()[a[i]];
-        }
+        final OAuthScope[] scopeArray = OAuthScope.fromIntegerArray(a);
+
         return new Application(
                 r.getLong("id"),
                 r.getString("name"),
                 r.getString("client_id"),
                 r.getString("client_secret"),
                 r.getString("redirect_uri"),
-                s,
+                scopeArray,
                 r.getLong("dev_account_id"),
                 r.getString("description"),
                 r.getBoolean("published"),

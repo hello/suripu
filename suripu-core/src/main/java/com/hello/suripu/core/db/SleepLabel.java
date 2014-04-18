@@ -1,4 +1,4 @@
-package com.hello.suripu.service.db;
+package com.hello.suripu.core.db;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;

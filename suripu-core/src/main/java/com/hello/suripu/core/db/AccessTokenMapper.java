@@ -17,12 +17,10 @@ public class AccessTokenMapper implements ResultSetMapper<AccessToken> {
     public AccessToken map(int index, ResultSet r, StatementContext ctx) throws SQLException {
 
         final Array scopes = r.getArray("scopes");
+
         // TODO: Scopes is nullable, handle failure cases
         final Integer[] a = (Integer[]) scopes.getArray();
-        final OAuthScope[] s = new OAuthScope[a.length];
-        for(int i = 0; i < a.length; i ++) {
-            s[i] = OAuthScope.values()[a[i]];
-        }
+        final OAuthScope[] scopeArray = OAuthScope.fromIntegerArray(a);
 
         return new AccessToken(
                 UUID.fromString(r.getString("access_token")),
@@ -31,7 +29,7 @@ public class AccessTokenMapper implements ResultSetMapper<AccessToken> {
                 new DateTime(r.getLong("created_at"), DateTimeZone.UTC),
                 r.getLong("account_id"),
                 r.getLong("app_id"),
-                s
+                scopeArray
 
         );
     }

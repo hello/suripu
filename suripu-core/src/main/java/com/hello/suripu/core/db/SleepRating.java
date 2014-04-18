@@ -1,4 +1,4 @@
-package com.hello.suripu.service.db;
+package com.hello.suripu.core.db;
 
 
 public enum SleepRating {

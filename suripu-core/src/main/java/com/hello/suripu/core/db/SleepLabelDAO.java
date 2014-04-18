@@ -1,4 +1,4 @@
-package com.hello.suripu.service.db;
+package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
 import org.joda.time.DateTime;
