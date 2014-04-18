@@ -7,7 +7,9 @@ public enum OAuthScope {
     SENSORS_BASIC(2),
     SENSORS_EXTENDED(3),
     SENSORS_WRITE(4),
-    SCORE_READ(5);
+    SCORE_READ(5),
+    SLEEP_LABEL_BASIC(6),
+    SLEEP_LABEL_WRITE(7);
 
     private int value;
 

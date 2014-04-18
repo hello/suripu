@@ -22,8 +22,8 @@ public class ScoreMapper implements ResultSetMapper<Score> {
             r.getInt("ambient_air_quality"),
             r.getInt("ambient_light"),
 
-            // The same as Record, create a timezone from offset or make an additional field?
-            new DateTime(r.getTimestamp("ts"), DateTimeZone.forOffsetMillis(r.getInt("offset_millis")))
+            //TODO: The same as Record, create a timezone from offset or make an additional field?
+            new DateTime(r.getTimestamp("ts"), DateTimeZone.UTC)
         );
     }
 }
