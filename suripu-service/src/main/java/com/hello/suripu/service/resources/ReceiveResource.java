@@ -149,6 +149,7 @@ public class ReceiveResource {
                 dateTimes.add(rounded);
             }
 
+
             if(sample.hasSoundAmplitude()) {
                 final Long sampleTimestamp = sample.getTimestamp();
                 final DateTime dateTimeSample = new DateTime(sampleTimestamp, DateTimeZone.UTC);
