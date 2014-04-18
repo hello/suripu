@@ -17,7 +17,7 @@ public class RecordMapper implements ResultSetMapper<Record>{
                 r.getFloat("ambient_humidity"),
                 r.getFloat("ambient_air_quality"),
                 r.getFloat("ambient_light"),
-                new DateTime(r.getTimestamp("ts"), DateTimeZone.UTC),  // This is confusing, shall we just keep it long or use the offset to create a DateTime that reflects the timezone?
+                new DateTime(r.getTimestamp("ts"), DateTimeZone.UTC),
                 r.getInt("offset_millis")
         );
         return record;
