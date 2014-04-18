@@ -6,6 +6,7 @@ import com.hello.suripu.app.resources.ApplicationResource;
 import com.hello.suripu.app.resources.HistoryResource;
 import com.hello.suripu.app.resources.OAuthResource;
 import com.hello.suripu.app.resources.ScoreResource;
+import com.hello.suripu.app.resources.UserLabelResource;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
@@ -13,6 +14,7 @@ import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.db.ScoreDAO;
+import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.TimeSerieDAO;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -68,6 +70,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AccessTokenDAO accessTokenDAO = jdbi.onDemand(AccessTokenDAO.class);
         final DeviceDAO deviceDAO = jdbi.onDemand(DeviceDAO.class);
         final ScoreDAO scoreDAO = jdbi.onDemand(ScoreDAO.class);
+        final SleepLabelDAO sleepLabelDAO = jdbi.onDemand(SleepLabelDAO.class);
 
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
         final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
@@ -111,6 +114,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new HistoryResource(timeSerieDAO, deviceDAO));
         environment.addResource(new ApplicationResource(applicationStore));
         environment.addResource(new ScoreResource(timeSerieDAO, deviceDAO, scoreDAO, accountDAO));
+        environment.addResource(new UserLabelResource(sleepLabelDAO));
+
         environment.addHealthCheck(new DBIHealthCheck(jdbi, "account-db", "SELECT * FROM accounts ORDER BY ID DESC LIMIT 1;"));
     }
 }

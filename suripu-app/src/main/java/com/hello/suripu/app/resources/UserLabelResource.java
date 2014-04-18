@@ -1,11 +1,12 @@
-package com.hello.suripu.service.resources;
+package com.hello.suripu.app.resources;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
-import com.hello.suripu.service.db.SleepLabel;
-import com.hello.suripu.service.db.SleepLabelDAO;
+import com.hello.suripu.core.db.SleepLabel;
+import com.hello.suripu.core.db.SleepLabelDAO;
+import com.hello.suripu.service.resources.ReceiveResource;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.Transaction;
