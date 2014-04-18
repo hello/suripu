@@ -6,6 +6,8 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.service.db.SleepLabel;
 import com.hello.suripu.service.db.SleepLabelDAO;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,15 +39,28 @@ public class UserLabelResource {
 
 
         try{
+            DateTimeZone userLocalTimeZone = DateTimeZone.forOffsetMillis(sleepLabel.timeZoneOffset);
+            DateTime userLocalDateTime = new DateTime(sleepLabel.dateUTC.getMillis(), userLocalTimeZone);
+            LOGGER.debug("Received sleep label for local time {}", userLocalDateTime.toString("MM/dd/yyyy HH:mm:ss Z"));
+
+            // Round on the user lcoal time instead of the UTC tme.
+            userLocalDateTime = new DateTime(userLocalDateTime.getYear(),
+                    userLocalDateTime.getMonthOfYear(),
+                    userLocalDateTime.getDayOfMonth(),
+                    0,
+                    0,
+                    userLocalTimeZone);
+            DateTime roundedUserLocalTimeInUTC = new DateTime(userLocalDateTime.getMillis(), DateTimeZone.UTC);
+
             Optional<SleepLabel> sleepLabelOptional = this.sleepLabelDAO.getLabelByAccountAndDate(
                     accessToken.accountId,
-                    sleepLabel.dateUTC,
+                    roundedUserLocalTimeInUTC,
                     sleepLabel.timeZoneOffset
             );
 
             if(sleepLabelOptional.isPresent()){
                 LOGGER.warn("Sleep label at {}, timezone {} found, label will be updated",
-                        sleepLabelOptional.get().dateUTC,
+                        roundedUserLocalTimeInUTC,
                         sleepLabelOptional.get().timeZoneOffset);
                 this.sleepLabelDAO.updateBySleepLabelId(sleepLabelOptional.get().id,
                         sleepLabelOptional.get().rating.ordinal(),
@@ -54,14 +69,14 @@ public class UserLabelResource {
 
             }else{
                 this.sleepLabelDAO.insertLabel(accessToken.accountId,
-                        sleepLabel.dateUTC,
+                        roundedUserLocalTimeInUTC,
                         sleepLabel.rating.ordinal(),
                         sleepLabel.sleepTimeUTC,
                         sleepLabel.wakeUpTimeUTC,
                         sleepLabel.timeZoneOffset
                 );
                 LOGGER.debug("Sleep label at {}, timezone {} created, ",
-                        sleepLabel.dateUTC,
+                        roundedUserLocalTimeInUTC,
                         sleepLabel.timeZoneOffset);
             }
         }catch (UnableToExecuteStatementException ex){

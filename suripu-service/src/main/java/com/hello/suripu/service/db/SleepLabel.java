@@ -6,9 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-/**
- * Created by pangwu on 4/16/14.
- */
+
 public class SleepLabel {
 
     @JsonIgnore

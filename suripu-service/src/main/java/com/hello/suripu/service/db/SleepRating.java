@@ -1,8 +1,6 @@
 package com.hello.suripu.service.db;
 
-/**
- * Created by pangwu on 4/16/14.
- */
+
 public enum SleepRating {
     POOR(0),
     GOOD(1),

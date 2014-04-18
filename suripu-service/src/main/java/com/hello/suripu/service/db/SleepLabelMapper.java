@@ -8,9 +8,6 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-/**
- * Created by pangwu on 4/16/14.
- */
 public class SleepLabelMapper implements ResultSetMapper<SleepLabel> {
 
     @Override

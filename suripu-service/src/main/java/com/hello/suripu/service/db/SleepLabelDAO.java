@@ -9,9 +9,7 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 
-/**
- * Created by pangwu on 4/16/14.
- */
+
 @RegisterMapper(SleepLabelMapper.class)
 public interface SleepLabelDAO {
 
