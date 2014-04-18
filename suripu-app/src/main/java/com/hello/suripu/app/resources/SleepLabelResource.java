@@ -1,12 +1,11 @@
 package com.hello.suripu.app.resources;
 
 import com.google.common.base.Optional;
+import com.hello.suripu.core.db.SleepLabel;
+import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
-import com.hello.suripu.core.db.SleepLabel;
-import com.hello.suripu.core.db.SleepLabelDAO;
-import com.hello.suripu.service.resources.ReceiveResource;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.Transaction;
@@ -26,12 +25,12 @@ import javax.ws.rs.core.Response;
 /**
  * Created by pangwu on 4/16/14.
  */
-@Path("/label")
-public class UserLabelResource {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReceiveResource.class);
+@Path("/sleep")
+public class SleepLabelResource {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SleepLabelResource.class);
 
     private final SleepLabelDAO sleepLabelDAO;
-    public UserLabelResource(final SleepLabelDAO sleepLabelDAO){
+    public SleepLabelResource(final SleepLabelDAO sleepLabelDAO){
         this.sleepLabelDAO = sleepLabelDAO;
     }
 
@@ -44,18 +43,18 @@ public class UserLabelResource {
 
 
         try{
-            DateTimeZone userLocalTimeZone = DateTimeZone.forOffsetMillis(sleepLabel.timeZoneOffset);
-            DateTime userLocalDateTime = new DateTime(sleepLabel.dateUTC.getMillis(), userLocalTimeZone);
+            final DateTimeZone userLocalTimeZone = DateTimeZone.forOffsetMillis(sleepLabel.timeZoneOffset);
+            final DateTime userLocalDateTime = new DateTime(sleepLabel.dateUTC.getMillis(), userLocalTimeZone);
             LOGGER.debug("Received sleep label for the night of {}", userLocalDateTime.toString("MM/dd/yyyy HH:mm:ss Z"));
 
             // Round on the user lcoal time instead of the UTC tme.
-            userLocalDateTime = new DateTime(userLocalDateTime.getYear(),
+            final DateTime roundedUserLocalDateTime = new DateTime(userLocalDateTime.getYear(),
                     userLocalDateTime.getMonthOfYear(),
                     userLocalDateTime.getDayOfMonth(),
                     0,
                     0,
                     userLocalTimeZone);
-            final DateTime roundedUserLocalTimeInUTC = new DateTime(userLocalDateTime.getMillis(), DateTimeZone.UTC);
+            final DateTime roundedUserLocalTimeInUTC = new DateTime(roundedUserLocalDateTime.getMillis(), DateTimeZone.UTC);
 
             this.sleepLabelDAO.inTransaction(TransactionIsolationLevel.SERIALIZABLE ,new Transaction<Void, SleepLabelDAO>() {
 

@@ -6,7 +6,7 @@ import com.hello.suripu.app.resources.ApplicationResource;
 import com.hello.suripu.app.resources.HistoryResource;
 import com.hello.suripu.app.resources.OAuthResource;
 import com.hello.suripu.app.resources.ScoreResource;
-import com.hello.suripu.app.resources.UserLabelResource;
+import com.hello.suripu.app.resources.SleepLabelResource;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
@@ -114,7 +114,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new HistoryResource(timeSerieDAO, deviceDAO));
         environment.addResource(new ApplicationResource(applicationStore));
         environment.addResource(new ScoreResource(timeSerieDAO, deviceDAO, scoreDAO, accountDAO));
-        environment.addResource(new UserLabelResource(sleepLabelDAO));
+        environment.addResource(new SleepLabelResource(sleepLabelDAO));
 
         environment.addHealthCheck(new DBIHealthCheck(jdbi, "account-db", "SELECT * FROM accounts ORDER BY ID DESC LIMIT 1;"));
     }
