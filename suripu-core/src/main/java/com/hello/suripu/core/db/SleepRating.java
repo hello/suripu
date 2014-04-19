@@ -24,4 +24,9 @@ public enum SleepRating {
                 return GOOD;
         }
     }
+
+
+    public int getValue(){
+        return this.value;
+    }
 }
