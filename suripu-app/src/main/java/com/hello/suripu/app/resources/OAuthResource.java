@@ -12,7 +12,6 @@ import com.hello.suripu.core.oauth.ClientAuthenticationException;
 import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
 import com.hello.suripu.core.oauth.GrantTypeParam;
-import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.OAuthTokenStore;
 import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;
@@ -81,31 +80,14 @@ public class OAuthResource {
             }
 
             final Account account = accountOptional.get();
-            final OAuthScope[] scopes = new OAuthScope[]{
-                    OAuthScope.USER_BASIC,
-                    OAuthScope.USER_EXTENDED,
-                    OAuthScope.SENSORS_BASIC,
-                    OAuthScope.SENSORS_EXTENDED
-            };
 
-            // Important : when using password flow, we should not send / nor expect the client_secret
-            final ClientDetails details = new ClientDetails(
-                    grantType.getType(),
-                    clientId,
-                    redirectUri,
-                    scopes,
-                    "",
-                    code,
-                    account.id,
-                    clientSecret
-            );
 
             // FIXME: this is confusing, are we checking for application, or for installed application for this user
             // FIXME: if that's what we are doing, how did they get a token in the first place?
             // TODO: BE SMARTER
-            final Optional<Application> applicationOptional = applicationStore.getApplicationByClientId(details.clientId);
+            final Optional<Application> applicationOptional = applicationStore.getApplicationByClientId(clientId);
             if(!applicationOptional.isPresent()) {
-                LOGGER.error("application wasn't found for clientId : {}", details.clientId);
+                LOGGER.error("application wasn't found for clientId : {}", clientId);
                 return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
                         .type(MediaType.TEXT_PLAIN_TYPE).build();
             }
@@ -115,6 +97,19 @@ public class OAuthResource {
                 return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
                         .type(MediaType.TEXT_PLAIN_TYPE).build();
             }
+
+            // Important : when using password flow, we should not send / nor expect the client_secret
+            final ClientDetails details = new ClientDetails(
+                    grantType.getType(),
+                    clientId,
+                    redirectUri,
+                    applicationOptional.get().scopes,
+                    "", // state
+                    code,
+                    account.id,
+                    clientSecret
+            );
+
             details.setApp(applicationOptional.get());
             AccessToken accessToken = null;
 
