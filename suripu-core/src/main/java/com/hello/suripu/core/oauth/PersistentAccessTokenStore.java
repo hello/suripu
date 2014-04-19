@@ -44,7 +44,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
                 DateTime.now(DateTimeZone.UTC),
                 clientDetails.accountId,
                 clientDetails.application.get().id,
-                new OAuthScope[]{OAuthScope.SENSORS_BASIC}
+                clientDetails.scopes
         );
 
         accessTokenDAO.storeAccessToken(accessToken);
