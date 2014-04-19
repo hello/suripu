@@ -72,15 +72,16 @@ public class SleepLabelResource {
                         LOGGER.warn("Sleep label at {}, timezone {} found, label will be updated",
                                 roundedUserLocalTimeInUTC,
                                 sleepLabelOptional.get().timeZoneOffset);
+
                         sleepLabelDAO.updateBySleepLabelId(sleepLabelOptional.get().id,
-                                sleepLabelOptional.get().rating.ordinal(),
-                                sleepLabelOptional.get().sleepTimeUTC,
-                                sleepLabelOptional.get().wakeUpTimeUTC);
+                                sleepLabel.rating.getValue(),
+                                sleepLabel.sleepTimeUTC,
+                                sleepLabel.wakeUpTimeUTC);
 
                     }else{
                         sleepLabelDAO.insert(accessToken.accountId,
                                 roundedUserLocalTimeInUTC,
-                                sleepLabel.rating.ordinal(),
+                                sleepLabel.rating.getValue(),
                                 sleepLabel.sleepTimeUTC,
                                 sleepLabel.wakeUpTimeUTC,
                                 sleepLabel.timeZoneOffset
