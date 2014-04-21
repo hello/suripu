@@ -17,7 +17,7 @@ import com.hello.suripu.core.oauth.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.PersistentApplicationStore;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
 import com.hello.suripu.service.db.EventDAO;
-import com.hello.suripu.service.db.JodaArgumentFactory;
+import com.hello.suripu.core.JodaArgumentFactory;
 import com.hello.suripu.service.resources.ReceiveResource;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
