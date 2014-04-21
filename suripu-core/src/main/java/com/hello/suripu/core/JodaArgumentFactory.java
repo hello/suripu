@@ -1,4 +1,4 @@
-package com.hello.suripu.service.db;
+package com.hello.suripu.core;
 
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.StatementContext;
