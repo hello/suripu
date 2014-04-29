@@ -6,11 +6,13 @@ import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.core.Score;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.service.db.EventDAO;
+import com.sun.jersey.core.util.Base64;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -21,12 +23,21 @@ import org.slf4j.LoggerFactory;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -41,12 +52,54 @@ public class ReceiveResource {
     private final EventDAO eventDAO;
     private final DeviceDAO deviceDAO;
     private final ScoreDAO scoreDAO;
+    private final PublicKeyStore publicKeyStore;
 
-    public ReceiveResource(final EventDAO eventDAO, final DeviceDAO deviceDAO, final ScoreDAO scoreDAO) {
+    public ReceiveResource(final EventDAO eventDAO, final DeviceDAO deviceDAO, final ScoreDAO scoreDAO, final PublicKeyStore publicKeyStore) {
         this.eventDAO = eventDAO;
         this.deviceDAO = deviceDAO;
         this.scoreDAO = scoreDAO;
+        this.publicKeyStore = publicKeyStore;
     }
+
+
+    @PUT
+    @Timed
+    @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
+    public Response receiveDevicePayload(@Valid InputProtos.SimpleSensorBatch batch) {
+
+        final byte[] publicKeyBase64Encoded = publicKeyStore.get(batch.getDeviceId());
+
+        final X509EncodedKeySpec spec = new X509EncodedKeySpec(Base64.decode(publicKeyBase64Encoded));
+        try {
+            final KeyFactory kf = KeyFactory.getInstance("RSA");
+            final PublicKey publicKeyFromDataStore = kf.generatePublic(spec);
+
+            final Signature signature = Signature.getInstance("SHA512WithRSA");
+            signature.initVerify(publicKeyFromDataStore);
+            // TODO : agree on device data that is signed;
+            signature.update(batch.getSamples(0).getDeviceData().toByteArray());
+
+            if(!signature.verify(batch.getSamples(0).getDeviceDataSignature().toByteArray())) {
+                System.out.println("Did not recognize the signature bailing");
+                return Response.status(Response.Status.BAD_REQUEST).build();
+            }
+
+            return Response.ok().build();
+
+        } catch (NoSuchAlgorithmException e) {
+            LOGGER.error("{}", e);
+        } catch (InvalidKeySpecException e) {
+            LOGGER.error("{}", e);
+        } catch (SignatureException e) {
+            LOGGER.error("{}", e);
+        } catch (InvalidKeyException e) {
+            LOGGER.error("{}", e);
+        }
+
+        return Response.serverError().build();
+    }
+
+
 
     @POST
     @Timed
