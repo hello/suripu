@@ -44,8 +44,6 @@ public class PublicKeyStoreDynamoDB implements PublicKeyStore {
         attributes.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
         attributes.put(PUBLIC_KEY_ATTRIBUTE_NAME, new AttributeValue().withS(publicKey));
 
-//        final HashMap<String, AttributeValue> key = new HashMap<String, AttributeValue>();
-//        key.put("device_id", new AttributeValue().withS(deviceId));
         final PutItemRequest putItemRequest = new PutItemRequest()
                 .withTableName(keyStoreTableName)
                 .withItem(attributes);
