@@ -12,6 +12,8 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.PublicKeyStoreDynamoDB;
 import com.hello.suripu.core.db.ScoreDAO;
+import com.hello.suripu.core.health.DynamoDbHealthCheck;
+import com.hello.suripu.core.managers.DynamoDBClientManaged;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
@@ -75,6 +77,9 @@ public class SuripuService extends Service<SuripuConfiguration> {
         environment.addResource(new ReceiveResource(dao, deviceDAO, scoreDAO, publicKeyStore));
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());
+        environment.manage(new DynamoDBClientManaged(dynamoDBClient));
+        environment.addHealthCheck(new DynamoDbHealthCheck(dynamoDBClient));
+
 
     }
 }

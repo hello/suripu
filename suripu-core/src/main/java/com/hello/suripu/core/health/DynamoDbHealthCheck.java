@@ -1,4 +1,4 @@
-package com.hello.suripu.factory.health;
+package com.hello.suripu.core.health;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.ListTablesResult;

@@ -1,4 +1,4 @@
-package com.hello.suripu.factory.managers;
+package com.hello.suripu.core.managers;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.yammer.dropwizard.lifecycle.Managed;
