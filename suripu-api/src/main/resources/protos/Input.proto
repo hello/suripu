@@ -28,6 +28,20 @@ message SensorSampleBatch {
     optional string device_id = 2;
 }
 
+message MotionSensorBatch {
+
+    enum Manufacturer {
+        HELLO = 0;
+    }
+
+    message MotionSensor {
+        optional int64 timestamp = 1;
+        optional int32 value = 2;
+    }
+
+    optional Manufacturer manufacturer = 1;
+    repeated MotionSensor samples = 2;
+}
 
 message SimpleSensorBatch {
     message GpsInfo {
