@@ -1,12 +1,19 @@
 package com.hello.suripu.service;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.hello.dropwizard.mikkusu.helpers.JacksonProtobufProvider;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.PublicKeyStore;
+import com.hello.suripu.core.db.PublicKeyStoreDynamoDB;
 import com.hello.suripu.core.db.ScoreDAO;
+import com.hello.suripu.core.health.DynamoDbHealthCheck;
+import com.hello.suripu.core.managers.DynamoDBClientManaged;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
@@ -38,11 +45,11 @@ public class SuripuService extends Service<SuripuConfiguration> {
     }
 
     @Override
-    public void run(SuripuConfiguration config, Environment environment) throws Exception {
+    public void run(SuripuConfiguration configuration, Environment environment) throws Exception {
         environment.addProvider(new JacksonProtobufProvider());
 
         final DBIFactory factory = new DBIFactory();
-        final DBI jdbi = factory.build(environment, config.getDatabaseConfiguration(), "postgresql");
+        final DBI jdbi = factory.build(environment, configuration.getDatabaseConfiguration(), "postgresql");
         jdbi.registerArgumentFactory(new JodaArgumentFactory());
 
         final EventDAO dao = jdbi.onDemand(EventDAO.class);
@@ -51,15 +58,28 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final ApplicationsDAO applicationsDAO = jdbi.onDemand(ApplicationsDAO.class);
         final ScoreDAO scoreDAO = jdbi.onDemand(ScoreDAO.class);
 
+        final AWSCredentialsProvider awsCredentialsProvider = new EnvironmentVariableCredentialsProvider();
+        final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
+        dynamoDBClient.setEndpoint(configuration.getDynamoDBConfiguration().getEndpoint());
+        // TODO; set region here?
+
+        final PublicKeyStore publicKeyStore = new PublicKeyStoreDynamoDB(
+                dynamoDBClient,
+                configuration.getDynamoDBConfiguration().getKeyStoreTable()
+        );
+
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
 
         final OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
 
         environment.addProvider(new OAuthProvider<AccessToken>(new OAuthAuthenticator(tokenStore), "protected-resources"));
 
-        environment.addResource(new ReceiveResource(dao, deviceDAO, scoreDAO));
+        environment.addResource(new ReceiveResource(dao, deviceDAO, scoreDAO, publicKeyStore));
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());
+        environment.manage(new DynamoDBClientManaged(dynamoDBClient));
+        environment.addHealthCheck(new DynamoDbHealthCheck(dynamoDBClient));
+
 
     }
 }

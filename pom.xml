@@ -19,6 +19,7 @@
         <module>suripu-core</module>
         <module>suripu-service</module>
         <module>suripu-app</module>
+        <module>suripu-factory</module>
     </modules>
 
     <dependencies>
