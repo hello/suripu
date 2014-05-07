@@ -71,3 +71,65 @@ message SimpleSensorBatch {
     repeated SimpleSensorSample samples = 2;
 
 }
+
+message SyncRequest {
+    optional string device_id = 1;
+    optional string firmware_version = 2;
+    optional bytes signature = 3;
+}
+
+
+message SyncResponse {
+
+    message Alarm {
+        optional int32 start_time = 1;
+        optional int32 end_time = 2;
+        optional int32 ringtone_id = 3 [default = 1];
+    }
+
+    message PairingAction {
+        enum ActionType {
+            PAIR = 0;
+            UNPAIR = 1;
+        }
+
+        optional string ssid = 1;
+        optional ActionType type = 2;
+    }
+
+
+    message WhiteNoise {
+        optional int32 start_time = 1;
+        optional int32 end_time = 2;
+        optional int32 sound_id = 3;
+    }
+
+    message FlashAction {
+        message LEDAction {
+            optional int32 color = 1;
+            optional int32 start_time = 2;
+            optional int32 end_time = 3;
+        }
+
+        optional LEDAction led_1 = 1;
+        optional LEDAction led_2 = 2;
+        optional LEDAction led_3 = 3;
+        optional LEDAction led_4 = 4;
+        optional LEDAction led_5 = 5;
+    }
+
+    // TODO: failure cases (timeout, exponential backoff, etc.)
+
+    optional int32 upload_cycle = 1;
+    optional int32 sync_cycle = 2;
+    optional int32 acc_scan_cyle = 3;
+    optional int32 acc_sampling_interval = 4;
+    optional int32 device_sampling_interval = 5;
+    optional Alarm alarm = 6;
+    optional PairingAction pairing_action = 7;
+    optional WhiteNoise white_noise = 8;
+    optional FlashAction flash_action = 9;
+
+    // TODO: settings for snoring detection
+    // TODO: settings for firmware update
+}
