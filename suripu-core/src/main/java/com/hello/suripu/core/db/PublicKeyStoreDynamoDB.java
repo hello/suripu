@@ -6,6 +6,7 @@ import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
+import com.google.common.base.Optional;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +27,7 @@ public class PublicKeyStoreDynamoDB implements PublicKeyStore {
     }
 
     @Override
-    public byte[] get(final String deviceId) {
+    public Optional<byte[]> get(final String deviceId) {
         final HashMap<String, AttributeValue> key = new HashMap<String, AttributeValue>();
         key.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
         final GetItemRequest getItemRequest = new GetItemRequest()
@@ -34,8 +35,10 @@ public class PublicKeyStoreDynamoDB implements PublicKeyStore {
                 .withKey(key);
 
         final GetItemResult getItemResult = dynamoDBClient.getItem(getItemRequest);
+        // TODO: check if key exists
         final String base64EncodedPublicKey = getItemResult.getItem().get(PUBLIC_KEY_ATTRIBUTE_NAME).getS();
-        return base64EncodedPublicKey.getBytes();
+
+        return Optional.of(base64EncodedPublicKey.getBytes());
     }
 
     @Override

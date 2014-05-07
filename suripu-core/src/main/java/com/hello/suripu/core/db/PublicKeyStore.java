@@ -1,5 +1,7 @@
 package com.hello.suripu.core.db;
 
+import com.google.common.base.Optional;
+
 public interface PublicKeyStore {
 
     /**
@@ -7,7 +9,7 @@ public interface PublicKeyStore {
      * @param deviceId String : unique identifier representing a device
      * @return byte[]
      */
-    byte[] get(String deviceId);
+    Optional<byte[]> get(String deviceId);
 
 
     /**

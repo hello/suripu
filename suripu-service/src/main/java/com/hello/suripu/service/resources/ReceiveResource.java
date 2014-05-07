@@ -67,7 +67,13 @@ public class ReceiveResource {
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     public Response receiveDevicePayload(@Valid InputProtos.SimpleSensorBatch batch) {
 
-        final byte[] publicKeyBase64Encoded = publicKeyStore.get(batch.getDeviceId());
+        final Optional<byte[]> optionalPublicKeyBase64Encoded = publicKeyStore.get(batch.getDeviceId());
+        if(!optionalPublicKeyBase64Encoded.isPresent()) {
+            LOGGER.warn("Public key does not exist");
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+
+        final byte[] publicKeyBase64Encoded = optionalPublicKeyBase64Encoded.get();
 
         final X509EncodedKeySpec spec = new X509EncodedKeySpec(Base64.decode(publicKeyBase64Encoded));
         try {
