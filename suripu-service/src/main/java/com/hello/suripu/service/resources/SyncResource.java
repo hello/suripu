@@ -32,7 +32,7 @@ public class SyncResource {
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     public Response sync(@Valid InputProtos.SyncRequest syncRequest) {
 
-        Optional<byte[]> optionalPublicKeyBase64Encoded = publicKeyStore.get(syncRequest.getDeviceId());
+        final Optional<byte[]> optionalPublicKeyBase64Encoded = publicKeyStore.get(syncRequest.getDeviceId());
         if(!optionalPublicKeyBase64Encoded.isPresent()) {
             LOGGER.warn("Public key wasn't found for device id: {}", syncRequest.getDeviceId());
             return Response.status(Response.Status.BAD_REQUEST).build();
@@ -47,8 +47,8 @@ public class SyncResource {
                 .build();
 
 
-        int ledFlashStartTime = (int) DateTime.now().getMillis() / 1000;
-        int ledFlashEndTime = (int) DateTime.now().plusSeconds(10).getMillis() / 1000;
+        final int ledFlashStartTime = (int) DateTime.now().getMillis() / 1000;
+        final int ledFlashEndTime = (int) DateTime.now().plusSeconds(10).getMillis() / 1000;
 
         final InputProtos.SyncResponse.FlashAction.LEDAction ledAction = InputProtos.SyncResponse.FlashAction.LEDAction.newBuilder()
                 .setColor(0xFFCC66)
@@ -69,7 +69,7 @@ public class SyncResource {
                 .setFlashAction(flashAction)
                 .build();
 
-        byte[] responseBytes = response.toByteArray();
+        final byte[] responseBytes = response.toByteArray();
         // TODO: ENCRYPT WITH PUBLIC KEY
         return Response.ok().entity(responseBytes).build();
     }
