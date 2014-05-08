@@ -49,7 +49,7 @@ message TrackerDataBatch {
         optional string tracker_id = 1;  // Do you think this is a good idea?
         optional int64 timestamp = 2;
         optional int32 offset_millis = 3;
-        optional float svm_no_gravity = 4;
+        optional int32 svm_no_gravity = 4;
 
     }
 

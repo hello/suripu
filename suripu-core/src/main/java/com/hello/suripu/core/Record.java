@@ -21,7 +21,7 @@ public class Record {
     public final DateTime dateTime;
 
     @JsonProperty("offset_millis")
-    public final Long offsetMillis;
+    public final int offsetMillis;
 
     public Record(
             final float ambientTemperature,
@@ -29,7 +29,7 @@ public class Record {
             float ambientAirQuality,
             final float ambientLight,
             final DateTime dateTime,
-            final long offsetMillis) {
+            final int offsetMillis) {
         this.ambientTemperature = ambientTemperature;
         this.ambientHumidity = ambientHumidity;
         this.ambientAirQuality = ambientAirQuality;

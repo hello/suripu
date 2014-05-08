@@ -3043,15 +3043,15 @@ public final class InputProtos {
        */
       int getOffsetMillis();
 
-      // optional float svm_no_gravity = 4;
+      // optional int32 svm_no_gravity = 4;
       /**
-       * <code>optional float svm_no_gravity = 4;</code>
+       * <code>optional int32 svm_no_gravity = 4;</code>
        */
       boolean hasSvmNoGravity();
       /**
-       * <code>optional float svm_no_gravity = 4;</code>
+       * <code>optional int32 svm_no_gravity = 4;</code>
        */
-      float getSvmNoGravity();
+      int getSvmNoGravity();
     }
     /**
      * Protobuf type {@code hello.TrackerDataBatch.TrackerData}
@@ -3119,9 +3119,9 @@ public final class InputProtos {
                 offsetMillis_ = input.readInt32();
                 break;
               }
-              case 37: {
+              case 32: {
                 bitField0_ |= 0x00000008;
-                svmNoGravity_ = input.readFloat();
+                svmNoGravity_ = input.readInt32();
                 break;
               }
             }
@@ -3251,19 +3251,19 @@ public final class InputProtos {
         return offsetMillis_;
       }
 
-      // optional float svm_no_gravity = 4;
+      // optional int32 svm_no_gravity = 4;
       public static final int SVM_NO_GRAVITY_FIELD_NUMBER = 4;
-      private float svmNoGravity_;
+      private int svmNoGravity_;
       /**
-       * <code>optional float svm_no_gravity = 4;</code>
+       * <code>optional int32 svm_no_gravity = 4;</code>
        */
       public boolean hasSvmNoGravity() {
         return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
-       * <code>optional float svm_no_gravity = 4;</code>
+       * <code>optional int32 svm_no_gravity = 4;</code>
        */
-      public float getSvmNoGravity() {
+      public int getSvmNoGravity() {
         return svmNoGravity_;
       }
 
@@ -3271,7 +3271,7 @@ public final class InputProtos {
         trackerId_ = "";
         timestamp_ = 0L;
         offsetMillis_ = 0;
-        svmNoGravity_ = 0F;
+        svmNoGravity_ = 0;
       }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
@@ -3295,7 +3295,7 @@ public final class InputProtos {
           output.writeInt32(3, offsetMillis_);
         }
         if (((bitField0_ & 0x00000008) == 0x00000008)) {
-          output.writeFloat(4, svmNoGravity_);
+          output.writeInt32(4, svmNoGravity_);
         }
         getUnknownFields().writeTo(output);
       }
@@ -3320,7 +3320,7 @@ public final class InputProtos {
         }
         if (((bitField0_ & 0x00000008) == 0x00000008)) {
           size += com.google.protobuf.CodedOutputStream
-            .computeFloatSize(4, svmNoGravity_);
+            .computeInt32Size(4, svmNoGravity_);
         }
         size += getUnknownFields().getSerializedSize();
         memoizedSerializedSize = size;
@@ -3444,7 +3444,7 @@ public final class InputProtos {
           bitField0_ = (bitField0_ & ~0x00000002);
           offsetMillis_ = 0;
           bitField0_ = (bitField0_ & ~0x00000004);
-          svmNoGravity_ = 0F;
+          svmNoGravity_ = 0;
           bitField0_ = (bitField0_ & ~0x00000008);
           return this;
         }
@@ -3711,35 +3711,35 @@ public final class InputProtos {
           return this;
         }
 
-        // optional float svm_no_gravity = 4;
-        private float svmNoGravity_ ;
+        // optional int32 svm_no_gravity = 4;
+        private int svmNoGravity_ ;
         /**
-         * <code>optional float svm_no_gravity = 4;</code>
+         * <code>optional int32 svm_no_gravity = 4;</code>
          */
         public boolean hasSvmNoGravity() {
           return ((bitField0_ & 0x00000008) == 0x00000008);
         }
         /**
-         * <code>optional float svm_no_gravity = 4;</code>
+         * <code>optional int32 svm_no_gravity = 4;</code>
          */
-        public float getSvmNoGravity() {
+        public int getSvmNoGravity() {
           return svmNoGravity_;
         }
         /**
-         * <code>optional float svm_no_gravity = 4;</code>
+         * <code>optional int32 svm_no_gravity = 4;</code>
          */
-        public Builder setSvmNoGravity(float value) {
+        public Builder setSvmNoGravity(int value) {
           bitField0_ |= 0x00000008;
           svmNoGravity_ = value;
           onChanged();
           return this;
         }
         /**
-         * <code>optional float svm_no_gravity = 4;</code>
+         * <code>optional int32 svm_no_gravity = 4;</code>
          */
         public Builder clearSvmNoGravity() {
           bitField0_ = (bitField0_ & ~0x00000008);
-          svmNoGravity_ = 0F;
+          svmNoGravity_ = 0;
           onChanged();
           return this;
         }
@@ -13304,7 +13304,7 @@ public final class InputProtos {
       "o.TrackerDataBatch.TrackerData\032c\n\013Tracke" +
       "rData\022\022\n\ntracker_id\030\001 \001(\t\022\021\n\ttimestamp\030\002",
       " \001(\003\022\025\n\roffset_millis\030\003 \001(\005\022\026\n\016svm_no_gr" +
-      "avity\030\004 \001(\002\"\211\004\n\021SimpleSensorBatch\022\021\n\tdev" +
+      "avity\030\004 \001(\005\"\211\004\n\021SimpleSensorBatch\022\021\n\tdev" +
       "ice_id\030\001 \001(\t\022<\n\007samples\030\002 \003(\0132+.hello.Si" +
       "mpleSensorBatch.SimpleSensorSample\032a\n\007Gp" +
       "sInfo\022\020\n\010latitude\030\001 \001(\002\022\021\n\tlongitude\030\002 \001" +

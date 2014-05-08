@@ -3,7 +3,6 @@ package com.hello.suripu.core;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hello.suripu.core.db.SleepRating;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 

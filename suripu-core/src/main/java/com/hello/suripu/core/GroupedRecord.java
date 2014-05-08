@@ -73,11 +73,11 @@ public class GroupedRecord {
 
 
         for(final Record record : records) {
-            temp.add(new SensorSample(record.dateTime, record.ambientTemperature));
-            hum.add(new SensorSample(record.dateTime, record.ambientHumidity));
-            snd.add(new SensorSample(record.dateTime, record.ambientHumidity)); // TODO : fix this
-            lght.add(new SensorSample(record.dateTime, record.ambientHumidity)); // TODO : fix this
-            air.add(new SensorSample(record.dateTime, record.ambientAirQuality)); // TODO : fix this
+            temp.add(new SensorSample(record.dateTime, record.ambientTemperature, record.offsetMillis));
+            hum.add(new SensorSample(record.dateTime, record.ambientHumidity, record.offsetMillis));
+            snd.add(new SensorSample(record.dateTime, record.ambientHumidity, record.offsetMillis)); // TODO : fix this
+            lght.add(new SensorSample(record.dateTime, record.ambientHumidity, record.offsetMillis)); // TODO : fix this
+            air.add(new SensorSample(record.dateTime, record.ambientAirQuality, record.offsetMillis)); // TODO : fix this
         }
 
         return new GroupedRecord(temp, hum, snd, lght, air);

@@ -1,6 +1,6 @@
 package com.hello.suripu.core.db;
 
-import com.hello.suripu.core.TrackerMotionSample;
+import com.hello.suripu.core.TrackerMotion;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.StatementContext;
@@ -12,20 +12,20 @@ import java.sql.SQLException;
 /**
  * Created by pangwu on 5/6/14.
  */
-public class TrackerMotionMapper implements ResultSetMapper<TrackerMotionSample> {
+public class TrackerMotionMapper implements ResultSetMapper<TrackerMotion> {
 
     @Override
-    public TrackerMotionSample map(int i, ResultSet resultSet, StatementContext statementContext) throws SQLException {
-        int timezoneOffset = resultSet.getInt("offset_millis");
-        long timestamp = resultSet.getTimestamp("ts").getTime();
-        DateTimeZone userLocalTimeZone = DateTimeZone.forOffsetMillis(timezoneOffset);
+    public TrackerMotion map(int i, ResultSet resultSet, StatementContext statementContext) throws SQLException {
 
-        return new TrackerMotionSample(
+        long timestamp = resultSet.getTimestamp("ts").getTime();
+
+        return new TrackerMotion(
                 resultSet.getLong("id"),
                 resultSet.getLong("account_id"),
                 resultSet.getString("tracker_id"),
-                new DateTime(timestamp, userLocalTimeZone),
-                resultSet.getInt("svm_no_gravity")
+                new DateTime(timestamp, DateTimeZone.UTC),
+                resultSet.getInt("svm_no_gravity"),
+                resultSet.getInt("offset_millis")
         );
     }
 }

@@ -1,6 +1,7 @@
 package com.hello.suripu.core.db;
 
 import com.hello.suripu.core.SleepLabel;
+import com.hello.suripu.core.SleepRating;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.StatementContext;

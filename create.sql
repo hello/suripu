@@ -186,3 +186,16 @@ CREATE TABLE tracker_pairing_history(
 
 GRANT ALL PRIVILEGES ON tracker_pairing_history TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE tracker_pairing_history_seq TO ingress_user;
+
+CREATE TABLE event(
+    id BIGSERIAL PRIMARY KEY,
+    event_type INTEGER,  --{MOTION, NOISE, SNORING}
+    account_id INTEGER,
+    start_time_utc TIMESTAMP,
+    end_time_utc TIMESTAMP,
+    offset_millis INTEGER
+);
+
+CREATE UNIQUE INDEX uniq_event_account_type_starttime ON event(account_id, event_type, start_time_utc);
+GRANT ALL PRIVILEGES ON event TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE event_seq TO ingress_user;
