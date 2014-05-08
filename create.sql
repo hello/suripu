@@ -159,3 +159,30 @@ CREATE UNIQUE INDEX uniq_account_target_date on sleep_label(account_id, date_utc
 
 GRANT ALL PRIVILEGES ON sleep_label TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE sleep_label_id_seq TO ingress_user;
+
+
+-- Assume for now we only support one tracker each account for sleep cycle tracking
+CREATE TABLE motion(
+    id BIGSERIAL PRIMARY KEY,
+    account_id INTEGER,
+    tracker_id VARCHAR(64),
+    svm_no_gravity INTEGER,
+    ts TIMESTAMP,
+    offset_millis INTEGER
+);
+
+CREATE UNIQUE INDEX uniq_tracker_id_ts ON motion(account_id, ts);
+GRANT ALL PRIVILEGES ON motion TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE motion_id_seq TO ingress_user;
+
+
+CREATE TABLE tracker_pairing_history(
+    id BIGSERIAL PRIMARY KEY,
+    account_id INTEGER,
+    tracker_id VARCHAR(64),
+    ts TIMESTAMP,
+    offset_millis INTEGER
+);
+
+GRANT ALL PRIVILEGES ON tracker_pairing_history TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE tracker_pairing_history_seq TO ingress_user;

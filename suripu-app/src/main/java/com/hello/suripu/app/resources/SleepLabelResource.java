@@ -1,7 +1,7 @@
 package com.hello.suripu.app.resources;
 
 import com.google.common.base.Optional;
-import com.hello.suripu.core.db.SleepLabel;
+import com.hello.suripu.core.SleepLabel;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;

@@ -4,7 +4,9 @@ import com.google.common.base.Optional;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
+import com.hello.suripu.api.input.InputProtos.SimpleSensorBatch;
 import com.hello.suripu.core.Score;
+import com.hello.suripu.core.TrackerMotionSample;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.ScoreDAO;
@@ -65,7 +67,7 @@ public class ReceiveResource {
     @PUT
     @Timed
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
-    public Response receiveDevicePayload(@Valid InputProtos.SimpleSensorBatch batch) {
+    public Response receiveDevicePayload(@Valid SimpleSensorBatch batch) {
 
         final Optional<byte[]> optionalPublicKeyBase64Encoded = publicKeyStore.get(batch.getDeviceId());
         if(!optionalPublicKeyBase64Encoded.isPresent()) {
@@ -103,6 +105,57 @@ public class ReceiveResource {
         }
 
         return Response.serverError().build();
+    }
+
+
+
+    @POST
+    @Timed
+    @Path("/tracker")
+    @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
+    public Response receiveTrackerData(
+            @Valid InputProtos.TrackerDataBatch batch,
+            @Scope({OAuthScope.SENSORS_BASIC}) AccessToken accessToken){
+
+
+        for(InputProtos.TrackerDataBatch.TrackerData datum:batch.getSamplesList()){
+            DateTime dateTimeUTC = new DateTime(datum.getTimestamp(), DateTimeZone.UTC);
+            DateTime roundedDateTimeUTC = new DateTime(
+                    dateTimeUTC.getYear(),
+                    dateTimeUTC.getMonthOfYear(),
+                    dateTimeUTC.getDayOfMonth(),
+                    dateTimeUTC.getHourOfDay(),
+                    dateTimeUTC.getMinuteOfHour(),
+                    DateTimeZone.UTC
+            );
+
+
+            try{
+                eventDAO.insertTrackerMotion(accessToken.accountId,
+                        datum.getTrackerId(),
+                        (int) (datum.getSvmNoGravity() * TrackerMotionSample.FLOAT_TO_INT_CONVERTER),
+                        roundedDateTimeUTC,
+                        datum.getOffsetMillis());
+            } catch (UnableToExecuteStatementException exception) {
+                Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
+
+                if(!matcher.find()) {
+                    LOGGER.error(exception.getMessage());
+                    return Response.serverError().build();
+                }
+
+                LOGGER.warn("Duplicate entry for account {}, tracker {} with ts = {}",
+                        accessToken.accountId,
+                        datum.getTrackerId(),
+                        roundedDateTimeUTC);
+            }
+
+
+        }
+
+        return Response.ok().build();
+
+
     }
 
 
