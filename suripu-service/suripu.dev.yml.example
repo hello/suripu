@@ -56,3 +56,8 @@ logging:
 http:
     port: 5555
     adminPort: 5556
+
+dynamodb:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  keyStoreTable: public_key_table
