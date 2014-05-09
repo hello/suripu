@@ -171,7 +171,8 @@ public class ReceiveResource {
                 );
 
                 try {
-                    eventDAO.insert(deviceIdOptional.get(), rounded, offsetMillis, temp, light, humidity, airQuality);
+                    // TODO: FINAL VERSION WILL HAVE TO QUERY FROM DB
+                    eventDAO.insert(deviceIdOptional.get(), accessToken.accountId, rounded, offsetMillis, temp, light, humidity, airQuality);
                 } catch (UnableToExecuteStatementException exception) {
                     Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
                     if (!matcher.find()) {
