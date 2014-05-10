@@ -159,3 +159,7 @@ CREATE UNIQUE INDEX uniq_account_target_date on sleep_label(account_id, date_utc
 
 GRANT ALL PRIVILEGES ON sleep_label TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE sleep_label_id_seq TO ingress_user;
+
+-- 2014/05/08
+-- NEW CHANGES
+ALTER TABLE device_sensors ADD COLUMN account_id INTEGER;
