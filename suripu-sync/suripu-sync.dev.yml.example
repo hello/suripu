@@ -1,0 +1,15 @@
+dynamodb:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  keyStoreTable: public_key_table
+
+http:
+    port: 2222
+    adminPort: 2223
+
+logging:
+
+  # The default level of all loggers. Can be OFF, ERROR, WARN, INFO, DEBUG, TRACE, or ALL.
+  level: INFO
+  loggers:
+    com.hello.suripu.sync : DEBUG
