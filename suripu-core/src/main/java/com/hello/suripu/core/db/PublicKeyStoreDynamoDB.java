@@ -7,11 +7,15 @@ import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.google.common.base.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class PublicKeyStoreDynamoDB implements PublicKeyStore {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(PublicKeyStoreDynamoDB.class);
 
     private final AmazonDynamoDBClient dynamoDBClient;
     private final String keyStoreTableName;
@@ -28,6 +32,8 @@ public class PublicKeyStoreDynamoDB implements PublicKeyStore {
 
     @Override
     public Optional<byte[]> get(final String deviceId) {
+        LOGGER.warn("Calling get with {}", deviceId);
+
         final HashMap<String, AttributeValue> key = new HashMap<String, AttributeValue>();
         key.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
         final GetItemRequest getItemRequest = new GetItemRequest()
@@ -35,10 +41,16 @@ public class PublicKeyStoreDynamoDB implements PublicKeyStore {
                 .withKey(key);
 
         final GetItemResult getItemResult = dynamoDBClient.getItem(getItemRequest);
-        // TODO: check if key exists
-        final String base64EncodedPublicKey = getItemResult.getItem().get(PUBLIC_KEY_ATTRIBUTE_NAME).getS();
 
+        LOGGER.warn(getItemResult.toString());
+        if(getItemResult.getItem() == null || !getItemResult.getItem().containsKey(PUBLIC_KEY_ATTRIBUTE_NAME)) {
+            LOGGER.warn("Did not find anything for device_id = {}", deviceId);
+            return Optional.absent();
+        }
+
+        final String base64EncodedPublicKey = getItemResult.getItem().get(PUBLIC_KEY_ATTRIBUTE_NAME).getS();
         return Optional.of(base64EncodedPublicKey.getBytes());
+
     }
 
     @Override

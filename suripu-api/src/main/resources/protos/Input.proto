@@ -87,11 +87,30 @@ message SimpleSensorBatch {
 
 }
 
+
+message ActivationRequest {
+    optional string device_id = 1;
+    optional string account_id = 2;
+    optional int64 timestamp = 3;
+    optional string firmware_version = 4;
+    optional bytes signature = 5;
+}
+
+
+message ActivationResponse {
+    optional bool success = 1;
+    // TODO: do we need retry / rate-limiting exposed here?
+    // TODO: do we need another proof?
+}
+
 message SyncRequest {
     optional string device_id = 1;
     optional string firmware_version = 2;
     optional bytes signature = 3;
 }
+
+
+
 
 
 message SyncResponse {

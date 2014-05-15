@@ -20,7 +20,7 @@
         <module>suripu-service</module>
         <module>suripu-app</module>
         <module>suripu-factory</module>
-        <module>suripu-processing</module>
+        <module>suripu-sync</module>
     </modules>
 
     <dependencies>
