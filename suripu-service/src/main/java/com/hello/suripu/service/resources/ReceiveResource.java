@@ -4,15 +4,19 @@ import com.google.common.base.Optional;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
-import com.hello.suripu.core.crypto.CryptoHelper;
+import com.hello.suripu.api.input.InputProtos.SimpleSensorBatch;
 import com.hello.suripu.core.Score;
+import com.hello.suripu.core.crypto.CryptoHelper;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.EventDAO;
 import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.ScoreDAO;
+import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
-import com.hello.suripu.service.db.EventDAO;
+import com.hello.suripu.service.db.DataExtractor;
+import com.hello.suripu.service.db.DeviceDataDAO;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -22,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.HEAD;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -35,22 +40,30 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 @Path("/in")
 public class ReceiveResource {
 
     private static final Pattern PG_UNIQ_PATTERN = Pattern.compile("ERROR: duplicate key value violates unique constraint \"(\\w+)\"");
     private static final Logger LOGGER = LoggerFactory.getLogger(ReceiveResource.class);
 
-    private final EventDAO eventDAO;
+    private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
     private final ScoreDAO scoreDAO;
+    private final TrackerMotionDAO trackerMotionDAO;
     private final PublicKeyStore publicKeyStore;
+
     private final CryptoHelper cryptoHelper;
 
-    public ReceiveResource(final EventDAO eventDAO, final DeviceDAO deviceDAO, final ScoreDAO scoreDAO, final PublicKeyStore publicKeyStore) {
-        this.eventDAO = eventDAO;
+    public ReceiveResource(final DeviceDataDAO deviceDataDAO,
+                           final DeviceDAO deviceDAO,
+                           final ScoreDAO scoreDAO,
+                           final TrackerMotionDAO trackerMotionDAO,
+                           final PublicKeyStore publicKeyStore) {
+        this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.scoreDAO = scoreDAO;
+        this.trackerMotionDAO = trackerMotionDAO;
         this.publicKeyStore = publicKeyStore;
         cryptoHelper = new CryptoHelper();
     }
@@ -59,7 +72,7 @@ public class ReceiveResource {
     @PUT
     @Timed
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
-    public Response receiveDevicePayload(@Valid InputProtos.SimpleSensorBatch batch) {
+    public Response receiveDevicePayload(@Valid SimpleSensorBatch batch) {
 
         final Optional<byte[]> optionalPublicKeyBase64Encoded = publicKeyStore.get(batch.getDeviceId());
         if(!optionalPublicKeyBase64Encoded.isPresent()) {
@@ -84,6 +97,49 @@ public class ReceiveResource {
         }
 
         return Response.ok().build();
+    }
+
+
+
+    @POST
+    @Timed
+    @Path("/tracker")
+    @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
+    public Response receiveTrackerData(
+            @Valid InputProtos.TrackerDataBatch batch,
+            @Scope({OAuthScope.SENSORS_BASIC}) AccessToken accessToken){
+
+        if(batch.getSamplesCount() == 0){
+            LOGGER.warn("Empty payload.");
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+
+
+        for(final InputProtos.TrackerDataBatch.TrackerData datum:batch.getSamplesList()){
+
+            try{
+                DataExtractor.normalizeAndSave(datum, accessToken, trackerMotionDAO);
+            } catch (UnableToExecuteStatementException exception) {
+                Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
+
+                if(!matcher.find()) {
+                    LOGGER.error(exception.getMessage());
+                    return Response.serverError().build();
+                }
+
+                LOGGER.warn("Duplicate tracker data for account {}, tracker {} with ts = {}",
+                        accessToken.accountId,
+                        datum.getTrackerId(),
+                        new DateTime(datum.getTimestamp(), DateTimeZone.forOffsetMillis(datum.getOffsetMillis()))
+                        );
+            }
+
+
+        }
+
+        return Response.ok().build();
+
+
     }
 
 
@@ -142,7 +198,7 @@ public class ReceiveResource {
 
                 try {
                     timestamp = dataInputStream.readLong();
-                    LOGGER.debug("timestamp = {}", timestamp);
+                    LOGGER.debug("Device timestamp = {}", timestamp);
                     temp = dataInputStream.readInt();
                     light = dataInputStream.readInt();
                     humidity = dataInputStream.readInt();
@@ -172,7 +228,8 @@ public class ReceiveResource {
 
                 try {
                     // TODO: FINAL VERSION WILL HAVE TO QUERY FROM DB
-                    eventDAO.insert(deviceIdOptional.get(), accessToken.accountId, rounded, offsetMillis, temp, light, humidity, airQuality);
+                    deviceDataDAO.insert(deviceIdOptional.get(), accessToken.accountId, rounded, offsetMillis, temp, light, humidity, airQuality);
+
                 } catch (UnableToExecuteStatementException exception) {
                     Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
                     if (!matcher.find()) {
@@ -195,7 +252,8 @@ public class ReceiveResource {
                 final Long sampleTimestamp = sample.getTimestamp();
                 final DateTime dateTimeSample = new DateTime(sampleTimestamp, DateTimeZone.UTC);
                 try {
-                    eventDAO.insertSound(deviceIdOptional.get(), sample.getSoundAmplitude(), dateTimeSample, offsetMillis);
+                    deviceDataDAO.insertSound(deviceIdOptional.get(), sample.getSoundAmplitude(), dateTimeSample, offsetMillis);
+                    LOGGER.debug("Sound timestamp = {}", sampleTimestamp);
                 } catch (UnableToExecuteStatementException exception) {
                     Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
                     if (!matcher.find()) {

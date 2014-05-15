@@ -5,15 +5,19 @@ import org.joda.time.DateTime;
 
 public class SensorSample {
 
-    @JsonProperty("datetime")
+    @JsonProperty("datetime_utc")
     public final DateTime dateTime;
 
     @JsonProperty("value")
     public final float val;
 
-    public SensorSample(final DateTime dateTime, final float val) {
+    @JsonProperty("timezone_offset")
+    public final int timeZoneOffset;
+
+    public SensorSample(final DateTime dateTime, final float val, final int timeZoneOffset) {
 
         this.dateTime = dateTime;
         this.val = val;
+        this.timeZoneOffset = timeZoneOffset;
     }
 }

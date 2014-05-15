@@ -7,7 +7,7 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
 import java.util.List;
 
-public interface EventDAO {
+public interface DeviceDataDAO {
 
     @SqlBatch("INSERT INTO sensor_samples (sensor_id, device_id, ts, val) VALUES(:sensor_id, :device_id, :ts, :val);")
     void insertBatch(
@@ -31,4 +31,6 @@ public interface EventDAO {
 
     @SqlUpdate("INSERT INTO device_sound (device_id, amplitude, ts, offset_millis) VALUES(:device_id, :amplitude, :ts, :offset);")
     void insertSound(@Bind("device_id") Long deviceId, @Bind("amplitude") float amplitude, @Bind("ts") DateTime ts, @Bind("offset") int offset);
+
+
 }

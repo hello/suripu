@@ -160,6 +160,34 @@ CREATE UNIQUE INDEX uniq_account_target_date on sleep_label(account_id, date_utc
 GRANT ALL PRIVILEGES ON sleep_label TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE sleep_label_id_seq TO ingress_user;
 
+-- Assume for now we only support one tracker each account for sleep cycle tracking
+CREATE TABLE motion(
+    id BIGSERIAL PRIMARY KEY,
+    account_id INTEGER,
+    tracker_id VARCHAR(64),
+    svm_no_gravity INTEGER,
+    ts TIMESTAMP,
+    offset_millis INTEGER
+);
+
+CREATE UNIQUE INDEX uniq_tracker_id_ts ON motion(account_id, ts);
+GRANT ALL PRIVILEGES ON motion TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE motion_id_seq TO ingress_user;
+
+CREATE TABLE event(
+    id BIGSERIAL PRIMARY KEY,
+    event_type INTEGER, --{MOTION, NOISE, SNORING}
+    account_id INTEGER,
+    start_time_utc TIMESTAMP,
+    end_time_utc TIMESTAMP,
+    offset_millis INTEGER
+);
+
+CREATE UNIQUE INDEX uniq_event_account_type_starttime ON event(account_id, event_type, start_time_utc);
+GRANT ALL PRIVILEGES ON event TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE event_seq TO ingress_user;
+
+
 -- 2014/05/08
 -- NEW CHANGES
 ALTER TABLE device_sensors ADD COLUMN account_id INTEGER;

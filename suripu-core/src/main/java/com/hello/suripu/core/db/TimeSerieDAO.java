@@ -8,9 +8,10 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 
-@RegisterMapper(RecordMapper.class)
+
 public interface TimeSerieDAO {
 
+    @RegisterMapper(RecordMapper.class)
     @SqlQuery("SELECT * FROM device_sensors WHERE device_id = :device_id AND ts > :start_ts AND ts < :end_ts")
     public ImmutableList<Record> getHistoricalData(@Bind("device_id") Long deviceId, @Bind("start_ts") DateTime start, @Bind("end_ts") DateTime end);
 
@@ -19,4 +20,6 @@ public interface TimeSerieDAO {
     @RegisterMapper(SoundRecordMapper.class)
     @SqlQuery("SELECT device_id, date_trunc('hour', ts) as ts_trunc, avg(amplitude) as avg_max_amplitude FROM device_sound WHERE device_id = :device_id AND ts > :start AND ts < :end GROUP BY ts_trunc, device_id ORDER BY ts_trunc asc;")
     public ImmutableList<SoundRecord> getAvgSoundData(@Bind("device_id") Long deviceId, @Bind("start") DateTime start, @Bind("end") DateTime end);
+
+
 }

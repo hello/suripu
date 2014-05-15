@@ -43,6 +43,21 @@ message MotionSensorBatch {
     repeated MotionSensor samples = 2;
 }
 
+message TrackerDataBatch {
+
+    message  TrackerData {
+        optional string tracker_id = 1;  // Do you think this is a good idea?
+        optional int64 timestamp = 2;
+        optional int32 offset_millis = 3;
+        optional int32 svm_no_gravity = 4;
+
+    }
+
+    repeated TrackerData samples = 1;
+
+}
+
+
 message SimpleSensorBatch {
     message GpsInfo {
         optional float latitude = 1;

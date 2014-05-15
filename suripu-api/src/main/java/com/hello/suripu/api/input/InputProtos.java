@@ -2864,6 +2864,1442 @@ public final class InputProtos {
     // @@protoc_insertion_point(class_scope:hello.MotionSensorBatch)
   }
 
+  public interface TrackerDataBatchOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // repeated .hello.TrackerDataBatch.TrackerData samples = 1;
+    /**
+     * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+     */
+    java.util.List<com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData> 
+        getSamplesList();
+    /**
+     * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+     */
+    com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData getSamples(int index);
+    /**
+     * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+     */
+    int getSamplesCount();
+    /**
+     * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+     */
+    java.util.List<? extends com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerDataOrBuilder> 
+        getSamplesOrBuilderList();
+    /**
+     * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+     */
+    com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerDataOrBuilder getSamplesOrBuilder(
+        int index);
+  }
+  /**
+   * Protobuf type {@code hello.TrackerDataBatch}
+   */
+  public static final class TrackerDataBatch extends
+      com.google.protobuf.GeneratedMessage
+      implements TrackerDataBatchOrBuilder {
+    // Use TrackerDataBatch.newBuilder() to construct.
+    private TrackerDataBatch(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private TrackerDataBatch(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final TrackerDataBatch defaultInstance;
+    public static TrackerDataBatch getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public TrackerDataBatch getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private TrackerDataBatch(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                samples_ = new java.util.ArrayList<com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              samples_.add(input.readMessage(com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData.PARSER, extensionRegistry));
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          samples_ = java.util.Collections.unmodifiableList(samples_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.suripu.api.input.InputProtos.internal_static_hello_TrackerDataBatch_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.suripu.api.input.InputProtos.internal_static_hello_TrackerDataBatch_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.suripu.api.input.InputProtos.TrackerDataBatch.class, com.hello.suripu.api.input.InputProtos.TrackerDataBatch.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<TrackerDataBatch> PARSER =
+        new com.google.protobuf.AbstractParser<TrackerDataBatch>() {
+      public TrackerDataBatch parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new TrackerDataBatch(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<TrackerDataBatch> getParserForType() {
+      return PARSER;
+    }
+
+    public interface TrackerDataOrBuilder
+        extends com.google.protobuf.MessageOrBuilder {
+
+      // optional string tracker_id = 1;
+      /**
+       * <code>optional string tracker_id = 1;</code>
+       *
+       * <pre>
+       * Do you think this is a good idea?
+       * </pre>
+       */
+      boolean hasTrackerId();
+      /**
+       * <code>optional string tracker_id = 1;</code>
+       *
+       * <pre>
+       * Do you think this is a good idea?
+       * </pre>
+       */
+      java.lang.String getTrackerId();
+      /**
+       * <code>optional string tracker_id = 1;</code>
+       *
+       * <pre>
+       * Do you think this is a good idea?
+       * </pre>
+       */
+      com.google.protobuf.ByteString
+          getTrackerIdBytes();
+
+      // optional int64 timestamp = 2;
+      /**
+       * <code>optional int64 timestamp = 2;</code>
+       */
+      boolean hasTimestamp();
+      /**
+       * <code>optional int64 timestamp = 2;</code>
+       */
+      long getTimestamp();
+
+      // optional int32 offset_millis = 3;
+      /**
+       * <code>optional int32 offset_millis = 3;</code>
+       */
+      boolean hasOffsetMillis();
+      /**
+       * <code>optional int32 offset_millis = 3;</code>
+       */
+      int getOffsetMillis();
+
+      // optional int32 svm_no_gravity = 4;
+      /**
+       * <code>optional int32 svm_no_gravity = 4;</code>
+       */
+      boolean hasSvmNoGravity();
+      /**
+       * <code>optional int32 svm_no_gravity = 4;</code>
+       */
+      int getSvmNoGravity();
+    }
+    /**
+     * Protobuf type {@code hello.TrackerDataBatch.TrackerData}
+     */
+    public static final class TrackerData extends
+        com.google.protobuf.GeneratedMessage
+        implements TrackerDataOrBuilder {
+      // Use TrackerData.newBuilder() to construct.
+      private TrackerData(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+        super(builder);
+        this.unknownFields = builder.getUnknownFields();
+      }
+      private TrackerData(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+      private static final TrackerData defaultInstance;
+      public static TrackerData getDefaultInstance() {
+        return defaultInstance;
+      }
+
+      public TrackerData getDefaultInstanceForType() {
+        return defaultInstance;
+      }
+
+      private final com.google.protobuf.UnknownFieldSet unknownFields;
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+          getUnknownFields() {
+        return this.unknownFields;
+      }
+      private TrackerData(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        initFields();
+        int mutable_bitField0_ = 0;
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              default: {
+                if (!parseUnknownField(input, unknownFields,
+                                       extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+              case 10: {
+                bitField0_ |= 0x00000001;
+                trackerId_ = input.readBytes();
+                break;
+              }
+              case 16: {
+                bitField0_ |= 0x00000002;
+                timestamp_ = input.readInt64();
+                break;
+              }
+              case 24: {
+                bitField0_ |= 0x00000004;
+                offsetMillis_ = input.readInt32();
+                break;
+              }
+              case 32: {
+                bitField0_ |= 0x00000008;
+                svmNoGravity_ = input.readInt32();
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e.getMessage()).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_TrackerDataBatch_TrackerData_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_TrackerDataBatch_TrackerData_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData.class, com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData.Builder.class);
+      }
+
+      public static com.google.protobuf.Parser<TrackerData> PARSER =
+          new com.google.protobuf.AbstractParser<TrackerData>() {
+        public TrackerData parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new TrackerData(input, extensionRegistry);
+        }
+      };
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<TrackerData> getParserForType() {
+        return PARSER;
+      }
+
+      private int bitField0_;
+      // optional string tracker_id = 1;
+      public static final int TRACKER_ID_FIELD_NUMBER = 1;
+      private java.lang.Object trackerId_;
+      /**
+       * <code>optional string tracker_id = 1;</code>
+       *
+       * <pre>
+       * Do you think this is a good idea?
+       * </pre>
+       */
+      public boolean hasTrackerId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string tracker_id = 1;</code>
+       *
+       * <pre>
+       * Do you think this is a good idea?
+       * </pre>
+       */
+      public java.lang.String getTrackerId() {
+        java.lang.Object ref = trackerId_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            trackerId_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       * <code>optional string tracker_id = 1;</code>
+       *
+       * <pre>
+       * Do you think this is a good idea?
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getTrackerIdBytes() {
+        java.lang.Object ref = trackerId_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          trackerId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
+      // optional int64 timestamp = 2;
+      public static final int TIMESTAMP_FIELD_NUMBER = 2;
+      private long timestamp_;
+      /**
+       * <code>optional int64 timestamp = 2;</code>
+       */
+      public boolean hasTimestamp() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional int64 timestamp = 2;</code>
+       */
+      public long getTimestamp() {
+        return timestamp_;
+      }
+
+      // optional int32 offset_millis = 3;
+      public static final int OFFSET_MILLIS_FIELD_NUMBER = 3;
+      private int offsetMillis_;
+      /**
+       * <code>optional int32 offset_millis = 3;</code>
+       */
+      public boolean hasOffsetMillis() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional int32 offset_millis = 3;</code>
+       */
+      public int getOffsetMillis() {
+        return offsetMillis_;
+      }
+
+      // optional int32 svm_no_gravity = 4;
+      public static final int SVM_NO_GRAVITY_FIELD_NUMBER = 4;
+      private int svmNoGravity_;
+      /**
+       * <code>optional int32 svm_no_gravity = 4;</code>
+       */
+      public boolean hasSvmNoGravity() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional int32 svm_no_gravity = 4;</code>
+       */
+      public int getSvmNoGravity() {
+        return svmNoGravity_;
+      }
+
+      private void initFields() {
+        trackerId_ = "";
+        timestamp_ = 0L;
+        offsetMillis_ = 0;
+        svmNoGravity_ = 0;
+      }
+      private byte memoizedIsInitialized = -1;
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized != -1) return isInitialized == 1;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        getSerializedSize();
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          output.writeBytes(1, getTrackerIdBytes());
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          output.writeInt64(2, timestamp_);
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          output.writeInt32(3, offsetMillis_);
+        }
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          output.writeInt32(4, svmNoGravity_);
+        }
+        getUnknownFields().writeTo(output);
+      }
+
+      private int memoizedSerializedSize = -1;
+      public int getSerializedSize() {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(1, getTrackerIdBytes());
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt64Size(2, timestamp_);
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(3, offsetMillis_);
+        }
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(4, svmNoGravity_);
+        }
+        size += getUnknownFields().getSerializedSize();
+        memoizedSerializedSize = size;
+        return size;
+      }
+
+      private static final long serialVersionUID = 0L;
+      @java.lang.Override
+      protected java.lang.Object writeReplace()
+          throws java.io.ObjectStreamException {
+        return super.writeReplace();
+      }
+
+      public static com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input);
+      }
+      public static com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+
+      public static Builder newBuilder() { return Builder.create(); }
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder(com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData prototype) {
+        return newBuilder().mergeFrom(prototype);
+      }
+      public Builder toBuilder() { return newBuilder(this); }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code hello.TrackerDataBatch.TrackerData}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessage.Builder<Builder>
+         implements com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerDataOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return com.hello.suripu.api.input.InputProtos.internal_static_hello_TrackerDataBatch_TrackerData_descriptor;
+        }
+
+        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return com.hello.suripu.api.input.InputProtos.internal_static_hello_TrackerDataBatch_TrackerData_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData.class, com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData.Builder.class);
+        }
+
+        // Construct using com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          }
+        }
+        private static Builder create() {
+          return new Builder();
+        }
+
+        public Builder clear() {
+          super.clear();
+          trackerId_ = "";
+          bitField0_ = (bitField0_ & ~0x00000001);
+          timestamp_ = 0L;
+          bitField0_ = (bitField0_ & ~0x00000002);
+          offsetMillis_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000004);
+          svmNoGravity_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000008);
+          return this;
+        }
+
+        public Builder clone() {
+          return create().mergeFrom(buildPartial());
+        }
+
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return com.hello.suripu.api.input.InputProtos.internal_static_hello_TrackerDataBatch_TrackerData_descriptor;
+        }
+
+        public com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData getDefaultInstanceForType() {
+          return com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData.getDefaultInstance();
+        }
+
+        public com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData build() {
+          com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        public com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData buildPartial() {
+          com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData result = new com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData(this);
+          int from_bitField0_ = bitField0_;
+          int to_bitField0_ = 0;
+          if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+            to_bitField0_ |= 0x00000001;
+          }
+          result.trackerId_ = trackerId_;
+          if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+            to_bitField0_ |= 0x00000002;
+          }
+          result.timestamp_ = timestamp_;
+          if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+            to_bitField0_ |= 0x00000004;
+          }
+          result.offsetMillis_ = offsetMillis_;
+          if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+            to_bitField0_ |= 0x00000008;
+          }
+          result.svmNoGravity_ = svmNoGravity_;
+          result.bitField0_ = to_bitField0_;
+          onBuilt();
+          return result;
+        }
+
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData) {
+            return mergeFrom((com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData other) {
+          if (other == com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData.getDefaultInstance()) return this;
+          if (other.hasTrackerId()) {
+            bitField0_ |= 0x00000001;
+            trackerId_ = other.trackerId_;
+            onChanged();
+          }
+          if (other.hasTimestamp()) {
+            setTimestamp(other.getTimestamp());
+          }
+          if (other.hasOffsetMillis()) {
+            setOffsetMillis(other.getOffsetMillis());
+          }
+          if (other.hasSvmNoGravity()) {
+            setSvmNoGravity(other.getSvmNoGravity());
+          }
+          this.mergeUnknownFields(other.getUnknownFields());
+          return this;
+        }
+
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData) e.getUnfinishedMessage();
+            throw e;
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+        private int bitField0_;
+
+        // optional string tracker_id = 1;
+        private java.lang.Object trackerId_ = "";
+        /**
+         * <code>optional string tracker_id = 1;</code>
+         *
+         * <pre>
+         * Do you think this is a good idea?
+         * </pre>
+         */
+        public boolean hasTrackerId() {
+          return ((bitField0_ & 0x00000001) == 0x00000001);
+        }
+        /**
+         * <code>optional string tracker_id = 1;</code>
+         *
+         * <pre>
+         * Do you think this is a good idea?
+         * </pre>
+         */
+        public java.lang.String getTrackerId() {
+          java.lang.Object ref = trackerId_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
+                .toStringUtf8();
+            trackerId_ = s;
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         * <code>optional string tracker_id = 1;</code>
+         *
+         * <pre>
+         * Do you think this is a good idea?
+         * </pre>
+         */
+        public com.google.protobuf.ByteString
+            getTrackerIdBytes() {
+          java.lang.Object ref = trackerId_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
+            trackerId_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         * <code>optional string tracker_id = 1;</code>
+         *
+         * <pre>
+         * Do you think this is a good idea?
+         * </pre>
+         */
+        public Builder setTrackerId(
+            java.lang.String value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+          trackerId_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string tracker_id = 1;</code>
+         *
+         * <pre>
+         * Do you think this is a good idea?
+         * </pre>
+         */
+        public Builder clearTrackerId() {
+          bitField0_ = (bitField0_ & ~0x00000001);
+          trackerId_ = getDefaultInstance().getTrackerId();
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string tracker_id = 1;</code>
+         *
+         * <pre>
+         * Do you think this is a good idea?
+         * </pre>
+         */
+        public Builder setTrackerIdBytes(
+            com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+          trackerId_ = value;
+          onChanged();
+          return this;
+        }
+
+        // optional int64 timestamp = 2;
+        private long timestamp_ ;
+        /**
+         * <code>optional int64 timestamp = 2;</code>
+         */
+        public boolean hasTimestamp() {
+          return ((bitField0_ & 0x00000002) == 0x00000002);
+        }
+        /**
+         * <code>optional int64 timestamp = 2;</code>
+         */
+        public long getTimestamp() {
+          return timestamp_;
+        }
+        /**
+         * <code>optional int64 timestamp = 2;</code>
+         */
+        public Builder setTimestamp(long value) {
+          bitField0_ |= 0x00000002;
+          timestamp_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int64 timestamp = 2;</code>
+         */
+        public Builder clearTimestamp() {
+          bitField0_ = (bitField0_ & ~0x00000002);
+          timestamp_ = 0L;
+          onChanged();
+          return this;
+        }
+
+        // optional int32 offset_millis = 3;
+        private int offsetMillis_ ;
+        /**
+         * <code>optional int32 offset_millis = 3;</code>
+         */
+        public boolean hasOffsetMillis() {
+          return ((bitField0_ & 0x00000004) == 0x00000004);
+        }
+        /**
+         * <code>optional int32 offset_millis = 3;</code>
+         */
+        public int getOffsetMillis() {
+          return offsetMillis_;
+        }
+        /**
+         * <code>optional int32 offset_millis = 3;</code>
+         */
+        public Builder setOffsetMillis(int value) {
+          bitField0_ |= 0x00000004;
+          offsetMillis_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int32 offset_millis = 3;</code>
+         */
+        public Builder clearOffsetMillis() {
+          bitField0_ = (bitField0_ & ~0x00000004);
+          offsetMillis_ = 0;
+          onChanged();
+          return this;
+        }
+
+        // optional int32 svm_no_gravity = 4;
+        private int svmNoGravity_ ;
+        /**
+         * <code>optional int32 svm_no_gravity = 4;</code>
+         */
+        public boolean hasSvmNoGravity() {
+          return ((bitField0_ & 0x00000008) == 0x00000008);
+        }
+        /**
+         * <code>optional int32 svm_no_gravity = 4;</code>
+         */
+        public int getSvmNoGravity() {
+          return svmNoGravity_;
+        }
+        /**
+         * <code>optional int32 svm_no_gravity = 4;</code>
+         */
+        public Builder setSvmNoGravity(int value) {
+          bitField0_ |= 0x00000008;
+          svmNoGravity_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int32 svm_no_gravity = 4;</code>
+         */
+        public Builder clearSvmNoGravity() {
+          bitField0_ = (bitField0_ & ~0x00000008);
+          svmNoGravity_ = 0;
+          onChanged();
+          return this;
+        }
+
+        // @@protoc_insertion_point(builder_scope:hello.TrackerDataBatch.TrackerData)
+      }
+
+      static {
+        defaultInstance = new TrackerData(true);
+        defaultInstance.initFields();
+      }
+
+      // @@protoc_insertion_point(class_scope:hello.TrackerDataBatch.TrackerData)
+    }
+
+    // repeated .hello.TrackerDataBatch.TrackerData samples = 1;
+    public static final int SAMPLES_FIELD_NUMBER = 1;
+    private java.util.List<com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData> samples_;
+    /**
+     * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+     */
+    public java.util.List<com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData> getSamplesList() {
+      return samples_;
+    }
+    /**
+     * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+     */
+    public java.util.List<? extends com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerDataOrBuilder> 
+        getSamplesOrBuilderList() {
+      return samples_;
+    }
+    /**
+     * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+     */
+    public int getSamplesCount() {
+      return samples_.size();
+    }
+    /**
+     * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+     */
+    public com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData getSamples(int index) {
+      return samples_.get(index);
+    }
+    /**
+     * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+     */
+    public com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerDataOrBuilder getSamplesOrBuilder(
+        int index) {
+      return samples_.get(index);
+    }
+
+    private void initFields() {
+      samples_ = java.util.Collections.emptyList();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      for (int i = 0; i < samples_.size(); i++) {
+        output.writeMessage(1, samples_.get(i));
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (int i = 0; i < samples_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, samples_.get(i));
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.suripu.api.input.InputProtos.TrackerDataBatch parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.input.InputProtos.TrackerDataBatch parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.TrackerDataBatch parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.input.InputProtos.TrackerDataBatch parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.TrackerDataBatch parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.input.InputProtos.TrackerDataBatch parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.TrackerDataBatch parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.suripu.api.input.InputProtos.TrackerDataBatch parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.TrackerDataBatch parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.input.InputProtos.TrackerDataBatch parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.suripu.api.input.InputProtos.TrackerDataBatch prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code hello.TrackerDataBatch}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.input.InputProtos.TrackerDataBatchOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_TrackerDataBatch_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_TrackerDataBatch_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.input.InputProtos.TrackerDataBatch.class, com.hello.suripu.api.input.InputProtos.TrackerDataBatch.Builder.class);
+      }
+
+      // Construct using com.hello.suripu.api.input.InputProtos.TrackerDataBatch.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getSamplesFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        if (samplesBuilder_ == null) {
+          samples_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          samplesBuilder_.clear();
+        }
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_TrackerDataBatch_descriptor;
+      }
+
+      public com.hello.suripu.api.input.InputProtos.TrackerDataBatch getDefaultInstanceForType() {
+        return com.hello.suripu.api.input.InputProtos.TrackerDataBatch.getDefaultInstance();
+      }
+
+      public com.hello.suripu.api.input.InputProtos.TrackerDataBatch build() {
+        com.hello.suripu.api.input.InputProtos.TrackerDataBatch result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.suripu.api.input.InputProtos.TrackerDataBatch buildPartial() {
+        com.hello.suripu.api.input.InputProtos.TrackerDataBatch result = new com.hello.suripu.api.input.InputProtos.TrackerDataBatch(this);
+        int from_bitField0_ = bitField0_;
+        if (samplesBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+            samples_ = java.util.Collections.unmodifiableList(samples_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.samples_ = samples_;
+        } else {
+          result.samples_ = samplesBuilder_.build();
+        }
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.suripu.api.input.InputProtos.TrackerDataBatch) {
+          return mergeFrom((com.hello.suripu.api.input.InputProtos.TrackerDataBatch)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.suripu.api.input.InputProtos.TrackerDataBatch other) {
+        if (other == com.hello.suripu.api.input.InputProtos.TrackerDataBatch.getDefaultInstance()) return this;
+        if (samplesBuilder_ == null) {
+          if (!other.samples_.isEmpty()) {
+            if (samples_.isEmpty()) {
+              samples_ = other.samples_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureSamplesIsMutable();
+              samples_.addAll(other.samples_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.samples_.isEmpty()) {
+            if (samplesBuilder_.isEmpty()) {
+              samplesBuilder_.dispose();
+              samplesBuilder_ = null;
+              samples_ = other.samples_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              samplesBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getSamplesFieldBuilder() : null;
+            } else {
+              samplesBuilder_.addAllMessages(other.samples_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.suripu.api.input.InputProtos.TrackerDataBatch parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.suripu.api.input.InputProtos.TrackerDataBatch) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // repeated .hello.TrackerDataBatch.TrackerData samples = 1;
+      private java.util.List<com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData> samples_ =
+        java.util.Collections.emptyList();
+      private void ensureSamplesIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          samples_ = new java.util.ArrayList<com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData>(samples_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData, com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData.Builder, com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerDataOrBuilder> samplesBuilder_;
+
+      /**
+       * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+       */
+      public java.util.List<com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData> getSamplesList() {
+        if (samplesBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(samples_);
+        } else {
+          return samplesBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+       */
+      public int getSamplesCount() {
+        if (samplesBuilder_ == null) {
+          return samples_.size();
+        } else {
+          return samplesBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData getSamples(int index) {
+        if (samplesBuilder_ == null) {
+          return samples_.get(index);
+        } else {
+          return samplesBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+       */
+      public Builder setSamples(
+          int index, com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData value) {
+        if (samplesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureSamplesIsMutable();
+          samples_.set(index, value);
+          onChanged();
+        } else {
+          samplesBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+       */
+      public Builder setSamples(
+          int index, com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData.Builder builderForValue) {
+        if (samplesBuilder_ == null) {
+          ensureSamplesIsMutable();
+          samples_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          samplesBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+       */
+      public Builder addSamples(com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData value) {
+        if (samplesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureSamplesIsMutable();
+          samples_.add(value);
+          onChanged();
+        } else {
+          samplesBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+       */
+      public Builder addSamples(
+          int index, com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData value) {
+        if (samplesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureSamplesIsMutable();
+          samples_.add(index, value);
+          onChanged();
+        } else {
+          samplesBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+       */
+      public Builder addSamples(
+          com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData.Builder builderForValue) {
+        if (samplesBuilder_ == null) {
+          ensureSamplesIsMutable();
+          samples_.add(builderForValue.build());
+          onChanged();
+        } else {
+          samplesBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+       */
+      public Builder addSamples(
+          int index, com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData.Builder builderForValue) {
+        if (samplesBuilder_ == null) {
+          ensureSamplesIsMutable();
+          samples_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          samplesBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+       */
+      public Builder addAllSamples(
+          java.lang.Iterable<? extends com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData> values) {
+        if (samplesBuilder_ == null) {
+          ensureSamplesIsMutable();
+          super.addAll(values, samples_);
+          onChanged();
+        } else {
+          samplesBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+       */
+      public Builder clearSamples() {
+        if (samplesBuilder_ == null) {
+          samples_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          samplesBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+       */
+      public Builder removeSamples(int index) {
+        if (samplesBuilder_ == null) {
+          ensureSamplesIsMutable();
+          samples_.remove(index);
+          onChanged();
+        } else {
+          samplesBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData.Builder getSamplesBuilder(
+          int index) {
+        return getSamplesFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerDataOrBuilder getSamplesOrBuilder(
+          int index) {
+        if (samplesBuilder_ == null) {
+          return samples_.get(index);  } else {
+          return samplesBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+       */
+      public java.util.List<? extends com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerDataOrBuilder> 
+           getSamplesOrBuilderList() {
+        if (samplesBuilder_ != null) {
+          return samplesBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(samples_);
+        }
+      }
+      /**
+       * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData.Builder addSamplesBuilder() {
+        return getSamplesFieldBuilder().addBuilder(
+            com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData.Builder addSamplesBuilder(
+          int index) {
+        return getSamplesFieldBuilder().addBuilder(
+            index, com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.TrackerDataBatch.TrackerData samples = 1;</code>
+       */
+      public java.util.List<com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData.Builder> 
+           getSamplesBuilderList() {
+        return getSamplesFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData, com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData.Builder, com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerDataOrBuilder> 
+          getSamplesFieldBuilder() {
+        if (samplesBuilder_ == null) {
+          samplesBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData, com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerData.Builder, com.hello.suripu.api.input.InputProtos.TrackerDataBatch.TrackerDataOrBuilder>(
+                  samples_,
+                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  getParentForChildren(),
+                  isClean());
+          samples_ = null;
+        }
+        return samplesBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:hello.TrackerDataBatch)
+    }
+
+    static {
+      defaultInstance = new TrackerDataBatch(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:hello.TrackerDataBatch)
+  }
+
   public interface SimpleSensorBatchOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
@@ -13163,6 +14599,16 @@ public final class InputProtos {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_MotionSensorBatch_MotionSensor_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_hello_TrackerDataBatch_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_hello_TrackerDataBatch_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_hello_TrackerDataBatch_TrackerData_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_hello_TrackerDataBatch_TrackerData_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_SimpleSensorBatch_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -13247,53 +14693,57 @@ public final class InputProtos {
       "nsorBatch.Manufacturer\0226\n\007samples\030\002 \003(\0132" +
       "%.hello.MotionSensorBatch.MotionSensor\0320" +
       "\n\014MotionSensor\022\021\n\ttimestamp\030\001 \001(\003\022\r\n\005val" +
-      "ue\030\002 \001(\005\"\031\n\014Manufacturer\022\t\n\005HELLO\020\000\"\211\004\n\021" +
-      "SimpleSensorBatch\022\021\n\tdevice_id\030\001 \001(\t\022<\n\007" +
-      "samples\030\002 \003(\0132+.hello.SimpleSensorBatch." +
-      "SimpleSensorSample\032a\n\007GpsInfo\022\020\n\010latitud",
-      "e\030\001 \001(\002\022\021\n\tlongitude\030\002 \001(\002\022\020\n\010accuracy\030\003" +
-      " \001(\002\022\r\n\005speed\030\004 \001(\002\022\020\n\010provider\030\005 \001(\t\032\277\002" +
-      "\n\022SimpleSensorSample\022\021\n\ttimestamp\030\001 \001(\003\022" +
-      "\033\n\023ambient_temperature\030\002 \001(\002\022\030\n\020ambient_" +
-      "humidity\030\003 \001(\002\022\025\n\rambient_light\030\004 \001(\002\022\030\n" +
-      "\020ambient_decibels\030\005 \001(\002\022\033\n\023ambient_air_q" +
-      "uality\030\006 \001(\002\022\023\n\013device_data\030\007 \001(\014\022\035\n\025dev" +
-      "ice_data_signature\030\010 \001(\014\022\027\n\017sound_amplit" +
-      "ude\030\t \001(\002\022-\n\003gps\030\n \001(\0132 .hello.SimpleSen" +
-      "sorBatch.GpsInfo\022\025\n\roffset_millis\030\013 \001(\005\"",
-      "z\n\021ActivationRequest\022\021\n\tdevice_id\030\001 \001(\t\022" +
-      "\022\n\naccount_id\030\002 \001(\t\022\021\n\ttimestamp\030\003 \001(\003\022\030" +
-      "\n\020firmware_version\030\004 \001(\t\022\021\n\tsignature\030\005 " +
-      "\001(\014\"%\n\022ActivationResponse\022\017\n\007success\030\001 \001" +
-      "(\010\"M\n\013SyncRequest\022\021\n\tdevice_id\030\001 \001(\t\022\030\n\020" +
-      "firmware_version\030\002 \001(\t\022\021\n\tsignature\030\003 \001(" +
-      "\014\"\341\007\n\014SyncResponse\022\024\n\014upload_cycle\030\001 \001(\005" +
-      "\022\022\n\nsync_cycle\030\002 \001(\005\022\025\n\racc_scan_cyle\030\003 " +
-      "\001(\005\022\035\n\025acc_sampling_interval\030\004 \001(\005\022 \n\030de" +
-      "vice_sampling_interval\030\005 \001(\005\022(\n\005alarm\030\006 ",
-      "\001(\0132\031.hello.SyncResponse.Alarm\0229\n\016pairin" +
-      "g_action\030\007 \001(\0132!.hello.SyncResponse.Pair" +
-      "ingAction\0223\n\013white_noise\030\010 \001(\0132\036.hello.S" +
-      "yncResponse.WhiteNoise\0225\n\014flash_action\030\t" +
-      " \001(\0132\037.hello.SyncResponse.FlashAction\032E\n" +
-      "\005Alarm\022\022\n\nstart_time\030\001 \001(\005\022\020\n\010end_time\030\002" +
-      " \001(\005\022\026\n\013ringtone_id\030\003 \001(\005:\0011\032}\n\rPairingA" +
-      "ction\022\014\n\004ssid\030\001 \001(\t\022:\n\004type\030\002 \001(\0162,.hell" +
-      "o.SyncResponse.PairingAction.ActionType\"" +
-      "\"\n\nActionType\022\010\n\004PAIR\020\000\022\n\n\006UNPAIR\020\001\032D\n\nW",
-      "hiteNoise\022\022\n\nstart_time\030\001 \001(\005\022\020\n\010end_tim" +
-      "e\030\002 \001(\005\022\020\n\010sound_id\030\003 \001(\005\032\361\002\n\013FlashActio" +
-      "n\0228\n\005led_1\030\001 \001(\0132).hello.SyncResponse.Fl" +
-      "ashAction.LEDAction\0228\n\005led_2\030\002 \001(\0132).hel" +
-      "lo.SyncResponse.FlashAction.LEDAction\0228\n" +
-      "\005led_3\030\003 \001(\0132).hello.SyncResponse.FlashA" +
-      "ction.LEDAction\0228\n\005led_4\030\004 \001(\0132).hello.S" +
-      "yncResponse.FlashAction.LEDAction\0228\n\005led" +
-      "_5\030\005 \001(\0132).hello.SyncResponse.FlashActio" +
-      "n.LEDAction\032@\n\tLEDAction\022\r\n\005color\030\001 \001(\005\022",
-      "\022\n\nstart_time\030\002 \001(\005\022\020\n\010end_time\030\003 \001(\005B+\n" +
-      "\032com.hello.suripu.api.inputB\013InputProtos" +
-      "H\001"
+      "ue\030\002 \001(\005\"\031\n\014Manufacturer\022\t\n\005HELLO\020\000\"\255\001\n\020" +
+      "TrackerDataBatch\0224\n\007samples\030\001 \003(\0132#.hell" +
+      "o.TrackerDataBatch.TrackerData\032c\n\013Tracke" +
+      "rData\022\022\n\ntracker_id\030\001 \001(\t\022\021\n\ttimestamp\030\002",
+      " \001(\003\022\025\n\roffset_millis\030\003 \001(\005\022\026\n\016svm_no_gr" +
+      "avity\030\004 \001(\005\"\211\004\n\021SimpleSensorBatch\022\021\n\tdev" +
+      "ice_id\030\001 \001(\t\022<\n\007samples\030\002 \003(\0132+.hello.Si" +
+      "mpleSensorBatch.SimpleSensorSample\032a\n\007Gp" +
+      "sInfo\022\020\n\010latitude\030\001 \001(\002\022\021\n\tlongitude\030\002 \001" +
+      "(\002\022\020\n\010accuracy\030\003 \001(\002\022\r\n\005speed\030\004 \001(\002\022\020\n\010p" +
+      "rovider\030\005 \001(\t\032\277\002\n\022SimpleSensorSample\022\021\n\t" +
+      "timestamp\030\001 \001(\003\022\033\n\023ambient_temperature\030\002" +
+      " \001(\002\022\030\n\020ambient_humidity\030\003 \001(\002\022\025\n\rambien" +
+      "t_light\030\004 \001(\002\022\030\n\020ambient_decibels\030\005 \001(\002\022",
+      "\033\n\023ambient_air_quality\030\006 \001(\002\022\023\n\013device_d" +
+      "ata\030\007 \001(\014\022\035\n\025device_data_signature\030\010 \001(\014" +
+      "\022\027\n\017sound_amplitude\030\t \001(\002\022-\n\003gps\030\n \001(\0132 " +
+      ".hello.SimpleSensorBatch.GpsInfo\022\025\n\roffs" +
+      "et_millis\030\013 \001(\005\"z\n\021ActivationRequest\022\021\n\t" +
+      "device_id\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(\t\022\021\n\tt" +
+      "imestamp\030\003 \001(\003\022\030\n\020firmware_version\030\004 \001(\t" +
+      "\022\021\n\tsignature\030\005 \001(\014\"%\n\022ActivationRespons" +
+      "e\022\017\n\007success\030\001 \001(\010\"M\n\013SyncRequest\022\021\n\tdev" +
+      "ice_id\030\001 \001(\t\022\030\n\020firmware_version\030\002 \001(\t\022\021",
+      "\n\tsignature\030\003 \001(\014\"\341\007\n\014SyncResponse\022\024\n\014up" +
+      "load_cycle\030\001 \001(\005\022\022\n\nsync_cycle\030\002 \001(\005\022\025\n\r" +
+      "acc_scan_cyle\030\003 \001(\005\022\035\n\025acc_sampling_inte" +
+      "rval\030\004 \001(\005\022 \n\030device_sampling_interval\030\005" +
+      " \001(\005\022(\n\005alarm\030\006 \001(\0132\031.hello.SyncResponse" +
+      ".Alarm\0229\n\016pairing_action\030\007 \001(\0132!.hello.S" +
+      "yncResponse.PairingAction\0223\n\013white_noise" +
+      "\030\010 \001(\0132\036.hello.SyncResponse.WhiteNoise\0225" +
+      "\n\014flash_action\030\t \001(\0132\037.hello.SyncRespons" +
+      "e.FlashAction\032E\n\005Alarm\022\022\n\nstart_time\030\001 \001",
+      "(\005\022\020\n\010end_time\030\002 \001(\005\022\026\n\013ringtone_id\030\003 \001(" +
+      "\005:\0011\032}\n\rPairingAction\022\014\n\004ssid\030\001 \001(\t\022:\n\004t" +
+      "ype\030\002 \001(\0162,.hello.SyncResponse.PairingAc" +
+      "tion.ActionType\"\"\n\nActionType\022\010\n\004PAIR\020\000\022" +
+      "\n\n\006UNPAIR\020\001\032D\n\nWhiteNoise\022\022\n\nstart_time\030" +
+      "\001 \001(\005\022\020\n\010end_time\030\002 \001(\005\022\020\n\010sound_id\030\003 \001(" +
+      "\005\032\361\002\n\013FlashAction\0228\n\005led_1\030\001 \001(\0132).hello" +
+      ".SyncResponse.FlashAction.LEDAction\0228\n\005l" +
+      "ed_2\030\002 \001(\0132).hello.SyncResponse.FlashAct" +
+      "ion.LEDAction\0228\n\005led_3\030\003 \001(\0132).hello.Syn",
+      "cResponse.FlashAction.LEDAction\0228\n\005led_4" +
+      "\030\004 \001(\0132).hello.SyncResponse.FlashAction." +
+      "LEDAction\0228\n\005led_5\030\005 \001(\0132).hello.SyncRes" +
+      "ponse.FlashAction.LEDAction\032@\n\tLEDAction" +
+      "\022\r\n\005color\030\001 \001(\005\022\022\n\nstart_time\030\002 \001(\005\022\020\n\010e" +
+      "nd_time\030\003 \001(\005B+\n\032com.hello.suripu.api.in" +
+      "putB\013InputProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -13324,8 +14774,20 @@ public final class InputProtos {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_MotionSensorBatch_MotionSensor_descriptor,
               new java.lang.String[] { "Timestamp", "Value", });
-          internal_static_hello_SimpleSensorBatch_descriptor =
+          internal_static_hello_TrackerDataBatch_descriptor =
             getDescriptor().getMessageTypes().get(2);
+          internal_static_hello_TrackerDataBatch_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_TrackerDataBatch_descriptor,
+              new java.lang.String[] { "Samples", });
+          internal_static_hello_TrackerDataBatch_TrackerData_descriptor =
+            internal_static_hello_TrackerDataBatch_descriptor.getNestedTypes().get(0);
+          internal_static_hello_TrackerDataBatch_TrackerData_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_TrackerDataBatch_TrackerData_descriptor,
+              new java.lang.String[] { "TrackerId", "Timestamp", "OffsetMillis", "SvmNoGravity", });
+          internal_static_hello_SimpleSensorBatch_descriptor =
+            getDescriptor().getMessageTypes().get(3);
           internal_static_hello_SimpleSensorBatch_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_SimpleSensorBatch_descriptor,
@@ -13343,25 +14805,25 @@ public final class InputProtos {
               internal_static_hello_SimpleSensorBatch_SimpleSensorSample_descriptor,
               new java.lang.String[] { "Timestamp", "AmbientTemperature", "AmbientHumidity", "AmbientLight", "AmbientDecibels", "AmbientAirQuality", "DeviceData", "DeviceDataSignature", "SoundAmplitude", "Gps", "OffsetMillis", });
           internal_static_hello_ActivationRequest_descriptor =
-            getDescriptor().getMessageTypes().get(3);
+            getDescriptor().getMessageTypes().get(4);
           internal_static_hello_ActivationRequest_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_ActivationRequest_descriptor,
               new java.lang.String[] { "DeviceId", "AccountId", "Timestamp", "FirmwareVersion", "Signature", });
           internal_static_hello_ActivationResponse_descriptor =
-            getDescriptor().getMessageTypes().get(4);
+            getDescriptor().getMessageTypes().get(5);
           internal_static_hello_ActivationResponse_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_ActivationResponse_descriptor,
               new java.lang.String[] { "Success", });
           internal_static_hello_SyncRequest_descriptor =
-            getDescriptor().getMessageTypes().get(5);
+            getDescriptor().getMessageTypes().get(6);
           internal_static_hello_SyncRequest_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_SyncRequest_descriptor,
               new java.lang.String[] { "DeviceId", "FirmwareVersion", "Signature", });
           internal_static_hello_SyncResponse_descriptor =
-            getDescriptor().getMessageTypes().get(6);
+            getDescriptor().getMessageTypes().get(7);
           internal_static_hello_SyncResponse_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_SyncResponse_descriptor,
