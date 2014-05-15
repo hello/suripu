@@ -174,6 +174,19 @@ CREATE UNIQUE INDEX uniq_tracker_id_ts ON motion(account_id, ts);
 GRANT ALL PRIVILEGES ON motion TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE motion_id_seq TO ingress_user;
 
+CREATE TABLE event(
+    id BIGSERIAL PRIMARY KEY,
+    event_type INTEGER, --{MOTION, NOISE, SNORING}
+    account_id INTEGER,
+    start_time_utc TIMESTAMP,
+    end_time_utc TIMESTAMP,
+    offset_millis INTEGER
+);
+
+CREATE UNIQUE INDEX uniq_event_account_type_starttime ON event(account_id, event_type, start_time_utc);
+GRANT ALL PRIVILEGES ON event TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE event_seq TO ingress_user;
+
 
 -- 2014/05/08
 -- NEW CHANGES
