@@ -16,10 +16,11 @@ public interface DeviceDataDAO {
             @Bind("ts") List<DateTime> timestamps,
             @Bind("val") List<Integer> value);
 
-    @SqlUpdate("INSERT INTO device_sensors (device_id, ts, offset_millis, ambient_temp, ambient_light, " +
-            "ambient_humidity, ambient_air_quality) VALUES(:device_id, :ts, :offset_millis, :ambient_temp, :ambient_light, :ambient_humidity, :ambient_air_quality)")
+    @SqlUpdate("INSERT INTO device_sensors (device_id, account_id, ts, offset_millis, ambient_temp, ambient_light, " +
+            "ambient_humidity, ambient_air_quality) VALUES(:device_id, :account_id, :ts, :offset_millis, :ambient_temp, :ambient_light, :ambient_humidity, :ambient_air_quality)")
     void insert(
             @Bind("device_id") Long deviceId,
+            @Bind("account_id") Long accountId,
             @Bind("ts") DateTime ts,
             @Bind("offset_millis") int offsetMillis,
             @Bind("ambient_temp") float temp,

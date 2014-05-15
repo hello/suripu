@@ -6,6 +6,7 @@ import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.api.input.InputProtos.SimpleSensorBatch;
 import com.hello.suripu.core.Score;
+import com.hello.suripu.core.crypto.CryptoHelper;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.EventDAO;
 import com.hello.suripu.core.db.PublicKeyStore;
@@ -16,7 +17,6 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.service.db.DataExtractor;
 import com.hello.suripu.service.db.DeviceDataDAO;
-import com.sun.jersey.core.util.Base64;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.HEAD;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -34,18 +35,11 @@ import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.InvalidKeyException;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.Signature;
-import java.security.SignatureException;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 
 @Path("/in")
 public class ReceiveResource {
@@ -58,20 +52,20 @@ public class ReceiveResource {
     private final ScoreDAO scoreDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final PublicKeyStore publicKeyStore;
-    private final EventDAO eventDAO;
+
+    private final CryptoHelper cryptoHelper;
 
     public ReceiveResource(final DeviceDataDAO deviceDataDAO,
                            final DeviceDAO deviceDAO,
                            final ScoreDAO scoreDAO,
                            final TrackerMotionDAO trackerMotionDAO,
-                           final PublicKeyStore publicKeyStore,
-                           final EventDAO eventDAO) {
+                           final PublicKeyStore publicKeyStore) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.scoreDAO = scoreDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.publicKeyStore = publicKeyStore;
-        this.eventDAO = eventDAO;
+        cryptoHelper = new CryptoHelper();
     }
 
 
@@ -88,34 +82,21 @@ public class ReceiveResource {
 
         final byte[] publicKeyBase64Encoded = optionalPublicKeyBase64Encoded.get();
 
-        final X509EncodedKeySpec spec = new X509EncodedKeySpec(Base64.decode(publicKeyBase64Encoded));
-        try {
-            final KeyFactory kf = KeyFactory.getInstance("RSA");
-            final PublicKey publicKeyFromDataStore = kf.generatePublic(spec);
 
-            final Signature signature = Signature.getInstance("SHA512WithRSA");
-            signature.initVerify(publicKeyFromDataStore);
-            // TODO : agree on device data that is signed;
-            signature.update(batch.getSamples(0).getDeviceData().toByteArray());
+        // TODO: agree on which part of the data is signed
+        final boolean verified = cryptoHelper.validate(
+                batch.getSamples(0).getDeviceData().toByteArray(),
+                batch.getSamples(0).getDeviceDataSignature().toByteArray(),
+                publicKeyBase64Encoded
+        );
 
-            if(!signature.verify(batch.getSamples(0).getDeviceDataSignature().toByteArray())) {
-                System.out.println("Did not recognize the signature bailing");
-                return Response.status(Response.Status.BAD_REQUEST).build();
-            }
-
-            return Response.ok().build();
-
-        } catch (NoSuchAlgorithmException e) {
-            LOGGER.error("{}", e);
-        } catch (InvalidKeySpecException e) {
-            LOGGER.error("{}", e);
-        } catch (SignatureException e) {
-            LOGGER.error("{}", e);
-        } catch (InvalidKeyException e) {
-            LOGGER.error("{}", e);
+        if(!verified) {
+            // TODO: make distinction server error and malformed request?
+            // TODO: let's not give potential attackers too much information
+            return Response.serverError().build();
         }
 
-        return Response.serverError().build();
+        return Response.ok().build();
     }
 
 
@@ -246,7 +227,9 @@ public class ReceiveResource {
                 );
 
                 try {
-                    deviceDataDAO.insert(deviceIdOptional.get(), rounded, offsetMillis, temp, light, humidity, airQuality);
+                    // TODO: FINAL VERSION WILL HAVE TO QUERY FROM DB
+                    deviceDataDAO.insert(deviceIdOptional.get(), accessToken.accountId, rounded, offsetMillis, temp, light, humidity, airQuality);
+
                 } catch (UnableToExecuteStatementException exception) {
                     Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
                     if (!matcher.find()) {
