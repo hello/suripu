@@ -28,9 +28,18 @@ public interface TrackerMotionDAO {
                                                                        @Bind("ts") DateTime timestampUTC,
                                                                        @Bind("offset_millis") int timezoneOffset);
 
-    @SqlQuery("SELECT * FROM motion WHERE accound_id = :accound_id ORDER BY ts DESC limit :n;")
+    @SqlQuery("SELECT * FROM motion WHERE account_id = :account_id ORDER BY ts DESC limit :n;")
     public ImmutableList<TrackerMotion> getLast(@Bind("n") int numberOfRecords,
                                                       @Bind("account_id") long accountId);
+
+    @SqlQuery("SELECT * FROM motion WHERE " +
+            "account_id = :account_id AND ts >= :start_timestamp AND ts <= :end_timestamp AND offset_millis = :offset_millis " +
+            "ORDER BY ts ASC;"
+    )
+    public ImmutableList<TrackerMotion> getBetween(@Bind("account_id") long accountId,
+                                                   @Bind("start_timestamp") long startTimestamp,
+                                                   @Bind("end_timestamp") long endTimestamp,
+                                                   @Bind("offset_millis") int timezoneOffset);
 
     @SqlBatch("INSERT INTO motion (account_id, tracker_id, svm_no_gravity, ts, offset_millis) " +
             "VALUES(:account_id, :tracker_id, :svm_no_gravity, :ts, :offset_millis);")

@@ -13,7 +13,7 @@ public class Util {
     public static double getAverageSVM(LinkedList<TrackerMotion> buffer){
         double average = 0.0;
         for(TrackerMotion datum:buffer){
-            average += datum.val;
+            average += datum.value;
         }
 
         return average / buffer.size();

@@ -5,9 +5,7 @@ import com.google.common.io.LittleEndianDataInputStream;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.api.input.InputProtos.SimpleSensorBatch;
-import com.hello.suripu.core.Event;
 import com.hello.suripu.core.Score;
-import com.hello.suripu.core.TrackerMotion;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.EventDAO;
 import com.hello.suripu.core.db.PublicKeyStore;
@@ -16,7 +14,6 @@ import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
-import com.hello.suripu.service.Util;
 import com.hello.suripu.service.db.DataExtractor;
 import com.hello.suripu.service.db.DeviceDataDAO;
 import com.sun.jersey.core.util.Base64;
@@ -46,7 +43,6 @@ import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -137,75 +133,11 @@ public class ReceiveResource {
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
 
-        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getLast(10, accessToken.accountId);
-        final InputProtos.TrackerDataBatch.TrackerData firstUploadedData = batch.getSamples(0);
-        final LinkedList<TrackerMotion> buffer = new LinkedList<TrackerMotion>();
-        double average = 0.0;
 
-        if(trackerMotions.size() > 0) {
-            final DateTime roundedTimeForFirstUploadedData = Util.roundTimestampToMinuteUTC(firstUploadedData.getTimestamp());
-            if (roundedTimeForFirstUploadedData.getMillis() - trackerMotions.get(0).dateTime.getMillis() <
-                    10 * 60 * 1000) {
-                for(int i = trackerMotions.size() - 1; i >= 0; i--) {
-                    buffer.add(trackerMotions.get(i));
-                }
-            }
-
-        }
-
-
-
-        for(InputProtos.TrackerDataBatch.TrackerData datum:batch.getSamplesList()){
-            DateTime roundedTimeUTC = Util.roundTimestampToMinuteUTC(datum.getTimestamp());
-            if(buffer.size() > 0){
-                average = Util.getAverageSVM(buffer);  // Don't blame me, I know this is 10 times slower.
-
-                try {
-                    if (average > 0) {
-                        if (datum.getSvmNoGravity() > average * 2d) {
-                            // TODO: add event to DB
-                            this.eventDAO.create(accessToken.accountId,
-                                    Event.Type.MOTION.getValue(),
-                                    roundedTimeUTC,
-                                    roundedTimeUTC.plusMinutes(1),
-                                    datum.getOffsetMillis());
-                        }
-                    } else {
-                        if (datum.getSvmNoGravity() > average / 2d) {
-                            // TODO: add event to DB
-                            this.eventDAO.create(accessToken.accountId,
-                                    Event.Type.MOTION.getValue(),
-                                    roundedTimeUTC,
-                                    roundedTimeUTC.plusMinutes(1),
-                                    datum.getOffsetMillis());
-                        }
-
-                    }
-                }catch (UnableToExecuteStatementException ex){
-                    Matcher matcher = PG_UNIQ_PATTERN.matcher(ex.getMessage());
-
-                    if(!matcher.find()) {
-                        LOGGER.error(ex.getMessage());
-                    }else {
-
-                        LOGGER.warn("Duplicate event for account {}, type {} with start time = {}",
-                                accessToken.accountId,
-                                Event.Type.MOTION,
-                                roundedTimeUTC);
-                    }
-                }
-            }
-
-
+        for(final InputProtos.TrackerDataBatch.TrackerData datum:batch.getSamplesList()){
 
             try{
-                TrackerMotion trackerMotion = DataExtractor.normalizeAndSave(datum, accessToken, trackerMotionDAO);
-
-                buffer.add(trackerMotion);
-                if(buffer.size() > 10){
-                    buffer.removeFirst();
-                }
-
+                DataExtractor.normalizeAndSave(datum, accessToken, trackerMotionDAO);
             } catch (UnableToExecuteStatementException exception) {
                 Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
 
@@ -214,7 +146,7 @@ public class ReceiveResource {
                     return Response.serverError().build();
                 }
 
-                LOGGER.warn("Duplicate entry for account {}, tracker {} with ts = {}",
+                LOGGER.warn("Duplicate tracker data for account {}, tracker {} with ts = {}",
                         accessToken.accountId,
                         datum.getTrackerId(),
                         new DateTime(datum.getTimestamp(), DateTimeZone.forOffsetMillis(datum.getOffsetMillis()))
@@ -285,7 +217,7 @@ public class ReceiveResource {
 
                 try {
                     timestamp = dataInputStream.readLong();
-                    LOGGER.debug("timestamp = {}", timestamp);
+                    LOGGER.debug("Device timestamp = {}", timestamp);
                     temp = dataInputStream.readInt();
                     light = dataInputStream.readInt();
                     humidity = dataInputStream.readInt();
@@ -338,6 +270,7 @@ public class ReceiveResource {
                 final DateTime dateTimeSample = new DateTime(sampleTimestamp, DateTimeZone.UTC);
                 try {
                     deviceDataDAO.insertSound(deviceIdOptional.get(), sample.getSoundAmplitude(), dateTimeSample, offsetMillis);
+                    LOGGER.debug("Sound timestamp = {}", sampleTimestamp);
                 } catch (UnableToExecuteStatementException exception) {
                     Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
                     if (!matcher.find()) {

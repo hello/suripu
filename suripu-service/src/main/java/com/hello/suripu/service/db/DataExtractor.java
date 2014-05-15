@@ -11,15 +11,13 @@ import org.joda.time.DateTime;
  * Created by pangwu on 5/8/14.
  */
 public class DataExtractor {
-    public static TrackerMotion normalizeAndSave(InputProtos.TrackerDataBatch.TrackerData sample,
-                                                       AccessToken accessToken,
-                                                       TrackerMotionDAO dao){
+    public static TrackerMotion normalizeAndSave(final InputProtos.TrackerDataBatch.TrackerData sample,
+                                                 final AccessToken accessToken,
+                                                 final TrackerMotionDAO dao){
 
-        DateTime roundedDateTimeUTC = Util.roundTimestampToMinuteUTC(sample.getTimestamp());
+        final DateTime roundedDateTimeUTC = Util.roundTimestampToMinuteUTC(sample.getTimestamp());
 
-
-
-        Long id = dao.insertTrackerMotion(accessToken.accountId,
+        final Long id = dao.insertTrackerMotion(accessToken.accountId,
                 sample.getTrackerId(),
                 sample.getSvmNoGravity(),
                 roundedDateTimeUTC,
@@ -27,11 +25,10 @@ public class DataExtractor {
 
         return new TrackerMotion(id, accessToken.accountId,
                 sample.getTrackerId(),
-                roundedDateTimeUTC,
+                roundedDateTimeUTC.getMillis(),
                 sample.getSvmNoGravity(),
                 sample.getOffsetMillis()
                 );
     }
-
     
 }
