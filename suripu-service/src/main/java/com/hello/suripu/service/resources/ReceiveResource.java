@@ -6,9 +6,9 @@ import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.api.input.InputProtos.SimpleSensorBatch;
 import com.hello.suripu.core.Score;
+import com.hello.suripu.core.TempTrackerData;
 import com.hello.suripu.core.crypto.CryptoHelper;
 import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.EventDAO;
 import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
@@ -26,10 +26,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.HEAD;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
@@ -142,7 +142,48 @@ public class ReceiveResource {
 
     }
 
+    @POST
+    @Timed
+    @Path("/temp/tracker")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Deprecated
+    public Response sendTempData(
+            @Valid List<TempTrackerData> trackerData,
+            @Scope({OAuthScope.SENSORS_BASIC}) AccessToken accessToken) {
 
+        for(TempTrackerData tempTrackerData : trackerData) {
+            final DateTime originalDateTime = new DateTime(tempTrackerData.timestamp, DateTimeZone.UTC);
+            final DateTime roundedDateTimeUTC = new DateTime(
+                    originalDateTime.getYear(),
+                    originalDateTime.getMonthOfYear(),
+                    originalDateTime.getDayOfMonth(),
+                    originalDateTime.getHourOfDay(),
+                    originalDateTime.getMinuteOfHour(),
+                    DateTimeZone.UTC
+            );
+
+            try {
+                final Long id = trackerMotionDAO.insertTrackerMotion(accessToken.accountId,
+                        tempTrackerData.trackerId,
+                        tempTrackerData.value,
+                        roundedDateTimeUTC,
+                        -25200000 // OH YEAH THIS IS CALIFORNIA. OBVIOUSLY NOT VALID FOR ANYONE OUTSIDE THE OFFICE
+                );
+            } catch (UnableToExecuteStatementException exception) {
+                Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
+                if (!matcher.find()) {
+                    LOGGER.error(exception.getMessage());
+                    return Response.serverError().build();
+                }
+
+                LOGGER.warn("Duplicate sensor value for account_id = {}", accessToken.accountId);
+            }
+
+        }
+
+        return Response.ok().build();
+    }
 
     @POST
     @Timed

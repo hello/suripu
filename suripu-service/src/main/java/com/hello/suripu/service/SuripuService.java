@@ -78,7 +78,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
         environment.addProvider(new OAuthProvider<AccessToken>(new OAuthAuthenticator(tokenStore), "protected-resources"));
 
-        environment.addResource(new ReceiveResource(dao, deviceDAO, scoreDAO, trackerMotionDAO, publicKeyStore, eventDAO));
+        environment.addResource(new ReceiveResource(dao, deviceDAO, scoreDAO, trackerMotionDAO, publicKeyStore));
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());
         environment.manage(new DynamoDBClientManaged(dynamoDBClient));
