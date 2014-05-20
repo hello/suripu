@@ -5,6 +5,7 @@ import com.google.common.io.LittleEndianDataInputStream;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.api.input.InputProtos.SimpleSensorBatch;
+import com.hello.suripu.core.KinesisLogger;
 import com.hello.suripu.core.Score;
 import com.hello.suripu.core.TempTrackerData;
 import com.hello.suripu.core.crypto.CryptoHelper;
@@ -53,19 +54,22 @@ public class ReceiveResource {
     private final TrackerMotionDAO trackerMotionDAO;
     private final PublicKeyStore publicKeyStore;
 
+    private final KinesisLogger kinesisLogger;
     private final CryptoHelper cryptoHelper;
 
     public ReceiveResource(final DeviceDataDAO deviceDataDAO,
                            final DeviceDAO deviceDAO,
                            final ScoreDAO scoreDAO,
                            final TrackerMotionDAO trackerMotionDAO,
-                           final PublicKeyStore publicKeyStore) {
+                           final PublicKeyStore publicKeyStore,
+                           final KinesisLogger kinesisLogger) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.scoreDAO = scoreDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.publicKeyStore = publicKeyStore;
         cryptoHelper = new CryptoHelper();
+        this.kinesisLogger = kinesisLogger;
     }
 
 
@@ -193,6 +197,8 @@ public class ReceiveResource {
             @Scope({OAuthScope.SENSORS_BASIC}) AccessToken accessToken) {
 
         // TODO : remove this after alpha testing
+
+        kinesisLogger.put(batch.getDeviceId(), batch.toByteArray());
 
         try {
             deviceDAO.registerDevice(accessToken.accountId, batch.getDeviceId());

@@ -50,3 +50,8 @@ logging:
 http:
     port: 5555
     adminPort: 5556
+
+dynamodb:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  keyStoreTable: public_key_table
