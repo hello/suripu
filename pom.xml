@@ -12,6 +12,7 @@
     <properties>
         <dropwizard.version>0.6.2</dropwizard.version>
         <protobuf.version>2.5.0</protobuf.version>
+        <aws.sdk.version>1.7.7</aws.sdk.version>
     </properties>
 
     <modules>
