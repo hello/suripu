@@ -3,9 +3,12 @@ package com.hello.suripu.service;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
 import com.hello.dropwizard.mikkusu.helpers.JacksonProtobufProvider;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
+import com.hello.suripu.core.JodaArgumentFactory;
+import com.hello.suripu.core.KinesisLogger;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -26,7 +29,6 @@ import com.hello.suripu.core.oauth.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.PersistentApplicationStore;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
 import com.hello.suripu.service.db.DeviceDataDAO;
-import com.hello.suripu.core.JodaArgumentFactory;
 import com.hello.suripu.service.resources.ReceiveResource;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -64,6 +66,12 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
         final AWSCredentialsProvider awsCredentialsProvider = new EnvironmentVariableCredentialsProvider();
         final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
+
+        final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider);
+        kinesisClient.setEndpoint(configuration.getKinesisConfiguration().getEndpoint());
+
+        final KinesisLogger kinesisLogger = new KinesisLogger(kinesisClient, configuration.getKinesisConfiguration().getStreamName());
+
         dynamoDBClient.setEndpoint(configuration.getDynamoDBConfiguration().getEndpoint());
         // TODO; set region here?
 
@@ -78,7 +86,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
         environment.addProvider(new OAuthProvider<AccessToken>(new OAuthAuthenticator(tokenStore), "protected-resources"));
 
-        environment.addResource(new ReceiveResource(dao, deviceDAO, scoreDAO, trackerMotionDAO, publicKeyStore));
+        environment.addResource(new ReceiveResource(dao, deviceDAO, scoreDAO, trackerMotionDAO, publicKeyStore, kinesisLogger));
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());
         environment.manage(new DynamoDBClientManaged(dynamoDBClient));
