@@ -1,6 +1,7 @@
 package com.hello.suripu.core.oauth;
 
 import com.google.common.base.Optional;
+import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.yammer.dropwizard.auth.AuthenticationException;
 import org.joda.time.DateTime;
 import org.junit.Before;

@@ -2,8 +2,8 @@ package com.hello.suripu.app.resources;
 
 import com.hello.suripu.core.oauth.Application;
 import com.hello.suripu.core.oauth.ApplicationRegistration;
-import com.hello.suripu.core.oauth.ApplicationStore;
 import com.hello.suripu.core.oauth.OAuthScope;
+import com.hello.suripu.core.oauth.stores.ApplicationStore;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
