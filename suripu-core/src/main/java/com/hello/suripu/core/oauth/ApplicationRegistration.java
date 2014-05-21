@@ -45,6 +45,19 @@ public class ApplicationRegistration {
         this(name, clientId, clientSecret, redirectURI, scopes, developerAccountId, description, DateTime.now(DateTimeZone.UTC));
     }
 
+    /**
+     * Full constructor requires a creation datetime.
+     * JsonCreator should NEVER be able to set this
+     *
+     * @param name
+     * @param clientId
+     * @param clientSecret
+     * @param redirectURI
+     * @param scopes
+     * @param developerAccountId
+     * @param description
+     * @param created
+     */
     public ApplicationRegistration(
         final String name,
         final String clientId,

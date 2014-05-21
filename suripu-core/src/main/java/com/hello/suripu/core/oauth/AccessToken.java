@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import java.util.UUID;
 
@@ -71,6 +72,61 @@ public class AccessToken {
         this.appId = appId;
         this.scopes = scopes;
     }
+
+
+    public static class Builder {
+        private UUID token;
+        private UUID refreshToken;
+        private Long expiresIn;
+        private DateTime createdAt;
+        private Long accountId;
+        private Long appId;
+        private OAuthScope[] scopes;
+
+        public Builder() {
+            createdAt = DateTime.now(DateTimeZone.UTC);
+        }
+
+        public Builder withToken(final UUID token) {
+            this.token = token;
+            return this;
+        }
+
+        public Builder withRefreshToken(final UUID refreshToken) {
+            this.refreshToken = refreshToken;
+            return this;
+        }
+
+        public Builder withExpiresIn(Long expiresIn) {
+            this.expiresIn = expiresIn;
+            return this;
+        }
+
+        public Builder withCreatedAt(final DateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public Builder withAccountId(final Long accountId) {
+            this.accountId = accountId;
+            return this;
+        }
+
+        public Builder withAppId(final Long appId) {
+            this.appId = appId;
+            return this;
+        }
+
+        public Builder withScopes(final OAuthScope[] scopes) {
+            this.scopes = scopes;
+            return this;
+        }
+
+        public AccessToken build() {
+            return new AccessToken(token, refreshToken, expiresIn, createdAt, accountId, appId, scopes);
+        }
+    }
+
 
     @Override
     public int hashCode() {

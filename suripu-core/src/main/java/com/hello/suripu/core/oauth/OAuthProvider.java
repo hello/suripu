@@ -24,7 +24,6 @@ public class OAuthProvider<T> implements InjectableProvider<Scope, Type> {
             private static final Logger LOGGER = LoggerFactory.getLogger(OAuthWithScopeInjectable.class);
             private static final String HEADER_NAME = "WWW-Authenticate";
             private static final String HEADER_VALUE = "Bearer realm=\"%s\"";
-            private static final String PREFIX = "bearer";
 
             private final Authenticator<ClientCredentials, T> authenticator;
             private final String realm;
@@ -38,26 +37,19 @@ public class OAuthProvider<T> implements InjectableProvider<Scope, Type> {
 
             @Override
             public T getValue(HttpContext c) {
-                try {
-                    final String header = c.getRequest().getHeaderValue(HttpHeaders.AUTHORIZATION);
-                    if (header != null) {
-                        final int space = header.indexOf(' ');
-                        if (space > 0) {
-                            final String method = header.substring(0, space);
-                            if (PREFIX.equalsIgnoreCase(method)) {
-                                final String bearer = header.substring(space + 1);
-
-                                ClientCredentials creds = new ClientCredentials(scopes, bearer);
-                                final Optional<T> result = authenticator.authenticate(creds);
-                                if (result.isPresent()) {
-                                    return  result.get();
-                                }
-                            }
+                final String header = c.getRequest().getHeaderValue(HttpHeaders.AUTHORIZATION);
+                Optional<String> bearerString = Util.extractBearerToken(header);
+                if (bearerString.isPresent()) {
+                    try {
+                        final ClientCredentials creds = new ClientCredentials(scopes, bearerString.get());
+                        final Optional<T> result = authenticator.authenticate(creds);
+                        if (result.isPresent()) {
+                            return result.get();
                         }
+                    } catch (AuthenticationException e) {
+                        LOGGER.warn("Error authenticating credentials", e);
+                        throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
                     }
-                } catch (AuthenticationException e) {
-                    LOGGER.warn("Error authenticating credentials", e);
-                    throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
                 }
 
                 throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
