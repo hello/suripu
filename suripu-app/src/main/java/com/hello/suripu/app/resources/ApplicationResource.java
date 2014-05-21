@@ -1,8 +1,10 @@
 package com.hello.suripu.app.resources;
 
+import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.Application;
 import com.hello.suripu.core.oauth.ApplicationRegistration;
 import com.hello.suripu.core.oauth.OAuthScope;
+import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.oauth.stores.ApplicationStore;
 
 import javax.validation.Valid;
@@ -27,7 +29,9 @@ public class ApplicationResource {
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response register(@Valid final ApplicationRegistration applicationRegistration) {
+    public Response register(
+            @Valid final ApplicationRegistration applicationRegistration,
+            @Scope({OAuthScope.ADMINISTRATION_WRITE}) final AccessToken token) {
         applicationStore.register(applicationRegistration);
         return Response.ok().build();
     }
@@ -35,32 +39,10 @@ public class ApplicationResource {
     @GET
     @Path("/{dev_account_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Application> getApplicationsByDeveloper(@PathParam("dev_account_id") final Long devAccountId) {
+    public List<Application> getApplicationsByDeveloper(
+            @Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken token,
+            @PathParam("dev_account_id") final Long devAccountId) {
 
         return applicationStore.getApplicationsByDevId(devAccountId);
-    }
-
-
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public ApplicationRegistration get() {
-
-        final OAuthScope[] scopes = new OAuthScope[]{
-                OAuthScope.USER_BASIC,
-                OAuthScope.USER_EXTENDED,
-                OAuthScope.SENSORS_BASIC,
-                OAuthScope.SENSORS_EXTENDED,
-        };
-
-        final ApplicationRegistration registration = new ApplicationRegistration(
-            "Hello OAuth Application",
-            "123456ClientId",
-            "654321ClientSecret",
-            "http://hello.com/oauth",
-            scopes,
-            666L,
-            "Official Hello Application"
-        );
-        return registration;
     }
 }
