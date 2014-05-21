@@ -11,6 +11,9 @@ import org.slf4j.LoggerFactory;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * PersistentAccessTokenStore keeps track of assigned access tokens
+ */
 public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials>{
 
     private final AccessTokenDAO accessTokenDAO;
@@ -24,6 +27,14 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         this(accessTokenDAO, applicationStore, DEFAULT_EXPIRATION_TIME_IN_SECONDS);
     }
 
+
+    /**
+     * Default constructor for PersistentAccessTokenStore
+     *
+     * @param accessTokenDAO where we store or retrieve access tokens from
+     * @param applicationStore
+     * @param expirationTimeInSeconds
+     */
     public PersistentAccessTokenStore(
             final AccessTokenDAO accessTokenDAO,
             final ApplicationStore<Application, ApplicationRegistration> applicationStore,
@@ -34,6 +45,13 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
 
     }
 
+
+    /**
+     * Validates client details and stores generated accessToken
+     * @param clientDetails
+     * @return
+     * @throws ClientAuthenticationException
+     */
     @Override
     public AccessToken storeAccessToken(final ClientDetails clientDetails) throws ClientAuthenticationException {
 
@@ -42,27 +60,22 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
             throw new ClientAuthenticationException();
         }
 
-        final UUID accessTokenUUID = UUID.randomUUID();
-        final UUID refreshTokenUUID = UUID.randomUUID();
-
-        LOGGER.debug("AccessToken String = {}", accessTokenUUID.toString());
-        LOGGER.debug("RefreshToken String = {}", refreshTokenUUID.toString());
-
-
-        final AccessToken accessToken = new AccessToken(
-                accessTokenUUID,
-                refreshTokenUUID,
-                expirationTimeInSeconds,
-                DateTime.now(DateTimeZone.UTC),
-                clientDetails.accountId,
-                clientDetails.application.get().id,
-                clientDetails.scopes
+        final AccessToken accessToken = generateAccessToken(
+                clientDetails,
+                DateTime.now(DateTimeZone.UTC), // this is not sent to the client. We store it to expire tokens
+                expirationTimeInSeconds
         );
 
         accessTokenDAO.storeAccessToken(accessToken);
         return accessToken;
     }
 
+
+    /**
+     * Converts the token to a proper UUID and attempts to retrieve the clientdetails based on the token string
+     * @param credentials
+     * @return
+     */
     @Override
     public Optional<AccessToken> getClientDetailsByToken(final ClientCredentials credentials) {
 
@@ -94,6 +107,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         return accessTokenOptional;
     }
 
+
     @Override
     public ClientCredentials storeAuthorizationCode(final ClientDetails clientDetails) throws ClientAuthenticationException {
         return new ClientCredentials(null, "code");
@@ -102,5 +116,34 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
     @Override
     public Optional<ClientDetails> getClientDetailsByAuthorizationCode(final String code) {
         return Optional.absent();
+    }
+
+
+    /**
+     * Generates an access token
+     * @param clientDetails
+     * @param createdAt
+     * @param expirationTimeInSeconds
+     * @return
+     */
+    private AccessToken generateAccessToken(final ClientDetails clientDetails, final DateTime createdAt, final Long expirationTimeInSeconds) {
+        final UUID accessTokenUUID = UUID.randomUUID();
+        final UUID refreshTokenUUID = UUID.randomUUID();
+
+        LOGGER.debug("AccessToken String = {}", accessTokenUUID.toString());
+        LOGGER.debug("RefreshToken String = {}", refreshTokenUUID.toString());
+
+
+        final AccessToken accessToken = new AccessToken.Builder()
+                .withToken(accessTokenUUID)
+                .withRefreshToken(refreshTokenUUID)
+                .withExpiresIn(expirationTimeInSeconds)
+                .withCreatedAt(createdAt)
+                .withAccountId(clientDetails.accountId)
+                .withAppId(clientDetails.application.get().id)
+                .withScopes(clientDetails.scopes)
+                .build();
+
+        return accessToken;
     }
 }
