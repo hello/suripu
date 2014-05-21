@@ -1,0 +1,86 @@
+#!/usr/bin/env python
+
+import glob
+import yaml
+import sys
+
+import subprocess
+import humanhash
+
+
+
+
+prod_config_files = glob.glob('suripu-*/*.prod.yml')
+local_config_files = glob.glob('suripu-*/*.yml.example')
+
+def color(msg, code):
+  return "\033[0;%dm%s\033[0m" % (code, msg)
+
+
+def info(msg):
+  return color("[INFO]\t" + msg, 32)
+
+def warn(msg):
+  return color("[WARN]\t" + msg, 33)
+
+
+def error(msg):
+  return color("[INFO]\t" + msg, 31)
+
+
+def group_by_module(list_of_config_files):
+  config_files_per_module = {}
+
+  for config_file_path in list_of_config_files:
+    module, fname = config_file_path.split('/')
+    config_files_per_module[module] = config_file_path
+  return config_files_per_module
+
+
+def check_if_config_prod_and_local_are_present(local_files, prod_files):
+  local_set = set(local_files.keys())
+  prod_set = set(prod_files.keys())
+  diff = local_set.difference(prod_set)
+  if diff:
+    msg = "don't" if (len(diff) > 1) else "doesn't"
+    print error(','.join(list(diff)) + ' ' +  msg + "have a prod configuration. Please fix this.")
+    sys.exit(1)
+
+
+def contains_same_keys(local_files, prod_files):
+  for local_key in local_files.keys():
+    loc_f = file(local_files[local_key], 'r')
+    prod_f = file(prod_files[local_key], 'r')
+    
+    loc = yaml.load(loc_f)
+    prod = yaml.load(prod_f)
+    loc_keys = set(loc.keys())
+    prod_keys = set(prod.keys())
+    diff = prod_keys.difference(loc_keys)
+    if diff:
+      print error("keys don't match for %s" % local_key)
+      print error("Difference = %s", ','.join(list(diff)))
+      sys.exit(1)
+
+
+def main():
+
+# get the last commit SHA and print it after humanizing it
+    sha_str = subprocess.check_output(['git','rev-parse','HEAD'])
+    sha_str = sha_str.strip()
+    human_str = humanhash.humanize(sha_str)
+
+    print info("Currently on revision [%s]" % (sha_str))
+    print info("Also known as %s" % (human_str))
+
+
+    local_files = group_by_module(local_config_files)
+    prod_files = group_by_module(prod_config_files)
+
+    check_if_config_prod_and_local_are_present(local_files, prod_files)
+    contains_same_keys(local_files, prod_files)
+    print info("Config files seem valid.")
+
+
+if __name__ == "__main__":
+  main()
