@@ -8,13 +8,14 @@ import com.hello.suripu.core.db.ApplicationsDAO;
 public class PersistentApplicationStore implements ApplicationStore<Application, ApplicationRegistration>{
 
     private final ApplicationsDAO applicationsDAO;
+
     public PersistentApplicationStore(final ApplicationsDAO applicationsDAO) {
          this.applicationsDAO = applicationsDAO;
     }
 
     @Override
     public Optional<Application> getApplicationById(final Long applicationId) {
-        Optional<Application> applicationOptional = applicationsDAO.getById(applicationId);
+        final Optional<Application> applicationOptional = applicationsDAO.getById(applicationId);
         return applicationOptional;
     }
 
