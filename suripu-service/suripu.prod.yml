@@ -55,3 +55,7 @@ dynamodb:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   keyStoreTable: public_key_table
+
+kinesis:
+  endpoint : https://kinesis.us-east-1.amazonaws.com
+  streamName : test-stream-suripu
