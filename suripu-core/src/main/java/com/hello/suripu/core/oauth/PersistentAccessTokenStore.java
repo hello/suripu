@@ -15,11 +15,23 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
 
     private final AccessTokenDAO accessTokenDAO;
     private final ApplicationStore<Application, ApplicationRegistration> applicationStore;
+    private final Long expirationTimeInSeconds;
+
+    private static final Long DEFAULT_EXPIRATION_TIME_IN_SECONDS = 86400L * 90; // 90 days
     private static final Logger LOGGER = LoggerFactory.getLogger(PersistentAccessTokenStore.class);
 
     public PersistentAccessTokenStore(final AccessTokenDAO accessTokenDAO, final ApplicationStore<Application, ApplicationRegistration> applicationStore) {
+        this(accessTokenDAO, applicationStore, DEFAULT_EXPIRATION_TIME_IN_SECONDS);
+    }
+
+    public PersistentAccessTokenStore(
+            final AccessTokenDAO accessTokenDAO,
+            final ApplicationStore<Application, ApplicationRegistration> applicationStore,
+            final Long expirationTimeInSeconds) {
         this.accessTokenDAO = accessTokenDAO;
         this.applicationStore = applicationStore;
+        this.expirationTimeInSeconds = expirationTimeInSeconds;
+
     }
 
     @Override
@@ -40,7 +52,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         final AccessToken accessToken = new AccessToken(
                 accessTokenUUID,
                 refreshTokenUUID,
-                86400L * 90, // 90 days
+                expirationTimeInSeconds,
                 DateTime.now(DateTimeZone.UTC),
                 clientDetails.accountId,
                 clientDetails.application.get().id,
@@ -56,15 +68,13 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
 
         // TODO: make sure this is efficient
         final String uuidWithHyphens =  credentials.tokenOrCode.replaceFirst("([0-9a-fA-F]{8})([0-9a-fA-F]{4})([0-9a-fA-F]{4})([0-9a-fA-F]{4})([0-9a-fA-F]+)", "$1-$2-$3-$4-$5" );
-        LOGGER.debug("Before transformation : {}", credentials.tokenOrCode);
-        LOGGER.debug("After transformation : {}", uuidWithHyphens);
         final Optional<AccessToken> accessTokenOptional = accessTokenDAO.getByAccessToken(UUID.fromString(uuidWithHyphens));
 
         if(!accessTokenOptional.isPresent()) {
             return Optional.absent();
         }
 
-        Optional<Application> applicationOptional = applicationStore.getApplicationById(accessTokenOptional.get().appId);
+        final Optional<Application> applicationOptional = applicationStore.getApplicationById(accessTokenOptional.get().appId);
 
         if(!applicationOptional.isPresent()) {
             return Optional.absent();
