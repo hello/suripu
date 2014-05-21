@@ -1,6 +1,7 @@
-package com.hello.suripu.core.oauth;
+package com.hello.suripu.core.oauth.stores;
 
 import com.google.common.base.Optional;
+import com.hello.suripu.core.oauth.ClientAuthenticationException;
 
 /**
  * Token store

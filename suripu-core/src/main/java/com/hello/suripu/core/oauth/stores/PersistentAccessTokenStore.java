@@ -1,8 +1,15 @@
-package com.hello.suripu.core.oauth;
+package com.hello.suripu.core.oauth.stores;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.AccessTokenDAO;
+import com.hello.suripu.core.oauth.AccessToken;
+import com.hello.suripu.core.oauth.Application;
+import com.hello.suripu.core.oauth.ApplicationRegistration;
+import com.hello.suripu.core.oauth.ClientAuthenticationException;
+import com.hello.suripu.core.oauth.ClientCredentials;
+import com.hello.suripu.core.oauth.ClientDetails;
+import com.hello.suripu.core.oauth.OAuthScope;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -50,7 +57,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
      * Validates client details and stores generated accessToken
      * @param clientDetails
      * @return
-     * @throws ClientAuthenticationException
+     * @throws com.hello.suripu.core.oauth.ClientAuthenticationException
      */
     @Override
     public AccessToken storeAccessToken(final ClientDetails clientDetails) throws ClientAuthenticationException {

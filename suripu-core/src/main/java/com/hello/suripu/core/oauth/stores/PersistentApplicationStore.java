@@ -1,8 +1,10 @@
-package com.hello.suripu.core.oauth;
+package com.hello.suripu.core.oauth.stores;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.ApplicationsDAO;
+import com.hello.suripu.core.oauth.Application;
+import com.hello.suripu.core.oauth.ApplicationRegistration;
 
 
 public class PersistentApplicationStore implements ApplicationStore<Application, ApplicationRegistration>{

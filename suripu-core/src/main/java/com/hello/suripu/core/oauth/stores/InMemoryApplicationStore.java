@@ -1,12 +1,12 @@
-package com.hello.suripu.core.oauth;
+package com.hello.suripu.core.oauth.stores;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Sets;
+import com.hello.suripu.core.oauth.Application;
+import com.hello.suripu.core.oauth.ApplicationRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
