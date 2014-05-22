@@ -100,13 +100,8 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
             return Optional.absent();
         }
 
-        final Set<OAuthScope> requiredScopes = Sets.newHashSet(credentials.scopes);
-        final Set<OAuthScope> grantedScopes = Sets.newHashSet(applicationOptional.get().scopes);
-
-        // Make sure we have all the permissions
-        if(!grantedScopes.containsAll(requiredScopes)) {
-            LOGGER.debug("Required: {}", requiredScopes);
-            LOGGER.debug("Granted: {}", grantedScopes);
+        boolean validScopes = hasRequiredScopes(applicationOptional.get().scopes, credentials.scopes);
+        if(!validScopes) {
             LOGGER.warn("Scopes don't match for {}", credentials.tokenOrCode);
             return Optional.absent();
         }
@@ -152,5 +147,24 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
                 .build();
 
         return accessToken;
+    }
+
+    public boolean hasRequiredScopes(OAuthScope[] granted, OAuthScope[] required) {
+        if(granted.length == 0 || required.length == 0) {
+            LOGGER.warn("Empty scopes is definitely not valid");
+            return false;
+        }
+
+        final Set<OAuthScope> requiredScopes = Sets.newHashSet(required);
+        final Set<OAuthScope> grantedScopes = Sets.newHashSet(granted);
+
+        // Make sure we have all the permissions
+        boolean valid = grantedScopes.containsAll(requiredScopes);
+        if(!valid) {
+            LOGGER.debug("Required: {}", requiredScopes);
+            LOGGER.debug("Granted: {}", grantedScopes);
+        }
+
+        return valid;
     }
 }
