@@ -67,7 +67,7 @@ public class PersistentAccessTokenStoreTest {
     }
 
     @Test
-    public void testPresentAccessTokenButMissingApplication() {
+    public void testMissingApplication() {
         when(accessTokenDAO.getByAccessToken(accessToken.token)).thenReturn(Optional.of(accessToken));
         when(applicationStore.getApplicationById(accessToken.appId)).thenReturn(Optional.absent());
 
@@ -77,7 +77,7 @@ public class PersistentAccessTokenStoreTest {
     }
 
     @Test
-    public void testPresentAccessTokenAndPresentApplicationAndWrongScopes() {
+    public void testInvalidScopes() {
         when(accessTokenDAO.getByAccessToken(accessToken.token)).thenReturn(Optional.of(accessToken));
         when(applicationStore.getApplicationById(accessToken.appId)).thenReturn(Optional.of(application));
 
@@ -87,7 +87,7 @@ public class PersistentAccessTokenStoreTest {
     }
 
     @Test
-    public void testPresentAccessTokenAndPresentApplicationAndValidScopes() {
+    public void testBehaviorWithCorrectEnvironment() {
         when(accessTokenDAO.getByAccessToken(accessToken.token)).thenReturn(Optional.of(accessToken));
         when(applicationStore.getApplicationById(accessToken.appId)).thenReturn(Optional.of(application));
 
