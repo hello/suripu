@@ -1,6 +1,7 @@
 package com.hello.suripu.service;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
 import com.hello.dropwizard.mikkusu.helpers.JacksonProtobufProvider;
@@ -8,7 +9,6 @@ import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.core.JodaArgumentFactory;
 import com.hello.suripu.core.KinesisLogger;
-import com.hello.suripu.core.aws.AWSHelper;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -70,8 +70,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final TrackerMotionDAO trackerMotionDAO = jdbi.onDemand(TrackerMotionDAO.class);
         final EventDAO eventDAO = jdbi.onDemand(EventDAO.class);
 
-
-        final AWSCredentialsProvider awsCredentialsProvider = AWSHelper.getCredentials();
+        // Checks Environment first and then instance profile.
+        final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
 
         final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
 
