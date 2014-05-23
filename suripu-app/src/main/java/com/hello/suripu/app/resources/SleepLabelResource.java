@@ -6,6 +6,7 @@ import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.Transaction;
@@ -17,8 +18,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -34,6 +38,33 @@ public class SleepLabelResource {
         this.sleepLabelDAO = sleepLabelDAO;
     }
 
+    @Path("/get")
+    @GET
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getLabel(@QueryParam("target_date_millis") final Long targetDayTimestamp,
+                             @QueryParam("timezone_offset_millis") final Integer timeZoneOffset,
+                             @Scope({OAuthScope.SLEEP_LABEL_BASIC}) final AccessToken accessToken){
+        if(targetDayTimestamp == null || timeZoneOffset == null){
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+
+        final DateTimeZone userLocalTimeZone = DateTimeZone.forOffsetMillis(timeZoneOffset);
+        final DateTime userLocalDateTime = new DateTime(targetDayTimestamp, userLocalTimeZone).withTimeAtStartOfDay();
+        final DateTime roundedUserLocalTimeInUTC = new DateTime(userLocalDateTime.getMillis(), DateTimeZone.UTC);
+
+        Optional<SleepLabel> sleepLabelOptional = sleepLabelDAO.getByAccountAndDate(
+                accessToken.accountId,
+                roundedUserLocalTimeInUTC,
+                timeZoneOffset
+        );
+
+        if(sleepLabelOptional.isPresent()){
+            return Response.ok(sleepLabelOptional.get()).build();
+        }else{
+            return Response.status(Response.Status.NO_CONTENT).build();
+        }
+    }
 
     @Path("/save")
     @POST
@@ -48,12 +79,7 @@ public class SleepLabelResource {
             LOGGER.debug("Received sleep label for the night of {}", userLocalDateTime.toString("MM/dd/yyyy HH:mm:ss Z"));
 
             // Round on the user lcoal time instead of the UTC tme.
-            final DateTime roundedUserLocalDateTime = new DateTime(userLocalDateTime.getYear(),
-                    userLocalDateTime.getMonthOfYear(),
-                    userLocalDateTime.getDayOfMonth(),
-                    0,
-                    0,
-                    userLocalTimeZone);
+            final DateTime roundedUserLocalDateTime = userLocalDateTime.withTimeAtStartOfDay();
             final DateTime roundedUserLocalTimeInUTC = new DateTime(roundedUserLocalDateTime.getMillis(), DateTimeZone.UTC);
 
             this.sleepLabelDAO.inTransaction(TransactionIsolationLevel.SERIALIZABLE ,new Transaction<Void, SleepLabelDAO>() {
