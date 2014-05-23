@@ -62,7 +62,7 @@ public class SleepLabelResource {
         if(sleepLabelOptional.isPresent()){
             return Response.ok(sleepLabelOptional.get()).build();
         }else{
-            return Response.status(Response.Status.NO_CONTENT).build();
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
     }
 
