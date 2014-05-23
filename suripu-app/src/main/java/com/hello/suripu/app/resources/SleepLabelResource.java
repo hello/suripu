@@ -53,7 +53,7 @@ public class SleepLabelResource {
         final DateTime userLocalDateTime = new DateTime(targetDayTimestamp, userLocalTimeZone).withTimeAtStartOfDay();
         final DateTime roundedUserLocalTimeInUTC = new DateTime(userLocalDateTime.getMillis(), DateTimeZone.UTC);
 
-        Optional<SleepLabel> sleepLabelOptional = sleepLabelDAO.getByAccountAndDate(
+        final Optional<SleepLabel> sleepLabelOptional = sleepLabelDAO.getByAccountAndDate(
                 accessToken.accountId,
                 roundedUserLocalTimeInUTC,
                 timeZoneOffset
