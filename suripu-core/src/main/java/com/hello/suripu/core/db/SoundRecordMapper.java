@@ -14,7 +14,7 @@ public class SoundRecordMapper implements ResultSetMapper<SoundRecord> {
 
         return new SoundRecord(
                 r.getLong("device_id"),
-                r.getFloat("avg_max_amplitude"),
+                r.getInt("max_amplitude"),
                 new DateTime(r.getTimestamp("ts_trunc"))
             );
     }

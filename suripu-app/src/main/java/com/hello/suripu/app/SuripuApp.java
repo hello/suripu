@@ -75,7 +75,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
         final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
 
-
         if(config.getMetricsEnabled()) {
             final String libratoUsername = config.getLibrato().getUsername();
             final String libratoApiKey = config.getLibrato().getApiKey();

@@ -2,8 +2,11 @@ package com.hello.suripu.app.resources;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.app.utils.DataType;
 import com.hello.suripu.core.GroupedRecord;
 import com.hello.suripu.core.Record;
+import com.hello.suripu.core.SoundRecord;
+import com.hello.suripu.core.TrackerMotion;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.TimeSerieDAO;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -23,7 +26,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
 import java.util.List;
 
 @Path("/history")
@@ -31,7 +33,7 @@ public class HistoryResource {
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryResource.class);
-    private final TimeSerieDAO timeSerieDAO;
+    private final TimeSerieDAO timeSerieDAO; // Any reason put different things together?
     private final DeviceDAO deviceDAO;
 
     public HistoryResource(final TimeSerieDAO timeSerieDAO, final DeviceDAO deviceDAO) {
@@ -64,12 +66,45 @@ public class HistoryResource {
     @GET
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Record> getRecordsBetween(
+    public Response getRecordsBetween(
             @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
-            @QueryParam("from") Long from,
-            @QueryParam("to") Long to) {
+            @QueryParam("from") final Long from,
+            @QueryParam("to") final Long to,
+            @QueryParam("data_type") final DataType type) {
 
-        return new ArrayList<Record>();
+        if(from == null || to == null){
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+
+        if(Math.abs(to - from) > 3 * 24 * 60 * 60 * 1000){
+            // Just don't allow a big query
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+
+
+        switch (type){
+            case MOTION:
+                final ImmutableList<TrackerMotion> trackerMotions = this.timeSerieDAO.getTrackerDataBetween(accessToken.accountId,
+                        new DateTime(from, DateTimeZone.UTC),
+                        new DateTime(to, DateTimeZone.UTC));
+                return Response.ok().entity(trackerMotions).build();
+            case SOUND:
+
+                // FIXME: The device Id is no longer needed, should query everything based on account id.
+                final Optional<Long> deviceId = deviceDAO.getByAccountId(accessToken.accountId);
+                if(!deviceId.isPresent()) {
+                    return Response.status(Response.Status.NOT_FOUND).build();
+                }
+
+                final ImmutableList<SoundRecord> soundRecords = this.timeSerieDAO.getSoundDataBetween(deviceId.get(),
+                        new DateTime(from, DateTimeZone.UTC),
+                        new DateTime(to, DateTimeZone.UTC));
+                return Response.ok().entity(soundRecords).build();
+            default:
+                return Response.status(Response.Status.BAD_REQUEST).build();
+
+        }
+
     }
 
 
