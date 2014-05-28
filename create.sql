@@ -191,3 +191,8 @@ GRANT ALL PRIVILEGES ON SEQUENCE event_seq TO ingress_user;
 -- 2014/05/08
 -- NEW CHANGES
 ALTER TABLE device_sensors ADD COLUMN account_id INTEGER;
+
+-- to populate the account_id execute the following query:
+-- UPDATE device_sensors SET account_id = account_device_map.account_id
+--    FROM account_device_map
+--    WHERE device_sensors.device_id = account_device_map.id;
