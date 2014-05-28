@@ -67,7 +67,7 @@ public class HistoryResource {
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
     public Response getRecordsBetween(
-            @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
+            @Scope({OAuthScope.API_INTERNAL_DATA_READ}) final AccessToken accessToken,
             @QueryParam("from") final Long from,
             @QueryParam("to") final Long to,
             @QueryParam("data_type") final DataType type) {
