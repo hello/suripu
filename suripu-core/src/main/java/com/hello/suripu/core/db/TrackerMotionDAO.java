@@ -21,25 +21,23 @@ public interface TrackerMotionDAO {
     @SqlQuery("SELECT * " +
             "FROM motion " +
             // TODO: Test changing trackerId for the same account
-            "WHERE account_id = :account_id AND ts > :ts AND offset_millis = :offset_millis " +  // We ignore the tracker id when retrieving data for processing
+            "WHERE account_id = :account_id AND ts > :ts " +  // We ignore the tracker id when retrieving data for processing
             "ORDER BY ts ASC;"
     )
     public ImmutableList<TrackerMotion> getAllTrackerMotionAfter(@Bind("account_id") long accountId,
-                                                                       @Bind("ts") DateTime timestampUTC,
-                                                                       @Bind("offset_millis") int timezoneOffset);
+                                                                       @Bind("ts") DateTime timestampUTC);
 
     @SqlQuery("SELECT * FROM motion WHERE account_id = :account_id ORDER BY ts DESC limit :n;")
     public ImmutableList<TrackerMotion> getLast(@Bind("n") int numberOfRecords,
                                                       @Bind("account_id") long accountId);
 
     @SqlQuery("SELECT * FROM motion WHERE " +
-            "account_id = :account_id AND ts >= :start_timestamp AND ts <= :end_timestamp AND offset_millis = :offset_millis " +
+            "account_id = :account_id AND ts >= :start_timestamp AND ts <= :end_timestamp " +
             "ORDER BY ts ASC;"
     )
     public ImmutableList<TrackerMotion> getBetween(@Bind("account_id") long accountId,
-                                                   @Bind("start_timestamp") long startTimestamp,
-                                                   @Bind("end_timestamp") long endTimestamp,
-                                                   @Bind("offset_millis") int timezoneOffset);
+                                                   @Bind("start_timestamp") DateTime startTimestampUTC,
+                                                   @Bind("end_timestamp") DateTime endTimestampUTC);
 
     @SqlBatch("INSERT INTO motion (account_id, tracker_id, svm_no_gravity, ts, offset_millis) " +
             "VALUES(:account_id, :tracker_id, :svm_no_gravity, :ts, :offset_millis);")

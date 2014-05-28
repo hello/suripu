@@ -8,15 +8,15 @@ public class SoundRecord {
     @JsonProperty("device_id")
     public final Long deviceId;
 
-    @JsonProperty("avg_max_amplitude")
-    public final float averageMaxAmplitude;
+    @JsonProperty("value")
+    public final Integer averageMaxAmplitude;
 
-    @JsonProperty("ts")
+    @JsonProperty("timestamp")
     public final DateTime dateTime;
 
     public SoundRecord(
             Long deviceId,
-            float averageMaxAmplitude,
+            Integer averageMaxAmplitude,
             DateTime dateTime
     ) {
         this.deviceId = deviceId;
