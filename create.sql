@@ -22,6 +22,10 @@ CREATE TABLE device_sensors (
 
 CREATE UNIQUE INDEX uniq_device_ts on device_sensors(device_id, ts);
 
+-- creating a 3 element index because account_id <-> ts is not sufficient if we want to support multiple devices
+-- in the future
+CREATE UNIQUE INDEX uniq_device_id_account_id_ts on device_sensors(device_id, account_id, ts);
+
 GRANT ALL PRIVILEGES ON device_sensors TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE device_sensors_id_seq TO ingress_user;
 
