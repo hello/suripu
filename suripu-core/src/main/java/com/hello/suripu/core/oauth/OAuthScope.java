@@ -17,7 +17,9 @@ public enum OAuthScope {
     SLEEP_LABEL_BASIC(6),
     SLEEP_LABEL_WRITE(7),
     ADMINISTRATION_READ(8),   // Used for dev website, or other tools which will help create/register/list applications
-    ADMINISTRATION_WRITE(9);
+    ADMINISTRATION_WRITE(9),
+    API_INTERNAL_DATA_READ(10),
+    API_INTERNAL_DATA_WRITE(11);
 
     private int value;
 

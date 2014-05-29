@@ -154,7 +154,7 @@ public class ReceiveResource {
     @Deprecated
     public Response sendTempData(
             @Valid List<TempTrackerData> trackerData,
-            @Scope({OAuthScope.SENSORS_BASIC}) AccessToken accessToken) {
+            @Scope({OAuthScope.API_INTERNAL_DATA_WRITE}) AccessToken accessToken) {
 
         for(TempTrackerData tempTrackerData : trackerData) {
             final DateTime originalDateTime = new DateTime(tempTrackerData.timestamp, DateTimeZone.UTC);
