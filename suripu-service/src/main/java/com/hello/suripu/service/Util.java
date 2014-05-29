@@ -1,6 +1,6 @@
 package com.hello.suripu.service;
 
-import com.hello.suripu.core.TrackerMotion;
+import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 

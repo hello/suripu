@@ -1,9 +1,9 @@
 package com.hello.suripu.app.resources;
 
 import com.google.common.base.Optional;
-import com.hello.suripu.core.Account;
-import com.hello.suripu.core.Score;
-import com.hello.suripu.core.SoundRecord;
+import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.Score;
+import com.hello.suripu.core.models.SoundRecord;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.ScoreDAO;

@@ -2,7 +2,8 @@ package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.core.DeviceAccountPair;
+import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.db.mappers.DeviceAccountPairMapper;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;

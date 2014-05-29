@@ -2,7 +2,7 @@ package com.hello.suripu.app.resources;
 
 
 import com.google.common.base.Optional;
-import com.hello.suripu.core.Account;
+import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.Application;

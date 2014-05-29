@@ -1,7 +1,8 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.core.TrackerMotion;
+import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.db.mappers.TrackerMotionMapper;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
