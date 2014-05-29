@@ -1,7 +1,8 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
-import com.hello.suripu.core.SleepLabel;
+import com.hello.suripu.core.models.SleepLabel;
+import com.hello.suripu.core.db.mappers.SleepLabelMapper;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.TransactionIsolationLevel;
 import org.skife.jdbi.v2.sqlobject.Bind;

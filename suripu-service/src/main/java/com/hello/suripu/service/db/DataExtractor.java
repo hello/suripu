@@ -1,7 +1,7 @@
 package com.hello.suripu.service.db;
 
 import com.hello.suripu.api.input.InputProtos;
-import com.hello.suripu.core.TrackerMotion;
+import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.service.Util;

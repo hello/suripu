@@ -1,7 +1,9 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.core.Score;
+import com.hello.suripu.core.models.Score;
+import com.hello.suripu.core.db.binders.BindScore;
+import com.hello.suripu.core.db.mappers.ScoreMapper;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;

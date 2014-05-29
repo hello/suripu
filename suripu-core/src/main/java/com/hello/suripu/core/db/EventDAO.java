@@ -1,7 +1,8 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.core.Event;
+import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.db.mappers.EventMapper;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;

@@ -2,6 +2,8 @@ package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.core.db.binders.BindApplicationRegistration;
+import com.hello.suripu.core.db.mappers.ApplicationMapper;
 import com.hello.suripu.core.oauth.Application;
 import com.hello.suripu.core.oauth.ApplicationRegistration;
 import org.skife.jdbi.v2.sqlobject.Bind;

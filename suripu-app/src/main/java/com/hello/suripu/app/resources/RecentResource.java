@@ -1,6 +1,6 @@
 package com.hello.suripu.app.resources;
 
-import com.hello.suripu.core.Record;
+import com.hello.suripu.core.models.Record;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 

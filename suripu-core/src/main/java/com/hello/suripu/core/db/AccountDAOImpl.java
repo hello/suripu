@@ -1,8 +1,10 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
-import com.hello.suripu.core.Account;
-import com.hello.suripu.core.Registration;
+import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.Registration;
+import com.hello.suripu.core.db.binders.BindRegistration;
+import com.hello.suripu.core.db.mappers.AccountMapper;
 import org.mindrot.jbcrypt.BCrypt;
 import org.skife.jdbi.v2.sqlobject.*;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
