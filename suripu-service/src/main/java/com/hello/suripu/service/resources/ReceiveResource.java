@@ -5,8 +5,8 @@ import com.google.common.io.LittleEndianDataInputStream;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.api.input.InputProtos.SimpleSensorBatch;
+import com.hello.suripu.core.DeviceAccountPair;
 import com.hello.suripu.core.KinesisLogger;
-import com.hello.suripu.core.Score;
 import com.hello.suripu.core.TempTrackerData;
 import com.hello.suripu.core.crypto.CryptoHelper;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -36,7 +36,6 @@ import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -196,37 +195,19 @@ public class ReceiveResource {
             @Valid InputProtos.SimpleSensorBatch batch,
             @Scope({OAuthScope.SENSORS_BASIC}) AccessToken accessToken) {
 
-        // TODO : remove this after alpha testing
+        // the accessToken is only used for upload permission at the moment
+        // it will soon be removed and rely on device_id and signature from Morpheus
+        // TODO: make transition from access token to signature based happen.
 
         kinesisLogger.put(batch.getDeviceId(), batch.toByteArray());
 
-        try {
-            deviceDAO.registerDevice(accessToken.accountId, batch.getDeviceId());
-        } catch (UnableToExecuteStatementException exception) {
-            Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
-            if (!matcher.find()) {
-                LOGGER.error(exception.getMessage());
-                return Response.serverError().build();
-            }
-            LOGGER.warn("Duplicate entry for account_id: {} with device_id = {}", accessToken.accountId, batch.getDeviceId());
-        }
+        final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(batch.getDeviceId());
 
-        // TODO : END REMOVE
-
-
-
-        final Optional<Long> deviceIdOptional = deviceDAO.getDeviceForAccountId(accessToken.accountId, batch.getDeviceId());
-        if(!deviceIdOptional.isPresent()) {
-            LOGGER.warn("DeviceId: {} was not found", batch.getDeviceId());
+        if(deviceAccountPairs.isEmpty()) {
+            LOGGER.warn("No account found for device_id: {}", batch.getDeviceId());
+            LOGGER.warn("{} needs to be registered", batch.getDeviceId());
             return Response.status(Response.Status.BAD_REQUEST).entity("Bad Request").type(MediaType.TEXT_PLAIN_TYPE).build();
         }
-
-        final ArrayList<Integer> lightSamples = new ArrayList<Integer>(batch.getSamplesCount());
-        final ArrayList<Integer> tempSamples = new ArrayList<Integer>(batch.getSamplesCount());
-        final ArrayList<Integer> humiditySamples = new ArrayList<Integer>(batch.getSamplesCount());
-        final ArrayList<Integer> airQualitySamples = new ArrayList<Integer>(batch.getSamplesCount());
-
-        final ArrayList<DateTime> dateTimes = new ArrayList<DateTime>();
 
         for(InputProtos.SimpleSensorBatch.SimpleSensorSample sample : batch.getSamplesList()) {
 
@@ -273,118 +254,49 @@ public class ReceiveResource {
                         DateTimeZone.UTC
                 );
 
-                try {
-                    // TODO: FINAL VERSION WILL HAVE TO QUERY FROM DB
-                    deviceDataDAO.insert(deviceIdOptional.get(), accessToken.accountId, rounded, offsetMillis, temp, light, humidity, airQuality);
+                for(DeviceAccountPair pair : deviceAccountPairs) {
+                    try {
+                        // TODO: FINAL VERSION WILL HAVE TO QUERY FROM DB
+                        deviceDataDAO.insert(pair.internalDeviceId, pair.accountId, rounded, offsetMillis, temp, light, humidity, airQuality);
 
-                } catch (UnableToExecuteStatementException exception) {
-                    Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
-                    if (!matcher.find()) {
-                        LOGGER.error(exception.getMessage());
-                        return Response.serverError().build();
+                    } catch (UnableToExecuteStatementException exception) {
+                        Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
+                        if (!matcher.find()) {
+                            LOGGER.error(exception.getMessage());
+                            return Response.serverError().build();
+                        }
+
+                        LOGGER.warn("Duplicate entry for {} ({}) with ts = {} and account_id = {}",
+                                pair.internalDeviceId,
+                                batch.getDeviceId(),
+                                rounded,
+                                pair.accountId
+                        );
                     }
-                    LOGGER.warn("Duplicate entry for {} with ts = {}", deviceIdOptional.get(), rounded);
                 }
-
-                // TODO: refactor this, this is ugly
-                lightSamples.add(light);
-                tempSamples.add(temp);
-                humiditySamples.add(humidity);
-                airQualitySamples.add(airQuality);
-                dateTimes.add(rounded);
             }
 
 
             if(sample.hasSoundAmplitude()) {
                 final Long sampleTimestamp = sample.getTimestamp();
                 final DateTime dateTimeSample = new DateTime(sampleTimestamp, DateTimeZone.UTC);
-                try {
-                    deviceDataDAO.insertSound(deviceIdOptional.get(), sample.getSoundAmplitude(), dateTimeSample, offsetMillis);
-                    LOGGER.debug("Sound timestamp = {}", sampleTimestamp);
-                } catch (UnableToExecuteStatementException exception) {
-                    Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
-                    if (!matcher.find()) {
-                        LOGGER.error(exception.getMessage());
-                        return Response.serverError().build();
+                for(DeviceAccountPair pair : deviceAccountPairs) {
+                    try {
+                        deviceDataDAO.insertSound(pair.internalDeviceId, sample.getSoundAmplitude(), dateTimeSample, offsetMillis);
+                        LOGGER.debug("Sound timestamp = {}", sampleTimestamp);
+                    } catch (UnableToExecuteStatementException exception) {
+                        Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
+                        if (!matcher.find()) {
+                            LOGGER.error(exception.getMessage());
+                            return Response.serverError().build();
+                        }
+                        LOGGER.warn("Duplicate sound entry for {} with ts = {} and account_id = {}", pair.internalDeviceId, dateTimeSample, pair.accountId);
                     }
-                    LOGGER.warn("Duplicate entry for {} with ts = {}", deviceIdOptional.get(), dateTimeSample);
                 }
             }
 
         }
 
-
-        int lightScore = scoreLight(lightSamples);
-        int tempScore = scoreTemperatures(tempSamples);
-        int humidityScore = scoreHumidity(humiditySamples);
-        int airQualityScore = scoreAirQuality(airQualitySamples);
-
-        final Score score = new Score.Builder()
-                .withAccountId(accessToken.accountId)
-                .withLight(lightScore)
-                .withTemperature(tempScore)
-                .withHumidity(humidityScore)
-                .withAirQuality(airQualityScore)
-                .withSound(0)
-                .build();
-        scoreDAO.insertScore(score);
-
         return Response.ok().build();
-    }
-
-    private int scoreLight(List<Integer> items) {
-        // TODO : REAL SCORING
-        if(items.isEmpty()) {
-            return 0;
-        }
-
-        int sum = 0;
-        for(Integer i : items) {
-            sum += i;
-        }
-
-        return Math.round(sum / items.size());
-    }
-
-    private int scoreHumidity(List<Integer> items) {
-        // TODO : REAL SCORING
-        if(items.isEmpty()) {
-            return 0;
-        }
-
-        int sum = 0;
-        for(Integer i : items) {
-            sum += i;
-        }
-
-        return Math.round(sum / items.size());
-    }
-
-    private int scoreAirQuality(List<Integer> items) {
-        // TODO : REAL SCORING
-        if(items.isEmpty()) {
-            return 0;
-        }
-
-        int sum = 0;
-        for(Integer i : items) {
-            sum += i;
-        }
-
-        return Math.round(sum / items.size());
-    }
-
-    private int scoreTemperatures(List<Integer> items) {
-        // TODO : REAL SCORING
-        if(items.isEmpty()) {
-            return 0;
-        }
-
-        int sum = 0;
-        for(Integer i : items) {
-            sum += i;
-        }
-
-        return Math.round(sum / items.size());
     }
 }

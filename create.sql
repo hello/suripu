@@ -22,6 +22,10 @@ CREATE TABLE device_sensors (
 
 CREATE UNIQUE INDEX uniq_device_ts on device_sensors(device_id, ts);
 
+-- creating a 3 element index because account_id <-> ts is not sufficient if we want to support multiple devices
+-- in the future
+CREATE UNIQUE INDEX uniq_device_id_account_id_ts on device_sensors(device_id, account_id, ts);
+
 GRANT ALL PRIVILEGES ON device_sensors TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE device_sensors_id_seq TO ingress_user;
 
@@ -191,3 +195,8 @@ GRANT ALL PRIVILEGES ON SEQUENCE event_seq TO ingress_user;
 -- 2014/05/08
 -- NEW CHANGES
 ALTER TABLE device_sensors ADD COLUMN account_id INTEGER;
+
+-- to populate the account_id execute the following query:
+-- UPDATE device_sensors SET account_id = account_device_map.account_id
+--    FROM account_device_map
+--    WHERE device_sensors.device_id = account_device_map.id;
