@@ -67,7 +67,7 @@ public class TrackerMotionDAODynamoDB {
         try {
             getItemResult = dynamoDBClient.getItem(getItemRequest);
         }catch (AmazonServiceException ase){
-            LOGGER.warn("Amazon service exception {}", ase.getMessage());
+            LOGGER.error("Amazon service exception {}", ase.getMessage());
         }finally {
             if (getItemResult.getItem() == null || !getItemResult.getItem().containsKey(DATA_BLOB_ATTRIBUTE_NAME)) {
                 return ImmutableList.copyOf(Collections.<TrackerMotion>emptyList());
@@ -80,9 +80,8 @@ public class TrackerMotionDAODynamoDB {
             final InputProtos.TrackerDataBatch trackerDataBatch = InputProtos.TrackerDataBatch.parseFrom(byteBuffer.array());
             final List<InputProtos.TrackerDataBatch.TrackerData> dataList = trackerDataBatch.getSamplesList();
 
-            TrackerMotion[] resultData = new TrackerMotion[dataList.size()];
+            LinkedList<TrackerMotion> resultData = new LinkedList<TrackerMotion>();
 
-            int index = 0;
             for(final InputProtos.TrackerDataBatch.TrackerData datum:dataList){
                 TrackerMotion trackerMotion = new TrackerMotion(
                         -1,
@@ -91,15 +90,15 @@ public class TrackerMotionDAODynamoDB {
                         datum.getTimestamp(),
                         datum.getSvmNoGravity(),
                         datum.getOffsetMillis());
-                resultData[index] = trackerMotion;
-                index++;
+                resultData.add(trackerMotion);
+                
             }
 
             return ImmutableList.copyOf(resultData);
 
         } catch (IOException e) {
-            e.printStackTrace();
-            LOGGER.warn("{}", e.getStackTrace());
+
+            LOGGER.error("{}", e.getStackTrace());
         }
 
         return ImmutableList.copyOf(Collections.<TrackerMotion>emptyList());
@@ -159,6 +158,7 @@ public class TrackerMotionDAODynamoDB {
                 final List<Map<String, AttributeValue>> items = queryResult.getItems();
                 for(final Map<String, AttributeValue> item:items){
                     if(!item.containsKey(DATA_BLOB_ATTRIBUTE_NAME)){
+                        LOGGER.warn("Missing field: {}", DATA_BLOB_ATTRIBUTE_NAME);
                         continue;
                     }
 
@@ -178,8 +178,8 @@ public class TrackerMotionDAODynamoDB {
                             finalResult.add(trackerMotion);
                         }
                     } catch (InvalidProtocolBufferException e) {
-                        e.printStackTrace();
-                        LOGGER.warn("{}", e.getStackTrace());
+
+                        LOGGER.error("{}", e.getStackTrace());
                     }
                 }
             }
@@ -187,7 +187,7 @@ public class TrackerMotionDAODynamoDB {
             loopCount++;
         }while (lastEvaluatedKey != null && loopCount < 30);
 
-        return ImmutableList.copyOf(finalResult.toArray(new TrackerMotion[0]));
+        return ImmutableList.copyOf(finalResult);
 
 
 
@@ -275,7 +275,7 @@ public class TrackerMotionDAODynamoDB {
             } while (result.getUnprocessedItems().size() > 0 && callCount < 100);
 
         }  catch (AmazonServiceException ase) {
-            LOGGER.warn("Failed to retrieve items: {}", ase.getErrorMessage());
+            LOGGER.error("Failed to retrieve items: {}", ase.getErrorMessage());
         }
 
     }
