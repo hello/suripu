@@ -191,7 +191,13 @@ public class ReceiveResource {
 
             // Get back the local time.
             final DateTime localTime = new DateTime(tempTrackerData.timestamp, DateTimeZone.forOffsetMillis(offsetMillis));
-            datesInUploadData.add(localTime.withTimeAtStartOfDay());
+            final DateTime localStartOfDay = localTime.withTimeAtStartOfDay();
+
+            if(localTime.getMillis() < localStartOfDay.plusHours(12).getMillis()){
+                datesInUploadData.add(localStartOfDay.minusDays(1));
+            }else{
+                datesInUploadData.add(localStartOfDay);
+            }
 
             final DateTime roundedDateTimeUTC = new DateTime(
                     originalDateTime.getYear(),
@@ -225,13 +231,13 @@ public class ReceiveResource {
         final LinkedList<TrackerMotion> dataToBeSync = new LinkedList<TrackerMotion>();
 
         for(final DateTime date:datesInUploadData){
-            final DateTime startDate = date;
-            final DateTime endDate = date.plusHours(23).plusMinutes(59).plusSeconds(59).plusMillis(999);
+            final DateTime startQueryTimestamp = date.plusHours(12);
+            final DateTime endQueryTimestamp = startQueryTimestamp.plusHours(23).plusMinutes(59).plusSeconds(59).plusMillis(999);
 
             final ImmutableList<TrackerMotion> dataForThatDay = this.trackerMotionDAO.getBetween(
                     accessToken.accountId,
-                    startDate,
-                    endDate
+                    new DateTime(startQueryTimestamp.getMillis(), DateTimeZone.UTC),
+                    new DateTime(endQueryTimestamp.getMillis(), DateTimeZone.UTC)
             );
 
             dataToBeSync.addAll(dataForThatDay);

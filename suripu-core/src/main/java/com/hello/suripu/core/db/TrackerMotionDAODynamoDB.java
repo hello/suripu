@@ -270,7 +270,16 @@ public class TrackerMotionDAODynamoDB {
         // Group the data based on dates
         for(final TrackerMotion datum:data){
             final DateTime localTime = new DateTime(datum.timestamp, DateTimeZone.forOffsetMillis(datum.offsetMillis));
-            final String dateKey = localTime.toString(DateTimeFormatString.FORMAT_TO_DAY);
+
+            final DateTime localStartOfDay = localTime.withTimeAtStartOfDay();
+
+            String dateKey = localTime.toString(DateTimeFormatString.FORMAT_TO_DAY);
+
+            if(localTime.getMillis() < localStartOfDay.plusHours(12).getMillis()){
+                // If the data is collected before noon, this is the data of previous day.
+                dateKey = localTime.minusDays(1).toString(DateTimeFormatString.FORMAT_TO_DAY);
+            }
+
             if(!groupedData.containsKey(dateKey)){
                 groupedData.put(dateKey, InputProtos.TrackerDataBatch.newBuilder());
             }
