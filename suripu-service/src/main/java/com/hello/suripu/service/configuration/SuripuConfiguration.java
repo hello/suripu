@@ -52,6 +52,16 @@ public class SuripuConfiguration extends Configuration {
 
     @Valid
     @NotNull
+    @JsonProperty("motion_db")
+    private DynamoDBConfiguration motionDBConfiguration;
+
+    public DynamoDBConfiguration getMotionDBConfiguration() {
+        return this.motionDBConfiguration;
+    }
+
+
+    @Valid
+    @NotNull
     @JsonProperty("kinesis")
     private KinesisConfiguration kinesisConfiguration;
 

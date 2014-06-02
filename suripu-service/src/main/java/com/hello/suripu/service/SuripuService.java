@@ -30,6 +30,7 @@ import com.hello.suripu.core.oauth.OAuthProvider;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
+import com.hello.suripu.service.cli.CreateDynamoDBTrackerTableCommand;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
 import com.hello.suripu.service.db.DeviceDataDAO;
 import com.hello.suripu.service.resources.ReceiveResource;
@@ -59,6 +60,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
     @Override
     public void initialize(Bootstrap<SuripuConfiguration> bootstrap) {
         bootstrap.addBundle(new DBIExceptionsBundle());
+        bootstrap.addCommand(new CreateDynamoDBTrackerTableCommand());
     }
 
     @Override
