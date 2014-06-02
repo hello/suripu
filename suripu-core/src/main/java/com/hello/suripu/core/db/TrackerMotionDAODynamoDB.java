@@ -1,20 +1,23 @@
 package com.hello.suripu.core.db;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
+import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
-import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
-import com.amazonaws.services.dynamodbv2.model.PutItemResult;
+import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.amazonaws.services.dynamodbv2.model.ReturnConsumedCapacity;
+import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.collect.ImmutableList;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.core.db.util.DateTimeFormatString;
-import com.hello.suripu.core.models.AmplitudeDataCompact;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -22,7 +25,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -53,33 +58,39 @@ public class TrackerMotionDAODynamoDB {
         final HashMap<String, AttributeValue> key = new HashMap<String, AttributeValue>();
         key.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
         key.put(TARGET_DATE_ATTRIBUTE_NAME, new AttributeValue().withS(targetDateString));
+
         final GetItemRequest getItemRequest = new GetItemRequest()
                 .withTableName(this.tableName)
                 .withKey(key);
 
-        final GetItemResult getItemResult = dynamoDBClient.getItem(getItemRequest);
-
-        if(getItemResult.getItem() == null || !getItemResult.getItem().containsKey(DATA_BLOB_ATTRIBUTE_NAME)) {
-            return ImmutableList.copyOf(new TrackerMotion[0]);
+        GetItemResult getItemResult = null;
+        try {
+            getItemResult = dynamoDBClient.getItem(getItemRequest);
+        }catch (AmazonServiceException ase){
+            LOGGER.warn("Amazon service exception {}", ase.getMessage());
+        }finally {
+            if (getItemResult.getItem() == null || !getItemResult.getItem().containsKey(DATA_BLOB_ATTRIBUTE_NAME)) {
+                return ImmutableList.copyOf(Collections.<TrackerMotion>emptyList());
+            }
         }
 
-        final String jasonCompactMotionData = getItemResult.getItem().get(DATA_BLOB_ATTRIBUTE_NAME).getS();
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            final List<AmplitudeDataCompact> data = mapper.readValue(jasonCompactMotionData,
-                    new TypeReference<List<AmplitudeDataCompact>>(){});
+        final ByteBuffer byteBuffer = getItemResult.getItem().get(DATA_BLOB_ATTRIBUTE_NAME).getB();
 
-            TrackerMotion[] resultData = new TrackerMotion[data.size()];
+        try {
+            final InputProtos.TrackerDataBatch trackerDataBatch = InputProtos.TrackerDataBatch.parseFrom(byteBuffer.array());
+            final List<InputProtos.TrackerDataBatch.TrackerData> dataList = trackerDataBatch.getSamplesList();
+
+            TrackerMotion[] resultData = new TrackerMotion[dataList.size()];
 
             int index = 0;
-            for(final AmplitudeDataCompact datum:data){
+            for(final InputProtos.TrackerDataBatch.TrackerData datum:dataList){
                 TrackerMotion trackerMotion = new TrackerMotion(
                         -1,
                         accountId,
                         "",
-                        datum.timestamp,
-                        datum.amplitude,
-                        datum.offsetMillis);
+                        datum.getTimestamp(),
+                        datum.getSvmNoGravity(),
+                        datum.getOffsetMillis());
                 resultData[index] = trackerMotion;
                 index++;
             }
@@ -91,7 +102,7 @@ public class TrackerMotionDAODynamoDB {
             LOGGER.warn("{}", e.getStackTrace());
         }
 
-        return ImmutableList.copyOf(new TrackerMotion[0]);
+        return ImmutableList.copyOf(Collections.<TrackerMotion>emptyList());
     }
 
     public ImmutableList<TrackerMotion> getTrackerMotionForDate(long accountId, final DateTime targetDateLocal) {
@@ -103,12 +114,11 @@ public class TrackerMotionDAODynamoDB {
                                                    final DateTime startTimestampLocal,
                                                    final DateTime endTimestampLocal) {
         if(startTimestampLocal.getMillis() > endTimestampLocal.getMillis()){
-            return ImmutableList.copyOf(new TrackerMotion[0]);
+            return ImmutableList.copyOf(Collections.<TrackerMotion>emptyList());
         }
 
-        long delta = endTimestampLocal.getMillis() - startTimestampLocal.getMillis();
         if(endTimestampLocal.getMillis() > startTimestampLocal.plusDays(31).getMillis()){
-            return ImmutableList.copyOf(new TrackerMotion[0]);
+            return ImmutableList.copyOf(Collections.<TrackerMotion>emptyList());
         }
 
 
@@ -134,6 +144,8 @@ public class TrackerMotionDAODynamoDB {
         Map<String, AttributeValue> lastEvaluatedKey = null;
         final LinkedList<TrackerMotion> finalResult = new LinkedList<TrackerMotion>();
 
+        int loopCount = 0;
+
         do{
             final QueryRequest queryRequest = new QueryRequest()
                     .withTableName(this.tableName)
@@ -150,37 +162,32 @@ public class TrackerMotionDAODynamoDB {
                         continue;
                     }
 
-                    final String jasonCompactMotionData = item.get(DATA_BLOB_ATTRIBUTE_NAME).getS();
-                    ObjectMapper mapper = new ObjectMapper();
-                    try {
-                        final List<AmplitudeDataCompact> data = mapper.readValue(jasonCompactMotionData,
-                                new TypeReference<List<AmplitudeDataCompact>>(){});
+                    final ByteBuffer byteBuffer = item.get(DATA_BLOB_ATTRIBUTE_NAME).getB();
 
-                        for(final AmplitudeDataCompact datum:data){
+                    try {
+                        final InputProtos.TrackerDataBatch trackerDataBatch = InputProtos.TrackerDataBatch.parseFrom(byteBuffer.array());
+                        final List<InputProtos.TrackerDataBatch.TrackerData> dataList = trackerDataBatch.getSamplesList();
+                        for(final InputProtos.TrackerDataBatch.TrackerData datum:dataList){
                             TrackerMotion trackerMotion = new TrackerMotion(
                                     -1,
                                     accountId,
                                     "",
-                                    datum.timestamp,
-                                    datum.amplitude,
-                                    datum.offsetMillis);
+                                    datum.getTimestamp(),
+                                    datum.getSvmNoGravity(),
+                                    datum.getOffsetMillis());
                             finalResult.add(trackerMotion);
                         }
-                    } catch (IOException e) {
+                    } catch (InvalidProtocolBufferException e) {
                         e.printStackTrace();
                         LOGGER.warn("{}", e.getStackTrace());
                     }
                 }
             }
             lastEvaluatedKey = queryResult.getLastEvaluatedKey();
-        }while (lastEvaluatedKey != null);
+            loopCount++;
+        }while (lastEvaluatedKey != null && loopCount < 30);
 
         return ImmutableList.copyOf(finalResult.toArray(new TrackerMotion[0]));
-
-
-
-
-
 
 
 
@@ -215,40 +222,60 @@ public class TrackerMotionDAODynamoDB {
     }
 
     public void setTrackerMotions(long accountId, final List<TrackerMotion> data) {
-        final HashMap<String, LinkedList<AmplitudeDataCompact>> groupedData =
-                new HashMap<String, LinkedList<AmplitudeDataCompact>>();
+        final HashMap<String, InputProtos.TrackerDataBatch.Builder> groupedData =
+                new HashMap<String, InputProtos.TrackerDataBatch.Builder>();
 
         // Group the data based on dates
         for(final TrackerMotion datum:data){
             final DateTime localTime = new DateTime(datum.timestamp, DateTimeZone.forOffsetMillis(datum.offsetMillis));
             final String dateKey = localTime.toString(DateTimeFormatString.FORMAT_TO_DAY);
             if(!groupedData.containsKey(dateKey)){
-                groupedData.put(dateKey, new LinkedList<AmplitudeDataCompact>());
+                groupedData.put(dateKey, InputProtos.TrackerDataBatch.newBuilder());
             }
 
-            groupedData.get(dateKey).add(new AmplitudeDataCompact(datum.timestamp, datum.value, datum.offsetMillis));
+            final InputProtos.TrackerDataBatch.TrackerData trackerData = InputProtos.TrackerDataBatch.TrackerData.newBuilder()
+                    .setOffsetMillis(datum.offsetMillis)
+                    .setTimestamp(datum.timestamp)
+                    .setSvmNoGravity(datum.value)
+                    .build();
+            groupedData.get(dateKey).addSamples(trackerData);
         }
+
+
+        final ArrayList<WriteRequest> putRequests = new ArrayList<WriteRequest>();
 
         for(final String dateKey:groupedData.keySet()){
             final HashMap<String, AttributeValue> item = new HashMap<String, AttributeValue>();
             item.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
             item.put(TARGET_DATE_ATTRIBUTE_NAME, new AttributeValue().withS(dateKey));
+            final ByteBuffer byteBuffer = ByteBuffer.wrap(groupedData.get(dateKey).build().toByteArray());
+            item.put(DATA_BLOB_ATTRIBUTE_NAME, new AttributeValue().withB(byteBuffer));
+            final PutRequest putItemRequest = new PutRequest()
+                    .withItem(item);
+            final WriteRequest writeRequest = new WriteRequest().withPutRequest(putItemRequest);
+            putRequests.add(writeRequest);
 
-            final ObjectMapper mapper = new ObjectMapper();
+        }
 
-            try {
-                final String jsonData = mapper.writeValueAsString(groupedData.get(dateKey));
-                item.put(DATA_BLOB_ATTRIBUTE_NAME, new AttributeValue().withS(jsonData));
-                final PutItemRequest putItemRequest = new PutItemRequest()
-                        .withTableName(this.tableName)
-                        .withItem(item);
+        Map<String, List<WriteRequest>> requestItems = new HashMap<String, List<WriteRequest>>();
+        requestItems.put(this.tableName, putRequests);
 
-                final PutItemResult putItemResult = dynamoDBClient.putItem(putItemRequest);
+        BatchWriteItemResult result;
+        final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest()
+                .withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
+        int callCount = 0;
 
-                LOGGER.debug("Save data: {}", putItemResult);
-            }catch (Exception ex){
-                LOGGER.warn("Save motion data to dynamoDB failed: {}", ex.getMessage());
-            }
+        try{
+            do {
+
+                batchWriteItemRequest.withRequestItems(requestItems);
+                result = this.dynamoDBClient.batchWriteItem(batchWriteItemRequest);
+                requestItems = result.getUnprocessedItems();
+                callCount++;
+            } while (result.getUnprocessedItems().size() > 0 && callCount < 100);
+
+        }  catch (AmazonServiceException ase) {
+            LOGGER.warn("Failed to retrieve items: {}", ase.getErrorMessage());
         }
 
     }

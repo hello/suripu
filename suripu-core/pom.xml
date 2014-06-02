@@ -32,7 +32,11 @@
             <artifactId>aws-java-sdk</artifactId>
             <version>${aws.sdk.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.hello.suripu</groupId>
+            <artifactId>suripu-api</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+        </dependency>
 
     </dependencies>
 </project>
