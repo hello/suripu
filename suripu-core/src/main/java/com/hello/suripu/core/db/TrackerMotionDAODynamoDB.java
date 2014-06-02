@@ -91,7 +91,7 @@ public class TrackerMotionDAODynamoDB {
                         datum.getSvmNoGravity(),
                         datum.getOffsetMillis());
                 resultData.add(trackerMotion);
-                
+
             }
 
             return ImmutableList.copyOf(resultData);
