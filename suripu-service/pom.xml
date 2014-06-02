@@ -53,6 +53,11 @@
             <version>2.2.0</version>
         </dependency>
         <dependency>
+            <groupId>com.librato.metrics</groupId>
+            <artifactId>metrics-librato</artifactId>
+            <version>${librato.reporter.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.hello.dropwizard</groupId>
             <artifactId>dropwizard-mikkusu</artifactId>
             <version>0.0.1</version>
