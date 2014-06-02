@@ -32,6 +32,10 @@ public interface TrackerMotionDAO {
     public ImmutableList<TrackerMotion> getLast(@Bind("n") int numberOfRecords,
                                                       @Bind("account_id") long accountId);
 
+    @SqlQuery("SELECT * FROM motion WHERE account_id = :account_id ORDER BY ts ASC limit :n;")
+    public ImmutableList<TrackerMotion> getFirst(@Bind("n") int numberOfRecords,
+                                                @Bind("account_id") long accountId);
+
     @SqlQuery("SELECT * FROM motion WHERE " +
             "account_id = :account_id AND ts >= :start_timestamp AND ts <= :end_timestamp " +
             "ORDER BY ts ASC;"

@@ -121,7 +121,6 @@ public class TrackerMotionDAODynamoDB {
         }
 
 
-        final ArrayList<String> queryDates = new ArrayList<String>();
         final DateTime queryStartDateLocal = startTimestampLocal.withTimeAtStartOfDay();
         final DateTime queryEndDateLocal = endTimestampLocal.withTimeAtStartOfDay();
 
@@ -188,40 +187,83 @@ public class TrackerMotionDAODynamoDB {
         }while (lastEvaluatedKey != null && loopCount < 30);
 
         return ImmutableList.copyOf(finalResult);
+    }
 
 
+    public boolean isAccountInitialized(long accountId) {
 
-        /*
+        final DateTime queryStartDateLocal = new DateTime(1970,1,1,0,0,0);
 
+        // WHERE target_date >= :start_date AND target_date <= :end_date
+        final Condition selectDateRangeCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.GE.toString())
+                .withAttributeValueList(new AttributeValue().withS(queryStartDateLocal.toString(DateTimeFormatString.FORMAT_TO_DAY)));
 
+        // AND accound_id = :accound_id
+        final Condition selectAccountIdCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
 
+        final HashMap<String, Condition> queryConditions = new HashMap<String, Condition>();
+        queryConditions.put(TARGET_DATE_ATTRIBUTE_NAME, selectDateRangeCondition);
+        queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectAccountIdCondition);
 
-        DateTime currentQueryDateLocal = queryStartDateLocal;
-        // Get all possible dates in the query time range
-        while (currentQueryDateLocal.getMillis() <= queryEndDateLocal.getMillis()){
-            queryDates.add(currentQueryDateLocal.toString(DateTimeFormatString.FORMAT_TO_DAY));
-            currentQueryDateLocal = currentQueryDateLocal.plusDays(1);
-        }
+        Map<String, AttributeValue> lastEvaluatedKey = null;
+        final LinkedList<TrackerMotion> finalResult = new LinkedList<TrackerMotion>();
 
-        final LinkedList<TrackerMotion> result = new LinkedList<TrackerMotion>();
-        long startTimestamp = startTimestampLocal.getMillis();
-        long endTimestamp = endTimestampLocal.getMillis();
+        final QueryRequest queryRequest = new QueryRequest()
+                .withTableName(this.tableName)
+                .withKeyConditions(queryConditions)
+                .withAttributesToGet(DATA_BLOB_ATTRIBUTE_NAME)
+                .withLimit(1)
+                .withExclusiveStartKey(lastEvaluatedKey);
 
-        // Filter data between time range
-        for(final String dateString:queryDates){
-            ImmutableList<TrackerMotion> motionsForADay = getTrackerMotionForDate(accountId, dateString);
-            for(final TrackerMotion motion:motionsForADay){
-                if(motion.timestamp >= startTimestamp && motion.timestamp <= endTimestamp){
-                    result.add(motion);
+        final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
+        if(queryResult.getItems() != null){
+            final List<Map<String, AttributeValue>> items = queryResult.getItems();
+            if(items.size() == 0){
+                return false;
+            }
+
+            for(final Map<String, AttributeValue> item:items){
+                if(!item.containsKey(DATA_BLOB_ATTRIBUTE_NAME)){
+                    LOGGER.warn("Missing field: {}", DATA_BLOB_ATTRIBUTE_NAME);
+                    continue;
+                }
+
+                final ByteBuffer byteBuffer = item.get(DATA_BLOB_ATTRIBUTE_NAME).getB();
+
+                try {
+                    final InputProtos.TrackerDataBatch trackerDataBatch = InputProtos.TrackerDataBatch.parseFrom(byteBuffer.array());
+                    final List<InputProtos.TrackerDataBatch.TrackerData> dataList = trackerDataBatch.getSamplesList();
+                    for(final InputProtos.TrackerDataBatch.TrackerData datum:dataList){
+                        TrackerMotion trackerMotion = new TrackerMotion(
+                                -1,
+                                accountId,
+                                "",
+                                datum.getTimestamp(),
+                                datum.getSvmNoGravity(),
+                                datum.getOffsetMillis());
+                        finalResult.add(trackerMotion);
+                    }
+                } catch (InvalidProtocolBufferException e) {
+
+                    LOGGER.error("{}", e.getStackTrace());
                 }
             }
+        }else{
+            return false;
         }
-        return ImmutableList.copyOf(result.toArray(new TrackerMotion[0]));
-        */
 
+        return true;
     }
 
     public void setTrackerMotions(long accountId, final List<TrackerMotion> data) {
+        if(data.size() == 0){
+            return;
+        }
+
+
         final HashMap<String, InputProtos.TrackerDataBatch.Builder> groupedData =
                 new HashMap<String, InputProtos.TrackerDataBatch.Builder>();
 
@@ -265,18 +307,16 @@ public class TrackerMotionDAODynamoDB {
                 .withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
         int callCount = 0;
 
-        try{
-            do {
 
-                batchWriteItemRequest.withRequestItems(requestItems);
-                result = this.dynamoDBClient.batchWriteItem(batchWriteItemRequest);
-                requestItems = result.getUnprocessedItems();
-                callCount++;
-            } while (result.getUnprocessedItems().size() > 0 && callCount < 100);
+        do {
 
-        }  catch (AmazonServiceException ase) {
-            LOGGER.error("Failed to retrieve items: {}", ase.getErrorMessage());
-        }
+            batchWriteItemRequest.withRequestItems(requestItems);
+            result = this.dynamoDBClient.batchWriteItem(batchWriteItemRequest);
+            requestItems = result.getUnprocessedItems();
+            callCount++;
+        } while (result.getUnprocessedItems().size() > 0 && callCount < 100);
+
+
 
     }
 

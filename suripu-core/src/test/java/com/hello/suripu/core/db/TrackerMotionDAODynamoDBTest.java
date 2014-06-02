@@ -22,6 +22,7 @@ import java.util.ArrayList;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
 /**
@@ -74,6 +75,24 @@ public class TrackerMotionDAODynamoDBTest {
                 this.amazonDynamoDBClient,
                 tableName
         );
+    }
+
+
+    @Test
+    public void testIsAccountInitialized(){
+        boolean actual = this.trackerMotionDAODynamoDB.isAccountInitialized(1);
+        assertThat(actual, equalTo(false));
+
+        final ArrayList<TrackerMotion> testData = new ArrayList<TrackerMotion>();
+        final DateTime startTime = DateTime.now().withTimeAtStartOfDay();
+        long accountId = 1;
+
+        testData.add(new TrackerMotion(-1, accountId, "",
+                startTime.getMillis(),10, DateTimeZone.getDefault().getOffset(startTime)));
+        this.trackerMotionDAODynamoDB.setTrackerMotions(accountId, testData);
+
+        actual = this.trackerMotionDAODynamoDB.isAccountInitialized(accountId);
+        assertThat(actual, equalTo(true));
     }
 
     @Test
