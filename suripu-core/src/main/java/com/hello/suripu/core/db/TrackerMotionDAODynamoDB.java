@@ -2,10 +2,14 @@ package com.hello.suripu.core.db;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
+import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
+import com.amazonaws.services.dynamodbv2.model.QueryRequest;
+import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
@@ -22,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by pangwu on 5/30/14.
@@ -101,10 +106,88 @@ public class TrackerMotionDAODynamoDB {
             return ImmutableList.copyOf(new TrackerMotion[0]);
         }
 
+        long delta = endTimestampLocal.getMillis() - startTimestampLocal.getMillis();
+        if(endTimestampLocal.getMillis() > startTimestampLocal.plusDays(31).getMillis()){
+            return ImmutableList.copyOf(new TrackerMotion[0]);
+        }
+
 
         final ArrayList<String> queryDates = new ArrayList<String>();
         final DateTime queryStartDateLocal = startTimestampLocal.withTimeAtStartOfDay();
-        final DateTime queryEndDateLocal = endTimestampLocal.withTimeAtStartOfDay().plusDays(1);
+        final DateTime queryEndDateLocal = endTimestampLocal.withTimeAtStartOfDay();
+
+        // WHERE target_date >= :start_date AND target_date <= :end_date
+        final Condition selectDateRangeCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.BETWEEN.toString())
+                .withAttributeValueList(new AttributeValue().withS(queryStartDateLocal.toString(DateTimeFormatString.FORMAT_TO_DAY)),
+                        new AttributeValue().withS(queryEndDateLocal.toString(DateTimeFormatString.FORMAT_TO_DAY)));
+
+        // AND accound_id = :accound_id
+        final Condition selectAccountIdCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
+
+        final HashMap<String, Condition> queryConditions = new HashMap<String, Condition>();
+        queryConditions.put(TARGET_DATE_ATTRIBUTE_NAME, selectDateRangeCondition);
+        queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectAccountIdCondition);
+
+        Map<String, AttributeValue> lastEvaluatedKey = null;
+        final LinkedList<TrackerMotion> finalResult = new LinkedList<TrackerMotion>();
+
+        do{
+            final QueryRequest queryRequest = new QueryRequest()
+                    .withTableName(this.tableName)
+                    .withKeyConditions(queryConditions)
+                    .withAttributesToGet(DATA_BLOB_ATTRIBUTE_NAME)
+                    .withLimit(10)
+                    .withExclusiveStartKey(lastEvaluatedKey);
+
+            final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
+            if(queryResult.getItems() != null){
+                final List<Map<String, AttributeValue>> items = queryResult.getItems();
+                for(final Map<String, AttributeValue> item:items){
+                    if(!item.containsKey(DATA_BLOB_ATTRIBUTE_NAME)){
+                        continue;
+                    }
+
+                    final String jasonCompactMotionData = item.get(DATA_BLOB_ATTRIBUTE_NAME).getS();
+                    ObjectMapper mapper = new ObjectMapper();
+                    try {
+                        final List<AmplitudeDataCompact> data = mapper.readValue(jasonCompactMotionData,
+                                new TypeReference<List<AmplitudeDataCompact>>(){});
+
+                        for(final AmplitudeDataCompact datum:data){
+                            TrackerMotion trackerMotion = new TrackerMotion(
+                                    -1,
+                                    accountId,
+                                    "",
+                                    datum.timestamp,
+                                    datum.amplitude,
+                                    datum.offsetMillis);
+                            finalResult.add(trackerMotion);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        LOGGER.warn("{}", e.getStackTrace());
+                    }
+                }
+            }
+            lastEvaluatedKey = queryResult.getLastEvaluatedKey();
+        }while (lastEvaluatedKey != null);
+
+        return ImmutableList.copyOf(finalResult.toArray(new TrackerMotion[0]));
+
+
+
+
+
+
+
+
+        /*
+
+
+
 
         DateTime currentQueryDateLocal = queryStartDateLocal;
         // Get all possible dates in the query time range
@@ -127,6 +210,8 @@ public class TrackerMotionDAODynamoDB {
             }
         }
         return ImmutableList.copyOf(result.toArray(new TrackerMotion[0]));
+        */
+
     }
 
     public void setTrackerMotions(long accountId, final List<TrackerMotion> data) {

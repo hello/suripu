@@ -131,13 +131,13 @@ public class TrackerMotionDAODynamoDBTest {
         testDataCrossDays.add(new TrackerMotion(-1,accountId,"",
                 startTime.plusDays(1).plusMinutes(1).getMillis(),12, DateTimeZone.getDefault().getOffset(startTime.plusDays(1).plusMinutes(1))));
         this.trackerMotionDAODynamoDB.setTrackerMotions(accountId, testDataCrossDays);
-        this.trackerMotionDAODynamoDB.setTrackerMotions(accountId, testDataCrossDays);
+
         final ImmutableList<TrackerMotion> actualForCrossDayTest = this.trackerMotionDAODynamoDB.getBetween(accountId, startTime.minusDays(1), startTime.plusDays(2));
 
         assertThat(actualForCrossDayTest, containsInAnyOrder(testDataCrossDays.toArray()));
         assertThat(testDataCrossDays.size(), is(actualForCrossDayTest.size()));
 
-        final ImmutableList<TrackerMotion> actualJustQueryOneDay = this.trackerMotionDAODynamoDB.getBetween(accountId, startTime, startTime.plusDays(1));
+        final ImmutableList<TrackerMotion> actualJustQueryOneDay = this.trackerMotionDAODynamoDB.getBetween(accountId, startTime, startTime);
 
         assertThat(actualJustQueryOneDay, containsInAnyOrder(testData.toArray()));
         assertThat(testData.size(), is(actualJustQueryOneDay.size()));
