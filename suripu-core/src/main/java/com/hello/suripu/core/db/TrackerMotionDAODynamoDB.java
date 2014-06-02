@@ -54,7 +54,7 @@ public class TrackerMotionDAODynamoDB {
     }
 
 
-    public ImmutableList<TrackerMotion> getTrackerMotionForDate(long accountId, final String targetDateString) {
+    private ImmutableList<TrackerMotion> getTrackerMotionForDate(long accountId, final String targetDateString) {
         final HashMap<String, AttributeValue> key = new HashMap<String, AttributeValue>();
         key.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
         key.put(TARGET_DATE_ATTRIBUTE_NAME, new AttributeValue().withS(targetDateString));
