@@ -37,6 +37,8 @@ public abstract class AccountDAOImpl implements AccountDAO {
 
     public Optional<Account> exists(final String email, final String password) {
 
+        LOGGER.debug("Checking if account exists for email = {} with password length = {}", email, password.length());
+
         // TODO : check why we can get null return value here
         final Optional<Account> accountOptional = getByEmail(email);
 
