@@ -168,21 +168,6 @@ public class ReceiveResource {
             return Response.ok().build();
         }
 
-        if(!this.trackerMotionDAODynamoDB.isAccountInitialized(accessToken.accountId)){
-            // Migrate all the data from Postgres to DynamoDB
-            final DateTime beginningOfTheWorld = new DateTime(0, DateTimeZone.UTC);
-            final ImmutableList<TrackerMotion> oldDataFromPostgres = this.trackerMotionDAO.getBetween(accessToken.accountId,
-                    beginningOfTheWorld,
-                    new DateTime(trackerData.get(0).timestamp, DateTimeZone.UTC));
-
-            try {
-                this.trackerMotionDAODynamoDB.setTrackerMotions(accessToken.accountId, oldDataFromPostgres);
-            }catch (AmazonServiceException ase){
-                LOGGER.error("Data migration error {}", ase.getErrorMessage());
-            }
-
-        }
-
         final HashSet<DateTime> datesInUploadData = new HashSet<DateTime>();
 
         for(TempTrackerData tempTrackerData : trackerData) {

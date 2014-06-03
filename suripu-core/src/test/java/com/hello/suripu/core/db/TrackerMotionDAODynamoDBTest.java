@@ -11,6 +11,7 @@ import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -18,6 +19,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -160,6 +165,68 @@ public class TrackerMotionDAODynamoDBTest {
 
         assertThat(actualJustQueryOneDay, containsInAnyOrder(testData.toArray()));
         assertThat(testData.size(), is(actualJustQueryOneDay.size()));
+
+    }
+
+    @Test
+    public void testGetTrackerMotionForDates(){
+        final Map<DateTime, List<TrackerMotion>> testData = new HashMap<DateTime, List<TrackerMotion>>();
+        final DateTime startTime = DateTime.now().withTimeAtStartOfDay();
+        long accountId = 1;
+
+        final List<TrackerMotion> dataForDay1 = new ArrayList<TrackerMotion>();
+        dataForDay1.add(new TrackerMotion(-1, accountId, "",
+                startTime.getMillis(), 10,
+                DateTimeZone.getDefault().getOffset(startTime)));
+        dataForDay1.add(new TrackerMotion(-1,accountId,"",
+                startTime.plusMinutes(1).getMillis(),11,
+                DateTimeZone.getDefault().getOffset(startTime.plusMinutes(1))));
+
+        testData.put(startTime.minusDays(1), dataForDay1);
+
+        this.trackerMotionDAODynamoDB.setTrackerMotions(accountId, dataForDay1);
+
+        final List<TrackerMotion> dataForDay2 = new ArrayList<TrackerMotion>();
+        dataForDay2.add(new TrackerMotion(-1, accountId, "",
+                startTime.plusDays(1).plusMinutes(1).getMillis(), 12,
+                DateTimeZone.getDefault().getOffset(startTime.plusDays(1).plusMinutes(1))));
+
+        this.trackerMotionDAODynamoDB.setTrackerMotions(accountId, dataForDay2);
+
+        final List<DateTime> dates = new ArrayList<DateTime>();
+        dates.add(startTime.minusDays(1));
+
+        ImmutableMap<DateTime, List<TrackerMotion>> actual = this.trackerMotionDAODynamoDB.getTrackerMotionForDates(accountId, dates);
+
+        for(final DateTime targetDate:dates) {
+            assertThat(actual.get(targetDate), containsInAnyOrder(testData.get(targetDate).toArray()));
+            assertThat(actual.get(targetDate).size(), is(testData.get(targetDate).size()));
+        }
+
+        testData.put(startTime, dataForDay2);
+        dates.add(startTime);
+
+
+        final ImmutableList<TrackerMotion> actualDebug = this.trackerMotionDAODynamoDB.getTrackerMotionForDate(accountId, startTime);
+        assertThat(actualDebug, containsInAnyOrder(testData.get(startTime).toArray()));
+
+
+        actual = this.trackerMotionDAODynamoDB.getTrackerMotionForDates(accountId, dates);
+
+        for(final DateTime targetDate:dates) {
+            assertThat(actual.get(targetDate), containsInAnyOrder(testData.get(targetDate).toArray()));
+            assertThat(actual.get(targetDate).size(), is(testData.get(targetDate).size()));
+        }
+
+        dates.add(startTime.plusDays(100));
+        testData.put(startTime.plusDays(100), Collections.<TrackerMotion>emptyList());
+        actual = this.trackerMotionDAODynamoDB.getTrackerMotionForDates(accountId, dates);
+
+        for(final DateTime targetDate:dates) {
+            assertThat(actual.get(targetDate), containsInAnyOrder(testData.get(targetDate).toArray()));
+            assertThat(actual.get(targetDate).size(), is(testData.get(targetDate).size()));
+        }
+
 
     }
 }

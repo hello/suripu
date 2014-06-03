@@ -2,7 +2,11 @@ package com.hello.suripu.app.resources;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.app.utils.DataType;
+import com.hello.suripu.app.utils.GetTrackerDataResponse;
+import com.hello.suripu.core.db.TrackerMotionDAODynamoDB;
+import com.hello.suripu.core.db.util.DateTimeFormatString;
 import com.hello.suripu.core.models.GroupedRecord;
 import com.hello.suripu.core.models.Record;
 import com.hello.suripu.core.models.SoundRecord;
@@ -15,10 +19,14 @@ import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.Valid;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -26,7 +34,9 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Path("/history")
 public class HistoryResource {
@@ -35,10 +45,14 @@ public class HistoryResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryResource.class);
     private final TimeSerieDAO timeSerieDAO; // Any reason put different things together?
     private final DeviceDAO deviceDAO;
+    private final TrackerMotionDAODynamoDB trackerMotionDAODynamoDB;
 
-    public HistoryResource(final TimeSerieDAO timeSerieDAO, final DeviceDAO deviceDAO) {
+    public HistoryResource(final TimeSerieDAO timeSerieDAO,
+                           final DeviceDAO deviceDAO,
+                           final TrackerMotionDAODynamoDB trackerMotionDAODynamoDB) {
         this.timeSerieDAO = timeSerieDAO;
         this.deviceDAO = deviceDAO;
+        this.trackerMotionDAODynamoDB = trackerMotionDAODynamoDB;
     }
 
     @GET
@@ -63,6 +77,7 @@ public class HistoryResource {
         return records;
     }
 
+    @Deprecated
     @GET
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
@@ -104,6 +119,41 @@ public class HistoryResource {
                 return Response.status(Response.Status.BAD_REQUEST).build();
 
         }
+
+    }
+
+
+    @POST
+    @Timed
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public GetTrackerDataResponse getTrackerDataForDates(@Valid final List<String> dateStrings, @Scope({OAuthScope.API_INTERNAL_DATA_READ}) final AccessToken accessToken) {
+
+        if(dateStrings.size() > 31 || dateStrings.size() == 0){
+            // Just don't allow a big query
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+        }
+
+        final Map<DateTime, String> dateToStringMapping = new HashMap<DateTime, String>();
+        for(final String dateString:dateStrings){
+            try {
+                dateToStringMapping.put(DateTime.parse(dateString, DateTimeFormat.forPattern(DateTimeFormatString.FORMAT_TO_DAY)), dateString);
+            }catch (IllegalArgumentException iae){
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+            }
+        }
+
+        // Now we verified that the params passed by user are valid.
+        final ImmutableMap<DateTime, List<TrackerMotion>> result = this.trackerMotionDAODynamoDB.getTrackerMotionForDates(accessToken.accountId, dateToStringMapping.keySet());
+        final Map<String, List<TrackerMotion>> convertedResult = new HashMap<String, List<TrackerMotion>>();
+        for(final DateTime date:result.keySet()){
+            if(dateToStringMapping.containsKey(date)){
+                convertedResult.put(dateToStringMapping.get(date), result.get(date));
+            }
+        }
+
+        final GetTrackerDataResponse response = new GetTrackerDataResponse(convertedResult);
+        return response;
 
     }
 

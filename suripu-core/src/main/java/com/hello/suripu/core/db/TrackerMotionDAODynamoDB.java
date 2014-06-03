@@ -15,18 +15,22 @@ import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ReturnConsumedCapacity;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.core.db.util.DateTimeFormatString;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -51,6 +55,125 @@ public class TrackerMotionDAODynamoDB {
         this.dynamoDBClient = amazonDynamoDBClient;
         this.tableName = tableName;
 
+    }
+
+    private ImmutableMap<String, List<TrackerMotion>> getTrackerMotionForDateStrings(long accountId, final Collection<String> dateStrings){
+        if(dateStrings.size() > 31){
+            return ImmutableMap.copyOf(Collections.<String, List<TrackerMotion>>emptyMap());
+        }
+
+        final Map<String, List<TrackerMotion>> finalResult = new HashMap<String, List<TrackerMotion>>();
+        final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
+
+        String[] sortedDateStrings = dateStrings.toArray(new String[0]);
+        Arrays.sort(sortedDateStrings);
+
+        final String startDateString = sortedDateStrings[0];
+        final String endDateString = sortedDateStrings[sortedDateStrings.length - 1];
+
+        final Condition selectDateCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.BETWEEN.toString())
+                .withAttributeValueList(new AttributeValue().withS(startDateString),
+                        new AttributeValue().withS(endDateString));
+
+        long maxLoopCount = (DateTime.parse(endDateString, DateTimeFormat.forPattern(DateTimeFormatString.FORMAT_TO_DAY)).getMillis()
+                - DateTime.parse(startDateString, DateTimeFormat.forPattern(DateTimeFormatString.FORMAT_TO_DAY)).getMillis()) /
+                (24 * 60 * 60 * 1000) + 1;
+
+
+        queryConditions.put(TARGET_DATE_ATTRIBUTE_NAME, selectDateCondition);
+
+        // AND accound_id = :accound_id
+        final Condition selectAccountIdCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
+        queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectAccountIdCondition);
+
+        Map<String, AttributeValue> lastEvaluatedKey = null;
+
+
+        int loopCount = 0;
+
+        do{
+            final QueryRequest queryRequest = new QueryRequest()
+                    .withTableName(this.tableName)
+                    .withKeyConditions(queryConditions)
+                    .withAttributesToGet(TARGET_DATE_ATTRIBUTE_NAME, DATA_BLOB_ATTRIBUTE_NAME)
+                    .withLimit(10)
+                    .withExclusiveStartKey(lastEvaluatedKey);
+
+            final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
+            if(queryResult.getItems() != null){
+                final List<Map<String, AttributeValue>> items = queryResult.getItems();
+                for(final Map<String, AttributeValue> item:items){
+                    if(item.containsKey(DATA_BLOB_ATTRIBUTE_NAME) == false ||
+                            item.containsKey(TARGET_DATE_ATTRIBUTE_NAME) == false){
+                        LOGGER.warn("Missing field in item {}", item);
+                        continue;
+                    }
+
+                    final ByteBuffer byteBuffer = item.get(DATA_BLOB_ATTRIBUTE_NAME).getB();
+                    final String dateString = item.get(TARGET_DATE_ATTRIBUTE_NAME).getS();
+
+                    if(!dateStrings.contains(dateString)){
+                        continue;
+                    }
+
+                    try {
+                        final InputProtos.TrackerDataBatch trackerDataBatch = InputProtos.TrackerDataBatch.parseFrom(byteBuffer.array());
+                        final List<InputProtos.TrackerDataBatch.TrackerData> dataList = trackerDataBatch.getSamplesList();
+                        final List<TrackerMotion> resultForDate = new LinkedList<TrackerMotion>();
+
+                        for(final InputProtos.TrackerDataBatch.TrackerData datum:dataList){
+                            TrackerMotion trackerMotion = new TrackerMotion(
+                                    -1,
+                                    accountId,
+                                    "",
+                                    datum.getTimestamp(),
+                                    datum.getSvmNoGravity(),
+                                    datum.getOffsetMillis());
+                            resultForDate.add(trackerMotion);
+                        }
+
+                        finalResult.put(dateString, resultForDate);
+                    } catch (InvalidProtocolBufferException e) {
+
+                        LOGGER.error("{}", e.getStackTrace());
+                    }
+                }
+            }
+
+            lastEvaluatedKey = queryResult.getLastEvaluatedKey();
+            loopCount++;
+        }while (lastEvaluatedKey != null && loopCount < maxLoopCount);
+
+        // Fill the non-exist days with empty lists
+        for(final String dateString:dateStrings){
+            if(!finalResult.containsKey(dateString)){
+                finalResult.put(dateString, Collections.<TrackerMotion>emptyList());
+            }
+        }
+
+        return ImmutableMap.copyOf(finalResult);
+    }
+
+    public ImmutableMap<DateTime, List<TrackerMotion>> getTrackerMotionForDates(long accountId, final Collection<DateTime> dates){
+        final Map<String, DateTime> dateToStringMapping = new HashMap<String, DateTime>();
+        for(final DateTime date:dates){
+            dateToStringMapping.put(date.toString(DateTimeFormatString.FORMAT_TO_DAY), date);
+        }
+
+        final Collection<String> dateStrings = dateToStringMapping.keySet();
+        final ImmutableMap<String, List<TrackerMotion>> data = this.getTrackerMotionForDateStrings(accountId, dateStrings);
+
+        final Map<DateTime, List<TrackerMotion>> finalResultMap = new HashMap<DateTime, List<TrackerMotion>>();
+        for(final String dateString:data.keySet()){
+            if(dateToStringMapping.containsKey(dateString)){
+                finalResultMap.put(dateToStringMapping.get(dateString), data.get(dateString));
+            }
+        }
+
+        return ImmutableMap.copyOf(finalResultMap);
     }
 
 
