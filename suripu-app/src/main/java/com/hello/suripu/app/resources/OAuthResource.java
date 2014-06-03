@@ -65,8 +65,8 @@ public class OAuthResource {
                     .type(MediaType.TEXT_PLAIN_TYPE).build();
         }
         if(grantType.getType().equals(GrantTypeParam.GrantType.PASSWORD)) {
-            if(username == null || password == null) {
-                LOGGER.error("username or password is null");
+            if(username == null || password == null || username.isEmpty() || password.isEmpty()) {
+                LOGGER.error("username or password is null or empty");
                 return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
                         .type(MediaType.TEXT_PLAIN_TYPE).build();
             }
