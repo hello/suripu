@@ -1,10 +1,9 @@
 package com.hello.suripu.app.resources;
 
 import com.google.common.base.Optional;
-import com.hello.suripu.core.models.Account;
-import com.hello.suripu.core.models.Gender;
-import com.hello.suripu.core.models.Registration;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.Registration;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -78,13 +77,5 @@ public class AccountResource {
         }
 
         return Response.serverError().entity("").type(MediaType.TEXT_PLAIN_TYPE).build();
-    }
-
-    @GET
-    @Path("/registration")
-    @Timed
-    @Produces(MediaType.APPLICATION_JSON)
-    public Registration fakeRegistration() {
-        return new Registration("John", "Doe", "john@example.com", "123456789", Gender.OTHER, 167.0f, 72.0f, 32, "America/Los_Angeles");
     }
 }
