@@ -12,6 +12,8 @@ import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @RegisterMapper(AccountMapper.class)
 public abstract class AccountDAOImpl implements AccountDAO {
 
@@ -36,6 +38,14 @@ public abstract class AccountDAOImpl implements AccountDAO {
     }
 
     public Optional<Account> exists(final String email, final String password) {
+
+        checkNotNull(email, "Email can not be null");
+        checkNotNull(password, "Password can not be null");
+
+        if(password.length() == 0) {
+            LOGGER.warn("Password should never be empty.");
+            return Optional.absent();
+        }
 
         LOGGER.debug("Checking if account exists for email = {} with password length = {}", email, password.length());
 
