@@ -1,20 +1,15 @@
-metrics_enabled : false
+metrics_enabled : true
 librato:
    username: tim@sayhello.com
    api_key: 64ab12d5c69fa2b6873b7ace11aba06f4d8c93fa9b0cd7012a0cd2ba2f9c53ac
    reporting_interval_in_seconds: 30
 database:
-  # the name of your JDBC driver
   driverClass: org.postgresql.Driver
-
-  # the username
-  user: your postgresql username
-
-  # the password
-  password: your postgresql password
-
-  # the JDBC URL
-  url: jdbc:postgresql://localhost:5432/[your postgresql username]
+  user: ingress_user
+  password: hello ingress user
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
+  properties:
+    hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
   # any properties specific to your JDBC driver:
   properties:
@@ -52,15 +47,20 @@ logging:
 
     # Sets the level for 'com.example.app' to DEBUG.
     com.hello.suripu: DEBUG
-
 http:
     port: 5555
     adminPort: 5556
 
 dynamodb:
-  endpoint : http://localhost:7777
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   keyStoreTable: public_key_table
+
+motion_db:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  keyStoreTable: tracker_motion
+
 
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com

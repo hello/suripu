@@ -2,6 +2,7 @@ package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
 
 /**
  * Created by pangwu on 5/6/14.
@@ -47,5 +48,23 @@ public class TrackerMotion {
 
     public static float intToFloatValue(final int value){
         return value / FLOAT_TO_INT_CONVERTER;
+    }
+
+
+    @Override
+    public boolean equals(Object other){
+        if (other == null){
+            return false;
+        }
+
+        if (getClass() != other.getClass()){
+            return false;
+        }
+
+        final TrackerMotion convertedObject = (TrackerMotion) other;
+
+        return   Objects.equal(this.timestamp, convertedObject.timestamp)
+                && Objects.equal(this.value, convertedObject.value)
+                && Objects.equal(this.offsetMillis, convertedObject.offsetMillis);
     }
 }
