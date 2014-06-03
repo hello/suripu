@@ -1,7 +1,6 @@
 package com.hello.suripu.core.db;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
@@ -29,14 +28,15 @@ import static org.hamcrest.Matchers.is;
  */
 public class TrackerMotionDAODynamoDBTest {
 
-    private AWSCredentialsProvider awsCredentialsProvider;
+    private BasicAWSCredentials awsCredentials;
     private AmazonDynamoDBClient amazonDynamoDBClient;
     private TrackerMotionDAODynamoDB trackerMotionDAODynamoDB;
 
     @Before
     public void setUp(){
-        this.awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
-        this.amazonDynamoDBClient = new AmazonDynamoDBClient(this.awsCredentialsProvider);
+
+        this.awsCredentials = new BasicAWSCredentials("FAKE_AWS_KEY", "FAKE_AWS_SECRET");
+        this.amazonDynamoDBClient = new AmazonDynamoDBClient(this.awsCredentials);
         this.amazonDynamoDBClient.setEndpoint("http://localhost:7777");
 
         // TODO; set region here?
