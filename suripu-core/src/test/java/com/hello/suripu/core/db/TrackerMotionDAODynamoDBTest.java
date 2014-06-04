@@ -12,12 +12,14 @@ import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,6 +29,7 @@ import java.util.Map;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThan;
 
 /**
  * Created by pangwu on 5/30/14.
@@ -210,6 +213,29 @@ public class TrackerMotionDAODynamoDBTest {
             assertThat(actual.get(targetDate).size(), is(testData.get(targetDate).size()));
         }
 
+
+    }
+
+
+    @Test
+    public void testCompactness(){
+        InputProtos.TrackerDataBatch.Builder builder = InputProtos.TrackerDataBatch.newBuilder();
+        final DateTime startTime = DateTime.now().withTimeAtStartOfDay();
+        for(int i = 0; i < 24 * 60; i++){
+            final DateTime currentTime = startTime.plusMinutes(i);
+            InputProtos.TrackerDataBatch.TrackerData trackerData = InputProtos.TrackerDataBatch.TrackerData.newBuilder()
+                    .setTimestamp(currentTime.getMillis())
+                    .setOffsetMillis(Integer.MIN_VALUE)  // Store negative value need more space ??
+                    .setSvmNoGravity(Integer.MIN_VALUE)
+                    .build();
+            builder.addSamples(trackerData);
+        }
+
+        final InputProtos.TrackerDataBatch trackerDataBatch = builder.build();
+
+        final ByteBuffer byteBuffer = ByteBuffer.wrap(trackerDataBatch.toByteArray());
+        System.out.println(byteBuffer.array().length);
+        assertThat(byteBuffer.array().length, lessThan(64 * 1024 * 1024));
 
     }
 }

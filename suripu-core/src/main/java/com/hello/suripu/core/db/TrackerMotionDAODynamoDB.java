@@ -113,6 +113,8 @@ public class TrackerMotionDAODynamoDB {
                     }
 
                     final ByteBuffer byteBuffer = item.get(DATA_BLOB_ATTRIBUTE_NAME).getB();
+
+                    //System.out.println("Bin protobuf size: " + byteBuffer.array().length);
                     final String dateString = item.get(TARGET_DATE_ATTRIBUTE_NAME).getS();
 
                     if(!dateStrings.contains(dateString)){
@@ -136,6 +138,8 @@ public class TrackerMotionDAODynamoDB {
                         }
 
                         finalResult.put(dateString, resultForDate);
+
+                        //System.out.println("Actual model count: " + resultForDate.size());
                     } catch (InvalidProtocolBufferException e) {
 
                         LOGGER.error("{}", e.getStackTrace());
