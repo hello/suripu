@@ -16,6 +16,7 @@ import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -66,5 +67,28 @@ public class AccountResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Registration fakeRegistration() {
         return new Registration("John", "Doe", "john@example.com", "123456789", Gender.OTHER, 167.0f, 72.0f, 32, "America/Los_Angeles");
+    }
+
+    @PUT
+    @Timed
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response modify(
+            @Valid final Account account,
+            @Scope({OAuthScope.ADMINISTRATION_WRITE}) final AccessToken accessToken)
+    {
+        if(accessToken.accountId != account.id) {
+            LOGGER.warn("Account {} attempting to change account id = {}", accessToken.accountId, account.id);
+            return Response.status(Response.Status.FORBIDDEN).entity("Forbidden").type(MediaType.TEXT_PLAIN_TYPE).build();
+        }
+
+        if(account.email.isEmpty()) {
+            LOGGER.warn("Email was empty for account id = {}. Refusing to update account.");
+            return Response.status(Response.Status.BAD_REQUEST).type(MediaType.TEXT_PLAIN_TYPE).build();
+        }
+
+        accountDAO.update(account);
+
+        return Response.ok().build();
     }
 }

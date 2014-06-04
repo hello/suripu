@@ -1,6 +1,7 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
+import com.hello.suripu.core.db.binders.BindAccount;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Registration;
 import com.hello.suripu.core.db.binders.BindRegistration;
@@ -51,12 +52,21 @@ public abstract class AccountDAOImpl implements AccountDAO {
         }
 
 
-        final String passwordFromDB = accountOptional.get().passwordHash;
+        final String passwordFromDB = accountOptional.get().password;
         if(!BCrypt.checkpw(password, passwordFromDB)) {
             LOGGER.warn("Passwords don't match");
             // TODO: Add metrics here
             return Optional.absent();
         }
         return accountOptional;
+    }
+
+    @SqlUpdate("UPDATE accounts SET firstname=:firstname, lastname=:lastname, email=:email, height=:height, weight=:weight WHERE id=:id")
+    protected abstract Integer updateAccount(@BindAccount Account account);
+
+    public void update(final Account account) {
+
+        int updated = updateAccount(account);
+        LOGGER.debug("updated = {}", updated);
     }
 }
