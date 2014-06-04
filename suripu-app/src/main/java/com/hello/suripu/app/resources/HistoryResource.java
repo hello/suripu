@@ -1,5 +1,6 @@
 package com.hello.suripu.app.resources;
 
+import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -143,17 +144,21 @@ public class HistoryResource {
             }
         }
 
-        // Now we verified that the params passed by user are valid.
-        final ImmutableMap<DateTime, List<TrackerMotion>> result = this.trackerMotionDAODynamoDB.getTrackerMotionForDates(accessToken.accountId, dateToStringMapping.keySet());
-        final Map<String, List<TrackerMotion>> convertedResult = new HashMap<String, List<TrackerMotion>>();
-        for(final DateTime date:result.keySet()){
-            if(dateToStringMapping.containsKey(date)){
-                convertedResult.put(dateToStringMapping.get(date), result.get(date));
+        try {
+            // Now we verified that the params passed by user are valid.
+            final ImmutableMap<DateTime, List<TrackerMotion>> result = this.trackerMotionDAODynamoDB.getTrackerMotionForDates(accessToken.accountId, dateToStringMapping.keySet());
+            final Map<String, List<TrackerMotion>> convertedResult = new HashMap<String, List<TrackerMotion>>();
+            for (final DateTime date : result.keySet()) {
+                if (dateToStringMapping.containsKey(date)) {
+                    convertedResult.put(dateToStringMapping.get(date), result.get(date));
+                }
             }
-        }
 
-        final GetTrackerDataResponse response = new GetTrackerDataResponse(convertedResult);
-        return response;
+            final GetTrackerDataResponse response = new GetTrackerDataResponse(convertedResult);
+            return response;
+        }catch (AmazonServiceException ase){
+            throw new WebApplicationException(Response.serverError().build());
+        }
 
     }
 
