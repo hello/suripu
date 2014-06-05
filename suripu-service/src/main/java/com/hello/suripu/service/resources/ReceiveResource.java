@@ -1,18 +1,22 @@
 package com.hello.suripu.service.resources;
 
+import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.api.input.InputProtos.SimpleSensorBatch;
-import com.hello.suripu.core.models.DeviceAccountPair;
-import com.hello.suripu.core.models.KinesisLogger;
-import com.hello.suripu.core.models.TempTrackerData;
 import com.hello.suripu.core.crypto.CryptoHelper;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.TrackerMotionDAODynamoDB;
+import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.KinesisLogger;
+import com.hello.suripu.core.models.TempTrackerData;
+import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -36,6 +40,8 @@ import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,6 +57,7 @@ public class ReceiveResource {
     private final DeviceDAO deviceDAO;
     private final ScoreDAO scoreDAO;
     private final TrackerMotionDAO trackerMotionDAO;
+    private final TrackerMotionDAODynamoDB trackerMotionDAODynamoDB;
     private final PublicKeyStore publicKeyStore;
 
     private final KinesisLogger kinesisLogger;
@@ -60,12 +67,14 @@ public class ReceiveResource {
                            final DeviceDAO deviceDAO,
                            final ScoreDAO scoreDAO,
                            final TrackerMotionDAO trackerMotionDAO,
+                           final TrackerMotionDAODynamoDB trackerMotionDAODynamoDB,
                            final PublicKeyStore publicKeyStore,
                            final KinesisLogger kinesisLogger) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.scoreDAO = scoreDAO;
         this.trackerMotionDAO = trackerMotionDAO;
+        this.trackerMotionDAODynamoDB = trackerMotionDAODynamoDB;
         this.publicKeyStore = publicKeyStore;
         cryptoHelper = new CryptoHelper();
         this.kinesisLogger = kinesisLogger;
@@ -155,8 +164,24 @@ public class ReceiveResource {
             @Valid List<TempTrackerData> trackerData,
             @Scope({OAuthScope.API_INTERNAL_DATA_WRITE}) AccessToken accessToken) {
 
+        if(trackerData.size() == 0){
+            LOGGER.info("Account {} tries to upload empty payload.", accessToken.accountId);
+            return Response.ok().build();
+        }
+
+        final HashSet<DateTime> datesInUploadData = new HashSet<DateTime>();
+
         for(TempTrackerData tempTrackerData : trackerData) {
             final DateTime originalDateTime = new DateTime(tempTrackerData.timestamp, DateTimeZone.UTC);
+            int offsetMillis = -25200000;
+
+            // Get back the local time.
+            final DateTime localTime = new DateTime(tempTrackerData.timestamp, DateTimeZone.forOffsetMillis(offsetMillis));
+            final DateTime localStartOfDay = localTime.withTimeAtStartOfDay();
+
+            datesInUploadData.add(localStartOfDay);
+
+
             final DateTime roundedDateTimeUTC = new DateTime(
                     originalDateTime.getYear(),
                     originalDateTime.getMonthOfYear(),
@@ -171,7 +196,7 @@ public class ReceiveResource {
                         tempTrackerData.trackerId,
                         tempTrackerData.value,
                         roundedDateTimeUTC,
-                        -25200000 // OH YEAH THIS IS CALIFORNIA. OBVIOUSLY NOT VALID FOR ANYONE OUTSIDE THE OFFICE
+                        offsetMillis // OH YEAH THIS IS CALIFORNIA. OBVIOUSLY NOT VALID FOR ANYONE OUTSIDE THE OFFICE
                 );
             } catch (UnableToExecuteStatementException exception) {
                 Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
@@ -183,6 +208,29 @@ public class ReceiveResource {
                 LOGGER.warn("Duplicate sensor value for account_id = {}", accessToken.accountId);
             }
 
+        }
+
+        // Okay, now we get all the dates that updated by this upload, let's sync them into DynamoDB.
+        final LinkedList<TrackerMotion> dataToBeSync = new LinkedList<TrackerMotion>();
+
+        for(final DateTime date:datesInUploadData){
+            final DateTime startQueryTimestamp = date.withTimeAtStartOfDay();
+            final DateTime endQueryTimestamp = startQueryTimestamp.plusHours(23).plusMinutes(59).plusSeconds(59).plusMillis(999);
+
+            final ImmutableList<TrackerMotion> dataForThatDay = this.trackerMotionDAO.getBetween(
+                    accessToken.accountId,
+                    new DateTime(startQueryTimestamp.getMillis(), DateTimeZone.UTC),
+                    new DateTime(endQueryTimestamp.getMillis(), DateTimeZone.UTC)
+            );
+
+            dataToBeSync.addAll(dataForThatDay);
+        }
+
+        try {
+            this.trackerMotionDAODynamoDB.setTrackerMotions(accessToken.accountId, dataToBeSync);
+        }catch (AmazonServiceException ase){
+            LOGGER.error("Sync data to DynamoDB failed {}", ase.getErrorMessage());
+            return Response.serverError().build();
         }
 
         return Response.ok().build();

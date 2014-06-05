@@ -15,6 +15,7 @@ import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.PublicKeyStoreDynamoDB;
 import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.TrackerMotionDAODynamoDB;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.health.DynamoDbHealthCheck;
 import com.hello.suripu.core.health.KinesisHealthCheck;
@@ -31,6 +32,7 @@ import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
 import com.hello.suripu.service.cli.CreateDynamoDBTrackerTableCommand;
+import com.hello.suripu.service.cli.MigrateTrackerDataCommand;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
 import com.hello.suripu.service.db.DeviceDataDAO;
 import com.hello.suripu.service.resources.ReceiveResource;
@@ -61,6 +63,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
     public void initialize(Bootstrap<SuripuConfiguration> bootstrap) {
         bootstrap.addBundle(new DBIExceptionsBundle());
         bootstrap.addCommand(new CreateDynamoDBTrackerTableCommand());
+        bootstrap.addCommand(new MigrateTrackerDataCommand());
+        //bootstrap.addCommand(new DropTrackerDataTableCommand());
     }
 
     @Override
@@ -77,12 +81,18 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final ApplicationsDAO applicationsDAO = jdbi.onDemand(ApplicationsDAO.class);
         final ScoreDAO scoreDAO = jdbi.onDemand(ScoreDAO.class);
         final TrackerMotionDAO trackerMotionDAO = jdbi.onDemand(TrackerMotionDAO.class);
+
+
         final EventDAO eventDAO = jdbi.onDemand(EventDAO.class);
 
         // Checks Environment first and then instance profile.
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
 
         final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
+
+        final String motionDataTableName = configuration.getMotionDBConfiguration().getKeyStoreTable();
+        final TrackerMotionDAODynamoDB trackerMotionDAODynamoDB = new TrackerMotionDAODynamoDB(dynamoDBClient, motionDataTableName);
+
 
         final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider);
         kinesisClient.setEndpoint(configuration.getKinesisConfiguration().getEndpoint());
@@ -135,7 +145,10 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
         environment.addProvider(new OAuthProvider<AccessToken>(new OAuthAuthenticator(tokenStore), "protected-resources"));
 
-        environment.addResource(new ReceiveResource(dao, deviceDAO, scoreDAO, trackerMotionDAO, publicKeyStore, kinesisLogger));
+        environment.addResource(new ReceiveResource(dao, deviceDAO, scoreDAO,
+                trackerMotionDAO,
+                trackerMotionDAODynamoDB,
+                publicKeyStore, kinesisLogger));
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());
 

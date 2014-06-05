@@ -26,7 +26,6 @@ public class CreateDynamoDBTrackerTableCommand extends ConfiguredCommand<SuripuC
         super("create_motion_table", "Create dynamoDB tracker motion table");
     }
 
-
     @Override
     protected void run(Bootstrap<SuripuConfiguration> bootstrap, Namespace namespace, SuripuConfiguration configuration) throws Exception {
         final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
