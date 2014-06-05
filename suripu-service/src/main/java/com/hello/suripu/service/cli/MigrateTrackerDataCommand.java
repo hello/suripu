@@ -73,8 +73,9 @@ public class MigrateTrackerDataCommand extends ConfiguredCommand<SuripuConfigura
 
 
         final ImmutableList<TrackerMotion> oldDataFromPostgres = trackerMotionDAO.getBetween(accountId,
-                startDate.plusHours(12),
-                endDate.plusHours(12).plusDays(1));
+                startDate,
+                endDate.plusHours(23).plusMinutes(59).plusSeconds(59).plusMillis(999));
+
         trackerMotionDAODynamoDB.setTrackerMotions(accountId, oldDataFromPostgres);
         System.out.println("Migrate data for account_id: " + accountId + " from " + startDate + " to " + endDate + " succeeded");
 

@@ -8,6 +8,7 @@ import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
+import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.collect.ImmutableList;
@@ -16,6 +17,7 @@ import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,6 +41,7 @@ public class TrackerMotionDAODynamoDBTest {
     private BasicAWSCredentials awsCredentials;
     private AmazonDynamoDBClient amazonDynamoDBClient;
     private TrackerMotionDAODynamoDB trackerMotionDAODynamoDB;
+    private final String tableName = "tracker_motion_test";
 
     @Before
     public void setUp(){
@@ -46,18 +49,6 @@ public class TrackerMotionDAODynamoDBTest {
         this.awsCredentials = new BasicAWSCredentials("FAKE_AWS_KEY", "FAKE_AWS_SECRET");
         this.amazonDynamoDBClient = new AmazonDynamoDBClient(this.awsCredentials);
         this.amazonDynamoDBClient.setEndpoint("http://localhost:7777");
-
-        // TODO; set region here?
-        final String tableName = "tracker_motion_test";
-
-        final DeleteTableRequest deleteTableRequest = new DeleteTableRequest()
-                .withTableName(tableName);
-        try {
-            this.amazonDynamoDBClient.deleteTable(deleteTableRequest);
-        }catch (ResourceNotFoundException ex){
-
-        }
-
 
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
@@ -76,12 +67,27 @@ public class TrackerMotionDAODynamoDBTest {
                 .withReadCapacityUnits(1L)
                 .withWriteCapacityUnits(1L));
 
-        this.amazonDynamoDBClient.createTable(request);
+        try {
+            this.amazonDynamoDBClient.createTable(request);
 
-        this.trackerMotionDAODynamoDB = new TrackerMotionDAODynamoDB(
-                this.amazonDynamoDBClient,
-                tableName
-        );
+            this.trackerMotionDAODynamoDB = new TrackerMotionDAODynamoDB(
+                    this.amazonDynamoDBClient,
+                    tableName
+            );
+        }catch (ResourceInUseException rie){
+            rie.printStackTrace();
+        }
+    }
+
+    @After
+    public void cleanUp(){
+        final DeleteTableRequest deleteTableRequest = new DeleteTableRequest()
+                .withTableName(tableName);
+        try {
+            this.amazonDynamoDBClient.deleteTable(deleteTableRequest);
+        }catch (ResourceNotFoundException ex){
+            ex.printStackTrace();
+        }
     }
 
 
@@ -98,7 +104,7 @@ public class TrackerMotionDAODynamoDBTest {
                         startTime.plusMinutes(1).getMillis(),11, DateTimeZone.getDefault().getOffset(startTime.plusMinutes(1))));
 
         this.trackerMotionDAODynamoDB.setTrackerMotions(accountId, testData);
-        final ImmutableList<TrackerMotion> actual = this.trackerMotionDAODynamoDB.getTrackerMotionForDate(accountId, startTime.minusDays(1));
+        final ImmutableList<TrackerMotion> actual = this.trackerMotionDAODynamoDB.getTrackerMotionForDate(accountId, startTime);
 
         assertThat(actual, containsInAnyOrder(testData.toArray(new TrackerMotion[0])));
         assertThat(actual.size(), is(testData.size()));
@@ -109,8 +115,8 @@ public class TrackerMotionDAODynamoDBTest {
                 startTime.plusDays(1).plusMinutes(1).getMillis(),11, DateTimeZone.getDefault().getOffset(startTime.plusDays(1).plusMinutes(1))));
         this.trackerMotionDAODynamoDB.setTrackerMotions(accountId, testDataCrossDays);
         this.trackerMotionDAODynamoDB.setTrackerMotions(accountId, testDataCrossDays);
-        final ImmutableList<TrackerMotion> dataFromDay1 = this.trackerMotionDAODynamoDB.getTrackerMotionForDate(accountId, startTime.minusDays(1));
-        final ImmutableList<TrackerMotion> dataFromDay2 = this.trackerMotionDAODynamoDB.getTrackerMotionForDate(accountId, startTime);
+        final ImmutableList<TrackerMotion> dataFromDay1 = this.trackerMotionDAODynamoDB.getTrackerMotionForDate(accountId, startTime);
+        final ImmutableList<TrackerMotion> dataFromDay2 = this.trackerMotionDAODynamoDB.getTrackerMotionForDate(accountId, startTime.plusDays(1));
 
         final ArrayList<TrackerMotion> actualForCrossDayTest = new ArrayList<TrackerMotion>();
         actualForCrossDayTest.addAll(dataFromDay1);
@@ -131,7 +137,7 @@ public class TrackerMotionDAODynamoDBTest {
                 startTime.plusMinutes(1).getMillis(),11, DateTimeZone.getDefault().getOffset(startTime.plusMinutes(1))));
 
         this.trackerMotionDAODynamoDB.setTrackerMotions(accountId, testData);
-        final ImmutableList<TrackerMotion> actual = this.trackerMotionDAODynamoDB.getBetween(accountId, startTime.minusDays(2), startTime.minusDays(1));
+        final ImmutableList<TrackerMotion> actual = this.trackerMotionDAODynamoDB.getBetween(accountId, startTime.minusDays(1), startTime.plusMinutes(1));
 
         assertThat(actual, containsInAnyOrder(testData.toArray(new TrackerMotion[0])));
         assertThat(actual.size(), is(testData.size()));
@@ -142,15 +148,16 @@ public class TrackerMotionDAODynamoDBTest {
                 startTime.plusDays(1).plusMinutes(1).getMillis(),12, DateTimeZone.getDefault().getOffset(startTime.plusDays(1).plusMinutes(1))));
         this.trackerMotionDAODynamoDB.setTrackerMotions(accountId, testDataCrossDays);
 
-        final ImmutableList<TrackerMotion> actualForCrossDayTest = this.trackerMotionDAODynamoDB.getBetween(accountId, startTime.minusDays(2), startTime);
+        final ImmutableList<TrackerMotion> actualForCrossDayTest = this.trackerMotionDAODynamoDB.getBetween(accountId, startTime.minusDays(1), startTime.plusDays(1).plusMinutes(1));
 
         assertThat(actualForCrossDayTest, containsInAnyOrder(testDataCrossDays.toArray()));
         assertThat(testDataCrossDays.size(), is(actualForCrossDayTest.size()));
 
-        final ImmutableList<TrackerMotion> actualJustQueryOneDay = this.trackerMotionDAODynamoDB.getBetween(accountId, startTime.minusDays(1), startTime.minusDays(1));
+        final ImmutableList<TrackerMotion> actualJustQueryOneDay = this.trackerMotionDAODynamoDB.getBetween(accountId, startTime, startTime);
 
-        assertThat(actualJustQueryOneDay, containsInAnyOrder(testData.toArray()));
-        assertThat(testData.size(), is(actualJustQueryOneDay.size()));
+        final TrackerMotion[] arrayHasOnlyFirstData = new TrackerMotion[]{ testData.get(0) };
+        assertThat(actualJustQueryOneDay, containsInAnyOrder(arrayHasOnlyFirstData));
+        assertThat(arrayHasOnlyFirstData.length, is(actualJustQueryOneDay.size()));
 
     }
 
@@ -168,7 +175,7 @@ public class TrackerMotionDAODynamoDBTest {
                 startTime.plusMinutes(1).getMillis(),11,
                 DateTimeZone.getDefault().getOffset(startTime.plusMinutes(1))));
 
-        testData.put(startTime.minusDays(1), dataForDay1);
+        testData.put(startTime, dataForDay1);
 
         this.trackerMotionDAODynamoDB.setTrackerMotions(accountId, dataForDay1);
 
@@ -180,7 +187,7 @@ public class TrackerMotionDAODynamoDBTest {
         this.trackerMotionDAODynamoDB.setTrackerMotions(accountId, dataForDay2);
 
         final List<DateTime> dates = new ArrayList<DateTime>();
-        dates.add(startTime.minusDays(1));
+        dates.add(startTime);
 
         ImmutableMap<DateTime, List<TrackerMotion>> actual = this.trackerMotionDAODynamoDB.getTrackerMotionForDates(accountId, dates);
 
@@ -189,8 +196,8 @@ public class TrackerMotionDAODynamoDBTest {
             assertThat(actual.get(targetDate).size(), is(testData.get(targetDate).size()));
         }
 
-        testData.put(startTime, dataForDay2);
-        dates.add(startTime);
+        testData.put(startTime.plusDays(1), dataForDay2);
+        dates.add(startTime.plusDays(1));
 
 
         final ImmutableList<TrackerMotion> actualDebug = this.trackerMotionDAODynamoDB.getTrackerMotionForDate(accountId, startTime);
@@ -235,7 +242,9 @@ public class TrackerMotionDAODynamoDBTest {
 
         final ByteBuffer byteBuffer = ByteBuffer.wrap(trackerDataBatch.toByteArray());
         System.out.println(byteBuffer.array().length);
-        assertThat(byteBuffer.array().length, lessThan(64 * 1024 * 1024));
+
+        int maxDataSizePerAttribute = 64 * 1024 * 1024; // The max dtaa size imposed by DynamoDB
+        assertThat(byteBuffer.array().length, lessThan(maxDataSizePerAttribute));
 
     }
 }

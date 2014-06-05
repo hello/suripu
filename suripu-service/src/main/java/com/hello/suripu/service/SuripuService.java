@@ -64,6 +64,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         bootstrap.addBundle(new DBIExceptionsBundle());
         bootstrap.addCommand(new CreateDynamoDBTrackerTableCommand());
         bootstrap.addCommand(new MigrateTrackerDataCommand());
+        //bootstrap.addCommand(new DropTrackerDataTableCommand());
     }
 
     @Override

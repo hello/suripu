@@ -26,7 +26,6 @@ import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,7 +46,11 @@ public class TrackerMotionDAODynamoDB {
 
     public final static String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
     public final static String TARGET_DATE_ATTRIBUTE_NAME = "target_date_utc_timestamp";
-    private final static String DATA_BLOB_ATTRIBUTE_NAME = "json_data_blob";
+    public final static String DATA_BLOB_ATTRIBUTE_NAME = "data_blob";
+
+    public final static int MAX_REQUEST_DAYS = 31;
+    public final static int MAX_UPLOAD_DATA_COUNT = 4 * 24 * 60;  // Does not allow upload more than 4 days data.
+    public final static int MAX_RETRY_COUNT = 5;
 
 
     public TrackerMotionDAODynamoDB(final AmazonDynamoDBClient amazonDynamoDBClient,
@@ -57,15 +60,18 @@ public class TrackerMotionDAODynamoDB {
 
     }
 
+    /*
+    * Get tracker data for maybe not consecutive days, internal use only
+     */
     private ImmutableMap<String, List<TrackerMotion>> getTrackerMotionForDateStrings(long accountId, final Collection<String> dateStrings){
-        if(dateStrings.size() > 31){
+        if(dateStrings.size() > MAX_REQUEST_DAYS){
             return ImmutableMap.copyOf(Collections.<String, List<TrackerMotion>>emptyMap());
         }
 
         final Map<String, List<TrackerMotion>> finalResult = new HashMap<String, List<TrackerMotion>>();
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
 
-        String[] sortedDateStrings = dateStrings.toArray(new String[0]);
+        final String[] sortedDateStrings = dateStrings.toArray(new String[0]);
         Arrays.sort(sortedDateStrings);
 
         final String startDateString = sortedDateStrings[0];
@@ -99,7 +105,7 @@ public class TrackerMotionDAODynamoDB {
                     .withTableName(this.tableName)
                     .withKeyConditions(queryConditions)
                     .withAttributesToGet(TARGET_DATE_ATTRIBUTE_NAME, DATA_BLOB_ATTRIBUTE_NAME)
-                    .withLimit(10)
+                    .withLimit(MAX_REQUEST_DAYS)
                     .withExclusiveStartKey(lastEvaluatedKey);
 
             final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
@@ -141,8 +147,7 @@ public class TrackerMotionDAODynamoDB {
 
                         //System.out.println("Actual model count: " + resultForDate.size());
                     } catch (InvalidProtocolBufferException e) {
-
-                        LOGGER.error("{}", e.getStackTrace());
+                        LOGGER.error("Corrupted data for account_id: {}, date: {}, {}", accountId, dateString, e.getMessage());
                     }
                 }
             }
@@ -223,9 +228,12 @@ public class TrackerMotionDAODynamoDB {
 
             return ImmutableList.copyOf(resultData);
 
-        } catch (IOException e) {
+        } catch (InvalidProtocolBufferException e) {
 
-            LOGGER.error("{}", e.getStackTrace());
+            LOGGER.error("Error in deserializing data for account {}, date {}, error: {}",
+                    accountId,
+                    targetDateString,
+                    e.getMessage());
         }
 
         return ImmutableList.copyOf(Collections.<TrackerMotion>emptyList());
@@ -243,7 +251,7 @@ public class TrackerMotionDAODynamoDB {
             return ImmutableList.copyOf(Collections.<TrackerMotion>emptyList());
         }
 
-        if(endTimestampLocal.getMillis() > startTimestampLocal.plusDays(31).getMillis()){
+        if(endTimestampLocal.getMillis() > startTimestampLocal.plusDays(MAX_REQUEST_DAYS).getMillis()){
             return ImmutableList.copyOf(Collections.<TrackerMotion>emptyList());
         }
 
@@ -276,7 +284,7 @@ public class TrackerMotionDAODynamoDB {
                     .withTableName(this.tableName)
                     .withKeyConditions(queryConditions)
                     .withAttributesToGet(DATA_BLOB_ATTRIBUTE_NAME)
-                    .withLimit(10)
+                    .withLimit(MAX_REQUEST_DAYS)
                     .withExclusiveStartKey(lastEvaluatedKey);
 
             final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
@@ -293,25 +301,32 @@ public class TrackerMotionDAODynamoDB {
                     try {
                         final InputProtos.TrackerDataBatch trackerDataBatch = InputProtos.TrackerDataBatch.parseFrom(byteBuffer.array());
                         final List<InputProtos.TrackerDataBatch.TrackerData> dataList = trackerDataBatch.getSamplesList();
+
                         for(final InputProtos.TrackerDataBatch.TrackerData datum:dataList){
-                            TrackerMotion trackerMotion = new TrackerMotion(
-                                    -1,
-                                    accountId,
-                                    "",
-                                    datum.getTimestamp(),
-                                    datum.getSvmNoGravity(),
-                                    datum.getOffsetMillis());
-                            finalResult.add(trackerMotion);
+                            if(datum.getTimestamp() >= startTimestampLocal.getMillis() &&
+                                    datum.getTimestamp() <= endTimestampLocal.getMillis()) {
+                                TrackerMotion trackerMotion = new TrackerMotion(
+                                        -1,
+                                        accountId,
+                                        "",
+                                        datum.getTimestamp(),
+                                        datum.getSvmNoGravity(),
+                                        datum.getOffsetMillis());
+                                finalResult.add(trackerMotion);
+                            }
                         }
                     } catch (InvalidProtocolBufferException e) {
-
-                        LOGGER.error("{}", e.getStackTrace());
+                        LOGGER.error("Error in deserializing data for account {}, date range {}-{}, error: {}",
+                                accountId,
+                                queryStartDateLocal.toString(DateTimeFormatString.FORMAT_TO_DAY),
+                                queryEndDateLocal.toString(DateTimeFormatString.FORMAT_TO_DAY),
+                                e.getMessage());
                     }
                 }
             }
             lastEvaluatedKey = queryResult.getLastEvaluatedKey();
             loopCount++;
-        }while (lastEvaluatedKey != null && loopCount < 30);
+        }while (lastEvaluatedKey != null && loopCount <= MAX_RETRY_COUNT);
 
         return ImmutableList.copyOf(finalResult);
     }
@@ -319,9 +334,9 @@ public class TrackerMotionDAODynamoDB {
 
     public void setTrackerMotions(long accountId, final List<TrackerMotion> data) {
         if(data.size() == 0){
+            LOGGER.info("Empty motion data for account_id = {}", accountId);
             return;
         }
-
 
         final HashMap<String, InputProtos.TrackerDataBatch.Builder> groupedData =
                 new HashMap<String, InputProtos.TrackerDataBatch.Builder>();
@@ -330,14 +345,19 @@ public class TrackerMotionDAODynamoDB {
         for(final TrackerMotion datum:data){
             final DateTime localTime = new DateTime(datum.timestamp, DateTimeZone.forOffsetMillis(datum.offsetMillis));
 
-            final DateTime localStartOfDay = localTime.withTimeAtStartOfDay();
-
             String dateKey = localTime.toString(DateTimeFormatString.FORMAT_TO_DAY);
+
+            /*
+            * DO NOT cut off by noon because the firmware cut off data at midnight.
+            *
+            final DateTime localStartOfDay = localTime.withTimeAtStartOfDay();
 
             if(localTime.getMillis() < localStartOfDay.plusHours(12).getMillis()){
                 // If the data is collected before noon, this is the data of previous day.
                 dateKey = localTime.minusDays(1).toString(DateTimeFormatString.FORMAT_TO_DAY);
             }
+            */
+
 
             if(!groupedData.containsKey(dateKey)){
                 groupedData.put(dateKey, InputProtos.TrackerDataBatch.newBuilder());
@@ -382,7 +402,12 @@ public class TrackerMotionDAODynamoDB {
             result = this.dynamoDBClient.batchWriteItem(batchWriteItemRequest);
             requestItems = result.getUnprocessedItems();
             callCount++;
-        } while (result.getUnprocessedItems().size() > 0 && callCount < 100);
+        } while (result.getUnprocessedItems().size() > 0 && callCount <= MAX_RETRY_COUNT);
+
+        if(result.getUnprocessedItems().size() > 0){
+            LOGGER.error("Account: {} tries to upload large data, data size: {}", accountId, data.size());
+            throw new RuntimeException("data is too large");
+        }
 
 
 

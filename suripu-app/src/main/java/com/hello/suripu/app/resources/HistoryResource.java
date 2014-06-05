@@ -157,6 +157,7 @@ public class HistoryResource {
             final GetTrackerDataResponse response = new GetTrackerDataResponse(convertedResult);
             return response;
         }catch (AmazonServiceException ase){
+            LOGGER.error("Amazon Service error: {}", ase.getErrorMessage());
             throw new WebApplicationException(Response.serverError().build());
         }
 
