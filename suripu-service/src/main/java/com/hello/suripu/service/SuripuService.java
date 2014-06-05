@@ -90,7 +90,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
         final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
 
-        final String motionDataTableName = configuration.getMotionDBConfiguration().getKeyStoreTable();
+        final String motionDataTableName = configuration.getMotionDBConfiguration().getTableName();
         final TrackerMotionDAODynamoDB trackerMotionDAODynamoDB = new TrackerMotionDAODynamoDB(dynamoDBClient, motionDataTableName);
 
 
@@ -104,7 +104,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
         final PublicKeyStore publicKeyStore = new PublicKeyStoreDynamoDB(
                 dynamoDBClient,
-                configuration.getDynamoDBConfiguration().getKeyStoreTable()
+                configuration.getDynamoDBConfiguration().getTableName()
         );
 
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);

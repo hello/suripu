@@ -27,7 +27,7 @@ public class CreateTableCommand extends ConfiguredCommand<SuripuFactoryConfigura
         final AWSCredentialsProvider awsCredentialsProvider= new EnvironmentVariableCredentialsProvider();
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
         client.setEndpoint(configuration.getDynamoDBConfiguration().getEndpoint());
-        final String tableName = configuration.getDynamoDBConfiguration().getKeyStoreTable();
+        final String tableName = configuration.getDynamoDBConfiguration().getTableName();
 
         final String hashKey = "device_id";
 

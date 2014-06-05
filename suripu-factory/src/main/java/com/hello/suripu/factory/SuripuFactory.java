@@ -41,7 +41,7 @@ public class SuripuFactory extends Service<SuripuFactoryConfiguration>{
 
         final PublicKeyStore publicKeyStore = new PublicKeyStoreDynamoDB(
                 dynamoDBClient,
-                configuration.getDynamoDBConfiguration().getKeyStoreTable()
+                configuration.getDynamoDBConfiguration().getTableName()
         );
 
         environment.addResource(new FactoryResource(publicKeyStore));

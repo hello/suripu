@@ -52,7 +52,7 @@ public class MigrateTrackerDataCommand extends ConfiguredCommand<SuripuConfigura
         final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
 
         dynamoDBClient.setEndpoint(configuration.getMotionDBConfiguration().getEndpoint());
-        final String tableName = configuration.getMotionDBConfiguration().getKeyStoreTable();
+        final String tableName = configuration.getMotionDBConfiguration().getTableName();
 
         final TrackerMotionDAODynamoDB trackerMotionDAODynamoDB = new TrackerMotionDAODynamoDB(dynamoDBClient, tableName);
 

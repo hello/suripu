@@ -63,4 +63,4 @@ logging:
 motion_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  keyStoreTable: tracker_motion
+  table_name: tracker_motion
