@@ -84,7 +84,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AmazonDynamoDBClient amazonDynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
         amazonDynamoDBClient.setEndpoint(config.getMotionDBConfiguration().getEndpoint());
 
-        final TrackerMotionDAODynamoDB trackerMotionDAODynamoDB = new TrackerMotionDAODynamoDB(amazonDynamoDBClient, config.getMotionDBConfiguration().getKeyStoreTable());
+        final TrackerMotionDAODynamoDB trackerMotionDAODynamoDB = new TrackerMotionDAODynamoDB(amazonDynamoDBClient, config.getMotionDBConfiguration().getTableName());
 
 
         if(config.getMetricsEnabled()) {

@@ -28,8 +28,8 @@ public class DynamoDBConfiguration extends Configuration{
 
     @Valid
     @NotNull
-    @JsonProperty("keyStoreTable")
-    private String keyStoreTable;
+    @JsonProperty("table_name")
+    private String tableName;
 
-    public String getKeyStoreTable(){ return keyStoreTable; }
+    public String getTableName(){ return tableName; }
 }

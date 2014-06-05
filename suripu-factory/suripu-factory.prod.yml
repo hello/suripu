@@ -34,7 +34,7 @@ database:
 dynamodb:
   endpoint: http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  keyStoreTable: public_key_table
+  table_name: public_key_table
 
 http:
     port: 6666

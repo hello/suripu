@@ -26,7 +26,7 @@ public class DropTrackerDataTableCommand extends ConfiguredCommand<SuripuConfigu
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
 
         client.setEndpoint(configuration.getMotionDBConfiguration().getEndpoint());
-        final String tableName = configuration.getMotionDBConfiguration().getKeyStoreTable();
+        final String tableName = configuration.getMotionDBConfiguration().getTableName();
 
         final DeleteTableRequest deleteTableRequest = new DeleteTableRequest()
                 .withTableName(tableName);
