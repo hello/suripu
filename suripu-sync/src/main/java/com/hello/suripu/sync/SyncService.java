@@ -36,7 +36,7 @@ public class SyncService extends Service<SyncConfiguration> {
 
         final PublicKeyStore publicKeyStore = new PublicKeyStoreDynamoDB(
                 dynamoDBClient,
-                configuration.getDynamoDBConfiguration().getKeyStoreTable()
+                configuration.getDynamoDBConfiguration().getTableName()
         );
 
         environment.addResource(new SyncResource());

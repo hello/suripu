@@ -26,14 +26,13 @@ public class CreateDynamoDBTrackerTableCommand extends ConfiguredCommand<SuripuC
         super("create_motion_table", "Create dynamoDB tracker motion table");
     }
 
-
     @Override
     protected void run(Bootstrap<SuripuConfiguration> bootstrap, Namespace namespace, SuripuConfiguration configuration) throws Exception {
         final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
 
         client.setEndpoint(configuration.getMotionDBConfiguration().getEndpoint());
-        final String tableName = configuration.getMotionDBConfiguration().getKeyStoreTable();
+        final String tableName = configuration.getMotionDBConfiguration().getTableName();
 
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 

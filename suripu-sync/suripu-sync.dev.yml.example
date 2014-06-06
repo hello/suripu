@@ -1,7 +1,7 @@
 dynamodb:
   endpoint : http://localhost:7777
   region: us-east-1
-  keyStoreTable: public_key_table
+  table_name: public_key_table
 
 http:
     port: 2222
