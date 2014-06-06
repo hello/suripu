@@ -5,6 +5,7 @@ import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Registration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,12 +44,17 @@ public class InMemoryAccountDAOImpl implements AccountDAO{
 
     public Optional<Account> exists(final String email, final String password) {
         for(Map.Entry<Long, Account> entry : store.entrySet()) {
-            if (entry.getValue().email.equals(email) && entry.getValue().passwordHash.equals(password)) {
+            if (entry.getValue().email.equals(email) && entry.getValue().password.equals(password)) {
                 return Optional.of(entry.getValue());
             }
         }
 
         LOGGER.warn("No user found for email = {} and password = {}", email, password);
         return Optional.absent();
+    }
+
+    @Override
+    public boolean update(Account account) {
+        throw new NotImplementedException();
     }
 }

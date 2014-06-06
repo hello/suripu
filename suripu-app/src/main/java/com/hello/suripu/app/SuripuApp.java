@@ -18,16 +18,19 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.TimeSerieDAO;
+import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.TrackerMotionDAODynamoDB;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
-import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthAuthenticator;
 import com.hello.suripu.core.oauth.OAuthProvider;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
+import com.hello.suripu.core.util.CustomJSONExceptionMapper;
+import com.hello.suripu.core.util.DropwizardServiceUtil;
 import com.librato.metrics.LibratoReporter;
+import com.sun.jersey.api.core.ResourceConfig;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
@@ -119,6 +122,14 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         }
 
         environment.addProvider(new OAuthProvider<AccessToken>(new OAuthAuthenticator(accessTokenStore), "protected-resources"));
+
+
+
+        // Custom JSON handling for responses.
+        final ResourceConfig jrConfig = environment.getJerseyResourceConfig();
+        DropwizardServiceUtil.deregisterDWSingletons(jrConfig);
+        environment.addProvider(new CustomJSONExceptionMapper(Boolean.TRUE));
+
 
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO));
         environment.addResource(new AccountResource(accountDAO));

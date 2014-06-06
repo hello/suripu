@@ -10,5 +10,6 @@ public interface AccountDAO {
     Optional<Account> getByEmail(final String email);
     Account register(Registration registration);
     Optional<Account> exists(final String email, final String password);
+    boolean update(final Account account);
 
 }
