@@ -7,7 +7,6 @@ import com.hello.suripu.app.resources.HistoryResource;
 import com.hello.suripu.app.resources.OAuthResource;
 import com.hello.suripu.app.resources.ScoreResource;
 import com.hello.suripu.app.resources.SleepLabelResource;
-import com.hello.suripu.core.util.CustomJSONExceptionMapper;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
@@ -24,6 +23,7 @@ import com.hello.suripu.core.oauth.OAuthAuthenticator;
 import com.hello.suripu.core.oauth.OAuthProvider;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
+import com.hello.suripu.core.util.CustomJSONExceptionMapper;
 import com.hello.suripu.core.util.DropwizardServiceUtil;
 import com.librato.metrics.LibratoReporter;
 import com.sun.jersey.api.core.ResourceConfig;
@@ -116,7 +116,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         // Custom JSON handling for responses.
         final ResourceConfig jrConfig = environment.getJerseyResourceConfig();
         DropwizardServiceUtil.deregisterDWSingletons(jrConfig);
-        environment.addProvider(new CustomJSONExceptionMapper(Boolean.TRUE).throwableExceptionMapper);
+        environment.addProvider(new CustomJSONExceptionMapper(Boolean.TRUE));
 
 
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO));

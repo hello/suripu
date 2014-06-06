@@ -73,12 +73,13 @@ public abstract class AccountDAOImpl implements AccountDAO {
         return accountOptional;
     }
 
-    @SqlUpdate("UPDATE accounts SET firstname=:firstname, lastname=:lastname, email=:email, height=:height, weight=:weight WHERE id=:id")
+    @SqlUpdate("UPDATE accounts SET firstname=:firstname, lastname=:lastname, email=:email, height=:height, weight=:weight WHERE id=:id;")
     protected abstract Integer updateAccount(@BindAccount Account account);
 
-    public void update(final Account account) {
 
+    public boolean update(final Account account) {
         int updated = updateAccount(account);
-        LOGGER.debug("updated = {}", updated);
+        LOGGER.debug("{} row updated for account_id = {}", updated, account.id);
+        return Boolean.TRUE ? (updated == 1) : Boolean.FALSE;
     }
 }

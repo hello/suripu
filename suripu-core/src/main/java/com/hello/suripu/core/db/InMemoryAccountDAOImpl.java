@@ -54,7 +54,7 @@ public class InMemoryAccountDAOImpl implements AccountDAO{
     }
 
     @Override
-    public void update(Account account) {
+    public boolean update(Account account) {
         throw new NotImplementedException();
     }
 }

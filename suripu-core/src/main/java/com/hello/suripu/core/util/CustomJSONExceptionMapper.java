@@ -1,9 +1,10 @@
 package com.hello.suripu.core.util;
 
-import com.yammer.dropwizard.validation.InvalidEntityException;
+import com.sun.jersey.api.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -11,7 +12,8 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 @Provider
-public class CustomJSONExceptionMapper {
+@Produces(MediaType.APPLICATION_JSON)
+public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CustomJSONExceptionMapper.class);
 
     private final Boolean debug;
@@ -21,10 +23,11 @@ public class CustomJSONExceptionMapper {
     }
 
     public CustomJSONExceptionMapper() {
-        this.debug = Boolean.FALSE;
+        this(Boolean.FALSE);
     }
 
     private static class Error {
+
         public final Integer code;
         public final String message;
 
@@ -34,115 +37,89 @@ public class CustomJSONExceptionMapper {
         }
     }
 
-    private Response handleWebApplicationException(Exception exception, Response defaultResponse) {
+    private final static Error notFoundError = new Error(404, "Not found.");
+    private final static Error notAuthorized = new Error(401, "Not authorized.");
+
+
+
+    @Override
+    public Response toResponse(Throwable throwable) {
+        final Response defaultResponse = Response
+                .serverError()
+                .entity(new Error(500, "Server Error"))
+                .type(MediaType.APPLICATION_JSON)
+                .build();
+
+        if(throwable instanceof WebApplicationException) {
+            return handleWebApplicationException(throwable, defaultResponse);
+        }
+
+
+        if(throwable.getClass().getName().startsWith("com.fasterxml.jackson")) {
+
+            final String message = (debug) ? throwable.getCause().getMessage() : "Bad request.";
+            final Error error = new Error(Response.Status.BAD_REQUEST.getStatusCode(), message);
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(error)
+                    .type(MediaType.APPLICATION_JSON)
+                    .build();
+        }
+
+
+        if(throwable instanceof NotFoundException) {
+            final Error error = new Error(Response.Status.BAD_REQUEST.getStatusCode(), "Not found.");
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(error)
+                    .type(MediaType.APPLICATION_JSON)
+                    .build();
+        }
+
+        if(throwable.getClass().getName().startsWith("com.sun.jersey.api")) {
+//                    final String message = throwable.
+            LOGGER.error("{}", throwable);
+        }
+
+        // Use the default
+        LOGGER.error("{}: {}", throwable.getClass().getName(), throwable.getMessage());
+        return defaultResponse;
+    }
+
+    /**
+     * If we have a Webapplication Exception, let's make our error look nice
+     * @param exception
+     * @param defaultResponse
+     * @return
+     */
+    private Response handleWebApplicationException(Throwable exception, Response defaultResponse) {
         WebApplicationException webAppException = (WebApplicationException) exception;
 
-        // No logging
         if (webAppException.getResponse().getStatus() == 401) {
             return Response
                     .status(Response.Status.UNAUTHORIZED)
-                    .entity("")
+                    .entity(notAuthorized)
+                    .type(MediaType.APPLICATION_JSON)
                     .build();
         }
         if (webAppException.getResponse().getStatus() == 404) {
             return Response
                     .status(Response.Status.NOT_FOUND)
-                    .entity("")
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(notFoundError)
                     .build();
         }
 
         if (webAppException.getResponse().getStatus() == 400) {
             return Response
                     .status(Response.Status.BAD_REQUEST)
-                    .entity("")
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(new Error(400, webAppException.getResponse().getEntity().toString()))
                     .build();
         }
 
-        // Debug logging
 
-        // Warn logging
 
-        // Error logging
-        LOGGER.error("{}", exception.getMessage());
+        LOGGER.error("WebApplicationException not caught: {} {}", webAppException.getResponse().getStatus(), webAppException.getMessage());
 
         return defaultResponse;
     }
-
-    public ExceptionMapper<InvalidEntityException> invalidEntityExceptionExceptionMapper = new ExceptionMapper<InvalidEntityException>() {
-
-        @Override
-        public Response toResponse(InvalidEntityException invalid) {
-
-            // Build default response
-            final Response defaultResponse = Response
-                    .status(Response.Status.BAD_REQUEST)
-                    .entity(invalid.getErrors())
-                    .type(MediaType.APPLICATION_JSON)
-                    .build();
-
-            LOGGER.error("{}", invalid.getErrors());
-            return defaultResponse;
-
-        }
-    };
-
-
-    public ExceptionMapper<RuntimeException> runtimeExceptionExceptionMapper = new ExceptionMapper<RuntimeException>() {
-
-        @Override
-        public Response toResponse(RuntimeException runtime) {
-
-            // Build default response
-            Response defaultResponse = Response
-                    .serverError()
-                    .entity("Runtime server error")
-                    .type(MediaType.TEXT_PLAIN_TYPE)
-                    .build();
-
-            // Check for any specific handling
-//            if (runtime instanceof WebApplicationException) {
-//
-//                return handleWebApplicationException(runtime, defaultResponse);
-//            }
-
-            // Use the default
-            LOGGER.error("{}",runtime.getMessage());
-            return defaultResponse;
-
-        }
-    };
-
-    public ExceptionMapper<Throwable> throwableExceptionMapper = new ExceptionMapper<Throwable>() {
-
-        @Override
-        public Response toResponse(Throwable throwable) {
-
-            if(throwable.getClass().getName().startsWith("com.fasterxml.jackson")) {
-
-                final String message = (debug) ? throwable.getCause().getMessage() : "Bad request.";
-                final Error error = new Error(Response.Status.BAD_REQUEST.getStatusCode(), message);
-                return Response.status(Response.Status.BAD_REQUEST)
-                        .entity(error)
-                        .type(MediaType.APPLICATION_JSON)
-                        .build();
-            }
-            // Build default response
-            final Response defaultResponse = Response
-                    .serverError()
-                    .entity(new Error(500, "Server Error"))
-                    .type(MediaType.APPLICATION_JSON)
-                    .build();
-
-            // Check for any specific handling
-//            if (runtime instanceof WebApplicationException) {
-//
-//                return handleWebApplicationException(runtime, defaultResponse);
-//            }
-
-            // Use the default
-            LOGGER.error("{}",throwable.getMessage());
-            return defaultResponse;
-
-        }
-    };
 }
