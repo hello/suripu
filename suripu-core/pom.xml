@@ -37,6 +37,11 @@
             <artifactId>suripu-api</artifactId>
             <version>0.1.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>org.xerial.snappy</groupId>
+            <artifactId>snappy-java</artifactId>
+            <version>1.1.1-M1</version>
+        </dependency>
 
     </dependencies>
 </project>

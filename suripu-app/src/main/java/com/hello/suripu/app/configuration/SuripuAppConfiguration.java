@@ -48,4 +48,13 @@ public class SuripuAppConfiguration extends Configuration {
     public DynamoDBConfiguration getMotionDBConfiguration() {
         return this.motionDBConfiguration;
     }
+
+
+    @Valid
+    @NotNull
+    @JsonProperty("event_db")
+    private DynamoDBConfiguration eventDBConfiguration;
+    public DynamoDBConfiguration getEventDBConfiguration(){
+        return this.eventDBConfiguration;
+    }
 }
