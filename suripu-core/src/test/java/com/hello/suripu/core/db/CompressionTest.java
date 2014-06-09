@@ -121,7 +121,7 @@ public class CompressionTest {
 
     @Test
     public void testCompressionTime(){
-        int testRound = 100;
+        int testRound = 10;
 
         long startTimestamp = DateTime.now().getMillis();
 
