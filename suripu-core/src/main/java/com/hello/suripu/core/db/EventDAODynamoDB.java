@@ -54,6 +54,8 @@ public class EventDAODynamoDB {
     public static final String TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME = "target_date_of_night";
     public static final String DATA_BLOB_ATTRIBUTE_NAME = "events_data";
 
+    public static final String COMPRESS_TYPE_ARRTIBUTE_NAME = "algorithm";
+
 
     private final int MAX_CALL_COUNT = 5;
     public final int MAX_REQUEST_DAYS = 31;
@@ -134,8 +136,10 @@ public class EventDAODynamoDB {
             final QueryRequest queryRequest = new QueryRequest()
                     .withTableName(this.tableName)
                     .withKeyConditions(queryConditions)
-                    .withAttributesToGet(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME,
-                            DATA_BLOB_ATTRIBUTE_NAME)
+                    .withAttributesToGet(
+                            TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME,
+                            DATA_BLOB_ATTRIBUTE_NAME,
+                            COMPRESS_TYPE_ARRTIBUTE_NAME)
                     .withLimit(MAX_REQUEST_DAYS)
                     .withExclusiveStartKey(lastEvaluatedKey);
 
@@ -144,7 +148,8 @@ public class EventDAODynamoDB {
                 final List<Map<String, AttributeValue>> items = queryResult.getItems();
                 for(final Map<String, AttributeValue> item:items){
                     if(item.containsKey(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME) == false ||
-                            item.containsKey(DATA_BLOB_ATTRIBUTE_NAME) == false){
+                            item.containsKey(DATA_BLOB_ATTRIBUTE_NAME) == false ||
+                            item.containsKey(COMPRESS_TYPE_ARRTIBUTE_NAME) == false){
                         LOGGER.warn("Missing field in item {}", item);
                         continue;
                     }
@@ -155,8 +160,19 @@ public class EventDAODynamoDB {
                     final ByteBuffer byteBuffer = item.get(DATA_BLOB_ATTRIBUTE_NAME).getB();
                     final byte[] compressed = byteBuffer.array();
 
+                    final Compress.CompressionType algorithmName = Compress.CompressionType.fromInt(Integer.valueOf(item.get(COMPRESS_TYPE_ARRTIBUTE_NAME).getN()));
+
+
                     try {
-                        final byte[] decompressed = Compress.bzip2Decompress(compressed);
+                        byte[] decompressed = null;
+                        switch (algorithmName){
+                            case GZIP:
+                                decompressed = Compress.gzipDecompress(compressed);
+                                break;
+                            case BZIP2:
+                                decompressed = Compress.bzip2Decompress(compressed);
+                                break;
+                        }
 
                         final ObjectMapper mapper = new ObjectMapper();
                         final List<Event> eventList = mapper.readValue(decompressed, new TypeReference<List<Event>>() {});
@@ -259,6 +275,8 @@ public class EventDAODynamoDB {
                 final HashMap<String, AttributeValue> item = new HashMap<String, AttributeValue>();
                 item.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
                 item.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new AttributeValue().withS(targetDateOfNight));
+                item.put(COMPRESS_TYPE_ARRTIBUTE_NAME, new AttributeValue().withN(
+                        String.valueOf(Compress.CompressionType.BZIP2.getValue())));
 
                 // final ByteBuffer byteBuffer = ByteBuffer.wrap(builder.build().toByteArray());
 

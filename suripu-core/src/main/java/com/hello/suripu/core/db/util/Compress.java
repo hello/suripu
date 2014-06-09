@@ -1,5 +1,6 @@
 package com.hello.suripu.core.db.util;
 
+import com.amazonaws.services.cloudfront.model.InvalidArgumentException;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 
@@ -13,6 +14,31 @@ import java.util.zip.GZIPOutputStream;
  * Created by pangwu on 6/6/14.
  */
 public class Compress {
+
+    public static enum CompressionType{
+        GZIP(0),
+        BZIP2(1);
+
+        private int value;
+        private CompressionType(int value){
+            this.value = value;
+        }
+
+        public static CompressionType fromInt(int value){
+            switch (value){
+                case 0:
+                    return GZIP;
+                case 1:
+                    return BZIP2;
+                default:
+                    throw new InvalidArgumentException("Invalid value.");
+            }
+        }
+
+        public int getValue(){
+            return this.value;
+        }
+    };
 
     public static byte[] bzip2Compress(final byte[] uncompressed) throws IOException {
         final ByteArrayOutputStream byteStream = new ByteArrayOutputStream(uncompressed.length);
