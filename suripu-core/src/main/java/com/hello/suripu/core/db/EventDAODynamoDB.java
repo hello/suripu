@@ -156,7 +156,7 @@ public class EventDAODynamoDB {
                     final byte[] compressed = byteBuffer.array();
 
                     try {
-                        final byte[] decompressed = Compress.gzipDecompress(compressed);
+                        final byte[] decompressed = Compress.bzip2Decompress(compressed);
 
                         final ObjectMapper mapper = new ObjectMapper();
                         final List<Event> eventList = mapper.readValue(decompressed, new TypeReference<List<Event>>() {});
@@ -262,7 +262,7 @@ public class EventDAODynamoDB {
 
                 // final ByteBuffer byteBuffer = ByteBuffer.wrap(builder.build().toByteArray());
 
-                final byte[] compressedData = Compress.gzipCompress(jsonEventList.getBytes(JSON_CHARSET));
+                final byte[] compressedData = Compress.bzip2Compress(jsonEventList.getBytes(JSON_CHARSET));
                 final ByteBuffer byteBuffer = ByteBuffer.wrap(compressedData);
                 item.put(DATA_BLOB_ATTRIBUTE_NAME, new AttributeValue().withB(byteBuffer));
 
