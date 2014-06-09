@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -92,7 +93,8 @@ public class TrackerMotionDAODynamoDB {
         queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectAccountIdCondition);
 
         Map<String, AttributeValue> lastEvaluatedKey = null;
-
+        final Collection<String> targetAttributeSet = new HashSet<String>();
+        Collections.addAll(targetAttributeSet, TARGET_DATE_ATTRIBUTE_NAME, DATA_BLOB_ATTRIBUTE_NAME);
 
         int loopCount = 0;
 
@@ -100,7 +102,7 @@ public class TrackerMotionDAODynamoDB {
             final QueryRequest queryRequest = new QueryRequest()
                     .withTableName(this.tableName)
                     .withKeyConditions(queryConditions)
-                    .withAttributesToGet(TARGET_DATE_ATTRIBUTE_NAME, DATA_BLOB_ATTRIBUTE_NAME)
+                    .withAttributesToGet(targetAttributeSet)
                     .withLimit(MAX_REQUEST_DAYS)
                     .withExclusiveStartKey(lastEvaluatedKey);
 
@@ -108,8 +110,7 @@ public class TrackerMotionDAODynamoDB {
             if(queryResult.getItems() != null){
                 final List<Map<String, AttributeValue>> items = queryResult.getItems();
                 for(final Map<String, AttributeValue> item:items){
-                    if(item.containsKey(DATA_BLOB_ATTRIBUTE_NAME) == false ||
-                            item.containsKey(TARGET_DATE_ATTRIBUTE_NAME) == false){
+                    if(!item.keySet().containsAll(targetAttributeSet)){
                         LOGGER.warn("Missing field in item {}", item);
                         continue;
                     }

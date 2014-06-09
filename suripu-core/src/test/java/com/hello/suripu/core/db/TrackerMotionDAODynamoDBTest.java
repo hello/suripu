@@ -50,6 +50,8 @@ public class TrackerMotionDAODynamoDBTest {
         this.amazonDynamoDBClient = new AmazonDynamoDBClient(this.awsCredentials);
         this.amazonDynamoDBClient.setEndpoint("http://localhost:7777");
 
+
+        cleanUp();
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(

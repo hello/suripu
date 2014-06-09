@@ -18,7 +18,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.hello.suripu.core.db.util.Compress;
+import com.hello.suripu.core.db.util.Compression;
 import com.hello.suripu.core.db.util.DateTimeFormatString;
 import com.hello.suripu.core.models.Event;
 import org.joda.time.DateTime;
@@ -34,6 +34,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -54,7 +55,7 @@ public class EventDAODynamoDB {
     public static final String TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME = "target_date_of_night";
     public static final String DATA_BLOB_ATTRIBUTE_NAME = "events_data";
 
-    public static final String COMPRESS_TYPE_ARRTIBUTE_NAME = "algorithm";
+    public static final String COMPRESS_TYPE_ARRTIBUTE_NAME = "compression_type";
 
 
     private final int MAX_CALL_COUNT = 5;
@@ -128,93 +129,81 @@ public class EventDAODynamoDB {
         queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectAccountIdCondition);
 
         Map<String, AttributeValue> lastEvaluatedKey = null;
+        final Collection<String> targetAttributeSet = new HashSet<String>();
+        Collections.addAll(targetAttributeSet,
+                TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME,
+                DATA_BLOB_ATTRIBUTE_NAME,
+                COMPRESS_TYPE_ARRTIBUTE_NAME);
 
 
         int loopCount = 0;
+        final ObjectMapper mapper = new ObjectMapper();
 
+        // Loop and construct queries..
         do{
             final QueryRequest queryRequest = new QueryRequest()
                     .withTableName(this.tableName)
                     .withKeyConditions(queryConditions)
-                    .withAttributesToGet(
-                            TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME,
-                            DATA_BLOB_ATTRIBUTE_NAME,
-                            COMPRESS_TYPE_ARRTIBUTE_NAME)
+                    .withAttributesToGet(targetAttributeSet)
                     .withLimit(MAX_REQUEST_DAYS)
                     .withExclusiveStartKey(lastEvaluatedKey);
 
             final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
-            if(queryResult.getItems() != null){
-                final List<Map<String, AttributeValue>> items = queryResult.getItems();
-                for(final Map<String, AttributeValue> item:items){
-                    if(item.containsKey(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME) == false ||
-                            item.containsKey(DATA_BLOB_ATTRIBUTE_NAME) == false ||
-                            item.containsKey(COMPRESS_TYPE_ARRTIBUTE_NAME) == false){
-                        LOGGER.warn("Missing field in item {}", item);
-                        continue;
-                    }
+            if(queryResult.getItems() == null){
+                break;
+            }
 
-                    final String dateString = item.get(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME).getS();
-                    final ArrayList<Event> eventsWithAllTypes = new ArrayList<Event>();
+            final List<Map<String, AttributeValue>> items = queryResult.getItems();
 
-                    final ByteBuffer byteBuffer = item.get(DATA_BLOB_ATTRIBUTE_NAME).getB();
-                    final byte[] compressed = byteBuffer.array();
-
-                    final Compress.CompressionType algorithmName = Compress.CompressionType.fromInt(Integer.valueOf(item.get(COMPRESS_TYPE_ARRTIBUTE_NAME).getN()));
-
-
-                    try {
-                        byte[] decompressed = null;
-                        switch (algorithmName){
-                            case GZIP:
-                                decompressed = Compress.gzipDecompress(compressed);
-                                break;
-                            case BZIP2:
-                                decompressed = Compress.bzip2Decompress(compressed);
-                                break;
-                        }
-
-                        final ObjectMapper mapper = new ObjectMapper();
-                        final List<Event> eventList = mapper.readValue(decompressed, new TypeReference<List<Event>>() {});
-                        eventsWithAllTypes.addAll(eventList);
-
-                    }catch (JsonParseException jpe){
-                        LOGGER.error("Parsing event list for account {}, failed: {}",
-                                accountId,
-                                //dataAttributeName,
-                                jpe.getMessage());
-
-                    }catch (JsonMappingException jmp){
-                        LOGGER.error("Parsing event list for account {}, failed: {}",
-                                accountId,
-                                //dataAttributeName,
-                                jmp.getMessage());
-
-                    }catch (IOException ioe){
-
-                        LOGGER.error("Decompress event list for account {}, failed: {}",
-                                accountId,
-                                //dataAttributeName,
-                                ioe.getMessage());
-                    }
-
-
-                    final Event[] rawEventsArrayWithAllTypes = eventsWithAllTypes.toArray(new Event[0]);
-                    Arrays.sort(rawEventsArrayWithAllTypes, new Comparator<Event>() {
-                        @Override
-                        public int compare(Event o1, Event o2) {
-                            return Long.compare(o1.startTimestamp, o2.startTimestamp);
-                        }
-                    });
-
-                    finalResult.put(dateString, ImmutableList.copyOf(rawEventsArrayWithAllTypes));
-
+            for(final Map<String, AttributeValue> item:items){
+                if(!item.keySet().containsAll(targetAttributeSet)){
+                    LOGGER.warn("Missing field in item {}", item);
+                    continue;
                 }
+
+                final String dateString = item.get(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME).getS();
+                final ArrayList<Event> eventsWithAllTypes = new ArrayList<Event>();
+
+                final ByteBuffer byteBuffer = item.get(DATA_BLOB_ATTRIBUTE_NAME).getB();
+                final byte[] compressed = byteBuffer.array();
+
+                final Compression.CompressionType compressionType = Compression.CompressionType.fromInt(Integer.valueOf(item.get(COMPRESS_TYPE_ARRTIBUTE_NAME).getN()));
+
+
+                try {
+                    final byte[] decompressed = Compression.decompress(compressed, compressionType);
+                    final List<Event> eventList = mapper.readValue(decompressed, new TypeReference<List<Event>>() {});
+                    eventsWithAllTypes.addAll(eventList);
+
+                }catch (JsonParseException jpe){
+                    LOGGER.error("Parsing event list for account {}, failed: {}",
+                            accountId,
+                            //dataAttributeName,
+                            jpe.getMessage());
+
+                }catch (JsonMappingException jmp){
+                    LOGGER.error("Parsing event list for account {}, failed: {}",
+                            accountId,
+                            //dataAttributeName,
+                            jmp.getMessage());
+
+                }catch (IOException ioe){
+
+                    LOGGER.error("Decompress event list for account {}, failed: {}",
+                            accountId,
+                            //dataAttributeName,
+                            ioe.getMessage());
+                }
+
+                finalResult.put(dateString, ImmutableList.copyOf(eventsWithAllTypes));
+
             }
 
             lastEvaluatedKey = queryResult.getLastEvaluatedKey();
             loopCount++;
         }while (lastEvaluatedKey != null && loopCount < MAX_CALL_COUNT);
+
+
 
         if(lastEvaluatedKey != null){
             // We still have something not fetched. Request still too large!
@@ -267,20 +256,29 @@ public class EventDAODynamoDB {
         for(final String targetDateOfNight:data.keySet()) {
 
             final List<Event> events = data.get(targetDateOfNight);
+            final Event[] rawEventsArrayWithAllTypes = events.toArray(new Event[0]);
+            Arrays.sort(rawEventsArrayWithAllTypes, new Comparator<Event>() {
+                @Override
+                public int compare(Event o1, Event o2) {
+                    return Long.compare(o1.startTimestamp, o2.startTimestamp);
+                }
+            });
+
+
             final ObjectMapper mapper = new ObjectMapper();
 
             try {
-                final String jsonEventList = mapper.writeValueAsString(events);
+                final String jsonEventList = mapper.writeValueAsString(rawEventsArrayWithAllTypes);
 
                 final HashMap<String, AttributeValue> item = new HashMap<String, AttributeValue>();
                 item.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
                 item.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new AttributeValue().withS(targetDateOfNight));
                 item.put(COMPRESS_TYPE_ARRTIBUTE_NAME, new AttributeValue().withN(
-                        String.valueOf(Compress.CompressionType.BZIP2.getValue())));
+                        String.valueOf(Compression.CompressionType.BZIP2.getValue())));
 
                 // final ByteBuffer byteBuffer = ByteBuffer.wrap(builder.build().toByteArray());
 
-                final byte[] compressedData = Compress.bzip2Compress(jsonEventList.getBytes(JSON_CHARSET));
+                final byte[] compressedData = Compression.bzip2Compress(jsonEventList.getBytes(JSON_CHARSET));
                 final ByteBuffer byteBuffer = ByteBuffer.wrap(compressedData);
                 item.put(DATA_BLOB_ATTRIBUTE_NAME, new AttributeValue().withB(byteBuffer));
 

@@ -14,7 +14,7 @@ import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.core.db.util.Compress;
+import com.hello.suripu.core.db.util.Compression;
 import com.hello.suripu.core.models.Event;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -47,6 +47,8 @@ public class EventDAODynamoDBTest {
         this.awsCredentials = new BasicAWSCredentials("FAKE_AWS_KEY", "FAKE_AWS_SECRET");
         this.amazonDynamoDBClient = new AmazonDynamoDBClient(this.awsCredentials);
         this.amazonDynamoDBClient.setEndpoint("http://localhost:7777");
+
+        cleanUp();
 
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
@@ -247,12 +249,12 @@ public class EventDAODynamoDBTest {
                 final String jsonString = mapper.writeValueAsString(eventListOfCertainType);
                 final byte[] uncompressed = jsonString.getBytes("UTF-8");
 
-                final byte[] compressed = Compress.gzipCompress(uncompressed);
+                final byte[] compressed = Compression.gzipCompress(uncompressed);
 
                 uncompressedTotalSize += uncompressed.length;
                 totalSize += compressed.length;
 
-                final byte[] decompressed = Compress.gzipDecompress(compressed);
+                final byte[] decompressed = Compression.gzipDecompress(compressed);
                 final List<Event> actual = mapper.readValue(decompressed, new TypeReference<List<Event>>(){});
                 assertThat(actual, containsInAnyOrder(eventListOfCertainType.toArray()));
 
@@ -297,12 +299,12 @@ public class EventDAODynamoDBTest {
                 final String jsonString = mapper.writeValueAsString(eventListOfCertainType);
                 final byte[] uncompressed = jsonString.getBytes("UTF-8");
 
-                final byte[] compressed = Compress.gzipCompress(uncompressed);
+                final byte[] compressed = Compression.gzipCompress(uncompressed);
 
                 uncompressedTotalSize += uncompressed.length;
                 totalSize += compressed.length;
 
-                final byte[] decompressed = Compress.gzipDecompress(compressed);
+                final byte[] decompressed = Compression.gzipDecompress(compressed);
                 final List<Event> actual = mapper.readValue(decompressed, new TypeReference<List<Event>>(){});
                 assertThat(actual, containsInAnyOrder(eventListOfCertainType.toArray()));
 
