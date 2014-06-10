@@ -167,3 +167,27 @@ message SyncResponse {
     // TODO: settings for snoring detection
     // TODO: settings for firmware update
 }
+
+
+// TODO:
+message PillData {
+    optional string pill_id = 1;
+    optional string account_id = 2;
+    optional bytes  data = 3;
+}
+
+
+message PillBlobHeader {
+    optional string first_sequence_number = 1;
+    optional string last_sequence_number = 2;
+    optional string first_sample_date = 3;
+    optional string last_sample_date = 4;
+    optional bytes compressed_bitmap_account_ids = 5;
+    optional string data_file_name = 6;
+    optional int32 num_items = 7;
+}
+
+
+message PillBlob {
+    repeated PillData items = 1;
+}
