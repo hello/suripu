@@ -251,7 +251,7 @@ public class ReceiveResource {
         final InputProtos.PillData pillData = InputProtos.PillData.newBuilder()
                     .setData(ByteString.copyFrom(data))
                     .setPillId(pillID)
-                    .setAccountId("123")
+                    .setAccountId(accessToken.accountId.toString())
                     .build();
 
         final byte[] pillDataBytes = pillData.toByteArray();
