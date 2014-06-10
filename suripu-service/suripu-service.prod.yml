@@ -65,3 +65,8 @@ motion_db:
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streamName : test-stream-suripu
+
+event_db:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: event

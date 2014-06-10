@@ -168,7 +168,6 @@ message SyncResponse {
     // TODO: settings for firmware update
 }
 
-
 // TODO:
 message PillData {
     optional string pill_id = 1;
@@ -191,3 +190,14 @@ message PillBlobHeader {
 message PillBlob {
     repeated PillData items = 1;
 }
+
+message EventBatch{
+    message EventItem {
+        optional int64 start_timestamp = 1;
+        optional int64 end_timestamp = 2;
+        optional int32 offsetMillis = 3;
+    }
+
+    repeated EventItem events = 1;
+}
+

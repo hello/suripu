@@ -17231,6 +17231,1238 @@ public final class InputProtos {
     // @@protoc_insertion_point(class_scope:hello.PillBlob)
   }
 
+  public interface EventBatchOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // repeated .hello.EventBatch.EventItem events = 1;
+    /**
+     * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+     */
+    java.util.List<com.hello.suripu.api.input.InputProtos.EventBatch.EventItem> 
+        getEventsList();
+    /**
+     * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+     */
+    com.hello.suripu.api.input.InputProtos.EventBatch.EventItem getEvents(int index);
+    /**
+     * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+     */
+    int getEventsCount();
+    /**
+     * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+     */
+    java.util.List<? extends com.hello.suripu.api.input.InputProtos.EventBatch.EventItemOrBuilder> 
+        getEventsOrBuilderList();
+    /**
+     * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+     */
+    com.hello.suripu.api.input.InputProtos.EventBatch.EventItemOrBuilder getEventsOrBuilder(
+        int index);
+  }
+  /**
+   * Protobuf type {@code hello.EventBatch}
+   */
+  public static final class EventBatch extends
+      com.google.protobuf.GeneratedMessage
+      implements EventBatchOrBuilder {
+    // Use EventBatch.newBuilder() to construct.
+    private EventBatch(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private EventBatch(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final EventBatch defaultInstance;
+    public static EventBatch getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public EventBatch getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private EventBatch(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                events_ = new java.util.ArrayList<com.hello.suripu.api.input.InputProtos.EventBatch.EventItem>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              events_.add(input.readMessage(com.hello.suripu.api.input.InputProtos.EventBatch.EventItem.PARSER, extensionRegistry));
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          events_ = java.util.Collections.unmodifiableList(events_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.suripu.api.input.InputProtos.internal_static_hello_EventBatch_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.suripu.api.input.InputProtos.internal_static_hello_EventBatch_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.suripu.api.input.InputProtos.EventBatch.class, com.hello.suripu.api.input.InputProtos.EventBatch.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<EventBatch> PARSER =
+        new com.google.protobuf.AbstractParser<EventBatch>() {
+      public EventBatch parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new EventBatch(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<EventBatch> getParserForType() {
+      return PARSER;
+    }
+
+    public interface EventItemOrBuilder
+        extends com.google.protobuf.MessageOrBuilder {
+
+      // optional int64 start_timestamp = 1;
+      /**
+       * <code>optional int64 start_timestamp = 1;</code>
+       */
+      boolean hasStartTimestamp();
+      /**
+       * <code>optional int64 start_timestamp = 1;</code>
+       */
+      long getStartTimestamp();
+
+      // optional int64 end_timestamp = 2;
+      /**
+       * <code>optional int64 end_timestamp = 2;</code>
+       */
+      boolean hasEndTimestamp();
+      /**
+       * <code>optional int64 end_timestamp = 2;</code>
+       */
+      long getEndTimestamp();
+
+      // optional int32 offsetMillis = 3;
+      /**
+       * <code>optional int32 offsetMillis = 3;</code>
+       */
+      boolean hasOffsetMillis();
+      /**
+       * <code>optional int32 offsetMillis = 3;</code>
+       */
+      int getOffsetMillis();
+    }
+    /**
+     * Protobuf type {@code hello.EventBatch.EventItem}
+     */
+    public static final class EventItem extends
+        com.google.protobuf.GeneratedMessage
+        implements EventItemOrBuilder {
+      // Use EventItem.newBuilder() to construct.
+      private EventItem(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+        super(builder);
+        this.unknownFields = builder.getUnknownFields();
+      }
+      private EventItem(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+      private static final EventItem defaultInstance;
+      public static EventItem getDefaultInstance() {
+        return defaultInstance;
+      }
+
+      public EventItem getDefaultInstanceForType() {
+        return defaultInstance;
+      }
+
+      private final com.google.protobuf.UnknownFieldSet unknownFields;
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+          getUnknownFields() {
+        return this.unknownFields;
+      }
+      private EventItem(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        initFields();
+        int mutable_bitField0_ = 0;
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              default: {
+                if (!parseUnknownField(input, unknownFields,
+                                       extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+              case 8: {
+                bitField0_ |= 0x00000001;
+                startTimestamp_ = input.readInt64();
+                break;
+              }
+              case 16: {
+                bitField0_ |= 0x00000002;
+                endTimestamp_ = input.readInt64();
+                break;
+              }
+              case 24: {
+                bitField0_ |= 0x00000004;
+                offsetMillis_ = input.readInt32();
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e.getMessage()).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_EventBatch_EventItem_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_EventBatch_EventItem_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.input.InputProtos.EventBatch.EventItem.class, com.hello.suripu.api.input.InputProtos.EventBatch.EventItem.Builder.class);
+      }
+
+      public static com.google.protobuf.Parser<EventItem> PARSER =
+          new com.google.protobuf.AbstractParser<EventItem>() {
+        public EventItem parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new EventItem(input, extensionRegistry);
+        }
+      };
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<EventItem> getParserForType() {
+        return PARSER;
+      }
+
+      private int bitField0_;
+      // optional int64 start_timestamp = 1;
+      public static final int START_TIMESTAMP_FIELD_NUMBER = 1;
+      private long startTimestamp_;
+      /**
+       * <code>optional int64 start_timestamp = 1;</code>
+       */
+      public boolean hasStartTimestamp() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional int64 start_timestamp = 1;</code>
+       */
+      public long getStartTimestamp() {
+        return startTimestamp_;
+      }
+
+      // optional int64 end_timestamp = 2;
+      public static final int END_TIMESTAMP_FIELD_NUMBER = 2;
+      private long endTimestamp_;
+      /**
+       * <code>optional int64 end_timestamp = 2;</code>
+       */
+      public boolean hasEndTimestamp() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional int64 end_timestamp = 2;</code>
+       */
+      public long getEndTimestamp() {
+        return endTimestamp_;
+      }
+
+      // optional int32 offsetMillis = 3;
+      public static final int OFFSETMILLIS_FIELD_NUMBER = 3;
+      private int offsetMillis_;
+      /**
+       * <code>optional int32 offsetMillis = 3;</code>
+       */
+      public boolean hasOffsetMillis() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional int32 offsetMillis = 3;</code>
+       */
+      public int getOffsetMillis() {
+        return offsetMillis_;
+      }
+
+      private void initFields() {
+        startTimestamp_ = 0L;
+        endTimestamp_ = 0L;
+        offsetMillis_ = 0;
+      }
+      private byte memoizedIsInitialized = -1;
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized != -1) return isInitialized == 1;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        getSerializedSize();
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          output.writeInt64(1, startTimestamp_);
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          output.writeInt64(2, endTimestamp_);
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          output.writeInt32(3, offsetMillis_);
+        }
+        getUnknownFields().writeTo(output);
+      }
+
+      private int memoizedSerializedSize = -1;
+      public int getSerializedSize() {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt64Size(1, startTimestamp_);
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt64Size(2, endTimestamp_);
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(3, offsetMillis_);
+        }
+        size += getUnknownFields().getSerializedSize();
+        memoizedSerializedSize = size;
+        return size;
+      }
+
+      private static final long serialVersionUID = 0L;
+      @java.lang.Override
+      protected java.lang.Object writeReplace()
+          throws java.io.ObjectStreamException {
+        return super.writeReplace();
+      }
+
+      public static com.hello.suripu.api.input.InputProtos.EventBatch.EventItem parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.hello.suripu.api.input.InputProtos.EventBatch.EventItem parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.EventBatch.EventItem parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.hello.suripu.api.input.InputProtos.EventBatch.EventItem parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.EventBatch.EventItem parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static com.hello.suripu.api.input.InputProtos.EventBatch.EventItem parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.EventBatch.EventItem parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input);
+      }
+      public static com.hello.suripu.api.input.InputProtos.EventBatch.EventItem parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.EventBatch.EventItem parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static com.hello.suripu.api.input.InputProtos.EventBatch.EventItem parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+
+      public static Builder newBuilder() { return Builder.create(); }
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder(com.hello.suripu.api.input.InputProtos.EventBatch.EventItem prototype) {
+        return newBuilder().mergeFrom(prototype);
+      }
+      public Builder toBuilder() { return newBuilder(this); }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code hello.EventBatch.EventItem}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessage.Builder<Builder>
+         implements com.hello.suripu.api.input.InputProtos.EventBatch.EventItemOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return com.hello.suripu.api.input.InputProtos.internal_static_hello_EventBatch_EventItem_descriptor;
+        }
+
+        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return com.hello.suripu.api.input.InputProtos.internal_static_hello_EventBatch_EventItem_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  com.hello.suripu.api.input.InputProtos.EventBatch.EventItem.class, com.hello.suripu.api.input.InputProtos.EventBatch.EventItem.Builder.class);
+        }
+
+        // Construct using com.hello.suripu.api.input.InputProtos.EventBatch.EventItem.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          }
+        }
+        private static Builder create() {
+          return new Builder();
+        }
+
+        public Builder clear() {
+          super.clear();
+          startTimestamp_ = 0L;
+          bitField0_ = (bitField0_ & ~0x00000001);
+          endTimestamp_ = 0L;
+          bitField0_ = (bitField0_ & ~0x00000002);
+          offsetMillis_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000004);
+          return this;
+        }
+
+        public Builder clone() {
+          return create().mergeFrom(buildPartial());
+        }
+
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return com.hello.suripu.api.input.InputProtos.internal_static_hello_EventBatch_EventItem_descriptor;
+        }
+
+        public com.hello.suripu.api.input.InputProtos.EventBatch.EventItem getDefaultInstanceForType() {
+          return com.hello.suripu.api.input.InputProtos.EventBatch.EventItem.getDefaultInstance();
+        }
+
+        public com.hello.suripu.api.input.InputProtos.EventBatch.EventItem build() {
+          com.hello.suripu.api.input.InputProtos.EventBatch.EventItem result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        public com.hello.suripu.api.input.InputProtos.EventBatch.EventItem buildPartial() {
+          com.hello.suripu.api.input.InputProtos.EventBatch.EventItem result = new com.hello.suripu.api.input.InputProtos.EventBatch.EventItem(this);
+          int from_bitField0_ = bitField0_;
+          int to_bitField0_ = 0;
+          if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+            to_bitField0_ |= 0x00000001;
+          }
+          result.startTimestamp_ = startTimestamp_;
+          if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+            to_bitField0_ |= 0x00000002;
+          }
+          result.endTimestamp_ = endTimestamp_;
+          if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+            to_bitField0_ |= 0x00000004;
+          }
+          result.offsetMillis_ = offsetMillis_;
+          result.bitField0_ = to_bitField0_;
+          onBuilt();
+          return result;
+        }
+
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof com.hello.suripu.api.input.InputProtos.EventBatch.EventItem) {
+            return mergeFrom((com.hello.suripu.api.input.InputProtos.EventBatch.EventItem)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(com.hello.suripu.api.input.InputProtos.EventBatch.EventItem other) {
+          if (other == com.hello.suripu.api.input.InputProtos.EventBatch.EventItem.getDefaultInstance()) return this;
+          if (other.hasStartTimestamp()) {
+            setStartTimestamp(other.getStartTimestamp());
+          }
+          if (other.hasEndTimestamp()) {
+            setEndTimestamp(other.getEndTimestamp());
+          }
+          if (other.hasOffsetMillis()) {
+            setOffsetMillis(other.getOffsetMillis());
+          }
+          this.mergeUnknownFields(other.getUnknownFields());
+          return this;
+        }
+
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          com.hello.suripu.api.input.InputProtos.EventBatch.EventItem parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (com.hello.suripu.api.input.InputProtos.EventBatch.EventItem) e.getUnfinishedMessage();
+            throw e;
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+        private int bitField0_;
+
+        // optional int64 start_timestamp = 1;
+        private long startTimestamp_ ;
+        /**
+         * <code>optional int64 start_timestamp = 1;</code>
+         */
+        public boolean hasStartTimestamp() {
+          return ((bitField0_ & 0x00000001) == 0x00000001);
+        }
+        /**
+         * <code>optional int64 start_timestamp = 1;</code>
+         */
+        public long getStartTimestamp() {
+          return startTimestamp_;
+        }
+        /**
+         * <code>optional int64 start_timestamp = 1;</code>
+         */
+        public Builder setStartTimestamp(long value) {
+          bitField0_ |= 0x00000001;
+          startTimestamp_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int64 start_timestamp = 1;</code>
+         */
+        public Builder clearStartTimestamp() {
+          bitField0_ = (bitField0_ & ~0x00000001);
+          startTimestamp_ = 0L;
+          onChanged();
+          return this;
+        }
+
+        // optional int64 end_timestamp = 2;
+        private long endTimestamp_ ;
+        /**
+         * <code>optional int64 end_timestamp = 2;</code>
+         */
+        public boolean hasEndTimestamp() {
+          return ((bitField0_ & 0x00000002) == 0x00000002);
+        }
+        /**
+         * <code>optional int64 end_timestamp = 2;</code>
+         */
+        public long getEndTimestamp() {
+          return endTimestamp_;
+        }
+        /**
+         * <code>optional int64 end_timestamp = 2;</code>
+         */
+        public Builder setEndTimestamp(long value) {
+          bitField0_ |= 0x00000002;
+          endTimestamp_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int64 end_timestamp = 2;</code>
+         */
+        public Builder clearEndTimestamp() {
+          bitField0_ = (bitField0_ & ~0x00000002);
+          endTimestamp_ = 0L;
+          onChanged();
+          return this;
+        }
+
+        // optional int32 offsetMillis = 3;
+        private int offsetMillis_ ;
+        /**
+         * <code>optional int32 offsetMillis = 3;</code>
+         */
+        public boolean hasOffsetMillis() {
+          return ((bitField0_ & 0x00000004) == 0x00000004);
+        }
+        /**
+         * <code>optional int32 offsetMillis = 3;</code>
+         */
+        public int getOffsetMillis() {
+          return offsetMillis_;
+        }
+        /**
+         * <code>optional int32 offsetMillis = 3;</code>
+         */
+        public Builder setOffsetMillis(int value) {
+          bitField0_ |= 0x00000004;
+          offsetMillis_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int32 offsetMillis = 3;</code>
+         */
+        public Builder clearOffsetMillis() {
+          bitField0_ = (bitField0_ & ~0x00000004);
+          offsetMillis_ = 0;
+          onChanged();
+          return this;
+        }
+
+        // @@protoc_insertion_point(builder_scope:hello.EventBatch.EventItem)
+      }
+
+      static {
+        defaultInstance = new EventItem(true);
+        defaultInstance.initFields();
+      }
+
+      // @@protoc_insertion_point(class_scope:hello.EventBatch.EventItem)
+    }
+
+    // repeated .hello.EventBatch.EventItem events = 1;
+    public static final int EVENTS_FIELD_NUMBER = 1;
+    private java.util.List<com.hello.suripu.api.input.InputProtos.EventBatch.EventItem> events_;
+    /**
+     * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+     */
+    public java.util.List<com.hello.suripu.api.input.InputProtos.EventBatch.EventItem> getEventsList() {
+      return events_;
+    }
+    /**
+     * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+     */
+    public java.util.List<? extends com.hello.suripu.api.input.InputProtos.EventBatch.EventItemOrBuilder> 
+        getEventsOrBuilderList() {
+      return events_;
+    }
+    /**
+     * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+     */
+    public int getEventsCount() {
+      return events_.size();
+    }
+    /**
+     * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+     */
+    public com.hello.suripu.api.input.InputProtos.EventBatch.EventItem getEvents(int index) {
+      return events_.get(index);
+    }
+    /**
+     * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+     */
+    public com.hello.suripu.api.input.InputProtos.EventBatch.EventItemOrBuilder getEventsOrBuilder(
+        int index) {
+      return events_.get(index);
+    }
+
+    private void initFields() {
+      events_ = java.util.Collections.emptyList();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      for (int i = 0; i < events_.size(); i++) {
+        output.writeMessage(1, events_.get(i));
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (int i = 0; i < events_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, events_.get(i));
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.suripu.api.input.InputProtos.EventBatch parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.input.InputProtos.EventBatch parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.EventBatch parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.input.InputProtos.EventBatch parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.EventBatch parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.input.InputProtos.EventBatch parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.EventBatch parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.suripu.api.input.InputProtos.EventBatch parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.EventBatch parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.input.InputProtos.EventBatch parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.suripu.api.input.InputProtos.EventBatch prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code hello.EventBatch}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.input.InputProtos.EventBatchOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_EventBatch_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_EventBatch_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.input.InputProtos.EventBatch.class, com.hello.suripu.api.input.InputProtos.EventBatch.Builder.class);
+      }
+
+      // Construct using com.hello.suripu.api.input.InputProtos.EventBatch.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getEventsFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        if (eventsBuilder_ == null) {
+          events_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          eventsBuilder_.clear();
+        }
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_EventBatch_descriptor;
+      }
+
+      public com.hello.suripu.api.input.InputProtos.EventBatch getDefaultInstanceForType() {
+        return com.hello.suripu.api.input.InputProtos.EventBatch.getDefaultInstance();
+      }
+
+      public com.hello.suripu.api.input.InputProtos.EventBatch build() {
+        com.hello.suripu.api.input.InputProtos.EventBatch result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.suripu.api.input.InputProtos.EventBatch buildPartial() {
+        com.hello.suripu.api.input.InputProtos.EventBatch result = new com.hello.suripu.api.input.InputProtos.EventBatch(this);
+        int from_bitField0_ = bitField0_;
+        if (eventsBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+            events_ = java.util.Collections.unmodifiableList(events_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.events_ = events_;
+        } else {
+          result.events_ = eventsBuilder_.build();
+        }
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.suripu.api.input.InputProtos.EventBatch) {
+          return mergeFrom((com.hello.suripu.api.input.InputProtos.EventBatch)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.suripu.api.input.InputProtos.EventBatch other) {
+        if (other == com.hello.suripu.api.input.InputProtos.EventBatch.getDefaultInstance()) return this;
+        if (eventsBuilder_ == null) {
+          if (!other.events_.isEmpty()) {
+            if (events_.isEmpty()) {
+              events_ = other.events_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureEventsIsMutable();
+              events_.addAll(other.events_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.events_.isEmpty()) {
+            if (eventsBuilder_.isEmpty()) {
+              eventsBuilder_.dispose();
+              eventsBuilder_ = null;
+              events_ = other.events_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              eventsBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getEventsFieldBuilder() : null;
+            } else {
+              eventsBuilder_.addAllMessages(other.events_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.suripu.api.input.InputProtos.EventBatch parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.suripu.api.input.InputProtos.EventBatch) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // repeated .hello.EventBatch.EventItem events = 1;
+      private java.util.List<com.hello.suripu.api.input.InputProtos.EventBatch.EventItem> events_ =
+        java.util.Collections.emptyList();
+      private void ensureEventsIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          events_ = new java.util.ArrayList<com.hello.suripu.api.input.InputProtos.EventBatch.EventItem>(events_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.input.InputProtos.EventBatch.EventItem, com.hello.suripu.api.input.InputProtos.EventBatch.EventItem.Builder, com.hello.suripu.api.input.InputProtos.EventBatch.EventItemOrBuilder> eventsBuilder_;
+
+      /**
+       * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+       */
+      public java.util.List<com.hello.suripu.api.input.InputProtos.EventBatch.EventItem> getEventsList() {
+        if (eventsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(events_);
+        } else {
+          return eventsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+       */
+      public int getEventsCount() {
+        if (eventsBuilder_ == null) {
+          return events_.size();
+        } else {
+          return eventsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.EventBatch.EventItem getEvents(int index) {
+        if (eventsBuilder_ == null) {
+          return events_.get(index);
+        } else {
+          return eventsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+       */
+      public Builder setEvents(
+          int index, com.hello.suripu.api.input.InputProtos.EventBatch.EventItem value) {
+        if (eventsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureEventsIsMutable();
+          events_.set(index, value);
+          onChanged();
+        } else {
+          eventsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+       */
+      public Builder setEvents(
+          int index, com.hello.suripu.api.input.InputProtos.EventBatch.EventItem.Builder builderForValue) {
+        if (eventsBuilder_ == null) {
+          ensureEventsIsMutable();
+          events_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          eventsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+       */
+      public Builder addEvents(com.hello.suripu.api.input.InputProtos.EventBatch.EventItem value) {
+        if (eventsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureEventsIsMutable();
+          events_.add(value);
+          onChanged();
+        } else {
+          eventsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+       */
+      public Builder addEvents(
+          int index, com.hello.suripu.api.input.InputProtos.EventBatch.EventItem value) {
+        if (eventsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureEventsIsMutable();
+          events_.add(index, value);
+          onChanged();
+        } else {
+          eventsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+       */
+      public Builder addEvents(
+          com.hello.suripu.api.input.InputProtos.EventBatch.EventItem.Builder builderForValue) {
+        if (eventsBuilder_ == null) {
+          ensureEventsIsMutable();
+          events_.add(builderForValue.build());
+          onChanged();
+        } else {
+          eventsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+       */
+      public Builder addEvents(
+          int index, com.hello.suripu.api.input.InputProtos.EventBatch.EventItem.Builder builderForValue) {
+        if (eventsBuilder_ == null) {
+          ensureEventsIsMutable();
+          events_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          eventsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+       */
+      public Builder addAllEvents(
+          java.lang.Iterable<? extends com.hello.suripu.api.input.InputProtos.EventBatch.EventItem> values) {
+        if (eventsBuilder_ == null) {
+          ensureEventsIsMutable();
+          super.addAll(values, events_);
+          onChanged();
+        } else {
+          eventsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+       */
+      public Builder clearEvents() {
+        if (eventsBuilder_ == null) {
+          events_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          eventsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+       */
+      public Builder removeEvents(int index) {
+        if (eventsBuilder_ == null) {
+          ensureEventsIsMutable();
+          events_.remove(index);
+          onChanged();
+        } else {
+          eventsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.EventBatch.EventItem.Builder getEventsBuilder(
+          int index) {
+        return getEventsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.EventBatch.EventItemOrBuilder getEventsOrBuilder(
+          int index) {
+        if (eventsBuilder_ == null) {
+          return events_.get(index);  } else {
+          return eventsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+       */
+      public java.util.List<? extends com.hello.suripu.api.input.InputProtos.EventBatch.EventItemOrBuilder> 
+           getEventsOrBuilderList() {
+        if (eventsBuilder_ != null) {
+          return eventsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(events_);
+        }
+      }
+      /**
+       * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.EventBatch.EventItem.Builder addEventsBuilder() {
+        return getEventsFieldBuilder().addBuilder(
+            com.hello.suripu.api.input.InputProtos.EventBatch.EventItem.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.EventBatch.EventItem.Builder addEventsBuilder(
+          int index) {
+        return getEventsFieldBuilder().addBuilder(
+            index, com.hello.suripu.api.input.InputProtos.EventBatch.EventItem.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.EventBatch.EventItem events = 1;</code>
+       */
+      public java.util.List<com.hello.suripu.api.input.InputProtos.EventBatch.EventItem.Builder> 
+           getEventsBuilderList() {
+        return getEventsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.input.InputProtos.EventBatch.EventItem, com.hello.suripu.api.input.InputProtos.EventBatch.EventItem.Builder, com.hello.suripu.api.input.InputProtos.EventBatch.EventItemOrBuilder> 
+          getEventsFieldBuilder() {
+        if (eventsBuilder_ == null) {
+          eventsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              com.hello.suripu.api.input.InputProtos.EventBatch.EventItem, com.hello.suripu.api.input.InputProtos.EventBatch.EventItem.Builder, com.hello.suripu.api.input.InputProtos.EventBatch.EventItemOrBuilder>(
+                  events_,
+                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  getParentForChildren(),
+                  isClean());
+          events_ = null;
+        }
+        return eventsBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:hello.EventBatch)
+    }
+
+    static {
+      defaultInstance = new EventBatch(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:hello.EventBatch)
+  }
+
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_SensorSampleBatch_descriptor;
   private static
@@ -17336,6 +18568,16 @@ public final class InputProtos {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_PillBlob_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_hello_EventBatch_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_hello_EventBatch_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_hello_EventBatch_EventItem_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_hello_EventBatch_EventItem_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -17418,8 +18660,12 @@ public final class InputProtos {
       "ate\030\004 \001(\t\022%\n\035compressed_bitmap_account_i" +
       "ds\030\005 \001(\014\022\026\n\016data_file_name\030\006 \001(\t\022\021\n\tnum_" +
       "items\030\007 \001(\005\"*\n\010PillBlob\022\036\n\005items\030\001 \003(\0132\017" +
-      ".hello.PillDataB+\n\032com.hello.suripu.api." +
-      "inputB\013InputProtosH\001"
+      ".hello.PillData\"\214\001\n\nEventBatch\022+\n\006events" +
+      "\030\001 \003(\0132\033.hello.EventBatch.EventItem\032Q\n\tE" +
+      "ventItem\022\027\n\017start_timestamp\030\001 \001(\003\022\025\n\rend" +
+      "_timestamp\030\002 \001(\003\022\024\n\014offsetMillis\030\003 \001(\005B+" +
+      "\n\032com.hello.suripu.api.inputB\013InputProto" +
+      "sH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -17552,6 +18798,18 @@ public final class InputProtos {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_PillBlob_descriptor,
               new java.lang.String[] { "Items", });
+          internal_static_hello_EventBatch_descriptor =
+            getDescriptor().getMessageTypes().get(11);
+          internal_static_hello_EventBatch_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_EventBatch_descriptor,
+              new java.lang.String[] { "Events", });
+          internal_static_hello_EventBatch_EventItem_descriptor =
+            internal_static_hello_EventBatch_descriptor.getNestedTypes().get(0);
+          internal_static_hello_EventBatch_EventItem_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_EventBatch_EventItem_descriptor,
+              new java.lang.String[] { "StartTimestamp", "EndTimestamp", "OffsetMillis", });
           return null;
         }
       };
