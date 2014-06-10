@@ -22,7 +22,6 @@ import com.hello.suripu.core.db.util.DateTimeFormatString;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +50,7 @@ public class TrackerMotionDAODynamoDB {
 
     public final static int MAX_REQUEST_DAYS = 31;
     public final static int MAX_UPLOAD_DATA_COUNT = 4 * 24 * 60;  // Does not allow upload more than 4 days data.
-    public final static int MAX_RETRY_COUNT = 5;
+    public final static int MAX_CALL_COUNT = 5;
 
 
     public TrackerMotionDAODynamoDB(final AmazonDynamoDBClient amazonDynamoDBClient,
@@ -63,12 +63,13 @@ public class TrackerMotionDAODynamoDB {
     /*
     * Get tracker data for maybe not consecutive days, internal use only
      */
-    private ImmutableMap<String, List<TrackerMotion>> getTrackerMotionForDateStrings(long accountId, final Collection<String> dateStrings){
+    private ImmutableMap<String, ImmutableList<TrackerMotion>> getTrackerMotionForDateStrings(long accountId, final Collection<String> dateStrings){
         if(dateStrings.size() > MAX_REQUEST_DAYS){
-            return ImmutableMap.copyOf(Collections.<String, List<TrackerMotion>>emptyMap());
+            LOGGER.warn("Request too large for events, num of days requested: {}, accountId: {}, eventType: {}", dateStrings.size(), accountId);
+            throw new RuntimeException("Request too many days event.");
         }
 
-        final Map<String, List<TrackerMotion>> finalResult = new HashMap<String, List<TrackerMotion>>();
+        final Map<String, ImmutableList<TrackerMotion>> finalResult = new HashMap<String, ImmutableList<TrackerMotion>>();
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
 
         final String[] sortedDateStrings = dateStrings.toArray(new String[0]);
@@ -82,10 +83,6 @@ public class TrackerMotionDAODynamoDB {
                 .withAttributeValueList(new AttributeValue().withS(startDateString),
                         new AttributeValue().withS(endDateString));
 
-        long maxLoopCount = (DateTime.parse(endDateString, DateTimeFormat.forPattern(DateTimeFormatString.FORMAT_TO_DAY)).getMillis()
-                - DateTime.parse(startDateString, DateTimeFormat.forPattern(DateTimeFormatString.FORMAT_TO_DAY)).getMillis()) /
-                (24 * 60 * 60 * 1000) + 1;
-
 
         queryConditions.put(TARGET_DATE_ATTRIBUTE_NAME, selectDateCondition);
 
@@ -96,7 +93,8 @@ public class TrackerMotionDAODynamoDB {
         queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectAccountIdCondition);
 
         Map<String, AttributeValue> lastEvaluatedKey = null;
-
+        final Collection<String> targetAttributeSet = new HashSet<String>();
+        Collections.addAll(targetAttributeSet, TARGET_DATE_ATTRIBUTE_NAME, DATA_BLOB_ATTRIBUTE_NAME);
 
         int loopCount = 0;
 
@@ -104,7 +102,7 @@ public class TrackerMotionDAODynamoDB {
             final QueryRequest queryRequest = new QueryRequest()
                     .withTableName(this.tableName)
                     .withKeyConditions(queryConditions)
-                    .withAttributesToGet(TARGET_DATE_ATTRIBUTE_NAME, DATA_BLOB_ATTRIBUTE_NAME)
+                    .withAttributesToGet(targetAttributeSet)
                     .withLimit(MAX_REQUEST_DAYS)
                     .withExclusiveStartKey(lastEvaluatedKey);
 
@@ -112,8 +110,7 @@ public class TrackerMotionDAODynamoDB {
             if(queryResult.getItems() != null){
                 final List<Map<String, AttributeValue>> items = queryResult.getItems();
                 for(final Map<String, AttributeValue> item:items){
-                    if(item.containsKey(DATA_BLOB_ATTRIBUTE_NAME) == false ||
-                            item.containsKey(TARGET_DATE_ATTRIBUTE_NAME) == false){
+                    if(!item.keySet().containsAll(targetAttributeSet)){
                         LOGGER.warn("Missing field in item {}", item);
                         continue;
                     }
@@ -143,7 +140,7 @@ public class TrackerMotionDAODynamoDB {
                             resultForDate.add(trackerMotion);
                         }
 
-                        finalResult.put(dateString, resultForDate);
+                        finalResult.put(dateString, ImmutableList.copyOf(resultForDate));
 
                         //System.out.println("Actual model count: " + resultForDate.size());
                     } catch (InvalidProtocolBufferException e) {
@@ -154,28 +151,34 @@ public class TrackerMotionDAODynamoDB {
 
             lastEvaluatedKey = queryResult.getLastEvaluatedKey();
             loopCount++;
-        }while (lastEvaluatedKey != null && loopCount < maxLoopCount);
+        }while (lastEvaluatedKey != null && loopCount < MAX_CALL_COUNT);
+
+        if(dateStrings.size() > MAX_REQUEST_DAYS){
+            LOGGER.warn("Request too many for data, num of days requested: {}, accountId: {}", dateStrings.size(), accountId);
+            throw new RuntimeException("Request too much data.");
+        }
+
 
         // Fill the non-exist days with empty lists
         for(final String dateString:dateStrings){
             if(!finalResult.containsKey(dateString)){
-                finalResult.put(dateString, Collections.<TrackerMotion>emptyList());
+                finalResult.put(dateString, ImmutableList.copyOf(Collections.<TrackerMotion>emptyList()));
             }
         }
 
         return ImmutableMap.copyOf(finalResult);
     }
 
-    public ImmutableMap<DateTime, List<TrackerMotion>> getTrackerMotionForDates(long accountId, final Collection<DateTime> dates){
+    public ImmutableMap<DateTime, ImmutableList<TrackerMotion>> getTrackerMotionForDates(long accountId, final Collection<DateTime> dates){
         final Map<String, DateTime> dateToStringMapping = new HashMap<String, DateTime>();
         for(final DateTime date:dates){
             dateToStringMapping.put(date.toString(DateTimeFormatString.FORMAT_TO_DAY), date);
         }
 
         final Collection<String> dateStrings = dateToStringMapping.keySet();
-        final ImmutableMap<String, List<TrackerMotion>> data = this.getTrackerMotionForDateStrings(accountId, dateStrings);
+        final ImmutableMap<String, ImmutableList<TrackerMotion>> data = this.getTrackerMotionForDateStrings(accountId, dateStrings);
 
-        final Map<DateTime, List<TrackerMotion>> finalResultMap = new HashMap<DateTime, List<TrackerMotion>>();
+        final Map<DateTime, ImmutableList<TrackerMotion>> finalResultMap = new HashMap<DateTime, ImmutableList<TrackerMotion>>();
         for(final String dateString:data.keySet()){
             if(dateToStringMapping.containsKey(dateString)){
                 finalResultMap.put(dateToStringMapping.get(dateString), data.get(dateString));
@@ -326,7 +329,7 @@ public class TrackerMotionDAODynamoDB {
             }
             lastEvaluatedKey = queryResult.getLastEvaluatedKey();
             loopCount++;
-        }while (lastEvaluatedKey != null && loopCount <= MAX_RETRY_COUNT);
+        }while (lastEvaluatedKey != null && loopCount <= MAX_CALL_COUNT);
 
         return ImmutableList.copyOf(finalResult);
     }
@@ -336,6 +339,11 @@ public class TrackerMotionDAODynamoDB {
         if(data.size() == 0){
             LOGGER.info("Empty motion data for account_id = {}", accountId);
             return;
+        }
+
+        if(data.size() > MAX_UPLOAD_DATA_COUNT){
+            LOGGER.error("Account: {} tries to upload large data, data size: {}", accountId, data.size());
+            throw new RuntimeException("data is too large");
         }
 
         final HashMap<String, InputProtos.TrackerDataBatch.Builder> groupedData =
@@ -402,7 +410,7 @@ public class TrackerMotionDAODynamoDB {
             result = this.dynamoDBClient.batchWriteItem(batchWriteItemRequest);
             requestItems = result.getUnprocessedItems();
             callCount++;
-        } while (result.getUnprocessedItems().size() > 0 && callCount <= MAX_RETRY_COUNT);
+        } while (result.getUnprocessedItems().size() > 0 && callCount <= MAX_CALL_COUNT);
 
         if(result.getUnprocessedItems().size() > 0){
             LOGGER.error("Account: {} tries to upload large data, data size: {}", accountId, data.size());

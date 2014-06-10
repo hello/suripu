@@ -50,6 +50,8 @@ public class TrackerMotionDAODynamoDBTest {
         this.amazonDynamoDBClient = new AmazonDynamoDBClient(this.awsCredentials);
         this.amazonDynamoDBClient.setEndpoint("http://localhost:7777");
 
+
+        cleanUp();
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(
@@ -189,7 +191,7 @@ public class TrackerMotionDAODynamoDBTest {
         final List<DateTime> dates = new ArrayList<DateTime>();
         dates.add(startTime);
 
-        ImmutableMap<DateTime, List<TrackerMotion>> actual = this.trackerMotionDAODynamoDB.getTrackerMotionForDates(accountId, dates);
+        ImmutableMap<DateTime, ImmutableList<TrackerMotion>> actual = this.trackerMotionDAODynamoDB.getTrackerMotionForDates(accountId, dates);
 
         for(final DateTime targetDate:dates) {
             assertThat(actual.get(targetDate), containsInAnyOrder(testData.get(targetDate).toArray()));
@@ -220,6 +222,11 @@ public class TrackerMotionDAODynamoDBTest {
             assertThat(actual.get(targetDate).size(), is(testData.get(targetDate).size()));
         }
 
+        actual = this.trackerMotionDAODynamoDB.getTrackerMotionForDates(accountId + 1, dates);
+        for(final DateTime targetDate:dates) {
+            assertThat(actual.get(targetDate), containsInAnyOrder(Collections.<TrackerMotion>emptyList().toArray()));
+            assertThat(actual.get(targetDate).size(), is(0));
+        }
 
     }
 
