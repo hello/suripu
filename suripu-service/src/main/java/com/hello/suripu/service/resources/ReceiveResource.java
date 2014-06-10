@@ -4,6 +4,7 @@ import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.LittleEndianDataInputStream;
+import com.google.protobuf.ByteString;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.api.input.InputProtos.SimpleSensorBatch;
@@ -13,8 +14,9 @@ import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrackerMotionDAODynamoDB;
+import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.models.DeviceAccountPair;
-import com.hello.suripu.core.models.KinesisLogger;
+import com.hello.suripu.core.logging.KinesisLogger;
 import com.hello.suripu.core.models.TempTrackerData;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -34,6 +36,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -60,7 +63,7 @@ public class ReceiveResource {
     private final TrackerMotionDAODynamoDB trackerMotionDAODynamoDB;
     private final PublicKeyStore publicKeyStore;
 
-    private final KinesisLogger kinesisLogger;
+    private final KinesisLoggerFactory kinesisLoggerFactory;
     private final CryptoHelper cryptoHelper;
 
     public ReceiveResource(final DeviceDataDAO deviceDataDAO,
@@ -69,7 +72,7 @@ public class ReceiveResource {
                            final TrackerMotionDAO trackerMotionDAO,
                            final TrackerMotionDAODynamoDB trackerMotionDAODynamoDB,
                            final PublicKeyStore publicKeyStore,
-                           final KinesisLogger kinesisLogger) {
+                           final KinesisLoggerFactory kinesisLoggerFactory) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.scoreDAO = scoreDAO;
@@ -77,7 +80,7 @@ public class ReceiveResource {
         this.trackerMotionDAODynamoDB = trackerMotionDAODynamoDB;
         this.publicKeyStore = publicKeyStore;
         cryptoHelper = new CryptoHelper();
-        this.kinesisLogger = kinesisLogger;
+        this.kinesisLoggerFactory = kinesisLoggerFactory;
     }
 
 
@@ -236,6 +239,29 @@ public class ReceiveResource {
         return Response.ok().build();
     }
 
+    @PUT
+    @Path("pill/{pill_id}")
+    @Timed
+    public Response savePillData(
+            @Scope({OAuthScope.SENSORS_BASIC}) AccessToken accessToken,
+            @PathParam("pill_id") String pillID,
+            byte[] data) {
+        final KinesisLogger kinesisLogger = kinesisLoggerFactory.buildForStreamName("test-pill-suripu");
+
+        final InputProtos.PillData pillData = InputProtos.PillData.newBuilder()
+                    .setData(ByteString.copyFrom(data))
+                    .setPillId(pillID)
+                    .setAccountId(accessToken.accountId.toString())
+                    .build();
+
+        final byte[] pillDataBytes = pillData.toByteArray();
+        final String shardingKey = pillID;
+
+        final String sequenceNumber = kinesisLogger.put(shardingKey, pillDataBytes);
+        LOGGER.debug("Data persisted to Kinesis with sequenceNumber = {}", sequenceNumber);
+        return Response.ok().build();
+    }
+
     @POST
     @Timed
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
@@ -246,8 +272,6 @@ public class ReceiveResource {
         // the accessToken is only used for upload permission at the moment
         // it will soon be removed and rely on device_id and signature from Morpheus
         // TODO: make transition from access token to signature based happen.
-
-        kinesisLogger.put(batch.getDeviceId(), batch.toByteArray());
 
         final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(batch.getDeviceId());
 
