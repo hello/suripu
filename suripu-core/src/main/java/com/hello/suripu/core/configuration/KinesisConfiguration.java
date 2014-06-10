@@ -1,9 +1,11 @@
 package com.hello.suripu.core.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableMap;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.util.Map;
 
 public class KinesisConfiguration {
 
@@ -19,10 +21,10 @@ public class KinesisConfiguration {
 
     @Valid
     @NotNull
-    @JsonProperty
-    private String streamName;
+    @JsonProperty("streams")
+    private Map<Queues, String> streams;
 
-    public String getStreamName() {
-        return streamName;
+    public ImmutableMap<Queues, String> getStreams() {
+        return ImmutableMap.copyOf(streams);
     }
 }
