@@ -95,10 +95,9 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
 
         final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider);
-
         kinesisClient.setEndpoint(configuration.getKinesisConfiguration().getEndpoint());
 
-        final KinesisLoggerFactory kinesisLoggerFactory = new KinesisLoggerFactory(kinesisClient);
+        final KinesisLoggerFactory kinesisLoggerFactory = new KinesisLoggerFactory(kinesisClient, configuration.getKinesisConfiguration().getStreams());
 
         dynamoDBClient.setEndpoint(configuration.getDynamoDBConfiguration().getEndpoint());
         // TODO; set region here?

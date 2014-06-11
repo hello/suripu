@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 
-public class KinesisLogger {
+public class KinesisLogger implements DataLogger {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(KinesisLogger.class);
 
@@ -21,6 +21,7 @@ public class KinesisLogger {
         this.streamName = streamName;
     }
 
+    @Override
     public void putAsync(final String deviceId, final byte[] payload) {
 
         final ByteBuffer data = ByteBuffer.wrap(payload);
@@ -44,6 +45,7 @@ public class KinesisLogger {
 
     }
 
+    @Override
     public String put(final String deviceId, final byte[] payload) {
         final ByteBuffer data = ByteBuffer.wrap(payload);
         final PutRecordRequest putRecordRequest = new PutRecordRequest();
@@ -62,6 +64,7 @@ public class KinesisLogger {
         return recordResult.getSequenceNumber();
     }
 
+    @Override
     public String putWithSequenceNumber(final String deviceId, final byte[] payload, final String sequenceNumber) {
         final ByteBuffer data = ByteBuffer.wrap(payload);
         final PutRecordRequest putRecordRequest = new PutRecordRequest();

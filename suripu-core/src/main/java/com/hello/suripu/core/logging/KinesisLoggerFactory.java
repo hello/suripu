@@ -1,36 +1,39 @@
 package com.hello.suripu.core.logging;
 
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
+import com.google.common.collect.ImmutableMap;
+import com.hello.suripu.core.configuration.QueueNames;
 
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class KinesisLoggerFactory {
 
     private final AmazonKinesisAsyncClient client;
-    private final ConcurrentMap<String, KinesisLogger> loggers = new ConcurrentHashMap<String, KinesisLogger>();
+    private final ImmutableMap<QueueNames, DataLogger> loggers;
 
-    public KinesisLoggerFactory(final AmazonKinesisAsyncClient client) {
+    public KinesisLoggerFactory(final AmazonKinesisAsyncClient client, final Map<QueueNames, String> streamNames) {
         this.client = client;
+
+        final Set<QueueNames> keys = streamNames.keySet();
+        final Map<QueueNames, DataLogger> streamNameDataLoggerMap = new HashMap<QueueNames, DataLogger>(streamNames.size());
+
+        for(final QueueNames queueNames : keys) {
+            final String streamName = streamNames.get(queueNames.name());
+            streamNameDataLoggerMap.put(queueNames, new KinesisLogger(client, streamName));
+        }
+
+        this.loggers = ImmutableMap.copyOf(streamNameDataLoggerMap);
     }
 
-    public KinesisLoggerFactory(final AmazonKinesisAsyncClient client, List<String> streamNames) {
-        this(client);
-        for(String streamName : streamNames) {
-            loggers.putIfAbsent(streamName, new KinesisLogger(client, streamName));
-        }
-    }
 
-    public KinesisLogger buildForStreamName(final String streamName) {
-        KinesisLogger logger = loggers.get(streamName);
-        if (logger  == null) {
-            final KinesisLogger newLogger = new KinesisLogger(client, streamName);
-            logger = loggers.putIfAbsent(streamName, newLogger);
-            if (logger == null) {
-                logger = newLogger;
-            }
+
+    public DataLogger get(final QueueNames streamName) {
+        if(!loggers.containsKey(streamName)) {
+            throw new RuntimeException("Missing Kinesis streamName");
         }
-        return logger;
+
+        return loggers.get(streamName);
     }
 }
