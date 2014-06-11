@@ -1,0 +1,4 @@
+queues:
+  pill_data: test-pill-suripu
+  morpheus_data: test-morpheus-suripu
+app_name: PillDataConsumer
