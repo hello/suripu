@@ -147,12 +147,21 @@ public class S3RecordProcessor implements IRecordProcessor {
         final ObjectMetadata dataMetadata = new ObjectMetadata();
         dataMetadata.setContentLength(dataContentLength);
 
-        final PutObjectResult blobResult = amazonS3Client.putObject(s3BucketName, filename, new ByteArrayInputStream(dataBytes), dataMetadata);
-        final PutObjectResult headerResult = amazonS3Client.putObject(s3BucketName, headerFilename, new ByteArrayInputStream(headerBytes), headerMetadata);
+        final ByteArrayInputStream dataByteArrayInputStream = new ByteArrayInputStream(dataBytes);
+        final ByteArrayInputStream headerByteArrayInputStream = new ByteArrayInputStream(headerBytes);
+
+        final PutObjectResult blobResult = amazonS3Client.putObject(s3BucketName, filename, dataByteArrayInputStream, dataMetadata);
+        final PutObjectResult headerResult = amazonS3Client.putObject(s3BucketName, headerFilename, headerByteArrayInputStream, headerMetadata);
 
         LOGGER.debug("Blob content MD5: {}", blobResult.getContentMd5());
         LOGGER.debug("Header content MD5: {}", headerResult.getContentMd5());
 
+        try {
+            dataByteArrayInputStream.close();
+            headerByteArrayInputStream.close();
+        } catch (IOException e) {
+            LOGGER.error("Failed closing ByteArrayInputStream while saving to S3", e.getMessage());
+        }
         return true;
     }
 }
