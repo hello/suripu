@@ -92,11 +92,19 @@ public class S3RecordProcessor implements IRecordProcessor {
         final DataOutputStream dos = new DataOutputStream(bos);
         try {
             roaringBitmap.serialize(dos);
+            return Optional.of(bos.toByteArray());
         } catch (IOException e) {
             LOGGER.error("Failed generating Bitmap index: {}", e.getMessage());
             return Optional.absent();
+        } finally {
+            try {
+                bos.close();
+                dos.close();
+            } catch (IOException e) {
+                LOGGER.error("{}", e.getMessage());
+            }
         }
-        return Optional.of(bos.toByteArray());
+
     }
 
 
