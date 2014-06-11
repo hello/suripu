@@ -8,7 +8,7 @@ import com.google.protobuf.ByteString;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.api.input.InputProtos.SimpleSensorBatch;
-import com.hello.suripu.core.configuration.Queues;
+import com.hello.suripu.core.configuration.QueueNames;
 import com.hello.suripu.core.crypto.CryptoHelper;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.PublicKeyStore;
@@ -247,7 +247,7 @@ public class ReceiveResource {
             @Scope({OAuthScope.SENSORS_BASIC}) AccessToken accessToken,
             @PathParam("pill_id") String pillID,
             byte[] data) {
-        final DataLogger dataLogger = kinesisLoggerFactory.get(Queues.PILL_DATA);
+        final DataLogger dataLogger = kinesisLoggerFactory.get(QueueNames.PILL_DATA);
 
         final InputProtos.PillData pillData = InputProtos.PillData.newBuilder()
                     .setData(ByteString.copyFrom(data))
