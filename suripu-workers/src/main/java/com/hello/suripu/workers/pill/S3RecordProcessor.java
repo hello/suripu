@@ -42,7 +42,7 @@ public class S3RecordProcessor implements IRecordProcessor {
     }
 
     @Override
-    public void processRecords(List<Record> records, IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
+    public void processRecords(final List<Record> records, final IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
         LOGGER.debug("Size = {}", records.size());
 
         final InputProtos.PillBlob.Builder builder = InputProtos.PillBlob.newBuilder();
@@ -77,7 +77,7 @@ public class S3RecordProcessor implements IRecordProcessor {
     }
 
     @Override
-    public void shutdown(IRecordProcessorCheckpointer iRecordProcessorCheckpointer, ShutdownReason shutdownReason) {
+    public void shutdown(final IRecordProcessorCheckpointer iRecordProcessorCheckpointer, final ShutdownReason shutdownReason) {
         LOGGER.warn("SHUTDOWN: {}", shutdownReason.toString());
         amazonS3Client.shutdown();
     }
