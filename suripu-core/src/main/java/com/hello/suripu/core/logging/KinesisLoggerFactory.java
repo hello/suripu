@@ -19,7 +19,7 @@ public class KinesisLoggerFactory {
         final Set<QueueNames> keys = streamNames.keySet();
         final Map<QueueNames, DataLogger> streamNameDataLoggerMap = new HashMap<QueueNames, DataLogger>(streamNames.size());
 
-        for(QueueNames queueNames : keys) {
+        for(final QueueNames queueNames : keys) {
             final String streamName = streamNames.get(queueNames.name());
             streamNameDataLoggerMap.put(queueNames, new KinesisLogger(client, streamName));
         }
