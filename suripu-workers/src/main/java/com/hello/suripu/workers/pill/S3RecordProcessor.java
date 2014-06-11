@@ -14,6 +14,8 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.InputProtos;
 import org.roaringbitmap.RoaringBitmap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -23,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class S3RecordProcessor implements IRecordProcessor {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(S3RecordProcessor.class);
 
     private final AmazonS3Client amazonS3Client;
     private final String s3BucketName;
@@ -39,7 +43,7 @@ public class S3RecordProcessor implements IRecordProcessor {
 
     @Override
     public void processRecords(List<Record> records, IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
-        System.out.println("Size = " + records.size());
+        LOGGER.debug("Size = {}", records.size());
 
         final InputProtos.PillBlob.Builder builder = InputProtos.PillBlob.newBuilder();
         final ArrayList<String> sequenceNumbers = new ArrayList<String>();
@@ -48,7 +52,7 @@ public class S3RecordProcessor implements IRecordProcessor {
 
         for(Record record : records) {
             sequenceNumbers.add(record.getSequenceNumber());
-            System.out.println("PartitionKey: " + record.getPartitionKey());
+            LOGGER.debug("PartitionKey: {}", record.getPartitionKey());
 
             try {
                 final InputProtos.PillData data = InputProtos.PillData.parseFrom(record.getData().array());
@@ -56,8 +60,8 @@ public class S3RecordProcessor implements IRecordProcessor {
                 accountIds.add(data.getAccountId());
                 builder.addItems(data);
             } catch (InvalidProtocolBufferException e) {
-                e.printStackTrace();
-                shutdown(iRecordProcessorCheckpointer, ShutdownReason.TERMINATE);
+                LOGGER.error("Failed to decode protobuf: {}", e.getMessage());
+                // TODO: increment error counter somewhere
             }
         }
 
@@ -66,15 +70,15 @@ public class S3RecordProcessor implements IRecordProcessor {
                 iRecordProcessorCheckpointer.checkpoint();
             }
         } catch (InvalidStateException e) {
-            e.printStackTrace();
+            LOGGER.error("{}", e.getMessage());
         } catch (ShutdownException e) {
-            e.printStackTrace();
+            LOGGER.error("Received shutdown command, bailing. {}", e.getMessage());
         }
     }
 
     @Override
     public void shutdown(IRecordProcessorCheckpointer iRecordProcessorCheckpointer, ShutdownReason shutdownReason) {
-        System.out.println("SHUTDOWN " + shutdownReason.toString());
+        LOGGER.warn("SHUTDOWN: {}", shutdownReason.toString());
         amazonS3Client.shutdown();
     }
 
@@ -89,9 +93,9 @@ public class S3RecordProcessor implements IRecordProcessor {
         try {
             roaringBitmap.serialize(dos);
         } catch (IOException e) {
+            LOGGER.error("Failed generating Bitmap index: {}", e.getMessage());
             return Optional.absent();
         }
-
         return Optional.of(bos.toByteArray());
     }
 
@@ -108,7 +112,7 @@ public class S3RecordProcessor implements IRecordProcessor {
 
         final Optional<byte[]> compressedIndex = buildIndex(accountIds);
         if(!compressedIndex.isPresent()) {
-            System.out.println("Failed to compress accountId index. Bailing.");
+            LOGGER.warn("Failed to compress accountId index. Bailing.");
             return false;
         }
 
@@ -123,9 +127,8 @@ public class S3RecordProcessor implements IRecordProcessor {
         final byte[] headerBytes = pillBlodHeader.toByteArray();
         final byte[] dataBytes = builder.build().toByteArray();
 
-        System.out.println("Filename = " + filename);
-        System.out.println("Header Filename = " + headerFilename);
-
+        LOGGER.debug("Filename = {}", filename);
+        LOGGER.debug("Header Filename = {}", headerFilename);
 
         final Long headerContentLength = Long.valueOf(headerBytes.length);
         final ObjectMetadata headerMetadata = new ObjectMetadata();
@@ -139,8 +142,8 @@ public class S3RecordProcessor implements IRecordProcessor {
         final PutObjectResult blobResult = amazonS3Client.putObject(s3BucketName, filename, new ByteArrayInputStream(dataBytes), dataMetadata);
         final PutObjectResult headerResult = amazonS3Client.putObject(s3BucketName, headerFilename, new ByteArrayInputStream(headerBytes), headerMetadata);
 
-        System.out.println("Blob content MD5: " + blobResult.getContentMd5());
-        System.out.println("Header content MD5: " + headerResult.getContentMd5());
+        LOGGER.debug("Blob content MD5: {}", blobResult.getContentMd5());
+        LOGGER.debug("Header content MD5: {}", headerResult.getContentMd5());
 
         return true;
     }
