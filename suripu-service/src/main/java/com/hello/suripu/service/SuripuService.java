@@ -17,6 +17,7 @@ import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrackerMotionDAODynamoDB;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
+import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.health.DynamoDbHealthCheck;
 import com.hello.suripu.core.health.KinesisHealthCheck;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
@@ -41,6 +42,7 @@ import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.jdbi.DBIFactory;
+import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
 import com.yammer.dropwizard.jdbi.bundles.DBIExceptionsBundle;
 import com.yammer.metrics.core.MetricPredicate;
 import org.skife.jdbi.v2.DBI;
@@ -74,6 +76,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final DBIFactory factory = new DBIFactory();
         final DBI jdbi = factory.build(environment, configuration.getDatabaseConfiguration(), "postgresql");
         jdbi.registerArgumentFactory(new JodaArgumentFactory());
+        jdbi.registerContainerFactory(new OptionalContainerFactory());
+        jdbi.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
 
         final DeviceDataDAO dao = jdbi.onDemand(DeviceDataDAO.class);
         final AccessTokenDAO accessTokenDAO = jdbi.onDemand(AccessTokenDAO.class);

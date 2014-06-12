@@ -1,20 +1,16 @@
 package com.hello.suripu.service.db;
 
+import com.hello.suripu.core.db.binders.BindDeviceBatch;
+import com.hello.suripu.core.db.binders.DeviceBatch;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-
-import java.util.List;
 
 public interface DeviceDataDAO {
 
-    @SqlBatch("INSERT INTO sensor_samples (sensor_id, device_id, ts, val) VALUES(:sensor_id, :device_id, :ts, :val);")
-    void insertBatch(
-            @Bind("sensor_id") List<Integer> sensorIds,
-            @Bind("device_id") Long deviceId,
-            @Bind("ts") List<DateTime> timestamps,
-            @Bind("val") List<Integer> value);
+    @SqlUpdate("INSERT INTO device_sensors_batch (account_id, ambient_temp, ambient_light, ambient_humidity, ambient_air_quality, ts, offset_millis) " +
+            "VALUES(:account_id, :ambient_temp, :ambient_light, :ambient_humidity, :ambient_air_quality, :ts, :offset_millis);")
+    void insertBatch(@BindDeviceBatch final DeviceBatch deviceBatch);
 
     @SqlUpdate("INSERT INTO device_sensors (device_id, account_id, ts, offset_millis, ambient_temp, ambient_light, " +
             "ambient_humidity, ambient_air_quality) VALUES(:device_id, :account_id, :ts, :offset_millis, :ambient_temp, :ambient_light, :ambient_humidity, :ambient_air_quality)")
