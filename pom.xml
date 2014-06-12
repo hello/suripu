@@ -24,6 +24,7 @@
         <module>suripu-factory</module>
         <module>suripu-sync</module>
         <module>suripu-algorithm</module>
+        <module>suripu-workers</module>
     </modules>
 
     <dependencies>

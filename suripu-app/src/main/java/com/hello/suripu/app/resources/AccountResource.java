@@ -16,6 +16,7 @@ import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -38,8 +39,7 @@ public class AccountResource {
     @GET
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
-    public Account getAccount(
-            @Scope({OAuthScope.USER_EXTENDED}) final AccessToken accessToken) {
+    public Account getAccount(@Scope({OAuthScope.USER_EXTENDED}) final AccessToken accessToken) {
 
         LOGGER.debug("{}", accessToken);
         final Optional<Account> account = accountDAO.getById(accessToken.accountId);
@@ -56,8 +56,8 @@ public class AccountResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response register(
-            @Valid final Registration registration,
-            @Scope({OAuthScope.ADMINISTRATION_WRITE}) final AccessToken accessToken) {
+//            @Scope({OAuthScope.ADMINISTRATION_WRITE}) final AccessToken accessToken,
+            @Valid final Registration registration) {
 
         LOGGER.info("Attempting to register account with email: {}", registration.email);
 
@@ -77,5 +77,31 @@ public class AccountResource {
         }
 
         return Response.serverError().entity("").type(MediaType.TEXT_PLAIN_TYPE).build();
+    }
+
+    @PUT
+    @Timed
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Account modify(
+            @Scope({OAuthScope.ADMINISTRATION_WRITE}) final AccessToken accessToken,
+            @Valid final Account account)
+    {
+        if(accessToken.accountId != account.id) {
+            LOGGER.warn("Account {} attempting to change account id = {}", accessToken.accountId, account.id);
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("").build());
+        }
+
+        if(account.email.isEmpty()) {
+            LOGGER.warn("Email was empty for account id = {}. Refusing to update account.");
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Email missing.").build());
+        }
+
+        if(accountDAO.update(account)) {
+            return account;
+        };
+
+        LOGGER.warn("Failed updating account with id = {}. Requested by accessToken = {}", account.id, accessToken);
+        throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("server error").build());
     }
 }

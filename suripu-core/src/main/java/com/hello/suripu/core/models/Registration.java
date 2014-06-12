@@ -26,10 +26,10 @@ public class Registration {
     public final Gender gender;
 
     @JsonProperty("height")
-    public final float height;
+    public final Integer height;
 
     @JsonProperty("weight")
-    public final float weight;
+    public final Integer weight;
 
     @JsonProperty("tz")
     public final TimeZone timeZone;
@@ -59,8 +59,8 @@ public class Registration {
             @JsonProperty("email") final String email,
             @JsonProperty("password") final String password,
             @JsonProperty("gender") final Gender gender,
-            @JsonProperty("height") final float height,
-            @JsonProperty("weight") final float weight,
+            @JsonProperty("height") final Integer height,
+            @JsonProperty("weight") final Integer weight,
             @JsonProperty("age") final Integer age,
             @JsonProperty("tz") final String timeZone
     ) {
@@ -95,8 +95,8 @@ public class Registration {
             final String email,
             final String hashedPassword,
             final Gender gender,
-            final float height,
-            final float weight,
+            final Integer height,
+            final Integer weight,
             final Integer age,
             final String timeZone,
             final DateTime datetime

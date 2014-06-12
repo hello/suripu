@@ -19,10 +19,10 @@ import com.hello.suripu.core.db.TrackerMotionDAODynamoDB;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.health.DynamoDbHealthCheck;
 import com.hello.suripu.core.health.KinesisHealthCheck;
+import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.managers.DynamoDBClientManaged;
 import com.hello.suripu.core.managers.KinesisClientManaged;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
-import com.hello.suripu.core.models.KinesisLogger;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
@@ -97,7 +97,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider);
         kinesisClient.setEndpoint(configuration.getKinesisConfiguration().getEndpoint());
 
-        final KinesisLogger kinesisLogger = new KinesisLogger(kinesisClient, configuration.getKinesisConfiguration().getStreamName());
+        final KinesisLoggerFactory kinesisLoggerFactory = new KinesisLoggerFactory(kinesisClient, configuration.getKinesisConfiguration().getStreams());
 
         dynamoDBClient.setEndpoint(configuration.getDynamoDBConfiguration().getEndpoint());
         // TODO; set region here?
@@ -148,7 +148,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         environment.addResource(new ReceiveResource(dao, deviceDAO, scoreDAO,
                 trackerMotionDAO,
                 trackerMotionDAODynamoDB,
-                publicKeyStore, kinesisLogger));
+                publicKeyStore, kinesisLoggerFactory));
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());
 
