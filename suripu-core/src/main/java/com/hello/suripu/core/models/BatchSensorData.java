@@ -1,4 +1,4 @@
-package com.hello.suripu.core.db.binders;
+package com.hello.suripu.core.models;
 
 import com.google.common.collect.ImmutableList;
 import org.joda.time.DateTime;
@@ -7,7 +7,7 @@ import org.joda.time.DateTimeZone;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DeviceBatch {
+public class BatchSensorData {
 
     public final Long accountId;
     public final List<Integer> ambientTemp;
@@ -27,7 +27,7 @@ public class DeviceBatch {
      * @param dateTime
      * @param offsetMillis
      */
-    public DeviceBatch(
+    public BatchSensorData(
             final Long accountId,
             final List<Integer> ambientTemp,
             final List<Integer> ambientAirQuality,
@@ -94,8 +94,8 @@ public class DeviceBatch {
             return this;
         }
 
-        public DeviceBatch build() {
-            return new DeviceBatch(accountId, ambientTemp, ambientAirQuality, ambientHumidity, ambientLight, dateTime, offsetMillis);
+        public BatchSensorData build() {
+            return new BatchSensorData(accountId, ambientTemp, ambientAirQuality, ambientHumidity, ambientLight, dateTime, offsetMillis);
         }
     }
 }
