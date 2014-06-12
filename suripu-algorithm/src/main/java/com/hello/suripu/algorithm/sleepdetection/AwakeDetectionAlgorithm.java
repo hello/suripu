@@ -213,7 +213,7 @@ public class AwakeDetectionAlgorithm implements SleepDetectionAlgorithm {
                                                             final List<SleepThreshold> thresholds,
                                                             final PaddingMode paddingMode){
 
-        final LinkedList<RankFactor> errors = new LinkedList<RankFactor>();
+        final LinkedList<ThresholdRankFactor> errors = new LinkedList<ThresholdRankFactor>();
         for(final SleepThreshold threshold:thresholds){
             final Segment segment = getAwakeSegment(data, threshold, paddingMode);
             if(segment == null){
@@ -237,15 +237,15 @@ public class AwakeDetectionAlgorithm implements SleepDetectionAlgorithm {
                 }
             }
 
-            final RankFactor errorDiff = new RankFactor(Math.abs(errorDown - errorUp), threshold);
+            final ThresholdRankFactor errorDiff = new ThresholdRankFactor(Math.abs(errorDown - errorUp), threshold);
             errors.add(errorDiff);
 
         }
 
-        final RankFactor[] errorDiffs = errors.toArray(new RankFactor[0]);
-        Arrays.sort(errorDiffs, new Comparator<RankFactor>() {
+        final ThresholdRankFactor[] errorDiffs = errors.toArray(new ThresholdRankFactor[0]);
+        Arrays.sort(errorDiffs, new Comparator<ThresholdRankFactor>() {
             @Override
-            public int compare(RankFactor lhs, RankFactor rhs) {
+            public int compare(ThresholdRankFactor lhs, ThresholdRankFactor rhs) {
                 return Double.compare(lhs.errorDiff, rhs.errorDiff);
             }
         });

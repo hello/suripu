@@ -146,7 +146,7 @@ public class QuietPeriodDetectionAlgorithm implements SleepDetectionAlgorithm {
     }
 
     private SleepThreshold selectThresholdOnQuietPeriod(final List<AmplitudeData> data, final List<SleepThreshold> thresholds){
-        final ArrayList<RankFactor> errors = new ArrayList<RankFactor>();
+        final ArrayList<ThresholdRankFactor> errors = new ArrayList<ThresholdRankFactor>();
         for(SleepThreshold threshold:thresholds){
             final Segment segment = getQuietPeriod(data, threshold);
             if(segment == null){
@@ -171,16 +171,16 @@ public class QuietPeriodDetectionAlgorithm implements SleepDetectionAlgorithm {
             }
 
             //if(errorUp > 0.0 && errorSleep > 0.0){
-            final RankFactor errorDiff = new RankFactor(Math.abs(errorSleep - errorUp), threshold);
+            final ThresholdRankFactor errorDiff = new ThresholdRankFactor(Math.abs(errorSleep - errorUp), threshold);
             errors.add(errorDiff);
             //}
 
         }
 
-        final RankFactor[] errorDiffs = errors.toArray(new RankFactor[0]);
-        Arrays.sort(errorDiffs, new Comparator<RankFactor>() {
+        final ThresholdRankFactor[] errorDiffs = errors.toArray(new ThresholdRankFactor[0]);
+        Arrays.sort(errorDiffs, new Comparator<ThresholdRankFactor>() {
             @Override
-            public int compare(RankFactor lhs, RankFactor rhs) {
+            public int compare(ThresholdRankFactor lhs, ThresholdRankFactor rhs) {
                 return Double.compare(lhs.errorDiff, rhs.errorDiff);
             }
         });
