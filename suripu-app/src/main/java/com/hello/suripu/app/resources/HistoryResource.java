@@ -146,7 +146,7 @@ public class HistoryResource {
 
         try {
             // Now we verified that the params passed by user are valid.
-            final ImmutableMap<DateTime, List<TrackerMotion>> result = this.trackerMotionDAODynamoDB.getTrackerMotionForDates(accessToken.accountId, dateToStringMapping.keySet());
+            final ImmutableMap<DateTime, ImmutableList<TrackerMotion>> result = this.trackerMotionDAODynamoDB.getTrackerMotionForDates(accessToken.accountId, dateToStringMapping.keySet());
             final Map<String, List<TrackerMotion>> convertedResult = new HashMap<String, List<TrackerMotion>>();
             for (final DateTime date : result.keySet()) {
                 if (dateToStringMapping.containsKey(date)) {
