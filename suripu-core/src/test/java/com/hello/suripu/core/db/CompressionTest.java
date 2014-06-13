@@ -7,6 +7,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Before;
 import org.junit.Test;
+import org.xerial.snappy.Snappy;
 
 import java.util.ArrayList;
 
@@ -123,21 +124,82 @@ public class CompressionTest {
     public void testCompressionTime(){
         int testRound = 100;
 
-        long startTimestamp = DateTime.now().getMillis();
+
 
         try {
+
+            byte[] compressedData = null;
+            System.out.println("raw data length: " + this.rawDataInBytes.length);
+
+
+
+            compressedData = Compression.bzip2Compress(this.rawDataInBytes);
+            System.out.println("bzip2 compressed length: " + compressedData.length);
+
+            long startTimestamp = DateTime.now().getMillis();
             for (int i = 0; i < testRound; i++) {
                 Compression.bzip2Compress(this.rawDataInBytes);
+
             }
 
             long bzip2CompressionTime = DateTime.now().getMillis() - startTimestamp;
+            System.out.println("bzip2 compression time: " + bzip2CompressionTime);
+            startTimestamp = DateTime.now().getMillis();
+            for (int i = 0; i < testRound; i++) {
+                Compression.bzip2Decompress(compressedData);
+
+            }
+
+            long bzip2DecompressionTime = DateTime.now().getMillis() - startTimestamp;
+            System.out.println("bzip2 decompression time: " + bzip2DecompressionTime);
+
+
+
+
+
+            compressedData = Compression.gzipCompress(this.rawDataInBytes);
+            System.out.println("gzip compressed length: " + compressedData.length);
 
             startTimestamp = DateTime.now().getMillis();
             for(int i = 0; i < testRound; i++){
                 Compression.gzipCompress(this.rawDataInBytes);
+
             }
 
             long gzipCompressionTime = DateTime.now().getMillis() - startTimestamp;
+            System.out.println("gzip compression time: " + gzipCompressionTime);
+
+            startTimestamp = DateTime.now().getMillis();
+            for (int i = 0; i < testRound; i++) {
+                Compression.gzipDecompress(compressedData);
+
+            }
+
+            long gzipDecompressionTime = DateTime.now().getMillis() - startTimestamp;
+            System.out.println("gzip decompression time: " + gzipDecompressionTime);
+
+
+
+
+            compressedData = Snappy.compress(this.rawDataInBytes);
+            System.out.println("Snappy compressed length: " + compressedData.length);
+            startTimestamp = DateTime.now().getMillis();
+            for(int i = 0; i < testRound; i++){
+                Snappy.compress(this.rawDataInBytes);
+            }
+
+            long snappyCompressionTime = DateTime.now().getMillis() - startTimestamp;
+            System.out.println("snappy compression time: " + snappyCompressionTime);
+
+            startTimestamp = DateTime.now().getMillis();
+            for (int i = 0; i < testRound; i++) {
+                Snappy.uncompress(compressedData);
+
+            }
+
+            long snappyDecompressionTime = DateTime.now().getMillis() - startTimestamp;
+            System.out.println("snappy decompression time: " + snappyDecompressionTime);
+
 
             assertThat(gzipCompressionTime, lessThan(bzip2CompressionTime));
         }catch (Exception ex){
