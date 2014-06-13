@@ -1,15 +1,22 @@
 package com.hello.suripu.core.db;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
+import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
+import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
+import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
+import com.amazonaws.services.dynamodbv2.model.KeyType;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ReturnConsumedCapacity;
+import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,6 +28,7 @@ import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.db.util.Compression;
 import com.hello.suripu.core.db.util.DateTimeFormatString;
 import com.hello.suripu.core.models.Event;
+import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +51,7 @@ import java.util.Map;
  */
 public class EventDAODynamoDB {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(TrackerMotionDAODynamoDB.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(EventDAODynamoDB.class);
     private final AmazonDynamoDBClient dynamoDBClient;
     private final String tableName;
 
@@ -70,6 +78,7 @@ public class EventDAODynamoDB {
         this.eventType = eventType;
     }
 
+    @Timed
     public ImmutableList<Event> getEventsForDate(long accountId, final DateTime date){
         final Collection<DateTime> convertedParam = new ArrayList<DateTime>();
         convertedParam.add(date);
@@ -77,6 +86,7 @@ public class EventDAODynamoDB {
         return result.get(date);
     }
 
+    @Timed
     public ImmutableMap<DateTime, ImmutableList<Event>> getEventsForDates(long accountId, final Collection<DateTime> dates){
         final Map<String, DateTime> dateToStringMapping = new HashMap<String, DateTime>();
         for(final DateTime date:dates){
@@ -223,12 +233,14 @@ public class EventDAODynamoDB {
     }
 
 
+    @Timed
     public void setEventsForDate(long accountId, final DateTime dateOfTheNight, final List<Event> data){
         final Map<DateTime, List<Event>> convertedParam = new HashMap<DateTime, List<Event>>();
         convertedParam.put(dateOfTheNight, data);
         setEventsForDates(accountId, convertedParam);
     }
 
+    @Timed
     public void setEventsForDates(long accountId, final Map<DateTime, List<Event>> data){
         final Map<String, List<Event>> dataWithStringDates = new HashMap<String, List<Event>>();
 
@@ -333,5 +345,28 @@ public class EventDAODynamoDB {
             LOGGER.error("Account: {} tries to upload large event data, data size: {}", accountId, itemCount);
             throw new RuntimeException("data is too large");
         }
+    }
+
+    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
+        final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
+
+        request.withKeySchema(
+                new KeySchemaElement().withAttributeName(EventDAODynamoDB.ACCOUNT_ID_ATTRIBUTE_NAME).withKeyType(KeyType.HASH),
+                new KeySchemaElement().withAttributeName(EventDAODynamoDB.TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME).withKeyType(KeyType.RANGE)
+        );
+
+        request.withAttributeDefinitions(
+                new AttributeDefinition().withAttributeName(EventDAODynamoDB.ACCOUNT_ID_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.N),
+                new AttributeDefinition().withAttributeName(EventDAODynamoDB.TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.S)
+
+        );
+
+
+        request.setProvisionedThroughput(new ProvisionedThroughput()
+                .withReadCapacityUnits(1L)
+                .withWriteCapacityUnits(1L));
+
+        final CreateTableResult result = dynamoDBClient.createTable(request);
+        return result;
     }
 }

@@ -39,6 +39,7 @@ import java.util.Map;
 /**
  * Created by pangwu on 5/30/14.
  */
+@Deprecated
 public class TrackerMotionDAODynamoDB {
     private final static Logger LOGGER = LoggerFactory.getLogger(TrackerMotionDAODynamoDB.class);
     private final AmazonDynamoDBClient dynamoDBClient;

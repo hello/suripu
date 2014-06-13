@@ -55,7 +55,7 @@ public class AwakeDetectionAlgorithm implements SleepDetectionAlgorithm {
         final ImmutableList<SleepThreshold> awakeThresholds = SleepThreshold.generateEqualBinThresholds(flattenWakeUpPeriodData, 1000);
 
         final SleepThreshold fallAsleepThreshold = selectThresholdOnAwakeSegments(flattenFallAsleepPeriodData, fallAsleepThresholds, PaddingMode.PAD_LATE);
-        final SleepThreshold wakeUpThreshold = selectThresholdOnAwakeSegments(flattenWakeUpPeriodData, awakeThresholds, PaddingMode.PAD_LATE);
+        final SleepThreshold wakeUpThreshold = selectThresholdOnAwakeSegments(flattenWakeUpPeriodData, awakeThresholds, PaddingMode.PAD_EARLY);
 
 
         //SleepThreshold selectedThreshold = SleepThresholdSelector.selectAverage(buffer);
@@ -72,7 +72,7 @@ public class AwakeDetectionAlgorithm implements SleepDetectionAlgorithm {
         }
 
         if(wakeUpThreshold != null) {
-            final Segment wakeUpSegment = getAwakeSegment(flattenWakeUpPeriodData, wakeUpThreshold, PaddingMode.PAD_LATE);
+            final Segment wakeUpSegment = getAwakeSegment(flattenWakeUpPeriodData, wakeUpThreshold, PaddingMode.PAD_EARLY);
             if(wakeUpSegment != null) {
                 sleepSegment.setEndTimestamp(wakeUpSegment.getStartTimestamp());
             }
@@ -169,11 +169,11 @@ public class AwakeDetectionAlgorithm implements SleepDetectionAlgorithm {
         for(int i = sleepSegments.length - 1; i >= 0; i--) {
             final Segment segment = sleepSegments[i];
             if(this.smoothWindowMillis >= 20 * 60 * 1000){
-                if (segment.getDuration() > 1 * this.smoothWindowMillis) {
+                if (segment.getDuration() >= 1 * this.smoothWindowMillis) {
                     longEnoughSegments.add(segment);
                 }
             }else {
-                if (segment.getDuration() > 2 * this.smoothWindowMillis) {
+                if (segment.getDuration() >= 2 * this.smoothWindowMillis) {
                     //return segment;
                     longEnoughSegments.add(segment);
                 }
