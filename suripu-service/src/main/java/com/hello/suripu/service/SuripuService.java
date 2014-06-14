@@ -35,7 +35,7 @@ import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
 import com.hello.suripu.service.cli.CreateDynamoDBTrackerTableCommand;
 import com.hello.suripu.service.cli.MigrateTrackerDataCommand;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
-import com.hello.suripu.service.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.service.resources.ReceiveResource;
 import com.librato.metrics.LibratoReporter;
 import com.yammer.dropwizard.Service;

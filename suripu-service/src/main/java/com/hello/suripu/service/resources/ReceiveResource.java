@@ -25,7 +25,7 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.service.db.DataExtractor;
-import com.hello.suripu.service.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceDataDAO;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
