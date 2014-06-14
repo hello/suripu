@@ -16,4 +16,21 @@ to enjoy output like:
 [INFO]  Currently on revision [09b33ddd4a5f51be485675b36254ecdf8e976ed8]
 [INFO]  Also known as bacon-pennsylvania-burger-kentucky
 [INFO]  Config files seem valid.
+[INFO]	Running $mvn clean compile now. Might take a few seconds to complete
+[INFO]	suripu-parent
+[INFO]	suripu-api
+[INFO]	suripu-core
+[INFO]	suripu-service
+[INFO]	suripu-app
+[INFO]	suripu-factory
+[INFO]	suripu-sync
+[INFO]	suripu-workers
+[INFO]	suripu-parent ..................................... SUCCESS [0.132s]
+[INFO]	suripu-api ........................................ SUCCESS [3.315s]
+[INFO]	suripu-core ....................................... SUCCESS [1.549s]
+[INFO]	suripu-service .................................... SUCCESS [0.554s]
+[INFO]	suripu-app ........................................ SUCCESS [0.341s]
+[INFO]	suripu-factory .................................... SUCCESS [0.254s]
+[INFO]	suripu-sync ....................................... SUCCESS [0.175s]
+[INFO]	suripu-workers .................................... SUCCESS [0.227s]
 ```

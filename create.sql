@@ -200,3 +200,16 @@ ALTER TABLE device_sensors ADD COLUMN account_id INTEGER;
 -- UPDATE device_sensors SET account_id = account_device_map.account_id
 --    FROM account_device_map
 --    WHERE device_sensors.device_id = account_device_map.id;
+
+
+
+CREATE TABLE device_sensors_batch (
+    id BIGSERIAL PRIMARY KEY,
+    account_id BIGINT,
+    ambient_temp int[],
+    ambient_light int[],
+    ambient_humidity int[],
+    ambient_air_quality int[],
+    ts TIMESTAMP,
+    offset_millis INTEGER
+);
