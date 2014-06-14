@@ -15,9 +15,9 @@ import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrackerMotionDAODynamoDB;
-import com.hello.suripu.core.db.binders.DeviceBatch;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
+import com.hello.suripu.core.models.BatchSensorData;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.TempTrackerData;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -350,8 +350,9 @@ public class ReceiveResource {
                 DateTimeZone.UTC
         );
 
-        final DeviceBatch deviceBatch = new DeviceBatch.Builder()
+        final BatchSensorData deviceBatch = new BatchSensorData.Builder()
                 .withAccountId(accessToken.accountId)
+                .withDeviceId(batch.getDeviceId())
                 .withAmbientTemp(tempSamples)
                 .withAmbientAirQuality(airQualitySamples)
                 .withAmbientHumidity(humiditySamples)
