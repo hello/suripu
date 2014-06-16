@@ -1,12 +1,15 @@
 language: java
-
+script: mvn clean package --settings settings.xml
 branches:
   only:
-    - master
-
+  - master
 notifications:
-  # See http://about.travis-ci.org/docs/user/build-configuration/ to learn more
   email: true
 jdk:
-  - openjdk7
-  - oraclejdk7
+- openjdk7
+- oraclejdk7
+env:
+  secure: 
+  global:
+  - secure: VeqOLZ0H41rli852ZCAKtB3HgJC+5UOS/DWGufa1FoYADs/fkUw+qVfIEbOuLkT5+jCKk06Ld65/BotVV3NN6rbmxtfce33YZtO5UoeGnuf0YbooAfxRb2exGArKtuzae+Z9vHQgnS/BB9+5sjcodpcbtBfm5rvb1hlKqFvD9No=
+  - secure: czOuDiTrx64IdY6/bbAekNdAKZorX7UNYSbHydL3+1bRql5CaPpHTJo6Ckm7o/t03VnCpdXiPBGjui5Ew036obpgVEhEH9Vxves4rqurfGA0Fkh2DuHpMEHiOcgu285UyZcsJP+mL4L1BWJQAqYrPmXABVPfu/Oxo5PM9/57yU0=
