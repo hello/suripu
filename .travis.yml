@@ -1,10 +1,8 @@
 language: java
 
-before_install:
-  - touch ~/.m2/settings.xml
-  - cat settings.xml >> ~/.m2/settings.xml
+before_install: "git clone -b master `git config --get remote.origin.url` target/master"
 
-script: mvn clean package deploy
+script: "mvn clean package deploy --settings target/master/settings.xml"
 branches:
   only:
   - master
