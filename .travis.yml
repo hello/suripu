@@ -3,7 +3,6 @@ language: java
 before_install:
   - touch ~/.m2/settings.xml
   - cat settings.xml >> ~/.m2/settings.xml
-  - cat ~/.m2/settings.xml
 
 script: mvn clean package deploy
 branches:
@@ -15,8 +14,8 @@ jdk:
 - oraclejdk7
 env:
   global:
-  - secure: VeqOLZ0H41rli852ZCAKtB3HgJC+5UOS/DWGufa1FoYADs/fkUw+qVfIEbOuLkT5+jCKk06Ld65/BotVV3NN6rbmxtfce33YZtO5UoeGnuf0YbooAfxRb2exGArKtuzae+Z9vHQgnS/BB9+5sjcodpcbtBfm5rvb1hlKqFvD9No=
-  - secure: czOuDiTrx64IdY6/bbAekNdAKZorX7UNYSbHydL3+1bRql5CaPpHTJo6Ckm7o/t03VnCpdXiPBGjui5Ew036obpgVEhEH9Vxves4rqurfGA0Fkh2DuHpMEHiOcgu285UyZcsJP+mL4L1BWJQAqYrPmXABVPfu/Oxo5PM9/57yU0=
+  - secure: "ZtcabJIbdoPJSX8tHU6Hocj1dknD/UxATnqvvVo3RK9CwWYlzEbO/3AyAqul78ythMOnvouU9dIFoxjxb4lek1nsd3dvSix7zNa4YVDvcj0+uV/IBl12OqTO2RnxlP5MPIeRzkrhs0vg1OfvxquMizBcBdF7MbwmdUtL1g1IA3A="
+  - secure: "Ed/gOoioqi7oacM+HpYsBF8nfXE6sd3Y99ZtNKg4mTrNUB9adF9jijv2B669TP+L/QXNoMvZizF7Cq+JFxjgH39pEMuMJfMsci2upxEtymZRbWKv3Kr6wM8AF7Jdyinf71RkIZC3VffKOluQ6vSFx1O51oVuSyrjyGxOYraPKWI="
 
 
 
