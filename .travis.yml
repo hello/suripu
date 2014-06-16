@@ -1,6 +1,6 @@
 language: java
 
-before_script:
+before_install:
   - touch ~/.m2/settings.xml
   - cat settings.xml >> ~/.m2/settings.xml
 
