@@ -6,7 +6,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
-import com.hello.suripu.core.db.EventDAODynamoDB;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -14,10 +14,10 @@ import net.sourceforge.argparse4j.inf.Namespace;
 /**
  * Created by pangwu on 5/30/14.
  */
-public class CreateDynamoDBEventTableCommand extends ConfiguredCommand<SuripuAppConfiguration> {
+public class CreateDynamoDBTimeZoneHistoryTableCommand extends ConfiguredCommand<SuripuAppConfiguration> {
 
-    public CreateDynamoDBEventTableCommand(){
-        super("create_event_table", "Create dynamoDB Event table");
+    public CreateDynamoDBTimeZoneHistoryTableCommand(){
+        super("create_timezone_history_table", "Create dynamoDB time zone history table");
     }
 
     @Override
@@ -25,10 +25,10 @@ public class CreateDynamoDBEventTableCommand extends ConfiguredCommand<SuripuApp
         final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
 
-        client.setEndpoint(configuration.getEventDBConfiguration().getEndpoint());
-        final String tableName = configuration.getEventDBConfiguration().getTableName();
+        client.setEndpoint(configuration.getTimeZoneHistoryDBConfiguration().getEndpoint());
+        final String tableName = configuration.getTimeZoneHistoryDBConfiguration().getTableName();
 
-        final CreateTableResult result = EventDAODynamoDB.createTable(tableName, client);
+        final CreateTableResult result = TimeZoneHistoryDAODynamoDB.createTable(tableName, client);
         final TableDescription description = result.getTableDescription();
         System.out.println(description.getTableStatus());
     }

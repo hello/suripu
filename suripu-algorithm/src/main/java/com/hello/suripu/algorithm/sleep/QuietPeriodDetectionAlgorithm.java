@@ -1,4 +1,4 @@
-package com.hello.suripu.algorithm.sleepdetection;
+package com.hello.suripu.algorithm.sleep;
 
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.core.AlgorithmException;
@@ -19,24 +19,23 @@ import java.util.List;
 /**
  * Created by pangwu on 6/11/14.
  */
-public class QuietPeriodDetectionAlgorithm implements SleepDetectionAlgorithm {
+public class QuietPeriodDetectionAlgorithm extends SleepDetectionAlgorithm {
 
-    private final int smoothWindowSizeMillis;
+    public QuietPeriodDetectionAlgorithm(final DataSource<AmplitudeData> dataSource, final int smoothWindowSizeMillis){
+        super(dataSource, smoothWindowSizeMillis);
 
-    public QuietPeriodDetectionAlgorithm(final int smoothWindowSizeMillis){
-        this.smoothWindowSizeMillis = smoothWindowSizeMillis;
     }
 
     @Override
-    public Segment getSleepPeriod(final DataSource<AmplitudeData> dataSource, final DateTime dateOfTheNight) throws AlgorithmException {
+    public Segment getSleepPeriod(final DateTime dateOfTheNight) throws AlgorithmException {
 
-        final ImmutableList<AmplitudeData> rawData = dataSource.getDataForDate(dateOfTheNight);
+        final ImmutableList<AmplitudeData> rawData = getDataSource().getDataForDate(dateOfTheNight);
         if(rawData.size() == 0){
             throw new AlgorithmException("No data available for date: " + dateOfTheNight);
         }
 
 
-        final AmplitudeDataPreprocessor smoother = new MaxAmplitudeAggregator(this.smoothWindowSizeMillis);
+        final AmplitudeDataPreprocessor smoother = new MaxAmplitudeAggregator(getSmoothWindow());
         final ImmutableList<AmplitudeData> smoothedData = smoother.process(rawData);
         final ImmutableList<AmplitudeData> data = NumericalUtils.roofDataByAverage(smoothedData);
 
@@ -96,7 +95,7 @@ public class QuietPeriodDetectionAlgorithm implements SleepDetectionAlgorithm {
 
                         if(segments.size() > 0){
                             Segment previousSegment = segments.getLast();
-                            if(startTime - previousSegment.getEndTimestamp() <= 3 * this.smoothWindowSizeMillis) {
+                            if(startTime - previousSegment.getEndTimestamp() <= 3 * getSmoothWindow()) {
                                 previousSegment.setEndTimestamp(endTime);
                             }else{
                                 segments.add(segment);

@@ -3,6 +3,9 @@ package com.hello.suripu.app;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.hello.suripu.app.cli.CreateDynamoDBEventTableCommand;
+import com.hello.suripu.app.cli.CreateDynamoDBTimeZoneHistoryTableCommand;
+import com.hello.suripu.app.cli.RecreateEventsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.resources.AccountResource;
 import com.hello.suripu.app.resources.ApplicationResource;
@@ -57,6 +60,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
     @Override
     public void initialize(final Bootstrap<SuripuAppConfiguration> bootstrap) {
         bootstrap.addBundle(new DBIExceptionsBundle());
+        bootstrap.addCommand(new RecreateEventsCommand());
+        bootstrap.addCommand(new CreateDynamoDBEventTableCommand());
+        bootstrap.addCommand(new CreateDynamoDBTimeZoneHistoryTableCommand());
     }
 
     @Override

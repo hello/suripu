@@ -55,9 +55,6 @@ public class EventDAODynamoDB {
     private final AmazonDynamoDBClient dynamoDBClient;
     private final String tableName;
 
-    private final Event.Type eventType;
-
-
     public static final String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
 
     public static final String TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME = "target_date_of_night";
@@ -72,10 +69,10 @@ public class EventDAODynamoDB {
     public final String JSON_CHARSET = "UTF-8";
 
 
-    public EventDAODynamoDB(final AmazonDynamoDBClient dynamoDBClient, final String tableName, final Event.Type eventType){
+    public EventDAODynamoDB(final AmazonDynamoDBClient dynamoDBClient, final String tableName){
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
-        this.eventType = eventType;
+
     }
 
     @Timed

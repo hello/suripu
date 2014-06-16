@@ -13,7 +13,8 @@ public class Event {
         NOISE(1),
         SNORING(2),
         SLEEP_TALK(3),
-        LIGHT(4);
+        LIGHT(4),
+        SLEEP_MOTION(5);
 
         private int value;
 
@@ -37,6 +38,8 @@ public class Event {
                     return SLEEP_TALK;
                 case 4:
                     return LIGHT;
+                case 5:
+                    return SLEEP_MOTION;
                 default:
                     return MOTION;
             }

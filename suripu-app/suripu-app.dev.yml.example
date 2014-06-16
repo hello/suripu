@@ -73,3 +73,8 @@ event_db:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: event
+
+timezone_history_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: timezone_history

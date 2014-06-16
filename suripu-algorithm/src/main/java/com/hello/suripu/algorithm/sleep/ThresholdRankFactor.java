@@ -1,4 +1,4 @@
-package com.hello.suripu.algorithm.sleepdetection;
+package com.hello.suripu.algorithm.sleep;
 
 /**
  * Created by pangwu on 6/11/14.

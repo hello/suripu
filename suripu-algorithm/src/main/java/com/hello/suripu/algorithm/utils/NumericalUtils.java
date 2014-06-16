@@ -2,7 +2,6 @@ package com.hello.suripu.algorithm.utils;
 
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.core.AmplitudeData;
-import com.hello.suripu.algorithm.sleepdetection.SleepThreshold;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -13,7 +12,7 @@ import java.util.List;
 public class NumericalUtils {
     public static ImmutableList<AmplitudeData> roofDataByAverage(final List<AmplitudeData> data){
 
-        double average = selectAverage(data).getValue();
+        double average = selectAverage(data);
         final LinkedList<AmplitudeData> list = new LinkedList<AmplitudeData>();
 
         for(final AmplitudeData datum:data){
@@ -31,7 +30,7 @@ public class NumericalUtils {
 
     public static ImmutableList<AmplitudeData> zeroDataUnderAverage(final List<AmplitudeData> data){
 
-        double average = selectAverage(data).getValue();
+        double average = selectAverage(data);
         final LinkedList<AmplitudeData> list = new LinkedList<AmplitudeData>();
 
         for(final AmplitudeData datum:data){
@@ -49,14 +48,14 @@ public class NumericalUtils {
     }
 
 
-    public static SleepThreshold selectAverage(final List<AmplitudeData> data){
+    public static double selectAverage(final List<AmplitudeData> data){
 
         double average = 0.0;
         for(final AmplitudeData datum:data){
             average += datum.amplitude;
         }
 
-        return new SleepThreshold(average / data.size());
+        return average / data.size();
 
     }
 

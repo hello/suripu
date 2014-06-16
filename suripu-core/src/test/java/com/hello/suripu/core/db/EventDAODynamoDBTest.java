@@ -18,12 +18,15 @@ import org.junit.Test;
 import org.xerial.snappy.Snappy;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.core.Is.is;
 
 /**
  * Created by pangwu on 6/5/14.
@@ -48,8 +51,7 @@ public class EventDAODynamoDBTest {
             EventDAODynamoDB.createTable(tableName, this.amazonDynamoDBClient);
             this.eventDAODynamoDB = new EventDAODynamoDB(
                     this.amazonDynamoDBClient,
-                    tableName,
-                    Event.Type.MOTION
+                    tableName
             );
 
 
@@ -68,6 +70,40 @@ public class EventDAODynamoDBTest {
         }catch (ResourceNotFoundException ex){
             ex.printStackTrace();
         }
+    }
+
+    @Test
+    public void testSetAndGetEventsForDates(){
+        final DateTime startOfDay1 = DateTime.now().withTimeAtStartOfDay();
+        final ArrayList<Event> eventsForDay1 = new ArrayList<Event>();
+
+        final Event eventForDay1 = new Event(Event.Type.MOTION, startOfDay1.getMillis(), startOfDay1.plusMinutes(1).getMillis(), DateTimeZone.getDefault().getOffset(startOfDay1));
+        eventsForDay1.add(eventForDay1);
+        long accountId = 1;
+
+
+        final DateTime startOfDay2 = startOfDay1.plusDays(1);
+        final Event eventForDay2 = new Event(Event.Type.MOTION,
+                startOfDay1.plusDays(1).getMillis(),
+                startOfDay1.plusDays(1).plusMinutes(1).getMillis(),
+                DateTimeZone.getDefault().getOffset(startOfDay1.plusDays(1)));
+
+        final ArrayList<Event> eventsForDay2 = new ArrayList<Event>();
+        eventsForDay2.add(eventForDay2);
+
+        final Map<DateTime, List<Event>> eventDayMap = new HashMap<DateTime, List<Event>>();
+        eventDayMap.put(startOfDay1, eventsForDay1);
+        eventDayMap.put(startOfDay2, eventsForDay2);
+        this.eventDAODynamoDB.setEventsForDates(accountId, eventDayMap);
+
+        final Map<DateTime, ImmutableList<Event>> actual = this.eventDAODynamoDB.getEventsForDates(accountId, eventDayMap.keySet());
+        for(final DateTime targetDay:eventDayMap.keySet()){
+            assertThat(actual.containsKey(targetDay), is(Boolean.TRUE));
+            assertThat(actual.get(targetDay), containsInAnyOrder(eventDayMap.get(targetDay).toArray()));
+        }
+
+
+
     }
 
 

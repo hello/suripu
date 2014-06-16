@@ -1,4 +1,4 @@
-package com.hello.suripu.algorithm.sleepdetection;
+package com.hello.suripu.algorithm.sleep;
 
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.core.AlgorithmException;
@@ -19,23 +19,22 @@ import java.util.List;
 /**
  * Created by pangwu on 6/11/14.
  */
-public class AwakeDetectionAlgorithm implements SleepDetectionAlgorithm {
+public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
 
-    private final int smoothWindowMillis;
     private enum PaddingMode { PAD_EARLY, PAD_LATE }
 
-    public AwakeDetectionAlgorithm(final int smootheWindowMillis){
-        this.smoothWindowMillis = smootheWindowMillis;
+    public AwakeDetectionAlgorithm(final DataSource<AmplitudeData> dataSource, final int smootheWindowMillis){
+        super(dataSource, smootheWindowMillis);
     }
 
     @Override
-    public Segment getSleepPeriod(final DataSource<AmplitudeData> dataSource, final DateTime dateOfTheNight) throws AlgorithmException {
-        final ImmutableList<AmplitudeData> rawData = dataSource.getDataForDate(dateOfTheNight);
+    public Segment getSleepPeriod(final DateTime dateOfTheNight) throws AlgorithmException {
+        final ImmutableList<AmplitudeData> rawData = getDataSource().getDataForDate(dateOfTheNight);
         if(rawData.size() == 0){
             throw new AlgorithmException("No data available for date: " + dateOfTheNight);
         }
 
-        final AmplitudeDataPreprocessor smoother = new MaxAmplitudeAggregator(this.smoothWindowMillis);
+        final AmplitudeDataPreprocessor smoother = new MaxAmplitudeAggregator(getSmoothWindow());
         final ImmutableList<AmplitudeData> smoothedData = smoother.process(rawData);
 
         final AmplitudeDataPreprocessor cutBefore4am = new DataCutter(dateOfTheNight.withTimeAtStartOfDay().plusHours(12),
@@ -107,7 +106,7 @@ public class AwakeDetectionAlgorithm implements SleepDetectionAlgorithm {
                         if(segments.size() > 0){
                             final Segment previousSegment = segments.getLast();
 
-                            if(startTime - previousSegment.getEndTimestamp() <= 2 * this.smoothWindowMillis) {
+                            if(startTime - previousSegment.getEndTimestamp() <= 2 * getSmoothWindow()) {
                                 previousSegment.setEndTimestamp(endTime);
                             }else{
                                 segments.add(segment);
@@ -168,12 +167,12 @@ public class AwakeDetectionAlgorithm implements SleepDetectionAlgorithm {
 
         for(int i = sleepSegments.length - 1; i >= 0; i--) {
             final Segment segment = sleepSegments[i];
-            if(this.smoothWindowMillis >= 20 * 60 * 1000){
-                if (segment.getDuration() >= 1 * this.smoothWindowMillis) {
+            if(getSmoothWindow() >= 20 * 60 * 1000){
+                if (segment.getDuration() >= 1 * getSmoothWindow()) {
                     longEnoughSegments.add(segment);
                 }
             }else {
-                if (segment.getDuration() >= 2 * this.smoothWindowMillis) {
+                if (segment.getDuration() >= 2 * getSmoothWindow()) {
                     //return segment;
                     longEnoughSegments.add(segment);
                 }
