@@ -1,13 +1,13 @@
 language: java
 
-before_install: "git clone -b master `git config --get remote.origin.url` target/master"
-
-script: "mvn clean package deploy --settings target/master/settings.xml"
+install: mvn --version
+script: "mvn --settings settings.xml -X clean package deploy"
 branches:
   only:
   - master
 notifications:
-  email: true
+  email:
+   - tim+travis-suripu@sayhello.com
 jdk:
 - oraclejdk7
 env:
