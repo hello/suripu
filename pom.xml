@@ -26,6 +26,53 @@
         <module>suripu-workers</module>
     </modules>
 
+    <scm>
+        <connection>scm:git:git://github.com/hello/suripu.git</connection>
+        <developerConnection>scm:git:git@github.com:hello/suripu.git</developerConnection>
+        <url>http://github.com/hello/suripu</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <distributionManagement>
+        <site>
+            <id>s3.site</id>
+            <url>s3://hello-maven/site</url>
+        </site>
+        <repository>
+            <id>s3.release</id>
+            <url>s3://hello-maven/release</url>
+        </repository>
+        <snapshotRepository>
+            <id>s3.snapshot</id>
+            <url>s3://hello-maven/snapshot</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>s3.release</id>
+            <name>hello-maven release</name>
+            <url>s3://hello-maven/release</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>s3.snapshot</id>
+            <name>hello-maven snapshot</name>
+            <url>s3://hello-maven/snapshot</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
