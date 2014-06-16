@@ -2,15 +2,9 @@ package com.hello.suripu.core.db;
 
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
-import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-import com.amazonaws.services.dynamodbv2.model.KeyType;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
-import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
@@ -50,33 +44,15 @@ public class EventDAODynamoDBTest {
 
         cleanUp();
 
-        final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
-
-        request.withKeySchema(
-                new KeySchemaElement().withAttributeName(EventDAODynamoDB.ACCOUNT_ID_ATTRIBUTE_NAME).withKeyType(KeyType.HASH),
-
-                new KeySchemaElement().withAttributeName(EventDAODynamoDB.TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME).withKeyType(KeyType.RANGE)
-        );
-
-        request.withAttributeDefinitions(
-                new AttributeDefinition().withAttributeName(EventDAODynamoDB.ACCOUNT_ID_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.N),
-
-                new AttributeDefinition().withAttributeName(EventDAODynamoDB.TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.S)
-        );
-
-
-        request.setProvisionedThroughput(new ProvisionedThroughput()
-                .withReadCapacityUnits(1L)
-                .withWriteCapacityUnits(1L));
-
         try {
-            this.amazonDynamoDBClient.createTable(request);
-
+            EventDAODynamoDB.createTable(tableName, this.amazonDynamoDBClient);
             this.eventDAODynamoDB = new EventDAODynamoDB(
                     this.amazonDynamoDBClient,
                     tableName,
                     Event.Type.MOTION
             );
+
+
         }catch (ResourceInUseException rie){
             rie.printStackTrace();
         }
