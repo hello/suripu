@@ -17,6 +17,7 @@ import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrackerMotionDAODynamoDB;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
+import com.hello.suripu.core.models.BatchSensorData;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.TempTrackerData;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -24,7 +25,7 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.service.db.DataExtractor;
-import com.hello.suripu.service.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceDataDAO;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -39,11 +40,13 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -279,9 +282,19 @@ public class ReceiveResource {
         if(deviceAccountPairs.isEmpty()) {
             LOGGER.warn("No account found for device_id: {}", batch.getDeviceId());
             LOGGER.warn("{} needs to be registered", batch.getDeviceId());
-            return Response.status(Response.Status.BAD_REQUEST).entity("Bad Request").type(MediaType.TEXT_PLAIN_TYPE).build();
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Bad Request").build());
         }
 
+        final ArrayList<Integer> tempSamples = new ArrayList<Integer>(batch.getSamplesCount());
+        final ArrayList<Integer> lightSamples = new ArrayList<Integer>(batch.getSamplesCount());
+        final ArrayList<Integer> humiditySamples = new ArrayList<Integer>(batch.getSamplesCount());
+        final ArrayList<Integer> airQualitySamples = new ArrayList<Integer>(batch.getSamplesCount());
+
+        final ArrayList<Long> timestamps = new ArrayList<Long>(batch.getSamplesCount());
+        final ArrayList<Integer> offsetMillisSamples = new ArrayList<Integer>(batch.getSamplesCount());
+
+
+        // TODO: maybe refactor the protobuf to have a more sensible structure?
         for(InputProtos.SimpleSensorBatch.SimpleSensorSample sample : batch.getSamplesList()) {
 
             final int offsetMillis = sample.getOffsetMillis();
@@ -307,69 +320,79 @@ public class ReceiveResource {
 
                 } catch (IOException e) {
                     LOGGER.error(e.getMessage());
-                    return Response.serverError().entity("Failed parsing device data").build();
+                    throw new WebApplicationException(Response.serverError().entity("Failed parsing device data").build());
                 } finally {
                     try {
                         dataInputStream.close();
                     } catch (IOException ioException) {
-                        LOGGER.warn("Could close LittleEndianInputStream. Investigate.");
+                        LOGGER.warn("Could not close LittleEndianInputStream. Investigate.");
                     }
                 }
 
-                LOGGER.debug("ts = {}", timestamp);
-                final DateTime dateTime = new DateTime(timestamp, DateTimeZone.UTC);
-                final DateTime rounded = new DateTime(
-                        dateTime.getYear(),
-                        dateTime.getMonthOfYear(),
-                        dateTime.getDayOfMonth(),
-                        dateTime.getHourOfDay(),
-                        dateTime.getMinuteOfHour(),
-                        DateTimeZone.UTC
-                );
-
-                for(DeviceAccountPair pair : deviceAccountPairs) {
-                    try {
-                        // TODO: FINAL VERSION WILL HAVE TO QUERY FROM DB
-                        deviceDataDAO.insert(pair.internalDeviceId, pair.accountId, rounded, offsetMillis, temp, light, humidity, airQuality);
-
-                    } catch (UnableToExecuteStatementException exception) {
-                        Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
-                        if (!matcher.find()) {
-                            LOGGER.error(exception.getMessage());
-                            return Response.serverError().build();
-                        }
-
-                        LOGGER.warn("Duplicate entry for {} ({}) with ts = {} and account_id = {}",
-                                pair.internalDeviceId,
-                                batch.getDeviceId(),
-                                rounded,
-                                pair.accountId
-                        );
-                    }
-                }
+                tempSamples.add(temp);
+                lightSamples.add(light);
+                humiditySamples.add(humidity);
+                airQualitySamples.add(airQuality);
+                timestamps.add(timestamp);
+                offsetMillisSamples.add(offsetMillis);
             }
 
+            saveSoundSample(sample, deviceAccountPairs);
+        }
 
-            if(sample.hasSoundAmplitude()) {
-                final Long sampleTimestamp = sample.getTimestamp();
-                final DateTime dateTimeSample = new DateTime(sampleTimestamp, DateTimeZone.UTC);
-                for(DeviceAccountPair pair : deviceAccountPairs) {
-                    try {
-                        deviceDataDAO.insertSound(pair.internalDeviceId, sample.getSoundAmplitude(), dateTimeSample, offsetMillis);
-                        LOGGER.debug("Sound timestamp = {}", sampleTimestamp);
-                    } catch (UnableToExecuteStatementException exception) {
-                        Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
-                        if (!matcher.find()) {
-                            LOGGER.error(exception.getMessage());
-                            return Response.serverError().build();
-                        }
-                        LOGGER.warn("Duplicate sound entry for {} with ts = {} and account_id = {}", pair.internalDeviceId, dateTimeSample, pair.accountId);
-                    }
-                }
+        final DateTime dateTime = new DateTime(timestamps.get(0), DateTimeZone.UTC);
+        final DateTime rounded = new DateTime(
+                dateTime.getYear(),
+                dateTime.getMonthOfYear(),
+                dateTime.getDayOfMonth(),
+                dateTime.getHourOfDay(),
+                dateTime.getMinuteOfHour(),
+                DateTimeZone.UTC
+        );
+
+        final BatchSensorData deviceBatch = new BatchSensorData.Builder()
+                .withAccountId(accessToken.accountId)
+                .withDeviceId(batch.getDeviceId())
+                .withAmbientTemp(tempSamples)
+                .withAmbientAirQuality(airQualitySamples)
+                .withAmbientHumidity(humiditySamples)
+                .withAmbientLight(lightSamples)
+                .withDateTime(rounded)
+                .withOffsetMillis(offsetMillisSamples.get(0))
+                .build();
+
+        try {
+            deviceDataDAO.insertBatch(deviceBatch);
+        } catch (UnableToExecuteStatementException exception) {
+            final Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
+            if (!matcher.find()) {
+                LOGGER.error(exception.getMessage());
+                return Response.serverError().build();
             }
-
         }
 
         return Response.ok().build();
+    }
+
+    private void saveSoundSample(final SimpleSensorBatch.SimpleSensorSample sample, final List<DeviceAccountPair> deviceAccountPairs) {
+        if(sample.hasSoundAmplitude()) {
+            final Long sampleTimestamp = sample.getTimestamp();
+            final DateTime dateTimeSample = new DateTime(sampleTimestamp, DateTimeZone.UTC);
+            final Integer offsetMillis = sample.getOffsetMillis();
+
+            for(final DeviceAccountPair pair : deviceAccountPairs) {
+                try {
+                    deviceDataDAO.insertSound(pair.internalDeviceId, sample.getSoundAmplitude(), dateTimeSample, offsetMillis);
+                    LOGGER.debug("Sound timestamp = {}", sampleTimestamp);
+                } catch (UnableToExecuteStatementException exception) {
+                    Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
+                    if (!matcher.find()) {
+                        LOGGER.error(exception.getMessage());
+                        return;
+                    }
+                    LOGGER.warn("Duplicate sound entry for {} with ts = {} and account_id = {}", pair.internalDeviceId, dateTimeSample, pair.accountId);
+                }
+            }
+        }
     }
 }

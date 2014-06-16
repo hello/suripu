@@ -5,7 +5,6 @@ import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Registration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -55,6 +54,6 @@ public class InMemoryAccountDAOImpl implements AccountDAO{
 
     @Override
     public boolean update(Account account) {
-        throw new NotImplementedException();
+        throw new RuntimeException("Not implemented");
     }
 }
