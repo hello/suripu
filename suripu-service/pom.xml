@@ -57,11 +57,6 @@
             <artifactId>metrics-librato</artifactId>
             <version>${librato.reporter.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.hello.dropwizard</groupId>
-            <artifactId>dropwizard-mikkusu</artifactId>
-            <version>0.0.1</version>
-        </dependency>
     </dependencies>
     <build>
         <plugins>

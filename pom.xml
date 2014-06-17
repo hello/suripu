@@ -16,6 +16,7 @@
         <librato.reporter.version>2.2.0.5</librato.reporter.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.wagon.threads.max>1</maven.wagon.threads.max>
     </properties>
 
     <modules>
@@ -53,26 +54,9 @@
 
     <repositories>
         <repository>
-            <id>s3.release</id>
-            <name>hello-maven release</name>
-            <url>s3://hello-maven/release</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>s3.snapshot</id>
-            <name>hello-maven snapshot</name>
-            <url>s3://hello-maven/snapshot</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
+            <id>project.local</id>
+            <name>project</name>
+            <url>file:${project.basedir}/../repo</url>
         </repository>
     </repositories>
 
@@ -97,8 +81,13 @@
             <version>1.9.5</version>
             <scope>test</scope>
         </dependency>
-    </dependencies>
 
+        <dependency>
+            <groupId>com.hello.dropwizard</groupId>
+            <artifactId>dropwizard-mikkusu</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+    </dependencies>
 
     <build>
         <extensions>
