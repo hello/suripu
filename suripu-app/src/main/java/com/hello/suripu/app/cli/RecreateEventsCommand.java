@@ -35,6 +35,8 @@ import net.sourceforge.argparse4j.inf.Subparser;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.DBI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,6 +48,8 @@ import java.util.Map;
  * Created by pangwu on 6/16/14.
  */
 public class RecreateEventsCommand extends ConfiguredCommand<SuripuAppConfiguration> {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(RecreateEventsCommand.class);
 
     public RecreateEventsCommand(){
         super("recreate_events", "Recreate events from motion table");
@@ -90,7 +94,7 @@ public class RecreateEventsCommand extends ConfiguredCommand<SuripuAppConfigurat
         final String userName = namespace.getString("user_name");
         final Optional<Account> accountOptional = accountDAO.getByEmail(userName);
         if(!accountOptional.isPresent()){
-            System.out.println("Email " + userName + " not exists!");
+            LOGGER.warn("Email " + userName + " not exists!");
             return;
         }
 
@@ -120,13 +124,13 @@ public class RecreateEventsCommand extends ConfiguredCommand<SuripuAppConfigurat
 
             final DateTime targetDay = firstDate.plusDays(dayOffset);
 
-            System.out.println(DateTime.now().toString() + ": detecting events for target date: " + targetDay);
+            LOGGER.info(DateTime.now().toString() + ": detecting events for target date: " + targetDay);
             Segment sleepPeriod = new Segment();
 
             try{
                 sleepPeriod = sleepDetectionAlgorithm.getSleepPeriod(targetDay);
             }catch (AlgorithmException alex){
-
+                LOGGER.warn("Sleep detection error: " + alex.getMessage());
             }
 
 
@@ -148,14 +152,14 @@ public class RecreateEventsCommand extends ConfiguredCommand<SuripuAppConfigurat
 
             dayOffset++;
 
-            System.out.println(DateTime.now().toString() + ": event detection completed for target date: " + targetDay);
+            LOGGER.info(DateTime.now().toString() + ": event detection completed for target date: " + targetDay);
         }
 
-        System.out.println(DateTime.now().toString() + ": Saving events to dynamoDB.");
+        LOGGER.info(DateTime.now().toString() + ": Saving events to dynamoDB.");
 
         // Shall we use the batch?
         eventDAODynamoDB.setEventsForDates(account.id, generatedEvents);
-        System.out.println(DateTime.now().toString() + ": All events have been saved for user: " + account.email);
+        LOGGER.info(DateTime.now().toString() + ": All events have been saved for user: " + account.email);
 
     }
 }

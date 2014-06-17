@@ -18,7 +18,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.InputProtos;
-import com.hello.suripu.core.db.util.DateTimeFormatString;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -173,7 +173,7 @@ public class TrackerMotionDAODynamoDB {
     public ImmutableMap<DateTime, ImmutableList<TrackerMotion>> getTrackerMotionForDates(long accountId, final Collection<DateTime> dates){
         final Map<String, DateTime> dateToStringMapping = new HashMap<String, DateTime>();
         for(final DateTime date:dates){
-            dateToStringMapping.put(date.toString(DateTimeFormatString.FORMAT_TO_DAY), date);
+            dateToStringMapping.put(date.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), date);
         }
 
         final Collection<String> dateStrings = dateToStringMapping.keySet();
@@ -244,7 +244,7 @@ public class TrackerMotionDAODynamoDB {
     }
 
     public ImmutableList<TrackerMotion> getTrackerMotionForDate(long accountId, final DateTime targetDateLocal) {
-        return getTrackerMotionForDate(accountId, targetDateLocal.toString(DateTimeFormatString.FORMAT_TO_DAY));
+        return getTrackerMotionForDate(accountId, targetDateLocal.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT));
     }
 
 
@@ -266,8 +266,8 @@ public class TrackerMotionDAODynamoDB {
         // WHERE target_date >= :start_date AND target_date <= :end_date
         final Condition selectDateRangeCondition = new Condition()
                 .withComparisonOperator(ComparisonOperator.BETWEEN.toString())
-                .withAttributeValueList(new AttributeValue().withS(queryStartDateLocal.toString(DateTimeFormatString.FORMAT_TO_DAY)),
-                        new AttributeValue().withS(queryEndDateLocal.toString(DateTimeFormatString.FORMAT_TO_DAY)));
+                .withAttributeValueList(new AttributeValue().withS(queryStartDateLocal.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT)),
+                        new AttributeValue().withS(queryEndDateLocal.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT)));
 
         // AND accound_id = :accound_id
         final Condition selectAccountIdCondition = new Condition()
@@ -322,8 +322,8 @@ public class TrackerMotionDAODynamoDB {
                     } catch (InvalidProtocolBufferException e) {
                         LOGGER.error("Error in deserializing data for account {}, date range {}-{}, error: {}",
                                 accountId,
-                                queryStartDateLocal.toString(DateTimeFormatString.FORMAT_TO_DAY),
-                                queryEndDateLocal.toString(DateTimeFormatString.FORMAT_TO_DAY),
+                                queryStartDateLocal.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT),
+                                queryEndDateLocal.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT),
                                 e.getMessage());
                     }
                 }
@@ -354,7 +354,7 @@ public class TrackerMotionDAODynamoDB {
         for(final TrackerMotion datum:data){
             final DateTime localTime = new DateTime(datum.timestamp, DateTimeZone.forOffsetMillis(datum.offsetMillis));
 
-            String dateKey = localTime.toString(DateTimeFormatString.FORMAT_TO_DAY);
+            String dateKey = localTime.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT);
 
             /*
             * DO NOT cut off by noon because the firmware cut off data at midnight.
@@ -363,7 +363,7 @@ public class TrackerMotionDAODynamoDB {
 
             if(localTime.getMillis() < localStartOfDay.plusHours(12).getMillis()){
                 // If the data is collected before noon, this is the data of previous day.
-                dateKey = localTime.minusDays(1).toString(DateTimeFormatString.FORMAT_TO_DAY);
+                dateKey = localTime.minusDays(1).toString(DateTimeFormatString.DYNAMO_DB_DATE_FORMAT);
             }
             */
 

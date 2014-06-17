@@ -3,7 +3,7 @@ package com.hello.suripu.app.resources;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.db.EventDAODynamoDB;
-import com.hello.suripu.core.db.util.DateTimeFormatString;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -20,7 +20,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,7 +48,12 @@ public class EventResource {
     public List<Event> getEvents(@Scope({OAuthScope.API_INTERNAL_DATA_READ}) final AccessToken token,
                                  @PathParam("target_date_string") final String targetDateString){
 
-        final DateTime targetDate = DateTime.parse(targetDateString, DateTimeFormat.forPattern(DateTimeFormatString.FORMAT_TO_DAY));
+        final DateTime targetDate = DateTime.parse(targetDateString, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT));
+
+        if(targetDate.getMillis() > targetDate.plusDays(2).getMillis() || targetDate.getMillis() < DateTimeUtil.MORPHEUS_DAY_ONE.getMillis()){
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+        }
+
         final List<Event> events = this.eventDAODynamoDB.getEventsForDate(token.accountId, targetDate);
         return events;
     }
@@ -60,13 +67,18 @@ public class EventResource {
                                               final List<String> dateStrings){
         final ArrayList<DateTime> targetDates = new ArrayList<DateTime>();
         for (final String dateString:dateStrings){
-            targetDates.add(DateTime.parse(dateString, DateTimeFormat.forPattern(DateTimeFormatString.FORMAT_TO_DAY)));
+            final DateTime targetDate = DateTime.parse(dateString, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT));
+            if(targetDate.getMillis() > targetDate.plusDays(2).getMillis() || targetDate.getMillis() < DateTimeUtil.MORPHEUS_DAY_ONE.getMillis()){
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+            }
+
+            targetDates.add(targetDate);
         }
 
         final ImmutableMap<DateTime, ImmutableList<Event>> dateEventsMap = this.eventDAODynamoDB.getEventsForDates(accessToken.accountId, targetDates);
         final HashMap<String, List<Event>> results = new HashMap<String, List<Event>>();
         for(final DateTime targetDate:dateEventsMap.keySet()){
-            results.put(targetDate.toString(DateTimeFormatString.FORMAT_TO_DAY), dateEventsMap.get(targetDate));
+            results.put(targetDate.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), dateEventsMap.get(targetDate));
         }
 
         return results;

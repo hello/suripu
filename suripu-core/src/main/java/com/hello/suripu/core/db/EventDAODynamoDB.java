@@ -26,7 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.db.util.Compression;
-import com.hello.suripu.core.db.util.DateTimeFormatString;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.models.Event;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -87,7 +87,7 @@ public class EventDAODynamoDB {
     public ImmutableMap<DateTime, ImmutableList<Event>> getEventsForDates(long accountId, final Collection<DateTime> dates){
         final Map<String, DateTime> dateToStringMapping = new HashMap<String, DateTime>();
         for(final DateTime date:dates){
-            dateToStringMapping.put(date.toString(DateTimeFormatString.FORMAT_TO_DAY), date);
+            dateToStringMapping.put(date.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), date);
         }
 
         final Collection<String> dateStrings = dateToStringMapping.keySet();
@@ -242,7 +242,7 @@ public class EventDAODynamoDB {
         final Map<String, List<Event>> dataWithStringDates = new HashMap<String, List<Event>>();
 
         for(final DateTime dateOfTheNight:data.keySet()){
-            dataWithStringDates.put(dateOfTheNight.toString(DateTimeFormatString.FORMAT_TO_DAY), data.get(dateOfTheNight));
+            dataWithStringDates.put(dateOfTheNight.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), data.get(dateOfTheNight));
         }
 
         setEventsForStringDates(accountId, dataWithStringDates);

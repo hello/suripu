@@ -25,6 +25,22 @@ public class EventDetectionAlgorithm {
         this.meanCrossBufferWindowMillis = meanCrossBufferWindowMillis;
     }
 
+    /*
+    * Check if the motion data from parameter current is a spike.
+    *
+    * Parameters:
+    * current: The max amplitude aggregated per-minute
+    * mean: The mean from the previous N minutes
+    *
+    * Algorithm explain:
+    *
+    * If current > 2 * mean Then
+    *   spike detected
+    * Else
+    *   normal/quiet detected
+    * EndIf
+    *
+     */
     private Optional<Segment> isEvent(final AmplitudeData current, final double mean){
         if(mean >= 0){
             if(current.amplitude > mean * 2){
@@ -51,6 +67,17 @@ public class EventDetectionAlgorithm {
         }
     }
 
+    /*
+    * A mean-cross variation algorithm for spike(event) detection.
+    *
+    * General Idea:
+    * Use a sliding window to compute the mean, then check if the next data point is larger than
+    * the mean to certain extend.
+    * This algorithm will add the spike data back to the sliding window and recompute the mean. Which
+    * will result in long noisy(loud) period detected as normal(quiet) period. this may or may not be
+    * a bad thing.
+    *
+     */
     public ImmutableList<Segment> getEventsForDate(final DateTime targetDate){
         final List<AmplitudeData> rawData = getDataSource().getDataForDate(targetDate);
         final LinkedList<AmplitudeData> buffer = new LinkedList<AmplitudeData>();
