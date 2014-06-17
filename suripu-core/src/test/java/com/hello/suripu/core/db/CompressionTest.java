@@ -1,20 +1,5 @@
 package com.hello.suripu.core.db;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hello.suripu.core.db.util.Compression;
-import com.hello.suripu.core.models.Event;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.junit.Before;
-import org.junit.Test;
-import org.xerial.snappy.Snappy;
-
-import java.util.ArrayList;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.lessThan;
-
 /**
  * Created by pangwu on 6/6/14.
  */
@@ -22,7 +7,7 @@ public class CompressionTest {
 
     private byte[] rawDataInBytes = null;
 
-
+    /*
     @Before
     public void setUp(){
         final Event.Type[] eventTypes = new Event.Type[]{Event.Type.MOTION, Event.Type.NOISE, Event.Type.LIGHT};
@@ -206,4 +191,5 @@ public class CompressionTest {
             ex.printStackTrace();
         }
     }
+    */
 }

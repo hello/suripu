@@ -1,4 +1,4 @@
-package com.hello.suripu.algorithm.sleepdetection;
+package com.hello.suripu.algorithm.sleep;
 
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.core.AmplitudeData;

@@ -7,7 +7,7 @@ import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.app.utils.DataType;
 import com.hello.suripu.app.utils.GetTrackerDataResponse;
 import com.hello.suripu.core.db.TrackerMotionDAODynamoDB;
-import com.hello.suripu.core.db.util.DateTimeFormatString;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.models.GroupedRecord;
 import com.hello.suripu.core.models.Record;
 import com.hello.suripu.core.models.SoundRecord;
@@ -138,7 +138,7 @@ public class HistoryResource {
         final Map<DateTime, String> dateToStringMapping = new HashMap<DateTime, String>();
         for(final String dateString:dateStrings){
             try {
-                dateToStringMapping.put(DateTime.parse(dateString, DateTimeFormat.forPattern(DateTimeFormatString.FORMAT_TO_DAY)), dateString);
+                dateToStringMapping.put(DateTime.parse(dateString, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT)), dateString);
             }catch (IllegalArgumentException iae){
                 throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
             }
