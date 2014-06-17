@@ -22,21 +22,6 @@
             <artifactId>postgresql</artifactId>
             <version>9.2-1004-jdbc4</version>
         </dependency>
-        <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-core</artifactId>
-            <version>${dropwizard.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-jdbi</artifactId>
-            <version>${dropwizard.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.librato.metrics</groupId>
-            <artifactId>metrics-librato</artifactId>
-            <version>${librato.reporter.version}</version>
-        </dependency>
     </dependencies>
     <build>
         <plugins>

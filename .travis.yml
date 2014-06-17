@@ -1,7 +1,7 @@
 language: java
 
 install: mvn --version
-script: "mvn --settings settings.xml clean -DskipTests package deploy"
+script: "mvn --settings settings.xml clean -DskipTests package deploy | grep -vE 'Download'"
 branches:
   only:
   - master
