@@ -1,6 +1,6 @@
 language: java
 install: mvn --version
-script: mvn --settings settings.xml clean -DskipTests package deploy | grep -vE 'Download|Upload'
+script: mvn --settings settings.xml clean -DskipTests package | grep -vE 'Download|Upload'
 branches:
   only:
   - master
