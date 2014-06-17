@@ -2,34 +2,25 @@ package com.hello.suripu.core.db;
 
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
-import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-import com.amazonaws.services.dynamodbv2.model.KeyType;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
-import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.core.db.util.Compression;
 import com.hello.suripu.core.models.Event;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.xerial.snappy.Snappy;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.core.Is.is;
 
 /**
  * Created by pangwu on 6/5/14.
@@ -50,33 +41,14 @@ public class EventDAODynamoDBTest {
 
         cleanUp();
 
-        final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
-
-        request.withKeySchema(
-                new KeySchemaElement().withAttributeName(EventDAODynamoDB.ACCOUNT_ID_ATTRIBUTE_NAME).withKeyType(KeyType.HASH),
-
-                new KeySchemaElement().withAttributeName(EventDAODynamoDB.TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME).withKeyType(KeyType.RANGE)
-        );
-
-        request.withAttributeDefinitions(
-                new AttributeDefinition().withAttributeName(EventDAODynamoDB.ACCOUNT_ID_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.N),
-
-                new AttributeDefinition().withAttributeName(EventDAODynamoDB.TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.S)
-        );
-
-
-        request.setProvisionedThroughput(new ProvisionedThroughput()
-                .withReadCapacityUnits(1L)
-                .withWriteCapacityUnits(1L));
-
         try {
-            this.amazonDynamoDBClient.createTable(request);
-
+            EventDAODynamoDB.createTable(tableName, this.amazonDynamoDBClient);
             this.eventDAODynamoDB = new EventDAODynamoDB(
                     this.amazonDynamoDBClient,
-                    tableName,
-                    Event.Type.MOTION
+                    tableName
             );
+
+
         }catch (ResourceInUseException rie){
             rie.printStackTrace();
         }
@@ -92,6 +64,40 @@ public class EventDAODynamoDBTest {
         }catch (ResourceNotFoundException ex){
             ex.printStackTrace();
         }
+    }
+
+    @Test
+    public void testSetAndGetEventsForDates(){
+        final DateTime startOfDay1 = DateTime.now().withTimeAtStartOfDay();
+        final ArrayList<Event> eventsForDay1 = new ArrayList<Event>();
+
+        final Event eventForDay1 = new Event(Event.Type.MOTION, startOfDay1.getMillis(), startOfDay1.plusMinutes(1).getMillis(), DateTimeZone.getDefault().getOffset(startOfDay1));
+        eventsForDay1.add(eventForDay1);
+        long accountId = 1;
+
+
+        final DateTime startOfDay2 = startOfDay1.plusDays(1);
+        final Event eventForDay2 = new Event(Event.Type.MOTION,
+                startOfDay1.plusDays(1).getMillis(),
+                startOfDay1.plusDays(1).plusMinutes(1).getMillis(),
+                DateTimeZone.getDefault().getOffset(startOfDay1.plusDays(1)));
+
+        final ArrayList<Event> eventsForDay2 = new ArrayList<Event>();
+        eventsForDay2.add(eventForDay2);
+
+        final Map<DateTime, List<Event>> eventDayMap = new HashMap<DateTime, List<Event>>();
+        eventDayMap.put(startOfDay1, eventsForDay1);
+        eventDayMap.put(startOfDay2, eventsForDay2);
+        this.eventDAODynamoDB.setEventsForDates(accountId, eventDayMap);
+
+        final Map<DateTime, ImmutableList<Event>> actual = this.eventDAODynamoDB.getEventsForDates(accountId, eventDayMap.keySet());
+        for(final DateTime targetDay:eventDayMap.keySet()){
+            assertThat(actual.containsKey(targetDay), is(Boolean.TRUE));
+            assertThat(actual.get(targetDay), containsInAnyOrder(eventDayMap.get(targetDay).toArray()));
+        }
+
+
+
     }
 
 
@@ -156,6 +162,7 @@ public class EventDAODynamoDBTest {
 
 
 
+    /*
     @Test
     public void testCompactnessBySnappyWithFullContent(){
         int numberOfMinutesPerDay = 24 * 60;
@@ -206,6 +213,7 @@ public class EventDAODynamoDBTest {
         assertThat(totalSize, greaterThan(64L * 1024 / 2));
 
     }
+    */
 
 
     /*
@@ -218,6 +226,7 @@ public class EventDAODynamoDBTest {
     *   Compressed JSON size by Snappy: ~54K
     *   Compressed Protobuf size by Snappy: ~59K
      */
+    /*
     @Test
     public void testCompactnessByGZipWithFullContent(){
         int numberOfMinutesPerDay = 24 * 60;
@@ -267,7 +276,9 @@ public class EventDAODynamoDBTest {
         assertThat(totalSize, lessThan(64L * 1024 / 2));
 
     }
+    */
 
+    /*
     @Test
     public void testCompactnessByGZipWithTimestampOffset(){
         int numberOfMinutesPerDay = 24 * 60;
@@ -317,4 +328,5 @@ public class EventDAODynamoDBTest {
         assertThat(totalSize, lessThan(64L * 1024 / 2));
 
     }
+    */
 }

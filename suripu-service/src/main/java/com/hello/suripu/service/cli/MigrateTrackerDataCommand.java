@@ -6,7 +6,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrackerMotionDAODynamoDB;
-import com.hello.suripu.core.db.util.DateTimeFormatString;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
@@ -44,8 +44,8 @@ public class MigrateTrackerDataCommand extends ConfiguredCommand<SuripuConfigura
 
     @Override
     protected void run(Bootstrap<SuripuConfiguration> bootstrap, Namespace namespace, SuripuConfiguration configuration) throws Exception {
-        final DateTime startDate = DateTime.parse(namespace.getString("start_date") + " PST", DateTimeFormat.forPattern(DateTimeFormatString.FORMAT_TO_DAY + " z"));
-        final DateTime endDate = DateTime.parse(namespace.getString("end_date") + " PST", DateTimeFormat.forPattern(DateTimeFormatString.FORMAT_TO_DAY + " z"));
+        final DateTime startDate = DateTime.parse(namespace.getString("start_date") + " PST", DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT + " z"));
+        final DateTime endDate = DateTime.parse(namespace.getString("end_date") + " PST", DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT + " z"));
         long accountId = Long.valueOf(namespace.getString("account_id"));
 
         final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();

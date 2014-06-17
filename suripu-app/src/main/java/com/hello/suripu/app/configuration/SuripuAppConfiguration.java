@@ -57,4 +57,12 @@ public class SuripuAppConfiguration extends Configuration {
     public DynamoDBConfiguration getEventDBConfiguration(){
         return this.eventDBConfiguration;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("timezone_history_db")
+    private DynamoDBConfiguration timeZoneHistoryDBConfiguration;
+    public DynamoDBConfiguration getTimeZoneHistoryDBConfiguration(){
+        return this.timeZoneHistoryDBConfiguration;
+    }
 }
