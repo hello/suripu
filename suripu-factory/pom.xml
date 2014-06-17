@@ -22,6 +22,16 @@
             <artifactId>postgresql</artifactId>
             <version>9.2-1004-jdbc4</version>
         </dependency>
+        <dependency>
+            <groupId>com.hello.dropwizard</groupId>
+            <artifactId>dropwizard-mikkusu</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.yammer.dropwizard</groupId>
+            <artifactId>dropwizard-core</artifactId>
+            <version>${dropwizard.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
