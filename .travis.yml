@@ -8,6 +8,11 @@ branches:
 notifications:
   email:
    - tim+travis-suripu@sayhello.com
+  hipchat:
+    rooms:
+        - mDwGqxGUPFlLf8CBEWGs9JPzZBmhJiQahoaHmlns@ops
+    template:
+          - '%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}'
 jdk:
 - oraclejdk7
 env:
