@@ -5,17 +5,13 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.core.db.util.Compression;
 import com.hello.suripu.core.models.Event;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.xerial.snappy.Snappy;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,8 +20,6 @@ import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.core.Is.is;
 
 /**
@@ -168,6 +162,7 @@ public class EventDAODynamoDBTest {
 
 
 
+    /*
     @Test
     public void testCompactnessBySnappyWithFullContent(){
         int numberOfMinutesPerDay = 24 * 60;
@@ -218,6 +213,7 @@ public class EventDAODynamoDBTest {
         assertThat(totalSize, greaterThan(64L * 1024 / 2));
 
     }
+    */
 
 
     /*
@@ -230,6 +226,7 @@ public class EventDAODynamoDBTest {
     *   Compressed JSON size by Snappy: ~54K
     *   Compressed Protobuf size by Snappy: ~59K
      */
+    /*
     @Test
     public void testCompactnessByGZipWithFullContent(){
         int numberOfMinutesPerDay = 24 * 60;
@@ -279,7 +276,9 @@ public class EventDAODynamoDBTest {
         assertThat(totalSize, lessThan(64L * 1024 / 2));
 
     }
+    */
 
+    /*
     @Test
     public void testCompactnessByGZipWithTimestampOffset(){
         int numberOfMinutesPerDay = 24 * 60;
@@ -329,4 +328,5 @@ public class EventDAODynamoDBTest {
         assertThat(totalSize, lessThan(64L * 1024 / 2));
 
     }
+    */
 }

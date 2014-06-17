@@ -94,40 +94,32 @@ public class TimeZoneHistoryDAODynamoDB {
                 OFFSET_MILLIS_ATTRIBUTE_NAME);
 
 
-        int loopCount = 0;
+        final QueryRequest queryRequest = new QueryRequest()
+                .withTableName(this.tableName)
+                .withKeyConditions(queryConditions)
+                .withAttributesToGet(targetAttributeSet)
+                .withLimit(1)
+                .withScanIndexForward(false);
 
-        // Loop and construct queries..
-        do{
-            final QueryRequest queryRequest = new QueryRequest()
-                    .withTableName(this.tableName)
-                    .withKeyConditions(queryConditions)
-                    .withAttributesToGet(targetAttributeSet)
-                    .withLimit(1)
-                    .withScanIndexForward(false)
-                    .withExclusiveStartKey(lastEvaluatedKey);
+        final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
+        if(queryResult.getItems() == null){
+            return Optional.absent();
+        }
 
-            final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
-            if(queryResult.getItems() == null){
-                break;
+        final List<Map<String, AttributeValue>> items = queryResult.getItems();
+
+        for(final Map<String, AttributeValue> item:items){
+            if(!item.keySet().containsAll(targetAttributeSet)){
+                LOGGER.warn("Missing field in item {}", item);
+                continue;
             }
 
-            final List<Map<String, AttributeValue>> items = queryResult.getItems();
+            final long updatedTime = Long.valueOf(item.get(UPDATED_AT_ATTRIBUTE_NAME).getN());
+            final int timeZone = Integer.valueOf(item.get(OFFSET_MILLIS_ATTRIBUTE_NAME).getN());
 
-            for(final Map<String, AttributeValue> item:items){
-                if(!item.keySet().containsAll(targetAttributeSet)){
-                    LOGGER.warn("Missing field in item {}", item);
-                    continue;
-                }
+            return Optional.of(new TimeZoneHistory(updatedTime, timeZone));
+        }
 
-                final long updatedTime = Long.valueOf(item.get(UPDATED_AT_ATTRIBUTE_NAME).getN());
-                final int timeZone = Integer.valueOf(item.get(OFFSET_MILLIS_ATTRIBUTE_NAME).getN());
-
-                return Optional.of(new TimeZoneHistory(updatedTime, timeZone));
-            }
-
-            lastEvaluatedKey = queryResult.getLastEvaluatedKey();
-            loopCount++;
-        }while (lastEvaluatedKey != null && loopCount < MAX_CALL_COUNT);
 
         return Optional.absent();
 
