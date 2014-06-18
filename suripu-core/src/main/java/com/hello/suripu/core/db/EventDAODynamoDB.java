@@ -64,7 +64,7 @@ public class EventDAODynamoDB {
 
 
     private final int MAX_CALL_COUNT = 5;
-    private final int MAX_BATCH_SIZE = 600 * 1024;
+    private final int MAX_BATCH_SIZE = 25;  // Based on: http://docs.aws.amazon.com/cli/latest/reference/dynamodb/batch-write-item.html
 
     public final int MAX_REQUEST_DAYS = 31;
 
@@ -262,11 +262,11 @@ public class EventDAODynamoDB {
         }
 
         final ArrayList<WriteRequest> putRequests = new ArrayList<WriteRequest>();
-        int processedItemsCount = 0;
+
         long currentBatchSize = 0;
 
         for(final String targetDateOfNight:data.keySet()) {
-            processedItemsCount++;
+
             final List<Event> events = data.get(targetDateOfNight);
             final Event[] rawEventsArrayWithAllTypes = events.toArray(new Event[0]);
             Arrays.sort(rawEventsArrayWithAllTypes, new Comparator<Event>() {
@@ -300,7 +300,7 @@ public class EventDAODynamoDB {
 
                 final WriteRequest writeRequest = new WriteRequest().withPutRequest(putItemRequest);
 
-                if(currentBatchSize + compressedData.length > MAX_BATCH_SIZE) {
+                if(currentBatchSize + 1 > MAX_BATCH_SIZE) {
                     LOGGER.info("Saving events for account_id: {}", accountId);
 
                     batchWrite(accountId, putRequests);
@@ -311,7 +311,7 @@ public class EventDAODynamoDB {
                 }
 
                 putRequests.add(writeRequest);
-                currentBatchSize += compressedData.length;
+                currentBatchSize ++;
 
             }catch (JsonProcessingException jpe){
                 LOGGER.error("Serialize events for account {}, night {} failed: {}",
