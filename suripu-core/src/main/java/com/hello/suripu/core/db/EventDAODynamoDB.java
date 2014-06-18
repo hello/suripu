@@ -342,6 +342,8 @@ public class EventDAODynamoDB {
     }
 
     private void batchWrite(final long accountId, final List<WriteRequest> writeRequests){
+        LOGGER.info("WriteRequest number per batch: {}", writeRequests.size());
+
         Map<String, List<WriteRequest>> requestItems = new HashMap<String, List<WriteRequest>>();
         requestItems.put(this.tableName, writeRequests);
 
