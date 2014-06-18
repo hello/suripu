@@ -83,8 +83,8 @@ public class RecreateEventsCommand extends ConfiguredCommand<SuripuAppConfigurat
         final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
 
-        client.setEndpoint(configuration.getMotionDBConfiguration().getEndpoint());
-        final String eventTableName = configuration.getMotionDBConfiguration().getTableName();
+        client.setEndpoint(configuration.getEventDBConfiguration().getEndpoint());
+        final String eventTableName = configuration.getEventDBConfiguration().getTableName();
         final EventDAODynamoDB eventDAODynamoDB = new EventDAODynamoDB(client, eventTableName);
 
 

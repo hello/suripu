@@ -50,6 +50,7 @@ public class SuripuConfiguration extends Configuration {
     }
 
 
+    /*
     @Valid
     @NotNull
     @JsonProperty("motion_db")
@@ -58,6 +59,7 @@ public class SuripuConfiguration extends Configuration {
     public DynamoDBConfiguration getMotionDBConfiguration() {
         return this.motionDBConfiguration;
     }
+    */
 
 
     @Valid
