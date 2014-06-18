@@ -62,11 +62,6 @@ dynamodb:
   region: us-east-1
   table_name: public_key_table
 
-motion_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: tracker_motion
-
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
