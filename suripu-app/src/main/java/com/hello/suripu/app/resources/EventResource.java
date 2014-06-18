@@ -86,6 +86,7 @@ public class EventResource {
      */
     private void validateTargetDate(final DateTime targetDate) {
         if(targetDate.getMillis() > targetDate.plusDays(2).getMillis() || targetDate.getMillis() < DateTimeUtil.MORPHEUS_DAY_ONE.getMillis()){
+            LOGGER.debug("Date {} is not valid", targetDate);
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
         }
     }
