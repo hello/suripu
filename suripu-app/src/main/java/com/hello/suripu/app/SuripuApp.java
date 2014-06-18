@@ -9,6 +9,7 @@ import com.hello.suripu.app.cli.RecreateEventsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.resources.AccountResource;
 import com.hello.suripu.app.resources.ApplicationResource;
+import com.hello.suripu.app.resources.EventResource;
 import com.hello.suripu.app.resources.HistoryResource;
 import com.hello.suripu.app.resources.OAuthResource;
 import com.hello.suripu.app.resources.ScoreResource;
@@ -18,11 +19,11 @@ import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.EventDAODynamoDB;
 import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.TimeSerieDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
-import com.hello.suripu.core.db.TrackerMotionDAODynamoDB;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -88,6 +89,14 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
         final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
 
+        final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+
+        client.setEndpoint(config.getEventDBConfiguration().getEndpoint());
+        final String eventTableName = config.getEventDBConfiguration().getTableName();
+        final EventDAODynamoDB eventDAODynamoDB = new EventDAODynamoDB(client, eventTableName);
+
+
 
         if(config.getMetricsEnabled()) {
             final String libratoUsername = config.getLibrato().getUsername();
@@ -136,6 +145,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new ApplicationResource(applicationStore));
         environment.addResource(new ScoreResource(timeSerieDAO, deviceDAO, scoreDAO, accountDAO));
         environment.addResource(new SleepLabelResource(sleepLabelDAO));
+        environment.addResource(new EventResource(eventDAODynamoDB));
 
         environment.addHealthCheck(new DBIHealthCheck(jdbi, "account-db", "SELECT * FROM accounts ORDER BY ID DESC LIMIT 1;"));
     }
