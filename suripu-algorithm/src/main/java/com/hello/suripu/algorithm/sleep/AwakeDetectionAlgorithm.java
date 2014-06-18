@@ -18,6 +18,15 @@ import java.util.List;
 
 /**
  * Created by pangwu on 6/11/14.
+ *
+ * The Awake Period detection algorithm works based on the idea below:
+ *
+ * The algorithm tries to found two "n Shapes", which are awake periods before and after sleep
+ * based on two optimization criteria:
+ *
+ * 1) Minimizes the disruption error in both awake and quiet period.
+ * 2) Maximizes the length of awake period.
+ *
  */
 public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
 
@@ -34,9 +43,12 @@ public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
             throw new AlgorithmException("No data available for date: " + dateOfTheNight);
         }
 
+        // Step 1: Aggregate the data based on a 10 minute interval.
         final AmplitudeDataPreprocessor smoother = new MaxAmplitudeAggregator(getSmoothWindow());
         final ImmutableList<AmplitudeData> smoothedData = smoother.process(rawData);
 
+        // Step 2: Generate two folds of data, first fold for fall asleep detection
+        // The second fold for wake up detection.
         final AmplitudeDataPreprocessor cutBefore4am = new DataCutter(dateOfTheNight.withTimeAtStartOfDay().plusHours(12),
                 dateOfTheNight.withTimeAtStartOfDay().plusDays(1).plusHours(4));
 
@@ -46,15 +58,17 @@ public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
         final ImmutableList<AmplitudeData> fallAsleepPeriodData = cutBefore4am.process(smoothedData);
         final ImmutableList<AmplitudeData> wakeUpPeriodData = cutAfter4am.process(smoothedData);
 
-        final ImmutableList<AmplitudeData> flattenFallAsleepPeriodData = NumericalUtils.zeroDataUnderAverage(fallAsleepPeriodData);
-        final ImmutableList<AmplitudeData> flattenWakeUpPeriodData = NumericalUtils.zeroDataUnderAverage(wakeUpPeriodData);
+        // Step 2.1: Make the data more contradictive.
+        final ImmutableList<AmplitudeData> sharpenFallAsleepPeriodData = NumericalUtils.zeroDataUnderAverage(fallAsleepPeriodData);
+        final ImmutableList<AmplitudeData> sharpenWakeUpPeriodData = NumericalUtils.zeroDataUnderAverage(wakeUpPeriodData);
 
+        // Step 3: Detect fall asleep period and wake up period.
+        final ImmutableList<SleepThreshold> fallAsleepThresholds = SleepThreshold.generateEqualBinThresholds(sharpenFallAsleepPeriodData, 1000);
+        final ImmutableList<SleepThreshold> awakeThresholds = SleepThreshold.generateEqualBinThresholds(sharpenWakeUpPeriodData, 1000);
 
-        final ImmutableList<SleepThreshold> fallAsleepThresholds = SleepThreshold.generateEqualBinThresholds(flattenFallAsleepPeriodData, 1000);
-        final ImmutableList<SleepThreshold> awakeThresholds = SleepThreshold.generateEqualBinThresholds(flattenWakeUpPeriodData, 1000);
-
-        final SleepThreshold fallAsleepThreshold = selectThresholdOnAwakeSegments(flattenFallAsleepPeriodData, fallAsleepThresholds, PaddingMode.PAD_LATE);
-        final SleepThreshold wakeUpThreshold = selectThresholdOnAwakeSegments(flattenWakeUpPeriodData, awakeThresholds, PaddingMode.PAD_EARLY);
+        // Step 3.1: Select thresholds for awake detections
+        final SleepThreshold fallAsleepThreshold = selectThresholdOnAwakeSegments(sharpenFallAsleepPeriodData, fallAsleepThresholds, PaddingMode.PAD_LATE);
+        final SleepThreshold wakeUpThreshold = selectThresholdOnAwakeSegments(sharpenWakeUpPeriodData, awakeThresholds, PaddingMode.PAD_EARLY);
 
 
         //SleepThreshold selectedThreshold = SleepThresholdSelector.selectAverage(buffer);
@@ -64,15 +78,19 @@ public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
 
 
         if(fallAsleepThreshold != null) {
-            final Segment beforeSleepAwakeSegment = getAwakeSegment(flattenFallAsleepPeriodData, fallAsleepThreshold, PaddingMode.PAD_LATE);
+            // Step 3.2: Generate fall asleep period based on selected threshold.
+            final Segment beforeSleepAwakeSegment = getAwakeSegment(sharpenFallAsleepPeriodData, fallAsleepThreshold, PaddingMode.PAD_LATE);
             if(beforeSleepAwakeSegment != null) {
+                // Set the start of sleeping period as the end of awake period before sleep.
                 sleepSegment.setStartTimestamp(beforeSleepAwakeSegment.getEndTimestamp());
             }
         }
 
         if(wakeUpThreshold != null) {
-            final Segment wakeUpSegment = getAwakeSegment(flattenWakeUpPeriodData, wakeUpThreshold, PaddingMode.PAD_EARLY);
+            // Step 3.3: Generate wake-up period by selected threshold.
+            final Segment wakeUpSegment = getAwakeSegment(sharpenWakeUpPeriodData, wakeUpThreshold, PaddingMode.PAD_EARLY);
             if(wakeUpSegment != null) {
+                // Set teh end of sleeping period as the start of wake-up period.
                 sleepSegment.setEndTimestamp(wakeUpSegment.getStartTimestamp());
             }
         }
