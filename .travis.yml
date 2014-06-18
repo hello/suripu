@@ -29,3 +29,8 @@ deploy:
   local-dir: build
   on:
     repo: hello/suripu
+
+cache:
+  bundler : true
+  directories:
+  - $HOME/.m2
