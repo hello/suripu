@@ -32,8 +32,6 @@ import com.hello.suripu.core.oauth.OAuthProvider;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
-import com.hello.suripu.service.cli.CreateDynamoDBTrackerTableCommand;
-import com.hello.suripu.service.cli.MigrateTrackerDataCommand;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.service.resources.ReceiveResource;
@@ -64,9 +62,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
     @Override
     public void initialize(Bootstrap<SuripuConfiguration> bootstrap) {
         bootstrap.addBundle(new DBIExceptionsBundle());
-        bootstrap.addCommand(new CreateDynamoDBTrackerTableCommand());
-        bootstrap.addCommand(new MigrateTrackerDataCommand());
-        //bootstrap.addCommand(new DropTrackerDataTableCommand());
+
     }
 
     @Override
@@ -93,9 +89,6 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
 
         final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
-
-        final String motionDataTableName = configuration.getMotionDBConfiguration().getTableName();
-        final TrackerMotionDAODynamoDB trackerMotionDAODynamoDB = new TrackerMotionDAODynamoDB(dynamoDBClient, motionDataTableName);
 
 
         final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider);
@@ -151,7 +144,6 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
         environment.addResource(new ReceiveResource(dao, deviceDAO, scoreDAO,
                 trackerMotionDAO,
-                trackerMotionDAODynamoDB,
                 publicKeyStore, kinesisLoggerFactory));
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());

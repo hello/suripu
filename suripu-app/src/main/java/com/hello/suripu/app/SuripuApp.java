@@ -89,13 +89,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
 
 
-        final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
-        final AmazonDynamoDBClient amazonDynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
-        amazonDynamoDBClient.setEndpoint(config.getMotionDBConfiguration().getEndpoint());
-
-        final TrackerMotionDAODynamoDB trackerMotionDAODynamoDB = new TrackerMotionDAODynamoDB(amazonDynamoDBClient, config.getMotionDBConfiguration().getTableName());
-
-
         if(config.getMetricsEnabled()) {
             final String libratoUsername = config.getLibrato().getUsername();
             final String libratoApiKey = config.getLibrato().getApiKey();
@@ -139,7 +132,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO));
         environment.addResource(new AccountResource(accountDAO));
-        environment.addResource(new HistoryResource(timeSerieDAO, deviceDAO, trackerMotionDAODynamoDB));
+        environment.addResource(new HistoryResource(timeSerieDAO, deviceDAO));
         environment.addResource(new ApplicationResource(applicationStore));
         environment.addResource(new ScoreResource(timeSerieDAO, deviceDAO, scoreDAO, accountDAO));
         environment.addResource(new SleepLabelResource(sleepLabelDAO));
