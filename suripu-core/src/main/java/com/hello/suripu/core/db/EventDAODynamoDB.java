@@ -64,6 +64,8 @@ public class EventDAODynamoDB {
 
 
     private final int MAX_CALL_COUNT = 5;
+    private final int MAX_BATCH_SIZE = 600 * 1024;
+
     public final int MAX_REQUEST_DAYS = 31;
 
     public final String JSON_CHARSET = "UTF-8";
@@ -260,10 +262,11 @@ public class EventDAODynamoDB {
         }
 
         final ArrayList<WriteRequest> putRequests = new ArrayList<WriteRequest>();
-        long itemCount = 0;
+        int processedItemsCount = 0;
+        long currentBatchSize = 0;
 
         for(final String targetDateOfNight:data.keySet()) {
-
+            processedItemsCount++;
             final List<Event> events = data.get(targetDateOfNight);
             final Event[] rawEventsArrayWithAllTypes = events.toArray(new Event[0]);
             Arrays.sort(rawEventsArrayWithAllTypes, new Comparator<Event>() {
@@ -296,7 +299,19 @@ public class EventDAODynamoDB {
                         .withItem(item);
 
                 final WriteRequest writeRequest = new WriteRequest().withPutRequest(putItemRequest);
+
+                if(currentBatchSize + compressedData.length > MAX_BATCH_SIZE) {
+                    LOGGER.info("Saving events for account_id: {}", accountId);
+
+                    batchWrite(accountId, putRequests);
+                    putRequests.clear();
+                    currentBatchSize = 0;
+
+                    LOGGER.info("Events saved for account_id: {}", accountId);
+                }
+
                 putRequests.add(writeRequest);
+                currentBatchSize += compressedData.length;
 
             }catch (JsonProcessingException jpe){
                 LOGGER.error("Serialize events for account {}, night {} failed: {}",
@@ -321,14 +336,19 @@ public class EventDAODynamoDB {
 
         }
 
+        if(putRequests.size() > 0){
+            batchWrite(accountId, putRequests);
+        }
+    }
+
+    private void batchWrite(final long accountId, final List<WriteRequest> writeRequests){
         Map<String, List<WriteRequest>> requestItems = new HashMap<String, List<WriteRequest>>();
-        requestItems.put(this.tableName, putRequests);
+        requestItems.put(this.tableName, writeRequests);
 
         BatchWriteItemResult result;
         final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest()
                 .withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
         int callCount = 0;
-
 
         do {
 
@@ -339,9 +359,11 @@ public class EventDAODynamoDB {
         } while (result.getUnprocessedItems().size() > 0 && callCount <= MAX_CALL_COUNT);
 
         if(result.getUnprocessedItems().size() > 0){
-            LOGGER.error("Account: {} tries to upload large event data, data size: {}", accountId, itemCount);
+            LOGGER.error("Account: {} tries to upload large event data", accountId);
             throw new RuntimeException("data is too large");
         }
+
+
     }
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
