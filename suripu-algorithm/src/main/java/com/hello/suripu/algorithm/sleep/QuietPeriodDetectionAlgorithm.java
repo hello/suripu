@@ -18,6 +18,16 @@ import java.util.List;
 
 /**
  * Created by pangwu on 6/11/14.
+ *
+ * The Quiet Period detection based Sleep Detection algorithm works based on the idea below:
+ *
+ * The algorithm tries to found a "U Shape" based on two optimization criteria:
+ * 1) Minimizes the disruption error in both awake and quiet period.
+ * 2) Maximizes the length of quiet period.
+ *
+ * Note: I found this algorithm is almost an equivalence to the Awake Period detection based Algorithm,
+ * with PAD_EARLY for fall asleep period detection and PAD_LATE for awake period detection.
+ *
  */
 public class QuietPeriodDetectionAlgorithm extends SleepDetectionAlgorithm {
 
@@ -34,9 +44,11 @@ public class QuietPeriodDetectionAlgorithm extends SleepDetectionAlgorithm {
             throw new AlgorithmException("No data available for date: " + dateOfTheNight);
         }
 
-
+        // Step 1: Aggregate the data based on a 10 minute interval.
         final AmplitudeDataPreprocessor smoother = new MaxAmplitudeAggregator(getSmoothWindow());
         final ImmutableList<AmplitudeData> smoothedData = smoother.process(rawData);
+
+        // Step 2: Make the data less contradictive.
         final ImmutableList<AmplitudeData> data = NumericalUtils.roofDataByAverage(smoothedData);
 
 
@@ -47,6 +59,7 @@ public class QuietPeriodDetectionAlgorithm extends SleepDetectionAlgorithm {
             throw new AlgorithmException("Cannot generate threshold in " + binNumber + " bins.");
         }
 
+        // Step 3: Select threshold that defines the sleep period.
         final SleepThreshold selectedThreshold = selectThresholdOnQuietPeriod(data, thresholds);
         final Segment theWholeDay = new Segment();
         theWholeDay.setStartTimestamp(data.get(0).timestamp);
@@ -58,6 +71,7 @@ public class QuietPeriodDetectionAlgorithm extends SleepDetectionAlgorithm {
             return theWholeDay;
         }
 
+        // Step 4: Extract the quiet period based on the threshold.
         final Segment sleepSegment = getQuietPeriod(data, selectedThreshold);
         if(sleepSegment == null){
             return theWholeDay;
