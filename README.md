@@ -34,3 +34,11 @@ to enjoy output like:
 [INFO]	suripu-sync ....................................... SUCCESS [0.175s]
 [INFO]	suripu-workers .................................... SUCCESS [0.227s]
 ```
+
+
+To deploy jars locally into the `repo` folder:
+
+1. cd into the project directory (ex: `~/java/dropwizard-mikkusu`)
+2. run `mvn package`
+3. cd into the target `directory`
+4. run `mvn deploy:deploy-file -Durl=file:///path/to/Suripu/repo/ -Dfile=dropwizard-mikkusu-0.0.1.jar -DgroupId=com.hello.dropwizard -DartifactId=dropwizard-mikkusu -Dpackaging=jar -Dversion=0.0.1`
