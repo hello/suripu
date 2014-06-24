@@ -131,11 +131,15 @@ public class ReceiveResource {
         for(final InputProtos.TrackerDataBatch.TrackerData datum:batch.getSamplesList()) {
             final DateTime roundedDateTimeUTC = Util.roundTimestampToMinuteUTC(datum.getTimestamp());
 
-            final TrackerMotion motion = new TrackerMotion(accessToken.accountId, roundedDateTimeUTC.getMillis(), datum.getSvmNoGravity(), datum.getOffsetMillis());
+            final TrackerMotion motion = new TrackerMotion(accessToken.accountId,
+                    datum.getTrackerId(),
+                    roundedDateTimeUTC.getMillis(),
+                    datum.getSvmNoGravity(), datum.getOffsetMillis());
             compressBuffer.add(motion);
 
             if(compressBuffer.get(compressBuffer.size() - 1).timestamp - compressBuffer.get(0).timestamp >= TrackerMotion.Batch.BATCH_INTERVAL){
                 final TrackerMotion.Batch trackerMotionBatch = new TrackerMotion.Batch(accessToken.accountId,
+                        compressBuffer.get(0).trackerId,
                         compressBuffer.get(0).timestamp,
                         compressBuffer.get(0).offsetMillis,
                         compressBuffer);
@@ -151,7 +155,7 @@ public class ReceiveResource {
                     }
 
                     LOGGER.warn("Duplicate sensor value for account_id = {}, ts = {}", accessToken.accountId,
-                            new DateTime(trackerMotionBatch.timestamp,
+                            new DateTime(trackerMotionBatch.firstElementTimestamp,
                                     DateTimeZone.forOffsetMillis(trackerMotionBatch.offsetMillis)));
                 }
 
@@ -163,6 +167,7 @@ public class ReceiveResource {
 
         if(compressBuffer.size() > 0) {
             final TrackerMotion.Batch trackerMotionBatch = new TrackerMotion.Batch(accessToken.accountId,
+                    compressBuffer.get(0).trackerId,
                     compressBuffer.get(0).timestamp,
                     compressBuffer.get(0).offsetMillis,
                     compressBuffer);
@@ -178,7 +183,7 @@ public class ReceiveResource {
                 }
 
                 LOGGER.warn("Duplicate sensor value for account_id = {}, ts = {}", accessToken.accountId,
-                        new DateTime(trackerMotionBatch.timestamp,
+                        new DateTime(trackerMotionBatch.firstElementTimestamp,
                                 DateTimeZone.forOffsetMillis(trackerMotionBatch.offsetMillis)));
             }
         }
@@ -206,15 +211,17 @@ public class ReceiveResource {
 
         final ArrayList<TrackerMotion> compressBuffer = new ArrayList<TrackerMotion>();
         int offsetMillis = -25200000;
+        final String trackerId  = "blue_giant_for_account_id:" + accessToken.accountId;
 
         for(final TempTrackerData tempTrackerData : trackerData) {
             final DateTime roundedDateTimeUTC = Util.roundTimestampToMinuteUTC(tempTrackerData.timestamp);
 
-            final TrackerMotion motion = new TrackerMotion(accessToken.accountId, roundedDateTimeUTC.getMillis(), tempTrackerData.value, offsetMillis);
+            final TrackerMotion motion = new TrackerMotion(accessToken.accountId, trackerId, roundedDateTimeUTC.getMillis(), tempTrackerData.value, offsetMillis);
             compressBuffer.add(motion);
 
             if(compressBuffer.get(compressBuffer.size() - 1).timestamp - compressBuffer.get(0).timestamp >= TrackerMotion.Batch.BATCH_INTERVAL){
                 final TrackerMotion.Batch trackerMotionBatch = new TrackerMotion.Batch(accessToken.accountId,
+                        trackerId,
                         compressBuffer.get(0).timestamp,
                         compressBuffer.get(0).offsetMillis,
                         compressBuffer);
@@ -230,7 +237,7 @@ public class ReceiveResource {
                     }
 
                     LOGGER.warn("Duplicate sensor value for account_id = {}, ts = {}", accessToken.accountId,
-                            new DateTime(trackerMotionBatch.timestamp,
+                            new DateTime(trackerMotionBatch.firstElementTimestamp,
                                     DateTimeZone.forOffsetMillis(trackerMotionBatch.offsetMillis)));
                 }
 
@@ -242,6 +249,7 @@ public class ReceiveResource {
 
         if(compressBuffer.size() > 0) {
             final TrackerMotion.Batch trackerMotionBatch = new TrackerMotion.Batch(accessToken.accountId,
+                    trackerId,
                     compressBuffer.get(0).timestamp,
                     compressBuffer.get(0).offsetMillis,
                     compressBuffer);
@@ -257,7 +265,7 @@ public class ReceiveResource {
                 }
 
                 LOGGER.warn("Duplicate sensor value for account_id = {}, ts = {}", accessToken.accountId,
-                        new DateTime(trackerMotionBatch.timestamp,
+                        new DateTime(trackerMotionBatch.firstElementTimestamp,
                                 DateTimeZone.forOffsetMillis(trackerMotionBatch.offsetMillis)));
             }
 
@@ -336,7 +344,7 @@ public class ReceiveResource {
 
                 try {
                     timestamp = dataInputStream.readLong();
-                    LOGGER.debug("Device timestamp = {}", timestamp);
+                    LOGGER.debug("Device firstElementTimestamp = {}", timestamp);
                     temp = dataInputStream.readInt();
                     light = dataInputStream.readInt();
                     humidity = dataInputStream.readInt();
@@ -407,7 +415,7 @@ public class ReceiveResource {
             for(final DeviceAccountPair pair : deviceAccountPairs) {
                 try {
                     deviceDataDAO.insertSound(pair.internalDeviceId, sample.getSoundAmplitude(), dateTimeSample, offsetMillis);
-                    LOGGER.debug("Sound timestamp = {}", sampleTimestamp);
+                    LOGGER.debug("Sound firstElementTimestamp = {}", sampleTimestamp);
                 } catch (UnableToExecuteStatementException exception) {
                     Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
                     if (!matcher.find()) {

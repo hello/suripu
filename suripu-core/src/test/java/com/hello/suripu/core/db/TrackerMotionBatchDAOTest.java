@@ -28,6 +28,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 public class TrackerMotionBatchDAOTest {
 
     private TrackerMotionBatchDAO trackerMotionBatchDAO;
+    private final String trackerId = "test_tracker";
 
     @Before
     public void setup() {
@@ -63,11 +64,15 @@ public class TrackerMotionBatchDAOTest {
         final DateTime startDateTime = DateTime.now();
         final ArrayList<TrackerMotion> motions = new ArrayList<>();
         for(int i = 0; i < 11; i++){
-            motions.add(new TrackerMotion(-1, startDateTime.getMillis() + i * 60 * 1000, i, startDateTime.getZone().getOffset(startDateTime)));
+            motions.add(new TrackerMotion(-1, this.trackerId,
+                    startDateTime.getMillis() + i * 60 * 1000, i,
+                    startDateTime.getZone().getOffset(startDateTime)));
 
         }
 
-        final TrackerMotion.Batch expectedBatch = new TrackerMotion.Batch(-1, startDateTime.getMillis(), startDateTime.getZone().getOffset(startDateTime), motions);
+        final TrackerMotion.Batch expectedBatch = new TrackerMotion.Batch(-1, this.trackerId,
+                startDateTime.getMillis(),
+                startDateTime.getZone().getOffset(startDateTime), motions);
         this.trackerMotionBatchDAO.insert(expectedBatch);
 
         final ImmutableList<TrackerMotion.Batch> batches = this.trackerMotionBatchDAO.getBetween(-1L,
@@ -89,20 +94,30 @@ public class TrackerMotionBatchDAOTest {
         final DateTime startDateTime = DateTime.now();
         final ArrayList<TrackerMotion> motions = new ArrayList<>();
 
+
         // Today's data
-        final TrackerMotion trackerMotion4Today = new TrackerMotion(-1, startDateTime.getMillis(), 100, startDateTime.getZone().getOffset(startDateTime));
+        final TrackerMotion trackerMotion4Today = new TrackerMotion(-1, this.trackerId,
+                startDateTime.getMillis(),
+                100, startDateTime.getZone().getOffset(startDateTime));
         motions.add(trackerMotion4Today);
 
-        final TrackerMotion.Batch expectedBatch4Today = new TrackerMotion.Batch(-1, startDateTime.getMillis(), startDateTime.getZone().getOffset(startDateTime), motions);
+        final TrackerMotion.Batch expectedBatch4Today = new TrackerMotion.Batch(-1, this.trackerId,
+                startDateTime.getMillis(),
+                startDateTime.getZone().getOffset(startDateTime), motions);
         this.trackerMotionBatchDAO.insert(expectedBatch4Today);
 
 
         motions.clear();
 
         // Tomorrow's data
-        final TrackerMotion trackerMotion4Tomorrow = new TrackerMotion(-1, startDateTime.plusDays(1).getMillis(), 101, startDateTime.plusDays(1).getZone().getOffset(startDateTime.plusDays(1)));
+        final TrackerMotion trackerMotion4Tomorrow = new TrackerMotion(-1, this.trackerId,
+                startDateTime.plusDays(1).getMillis(),
+                101, startDateTime.plusDays(1).getZone().getOffset(startDateTime.plusDays(1)));
         motions.add(trackerMotion4Tomorrow);
-        final TrackerMotion.Batch expectedBatch4Tomorrow = new TrackerMotion.Batch(-1, startDateTime.plusDays(1).getMillis(), startDateTime.plusDays(1).getZone().getOffset(startDateTime.plusDays(1)), motions);
+        final TrackerMotion.Batch expectedBatch4Tomorrow = new TrackerMotion.Batch(-1, this.trackerId,
+                startDateTime.plusDays(1).getMillis(),
+                startDateTime.plusDays(1).getZone().getOffset(startDateTime.plusDays(1)),
+                motions);
         this.trackerMotionBatchDAO.insert(expectedBatch4Tomorrow);
 
         final DateTime[] queryRange4Today = new DateTime[] {startDateTime, startDateTime.plusHours(12)};
@@ -187,14 +202,17 @@ public class TrackerMotionBatchDAOTest {
         final ArrayList<TrackerMotion> motions = new ArrayList<>();
 
         // Databatch 1
-        final TrackerMotion trackerMotion = new TrackerMotion(-1, startDateTime.getMillis(), 100, startDateTime.getZone().getOffset(startDateTime));
+        final TrackerMotion trackerMotion = new TrackerMotion(-1, this.trackerId,
+                startDateTime.getMillis(), 100, startDateTime.getZone().getOffset(startDateTime));
         motions.add(trackerMotion);
 
         // Duplicated batch
-        final TrackerMotion.Batch batch1 = new TrackerMotion.Batch(-1, startDateTime.getMillis(), startDateTime.getZone().getOffset(startDateTime), motions);
+        final TrackerMotion.Batch batch1 = new TrackerMotion.Batch(-1, this.trackerId,
+                startDateTime.getMillis(), startDateTime.getZone().getOffset(startDateTime), motions);
         this.trackerMotionBatchDAO.insert(batch1);
 
-        final TrackerMotion.Batch duplicatedBatch = new TrackerMotion.Batch(-1, startDateTime.getMillis(), startDateTime.getZone().getOffset(startDateTime), motions);
+        final TrackerMotion.Batch duplicatedBatch = new TrackerMotion.Batch(-1, this.trackerId,
+                startDateTime.getMillis(), startDateTime.getZone().getOffset(startDateTime), motions);
         this.trackerMotionBatchDAO.insert(duplicatedBatch);
     }
 

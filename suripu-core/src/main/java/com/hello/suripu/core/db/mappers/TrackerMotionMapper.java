@@ -17,6 +17,7 @@ public class TrackerMotionMapper implements ResultSetMapper<TrackerMotion> {
 
         return new TrackerMotion(
                 resultSet.getLong("account_id"),
+                resultSet.getString("tracker_id"),
                 resultSet.getTimestamp("ts").getTime(),
                 resultSet.getInt("svm_no_gravity"),
                 resultSet.getInt("offset_millis")

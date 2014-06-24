@@ -218,6 +218,7 @@ CREATE TABLE device_sensors_batch (
 CREATE TABLE motion_batch (
     id BIGSERIAL PRIMARY KEY,
     account_id BIGINT,
+    tracker_id VARCHAR(64),
     amplitudes int[],
     ts TIMESTAMP,
     offset_millis INTEGER

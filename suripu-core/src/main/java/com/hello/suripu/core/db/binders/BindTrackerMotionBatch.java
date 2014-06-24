@@ -39,7 +39,7 @@ public @interface BindTrackerMotionBatch {
                         amplitudes.add(batch.motionData.get(i).value);
                     }
                     sqlStatement.bind("amplitudes", SqlArray.<Integer>arrayOf(Integer.class, amplitudes));
-                    sqlStatement.bind("ts", new DateTime(batch.timestamp, DateTimeZone.UTC));
+                    sqlStatement.bind("ts", new DateTime(batch.firstElementTimestamp, DateTimeZone.UTC));
                     sqlStatement.bind("offset_millis", batch.offsetMillis);
                 }
             };

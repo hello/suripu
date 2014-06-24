@@ -21,16 +21,21 @@ public class TrackerMotionBatchMapper implements ResultSetMapper<TrackerMotion.B
         final Long accountId = resultSet.getLong("account_id");
         final Long startTimestamp = resultSet.getTimestamp("ts").getTime();
         final Integer offsetMillis = resultSet.getInt("offset_millis");
+        final String trackerId = resultSet.getString("tracker_id");
 
         final List<TrackerMotion> trackerMotions = new ArrayList<TrackerMotion>();
         if(motionAmplitudes != null) {
             final Integer[] amplitudesArray = (Integer[])motionAmplitudes.getArray();
             for (int i = 0; i < amplitudesArray.length; i++){
-                trackerMotions.add(new TrackerMotion(accountId, startTimestamp + i * 60 * 1000, amplitudesArray[i], offsetMillis));
+                trackerMotions.add(
+                        new TrackerMotion(accountId,
+                        trackerId,
+                        startTimestamp + i * 60 * 1000, amplitudesArray[i],
+                        offsetMillis));
             }
         }
 
-        return new TrackerMotion.Batch(accountId, startTimestamp, offsetMillis, trackerMotions);
+        return new TrackerMotion.Batch(accountId, trackerId, startTimestamp, offsetMillis, trackerMotions);
 
     }
 

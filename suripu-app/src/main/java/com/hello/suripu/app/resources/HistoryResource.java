@@ -105,7 +105,7 @@ public class HistoryResource {
                         continue;
                     }
 
-                    if(batch.timestamp < from){
+                    if(batch.firstElementTimestamp < from){
                         for(final TrackerMotion trackerMotion:batch.motionData){
                             if(trackerMotion.timestamp >= from && trackerMotion.timestamp <= to){
                                 trackerMotions.add(trackerMotion);
