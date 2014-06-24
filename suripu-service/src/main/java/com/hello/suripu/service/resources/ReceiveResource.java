@@ -13,7 +13,6 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
-import com.hello.suripu.core.db.TrackerMotionDAODynamoDB;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.models.BatchSensorData;
@@ -59,7 +58,6 @@ public class ReceiveResource {
     private final DeviceDAO deviceDAO;
     private final ScoreDAO scoreDAO;
     private final TrackerMotionDAO trackerMotionDAO;
-    private final TrackerMotionDAODynamoDB trackerMotionDAODynamoDB;
     private final PublicKeyStore publicKeyStore;
 
     private final KinesisLoggerFactory kinesisLoggerFactory;
@@ -69,14 +67,13 @@ public class ReceiveResource {
                            final DeviceDAO deviceDAO,
                            final ScoreDAO scoreDAO,
                            final TrackerMotionDAO trackerMotionDAO,
-                           final TrackerMotionDAODynamoDB trackerMotionDAODynamoDB,
                            final PublicKeyStore publicKeyStore,
                            final KinesisLoggerFactory kinesisLoggerFactory) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.scoreDAO = scoreDAO;
         this.trackerMotionDAO = trackerMotionDAO;
-        this.trackerMotionDAODynamoDB = trackerMotionDAODynamoDB;
+
         this.publicKeyStore = publicKeyStore;
         cryptoHelper = new CryptoHelper();
         this.kinesisLoggerFactory = kinesisLoggerFactory;

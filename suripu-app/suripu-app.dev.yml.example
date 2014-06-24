@@ -64,10 +64,6 @@ logging:
     # Sets the level for 'com.example.app' to DEBUG.
     com.hello.suripu: DEBUG
 
-motion_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: tracker_motion
 
 event_db:
   endpoint : http://localhost:7777

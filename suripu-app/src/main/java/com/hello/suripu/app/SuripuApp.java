@@ -9,6 +9,7 @@ import com.hello.suripu.app.cli.RecreateEventsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.resources.AccountResource;
 import com.hello.suripu.app.resources.ApplicationResource;
+import com.hello.suripu.app.resources.EventResource;
 import com.hello.suripu.app.resources.HistoryResource;
 import com.hello.suripu.app.resources.OAuthResource;
 import com.hello.suripu.app.resources.RoomConditionsResource;
@@ -20,10 +21,10 @@ import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.EventDAODynamoDB;
 import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.TimeSerieDAO;
-import com.hello.suripu.core.db.TrackerMotionDAODynamoDB;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
@@ -96,12 +97,13 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
         final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
 
+        final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
 
-        final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
-        final AmazonDynamoDBClient amazonDynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
-        amazonDynamoDBClient.setEndpoint(config.getMotionDBConfiguration().getEndpoint());
+        client.setEndpoint(config.getEventDBConfiguration().getEndpoint());
+        final String eventTableName = config.getEventDBConfiguration().getTableName();
+        final EventDAODynamoDB eventDAODynamoDB = new EventDAODynamoDB(client, eventTableName);
 
-        final TrackerMotionDAODynamoDB trackerMotionDAODynamoDB = new TrackerMotionDAODynamoDB(amazonDynamoDBClient, config.getMotionDBConfiguration().getTableName());
 
 
         if(config.getMetricsEnabled()) {
@@ -147,11 +149,12 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO));
         environment.addResource(new AccountResource(accountDAO));
-        environment.addResource(new HistoryResource(timeSerieDAO, deviceDAO, trackerMotionDAODynamoDB));
+        environment.addResource(new HistoryResource(timeSerieDAO, deviceDAO));
         environment.addResource(new ApplicationResource(applicationStore));
         environment.addResource(new ScoreResource(timeSerieDAO, deviceDAO, scoreDAO, accountDAO));
         environment.addResource(new SleepLabelResource(sleepLabelDAO));
         environment.addProvider(new RoomConditionsResource(deviceDataDAO));
+        environment.addResource(new EventResource(eventDAODynamoDB));
 
 //        environment.addHealthCheck(new DBIHealthCheck(sensorsDB, "account-db", "SELECT * FROM accounts ORDER BY ID DESC LIMIT 1;"));
     }
