@@ -4,20 +4,16 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 
+import java.util.List;
+
 /**
  * Created by pangwu on 5/6/14.
  */
 public class TrackerMotion {
     public static final float FLOAT_TO_INT_CONVERTER = 10000000;
 
-    @JsonProperty("id")
-    public final long id;
-
     @JsonProperty("account_id")
     public final long accountId;
-
-    @JsonProperty("tracker_id")
-    public final String trackerId;
 
     @JsonProperty("timestamp")
     public final long timestamp;
@@ -29,16 +25,12 @@ public class TrackerMotion {
     public final int offsetMillis;
 
     @JsonCreator
-    public TrackerMotion(@JsonProperty("id") final long id,
-                         @JsonProperty("account_id") final long accountId,
-                         @JsonProperty("tracker_id") final String trackerId,
+    public TrackerMotion(@JsonProperty("account_id") final long accountId,
                          @JsonProperty("timestamp") final long timestamp,
                          @JsonProperty("value") final int value,
                          @JsonProperty("timezone_offset") final int timeZoneOffset){
 
-        this.id = id;
         this.accountId = accountId;
-        this.trackerId = trackerId;
         this.timestamp = timestamp;
         this.value = value;
         this.offsetMillis = timeZoneOffset;
@@ -66,5 +58,20 @@ public class TrackerMotion {
         return   Objects.equal(this.timestamp, convertedObject.timestamp)
                 && Objects.equal(this.value, convertedObject.value)
                 && Objects.equal(this.offsetMillis, convertedObject.offsetMillis);
+    }
+
+    public static class Batch {
+        public final long accountId;
+        public final long timestamp;
+        public final int offsetMillis;
+        public final List<TrackerMotion> motionData;
+
+        public Batch(final long accountId, final long timestamp, final int offsetMillis, final List<TrackerMotion> motionData){
+            this.accountId = accountId;
+            this.motionData = motionData;
+            this.timestamp = timestamp;
+            this.offsetMillis = offsetMillis;
+        }
+
     }
 }

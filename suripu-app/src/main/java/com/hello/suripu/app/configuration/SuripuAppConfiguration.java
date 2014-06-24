@@ -40,16 +40,6 @@ public class SuripuAppConfiguration extends Configuration {
         return librato;
     }
 
-    /*
-    @Valid
-    @NotNull
-    @JsonProperty("motion_db")
-    private DynamoDBConfiguration motionDBConfiguration;
-
-    public DynamoDBConfiguration getMotionDBConfiguration() {
-        return this.motionDBConfiguration;
-    }
-    */
 
     @Valid
     @NotNull

@@ -14,6 +14,7 @@ import com.hello.suripu.core.db.EventDAO;
 import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.PublicKeyStoreDynamoDB;
 import com.hello.suripu.core.db.ScoreDAO;
+import com.hello.suripu.core.db.TrackerMotionBatchDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrackerMotionDAODynamoDB;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
@@ -80,7 +81,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final DeviceDAO deviceDAO = jdbi.onDemand(DeviceDAO.class);
         final ApplicationsDAO applicationsDAO = jdbi.onDemand(ApplicationsDAO.class);
         final ScoreDAO scoreDAO = jdbi.onDemand(ScoreDAO.class);
-        final TrackerMotionDAO trackerMotionDAO = jdbi.onDemand(TrackerMotionDAO.class);
+        final TrackerMotionBatchDAO trackerMotionDAO = jdbi.onDemand(TrackerMotionBatchDAO.class);
 
 
         final EventDAO eventDAO = jdbi.onDemand(EventDAO.class);

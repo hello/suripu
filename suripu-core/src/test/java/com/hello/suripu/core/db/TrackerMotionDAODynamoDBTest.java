@@ -100,9 +100,9 @@ public class TrackerMotionDAODynamoDBTest {
         final DateTime startTime = DateTime.now().withTimeAtStartOfDay();
         long accountId = 1;
 
-        testData.add(new TrackerMotion(-1, accountId, "",
+        testData.add(new TrackerMotion(accountId,
                 startTime.getMillis(),10, DateTimeZone.getDefault().getOffset(startTime)));
-        testData.add(new TrackerMotion(-1,accountId,"",
+        testData.add(new TrackerMotion(accountId,
                         startTime.plusMinutes(1).getMillis(),11, DateTimeZone.getDefault().getOffset(startTime.plusMinutes(1))));
 
         this.trackerMotionDAODynamoDB.setTrackerMotions(accountId, testData);
@@ -113,7 +113,7 @@ public class TrackerMotionDAODynamoDBTest {
 
         final ArrayList<TrackerMotion> testDataCrossDays = new ArrayList<TrackerMotion>();
         testDataCrossDays.addAll(testData);
-        testDataCrossDays.add(new TrackerMotion(-1,accountId,"",
+        testDataCrossDays.add(new TrackerMotion(accountId,
                 startTime.plusDays(1).plusMinutes(1).getMillis(),11, DateTimeZone.getDefault().getOffset(startTime.plusDays(1).plusMinutes(1))));
         this.trackerMotionDAODynamoDB.setTrackerMotions(accountId, testDataCrossDays);
         this.trackerMotionDAODynamoDB.setTrackerMotions(accountId, testDataCrossDays);
@@ -133,9 +133,9 @@ public class TrackerMotionDAODynamoDBTest {
         final DateTime startTime = DateTime.now().withTimeAtStartOfDay();
         long accountId = 1;
 
-        testData.add(new TrackerMotion(-1, accountId, "",
+        testData.add(new TrackerMotion(accountId,
                 startTime.getMillis(),10, DateTimeZone.getDefault().getOffset(startTime)));
-        testData.add(new TrackerMotion(-1,accountId,"",
+        testData.add(new TrackerMotion(accountId,
                 startTime.plusMinutes(1).getMillis(),11, DateTimeZone.getDefault().getOffset(startTime.plusMinutes(1))));
 
         this.trackerMotionDAODynamoDB.setTrackerMotions(accountId, testData);
@@ -146,7 +146,7 @@ public class TrackerMotionDAODynamoDBTest {
 
         final ArrayList<TrackerMotion> testDataCrossDays = new ArrayList<TrackerMotion>();
         testDataCrossDays.addAll(testData);
-        testDataCrossDays.add(new TrackerMotion(-1,accountId,"",
+        testDataCrossDays.add(new TrackerMotion(accountId,
                 startTime.plusDays(1).plusMinutes(1).getMillis(),12, DateTimeZone.getDefault().getOffset(startTime.plusDays(1).plusMinutes(1))));
         this.trackerMotionDAODynamoDB.setTrackerMotions(accountId, testDataCrossDays);
 
@@ -170,10 +170,10 @@ public class TrackerMotionDAODynamoDBTest {
         long accountId = 1;
 
         final List<TrackerMotion> dataForDay1 = new ArrayList<TrackerMotion>();
-        dataForDay1.add(new TrackerMotion(-1, accountId, "",
+        dataForDay1.add(new TrackerMotion(accountId,
                 startTime.getMillis(), 10,
                 DateTimeZone.getDefault().getOffset(startTime)));
-        dataForDay1.add(new TrackerMotion(-1,accountId,"",
+        dataForDay1.add(new TrackerMotion(accountId,
                 startTime.plusMinutes(1).getMillis(),11,
                 DateTimeZone.getDefault().getOffset(startTime.plusMinutes(1))));
 
@@ -182,7 +182,7 @@ public class TrackerMotionDAODynamoDBTest {
         this.trackerMotionDAODynamoDB.setTrackerMotions(accountId, dataForDay1);
 
         final List<TrackerMotion> dataForDay2 = new ArrayList<TrackerMotion>();
-        dataForDay2.add(new TrackerMotion(-1, accountId, "",
+        dataForDay2.add(new TrackerMotion(accountId,
                 startTime.plusDays(1).plusMinutes(1).getMillis(), 12,
                 DateTimeZone.getDefault().getOffset(startTime.plusDays(1).plusMinutes(1))));
 

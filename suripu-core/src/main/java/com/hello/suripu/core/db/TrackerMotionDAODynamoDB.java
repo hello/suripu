@@ -132,9 +132,7 @@ public class TrackerMotionDAODynamoDB {
 
                         for(final InputProtos.TrackerDataBatch.TrackerData datum:dataList){
                             TrackerMotion trackerMotion = new TrackerMotion(
-                                    -1,
                                     accountId,
-                                    "",
                                     datum.getTimestamp(),
                                     datum.getSvmNoGravity(),
                                     datum.getOffsetMillis());
@@ -220,9 +218,7 @@ public class TrackerMotionDAODynamoDB {
 
             for(final InputProtos.TrackerDataBatch.TrackerData datum:dataList){
                 TrackerMotion trackerMotion = new TrackerMotion(
-                        -1,
                         accountId,
-                        "",
                         datum.getTimestamp(),
                         datum.getSvmNoGravity(),
                         datum.getOffsetMillis());
@@ -310,9 +306,7 @@ public class TrackerMotionDAODynamoDB {
                             if(datum.getTimestamp() >= startTimestampLocal.getMillis() &&
                                     datum.getTimestamp() <= endTimestampLocal.getMillis()) {
                                 TrackerMotion trackerMotion = new TrackerMotion(
-                                        -1,
                                         accountId,
-                                        "",
                                         datum.getTimestamp(),
                                         datum.getSvmNoGravity(),
                                         datum.getOffsetMillis());
