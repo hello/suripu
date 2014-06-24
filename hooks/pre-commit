@@ -59,7 +59,7 @@ def contains_same_keys(local_files, prod_files):
     diff = prod_keys.difference(loc_keys)
     if diff:
       print error("keys don't match for %s" % local_key)
-      print error("Difference = %s", ','.join(list(diff)))
+      print error("Difference = %s" % ','.join(list(diff)))
       sys.exit(1)
 
 

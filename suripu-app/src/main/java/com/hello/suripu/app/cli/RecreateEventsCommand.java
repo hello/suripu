@@ -65,10 +65,10 @@ public class RecreateEventsCommand extends ConfiguredCommand<SuripuAppConfigurat
     @Override
     protected void run(Bootstrap<SuripuAppConfiguration> bootstrap, Namespace namespace, SuripuAppConfiguration configuration) throws Exception {
         final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
-        final ManagedDataSource dataSource = managedDataSourceFactory.build(configuration.getDatabaseConfiguration());
+        final ManagedDataSource dataSource = managedDataSourceFactory.build(configuration.getSensorsDB());
 
         final DBI jdbi = new DBI(dataSource);
-        jdbi.registerArgumentFactory(new OptionalArgumentFactory(configuration.getDatabaseConfiguration().getDriverClass()));
+        jdbi.registerArgumentFactory(new OptionalArgumentFactory(configuration.getSensorsDB().getDriverClass()));
         jdbi.registerContainerFactory(new ImmutableListContainerFactory());
         jdbi.registerContainerFactory(new ImmutableSetContainerFactory());
         jdbi.registerContainerFactory(new OptionalContainerFactory());

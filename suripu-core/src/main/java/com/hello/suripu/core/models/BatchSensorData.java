@@ -119,4 +119,16 @@ public class BatchSensorData {
             return new BatchSensorData(accountId, deviceId, ambientTemp, ambientAirQuality, ambientHumidity, ambientLight, dateTime, offsetMillis);
         }
     }
+
+    public Integer getLastTemperature() {
+        return ambientTemp.get(ambientTemp.size()-1);
+    }
+
+    public Integer getLastHumidity() {
+        return ambientHumidity.get(ambientHumidity.size()-1);
+    }
+
+    public Integer getLastAirQuality() {
+        return ambientAirQuality.get(ambientAirQuality.size()-1);
+    }
 }
