@@ -2,6 +2,8 @@ package com.hello.suripu.core.db.binders;
 
 import com.hello.suripu.core.db.util.SqlArray;
 import com.hello.suripu.core.models.TrackerMotion;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
@@ -29,16 +31,15 @@ public @interface BindTrackerMotionBatch {
             return new Binder<BindTrackerMotionBatch, TrackerMotion.Batch>() {
 
                 @Override
-                public void bind(final SQLStatement<?> sqlStatement, final BindTrackerMotionBatch bindTrackerMotionBatch, final TrackerMotion.Batch batch) {
+                public void bind(final SQLStatement sqlStatement, final BindTrackerMotionBatch bindTrackerMotionBatch, final TrackerMotion.Batch batch) {
                     sqlStatement.bind("account_id", batch.accountId);
 
                     final List<Integer> amplitudes = new ArrayList<Integer>();
                     for(int i = 0; i < batch.motionData.size(); i++){
                         amplitudes.add(batch.motionData.get(i).value);
                     }
-                    sqlStatement.bind("amplitudes", new SqlArray<Integer>(Integer.class, amplitudes));
-
-                    sqlStatement.bind("ts", batch.timestamp);
+                    sqlStatement.bind("amplitudes", SqlArray.<Integer>arrayOf(Integer.class, amplitudes));
+                    sqlStatement.bind("ts", new DateTime(batch.timestamp, DateTimeZone.UTC));
                     sqlStatement.bind("offset_millis", batch.offsetMillis);
                 }
             };

@@ -213,7 +213,7 @@ public class ReceiveResource {
             final TrackerMotion motion = new TrackerMotion(accessToken.accountId, roundedDateTimeUTC.getMillis(), tempTrackerData.value, offsetMillis);
             compressBuffer.add(motion);
 
-            if(compressBuffer.size() % 5 == 0){
+            if(compressBuffer.get(compressBuffer.size() - 1).timestamp - compressBuffer.get(0).timestamp >= 5 * 60 * 1000){
                 final TrackerMotion.Batch trackerMotionBatch = new TrackerMotion.Batch(accessToken.accountId,
                         compressBuffer.get(0).timestamp,
                         compressBuffer.get(0).offsetMillis,

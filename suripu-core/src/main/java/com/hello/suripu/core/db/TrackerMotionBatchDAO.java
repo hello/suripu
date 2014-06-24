@@ -8,7 +8,7 @@ import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 
 /**
  * Created by pangwu on 6/23/14.
@@ -16,11 +16,11 @@ import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
 public interface TrackerMotionBatchDAO {
 
     @SqlUpdate("INSERT INTO motion_batch (account_id, amplitudes, ts, offset_millis) " +
-            "VALUES(:account_id, :amplitudes, :ts, :offset_millis);")
+            "VALUES(:account_id, :amplitudes, :ts, :offset_millis)")
     void insert(@BindTrackerMotionBatch final TrackerMotion.Batch batchMotion);
 
 
-    @Mapper(TrackerMotionBatchMapper.class)
+    @RegisterMapper(TrackerMotionBatchMapper.class)
     @SqlQuery("SELECT * FROM motion_batch WHERE account_id = :account_id AND ts >= :start_timestamp AND ts <= :end_timestamp ORDER BY ts ASC")
     ImmutableList<TrackerMotion.Batch> getBetween(
             @Bind("account_id") final Long accountId,
