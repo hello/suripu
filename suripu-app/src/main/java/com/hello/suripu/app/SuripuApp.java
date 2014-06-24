@@ -11,6 +11,7 @@ import com.hello.suripu.app.resources.AccountResource;
 import com.hello.suripu.app.resources.ApplicationResource;
 import com.hello.suripu.app.resources.HistoryResource;
 import com.hello.suripu.app.resources.OAuthResource;
+import com.hello.suripu.app.resources.RoomConditionsResource;
 import com.hello.suripu.app.resources.ScoreResource;
 import com.hello.suripu.app.resources.SleepLabelResource;
 import com.hello.suripu.core.db.AccessTokenDAO;
@@ -18,11 +19,12 @@ import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.TimeSerieDAO;
-import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.TrackerMotionDAODynamoDB;
+import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -38,7 +40,6 @@ import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.jdbi.DBIFactory;
-import com.yammer.dropwizard.jdbi.DBIHealthCheck;
 import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
 import com.yammer.dropwizard.jdbi.bundles.DBIExceptionsBundle;
 import com.yammer.metrics.core.MetricPredicate;
@@ -71,19 +72,26 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
 
         final DBIFactory factory = new DBIFactory();
-        final DBI jdbi = factory.build(environment, config.getDatabaseConfiguration(), "postgresql");
-        jdbi.registerArgumentFactory(new JodaArgumentFactory());
-        jdbi.registerContainerFactory(new OptionalContainerFactory());
-        jdbi.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
+        final DBI sensorsDB = factory.build(environment, config.getSensorsDB(), "postgresql");
+        final DBI commonDB = factory.build(environment, config.getCommonDB(), "postgresql");
+
+        sensorsDB.registerArgumentFactory(new JodaArgumentFactory());
+        sensorsDB.registerContainerFactory(new OptionalContainerFactory());
+        sensorsDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
 
 
-        final TimeSerieDAO timeSerieDAO = jdbi.onDemand(TimeSerieDAO.class);
-        final AccountDAO accountDAO = jdbi.onDemand(AccountDAOImpl.class);
-        final ApplicationsDAO applicationsDAO = jdbi.onDemand(ApplicationsDAO.class);
-        final AccessTokenDAO accessTokenDAO = jdbi.onDemand(AccessTokenDAO.class);
-        final DeviceDAO deviceDAO = jdbi.onDemand(DeviceDAO.class);
-        final ScoreDAO scoreDAO = jdbi.onDemand(ScoreDAO.class);
-        final SleepLabelDAO sleepLabelDAO = jdbi.onDemand(SleepLabelDAO.class);
+        commonDB.registerArgumentFactory(new JodaArgumentFactory());
+        commonDB.registerContainerFactory(new OptionalContainerFactory());
+        commonDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
+
+        final TimeSerieDAO timeSerieDAO = sensorsDB.onDemand(TimeSerieDAO.class);
+        final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
+        final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
+        final AccessTokenDAO accessTokenDAO = commonDB.onDemand(AccessTokenDAO.class);
+        final DeviceDAO deviceDAO = sensorsDB.onDemand(DeviceDAO.class);
+        final ScoreDAO scoreDAO = commonDB.onDemand(ScoreDAO.class);
+        final SleepLabelDAO sleepLabelDAO = commonDB.onDemand(SleepLabelDAO.class);
+        final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
 
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
         final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
@@ -143,7 +151,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new ApplicationResource(applicationStore));
         environment.addResource(new ScoreResource(timeSerieDAO, deviceDAO, scoreDAO, accountDAO));
         environment.addResource(new SleepLabelResource(sleepLabelDAO));
+        environment.addProvider(new RoomConditionsResource(deviceDataDAO));
 
-        environment.addHealthCheck(new DBIHealthCheck(jdbi, "account-db", "SELECT * FROM accounts ORDER BY ID DESC LIMIT 1;"));
+//        environment.addHealthCheck(new DBIHealthCheck(sensorsDB, "account-db", "SELECT * FROM accounts ORDER BY ID DESC LIMIT 1;"));
     }
 }
