@@ -13,11 +13,20 @@ public class SuripuAppConfiguration extends Configuration {
 
     @Valid
     @NotNull
-    @JsonProperty("database")
-    private DatabaseConfiguration database = new DatabaseConfiguration();
+    @JsonProperty("sensors_db")
+    private DatabaseConfiguration sensorsDB = new DatabaseConfiguration();
 
-    public DatabaseConfiguration getDatabaseConfiguration() {
-        return database;
+    public DatabaseConfiguration getSensorsDB() {
+        return sensorsDB;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("common_db")
+    private DatabaseConfiguration commonDB = new DatabaseConfiguration();
+
+    public DatabaseConfiguration getCommonDB() {
+        return commonDB;
     }
 
     @Valid

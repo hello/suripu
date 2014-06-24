@@ -49,10 +49,7 @@ public class EventResource {
                                  @PathParam("target_date_string") final String targetDateString){
 
         final DateTime targetDate = DateTime.parse(targetDateString, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT));
-
-        if(targetDate.getMillis() > targetDate.plusDays(2).getMillis() || targetDate.getMillis() < DateTimeUtil.MORPHEUS_DAY_ONE.getMillis()){
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
-        }
+        validateTargetDate(targetDate);
 
         final List<Event> events = this.eventDAODynamoDB.getEventsForDate(token.accountId, targetDate);
         return events;
@@ -68,12 +65,10 @@ public class EventResource {
         final ArrayList<DateTime> targetDates = new ArrayList<DateTime>();
         for (final String dateString:dateStrings){
             final DateTime targetDate = DateTime.parse(dateString, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT));
-            if(targetDate.getMillis() > targetDate.plusDays(2).getMillis() || targetDate.getMillis() < DateTimeUtil.MORPHEUS_DAY_ONE.getMillis()){
-                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
-            }
-
             targetDates.add(targetDate);
         }
+
+        validateTargetDates(targetDates);
 
         final ImmutableMap<DateTime, ImmutableList<Event>> dateEventsMap = this.eventDAODynamoDB.getEventsForDates(accessToken.accountId, targetDates);
         final HashMap<String, List<Event>> results = new HashMap<String, List<Event>>();
@@ -83,5 +78,26 @@ public class EventResource {
 
         return results;
 
+    }
+
+    /**
+     * Validate that the target date is withing acceptable date range
+     * @param targetDate
+     */
+    private void validateTargetDate(final DateTime targetDate) {
+        if(targetDate.getMillis() > targetDate.plusDays(2).getMillis() || targetDate.getMillis() < DateTimeUtil.MORPHEUS_DAY_ONE.getMillis()){
+            LOGGER.debug("Date {} is not valid", targetDate);
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+        }
+    }
+
+    /**
+     * Bulk validation
+     * @param targetDates
+     */
+    private void validateTargetDates(final List<DateTime> targetDates) {
+        for(DateTime targetDate : targetDates) {
+            validateTargetDate(targetDate);
+        }
     }
 }

@@ -31,8 +31,11 @@ public class BatchSensorDataMapper implements ResultSetMapper<BatchSensorData> {
         final Array airQuality = r.getArray("ambient_air_quality");
         final List<Integer> ambientAirQuality = fromArray(temp);
 
+        final String deviceId = r.getString("device_id");
+
         final BatchSensorData batchSensorData = new BatchSensorData.Builder()
                 .withAccountId(accountId)
+                .withDeviceId(deviceId)
                 .withDateTime(dateTime)
                 .withOffsetMillis(offsetMillis)
                 .withAmbientTemp(ambientTemp)
