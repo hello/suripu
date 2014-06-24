@@ -25,6 +25,7 @@ import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.service.Util;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
@@ -127,8 +128,19 @@ public class ReceiveResource {
         }
 
         final ArrayList<TrackerMotion> compressBuffer = new ArrayList<TrackerMotion>();
+        long timestampOfLastData = 0;
 
         for(final InputProtos.TrackerDataBatch.TrackerData datum:batch.getSamplesList()) {
+            if(timestampOfLastData != 0){
+                if(datum.getTimestamp() - timestampOfLastData < DateTimeConstants.MILLIS_PER_MINUTE * 0.8){
+                    LOGGER.warn("Data interval less than 1 minute, account_id = {}, time_1: {}, time_2: {}",
+                            accessToken.accountId,
+                            new DateTime(timestampOfLastData, DateTimeZone.UTC),
+                            new DateTime(datum.getTimestamp(), DateTimeZone.UTC));
+                    continue;
+                }
+            }
+
             final DateTime roundedDateTimeUTC = Util.roundTimestampToMinuteUTC(datum.getTimestamp());
 
             final TrackerMotion motion = new TrackerMotion(accessToken.accountId,
@@ -161,6 +173,8 @@ public class ReceiveResource {
 
                 compressBuffer.clear();
             }
+
+            timestampOfLastData = datum.getTimestamp();
 
         }
 
@@ -212,10 +226,20 @@ public class ReceiveResource {
         final ArrayList<TrackerMotion> compressBuffer = new ArrayList<TrackerMotion>();
         int offsetMillis = -25200000;
         final String trackerId  = "blue_giant_for_account_id:" + accessToken.accountId;
+        long timestampOfLastData = 0;
 
         for(final TempTrackerData tempTrackerData : trackerData) {
-            final DateTime roundedDateTimeUTC = Util.roundTimestampToMinuteUTC(tempTrackerData.timestamp);
+            if(timestampOfLastData != 0){
+                if(tempTrackerData.timestamp - timestampOfLastData < DateTimeConstants.MILLIS_PER_MINUTE * 0.8){
+                    LOGGER.warn("Data interval less than 1 minute, account_id = {}, time_1: {}, time_2: {}",
+                            accessToken.accountId,
+                            new DateTime(timestampOfLastData, DateTimeZone.UTC),
+                            new DateTime(tempTrackerData.timestamp, DateTimeZone.UTC));
+                    continue;
+                }
+            }
 
+            final DateTime roundedDateTimeUTC = Util.roundTimestampToMinuteUTC(tempTrackerData.timestamp);
             final TrackerMotion motion = new TrackerMotion(accessToken.accountId, trackerId, roundedDateTimeUTC.getMillis(), tempTrackerData.value, offsetMillis);
             compressBuffer.add(motion);
 
@@ -243,6 +267,8 @@ public class ReceiveResource {
 
                 compressBuffer.clear();
             }
+
+            timestampOfLastData = tempTrackerData.timestamp;
 
         }
 
