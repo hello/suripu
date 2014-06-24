@@ -3,6 +3,7 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import org.joda.time.DateTimeConstants;
 
 import java.util.List;
 
@@ -61,6 +62,8 @@ public class TrackerMotion {
     }
 
     public static class Batch {
+        public static final long BATCH_INTERVAL = DateTimeConstants.MILLIS_PER_MINUTE * 5;
+
         public final long accountId;
         public final long timestamp;
         public final int offsetMillis;
