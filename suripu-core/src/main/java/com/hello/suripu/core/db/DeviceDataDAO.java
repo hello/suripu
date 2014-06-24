@@ -13,6 +13,7 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 
 
+@RegisterMapper(BatchSensorDataMapper.class)
 public interface DeviceDataDAO {
 
     @SqlUpdate("INSERT INTO device_sensors_batch (account_id, ambient_temp, ambient_light, ambient_humidity, ambient_air_quality, ts, offset_millis) " +
@@ -36,7 +37,7 @@ public interface DeviceDataDAO {
     void insertSound(@Bind("device_id") Long deviceId, @Bind("amplitude") float amplitude, @Bind("ts") DateTime ts, @Bind("offset") int offset);
 
 
-    @RegisterMapper(BatchSensorDataMapper.class)
+
     @SqlQuery("SELECT * FROM device_sensors_batch WHERE account_id = :account_id AND ts >= :start_timestamp AND ts <= :end_timestamp ORDER BY id ASC")
     ImmutableList<BatchSensorData> getBatchSensorDataBetween(
             @Bind("account_id") Long accountId,
