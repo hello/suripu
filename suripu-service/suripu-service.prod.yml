@@ -95,8 +95,3 @@ kinesis:
   streams :
     pill_data : test-pill-suripu
     morpheus_data : test-morpheus-suripu
-
-event_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: event
