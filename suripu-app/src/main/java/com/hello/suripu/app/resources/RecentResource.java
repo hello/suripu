@@ -15,7 +15,7 @@ public class RecentResource {
     @Timed
     public DeviceData getRecent() {
         final DateTime now = DateTime.now(DateTimeZone.UTC);
-        return new DeviceData(0, 0,
+        return new DeviceData(0L, 0L,
                 DeviceData.floatToDBInt(12.3f),
                 DeviceData.floatToDBInt(22.0f),
                 DeviceData.floatToDBInt(55.0f),

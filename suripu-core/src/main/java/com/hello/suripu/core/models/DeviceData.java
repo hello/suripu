@@ -34,14 +34,14 @@ public class DeviceData {
     public final Integer offsetMillis;
 
     public DeviceData(
-            final long accountId,
-            final long deviceId,
+            final Long accountId,
+            final Long deviceId,
             final int ambientTemperature,
             final int ambientHumidity,
             final int ambientAirQuality,
             final int ambientLight,
             final DateTime dateTimeUTC,
-            final int offsetMillis) {
+            final Integer offsetMillis) {
         this.accountId = accountId;
         this.deviceId = deviceId;
         this.ambientTemperature = ambientTemperature;
@@ -76,12 +76,12 @@ public class DeviceData {
         private DateTime dateTimeUTC;
         private Integer offsetMillis;
 
-        public Builder withAccountId(final long accountId){
+        public Builder withAccountId(final Long accountId){
             this.accountId = accountId;
             return this;
         }
 
-        public Builder withDeviceId(final long deviceId){
+        public Builder withDeviceId(final Long deviceId){
             this.deviceId = deviceId;
             return this;
         }
@@ -113,7 +113,7 @@ public class DeviceData {
         }
 
 
-        public Builder withOffsetMillis(final int offsetMillis){
+        public Builder withOffsetMillis(final Integer offsetMillis){
             this.offsetMillis = offsetMillis;
             return this;
         }
