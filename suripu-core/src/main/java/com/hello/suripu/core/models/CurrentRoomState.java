@@ -21,7 +21,7 @@ public class CurrentRoomState {
         }
 
         @JsonProperty("value")
-        public final float value;
+        public final int value;
 
         @JsonProperty("message")
         public final String message;
@@ -32,7 +32,7 @@ public class CurrentRoomState {
         @JsonProperty("last_updated_utc")
         public final DateTime lastUpdated;
 
-        public State(final float value, final String message, final Condition condition, final DateTime lastUpdated) {
+        public State(final int value, final String message, final Condition condition, final DateTime lastUpdated) {
             this.value = value;
             this.message = message;
             this.condition = condition;
@@ -62,9 +62,9 @@ public class CurrentRoomState {
      * @return
      */
     public static CurrentRoomState fromDeviceData(final DeviceData data) {
-        final float temp = DeviceData.dbIntToFloat(data.ambientTemperature);
-        final float humidity = DeviceData.dbIntToFloat(data.ambientHumidity);
-        final float particulates = DeviceData.dbIntToFloat(data.ambientAirQuality);
+        final int temp = (int)DeviceData.dbIntToFloat(data.ambientTemperature);
+        final int humidity = (int)DeviceData.dbIntToFloat(data.ambientHumidity);
+        final int particulates = (int)DeviceData.dbIntToFloat(data.ambientAirQuality);
         State temperatureState;
         State humidityState;
         State particulatesState;
