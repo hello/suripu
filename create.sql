@@ -96,7 +96,7 @@ GRANT ALL PRIVILEGES ON SEQUENCE oauth_tokens_id_seq TO ingress_user;
 
 CREATE TABLE account_device_map(
     id SERIAL PRIMARY KEY,
-    account_id INTEGER,
+    account_id BIGINT,
     device_id VARCHAR(100),
     created_at TIMESTAMP default current_timestamp
 );
@@ -109,7 +109,7 @@ GRANT ALL PRIVILEGES ON SEQUENCE account_device_map_id_seq TO ingress_user;
 
 CREATE TABLE device_sound(
     id BIGSERIAL PRIMARY KEY,
-    device_id INTEGER,
+    device_id BIGINT,
     amplitude INTEGER,
     ts TIMESTAMP,
     offset_millis INTEGER
@@ -123,7 +123,7 @@ GRANT ALL PRIVILEGES ON SEQUENCE device_sound_id_seq TO ingress_user;
 
 CREATE TABLE device_scores(
     id BIGSERIAL PRIMARY KEY,
-    device_id INTEGER,
+    device_id BIGINT,
     ambient_temp INTEGER,
     ambient_air_quality INTEGER,
     ambient_humidity INTEGER,
@@ -134,7 +134,7 @@ CREATE TABLE device_scores(
 
 CREATE TABLE account_scores(
     id BIGSERIAL PRIMARY KEY,
-    account_id INTEGER,
+    account_id BIGINT,
     ambient_temp INTEGER,
     ambient_humidity INTEGER,
     ambient_air_quality INTEGER,
@@ -151,7 +151,7 @@ GRANT ALL PRIVILEGES ON SEQUENCE account_scores_id_seq TO ingress_user;
 
 CREATE TABLE sleep_label(
     id SERIAL PRIMARY KEY,
-    account_id INTEGER,
+    account_id BIGINT,
     date_utc TIMESTAMP,
     rating INTEGER,
     sleep_at_utc TIMESTAMP,
@@ -167,7 +167,7 @@ GRANT ALL PRIVILEGES ON SEQUENCE sleep_label_id_seq TO ingress_user;
 -- Assume for now we only support one tracker each account for sleep cycle tracking
 CREATE TABLE motion(
     id BIGSERIAL PRIMARY KEY,
-    account_id INTEGER,
+    account_id BIGINT,
     tracker_id VARCHAR(64),
     svm_no_gravity INTEGER,
     ts TIMESTAMP,
@@ -181,7 +181,7 @@ GRANT ALL PRIVILEGES ON SEQUENCE motion_id_seq TO ingress_user;
 CREATE TABLE event(
     id BIGSERIAL PRIMARY KEY,
     event_type INTEGER, --{MOTION, NOISE, SNORING}
-    account_id INTEGER,
+    account_id BIGINT,
     start_time_utc TIMESTAMP,
     end_time_utc TIMESTAMP,
     offset_millis INTEGER
@@ -204,53 +204,10 @@ ALTER TABLE device_sensors ADD COLUMN account_id INTEGER;
 -- 2014/06/26
 -- Add Local timestamp that set to UTC time
 ALTER TABLE device_sensors ADD COLUMN local_utc_ts TIMESTAMP;
-ALTER TABLE device_sensors ALTER COLUMN device_id TYPE VARCHAR(255) USING device_id::BIGINT::TEXT::VARCHAR(255);
 
 -- Fill the new column using following query.
 -- UPDATE device_sensors SET offset_millis = -25200000 WHERE offset_millis = 0;  -- Assume all the existing data are in PST
 -- UPDATE device_sensors SET local_utc_ts = to_timestamp(extract(epoch from device_sensors.ts) + device_sensors.offset_millis::float / 1000);
-
--- 2014/06/26
--- Alter the device_sensors table to master table, drop all indexes on device_sensors table
-DROP INDEX uniq_device_ts;
-DROP INDEX uniq_device_id_account_id_ts;
-
--- 2014/06/26
--- Create default partition
-CREATE TABLE device_sensors_par_default() INHERITS (device_sensors);
-CREATE UNIQUE INDEX uniq_device_id_account_id_ts on device_sensors_par_default(device_id, account_id, ts);
-
--- 2014/06/26
--- Add trigger to master table
-
--- The default trigger function
--- This function use dynamic table name and exception fallback, which is extremely expensive.
--- please replace it with the actual partition function generate by gen_par_script command.
-CREATE OR REPLACE FUNCTION device_sensors_insert_function() RETURNS TRIGGER AS
-$BODY$
-DECLARE
-    table_name TEXT;
-BEGIN
-    table_name := 'device_sensors_par_' || to_char(NEW.local_utc_ts, 'YYYY_MM');
-
-    EXECUTE format('INSERT INTO %I VALUES ($1.*)', table_name) USING NEW;
-
-    RETURN NULL;
-EXCEPTION WHEN UNDEFINED_TABLE THEN  -- 42P01 	UNDEFINED TABLE: http://www.postgresql.org/docs/8.0/static/errcodes-appendix.html
-    INSERT INTO device_sensors_par_default VALUES (NEW.*);
-    RETURN NULL;
-END
-$BODY$
-LANGUAGE plpgsql;
-
--- Create trigger which calls the trigger function
-CREATE TRIGGER devcei_sensors_insert_trigger
-  BEFORE INSERT
-  ON device_sensors
-  FOR EACH ROW
-  EXECUTE PROCEDURE device_sensors_insert_function();
-
-
 
 
 
