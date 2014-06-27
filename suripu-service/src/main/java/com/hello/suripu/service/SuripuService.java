@@ -15,7 +15,6 @@ import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.PublicKeyStoreDynamoDB;
 import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
-import com.hello.suripu.core.db.TrackerMotionDAODynamoDB;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.health.DynamoDbHealthCheck;
