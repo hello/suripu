@@ -107,6 +107,20 @@ GRANT ALL PRIVILEGES ON account_device_map TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE account_device_map_id_seq TO ingress_user;
 
 
+CREATE TABLE account_tracker_map(
+    id SERIAL PRIMARY KEY,
+    account_id INTEGER,
+    device_id VARCHAR(100),
+    created_at TIMESTAMP default current_timestamp
+);
+
+CREATE UNIQUE INDEX uniq_account_tracker on account_tracker_map(account_id, device_id);
+
+
+GRANT ALL PRIVILEGES ON account_tracker_map TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE account_tracker_map_id_seq TO ingress_user;
+
+
 CREATE TABLE device_sound(
     id BIGSERIAL PRIMARY KEY,
     device_id INTEGER,
@@ -213,3 +227,19 @@ CREATE TABLE device_sensors_batch (
     ts TIMESTAMP,
     offset_millis INTEGER
 );
+
+
+
+-- Assume for now we only support one tracker each account for sleep cycle tracking
+CREATE TABLE tracker_motion_master(
+    id BIGSERIAL PRIMARY KEY,
+    account_id INTEGER,
+    tracker_id INTEGER,
+    svm_no_gravity INTEGER,
+    ts TIMESTAMP,
+    offset_millis INTEGER,
+    local_utc_ts TIMESTAMP
+);
+
+GRANT ALL PRIVILEGES ON tracker_motion_master TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE tracker_motion_master_id_seq TO ingress_user;

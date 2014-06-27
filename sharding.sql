@@ -64,3 +64,38 @@ BEGIN
     RETURN NULL;
 END
 $BODY$;
+
+
+
+
+
+
+
+
+
+
+
+CREATE TABLE tracker_motion_par_default() INHERITS (tracker_motion_master);
+GRANT ALL PRIVILEGES ON tracker_motion_par_default TO ingress_user;
+
+
+
+-- Create trigger which calls the trigger function
+CREATE TRIGGER tracker_motion_master_insert_trigger
+  BEFORE INSERT
+  ON tracker_motion_master
+  FOR EACH ROW
+  EXECUTE PROCEDURE tracker_motion_master_insert_function();
+
+
+-- Trigger function for device_sensors insert
+CREATE OR REPLACE FUNCTION tracker_motion_master_insert_function() RETURNS TRIGGER LANGUAGE plpgsql AS
+$BODY$
+DECLARE
+	table_name text;
+BEGIN
+    INSERT INTO tracker_motion_par_default VALUES (NEW.*);
+
+    RETURN NULL;
+END
+$BODY$;
