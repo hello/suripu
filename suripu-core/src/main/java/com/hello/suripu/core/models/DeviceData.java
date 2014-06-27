@@ -3,15 +3,17 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.joda.time.DateTime;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class DeviceData {
 
     public static final float FLOAT_2_INT_MULTIPLER = 1000;
 
     @JsonProperty("account_id")
-    public final long accountId;
+    public final Long accountId;
 
     @JsonProperty("device_id")
-    public final long deviceId;
+    public final Long deviceId;
 
     @JsonProperty("ambient_temperature")
     public final int ambientTemperature;
@@ -29,7 +31,7 @@ public class DeviceData {
     public final DateTime dateTimeUTC;
 
     @JsonProperty("offset_millis")
-    public final int offsetMillis;
+    public final Integer offsetMillis;
 
     public DeviceData(
             final long accountId,
@@ -48,6 +50,11 @@ public class DeviceData {
         this.ambientLight = ambientLight;
         this.dateTimeUTC = dateTimeUTC;
         this.offsetMillis = offsetMillis;
+
+        checkNotNull(this.accountId);
+        checkNotNull(this.deviceId);
+        checkNotNull(this.dateTimeUTC);
+        checkNotNull(this.offsetMillis);
     }
 
     public static int floatToDBInt(final float value){
@@ -60,14 +67,14 @@ public class DeviceData {
 
 
     public static class Builder{
-        private long accountId;
-        private long deviceId;
+        private Long accountId;
+        private Long deviceId;
         private int ambientTemperature;
         private int ambientHumidity;
         private int ambientAirQuality;
         private int ambientLight;
         private DateTime dateTimeUTC;
-        private int offsetMillis;
+        private Integer offsetMillis;
 
         public Builder withAccountId(final long accountId){
             this.accountId = accountId;
