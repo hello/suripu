@@ -27,7 +27,6 @@ BEGIN
 END
 $BODY$;
 
-
 -- 3. Add to your calendar the day you need to update this script. Usually 15 days before you run out of tables.
 
 
@@ -45,57 +44,3 @@ CREATE UNIQUE INDEX uniq_device_id_account_id_ts_on_par_2014_08 on device_sensor
 
 
 ALTER TABLE device_sensors_par_2014_08 ADD CHECK (local_utc_ts >= '2014-08-01 00:00:00' AND local_utc_ts < '2014-09-01 00:00:00');
--- 2. Update the trigger function
-
--- Trigger function for master insert
-CREATE OR REPLACE FUNCTION device_sensors_master_insert_function() RETURNS TRIGGER LANGUAGE plpgsql AS
-$BODY$
-DECLARE
-	table_name text;
-BEGIN
-    IF NEW.local_utc_ts >= '2014-07-01 00:00:00' AND NEW.local_utc_ts < '2014-08-01 00:00:00' THEN
-        INSERT INTO device_sensors_par_2014_07 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2014-08-01 00:00:00' AND NEW.local_utc_ts < '2014-09-01 00:00:00' THEN
-                INSERT INTO device_sensors_par_2014_08 VALUES (NEW.*);
-    ELSE
-        INSERT INTO device_sensors_par_default VALUES (NEW.*);
-    END IF;
-
-    RETURN NULL;
-END
-$BODY$;
-
-
-
-
-
-
-
-
-
-
-
-CREATE TABLE tracker_motion_par_default() INHERITS (tracker_motion_master);
-GRANT ALL PRIVILEGES ON tracker_motion_par_default TO ingress_user;
-
-
-
--- Create trigger which calls the trigger function
-CREATE TRIGGER tracker_motion_master_insert_trigger
-  BEFORE INSERT
-  ON tracker_motion_master
-  FOR EACH ROW
-  EXECUTE PROCEDURE tracker_motion_master_insert_function();
-
-
--- Trigger function for device_sensors insert
-CREATE OR REPLACE FUNCTION tracker_motion_master_insert_function() RETURNS TRIGGER LANGUAGE plpgsql AS
-$BODY$
-DECLARE
-	table_name text;
-BEGIN
-    INSERT INTO tracker_motion_par_default VALUES (NEW.*);
-
-    RETURN NULL;
-END
-$BODY$;
