@@ -2,8 +2,8 @@ package com.hello.suripu.app.resources;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.DeviceDataDAO;
-import com.hello.suripu.core.models.BatchSensorData;
 import com.hello.suripu.core.models.CurrentRoomState;
+import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -29,12 +29,12 @@ public class RoomConditionsResource {
     @Path("/current")
     @Produces(MediaType.APPLICATION_JSON)
     public CurrentRoomState current(@Scope({OAuthScope.SENSORS_BASIC}) final AccessToken token) {
-        final Optional<BatchSensorData> data = deviceDataDAO.getMostRecent(token.accountId);
+        final Optional<DeviceData> data = deviceDataDAO.getMostRecent(token.accountId);
         if(!data.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final CurrentRoomState roomState = CurrentRoomState.fromBatchSensorData(data.get());
+        final CurrentRoomState roomState = CurrentRoomState.fromDeviceData(data.get());
         return roomState;
     }
 

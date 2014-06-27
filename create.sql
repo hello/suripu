@@ -96,7 +96,7 @@ GRANT ALL PRIVILEGES ON SEQUENCE oauth_tokens_id_seq TO ingress_user;
 
 CREATE TABLE account_device_map(
     id SERIAL PRIMARY KEY,
-    account_id INTEGER,
+    account_id BIGINT,
     device_id VARCHAR(100),
     created_at TIMESTAMP default current_timestamp
 );
@@ -123,7 +123,7 @@ GRANT ALL PRIVILEGES ON SEQUENCE account_tracker_map_id_seq TO ingress_user;
 
 CREATE TABLE device_sound(
     id BIGSERIAL PRIMARY KEY,
-    device_id INTEGER,
+    device_id BIGINT,
     amplitude INTEGER,
     ts TIMESTAMP,
     offset_millis INTEGER
@@ -137,7 +137,7 @@ GRANT ALL PRIVILEGES ON SEQUENCE device_sound_id_seq TO ingress_user;
 
 CREATE TABLE device_scores(
     id BIGSERIAL PRIMARY KEY,
-    device_id INTEGER,
+    device_id BIGINT,
     ambient_temp INTEGER,
     ambient_air_quality INTEGER,
     ambient_humidity INTEGER,
@@ -148,7 +148,7 @@ CREATE TABLE device_scores(
 
 CREATE TABLE account_scores(
     id BIGSERIAL PRIMARY KEY,
-    account_id INTEGER,
+    account_id BIGINT,
     ambient_temp INTEGER,
     ambient_humidity INTEGER,
     ambient_air_quality INTEGER,
@@ -165,7 +165,7 @@ GRANT ALL PRIVILEGES ON SEQUENCE account_scores_id_seq TO ingress_user;
 
 CREATE TABLE sleep_label(
     id SERIAL PRIMARY KEY,
-    account_id INTEGER,
+    account_id BIGINT,
     date_utc TIMESTAMP,
     rating INTEGER,
     sleep_at_utc TIMESTAMP,
@@ -181,7 +181,7 @@ GRANT ALL PRIVILEGES ON SEQUENCE sleep_label_id_seq TO ingress_user;
 -- Assume for now we only support one tracker each account for sleep cycle tracking
 CREATE TABLE motion(
     id BIGSERIAL PRIMARY KEY,
-    account_id INTEGER,
+    account_id BIGINT,
     tracker_id VARCHAR(64),
     svm_no_gravity INTEGER,
     ts TIMESTAMP,
@@ -195,7 +195,7 @@ GRANT ALL PRIVILEGES ON SEQUENCE motion_id_seq TO ingress_user;
 CREATE TABLE event(
     id BIGSERIAL PRIMARY KEY,
     event_type INTEGER, --{MOTION, NOISE, SNORING}
-    account_id INTEGER,
+    account_id BIGINT,
     start_time_utc TIMESTAMP,
     end_time_utc TIMESTAMP,
     offset_millis INTEGER
@@ -209,11 +209,19 @@ GRANT ALL PRIVILEGES ON SEQUENCE event_seq TO ingress_user;
 -- 2014/05/08
 -- NEW CHANGES
 ALTER TABLE device_sensors ADD COLUMN account_id INTEGER;
-
 -- to populate the account_id execute the following query:
 -- UPDATE device_sensors SET account_id = account_device_map.account_id
 --    FROM account_device_map
 --    WHERE device_sensors.device_id = account_device_map.id;
+
+
+-- 2014/06/26
+-- Add Local timestamp that set to UTC time
+ALTER TABLE device_sensors ADD COLUMN local_utc_ts TIMESTAMP;
+
+-- Fill the new column using following query.
+-- UPDATE device_sensors SET offset_millis = -25200000 WHERE offset_millis = 0;  -- Assume all the existing data are in PST
+-- UPDATE device_sensors SET local_utc_ts = to_timestamp(extract(epoch from device_sensors.ts) + device_sensors.offset_millis::float / 1000);
 
 
 
@@ -227,7 +235,6 @@ CREATE TABLE device_sensors_batch (
     ts TIMESTAMP,
     offset_millis INTEGER
 );
-
 
 
 -- Assume for now we only support one tracker each account for sleep cycle tracking

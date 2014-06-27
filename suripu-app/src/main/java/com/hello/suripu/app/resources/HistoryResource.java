@@ -6,7 +6,7 @@ import com.hello.suripu.app.utils.DataType;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.TimeSerieDAO;
 import com.hello.suripu.core.models.GroupedRecord;
-import com.hello.suripu.core.models.Record;
+import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.SoundRecord;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -47,7 +47,7 @@ public class HistoryResource {
     @Timed
     @Path("/{days}")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Record> getRecords(
+    public List<DeviceData> getRecords(
             @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
             @PathParam("days") final Integer numDays) {
         LOGGER.debug("asking for {} days of recent history", numDays);
@@ -60,9 +60,10 @@ public class HistoryResource {
             throw new WebApplicationException(404);
         }
         LOGGER.debug("device = {}", deviceId.get());
-        final ImmutableList<Record> records = timeSerieDAO.getHistoricalData(deviceId.get(), then, now);
-        LOGGER.debug("Found {} records in DB", records.size());
-        return records;
+        //final ImmutableList<DeviceData> deviceDatas = timeSerieDAO.getHistoricalData(deviceId.get(), then, now);
+        final ImmutableList<DeviceData> deviceDatas = timeSerieDAO.getDeviceDataBetweenByUTCTime(accessToken.accountId, then, now);
+        LOGGER.debug("Found {} records in DB", deviceDatas.size());
+        return deviceDatas;
     }
 
     @Deprecated
@@ -128,9 +129,9 @@ public class HistoryResource {
         final DateTime now = DateTime.now(DateTimeZone.UTC);
         final DateTime then = now.minusDays(numDays);
 
-        final ImmutableList<Record> records = timeSerieDAO.getHistoricalData(optionalDeviceId.get(), then, now);
+        final ImmutableList<DeviceData> deviceDatas = timeSerieDAO.getDeviceDataBetweenByUTCTime(optionalDeviceId.get(), then, now);
 
-        final GroupedRecord groupedRecord = GroupedRecord.fromRecords(records);
+        final GroupedRecord groupedRecord = GroupedRecord.fromRecords(deviceDatas);
         return Response.ok().entity(groupedRecord).build();
     }
 }
