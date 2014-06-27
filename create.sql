@@ -195,11 +195,62 @@ GRANT ALL PRIVILEGES ON SEQUENCE event_seq TO ingress_user;
 -- 2014/05/08
 -- NEW CHANGES
 ALTER TABLE device_sensors ADD COLUMN account_id INTEGER;
-
 -- to populate the account_id execute the following query:
 -- UPDATE device_sensors SET account_id = account_device_map.account_id
 --    FROM account_device_map
 --    WHERE device_sensors.device_id = account_device_map.id;
+
+
+-- 2014/06/26
+-- Add Local timestamp that set to UTC time
+ALTER TABLE device_sensors ADD COLUMN local_utc_ts TIMESTAMP;
+ALTER TABLE device_sensors ALTER COLUMN device_id TYPE VARCHAR(255) USING device_id::BIGINT::TEXT::VARCHAR(255);
+
+-- Fill the new column using following query.
+-- UPDATE device_sensors SET offset_millis = -25200000 WHERE offset_millis = 0;  -- Assume all the existing data are in PST
+-- UPDATE device_sensors SET local_utc_ts = to_timestamp(extract(epoch from device_sensors.ts) + device_sensors.offset_millis::float / 1000);
+
+-- 2014/06/26
+-- Alter the device_sensors table to master table, drop all indexes on device_sensors table
+DROP INDEX uniq_device_ts;
+DROP INDEX uniq_device_id_account_id_ts;
+
+-- 2014/06/26
+-- Create default partition
+CREATE TABLE device_sensors_par_default() INHERITS (device_sensors);
+CREATE UNIQUE INDEX uniq_device_id_account_id_ts on device_sensors_par_default(device_id, account_id, ts);
+
+-- 2014/06/26
+-- Add trigger to master table
+
+-- The default trigger function
+-- This function use dynamic table name and exception fallback, which is extremely expensive.
+-- please replace it with the actual partition function generate by gen_par_script command.
+CREATE OR REPLACE FUNCTION device_sensors_insert_function() RETURNS TRIGGER AS
+$BODY$
+DECLARE
+    table_name TEXT;
+BEGIN
+    table_name := 'device_sensors_par_' || to_char(NEW.local_utc_ts, 'YYYY_MM');
+
+    EXECUTE format('INSERT INTO %I VALUES ($1.*)', table_name) USING NEW;
+
+    RETURN NULL;
+EXCEPTION WHEN UNDEFINED_TABLE THEN  -- 42P01 	UNDEFINED TABLE: http://www.postgresql.org/docs/8.0/static/errcodes-appendix.html
+    INSERT INTO device_sensors_par_default VALUES (NEW.*);
+    RETURN NULL;
+END
+$BODY$
+LANGUAGE plpgsql;
+
+-- Create trigger which calls the trigger function
+CREATE TRIGGER devcei_sensors_insert_trigger
+  BEFORE INSERT
+  ON device_sensors
+  FOR EACH ROW
+  EXECUTE PROCEDURE device_sensors_insert_function();
+
+
 
 
 

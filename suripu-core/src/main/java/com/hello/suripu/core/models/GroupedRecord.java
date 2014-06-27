@@ -64,20 +64,20 @@ public class GroupedRecord {
         return airQuality;
     }
 
-    public static GroupedRecord fromRecords(final List<Record> records) {
-        final List<SensorSample> temp = new ArrayList<SensorSample>(records.size());
-        final List<SensorSample> hum = new ArrayList<SensorSample>(records.size());
-        final List<SensorSample> snd = new ArrayList<SensorSample>(records.size());
-        final List<SensorSample> lght = new ArrayList<SensorSample>(records.size());
-        final List<SensorSample> air = new ArrayList<SensorSample>(records.size());
+    public static GroupedRecord fromRecords(final List<DeviceData> deviceDatas) {
+        final List<SensorSample> temp = new ArrayList<SensorSample>(deviceDatas.size());
+        final List<SensorSample> hum = new ArrayList<SensorSample>(deviceDatas.size());
+        final List<SensorSample> snd = new ArrayList<SensorSample>(deviceDatas.size());
+        final List<SensorSample> lght = new ArrayList<SensorSample>(deviceDatas.size());
+        final List<SensorSample> air = new ArrayList<SensorSample>(deviceDatas.size());
 
 
-        for(final Record record : records) {
-            temp.add(new SensorSample(record.dateTime, record.ambientTemperature, record.offsetMillis));
-            hum.add(new SensorSample(record.dateTime, record.ambientHumidity, record.offsetMillis));
-            snd.add(new SensorSample(record.dateTime, record.ambientHumidity, record.offsetMillis)); // TODO : fix this
-            lght.add(new SensorSample(record.dateTime, record.ambientHumidity, record.offsetMillis)); // TODO : fix this
-            air.add(new SensorSample(record.dateTime, record.ambientAirQuality, record.offsetMillis)); // TODO : fix this
+        for(final DeviceData deviceData : deviceDatas) {
+            temp.add(new SensorSample(deviceData.dateTimeUTC, deviceData.ambientTemperature, deviceData.offsetMillis));
+            hum.add(new SensorSample(deviceData.dateTimeUTC, deviceData.ambientHumidity, deviceData.offsetMillis));
+            snd.add(new SensorSample(deviceData.dateTimeUTC, deviceData.ambientHumidity, deviceData.offsetMillis)); // TODO : fix this
+            lght.add(new SensorSample(deviceData.dateTimeUTC, deviceData.ambientHumidity, deviceData.offsetMillis)); // TODO : fix this
+            air.add(new SensorSample(deviceData.dateTimeUTC, deviceData.ambientAirQuality, deviceData.offsetMillis)); // TODO : fix this
         }
 
         return new GroupedRecord(temp, hum, snd, lght, air);

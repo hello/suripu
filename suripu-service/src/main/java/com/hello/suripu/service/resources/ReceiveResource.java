@@ -15,8 +15,8 @@ import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
-import com.hello.suripu.core.models.BatchSensorData;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.TempTrackerData;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -42,7 +42,6 @@ import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -170,35 +169,27 @@ public class ReceiveResource {
 
 
         for(final TempTrackerData tempTrackerData : trackerData) {
-            final DateTime originalDateTime = new DateTime(tempTrackerData.timestamp, DateTimeZone.UTC);
+            final DateTime roundedDateTimeUTC = new DateTime(tempTrackerData.timestamp, DateTimeZone.UTC).withSecondOfMinute(0);
             int offsetMillis = -25200000;
 
-            final DateTime roundedDateTimeUTC = new DateTime(
-                    originalDateTime.getYear(),
-                    originalDateTime.getMonthOfYear(),
-                    originalDateTime.getDayOfMonth(),
-                    originalDateTime.getHourOfDay(),
-                    originalDateTime.getMinuteOfHour(),
-                    DateTimeZone.UTC
-            );
-
-            try {
+            try{
                 final Long id = trackerMotionDAO.insertTrackerMotion(accessToken.accountId,
                         tempTrackerData.trackerId,
                         tempTrackerData.value,
                         roundedDateTimeUTC,
                         offsetMillis // OH YEAH THIS IS CALIFORNIA. OBVIOUSLY NOT VALID FOR ANYONE OUTSIDE THE OFFICE
                 );
-            } catch (UnableToExecuteStatementException exception) {
-                Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
+            } catch (UnableToExecuteStatementException ex) {
+                Matcher matcher = PG_UNIQ_PATTERN.matcher(ex.getMessage());
+
                 if (!matcher.find()) {
-                    LOGGER.error(exception.getMessage());
+                    LOGGER.error(ex.getMessage());
                     return Response.serverError().build();
                 }
 
                 LOGGER.warn("Duplicate sensor value for account_id = {}", accessToken.accountId);
-            }
 
+            }
         }
 
         return Response.ok().build();
@@ -246,43 +237,31 @@ public class ReceiveResource {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Bad Request").build());
         }
 
-        final ArrayList<Integer> tempSamples = new ArrayList<Integer>(batch.getSamplesCount());
-        final ArrayList<Integer> lightSamples = new ArrayList<Integer>(batch.getSamplesCount());
-        final ArrayList<Integer> humiditySamples = new ArrayList<Integer>(batch.getSamplesCount());
-        final ArrayList<Integer> airQualitySamples = new ArrayList<Integer>(batch.getSamplesCount());
-
-        final ArrayList<Long> timestamps = new ArrayList<Long>(batch.getSamplesCount());
-        final ArrayList<Integer> offsetMillisSamples = new ArrayList<Integer>(batch.getSamplesCount());
-
-
         // TODO: maybe refactor the protobuf to have a more sensible structure?
-        for(InputProtos.SimpleSensorBatch.SimpleSensorSample sample : batch.getSamplesList()) {
+        for(final InputProtos.SimpleSensorBatch.SimpleSensorSample sample : batch.getSamplesList()) {
 
             final int offsetMillis = sample.getOffsetMillis();
 
             if(sample.hasDeviceData()) {
-
-
                 byte[] deviceData = sample.getDeviceData().toByteArray();
 
                 final InputStream inputStream = new ByteArrayInputStream(deviceData);
                 final LittleEndianDataInputStream dataInputStream = new LittleEndianDataInputStream(inputStream);
 
                 int temp, light, humidity, airQuality;
-                long timestamp;
+                DateTime roundedDateTime;
 
                 try {
-                    timestamp = dataInputStream.readLong();
-                    LOGGER.debug("Device timestamp = {}", timestamp);
+                    roundedDateTime = new DateTime(dataInputStream.readLong(), DateTimeZone.UTC).withSecondOfMinute(0);
+
                     temp = dataInputStream.readInt();
                     light = dataInputStream.readInt();
                     humidity = dataInputStream.readInt();
                     airQuality = dataInputStream.readInt();
-
-                } catch (IOException e) {
+                }catch(IOException e){
                     LOGGER.error(e.getMessage());
                     throw new WebApplicationException(Response.serverError().entity("Failed parsing device data").build());
-                } finally {
+                }finally{
                     try {
                         dataInputStream.close();
                     } catch (IOException ioException) {
@@ -290,47 +269,41 @@ public class ReceiveResource {
                     }
                 }
 
-                tempSamples.add(temp);
-                lightSamples.add(light);
-                humiditySamples.add(humidity);
-                airQualitySamples.add(airQuality);
-                timestamps.add(timestamp);
-                offsetMillisSamples.add(offsetMillis);
+                for (final DeviceAccountPair pair : deviceAccountPairs) {
+                    final DeviceData.Builder builder = new DeviceData.Builder()
+                            .withAccountId(pair.accountId)
+                            .withDeviceId(pair.internalDeviceId)
+                            .withAmbientTemperature(temp)
+                            .withAmbientAirQuality(airQuality)
+                            .withAmbientHumidity(humidity)
+                            .withAmbientLight(light)
+                            .withOffsetMillis(offsetMillis)
+                            .withDateTimeUTC(roundedDateTime);
+
+                    final DeviceData data = builder.build();
+
+                    try {
+                        deviceDataDAO.insert(data);
+                    } catch (UnableToExecuteStatementException exception) {
+                        final Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
+                        if (!matcher.find()) {
+                            LOGGER.error(exception.getMessage());
+                            return Response.serverError().build();
+                        }
+
+                        LOGGER.warn("Duplicate device sensor value for account_id = {}, time: ",
+                                accessToken.accountId, roundedDateTime);
+
+                    }
+
+                }
+
+
             }
 
             saveSoundSample(sample, deviceAccountPairs);
         }
 
-        final DateTime dateTime = new DateTime(timestamps.get(0), DateTimeZone.UTC);
-        final DateTime rounded = new DateTime(
-                dateTime.getYear(),
-                dateTime.getMonthOfYear(),
-                dateTime.getDayOfMonth(),
-                dateTime.getHourOfDay(),
-                dateTime.getMinuteOfHour(),
-                DateTimeZone.UTC
-        );
-
-        final BatchSensorData deviceBatch = new BatchSensorData.Builder()
-                .withAccountId(accessToken.accountId)
-                .withDeviceId(batch.getDeviceId())
-                .withAmbientTemp(tempSamples)
-                .withAmbientAirQuality(airQualitySamples)
-                .withAmbientHumidity(humiditySamples)
-                .withAmbientLight(lightSamples)
-                .withDateTime(rounded)
-                .withOffsetMillis(offsetMillisSamples.get(0))
-                .build();
-
-        try {
-            deviceDataDAO.insertBatch(deviceBatch);
-        } catch (UnableToExecuteStatementException exception) {
-            final Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
-            if (!matcher.find()) {
-                LOGGER.error(exception.getMessage());
-                return Response.serverError().build();
-            }
-        }
 
         return Response.ok().build();
     }
