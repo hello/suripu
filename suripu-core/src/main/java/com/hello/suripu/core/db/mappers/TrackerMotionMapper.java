@@ -16,7 +16,6 @@ public class TrackerMotionMapper implements ResultSetMapper<TrackerMotion> {
     public TrackerMotion map(int i, ResultSet resultSet, StatementContext statementContext) throws SQLException {
 
         return new TrackerMotion(
-                resultSet.getLong("id"),
                 resultSet.getLong("account_id"),
                 resultSet.getString("tracker_id"),
                 resultSet.getTimestamp("ts").getTime(),

@@ -18,7 +18,7 @@ public class TempTrackerData {
 
     @JsonCreator
     public TempTrackerData(
-            @JsonProperty("timestamp") Long timestamp,
+            @JsonProperty("firstElementTimestamp") Long timestamp,
             @JsonProperty("value") Integer value,
             @JsonProperty("tracker_id") String trackerId) {
 

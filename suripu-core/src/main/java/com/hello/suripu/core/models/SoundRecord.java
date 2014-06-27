@@ -11,7 +11,7 @@ public class SoundRecord {
     @JsonProperty("value")
     public final Integer averageMaxAmplitude;
 
-    @JsonProperty("timestamp")
+    @JsonProperty("firstElementTimestamp")
     public final DateTime dateTime;
 
     public SoundRecord(

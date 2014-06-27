@@ -26,6 +26,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.LinkedList;
 import java.util.List;
 
 @Path("/history")
@@ -87,9 +88,46 @@ public class HistoryResource {
 
         switch (type){
             case MOTION:
+                /*
                 final ImmutableList<TrackerMotion> trackerMotions = this.timeSerieDAO.getTrackerDataBetween(accessToken.accountId,
                         new DateTime(from, DateTimeZone.UTC),
                         new DateTime(to, DateTimeZone.UTC));
+                        */
+
+                final ImmutableList<TrackerMotion.Batch> motionBatches = this.timeSerieDAO.getTrackerMotionBatchBetween(accessToken.accountId,
+                        new DateTime(from, DateTimeZone.UTC).minusMinutes(10),
+                        new DateTime(to, DateTimeZone.UTC).plusMinutes(10));
+
+                final LinkedList<TrackerMotion> trackerMotions = new LinkedList<TrackerMotion>();
+                for(final TrackerMotion.Batch batch:motionBatches){
+
+                    if(batch.motionData.size() == 0) {
+                        continue;
+                    }
+
+                    if(batch.firstElementTimestamp < from){
+                        for(final TrackerMotion trackerMotion:batch.motionData){
+                            if(trackerMotion.timestamp >= from && trackerMotion.timestamp <= to){
+                                trackerMotions.add(trackerMotion);
+                            }
+                        }
+
+                        continue;
+                    }
+
+                    if(batch.motionData.get(batch.motionData.size() - 1).timestamp > to){
+                        for(final TrackerMotion trackerMotion:batch.motionData){
+                            if(trackerMotion.timestamp >= from && trackerMotion.timestamp <= to){
+                                trackerMotions.add(trackerMotion);
+                            }
+                        }
+
+                        continue;
+                    }
+
+                    trackerMotions.addAll(batch.motionData);
+                }
+
                 return Response.ok().entity(trackerMotions).build();
             case SOUND:
 

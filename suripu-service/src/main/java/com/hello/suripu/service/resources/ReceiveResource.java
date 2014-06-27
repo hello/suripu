@@ -12,18 +12,20 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.ScoreDAO;
-import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.TrackerMotionBatchDAO;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.models.BatchSensorData;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.TempTrackerData;
+import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
-import com.hello.suripu.service.db.DataExtractor;
+import com.hello.suripu.service.Util;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
@@ -57,7 +59,7 @@ public class ReceiveResource {
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
     private final ScoreDAO scoreDAO;
-    private final TrackerMotionDAO trackerMotionDAO;
+    private final TrackerMotionBatchDAO trackerMotionBatchDAO;
     private final PublicKeyStore publicKeyStore;
 
     private final KinesisLoggerFactory kinesisLoggerFactory;
@@ -66,13 +68,13 @@ public class ReceiveResource {
     public ReceiveResource(final DeviceDataDAO deviceDataDAO,
                            final DeviceDAO deviceDAO,
                            final ScoreDAO scoreDAO,
-                           final TrackerMotionDAO trackerMotionDAO,
+                           final TrackerMotionBatchDAO trackerMotionBatchDAO,
                            final PublicKeyStore publicKeyStore,
                            final KinesisLoggerFactory kinesisLoggerFactory) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.scoreDAO = scoreDAO;
-        this.trackerMotionDAO = trackerMotionDAO;
+        this.trackerMotionBatchDAO = trackerMotionBatchDAO;
 
         this.publicKeyStore = publicKeyStore;
         cryptoHelper = new CryptoHelper();
@@ -125,27 +127,79 @@ public class ReceiveResource {
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
 
+        final ArrayList<TrackerMotion> compressBuffer = new ArrayList<TrackerMotion>();
+        long timestampOfLastData = 0;
 
-        for(final InputProtos.TrackerDataBatch.TrackerData datum:batch.getSamplesList()){
+        for(final InputProtos.TrackerDataBatch.TrackerData datum:batch.getSamplesList()) {
+            if(timestampOfLastData != 0){
+                if(datum.getTimestamp() - timestampOfLastData < DateTimeConstants.MILLIS_PER_MINUTE * 0.8){
+                    LOGGER.warn("Data interval less than 1 minute, account_id = {}, time_1: {}, time_2: {}",
+                            accessToken.accountId,
+                            new DateTime(timestampOfLastData, DateTimeZone.UTC),
+                            new DateTime(datum.getTimestamp(), DateTimeZone.UTC));
+                    continue;
+                }
+            }
 
-            try{
-                DataExtractor.normalizeAndSave(datum, accessToken, trackerMotionDAO);
+            final DateTime roundedDateTimeUTC = Util.roundTimestampToMinuteUTC(datum.getTimestamp());
+
+            final TrackerMotion motion = new TrackerMotion(accessToken.accountId,
+                    datum.getTrackerId(),
+                    roundedDateTimeUTC.getMillis(),
+                    datum.getSvmNoGravity(), datum.getOffsetMillis());
+            compressBuffer.add(motion);
+
+            if(compressBuffer.get(compressBuffer.size() - 1).timestamp - compressBuffer.get(0).timestamp >= TrackerMotion.Batch.BATCH_INTERVAL){
+                final TrackerMotion.Batch trackerMotionBatch = new TrackerMotion.Batch(accessToken.accountId,
+                        compressBuffer.get(0).trackerId,
+                        compressBuffer.get(0).timestamp,
+                        compressBuffer.get(0).offsetMillis,
+                        compressBuffer);
+
+                try {
+
+                    this.trackerMotionBatchDAO.insert(trackerMotionBatch);
+                } catch (UnableToExecuteStatementException exception) {
+                    Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
+                    if (!matcher.find()) {
+                        LOGGER.error(exception.getMessage());
+                        return Response.serverError().build();
+                    }
+
+                    LOGGER.warn("Duplicate sensor value for account_id = {}, ts = {}", accessToken.accountId,
+                            new DateTime(trackerMotionBatch.firstElementTimestamp,
+                                    DateTimeZone.forOffsetMillis(trackerMotionBatch.offsetMillis)));
+                }
+
+                compressBuffer.clear();
+            }
+
+            timestampOfLastData = datum.getTimestamp();
+
+        }
+
+
+        if(compressBuffer.size() > 0) {
+            final TrackerMotion.Batch trackerMotionBatch = new TrackerMotion.Batch(accessToken.accountId,
+                    compressBuffer.get(0).trackerId,
+                    compressBuffer.get(0).timestamp,
+                    compressBuffer.get(0).offsetMillis,
+                    compressBuffer);
+
+            try {
+
+                this.trackerMotionBatchDAO.insert(trackerMotionBatch);
             } catch (UnableToExecuteStatementException exception) {
                 Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
-
-                if(!matcher.find()) {
+                if (!matcher.find()) {
                     LOGGER.error(exception.getMessage());
                     return Response.serverError().build();
                 }
 
-                LOGGER.warn("Duplicate tracker data for account {}, tracker {} with ts = {}",
-                        accessToken.accountId,
-                        datum.getTrackerId(),
-                        new DateTime(datum.getTimestamp(), DateTimeZone.forOffsetMillis(datum.getOffsetMillis()))
-                        );
+                LOGGER.warn("Duplicate sensor value for account_id = {}, ts = {}", accessToken.accountId,
+                        new DateTime(trackerMotionBatch.firstElementTimestamp,
+                                DateTimeZone.forOffsetMillis(trackerMotionBatch.offsetMillis)));
             }
-
-
         }
 
         return Response.ok().build();
@@ -169,26 +223,66 @@ public class ReceiveResource {
         }
 
 
-        for(final TempTrackerData tempTrackerData : trackerData) {
-            final DateTime originalDateTime = new DateTime(tempTrackerData.timestamp, DateTimeZone.UTC);
-            int offsetMillis = -25200000;
+        final ArrayList<TrackerMotion> compressBuffer = new ArrayList<TrackerMotion>();
+        int offsetMillis = -25200000;
+        final String trackerId  = "blue_giant_for_account_id:" + accessToken.accountId;
+        long timestampOfLastData = 0;
 
-            final DateTime roundedDateTimeUTC = new DateTime(
-                    originalDateTime.getYear(),
-                    originalDateTime.getMonthOfYear(),
-                    originalDateTime.getDayOfMonth(),
-                    originalDateTime.getHourOfDay(),
-                    originalDateTime.getMinuteOfHour(),
-                    DateTimeZone.UTC
-            );
+        for(final TempTrackerData tempTrackerData : trackerData) {
+            if(timestampOfLastData != 0){
+                if(tempTrackerData.timestamp - timestampOfLastData < DateTimeConstants.MILLIS_PER_MINUTE * 0.8){
+                    LOGGER.warn("Data interval less than 1 minute, account_id = {}, time_1: {}, time_2: {}",
+                            accessToken.accountId,
+                            new DateTime(timestampOfLastData, DateTimeZone.UTC),
+                            new DateTime(tempTrackerData.timestamp, DateTimeZone.UTC));
+                    continue;
+                }
+            }
+
+            final DateTime roundedDateTimeUTC = Util.roundTimestampToMinuteUTC(tempTrackerData.timestamp);
+            final TrackerMotion motion = new TrackerMotion(accessToken.accountId, trackerId, roundedDateTimeUTC.getMillis(), tempTrackerData.value, offsetMillis);
+            compressBuffer.add(motion);
+
+            if(compressBuffer.get(compressBuffer.size() - 1).timestamp - compressBuffer.get(0).timestamp >= TrackerMotion.Batch.BATCH_INTERVAL){
+                final TrackerMotion.Batch trackerMotionBatch = new TrackerMotion.Batch(accessToken.accountId,
+                        trackerId,
+                        compressBuffer.get(0).timestamp,
+                        compressBuffer.get(0).offsetMillis,
+                        compressBuffer);
+
+                try {
+
+                    this.trackerMotionBatchDAO.insert(trackerMotionBatch);
+                } catch (UnableToExecuteStatementException exception) {
+                    Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
+                    if (!matcher.find()) {
+                        LOGGER.error(exception.getMessage());
+                        return Response.serverError().build();
+                    }
+
+                    LOGGER.warn("Duplicate sensor value for account_id = {}, ts = {}", accessToken.accountId,
+                            new DateTime(trackerMotionBatch.firstElementTimestamp,
+                                    DateTimeZone.forOffsetMillis(trackerMotionBatch.offsetMillis)));
+                }
+
+                compressBuffer.clear();
+            }
+
+            timestampOfLastData = tempTrackerData.timestamp;
+
+        }
+
+
+        if(compressBuffer.size() > 0) {
+            final TrackerMotion.Batch trackerMotionBatch = new TrackerMotion.Batch(accessToken.accountId,
+                    trackerId,
+                    compressBuffer.get(0).timestamp,
+                    compressBuffer.get(0).offsetMillis,
+                    compressBuffer);
 
             try {
-                final Long id = trackerMotionDAO.insertTrackerMotion(accessToken.accountId,
-                        tempTrackerData.trackerId,
-                        tempTrackerData.value,
-                        roundedDateTimeUTC,
-                        offsetMillis // OH YEAH THIS IS CALIFORNIA. OBVIOUSLY NOT VALID FOR ANYONE OUTSIDE THE OFFICE
-                );
+
+                this.trackerMotionBatchDAO.insert(trackerMotionBatch);
             } catch (UnableToExecuteStatementException exception) {
                 Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
                 if (!matcher.find()) {
@@ -196,13 +290,16 @@ public class ReceiveResource {
                     return Response.serverError().build();
                 }
 
-                LOGGER.warn("Duplicate sensor value for account_id = {}", accessToken.accountId);
+                LOGGER.warn("Duplicate sensor value for account_id = {}, ts = {}", accessToken.accountId,
+                        new DateTime(trackerMotionBatch.firstElementTimestamp,
+                                DateTimeZone.forOffsetMillis(trackerMotionBatch.offsetMillis)));
             }
 
         }
 
         return Response.ok().build();
     }
+
 
     @PUT
     @Path("pill/{pill_id}")
@@ -273,7 +370,7 @@ public class ReceiveResource {
 
                 try {
                     timestamp = dataInputStream.readLong();
-                    LOGGER.debug("Device timestamp = {}", timestamp);
+                    LOGGER.debug("Device firstElementTimestamp = {}", timestamp);
                     temp = dataInputStream.readInt();
                     light = dataInputStream.readInt();
                     humidity = dataInputStream.readInt();
@@ -344,7 +441,7 @@ public class ReceiveResource {
             for(final DeviceAccountPair pair : deviceAccountPairs) {
                 try {
                     deviceDataDAO.insertSound(pair.internalDeviceId, sample.getSoundAmplitude(), dateTimeSample, offsetMillis);
-                    LOGGER.debug("Sound timestamp = {}", sampleTimestamp);
+                    LOGGER.debug("Sound firstElementTimestamp = {}", sampleTimestamp);
                 } catch (UnableToExecuteStatementException exception) {
                     Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
                     if (!matcher.find()) {

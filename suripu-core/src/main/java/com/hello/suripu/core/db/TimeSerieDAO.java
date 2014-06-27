@@ -1,6 +1,7 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.core.db.mappers.TrackerMotionBatchMapper;
 import com.hello.suripu.core.models.Record;
 import com.hello.suripu.core.models.SoundRecord;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -10,6 +11,7 @@ import com.hello.suripu.core.db.mappers.TrackerMotionMapper;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 
 
@@ -45,4 +47,13 @@ public interface TimeSerieDAO {
     public ImmutableList<TrackerMotion> getTrackerDataBetween(@Bind("account_id") Long accountId,
                                                    @Bind("start_timestamp") DateTime startTimestampUTC,
                                                    @Bind("end_timestamp") DateTime endTimestampUTC);
+
+
+    @Mapper(TrackerMotionBatchMapper.class)
+    @SqlQuery("SELECT * FROM motion_batch WHERE account_id = :account_id AND ts >= :start_timestamp AND ts <= :end_timestamp ORDER BY ts ASC")
+    ImmutableList<TrackerMotion.Batch> getTrackerMotionBatchBetween(
+            @Bind("account_id") final Long accountId,
+            @Bind("start_timestamp") final DateTime startTimestampUTC,
+            @Bind("end_timestamp") final DateTime endTimestampUTC);
+
 }

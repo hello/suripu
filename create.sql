@@ -213,3 +213,17 @@ CREATE TABLE device_sensors_batch (
     ts TIMESTAMP,
     offset_millis INTEGER
 );
+
+
+CREATE TABLE motion_batch (
+    id BIGSERIAL PRIMARY KEY,
+    account_id BIGINT,
+    tracker_id VARCHAR(64),
+    amplitudes int[],
+    ts TIMESTAMP,
+    offset_millis INTEGER
+);
+
+CREATE UNIQUE INDEX uniq_account_ts ON motion_batch(account_id, ts);
+GRANT ALL PRIVILEGES ON motion_batch TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE motion_batch_seq TO ingress_user;

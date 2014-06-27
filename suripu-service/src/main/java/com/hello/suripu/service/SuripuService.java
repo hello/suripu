@@ -10,12 +10,12 @@ import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.EventDAO;
 import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.PublicKeyStoreDynamoDB;
 import com.hello.suripu.core.db.ScoreDAO;
-import com.hello.suripu.core.db.TrackerMotionDAO;
-import com.hello.suripu.core.db.TrackerMotionDAODynamoDB;
+import com.hello.suripu.core.db.TrackerMotionBatchDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.health.DynamoDbHealthCheck;
@@ -33,7 +33,6 @@ import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
-import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.service.resources.ReceiveResource;
 import com.librato.metrics.LibratoReporter;
 import com.yammer.dropwizard.Service;
@@ -80,7 +79,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final DeviceDAO deviceDAO = jdbi.onDemand(DeviceDAO.class);
         final ApplicationsDAO applicationsDAO = jdbi.onDemand(ApplicationsDAO.class);
         final ScoreDAO scoreDAO = jdbi.onDemand(ScoreDAO.class);
-        final TrackerMotionDAO trackerMotionDAO = jdbi.onDemand(TrackerMotionDAO.class);
+        final TrackerMotionBatchDAO trackerMotionDAO = jdbi.onDemand(TrackerMotionBatchDAO.class);
 
 
         final EventDAO eventDAO = jdbi.onDemand(EventDAO.class);
