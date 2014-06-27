@@ -11,9 +11,15 @@ CREATE TABLE device_sensors_master (
     offset_millis INTEGER
 );
 
+GRANT ALL PRIVILEGES ON device_sensors_master TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE device_sensors_master_id_seq TO ingress_user;
+
 CREATE TABLE device_sensors_par_default() INHERITS (device_sensors_master);
+GRANT ALL PRIVILEGES ON device_sensors_par_default TO ingress_user;
+
 CREATE UNIQUE INDEX uniq_device_ts_on_par_default on device_sensors_par_default(device_id, ts);
 CREATE UNIQUE INDEX uniq_device_id_account_id_ts_on_par_default on device_sensors_par_default(device_id, account_id, ts);
+
 
 -- Trigger function for master insert
 CREATE OR REPLACE FUNCTION device_sensors_master_insert_function() RETURNS TRIGGER LANGUAGE plpgsql AS
@@ -31,7 +37,7 @@ END
 $BODY$;
 
 -- Create trigger which calls the trigger function
-CREATE TRIGGER devcei_sensors_master_insert_trigger
+CREATE TRIGGER device_sensors_master_insert_trigger
   BEFORE INSERT
   ON device_sensors_master
   FOR EACH ROW
@@ -52,7 +58,7 @@ END
 $BODY$;
 
 -- Create trigger which calls the trigger function
-CREATE TRIGGER devcei_sensors_duplicate_insert_trigger
+CREATE TRIGGER device_sensors_duplicate_insert_trigger
   BEFORE INSERT
   ON device_sensors
   FOR EACH ROW
@@ -73,6 +79,5 @@ SELECT device_sensors.account_id, device_sensors.device_id, device_sensors.ambie
 	device_sensors.offset_millis FROM
 		device_sensors WHERE device_sensors.ts < (SELECT device_sensors_par_default.ts FROM
 										device_sensors_par_default ORDER BY device_sensors_par_default.ts ASC LIMIT 1);
-
 
 
