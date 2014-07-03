@@ -112,7 +112,7 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
             return Response
                     .status(Response.Status.BAD_REQUEST)
                     .type(MediaType.APPLICATION_JSON)
-                    .entity(new Error(400, webAppException.getResponse().getEntity().toString()))
+                    .entity(new Error(400, "Malformed request"))
                     .build();
         }
 

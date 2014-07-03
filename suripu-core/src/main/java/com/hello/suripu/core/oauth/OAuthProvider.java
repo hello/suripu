@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.lang.reflect.Type;
 
@@ -52,11 +51,9 @@ public class OAuthProvider<T> implements InjectableProvider<Scope, Type> {
                     }
                 }
 
-                throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-                        .header(HEADER_NAME, String.format(HEADER_VALUE, realm))
-                        .entity("Credentials are required to access this resource.")
-                        .type(MediaType.TEXT_PLAIN_TYPE)
-                        .build());
+                throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
+
+
             }
         }
 

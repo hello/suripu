@@ -13,7 +13,6 @@ import com.hello.suripu.app.resources.EventResource;
 import com.hello.suripu.app.resources.HistoryResource;
 import com.hello.suripu.app.resources.OAuthResource;
 import com.hello.suripu.app.resources.RoomConditionsResource;
-import com.hello.suripu.app.resources.ScoreResource;
 import com.hello.suripu.app.resources.SleepLabelResource;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.AccountDAO;
@@ -24,7 +23,8 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.EventDAODynamoDB;
 import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
-import com.hello.suripu.core.db.TimeSerieDAO;
+import com.hello.suripu.core.db.SoundDAO;
+import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
@@ -85,7 +85,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         commonDB.registerContainerFactory(new OptionalContainerFactory());
         commonDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
 
-        final TimeSerieDAO timeSerieDAO = sensorsDB.onDemand(TimeSerieDAO.class);
+        final SoundDAO soundDAO = sensorsDB.onDemand(SoundDAO.class);
         final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
         final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
         final AccessTokenDAO accessTokenDAO = commonDB.onDemand(AccessTokenDAO.class);
@@ -93,6 +93,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final ScoreDAO scoreDAO = commonDB.onDemand(ScoreDAO.class);
         final SleepLabelDAO sleepLabelDAO = commonDB.onDemand(SleepLabelDAO.class);
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
+        final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
 
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
         final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
@@ -137,7 +138,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
             LOGGER.warn("Metrics not enabled.");
         }
 
-        environment.addProvider(new OAuthProvider<AccessToken>(new OAuthAuthenticator(accessTokenStore), "protected-resources"));
+
 
 
 
@@ -146,12 +147,12 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         DropwizardServiceUtil.deregisterDWSingletons(jrConfig);
         environment.addProvider(new CustomJSONExceptionMapper(Boolean.TRUE));
 
+        environment.addProvider(new OAuthProvider<AccessToken>(new OAuthAuthenticator(accessTokenStore), "protected-resources"));
 
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO));
         environment.addResource(new AccountResource(accountDAO));
-        environment.addResource(new HistoryResource(timeSerieDAO, deviceDAO));
+        environment.addResource(new HistoryResource(soundDAO, trackerMotionDAO, deviceDAO, deviceDataDAO));
         environment.addResource(new ApplicationResource(applicationStore));
-        environment.addResource(new ScoreResource(timeSerieDAO, deviceDAO, scoreDAO, accountDAO));
         environment.addResource(new SleepLabelResource(sleepLabelDAO));
         environment.addProvider(new RoomConditionsResource(deviceDataDAO));
         environment.addResource(new EventResource(eventDAODynamoDB));
