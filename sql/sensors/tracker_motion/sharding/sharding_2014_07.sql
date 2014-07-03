@@ -11,6 +11,14 @@ CREATE UNIQUE INDEX uniq_tracker_id_account_id_ts_on_par_2014_07 on device_senso
 ALTER TABLE tracker_motion_par_2014_07 ADD CHECK (local_utc_ts >= '2014-07-01 00:00:00' AND local_utc_ts < '2014-08-01 00:00:00');
 -- 2. Update the trigger function
 
+-- I don't know if this has to be re-created for every function update
+
+CREATE TRIGGER tracker_motion_master_insert_trigger
+  BEFORE INSERT
+  ON tracker_motion_master
+  FOR EACH ROW
+  EXECUTE PROCEDURE tracker_motion_master_insert_function();
+
 -- Trigger function for master insert
 CREATE OR REPLACE FUNCTION tracker_motion_master_insert_function() RETURNS TRIGGER LANGUAGE plpgsql AS
 $BODY$
