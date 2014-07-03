@@ -2,11 +2,10 @@ package com.hello.suripu.app.resources;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.app.utils.DataType;
 import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.TimeSerieDAO;
-import com.hello.suripu.core.models.GroupedRecord;
-import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.SoundDAO;
+import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.SoundRecord;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -20,7 +19,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
@@ -33,105 +31,81 @@ public class HistoryResource {
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryResource.class);
-    private final TimeSerieDAO timeSerieDAO; // Any reason put different things together?
+    private final SoundDAO soundDAO;
+    private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDAO deviceDAO;
+    private final DeviceDataDAO deviceDataDAO;
 
-    public HistoryResource(final TimeSerieDAO timeSerieDAO,
-                           final DeviceDAO deviceDAO) {
-        this.timeSerieDAO = timeSerieDAO;
+    public HistoryResource(final SoundDAO soundDAO,
+                           final TrackerMotionDAO trackerMotionDAO,
+                           final DeviceDAO deviceDAO,
+                           final DeviceDataDAO deviceDataDAO) {
+        this.soundDAO = soundDAO;
         this.deviceDAO = deviceDAO;
+        this.trackerMotionDAO = trackerMotionDAO;
+        this.deviceDataDAO = deviceDataDAO;
 
-    }
-
-    @GET
-    @Timed
-    @Path("/{days}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<DeviceData> getRecords(
-            @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
-            @PathParam("days") final Integer numDays) {
-        LOGGER.debug("asking for {} days of recent history", numDays);
-        final DateTime now = DateTime.now(DateTimeZone.UTC);
-        final DateTime then = now.minusDays(60);
-
-        final Optional<Long> deviceId = deviceDAO.getByAccountId(accessToken.accountId);
-        LOGGER.debug("Account id = {}", accessToken.accountId);
-        if(!deviceId.isPresent()) {
-            throw new WebApplicationException(404);
-        }
-        LOGGER.debug("device = {}", deviceId.get());
-        //final ImmutableList<DeviceData> deviceDatas = timeSerieDAO.getHistoricalData(deviceId.get(), then, now);
-        final ImmutableList<DeviceData> deviceDatas = timeSerieDAO.getDeviceDataBetweenByUTCTime(accessToken.accountId, then, now);
-        LOGGER.debug("Found {} records in DB", deviceDatas.size());
-        return deviceDatas;
     }
 
     @Deprecated
     @GET
+    @Path("/motion")
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getRecordsBetween(
+    public List<TrackerMotion> getMotionBetween(
             @Scope({OAuthScope.API_INTERNAL_DATA_READ}) final AccessToken accessToken,
             @QueryParam("from") final Long from,
-            @QueryParam("to") final Long to,
-            @QueryParam("data_type") final DataType type) {
+            @QueryParam("to") final Long to) {
 
         if(from == null || to == null){
-            return Response.status(Response.Status.BAD_REQUEST).build();
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
         if(Math.abs(to - from) > 3 * 24 * 60 * 60 * 1000){
             // Just don't allow a big query
-            return Response.status(Response.Status.BAD_REQUEST).build();
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
+        final ImmutableList<TrackerMotion> trackerMotions = this.trackerMotionDAO.getBetween(
+                accessToken.accountId,
+                new DateTime(from, DateTimeZone.UTC),
+                new DateTime(to, DateTimeZone.UTC)
+        );
 
-        switch (type){
-            case MOTION:
-                final ImmutableList<TrackerMotion> trackerMotions = this.timeSerieDAO.getTrackerDataBetween(accessToken.accountId,
-                        new DateTime(from, DateTimeZone.UTC),
-                        new DateTime(to, DateTimeZone.UTC));
-                return Response.ok().entity(trackerMotions).build();
-            case SOUND:
-
-                // FIXME: The device Id is no longer needed, should query everything based on account id.
-                final Optional<Long> deviceId = deviceDAO.getByAccountId(accessToken.accountId);
-                if(!deviceId.isPresent()) {
-                    return Response.status(Response.Status.NOT_FOUND).build();
-                }
-
-                final ImmutableList<SoundRecord> soundRecords = this.timeSerieDAO.getSoundDataBetween(deviceId.get(),
-                        new DateTime(from, DateTimeZone.UTC),
-                        new DateTime(to, DateTimeZone.UTC));
-                return Response.ok().entity(soundRecords).build();
-            default:
-                return Response.status(Response.Status.BAD_REQUEST).build();
-
-        }
-
+        return trackerMotions;
     }
 
-
+    @Deprecated
     @GET
+    @Path("/sound")
     @Timed
-    @Path("/grouped/{num_days}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getGroupedSensorResults(
-            @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken token,
-            @PathParam("num_days") final Integer numDays) {
+    public List<SoundRecord> getSoundBetween(
+            @Scope({OAuthScope.API_INTERNAL_DATA_READ}) final AccessToken accessToken,
+            @QueryParam("from") final Long from,
+            @QueryParam("to") final Long to) {
 
-        Optional<Long> optionalDeviceId = deviceDAO.getByAccountId(token.accountId);
-        if(!optionalDeviceId.isPresent()) {
-            LOGGER.warn("Device not found for account = {}", token.accountId);
-            return Response.status(Response.Status.NOT_FOUND).entity("not found").type(MediaType.TEXT_PLAIN).build();
+        if(from == null || to == null){
+            LOGGER.warn("Either from or to params were null");
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
-        final DateTime now = DateTime.now(DateTimeZone.UTC);
-        final DateTime then = now.minusDays(numDays);
+        if(Math.abs(to - from) > 3 * 24 * 60 * 60 * 1000){
+            // Just don't allow a big query
+            LOGGER.warn("Query is too big. Range = {}", Math.abs(to - from));
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+        }
 
-        final ImmutableList<DeviceData> deviceDatas = timeSerieDAO.getDeviceDataBetweenByUTCTime(optionalDeviceId.get(), then, now);
+        // FIXME: The device Id is no longer needed, should query everything based on account id.
+        final Optional<Long> deviceId = deviceDAO.getByAccountId(accessToken.accountId);
+        if(!deviceId.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
 
-        final GroupedRecord groupedRecord = GroupedRecord.fromRecords(deviceDatas);
-        return Response.ok().entity(groupedRecord).build();
+        final ImmutableList<SoundRecord> soundRecords = this.soundDAO.getSoundDataBetween(deviceId.get(),
+                new DateTime(from, DateTimeZone.UTC),
+                new DateTime(to, DateTimeZone.UTC));
+
+        return soundRecords;
     }
 }
