@@ -19,7 +19,7 @@ public class TrackerMotion {
     public final long accountId;
 
     @JsonProperty("tracker_id")
-    public final String trackerId;
+    public final Long trackerId;
 
     @JsonProperty("timestamp")
     public final long timestamp;
@@ -33,7 +33,7 @@ public class TrackerMotion {
     @JsonCreator
     public TrackerMotion(@JsonProperty("id") final long id,
                          @JsonProperty("account_id") final long accountId,
-                         @JsonProperty("tracker_id") final String trackerId,
+                         @JsonProperty("tracker_id") final Long trackerId,
                          @JsonProperty("timestamp") final long timestamp,
                          @JsonProperty("value") final int value,
                          @JsonProperty("timezone_offset") final int timeZoneOffset){

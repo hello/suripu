@@ -27,6 +27,6 @@ public interface DeviceDAO {
     Optional<Long> getByAccountId(@Bind("account_id") Long accountId);
 
     @RegisterMapper(DeviceAccountPairMapper.class)
-    @SqlQuery("SELECT id, account_id FROM account_device_map WHERE device_id = :device_id;")
+    @SqlQuery("SELECT * FROM account_device_map WHERE device_id = :device_id;")
     ImmutableList<DeviceAccountPair> getAccountIdsForDeviceId(@Bind("device_id") String device_id);
 }

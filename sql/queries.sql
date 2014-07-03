@@ -119,3 +119,20 @@ select filled_hours.hour,
   order by filled_hours.hour;
 
 
+
+
+
+-- Migrating
+-- not used, saved for historical reasons
+
+INSERT INTO device_sensors_batch (account_id, device_id, ambient_temp, ambient_light,ambient_humidity, ambient_air_quality, ts, offset_millis)
+SELECT MAX(account_id) AS account_id, MAX(device_id) AS device_id,
+array_agg(ambient_temp ORDER BY ts ASC) AS ambient_temp,
+array_agg(ambient_light ORDER BY ts ASC) AS ambient_light,
+array_agg(ambient_humidity ORDER BY ts ASC) AS ambient_humidity,
+array_agg(ambient_air_quality ORDER BY ts ASC) AS ambient_air_quality,
+date_trunc('hour', ts) + (date_part('minute', ts)::int / 5) * interval '5 min' AS tst,
+MIN(offset_millis)
+FROM device_sensors
+WHERE account_id = 1
+GROUP BY account_id, tst;

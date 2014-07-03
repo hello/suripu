@@ -18,10 +18,10 @@ import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.TempTrackerData;
+import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
-import com.hello.suripu.service.db.DataExtractor;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -42,7 +42,9 @@ import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -109,90 +111,83 @@ public class ReceiveResource {
         return Response.ok().build();
     }
 
-
-
-    @POST
-    @Timed
-    @Path("/tracker")
-    @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
-    public Response receiveTrackerData(
-            @Valid InputProtos.TrackerDataBatch batch,
-            @Scope({OAuthScope.SENSORS_BASIC}) AccessToken accessToken){
-
-        if(batch.getSamplesCount() == 0){
-            LOGGER.warn("Empty payload.");
-            return Response.status(Response.Status.BAD_REQUEST).build();
-        }
-
-
-        for(final InputProtos.TrackerDataBatch.TrackerData datum:batch.getSamplesList()){
-
-            try{
-                DataExtractor.normalizeAndSave(datum, accessToken, trackerMotionDAO);
-            } catch (UnableToExecuteStatementException exception) {
-                Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
-
-                if(!matcher.find()) {
-                    LOGGER.error(exception.getMessage());
-                    return Response.serverError().build();
-                }
-
-                LOGGER.warn("Duplicate tracker data for account {}, tracker {} with ts = {}",
-                        accessToken.accountId,
-                        datum.getTrackerId(),
-                        new DateTime(datum.getTimestamp(), DateTimeZone.forOffsetMillis(datum.getOffsetMillis()))
-                        );
-            }
-
-
-        }
-
-        return Response.ok().build();
-
-
-    }
-
     @POST
     @Timed
     @Path("/temp/tracker")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Deprecated
-    public Response sendTempData(
+    public void sendTempData(
             @Valid List<TempTrackerData> trackerData,
             @Scope({OAuthScope.API_INTERNAL_DATA_WRITE}) AccessToken accessToken) {
 
         if(trackerData.size() == 0){
             LOGGER.info("Account {} tries to upload empty payload.", accessToken.accountId);
-            return Response.ok().build();
+            return;
         }
 
 
+        final List<DeviceAccountPair> pairs = trackerMotionDAO.getTrackerIds(accessToken.accountId);
+
+        final Map<String, Long> pairsLookup = new HashMap<String, Long>(pairs.size());
+        for (DeviceAccountPair pair: pairs) {
+            pairsLookup.put(pair.externalDeviceId, pair.internalDeviceId);
+        }
+
+        if(pairs.isEmpty()) {
+            LOGGER.warn("No tracker registered for account = {}", accessToken.accountId);
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+        }
+
+        if(pairs.size() > 1) {
+            LOGGER.warn("Too many trackers ({}) for account = {}", pairs.size(), accessToken.accountId);
+        }
+
         for(final TempTrackerData tempTrackerData : trackerData) {
-            final DateTime roundedDateTimeUTC = new DateTime(tempTrackerData.timestamp, DateTimeZone.UTC).withSecondOfMinute(0);
+
+            final Long trackerId = pairsLookup.get(tempTrackerData.trackerId);
+            if(trackerId == null) {
+                LOGGER.warn("TrackerId {} is not paired to account: {}", tempTrackerData.trackerId, accessToken.accountId);
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+            }
+
+            final DateTime originalDateTime = new DateTime(tempTrackerData.timestamp, DateTimeZone.UTC);
             int offsetMillis = -25200000;
 
-            try{
-                final Long id = trackerMotionDAO.insertTrackerMotion(accessToken.accountId,
-                        tempTrackerData.trackerId,
-                        tempTrackerData.value,
-                        roundedDateTimeUTC,
-                        offsetMillis // OH YEAH THIS IS CALIFORNIA. OBVIOUSLY NOT VALID FOR ANYONE OUTSIDE THE OFFICE
-                );
-            } catch (UnableToExecuteStatementException ex) {
-                Matcher matcher = PG_UNIQ_PATTERN.matcher(ex.getMessage());
+            final DateTime roundedDateTimeUTC = new DateTime(
+                    originalDateTime.getYear(),
+                    originalDateTime.getMonthOfYear(),
+                    originalDateTime.getDayOfMonth(),
+                    originalDateTime.getHourOfDay(),
+                    originalDateTime.getMinuteOfHour(),
+                    DateTimeZone.UTC
+            );
 
+            // Query tracker / user
+
+            final TrackerMotion trackerMotion = new TrackerMotion(
+                    0,
+                    accessToken.accountId,
+                    trackerId,
+                    roundedDateTimeUTC.getMillis(),
+                    tempTrackerData.value,
+                    offsetMillis
+            );
+
+
+            try {
+                final Long id = trackerMotionDAO.insertTrackerMotion(trackerMotion);
+            } catch (UnableToExecuteStatementException exception) {
+                Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
                 if (!matcher.find()) {
-                    LOGGER.error(ex.getMessage());
-                    return Response.serverError().build();
+                    LOGGER.error(exception.getMessage());
+                    throw new WebApplicationException(Response.serverError().build());
                 }
 
                 LOGGER.warn("Duplicate sensor value for account_id = {}", accessToken.accountId);
 
             }
         }
-
-        return Response.ok().build();
     }
 
     @PUT

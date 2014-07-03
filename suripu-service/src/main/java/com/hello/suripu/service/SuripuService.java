@@ -15,7 +15,6 @@ import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.PublicKeyStoreDynamoDB;
 import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
-import com.hello.suripu.core.db.TrackerMotionDAODynamoDB;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.health.DynamoDbHealthCheck;
@@ -70,20 +69,26 @@ public class SuripuService extends Service<SuripuConfiguration> {
         environment.addProvider(new JacksonProtobufProvider());
 
         final DBIFactory factory = new DBIFactory();
-        final DBI jdbi = factory.build(environment, configuration.getDatabaseConfiguration(), "postgresql");
-        jdbi.registerArgumentFactory(new JodaArgumentFactory());
-        jdbi.registerContainerFactory(new OptionalContainerFactory());
-        jdbi.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
+        final DBI commonDB = factory.build(environment, configuration.getCommonDB(), "postgresql");
+        final DBI sensorsDB = factory.build(environment, configuration.getSensorsDB(), "postgresql");
 
-        final DeviceDataDAO dao = jdbi.onDemand(DeviceDataDAO.class);
-        final AccessTokenDAO accessTokenDAO = jdbi.onDemand(AccessTokenDAO.class);
-        final DeviceDAO deviceDAO = jdbi.onDemand(DeviceDAO.class);
-        final ApplicationsDAO applicationsDAO = jdbi.onDemand(ApplicationsDAO.class);
-        final ScoreDAO scoreDAO = jdbi.onDemand(ScoreDAO.class);
-        final TrackerMotionDAO trackerMotionDAO = jdbi.onDemand(TrackerMotionDAO.class);
+        commonDB.registerArgumentFactory(new JodaArgumentFactory());
+        commonDB.registerContainerFactory(new OptionalContainerFactory());
+        commonDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
+
+        sensorsDB.registerArgumentFactory(new JodaArgumentFactory());
+        sensorsDB.registerContainerFactory(new OptionalContainerFactory());
+        sensorsDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
+
+        final DeviceDataDAO dao = sensorsDB.onDemand(DeviceDataDAO.class);
+        final AccessTokenDAO accessTokenDAO = commonDB.onDemand(AccessTokenDAO.class);
+        final DeviceDAO deviceDAO = sensorsDB.onDemand(DeviceDAO.class);
+        final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
+        final ScoreDAO scoreDAO = commonDB.onDemand(ScoreDAO.class);
+        final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
 
 
-        final EventDAO eventDAO = jdbi.onDemand(EventDAO.class);
+        final EventDAO eventDAO = commonDB.onDemand(EventDAO.class);
 
         // Checks Environment first and then instance profile.
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
