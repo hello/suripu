@@ -66,7 +66,7 @@ public class EventDAODynamoDB {
     private final int MAX_CALL_COUNT = 5;
     private final int MAX_BATCH_SIZE = 25;  // Based on: http://docs.aws.amazon.com/cli/latest/reference/dynamodb/batch-write-item.html
 
-    public final int MAX_REQUEST_DAYS = 31;
+    public static final int MAX_REQUEST_DAYS = 31;
 
     public final String JSON_CHARSET = "UTF-8";
 

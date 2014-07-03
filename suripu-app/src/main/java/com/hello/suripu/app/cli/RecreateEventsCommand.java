@@ -153,13 +153,25 @@ public class RecreateEventsCommand extends ConfiguredCommand<SuripuAppConfigurat
             dayOffset++;
 
             LOGGER.info(DateTime.now().toString() + ": event detection completed for target date: " + targetDay);
+
+            if(generatedEvents.size() == EventDAODynamoDB.MAX_REQUEST_DAYS){
+                LOGGER.info(DateTime.now().toString() + ": Saving events to dynamoDB.");
+
+                // Shall we use the batch?
+                eventDAODynamoDB.setEventsForDates(account.id, generatedEvents);
+                LOGGER.info(DateTime.now().toString() + ": All events have been saved for user: " + account.email);
+
+                generatedEvents.clear();
+            }
         }
 
-        LOGGER.info(DateTime.now().toString() + ": Saving events to dynamoDB.");
 
-        // Shall we use the batch?
-        eventDAODynamoDB.setEventsForDates(account.id, generatedEvents);
-        LOGGER.info(DateTime.now().toString() + ": All events have been saved for user: " + account.email);
+        if(generatedEvents.size() > 0) {
+            LOGGER.info(DateTime.now().toString() + ": Saving events to dynamoDB.");
 
+            // Shall we use the batch?
+            eventDAODynamoDB.setEventsForDates(account.id, generatedEvents);
+            LOGGER.info(DateTime.now().toString() + ": All events have been saved for user: " + account.email);
+        }
     }
 }
