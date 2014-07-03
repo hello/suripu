@@ -136,3 +136,19 @@ MIN(offset_millis)
 FROM device_sensors
 WHERE account_id = 1
 GROUP BY account_id, tst;
+
+
+
+
+-- Temperature queries
+
+SELECT
+min(ambient_light) as min_light,
+max(ambient_light) as max_light,
+date_trunc('day', ts) as light_day
+FROM device_sensors_master
+WHERE account_id = 7
+AND ts > '2014-05-13'
+AND ts < '2014-06-20'
+AND extract(hour from ts) < 7
+GROUP BY light_day;
