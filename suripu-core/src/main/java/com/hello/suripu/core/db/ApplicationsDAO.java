@@ -13,6 +13,8 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 
+import java.util.List;
+
 @RegisterMapper(ApplicationMapper.class)
 public interface ApplicationsDAO {
 
@@ -32,6 +34,9 @@ public interface ApplicationsDAO {
 
     @SqlQuery("SELECT * FROM oauth_applications WHERE dev_account_id = :dev_account_id")
     ImmutableList<Application> getAllByDevId(@Bind("dev_account_id") Long devAccountId);
+
+    @SqlQuery("SELECT * FROM oauth_applications;")
+    List<Application> getAll();
 
     @SqlQuery("SELECT count(*) FROM authorized_oauth_applications WHERE app_id = :app_id AND account_id = : account_id LIMIT 1;")
     int exists(@Bind("app_id") Long appId, @Bind("account_id") Long accountId);
