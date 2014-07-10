@@ -1,5 +1,6 @@
 package com.hello.suripu.core.db;
 
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
@@ -25,7 +26,7 @@ import static org.hamcrest.core.Is.is;
 /**
  * Created by pangwu on 6/5/14.
  */
-public class EventDAODynamoDBTest {
+public class EventDAODynamoDBIT {
 
     private BasicAWSCredentials awsCredentials;
     private AmazonDynamoDBClient amazonDynamoDBClient;
@@ -36,7 +37,9 @@ public class EventDAODynamoDBTest {
     @Before
     public void setUp(){
         this.awsCredentials = new BasicAWSCredentials("FAKE_AWS_KEY", "FAKE_AWS_SECRET");
-        this.amazonDynamoDBClient = new AmazonDynamoDBClient(this.awsCredentials);
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+        clientConfiguration.setMaxErrorRetry(0);
+        this.amazonDynamoDBClient = new AmazonDynamoDBClient(this.awsCredentials, clientConfiguration);
         this.amazonDynamoDBClient.setEndpoint("http://localhost:7777");
 
         cleanUp();
