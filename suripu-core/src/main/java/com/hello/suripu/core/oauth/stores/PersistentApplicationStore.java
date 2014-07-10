@@ -1,10 +1,11 @@
 package com.hello.suripu.core.oauth.stores;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.oauth.Application;
 import com.hello.suripu.core.oauth.ApplicationRegistration;
+
+import java.util.List;
 
 
 public class PersistentApplicationStore implements ApplicationStore<Application, ApplicationRegistration>{
@@ -39,7 +40,12 @@ public class PersistentApplicationStore implements ApplicationStore<Application,
     }
 
     @Override
-    public ImmutableList<Application> getApplicationsByDevId(final Long accountId) {
+    public List<Application> getApplicationsByDevId(final Long accountId) {
         return applicationsDAO.getAllByDevId(accountId);
+    }
+
+    @Override
+    public List<Application> getAll() {
+        return applicationsDAO.getAll();
     }
 }
