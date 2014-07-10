@@ -116,6 +116,14 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
                     .build();
         }
 
+        if (webAppException.getResponse().getStatus() == 405) {
+            return Response
+                    .status(405)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(new Error(405, "Method not allowed"))
+                    .build();
+        }
+
 
 
         LOGGER.error("WebApplicationException not caught: {} {}", webAppException.getResponse().getStatus(), webAppException.getMessage());
