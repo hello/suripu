@@ -21,7 +21,6 @@ import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.EventDAODynamoDB;
-import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SoundDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
@@ -44,6 +43,8 @@ import com.yammer.dropwizard.jdbi.DBIFactory;
 import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
 import com.yammer.dropwizard.jdbi.bundles.DBIExceptionsBundle;
 import com.yammer.metrics.core.MetricPredicate;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,8 +71,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
     @Override
     public void run(final SuripuAppConfiguration config, final Environment environment) throws Exception {
 
-
-
         final DBIFactory factory = new DBIFactory();
         final DBI sensorsDB = factory.build(environment, config.getSensorsDB(), "postgresql");
         final DBI commonDB = factory.build(environment, config.getCommonDB(), "postgresql");
@@ -90,7 +89,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
         final AccessTokenDAO accessTokenDAO = commonDB.onDemand(AccessTokenDAO.class);
         final DeviceDAO deviceDAO = sensorsDB.onDemand(DeviceDAO.class);
-        final ScoreDAO scoreDAO = commonDB.onDemand(ScoreDAO.class);
+
         final SleepLabelDAO sleepLabelDAO = commonDB.onDemand(SleepLabelDAO.class);
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
@@ -139,9 +138,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         }
 
 
-
-
-
         // Custom JSON handling for responses.
         final ResourceConfig jrConfig = environment.getJerseyResourceConfig();
         DropwizardServiceUtil.deregisterDWSingletons(jrConfig);
@@ -154,8 +150,10 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new HistoryResource(soundDAO, trackerMotionDAO, deviceDAO, deviceDataDAO));
         environment.addResource(new ApplicationResource(applicationStore));
         environment.addResource(new SleepLabelResource(sleepLabelDAO));
-        environment.addProvider(new RoomConditionsResource(deviceDataDAO));
+        environment.addProvider(new RoomConditionsResource(deviceDataDAO, config.getAllowedQueryRange()));
         environment.addResource(new EventResource(eventDAODynamoDB));
+
+        LOGGER.debug("{}", DateTime.now(DateTimeZone.UTC).getMillis());
 
 //        environment.addHealthCheck(new DBIHealthCheck(sensorsDB, "account-db", "SELECT * FROM accounts ORDER BY ID DESC LIMIT 1;"));
     }

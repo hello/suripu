@@ -43,8 +43,6 @@ public class SuripuAppConfiguration extends Configuration {
     @JsonProperty("librato")
     private LibratoConfiguration librato;
 
-
-
     public LibratoConfiguration getLibrato() {
         return librato;
     }
@@ -74,5 +72,14 @@ public class SuripuAppConfiguration extends Configuration {
     private DynamoDBConfiguration timeZoneHistoryDBConfiguration;
     public DynamoDBConfiguration getTimeZoneHistoryDBConfiguration(){
         return this.timeZoneHistoryDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("allowed_query_range_seconds")
+    private Long allowedQueryRange;
+
+    public Long getAllowedQueryRange() {
+        return allowedQueryRange;
     }
 }
