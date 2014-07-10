@@ -92,8 +92,8 @@ public class RoomConditionsResource {
             @PathParam("sensor") final String sensor,
             @QueryParam("from") Long clientUtcTimestamp) {
 
-        final int slotDurationInMinutes = 5;
-        final int  queryDurationInHours = 24;
+        final int slotDurationInMinutes = 60;
+        final int  queryDurationInHours = 24 * 7; // 7 days
 
         validateQueryRange(clientUtcTimestamp, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
         return deviceDataDAO.generateTimeSerie(clientUtcTimestamp, accessToken.accountId, slotDurationInMinutes, queryDurationInHours, sensor);
