@@ -6,6 +6,7 @@ import com.hello.suripu.core.oauth.ApplicationRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -39,6 +40,11 @@ public class InMemoryApplicationStore implements ApplicationStore<Application, A
     @Override
     public List<Application> getApplicationsByDevId(Long accountId) {
         return null;
+    }
+
+    @Override
+    public List<Application> getAll() {
+        return new ArrayList<Application>();
     }
 
     @Override

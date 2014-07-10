@@ -11,4 +11,5 @@ public interface ApplicationStore<A, B> {
     A register(B registration);
     void activateForAccountId(A application, Long accountId);
     List<A> getApplicationsByDevId(Long accountId);
+    List<A> getAll();
 }
