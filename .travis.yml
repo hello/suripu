@@ -1,6 +1,6 @@
 language: java
 install: mvn --version
-script: mvn --settings settings.xml clean -DskipTests deploy -q
+script: mvn --settings settings.xml clean -DskipITs deploy -q
 branches:
   only:
   - master
