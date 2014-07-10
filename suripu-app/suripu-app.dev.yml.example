@@ -37,6 +37,11 @@ common_db:
   # any properties specific to your JDBC driver:
   properties:
     charSet: UTF-8
+
+# to allow queries with clocks out of sync
+# 12 * 3600s = 43200 sec -> 12h window
+allowed_query_range_seconds: 43200
+
 http:
 
   # The port on which the HTTP server listens for service requests.
