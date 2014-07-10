@@ -6,6 +6,8 @@ import com.hello.suripu.core.oauth.ApplicationRegistration;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.oauth.stores.ApplicationStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -21,6 +23,7 @@ import java.util.List;
 @Path("applications")
 public class ApplicationResource {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationResource.class);
     private final ApplicationStore<Application, ApplicationRegistration> applicationStore;
 
     public ApplicationResource(final ApplicationStore<Application, ApplicationRegistration> applicationStore) {
@@ -44,5 +47,14 @@ public class ApplicationResource {
             @PathParam("dev_account_id") final Long devAccountId) {
 
         return applicationStore.getApplicationsByDevId(devAccountId);
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Application> getAllApplications(
+            @Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken) {
+        List<Application> applications = applicationStore.getAll();
+        LOGGER.debug("Size of applications = {}", applications.size());
+        return applications;
     }
 }
