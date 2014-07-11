@@ -36,3 +36,16 @@ SELECT device_sensors.account_id, device_sensors.device_id, device_sensors.ambie
 										device_sensors_par_default ORDER BY device_sensors_par_default.ts ASC LIMIT 1);
 
 
+
+
+INSERT INTO device_sensors_master (account_id,
+		device_id, ambient_temp, ambient_light, ambient_humidity,
+		ambient_air_quality, ts, local_utc_ts, offset_millis)
+SELECT device_sensors.account_id, device_sensors.device_id, device_sensors.ambient_temp,
+	device_sensors.ambient_light, device_sensors.ambient_humidity, device_sensors.ambient_air_quality,
+	device_sensors.ts,
+	to_timestamp(extract(epoch from device_sensors.ts) + device_sensors.offset_millis::float / 1000),
+	device_sensors.offset_millis FROM
+		device_sensors;
+
+
