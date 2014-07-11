@@ -51,6 +51,20 @@ public class OAuthProvider<T> implements InjectableProvider<Scope, Type> {
                     }
                 }
 
+                for(final OAuthScope scope : scopes) {
+                    if(scope == OAuthScope.ADMINISTRATION_READ ||
+                       scope == OAuthScope.ADMINISTRATION_WRITE ||
+                       scope == OAuthScope.API_INTERNAL_DATA_READ ||
+                       scope == OAuthScope.API_INTERNAL_DATA_WRITE) {
+
+                        final String oauthTokenMaybe = (bearerString.isPresent()) ? bearerString.get() : "[NO TOKEN]";
+                        LOGGER.warn("Attempt to access admin protected resource with bad/wrong oauth token");
+                        LOGGER.warn("OAuth token was: {} and request was {}", oauthTokenMaybe , c.getRequest().getAbsolutePath());
+                        LOGGER.warn("Voluntarily returning a 404 to not expose too much to the client");
+                        throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+                    }
+                }
+
                 throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
 
 
