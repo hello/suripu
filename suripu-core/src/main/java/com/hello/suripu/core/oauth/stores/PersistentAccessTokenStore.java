@@ -86,17 +86,24 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
     @Override
     public Optional<AccessToken> getClientDetailsByToken(final ClientCredentials credentials) {
 
-        // TODO: make sure this is efficient
-        final String uuidWithHyphens =  credentials.tokenOrCode.replaceFirst("([0-9a-fA-F]{8})([0-9a-fA-F]{4})([0-9a-fA-F]{4})([0-9a-fA-F]{4})([0-9a-fA-F]+)", "$1-$2-$3-$4-$5" );
-        final Optional<AccessToken> accessTokenOptional = accessTokenDAO.getByAccessToken(UUID.fromString(uuidWithHyphens));
+        final UUID tokenUUID = AccessToken.cleanUUID(credentials.tokenOrCode);
+        final Optional<AccessToken> accessTokenOptional = accessTokenDAO.getByAccessToken(tokenUUID);
 
         if(!accessTokenOptional.isPresent()) {
             return Optional.absent();
         }
 
-        final Optional<Application> applicationOptional = applicationStore.getApplicationById(accessTokenOptional.get().appId);
+        final AccessToken accessToken = accessTokenOptional.get();
+        final Long appIdFromToken = AccessToken.extractAppIdFromToken(credentials.tokenOrCode);
+        if(!appIdFromToken.equals(accessToken.appId)) {
+            LOGGER.warn("AppId from token is different from appId retrieved from DB ({} vs {})", appIdFromToken, accessToken.appId);
+            return Optional.absent();
+        }
+
+        final Optional<Application> applicationOptional = applicationStore.getApplicationById(accessToken.appId);
 
         if(!applicationOptional.isPresent()) {
+            LOGGER.warn("No application with id = {} as specified by token {}", accessToken.appId, credentials.tokenOrCode);
             return Optional.absent();
         }
 

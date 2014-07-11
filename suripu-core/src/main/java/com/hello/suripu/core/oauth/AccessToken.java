@@ -39,12 +39,12 @@ public class AccessToken {
 
     @JsonProperty("access_token")
     public String serializeAccessToken() {
-        return token.toString().replace("-", "");
+        return String.format("%d.%s", appId, token.toString().replace("-", ""));
     }
 
     @JsonProperty("refresh_token")
     public String serializeRefreshToken() {
-        return refreshToken.toString().replace("-", "");
+        return String.format("%d.%s", appId, refreshToken.toString().replace("-", ""));
     }
 
     public AccessToken(
@@ -164,5 +164,31 @@ public class AccessToken {
                 .add("$access_token", serializeAccessToken())
                 .add("$refresh_token", serializeRefreshToken())
                 .toString();
+    }
+
+    /**
+     * Token format for client is {appId}.{uuidWithoutHyphens}
+     * @param dirtyToken
+     * @return
+     */
+    public static UUID cleanUUID(final String dirtyToken) {
+        // TODO: make sure this is efficient enough
+        final int dotIndex = dirtyToken.indexOf('.');
+        if(dotIndex == -1) {
+            throw new RuntimeException("Invalid format for access token.");
+        }
+
+        final String uuidWithoutAppId = dirtyToken.substring(dotIndex + 1);
+        final String uuidWithHyphens =  uuidWithoutAppId.replaceFirst("([0-9a-fA-F]{8})([0-9a-fA-F]{4})([0-9a-fA-F]{4})([0-9a-fA-F]{4})([0-9a-fA-F]+)", "$1-$2-$3-$4-$5" );
+        return UUID.fromString(uuidWithHyphens);
+    }
+
+    public static Long extractAppIdFromToken(final String dirtyToken) {
+        final int dotIndex = dirtyToken.indexOf('.');
+        if(dotIndex == -1) {
+            throw new RuntimeException("Invalid format for access token.");
+        }
+
+        return Long.parseLong(dirtyToken.substring(0, dotIndex));
     }
 }
