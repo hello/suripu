@@ -2,6 +2,7 @@ package com.hello.suripu.core.oauth.stores;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.oauth.ClientAuthenticationException;
+import org.joda.time.DateTime;
 
 /**
  * Token store
@@ -19,7 +20,7 @@ public interface OAuthTokenStore<T, I, C> {
 
     T storeAccessToken(I clientDetails) throws ClientAuthenticationException;
 
-    Optional<T> getClientDetailsByToken(C creds);
+    Optional<T> getClientDetailsByToken(C creds, DateTime now);
 
     C storeAuthorizationCode(I clientDetails) throws ClientAuthenticationException;
 

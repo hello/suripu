@@ -56,7 +56,7 @@ CREATE TABLE oauth_tokens(
     access_token UUID,
     refresh_token UUID,
     expires_in INTEGER,
-    created_at TIMESTAMP,
+    created_at TIMESTAMP default current_timestamp,
     app_id INTEGER,
     account_id INTEGER,
     scopes int[]

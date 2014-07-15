@@ -43,15 +43,16 @@ public class OAuthAuthenticatorTest {
 
     @Test
     public void testValidCredentials() throws AuthenticationException {
-
-        when(oAuthTokenStore.getClientDetailsByToken(credentials)).thenReturn(Optional.of(accessToken));
+        final DateTime now = DateTime.now();
+        when(oAuthTokenStore.getClientDetailsByToken(credentials, now)).thenReturn(Optional.of(accessToken));
         final Optional<AccessToken> accessTokenOptional = oAuthAuthenticator.authenticate(credentials);
         assertThat(accessTokenOptional.isPresent(), is(true));
     }
 
     @Test
     public void testInvalidCredentials() throws AuthenticationException {
-        when(oAuthTokenStore.getClientDetailsByToken(credentials)).thenReturn(Optional.absent());
+        final DateTime now = DateTime.now();
+        when(oAuthTokenStore.getClientDetailsByToken(credentials, now)).thenReturn(Optional.absent());
         final Optional<AccessToken> accessTokenOptional = oAuthAuthenticator.authenticate(credentials);
         assertThat(accessTokenOptional.isPresent(), is(false));
     }

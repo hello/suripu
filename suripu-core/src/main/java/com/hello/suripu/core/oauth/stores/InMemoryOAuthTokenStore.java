@@ -52,7 +52,7 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
     }
 
     @Override
-    public Optional<AccessToken> getClientDetailsByToken(final ClientCredentials credentials) {
+    public Optional<AccessToken> getClientDetailsByToken(final ClientCredentials credentials, final DateTime now) {
 
         final AccessToken accessToken = tokens.get(credentials.tokenOrCode);
         if(accessToken == null) {

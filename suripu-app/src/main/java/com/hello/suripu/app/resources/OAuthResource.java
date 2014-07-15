@@ -24,6 +24,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -50,7 +51,7 @@ public class OAuthResource {
     @Timed
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response accessToken(
+    public AccessToken accessToken(
                 @FormParam("grant_type") GrantTypeParam grantType,
                 @FormParam("code") String code,
                 @FormParam("redirect_uri") String redirectUri,
@@ -61,72 +62,67 @@ public class OAuthResource {
 
         if(grantType == null) {
             LOGGER.error("GrantType is null");
-            return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build();
-        }
-        if(grantType.getType().equals(GrantTypeParam.GrantType.PASSWORD)) {
-            if(username == null || password == null || username.isEmpty() || password.isEmpty()) {
-                LOGGER.error("username or password is null or empty");
-                return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
-                        .type(MediaType.TEXT_PLAIN_TYPE).build();
-            }
-
-
-            final Optional<Account> accountOptional = accountDAO.exists(username, password);
-            if(!accountOptional.isPresent()) {
-                LOGGER.error("Account wasn't found", username, password);
-                return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
-                        .type(MediaType.TEXT_PLAIN_TYPE).build();
-            }
-
-            final Account account = accountOptional.get();
-
-
-            // FIXME: this is confusing, are we checking for application, or for installed application for this user
-            // FIXME: if that's what we are doing, how did they get a token in the first place?
-            // TODO: BE SMARTER
-            final Optional<Application> applicationOptional = applicationStore.getApplicationByClientId(clientId);
-            if(!applicationOptional.isPresent()) {
-                LOGGER.error("application wasn't found for clientId : {}", clientId);
-                return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
-                        .type(MediaType.TEXT_PLAIN_TYPE).build();
-            }
-
-            if(!applicationOptional.get().grantType.equals(grantType.getType())) {
-                LOGGER.error("Grant types don't match : {} and {}", applicationOptional.get().grantType, grantType.getType());
-                return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
-                        .type(MediaType.TEXT_PLAIN_TYPE).build();
-            }
-
-            // Important : when using password flow, we should not send / nor expect the client_secret
-            final ClientDetails details = new ClientDetails(
-                    grantType.getType(),
-                    clientId,
-                    redirectUri,
-                    applicationOptional.get().scopes,
-                    "", // state
-                    code,
-                    account.id,
-                    clientSecret
-            );
-
-            details.setApp(applicationOptional.get());
-            AccessToken accessToken = null;
-
-            try {
-                accessToken = tokenStore.storeAccessToken(details);
-            } catch (ClientAuthenticationException clientAuthenticationException) {
-                LOGGER.error(clientAuthenticationException.getMessage());
-                return Response.serverError().build();
-            }
-
-            LOGGER.debug("{}", accessToken);
-            return Response.ok().entity(accessToken).build();
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization").build());
         }
 
-        // We only support password grant at the moment
-        return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization")
-            .type(MediaType.TEXT_PLAIN_TYPE).build();
+        if(!grantType.getType().equals(GrantTypeParam.GrantType.PASSWORD)) {
+            // We only support password grant at the moment
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization").build());
+        }
+
+        if(username == null || password == null || username.isEmpty() || password.isEmpty()) {
+            LOGGER.error("username or password is null or empty");
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization").build());
+        }
+
+
+        final Optional<Account> accountOptional = accountDAO.exists(username, password);
+        if(!accountOptional.isPresent()) {
+            LOGGER.error("Account wasn't found", username, password);
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization").build());
+        }
+
+        final Account account = accountOptional.get();
+
+
+        // FIXME: this is confusing, are we checking for application, or for installed application for this user
+        // FIXME: if that's what we are doing, how did they get a token in the first place?
+        // TODO: BE SMARTER
+        final Optional<Application> applicationOptional = applicationStore.getApplicationByClientId(clientId);
+        if(!applicationOptional.isPresent()) {
+            LOGGER.error("application wasn't found for clientId : {}", clientId);
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization").build());
+        }
+
+        if(!applicationOptional.get().grantType.equals(grantType.getType())) {
+            LOGGER.error("Grant types don't match : {} and {}", applicationOptional.get().grantType, grantType.getType());
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization").build());
+        }
+
+        // Important : when using password flow, we should not send / nor expect the client_secret
+        final ClientDetails details = new ClientDetails(
+                grantType.getType(),
+                clientId,
+                redirectUri,
+                applicationOptional.get().scopes,
+                "", // state
+                code,
+                account.id,
+                clientSecret
+        );
+
+        details.setApp(applicationOptional.get());
+        AccessToken accessToken = null;
+
+        try {
+            accessToken = tokenStore.storeAccessToken(details);
+        } catch (ClientAuthenticationException clientAuthenticationException) {
+            LOGGER.error(clientAuthenticationException.getMessage());
+            throw new WebApplicationException(Response.serverError().build());
+        }
+
+        LOGGER.debug("{}", accessToken);
+        return accessToken;
     }
 
     @GET

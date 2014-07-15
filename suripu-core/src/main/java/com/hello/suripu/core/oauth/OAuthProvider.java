@@ -37,7 +37,7 @@ public class OAuthProvider<T> implements InjectableProvider<Scope, Type> {
             @Override
             public T getValue(HttpContext c) {
                 final String header = c.getRequest().getHeaderValue(HttpHeaders.AUTHORIZATION);
-                Optional<String> bearerString = Util.extractBearerToken(header);
+                final Optional<String> bearerString = Util.extractBearerToken(header);
                 if (bearerString.isPresent()) {
                     try {
                         final ClientCredentials creds = new ClientCredentials(scopes, bearerString.get());
@@ -66,8 +66,6 @@ public class OAuthProvider<T> implements InjectableProvider<Scope, Type> {
                 }
 
                 throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
-
-
             }
         }
 
