@@ -87,7 +87,13 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
     @Override
     public Optional<AccessToken> getClientDetailsByToken(final ClientCredentials credentials, final DateTime now) {
 
-        final UUID tokenUUID = AccessToken.cleanUUID(credentials.tokenOrCode);
+        final Optional<UUID> optionalTokenUUID = AccessToken.cleanUUID(credentials.tokenOrCode);
+        if(!optionalTokenUUID.isPresent()) {
+            LOGGER.warn("Invalid format for token {}", credentials.tokenOrCode);
+            return Optional.absent();
+        }
+
+        final UUID tokenUUID = optionalTokenUUID.get();
         final Optional<AccessToken> accessTokenOptional = accessTokenDAO.getByAccessToken(tokenUUID);
 
         if(!accessTokenOptional.isPresent()) {
@@ -96,7 +102,14 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         }
 
         final AccessToken accessToken = accessTokenOptional.get();
-        final Long appIdFromToken = AccessToken.extractAppIdFromToken(credentials.tokenOrCode);
+        final Optional<Long> optionalAppIdFromToken = AccessToken.extractAppIdFromToken(credentials.tokenOrCode);
+        if(!optionalAppIdFromToken.isPresent()) {
+            LOGGER.warn("Invalid appId format for token {}", credentials.tokenOrCode);
+            return Optional.absent();
+        }
+
+        final Long appIdFromToken = optionalAppIdFromToken.get();
+
         if(!appIdFromToken.equals(accessToken.appId)) {
             LOGGER.warn("AppId from token is different from appId retrieved from DB ({} vs {})", appIdFromToken, accessToken.appId);
             return Optional.absent();
