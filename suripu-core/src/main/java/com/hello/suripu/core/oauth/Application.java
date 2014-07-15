@@ -15,7 +15,7 @@ public class Application {
     @JsonProperty("client_id")
     public final String clientId;
 
-    @JsonProperty("client_id")
+    @JsonProperty("client_secret")
     public final String clientSecret;
 
     @JsonProperty("redirect_uri")

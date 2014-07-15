@@ -28,6 +28,7 @@ public class PersistentAccessTokenStoreTest {
     private AccessToken accessToken;
     private Application application;
     private UUID validUUID = UUID.randomUUID();
+    private DateTime now = DateTime.now();
 
     @Before
     public void setUp() {
@@ -73,7 +74,7 @@ public class PersistentAccessTokenStoreTest {
         when(accessTokenDAO.getByAccessToken(uuid)).thenReturn(Optional.<AccessToken>absent());
 
         final ClientCredentials credentials = new ClientCredentials(new OAuthScope[]{}, accessToken.serializeAccessToken());
-        final Optional<AccessToken> accessTokenOptional = store.getClientDetailsByToken(credentials);
+        final Optional<AccessToken> accessTokenOptional = store.getClientDetailsByToken(credentials, now);
         assertThat(accessTokenOptional.isPresent(), is(false));
     }
 
@@ -83,7 +84,7 @@ public class PersistentAccessTokenStoreTest {
         when(applicationStore.getApplicationById(accessToken.appId)).thenReturn(Optional.absent());
 
         final ClientCredentials credentials = new ClientCredentials(new OAuthScope[]{}, accessToken.serializeAccessToken());
-        final Optional<AccessToken> accessTokenOptional = store.getClientDetailsByToken(credentials);
+        final Optional<AccessToken> accessTokenOptional = store.getClientDetailsByToken(credentials, now);
         assertThat(accessTokenOptional.isPresent(), is(false));
     }
 
@@ -93,7 +94,7 @@ public class PersistentAccessTokenStoreTest {
         when(applicationStore.getApplicationById(accessToken.appId)).thenReturn(Optional.of(application));
 
         final ClientCredentials credentials = new ClientCredentials(new OAuthScope[]{}, accessToken.serializeAccessToken());
-        final Optional<AccessToken> accessTokenOptional = store.getClientDetailsByToken(credentials);
+        final Optional<AccessToken> accessTokenOptional = store.getClientDetailsByToken(credentials, now);
         assertThat(accessTokenOptional.isPresent(), is(false));
     }
 
@@ -106,7 +107,7 @@ public class PersistentAccessTokenStoreTest {
         final String serialized = accessToken.serializeAccessToken();
         // scopes match the application scopes
         final ClientCredentials credentials = new ClientCredentials(application.scopes, serialized);
-        final Optional<AccessToken> accessTokenOptional = store.getClientDetailsByToken(credentials);
+        final Optional<AccessToken> accessTokenOptional = store.getClientDetailsByToken(credentials, now);
         assertThat(accessTokenOptional.isPresent(), is(true));
     }
 }

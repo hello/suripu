@@ -67,6 +67,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
             throw new ClientAuthenticationException();
         }
 
+
         final AccessToken accessToken = generateAccessToken(
                 clientDetails,
                 DateTime.now(DateTimeZone.UTC), // this is not sent to the client. We store it to expire tokens
@@ -84,12 +85,13 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
      * @return
      */
     @Override
-    public Optional<AccessToken> getClientDetailsByToken(final ClientCredentials credentials) {
+    public Optional<AccessToken> getClientDetailsByToken(final ClientCredentials credentials, final DateTime now) {
 
         final UUID tokenUUID = AccessToken.cleanUUID(credentials.tokenOrCode);
         final Optional<AccessToken> accessTokenOptional = accessTokenDAO.getByAccessToken(tokenUUID);
 
         if(!accessTokenOptional.isPresent()) {
+            LOGGER.warn("{} was not found in accessTokenDAO.getByAccessToken() (UUID)", tokenUUID);
             return Optional.absent();
         }
 
@@ -110,6 +112,14 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         boolean validScopes = hasRequiredScopes(applicationOptional.get().scopes, credentials.scopes);
         if(!validScopes) {
             LOGGER.warn("Scopes don't match for {}", credentials.tokenOrCode);
+            return Optional.absent();
+        }
+
+        long diffInSeconds= (now.getMillis() - accessToken.createdAt.getMillis()) / 1000;
+        LOGGER.debug("Token created at = {}", accessToken.createdAt);
+        LOGGER.debug("DiffInSeconds = {}", diffInSeconds);
+        if(diffInSeconds > expirationTimeInSeconds) {
+            LOGGER.warn("Token {} has expired {} seconds ago", credentials.tokenOrCode, diffInSeconds);
             return Optional.absent();
         }
 

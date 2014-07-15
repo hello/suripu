@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.yammer.dropwizard.auth.AuthenticationException;
 import com.yammer.dropwizard.auth.Authenticator;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,9 +33,9 @@ public class OAuthAuthenticator implements Authenticator<ClientCredentials, Acce
      * data for the student that authorized the client application (which we
      * currently don't do)
      */
-        Optional<AccessToken> token = tokenStore.getClientDetailsByToken(credentials);
+        final Optional<AccessToken> token = tokenStore.getClientDetailsByToken(credentials, DateTime.now());
         if(!token.isPresent()) {
-            LOGGER.warn("Token was not present in OAuthAuthenticator");
+            LOGGER.warn("Token {} was not present in OAuthAuthenticator", credentials.tokenOrCode);
         }
         return token;
     }
