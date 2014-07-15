@@ -72,12 +72,12 @@ public class RoomConditionsResource {
      * @param nowForServer
      * @param accountId
      */
-    private void validateQueryRange(final Long clientUtcTimestamp, final DateTime nowForServer, final Long accountId, final long allowedRangeInMillis) {
+    private void validateQueryRange(final Long clientUtcTimestamp, final DateTime nowForServer, final Long accountId, final long allowedRangeInSeconds) {
         if (clientUtcTimestamp == null) {
             throw new WebApplicationException(400);
         }
 
-        if(Math.abs(clientUtcTimestamp - nowForServer.getMillis()) > allowedRangeInMillis * 1000) {
+        if(Math.abs(clientUtcTimestamp - nowForServer.getMillis()) > allowedRangeInSeconds * 1000) {
             LOGGER.warn("Invalid request, {} is too far off for account_id = {}", clientUtcTimestamp, accountId);
             throw new WebApplicationException(400);
         }
