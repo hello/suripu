@@ -124,11 +124,11 @@ public abstract class DeviceDataDAO {
             // TODO: refactor this
 
             int sensorValue = 0;
-            if(sensor.equals("ambient_humidity")) {
+            if(sensor.equals("humidity")) {
                 sensorValue = deviceData.ambientHumidity;
-            } else if(sensor.equals("ambient_temp")) {
+            } else if(sensor.equals("temperature")) {
                 sensorValue = deviceData.ambientTemperature;
-            } else if (sensor.equals("ambient_air_quality")) {
+            } else if (sensor.equals("particulates")) {
                 sensorValue = deviceData.ambientAirQuality;
             } else {
                 LOGGER.warn("Sensor {} is not supported for account_id: {}. Returning early", sensor, accountId);
