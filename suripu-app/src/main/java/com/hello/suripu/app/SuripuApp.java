@@ -3,6 +3,8 @@ package com.hello.suripu.app;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.hello.dropwizard.mikkusu.resources.PingResource;
+import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.app.cli.CreateDynamoDBEventTableCommand;
 import com.hello.suripu.app.cli.CreateDynamoDBTimeZoneHistoryTableCommand;
 import com.hello.suripu.app.cli.RecreateEventsCommand;
@@ -155,6 +157,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         LOGGER.debug("{}", DateTime.now(DateTimeZone.UTC).getMillis());
 
-//        environment.addHealthCheck(new DBIHealthCheck(sensorsDB, "account-db", "SELECT * FROM accounts ORDER BY ID DESC LIMIT 1;"));
+        environment.addResource(new VersionResource());
+        environment.addResource(new PingResource());
     }
 }
