@@ -157,7 +157,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         LOGGER.debug("{}", DateTime.now(DateTimeZone.UTC).getMillis());
 
-        environment.addResource(new VersionResource());
-        environment.addResource(new PingResource());
+        if(config.getDebug()) {
+            environment.addResource(new VersionResource());
+            environment.addResource(new PingResource());
+        }
     }
 }
