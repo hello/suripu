@@ -26,19 +26,8 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
         this(Boolean.FALSE);
     }
 
-    private static class Error {
-
-        public final Integer code;
-        public final String message;
-
-        public Error(final Integer code, final String message) {
-            this.code = code;
-            this.message = message;
-        }
-    }
-
-    private final static Error notFoundError = new Error(404, "Not found.");
-    private final static Error notAuthorized = new Error(401, "Not authorized.");
+    private final static JsonError notFoundError = new JsonError(404, "Not found.");
+    private final static JsonError notAuthorized = new JsonError(401, "Not authorized.");
 
 
 
@@ -46,41 +35,44 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
     public Response toResponse(Throwable throwable) {
         final Response defaultResponse = Response
                 .serverError()
-                .entity(new Error(500, "Server Error"))
+                .entity(new JsonError(500, "Server Error"))
                 .type(MediaType.APPLICATION_JSON)
                 .build();
 
-        if(throwable instanceof WebApplicationException) {
-            return handleWebApplicationException(throwable, defaultResponse);
-        }
+        try {
+            if (throwable instanceof WebApplicationException) {
+                return handleWebApplicationException(throwable, defaultResponse);
+            }
 
 
-        if(throwable.getClass().getName().startsWith("com.fasterxml.jackson")) {
+            if (throwable.getClass().getName().startsWith("com.fasterxml.jackson")) {
 
-            final String message = (debug) ? throwable.getCause().getMessage() : "Bad request.";
-            final Error error = new Error(Response.Status.BAD_REQUEST.getStatusCode(), message);
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(error)
-                    .type(MediaType.APPLICATION_JSON)
-                    .build();
-        }
+                final String message = (debug) ? throwable.getCause().getMessage() : "Bad request.";
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), message))
+                        .type(MediaType.APPLICATION_JSON)
+                        .build();
+            }
 
 
-        if(throwable instanceof NotFoundException) {
-            final Error error = new Error(Response.Status.BAD_REQUEST.getStatusCode(), "Not found.");
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(error)
-                    .type(MediaType.APPLICATION_JSON)
-                    .build();
-        }
+            if (throwable instanceof NotFoundException) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), "Not found."))
+                        .type(MediaType.APPLICATION_JSON)
+                        .build();
+            }
 
-        if(throwable.getClass().getName().startsWith("com.sun.jersey.api")) {
+            if (throwable.getClass().getName().startsWith("com.sun.jersey.api")) {
 //                    final String message = throwable.
-            LOGGER.error("{}", throwable);
-        }
+                LOGGER.error("{}", throwable);
+            }
 
-        // Use the default
-        LOGGER.error("{}: {}", throwable.getClass().getName(), throwable.getMessage());
+            // Use the default
+            LOGGER.error("{}: {}", throwable.getClass().getName(), throwable.getMessage());
+        } catch (Exception exception) {
+            LOGGER.error("Failed to catch the following exception for: {}", throwable.getClass().getName());
+            LOGGER.error(exception.getMessage());
+        }
         return defaultResponse;
     }
 
@@ -112,7 +104,7 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
             return Response
                     .status(Response.Status.BAD_REQUEST)
                     .type(MediaType.APPLICATION_JSON)
-                    .entity(new Error(400, "Malformed request"))
+                    .entity(new JsonError(400, "Malformed request"))
                     .build();
         }
 
@@ -120,7 +112,15 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
             return Response
                     .status(405)
                     .type(MediaType.APPLICATION_JSON)
-                    .entity(new Error(405, "Method not allowed"))
+                    .entity(new JsonError(405, "Method not allowed"))
+                    .build();
+        }
+
+        if (webAppException.getResponse().getStatus() == 409) {
+            return Response
+                    .status(409)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(new JsonError(409, "conflict."))
                     .build();
         }
 
