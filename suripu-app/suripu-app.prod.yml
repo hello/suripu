@@ -1,4 +1,5 @@
 metrics_enabled: true
+debug: false
 librato:
   username: tim@sayhello.com
   api_key: 64ab12d5c69fa2b6873b7ace11aba06f4d8c93fa9b0cd7012a0cd2ba2f9c53ac

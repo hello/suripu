@@ -139,11 +139,11 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
             LOGGER.warn("Metrics not enabled.");
         }
 
-
+        LOGGER.warn("DEBUG MODE = {}", config.getDebug());
         // Custom JSON handling for responses.
         final ResourceConfig jrConfig = environment.getJerseyResourceConfig();
         DropwizardServiceUtil.deregisterDWSingletons(jrConfig);
-        environment.addProvider(new CustomJSONExceptionMapper(Boolean.TRUE));
+        environment.addProvider(new CustomJSONExceptionMapper(config.getDebug()));
 
         environment.addProvider(new OAuthProvider<AccessToken>(new OAuthAuthenticator(accessTokenStore), "protected-resources"));
 
