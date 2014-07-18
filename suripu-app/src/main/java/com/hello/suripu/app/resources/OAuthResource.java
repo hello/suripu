@@ -62,24 +62,24 @@ public class OAuthResource {
 
         if(grantType == null) {
             LOGGER.error("GrantType is null");
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization").build());
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
 
         if(!grantType.getType().equals(GrantTypeParam.GrantType.PASSWORD)) {
             // We only support password grant at the moment
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization").build());
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
 
         if(username == null || password == null || username.isEmpty() || password.isEmpty()) {
             LOGGER.error("username or password is null or empty");
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization").build());
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
 
 
         final Optional<Account> accountOptional = accountDAO.exists(username, password);
         if(!accountOptional.isPresent()) {
             LOGGER.error("Account wasn't found", username, password);
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization").build());
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
 
         final Account account = accountOptional.get();
@@ -91,12 +91,12 @@ public class OAuthResource {
         final Optional<Application> applicationOptional = applicationStore.getApplicationByClientId(clientId);
         if(!applicationOptional.isPresent()) {
             LOGGER.error("application wasn't found for clientId : {}", clientId);
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization").build());
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
 
         if(!applicationOptional.get().grantType.equals(grantType.getType())) {
             LOGGER.error("Grant types don't match : {} and {}", applicationOptional.get().grantType, grantType.getType());
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid authorization").build());
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
 
         // Important : when using password flow, we should not send / nor expect the client_secret
@@ -107,7 +107,7 @@ public class OAuthResource {
                 applicationOptional.get().scopes,
                 "", // state
                 code,
-                account.id,
+                account.id.get(),
                 clientSecret
         );
 
