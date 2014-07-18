@@ -28,7 +28,7 @@ public @interface BindAccount {
 //q.bind("age", arg.age); // TODO: add age
                     q.bind("height", arg.height);
                     q.bind("weight", arg.weight);
-                    q.bind("tz", arg.tzOffsetMillis);
+                    q.bind("tz_offset", arg.tzOffsetMillis);
                 }
             };
         }

@@ -20,7 +20,7 @@ public class AccountMapper implements ResultSetMapper<Account> {
         builder.withHeight(r.getInt("height"));
         builder.withWeight(r.getInt("weight"));
         builder.withId(r.getLong("id"));
-        builder.withTzOffsetMillis(r.getInt("tz"));
+        builder.withTzOffsetMillis(r.getInt("tz_offset"));
         builder.withPassword(r.getString("password_hash"));
 
         final Account account = builder.build();

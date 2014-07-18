@@ -27,7 +27,7 @@ public @interface BindRegistration {
                     q.bind("age", arg.age);
                     q.bind("height", arg.height);
                     q.bind("weight", arg.weight);
-                    q.bind("tz", arg.tzOffsetMillis);
+                    q.bind("tz_offset", arg.tzOffsetMillis);
                     q.bind("created", arg.created);
                 }
             };

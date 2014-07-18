@@ -35,7 +35,7 @@ public abstract class AccountDAOImpl implements AccountDAO {
     @SingleValueResult(Account.class)
     public abstract Optional<Account> getByEmail(@Bind("email") final String email);
 
-    @SqlUpdate("INSERT INTO accounts (name, email, password_hash, age, height, weight, tz, created) VALUES(:name, :email, :password, :age, :height, :weight, :tz, :created)")
+    @SqlUpdate("INSERT INTO accounts (name, email, password_hash, age, height, weight, tz_offset, created) VALUES(:name, :email, :password, :age, :height, :weight, :tz_offset, :created)")
     @GetGeneratedKeys
     public abstract long insertAccount(@BindRegistration Registration registration);
 
@@ -80,7 +80,7 @@ public abstract class AccountDAOImpl implements AccountDAO {
         return accountOptional;
     }
 
-    @SqlUpdate("UPDATE accounts SET name=:name, email=:email, height=:height, weight=:weight, tz=:tz WHERE id=:account_id;")
+    @SqlUpdate("UPDATE accounts SET name=:name, email=:email, height=:height, weight=:weight, tz_offset=:tz_offset WHERE id=:account_id;")
     protected abstract Integer updateAccount(@BindAccount Account account, @Bind("account_id") Long accountId);
 
 
@@ -95,6 +95,8 @@ public abstract class AccountDAOImpl implements AccountDAO {
             if(matcher.find()) {
                 LOGGER.warn("Update: Account with email {} already exists.", account.email);
             }
+
+            LOGGER.warn("Update account failed: {}", exception.getMessage());
         }
 
         return Boolean.FALSE;
