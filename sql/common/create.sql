@@ -27,6 +27,23 @@ GRANT ALL PRIVILEGES ON SEQUENCE accounts_id_seq TO ingress_user;
 
 
 --
+-- UPDATES TO ACCOUNT TABLE 2014-07-16
+--
+
+ALTER TABLE accounts ADD COLUMN name VARCHAR (255);
+UPDATE accounts SET name = firstname || ' ' || lastname;
+ALTER TABLE accounts ALTER COLUMN name set NOT NULL;
+
+
+--
+-- UPDATES TO ACCOUNT TABLE 2014-07-17
+--
+
+ALTER TABLE accounts DROP COLUMN tz;
+ALTER TABLE accounts ADD COLUMN tz INTEGER;
+
+
+--
 -- OAUTH
 --
 CREATE TABLE oauth_applications (
