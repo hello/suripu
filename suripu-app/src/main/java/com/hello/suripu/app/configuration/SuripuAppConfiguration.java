@@ -39,6 +39,14 @@ public class SuripuAppConfiguration extends Configuration {
     }
 
     @Valid
+    @JsonProperty("debug")
+    private Boolean debug = Boolean.FALSE;
+
+    public Boolean getDebug() {
+        return debug;
+    }
+
+    @Valid
     @NotNull
     @JsonProperty("librato")
     private LibratoConfiguration librato;
