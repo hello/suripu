@@ -2,16 +2,23 @@ package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.binders.BindAccount;
-import com.hello.suripu.core.models.Account;
-import com.hello.suripu.core.models.Registration;
 import com.hello.suripu.core.db.binders.BindRegistration;
 import com.hello.suripu.core.db.mappers.AccountMapper;
+import com.hello.suripu.core.db.util.MatcherPatternsDB;
+import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.Registration;
 import org.mindrot.jbcrypt.BCrypt;
-import org.skife.jdbi.v2.sqlobject.*;
+import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.regex.Matcher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -28,7 +35,7 @@ public abstract class AccountDAOImpl implements AccountDAO {
     @SingleValueResult(Account.class)
     public abstract Optional<Account> getByEmail(@Bind("email") final String email);
 
-    @SqlUpdate("INSERT INTO accounts (firstname, lastname, email, password_hash, age, height, weight, tz, created) VALUES(:firstname, :lastname, :email, :password, :age, :height, :weight, :tz, :created)")
+    @SqlUpdate("INSERT INTO accounts (name, email, password_hash, age, height, weight, tz, created) VALUES(:name, :email, :password, :age, :height, :weight, :tz, :created)")
     @GetGeneratedKeys
     public abstract long insertAccount(@BindRegistration Registration registration);
 
@@ -44,42 +51,52 @@ public abstract class AccountDAOImpl implements AccountDAO {
         checkNotNull(password, "Password can not be null");
 
         if(password.length() == 0) {
-            LOGGER.warn("Password should never be empty.");
+            LOGGER.warn("exists: Password should never be empty.");
             return Optional.absent();
         }
 
-        LOGGER.debug("Checking if account exists for email = {} with password length = {}", email, password.length());
+        LOGGER.debug("exists: Checking if account exists for email = {} with password length = {}", email, password.length());
 
         // TODO : check why we can get null return value here
         final Optional<Account> accountOptional = getByEmail(email);
 
         if(accountOptional == null) {
-            LOGGER.warn("!!! Account optional should never be NULL. Please investigate this issue !!!");
+            LOGGER.warn("exists: !!! Account optional should never be NULL. Please investigate this issue !!!");
             return Optional.absent();
         }
 
         if(!accountOptional.isPresent()) {
-            LOGGER.warn("Account wasn't found for email = {} and password = {}...", email, password.substring(0, 1));
+            LOGGER.warn("exists: Account wasn't found for email = {} and password = {}...", email, password.substring(0, 1));
             return Optional.absent();
         }
 
 
         final String passwordFromDB = accountOptional.get().password;
         if(!BCrypt.checkpw(password, passwordFromDB)) {
-            LOGGER.warn("Passwords don't match");
+            LOGGER.warn("exists: Passwords don't match");
             // TODO: Add metrics here
             return Optional.absent();
         }
         return accountOptional;
     }
 
-    @SqlUpdate("UPDATE accounts SET firstname=:firstname, lastname=:lastname, email=:email, height=:height, weight=:weight WHERE id=:id;")
-    protected abstract Integer updateAccount(@BindAccount Account account);
+    @SqlUpdate("UPDATE accounts SET name=:name, email=:email, height=:height, weight=:weight, tz=:tz WHERE id=:account_id;")
+    protected abstract Integer updateAccount(@BindAccount Account account, @Bind("account_id") Long accountId);
 
 
-    public boolean update(final Account account) {
-        int updated = updateAccount(account);
-        LOGGER.debug("{} row updated for account_id = {}", updated, account.id);
-        return Boolean.TRUE ? (updated == 1) : Boolean.FALSE;
+    public boolean update(final Account account, final Long accountId) {
+        try {
+            int updated = updateAccount(account, accountId);
+            LOGGER.debug("Update: {} row updated for account_id = {}", updated, accountId);
+            return Boolean.TRUE ? (updated == 1) : Boolean.FALSE;
+        } catch (UnableToExecuteStatementException exception) {
+            final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
+
+            if(matcher.find()) {
+                LOGGER.warn("Update: Account with email {} already exists.", account.email);
+            }
+        }
+
+        return Boolean.FALSE;
     }
 }

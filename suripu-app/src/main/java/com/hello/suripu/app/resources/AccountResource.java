@@ -2,11 +2,13 @@ package com.hello.suripu.app.resources;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Registration;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.util.JsonError;
 import com.yammer.metrics.annotation.Timed;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
@@ -14,21 +16,20 @@ import org.slf4j.LoggerFactory;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Path("/account")
 public class AccountResource {
 
-    private static final Pattern PG_UNIQ_PATTERN = Pattern.compile("ERROR: duplicate key value violates unique constraint \"(\\w+)\"");
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountResource.class);
     private final AccountDAO accountDAO;
 
@@ -55,53 +56,78 @@ public class AccountResource {
     @Timed
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response register(
-//            @Scope({OAuthScope.ADMINISTRATION_WRITE}) final AccessToken accessToken,
-            @Valid final Registration registration) {
+    public Account register(
+            @Valid final Registration registration,
+            @QueryParam("sig") final String signature) {
+
 
         LOGGER.info("Attempting to register account with email: {}", registration.email);
 
         final Registration securedRegistration = Registration.encryptPassword(registration);
+
         try {
             final Account account = accountDAO.register(securedRegistration);
-            return Response.ok().entity(account).build();
+            return account;
         } catch (UnableToExecuteStatementException exception) {
 
-            final Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
+            final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
 
             if(matcher.find()) {
-                return Response.status(409).entity("").type(MediaType.TEXT_PLAIN_TYPE).build();
+                LOGGER.warn("Account with email {} already exists.", registration.email);
+                throw new WebApplicationException(Response.status(Response.Status.CONFLICT)
+                        .entity(new JsonError(409, "Account already exists.")).build());
             }
 
+            LOGGER.error("Non unique exception for email = {}", registration.email);
             LOGGER.error(exception.getMessage());
         }
 
-        return Response.serverError().entity("").type(MediaType.TEXT_PLAIN_TYPE).build();
+        throw new WebApplicationException(Response.serverError().build());
     }
 
-    @PUT
+    @POST
     @Timed
+    @Path("/update")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Account modify(
-            @Scope({OAuthScope.ADMINISTRATION_WRITE}) final AccessToken accessToken,
-            @Valid final Account account)
-    {
-        if(accessToken.accountId != account.id) {
-            LOGGER.warn("Account {} attempting to change account id = {}", accessToken.accountId, account.id);
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("").build());
+            @Scope({OAuthScope.USER_EXTENDED}) final AccessToken accessToken,
+            @Valid final Account account) {
+
+        final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
+
+        if(!accountOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
         if(account.email.isEmpty()) {
             LOGGER.warn("Email was empty for account id = {}. Refusing to update account.");
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Email missing.").build());
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(new JsonError(400, "Email missing.")).build());
         }
 
-        if(accountDAO.update(account)) {
+        if(accountDAO.update(account, accessToken.accountId)) {
             return account;
         };
 
-        LOGGER.warn("Failed updating account with id = {}. Requested by accessToken = {}", account.id, accessToken);
-        throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("server error").build());
+        LOGGER.warn("Failed updating account with id = {}, email = {}. Requested by accessToken = {}", accessToken.accountId, account.email, accessToken);
+        throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+    }
+
+    @POST
+    @Timed
+    @Path("/password")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public void password(
+            @Scope({OAuthScope.USER_EXTENDED}) final AccessToken accessToken,
+            @FormParam("password") final String password) {
+
+        final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
+
+        if(!accountOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+        }
+
+        // TODO: update password
     }
 }

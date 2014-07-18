@@ -99,7 +99,7 @@ public class RecreateEventsCommand extends ConfiguredCommand<SuripuAppConfigurat
         }
 
         final Account account = accountOptional.get();
-        final ImmutableList<TrackerMotion> oldDataFromPostgres = trackerMotionDAO.getBetween(account.id,
+        final ImmutableList<TrackerMotion> oldDataFromPostgres = trackerMotionDAO.getBetween(account.id.get(),
                 new DateTime(0),
                 DateTime.now().plusHours(23).plusMinutes(59).plusSeconds(59).plusMillis(999));
 
@@ -158,7 +158,7 @@ public class RecreateEventsCommand extends ConfiguredCommand<SuripuAppConfigurat
                 LOGGER.info(DateTime.now().toString() + ": Saving events to dynamoDB.");
 
                 // Shall we use the batch?
-                eventDAODynamoDB.setEventsForDates(account.id, generatedEvents);
+                eventDAODynamoDB.setEventsForDates(account.id.get(), generatedEvents);
                 LOGGER.info(DateTime.now().toString() + ": All events have been saved for user: " + account.email);
 
                 generatedEvents.clear();
@@ -170,7 +170,7 @@ public class RecreateEventsCommand extends ConfiguredCommand<SuripuAppConfigurat
             LOGGER.info(DateTime.now().toString() + ": Saving events to dynamoDB.");
 
             // Shall we use the batch?
-            eventDAODynamoDB.setEventsForDates(account.id, generatedEvents);
+            eventDAODynamoDB.setEventsForDates(account.id.get(), generatedEvents);
             LOGGER.info(DateTime.now().toString() + ": All events have been saved for user: " + account.email);
         }
     }

@@ -22,14 +22,13 @@ public @interface BindAccount {
             return new Binder<BindAccount, Account>() {
                 public void bind(SQLStatement q, BindAccount bind, Account arg) {
                     q.bind("id", arg.id);
-                    q.bind("firstname", arg.firstname);
-                    q.bind("lastname", arg.lastname);
+                    q.bind("name", arg.name);
                     q.bind("email", arg.email);
                     q.bind("password", arg.password);
 //q.bind("age", arg.age); // TODO: add age
                     q.bind("height", arg.height);
                     q.bind("weight", arg.weight);
-                    q.bind("tz", arg.timeZone.getID());
+                    q.bind("tz", arg.tzOffsetMillis);
                 }
             };
         }

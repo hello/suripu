@@ -3,12 +3,13 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.TimeZoneSerializer;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import javax.validation.constraints.NotNull;
-import java.util.TimeZone;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -20,24 +21,24 @@ public class Account {
             super(message);
         }
     }
+
     // TODO: add age or DoB
 
     @NotNull
     @JsonIgnore
-    public final Long id;
+    public final Optional<Long> id;
+
+    @JsonProperty("id")
+    public final String externalID;
 
     @JsonProperty("email")
     public final String email;
 
     @JsonProperty("tz")
-    @JsonSerialize(using = TimeZoneSerializer.class)
-    public final TimeZone timeZone;
+    public final Integer tzOffsetMillis;
 
-    @JsonProperty("firstname")
-    public final String firstname;
-
-    @JsonProperty("lastname")
-    public final String lastname;
+    @JsonProperty("name")
+    public final String name;
 
     @JsonProperty("gender")
     public final Gender gender;
@@ -51,38 +52,43 @@ public class Account {
     @JsonIgnore
     public final String password;
 
+    @JsonIgnore
+    public final DateTime created;
+
     /**
      *
      * @param id
      * @param email
      * @param password
-     * @param timeZone
-     * @param firstname
-     * @param lastname
+     * @param tzOffsetMillis
+     * @param name
      * @param gender
      * @param height
      * @param weight
      */
-    private Account(final Long id,
+    private Account(final Optional<Long> id,
+                   final String externalID,
                    final String email,
                    final String password,
-                   final TimeZone timeZone,
-                   final String firstname,
-                   final String lastname,
+                   final Integer tzOffsetMillis,
+                   final String name,
                    final Gender gender,
                    final Integer height,
-                   final Integer weight) {
+                   final Integer weight,
+                   final DateTime created) {
 
         this.id = id;
+        this.externalID = externalID;
         this.email = email;
         this.password = password;
-        this.timeZone = timeZone;
+        this.tzOffsetMillis = tzOffsetMillis;
 
-        this.firstname = firstname;
-        this.lastname = lastname;
+        this.name = name;
         this.gender = gender;
         this.height = height;
         this.weight = weight;
+
+        this.created = created;
 
     }
 
@@ -93,41 +99,44 @@ public class Account {
      * @return
      */
     public static Account fromRegistration(final Registration registration, final Long id) {
-        return new Account(id, registration.email, registration.password, registration.timeZone, registration.firstname,
-                registration.lastname, registration.gender, registration.height, registration.weight);
+        final StringBuilder sb = new StringBuilder();
+        sb.append(id);
+        sb.append("|");
+        sb.append(registration.created.getMillis());
+
+        final String digest = DigestUtils.md5Hex(sb.toString());
+        return new Account(Optional.fromNullable(id), digest, registration.email, registration.password, registration.tzOffsetMillis,
+                registration.name, registration.gender, registration.height, registration.weight, registration.created);
     }
 
 
     public static class Builder {
-        private Long id;
-        private String firstname;
-        private String lastname;
+        private Optional<Long> id;
+        private String externalId;
+        private String name;
         private Gender gender;
         private Integer height;
         private Integer weight;
         private String password;
         private String email;
-        private TimeZone tz;
+        private Integer tzOffsetMillis;
+        private DateTime created;
 
         public Builder() {
-            this.firstname = "";
-            this.lastname = "";
+            this.id = Optional.absent();
+            this.externalId = "";
+            this.name = "";
             this.gender = Gender.OTHER;
             this.height = 0;
             this.weight = 0;
             this.password = "";
             this.email = "";
+            this.created = DateTime.now(DateTimeZone.UTC);
         }
 
-        @JsonProperty("firstname")
-        public Builder withFirstname(final String firstname) {
-            this.firstname = firstname;
-            return this;
-        }
-
-        @JsonProperty("lastname")
-        public Builder withLastname(final String lastname) {
-            this.lastname = lastname;
+        @JsonProperty("name")
+        public Builder withName(final String name) {
+            this.name = name;
             return this;
         }
 
@@ -170,41 +179,42 @@ public class Account {
         @NotNull
         @JsonProperty("id")
         public Builder withId(final Long id) {
-            this.id = id;
-            return this;
-        }
-
-        @JsonIgnore
-        public Builder withTimeZone(TimeZone tz) {
-            this.tz = tz;
+            this.id = Optional.fromNullable(id);
             return this;
         }
 
         @JsonProperty("tz")
-        public Builder withTimeZone(String tz) {
-            this.tz = TimeZone.getTimeZone(tz);
+        public Builder withTzOffsetMillis(final Integer tzOffsetMillis) {
+            this.tzOffsetMillis = tzOffsetMillis;
+            return this;
+        }
+
+        @JsonIgnore
+        public Builder withCreated(final Long created) {
+            this.created = new DateTime(created);
             return this;
         }
 
         public Account build() throws MyAccountCreationException {
             checkNotNull(id, "ID can not be null");
             checkNotNull(email, "Email can not be null");
-            return new Account(id, email, password, tz, firstname, lastname, gender, height, weight);
+            return new Account(id, externalId, email, password, tzOffsetMillis, name, gender, height, weight, created);
         }
     }
 
     @Override
     public String toString() {
         return Objects.toStringHelper(Account.class)
-                .add("id", id)
+                .add("id", (id.isPresent()) ? id.get() : "N/A")
+                .add("external_id", externalID)
                 .add("email", email)
                 .add("password", obscurePassword(password))
-                .add("timezone", timeZone.getDisplayName())
-                .add("firstname", firstname)
-                .add("lastname", lastname)
+                .add("tz", tzOffsetMillis)
+                .add("name", name)
                 .add("email", email)
                 .add("height", height)
                 .add("weight", weight)
+                .add("created", created)
                 .toString();
     }
 
@@ -214,5 +224,10 @@ public class Account {
             sb.append("*");
         }
         return sb.toString();
+    }
+
+    public static Account forApplication(final Long id, final Account account) {
+//        return new Account();
+        return null;
     }
 }
