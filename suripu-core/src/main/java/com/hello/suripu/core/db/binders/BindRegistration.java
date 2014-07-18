@@ -6,7 +6,11 @@ import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 @BindingAnnotation(BindRegistration.BindRegistrationFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
@@ -17,14 +21,13 @@ public @interface BindRegistration {
         public Binder build(Annotation annotation) {
             return new Binder<BindRegistration, Registration>() {
                 public void bind(SQLStatement q, BindRegistration bind, Registration arg) {
-                    q.bind("firstname", arg.firstname);
-                    q.bind("lastname", arg.lastname);
+                    q.bind("name", arg.name);
                     q.bind("email", arg.email);
                     q.bind("password", arg.password);
                     q.bind("age", arg.age);
                     q.bind("height", arg.height);
                     q.bind("weight", arg.weight);
-                    q.bind("tz", arg.timeZone.getID());
+                    q.bind("tz_offset", arg.tzOffsetMillis);
                     q.bind("created", arg.created);
                 }
             };

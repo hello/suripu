@@ -27,6 +27,22 @@ GRANT ALL PRIVILEGES ON SEQUENCE accounts_id_seq TO ingress_user;
 
 
 --
+-- UPDATES TO ACCOUNT TABLE 2014-07-16
+--
+
+ALTER TABLE accounts ADD COLUMN name VARCHAR (255);
+UPDATE accounts SET name = firstname || ' ' || lastname;
+ALTER TABLE accounts ALTER COLUMN name set NOT NULL;
+
+
+--
+-- UPDATES TO ACCOUNT TABLE 2014-07-17
+--
+
+ALTER TABLE accounts ADD COLUMN tz_offset INTEGER;
+-- ALTER TABLE accounts DROP COLUMN tz;
+
+--
 -- OAUTH
 --
 CREATE TABLE oauth_applications (
@@ -110,3 +126,22 @@ CREATE UNIQUE INDEX uniq_account_target_date on sleep_label(account_id, date_utc
 
 GRANT ALL PRIVILEGES ON sleep_label TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE sleep_label_id_seq TO ingress_user;
+
+
+--
+-- UPDATE LAST_MODIFIED COLUMN
+--
+CREATE OR REPLACE FUNCTION update_modified_column() RETURNS TRIGGER LANGUAGE plpgsql AS
+$BODY$
+BEGIN
+    NEW.last_modified = now();
+    RETURN NEW;
+END;
+$BODY$;
+
+
+CREATE TRIGGER update_modified_column_trigger
+BEFORE UPDATE
+ON accounts
+FOR EACH ROW
+EXECUTE PROCEDURE update_modified_column();

@@ -1,5 +1,6 @@
 package com.hello.suripu.service.resources;
 
+import au.com.bytecode.opencsv.CSVReader;
 import com.google.common.base.Optional;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.protobuf.ByteString;
@@ -42,6 +43,7 @@ import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -211,6 +213,42 @@ public class ReceiveResource {
         final String sequenceNumber = dataLogger.put(shardingKey, pillDataBytes);
         LOGGER.debug("Data persisted to Kinesis with sequenceNumber = {}", sequenceNumber);
         return Response.ok().build();
+    }
+
+    @POST
+    @Path("/morpheus")
+    @Timed
+    public void morpheusReceive(byte[] body) {
+
+        LOGGER.debug("Body length = {}", body.length);
+        ByteArrayInputStream byteArrayInputStream = null;
+
+        try {
+            byteArrayInputStream = new ByteArrayInputStream(body);
+
+            final CSVReader reader = new CSVReader(new InputStreamReader(byteArrayInputStream), ',');
+            String[] nextLine;
+            LOGGER.info("Attempting to parse csv");
+            while ((nextLine = reader.readNext()) != null) {
+                if (nextLine != null) {
+                    int temperature = Integer.parseInt(nextLine[0]);
+                    int humidity = Integer.parseInt(nextLine[1]);
+                    String deviceId = nextLine[2];
+                    LOGGER.info("Temperature was: {}, humidity was: {} for device {}", temperature, humidity, deviceId);
+                }
+            }
+        } catch(IOException exception) {
+            LOGGER.error("{}", exception.getMessage());
+        } finally {
+            if(byteArrayInputStream != null) {
+                try {
+                    byteArrayInputStream.close();
+                } catch (IOException exception ) {
+                    LOGGER.error("{}", exception.getMessage());
+                }
+            }
+        }
+        LOGGER.info("Done receiving");
     }
 
     @POST
