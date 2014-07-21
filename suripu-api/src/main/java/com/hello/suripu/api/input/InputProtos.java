@@ -8793,14 +8793,26 @@ public final class InputProtos {
     // optional string device_id = 1;
     /**
      * <code>optional string device_id = 1;</code>
+     *
+     * <pre>
+     * deprecated
+     * </pre>
      */
     boolean hasDeviceId();
     /**
      * <code>optional string device_id = 1;</code>
+     *
+     * <pre>
+     * deprecated
+     * </pre>
      */
     java.lang.String getDeviceId();
     /**
      * <code>optional string device_id = 1;</code>
+     *
+     * <pre>
+     * deprecated
+     * </pre>
      */
     com.google.protobuf.ByteString
         getDeviceIdBytes();
@@ -8829,6 +8841,21 @@ public final class InputProtos {
      * <code>optional bytes signature = 3;</code>
      */
     com.google.protobuf.ByteString getSignature();
+
+    // optional string something = 4;
+    /**
+     * <code>optional string something = 4;</code>
+     */
+    boolean hasSomething();
+    /**
+     * <code>optional string something = 4;</code>
+     */
+    java.lang.String getSomething();
+    /**
+     * <code>optional string something = 4;</code>
+     */
+    com.google.protobuf.ByteString
+        getSomethingBytes();
   }
   /**
    * Protobuf type {@code hello.SyncRequest}
@@ -8896,6 +8923,11 @@ public final class InputProtos {
               signature_ = input.readBytes();
               break;
             }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              something_ = input.readBytes();
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -8941,12 +8973,20 @@ public final class InputProtos {
     private java.lang.Object deviceId_;
     /**
      * <code>optional string device_id = 1;</code>
+     *
+     * <pre>
+     * deprecated
+     * </pre>
      */
     public boolean hasDeviceId() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
      * <code>optional string device_id = 1;</code>
+     *
+     * <pre>
+     * deprecated
+     * </pre>
      */
     public java.lang.String getDeviceId() {
       java.lang.Object ref = deviceId_;
@@ -8964,6 +9004,10 @@ public final class InputProtos {
     }
     /**
      * <code>optional string device_id = 1;</code>
+     *
+     * <pre>
+     * deprecated
+     * </pre>
      */
     public com.google.protobuf.ByteString
         getDeviceIdBytes() {
@@ -9038,10 +9082,54 @@ public final class InputProtos {
       return signature_;
     }
 
+    // optional string something = 4;
+    public static final int SOMETHING_FIELD_NUMBER = 4;
+    private java.lang.Object something_;
+    /**
+     * <code>optional string something = 4;</code>
+     */
+    public boolean hasSomething() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional string something = 4;</code>
+     */
+    public java.lang.String getSomething() {
+      java.lang.Object ref = something_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          something_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string something = 4;</code>
+     */
+    public com.google.protobuf.ByteString
+        getSomethingBytes() {
+      java.lang.Object ref = something_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        something_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       deviceId_ = "";
       firmwareVersion_ = "";
       signature_ = com.google.protobuf.ByteString.EMPTY;
+      something_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -9064,6 +9152,9 @@ public final class InputProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeBytes(3, signature_);
       }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(4, getSomethingBytes());
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -9084,6 +9175,10 @@ public final class InputProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, signature_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, getSomethingBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -9207,6 +9302,8 @@ public final class InputProtos {
         bitField0_ = (bitField0_ & ~0x00000002);
         signature_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000004);
+        something_ = "";
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -9247,6 +9344,10 @@ public final class InputProtos {
           to_bitField0_ |= 0x00000004;
         }
         result.signature_ = signature_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.something_ = something_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -9275,6 +9376,11 @@ public final class InputProtos {
         }
         if (other.hasSignature()) {
           setSignature(other.getSignature());
+        }
+        if (other.hasSomething()) {
+          bitField0_ |= 0x00000008;
+          something_ = other.something_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -9307,12 +9413,20 @@ public final class InputProtos {
       private java.lang.Object deviceId_ = "";
       /**
        * <code>optional string device_id = 1;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       public boolean hasDeviceId() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
        * <code>optional string device_id = 1;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       public java.lang.String getDeviceId() {
         java.lang.Object ref = deviceId_;
@@ -9327,6 +9441,10 @@ public final class InputProtos {
       }
       /**
        * <code>optional string device_id = 1;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       public com.google.protobuf.ByteString
           getDeviceIdBytes() {
@@ -9343,6 +9461,10 @@ public final class InputProtos {
       }
       /**
        * <code>optional string device_id = 1;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       public Builder setDeviceId(
           java.lang.String value) {
@@ -9356,6 +9478,10 @@ public final class InputProtos {
       }
       /**
        * <code>optional string device_id = 1;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       public Builder clearDeviceId() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -9365,6 +9491,10 @@ public final class InputProtos {
       }
       /**
        * <code>optional string device_id = 1;</code>
+       *
+       * <pre>
+       * deprecated
+       * </pre>
        */
       public Builder setDeviceIdBytes(
           com.google.protobuf.ByteString value) {
@@ -9483,6 +9613,80 @@ public final class InputProtos {
       public Builder clearSignature() {
         bitField0_ = (bitField0_ & ~0x00000004);
         signature_ = getDefaultInstance().getSignature();
+        onChanged();
+        return this;
+      }
+
+      // optional string something = 4;
+      private java.lang.Object something_ = "";
+      /**
+       * <code>optional string something = 4;</code>
+       */
+      public boolean hasSomething() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional string something = 4;</code>
+       */
+      public java.lang.String getSomething() {
+        java.lang.Object ref = something_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          something_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string something = 4;</code>
+       */
+      public com.google.protobuf.ByteString
+          getSomethingBytes() {
+        java.lang.Object ref = something_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          something_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string something = 4;</code>
+       */
+      public Builder setSomething(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        something_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string something = 4;</code>
+       */
+      public Builder clearSomething() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        something_ = getDefaultInstance().getSomething();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string something = 4;</code>
+       */
+      public Builder setSomethingBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        something_ = value;
         onChanged();
         return this;
       }
@@ -18463,6 +18667,882 @@ public final class InputProtos {
     // @@protoc_insertion_point(class_scope:hello.EventBatch)
   }
 
+  public interface periodic_dataOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional int32 unix_time = 1;
+    /**
+     * <code>optional int32 unix_time = 1;</code>
+     */
+    boolean hasUnixTime();
+    /**
+     * <code>optional int32 unix_time = 1;</code>
+     */
+    int getUnixTime();
+
+    // optional int32 light = 2;
+    /**
+     * <code>optional int32 light = 2;</code>
+     */
+    boolean hasLight();
+    /**
+     * <code>optional int32 light = 2;</code>
+     */
+    int getLight();
+
+    // optional int32 temperature = 3;
+    /**
+     * <code>optional int32 temperature = 3;</code>
+     */
+    boolean hasTemperature();
+    /**
+     * <code>optional int32 temperature = 3;</code>
+     */
+    int getTemperature();
+
+    // optional int32 humidity = 4;
+    /**
+     * <code>optional int32 humidity = 4;</code>
+     */
+    boolean hasHumidity();
+    /**
+     * <code>optional int32 humidity = 4;</code>
+     */
+    int getHumidity();
+
+    // optional int32 dust = 5;
+    /**
+     * <code>optional int32 dust = 5;</code>
+     */
+    boolean hasDust();
+    /**
+     * <code>optional int32 dust = 5;</code>
+     */
+    int getDust();
+
+    // optional string name = 6;
+    /**
+     * <code>optional string name = 6;</code>
+     */
+    boolean hasName();
+    /**
+     * <code>optional string name = 6;</code>
+     */
+    java.lang.String getName();
+    /**
+     * <code>optional string name = 6;</code>
+     */
+    com.google.protobuf.ByteString
+        getNameBytes();
+  }
+  /**
+   * Protobuf type {@code hello.periodic_data}
+   */
+  public static final class periodic_data extends
+      com.google.protobuf.GeneratedMessage
+      implements periodic_dataOrBuilder {
+    // Use periodic_data.newBuilder() to construct.
+    private periodic_data(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private periodic_data(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final periodic_data defaultInstance;
+    public static periodic_data getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public periodic_data getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private periodic_data(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              unixTime_ = input.readInt32();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              light_ = input.readInt32();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              temperature_ = input.readInt32();
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000008;
+              humidity_ = input.readInt32();
+              break;
+            }
+            case 40: {
+              bitField0_ |= 0x00000010;
+              dust_ = input.readInt32();
+              break;
+            }
+            case 50: {
+              bitField0_ |= 0x00000020;
+              name_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.suripu.api.input.InputProtos.internal_static_hello_periodic_data_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.suripu.api.input.InputProtos.internal_static_hello_periodic_data_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.suripu.api.input.InputProtos.periodic_data.class, com.hello.suripu.api.input.InputProtos.periodic_data.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<periodic_data> PARSER =
+        new com.google.protobuf.AbstractParser<periodic_data>() {
+      public periodic_data parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new periodic_data(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<periodic_data> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional int32 unix_time = 1;
+    public static final int UNIX_TIME_FIELD_NUMBER = 1;
+    private int unixTime_;
+    /**
+     * <code>optional int32 unix_time = 1;</code>
+     */
+    public boolean hasUnixTime() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional int32 unix_time = 1;</code>
+     */
+    public int getUnixTime() {
+      return unixTime_;
+    }
+
+    // optional int32 light = 2;
+    public static final int LIGHT_FIELD_NUMBER = 2;
+    private int light_;
+    /**
+     * <code>optional int32 light = 2;</code>
+     */
+    public boolean hasLight() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional int32 light = 2;</code>
+     */
+    public int getLight() {
+      return light_;
+    }
+
+    // optional int32 temperature = 3;
+    public static final int TEMPERATURE_FIELD_NUMBER = 3;
+    private int temperature_;
+    /**
+     * <code>optional int32 temperature = 3;</code>
+     */
+    public boolean hasTemperature() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional int32 temperature = 3;</code>
+     */
+    public int getTemperature() {
+      return temperature_;
+    }
+
+    // optional int32 humidity = 4;
+    public static final int HUMIDITY_FIELD_NUMBER = 4;
+    private int humidity_;
+    /**
+     * <code>optional int32 humidity = 4;</code>
+     */
+    public boolean hasHumidity() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional int32 humidity = 4;</code>
+     */
+    public int getHumidity() {
+      return humidity_;
+    }
+
+    // optional int32 dust = 5;
+    public static final int DUST_FIELD_NUMBER = 5;
+    private int dust_;
+    /**
+     * <code>optional int32 dust = 5;</code>
+     */
+    public boolean hasDust() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional int32 dust = 5;</code>
+     */
+    public int getDust() {
+      return dust_;
+    }
+
+    // optional string name = 6;
+    public static final int NAME_FIELD_NUMBER = 6;
+    private java.lang.Object name_;
+    /**
+     * <code>optional string name = 6;</code>
+     */
+    public boolean hasName() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional string name = 6;</code>
+     */
+    public java.lang.String getName() {
+      java.lang.Object ref = name_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          name_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string name = 6;</code>
+     */
+    public com.google.protobuf.ByteString
+        getNameBytes() {
+      java.lang.Object ref = name_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        name_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private void initFields() {
+      unixTime_ = 0;
+      light_ = 0;
+      temperature_ = 0;
+      humidity_ = 0;
+      dust_ = 0;
+      name_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeInt32(1, unixTime_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeInt32(2, light_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeInt32(3, temperature_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeInt32(4, humidity_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeInt32(5, dust_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeBytes(6, getNameBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(1, unixTime_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(2, light_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(3, temperature_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(4, humidity_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(5, dust_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(6, getNameBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.suripu.api.input.InputProtos.periodic_data parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.input.InputProtos.periodic_data parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.periodic_data parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.input.InputProtos.periodic_data parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.periodic_data parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.input.InputProtos.periodic_data parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.periodic_data parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.suripu.api.input.InputProtos.periodic_data parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.periodic_data parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.input.InputProtos.periodic_data parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.suripu.api.input.InputProtos.periodic_data prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code hello.periodic_data}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.input.InputProtos.periodic_dataOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_periodic_data_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_periodic_data_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.input.InputProtos.periodic_data.class, com.hello.suripu.api.input.InputProtos.periodic_data.Builder.class);
+      }
+
+      // Construct using com.hello.suripu.api.input.InputProtos.periodic_data.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        unixTime_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        light_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        temperature_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        humidity_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        dust_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        name_ = "";
+        bitField0_ = (bitField0_ & ~0x00000020);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_periodic_data_descriptor;
+      }
+
+      public com.hello.suripu.api.input.InputProtos.periodic_data getDefaultInstanceForType() {
+        return com.hello.suripu.api.input.InputProtos.periodic_data.getDefaultInstance();
+      }
+
+      public com.hello.suripu.api.input.InputProtos.periodic_data build() {
+        com.hello.suripu.api.input.InputProtos.periodic_data result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.suripu.api.input.InputProtos.periodic_data buildPartial() {
+        com.hello.suripu.api.input.InputProtos.periodic_data result = new com.hello.suripu.api.input.InputProtos.periodic_data(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.unixTime_ = unixTime_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.light_ = light_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.temperature_ = temperature_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.humidity_ = humidity_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.dust_ = dust_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.name_ = name_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.suripu.api.input.InputProtos.periodic_data) {
+          return mergeFrom((com.hello.suripu.api.input.InputProtos.periodic_data)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.suripu.api.input.InputProtos.periodic_data other) {
+        if (other == com.hello.suripu.api.input.InputProtos.periodic_data.getDefaultInstance()) return this;
+        if (other.hasUnixTime()) {
+          setUnixTime(other.getUnixTime());
+        }
+        if (other.hasLight()) {
+          setLight(other.getLight());
+        }
+        if (other.hasTemperature()) {
+          setTemperature(other.getTemperature());
+        }
+        if (other.hasHumidity()) {
+          setHumidity(other.getHumidity());
+        }
+        if (other.hasDust()) {
+          setDust(other.getDust());
+        }
+        if (other.hasName()) {
+          bitField0_ |= 0x00000020;
+          name_ = other.name_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.suripu.api.input.InputProtos.periodic_data parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.suripu.api.input.InputProtos.periodic_data) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional int32 unix_time = 1;
+      private int unixTime_ ;
+      /**
+       * <code>optional int32 unix_time = 1;</code>
+       */
+      public boolean hasUnixTime() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional int32 unix_time = 1;</code>
+       */
+      public int getUnixTime() {
+        return unixTime_;
+      }
+      /**
+       * <code>optional int32 unix_time = 1;</code>
+       */
+      public Builder setUnixTime(int value) {
+        bitField0_ |= 0x00000001;
+        unixTime_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 unix_time = 1;</code>
+       */
+      public Builder clearUnixTime() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        unixTime_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 light = 2;
+      private int light_ ;
+      /**
+       * <code>optional int32 light = 2;</code>
+       */
+      public boolean hasLight() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional int32 light = 2;</code>
+       */
+      public int getLight() {
+        return light_;
+      }
+      /**
+       * <code>optional int32 light = 2;</code>
+       */
+      public Builder setLight(int value) {
+        bitField0_ |= 0x00000002;
+        light_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 light = 2;</code>
+       */
+      public Builder clearLight() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        light_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 temperature = 3;
+      private int temperature_ ;
+      /**
+       * <code>optional int32 temperature = 3;</code>
+       */
+      public boolean hasTemperature() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional int32 temperature = 3;</code>
+       */
+      public int getTemperature() {
+        return temperature_;
+      }
+      /**
+       * <code>optional int32 temperature = 3;</code>
+       */
+      public Builder setTemperature(int value) {
+        bitField0_ |= 0x00000004;
+        temperature_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 temperature = 3;</code>
+       */
+      public Builder clearTemperature() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        temperature_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 humidity = 4;
+      private int humidity_ ;
+      /**
+       * <code>optional int32 humidity = 4;</code>
+       */
+      public boolean hasHumidity() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional int32 humidity = 4;</code>
+       */
+      public int getHumidity() {
+        return humidity_;
+      }
+      /**
+       * <code>optional int32 humidity = 4;</code>
+       */
+      public Builder setHumidity(int value) {
+        bitField0_ |= 0x00000008;
+        humidity_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 humidity = 4;</code>
+       */
+      public Builder clearHumidity() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        humidity_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 dust = 5;
+      private int dust_ ;
+      /**
+       * <code>optional int32 dust = 5;</code>
+       */
+      public boolean hasDust() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional int32 dust = 5;</code>
+       */
+      public int getDust() {
+        return dust_;
+      }
+      /**
+       * <code>optional int32 dust = 5;</code>
+       */
+      public Builder setDust(int value) {
+        bitField0_ |= 0x00000010;
+        dust_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 dust = 5;</code>
+       */
+      public Builder clearDust() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        dust_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional string name = 6;
+      private java.lang.Object name_ = "";
+      /**
+       * <code>optional string name = 6;</code>
+       */
+      public boolean hasName() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional string name = 6;</code>
+       */
+      public java.lang.String getName() {
+        java.lang.Object ref = name_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          name_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string name = 6;</code>
+       */
+      public com.google.protobuf.ByteString
+          getNameBytes() {
+        java.lang.Object ref = name_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          name_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string name = 6;</code>
+       */
+      public Builder setName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        name_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string name = 6;</code>
+       */
+      public Builder clearName() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        name_ = getDefaultInstance().getName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string name = 6;</code>
+       */
+      public Builder setNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        name_ = value;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:hello.periodic_data)
+    }
+
+    static {
+      defaultInstance = new periodic_data(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:hello.periodic_data)
+  }
+
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_SensorSampleBatch_descriptor;
   private static
@@ -18578,6 +19658,11 @@ public final class InputProtos {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_EventBatch_EventItem_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_hello_periodic_data_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_hello_periodic_data_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -18625,47 +19710,50 @@ public final class InputProtos {
       "device_id\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(\t\022\021\n\tt" +
       "imestamp\030\003 \001(\003\022\030\n\020firmware_version\030\004 \001(\t" +
       "\022\021\n\tsignature\030\005 \001(\014\"%\n\022ActivationRespons" +
-      "e\022\017\n\007success\030\001 \001(\010\"M\n\013SyncRequest\022\021\n\tdev" +
+      "e\022\017\n\007success\030\001 \001(\010\"`\n\013SyncRequest\022\021\n\tdev" +
       "ice_id\030\001 \001(\t\022\030\n\020firmware_version\030\002 \001(\t\022\021",
-      "\n\tsignature\030\003 \001(\014\"\341\007\n\014SyncResponse\022\024\n\014up" +
-      "load_cycle\030\001 \001(\005\022\022\n\nsync_cycle\030\002 \001(\005\022\025\n\r" +
-      "acc_scan_cyle\030\003 \001(\005\022\035\n\025acc_sampling_inte" +
-      "rval\030\004 \001(\005\022 \n\030device_sampling_interval\030\005" +
-      " \001(\005\022(\n\005alarm\030\006 \001(\0132\031.hello.SyncResponse" +
-      ".Alarm\0229\n\016pairing_action\030\007 \001(\0132!.hello.S" +
-      "yncResponse.PairingAction\0223\n\013white_noise" +
-      "\030\010 \001(\0132\036.hello.SyncResponse.WhiteNoise\0225" +
-      "\n\014flash_action\030\t \001(\0132\037.hello.SyncRespons" +
-      "e.FlashAction\032E\n\005Alarm\022\022\n\nstart_time\030\001 \001",
-      "(\005\022\020\n\010end_time\030\002 \001(\005\022\026\n\013ringtone_id\030\003 \001(" +
-      "\005:\0011\032}\n\rPairingAction\022\014\n\004ssid\030\001 \001(\t\022:\n\004t" +
-      "ype\030\002 \001(\0162,.hello.SyncResponse.PairingAc" +
-      "tion.ActionType\"\"\n\nActionType\022\010\n\004PAIR\020\000\022" +
-      "\n\n\006UNPAIR\020\001\032D\n\nWhiteNoise\022\022\n\nstart_time\030" +
-      "\001 \001(\005\022\020\n\010end_time\030\002 \001(\005\022\020\n\010sound_id\030\003 \001(" +
-      "\005\032\361\002\n\013FlashAction\0228\n\005led_1\030\001 \001(\0132).hello" +
-      ".SyncResponse.FlashAction.LEDAction\0228\n\005l" +
-      "ed_2\030\002 \001(\0132).hello.SyncResponse.FlashAct" +
-      "ion.LEDAction\0228\n\005led_3\030\003 \001(\0132).hello.Syn",
-      "cResponse.FlashAction.LEDAction\0228\n\005led_4" +
-      "\030\004 \001(\0132).hello.SyncResponse.FlashAction." +
-      "LEDAction\0228\n\005led_5\030\005 \001(\0132).hello.SyncRes" +
-      "ponse.FlashAction.LEDAction\032@\n\tLEDAction" +
-      "\022\r\n\005color\030\001 \001(\005\022\022\n\nstart_time\030\002 \001(\005\022\020\n\010e" +
-      "nd_time\030\003 \001(\005\"=\n\010PillData\022\017\n\007pill_id\030\001 \001" +
-      "(\t\022\022\n\naccount_id\030\002 \001(\t\022\014\n\004data\030\003 \001(\014\"\324\001\n" +
-      "\016PillBlobHeader\022\035\n\025first_sequence_number" +
-      "\030\001 \001(\t\022\034\n\024last_sequence_number\030\002 \001(\t\022\031\n\021" +
-      "first_sample_date\030\003 \001(\t\022\030\n\020last_sample_d",
-      "ate\030\004 \001(\t\022%\n\035compressed_bitmap_account_i" +
-      "ds\030\005 \001(\014\022\026\n\016data_file_name\030\006 \001(\t\022\021\n\tnum_" +
-      "items\030\007 \001(\005\"*\n\010PillBlob\022\036\n\005items\030\001 \003(\0132\017" +
-      ".hello.PillData\"\214\001\n\nEventBatch\022+\n\006events" +
-      "\030\001 \003(\0132\033.hello.EventBatch.EventItem\032Q\n\tE" +
-      "ventItem\022\027\n\017start_timestamp\030\001 \001(\003\022\025\n\rend" +
-      "_timestamp\030\002 \001(\003\022\024\n\014offsetMillis\030\003 \001(\005B+" +
-      "\n\032com.hello.suripu.api.inputB\013InputProto" +
-      "sH\001"
+      "\n\tsignature\030\003 \001(\014\022\021\n\tsomething\030\004 \001(\t\"\341\007\n" +
+      "\014SyncResponse\022\024\n\014upload_cycle\030\001 \001(\005\022\022\n\ns" +
+      "ync_cycle\030\002 \001(\005\022\025\n\racc_scan_cyle\030\003 \001(\005\022\035" +
+      "\n\025acc_sampling_interval\030\004 \001(\005\022 \n\030device_" +
+      "sampling_interval\030\005 \001(\005\022(\n\005alarm\030\006 \001(\0132\031" +
+      ".hello.SyncResponse.Alarm\0229\n\016pairing_act" +
+      "ion\030\007 \001(\0132!.hello.SyncResponse.PairingAc" +
+      "tion\0223\n\013white_noise\030\010 \001(\0132\036.hello.SyncRe" +
+      "sponse.WhiteNoise\0225\n\014flash_action\030\t \001(\0132" +
+      "\037.hello.SyncResponse.FlashAction\032E\n\005Alar",
+      "m\022\022\n\nstart_time\030\001 \001(\005\022\020\n\010end_time\030\002 \001(\005\022" +
+      "\026\n\013ringtone_id\030\003 \001(\005:\0011\032}\n\rPairingAction" +
+      "\022\014\n\004ssid\030\001 \001(\t\022:\n\004type\030\002 \001(\0162,.hello.Syn" +
+      "cResponse.PairingAction.ActionType\"\"\n\nAc" +
+      "tionType\022\010\n\004PAIR\020\000\022\n\n\006UNPAIR\020\001\032D\n\nWhiteN" +
+      "oise\022\022\n\nstart_time\030\001 \001(\005\022\020\n\010end_time\030\002 \001" +
+      "(\005\022\020\n\010sound_id\030\003 \001(\005\032\361\002\n\013FlashAction\0228\n\005" +
+      "led_1\030\001 \001(\0132).hello.SyncResponse.FlashAc" +
+      "tion.LEDAction\0228\n\005led_2\030\002 \001(\0132).hello.Sy" +
+      "ncResponse.FlashAction.LEDAction\0228\n\005led_",
+      "3\030\003 \001(\0132).hello.SyncResponse.FlashAction" +
+      ".LEDAction\0228\n\005led_4\030\004 \001(\0132).hello.SyncRe" +
+      "sponse.FlashAction.LEDAction\0228\n\005led_5\030\005 " +
+      "\001(\0132).hello.SyncResponse.FlashAction.LED" +
+      "Action\032@\n\tLEDAction\022\r\n\005color\030\001 \001(\005\022\022\n\nst" +
+      "art_time\030\002 \001(\005\022\020\n\010end_time\030\003 \001(\005\"=\n\010Pill" +
+      "Data\022\017\n\007pill_id\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(" +
+      "\t\022\014\n\004data\030\003 \001(\014\"\324\001\n\016PillBlobHeader\022\035\n\025fi" +
+      "rst_sequence_number\030\001 \001(\t\022\034\n\024last_sequen" +
+      "ce_number\030\002 \001(\t\022\031\n\021first_sample_date\030\003 \001",
+      "(\t\022\030\n\020last_sample_date\030\004 \001(\t\022%\n\035compress" +
+      "ed_bitmap_account_ids\030\005 \001(\014\022\026\n\016data_file" +
+      "_name\030\006 \001(\t\022\021\n\tnum_items\030\007 \001(\005\"*\n\010PillBl" +
+      "ob\022\036\n\005items\030\001 \003(\0132\017.hello.PillData\"\214\001\n\nE" +
+      "ventBatch\022+\n\006events\030\001 \003(\0132\033.hello.EventB" +
+      "atch.EventItem\032Q\n\tEventItem\022\027\n\017start_tim" +
+      "estamp\030\001 \001(\003\022\025\n\rend_timestamp\030\002 \001(\003\022\024\n\014o" +
+      "ffsetMillis\030\003 \001(\005\"t\n\rperiodic_data\022\021\n\tun" +
+      "ix_time\030\001 \001(\005\022\r\n\005light\030\002 \001(\005\022\023\n\013temperat" +
+      "ure\030\003 \001(\005\022\020\n\010humidity\030\004 \001(\005\022\014\n\004dust\030\005 \001(",
+      "\005\022\014\n\004name\030\006 \001(\tB+\n\032com.hello.suripu.api." +
+      "inputB\013InputProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -18743,7 +19831,7 @@ public final class InputProtos {
           internal_static_hello_SyncRequest_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_SyncRequest_descriptor,
-              new java.lang.String[] { "DeviceId", "FirmwareVersion", "Signature", });
+              new java.lang.String[] { "DeviceId", "FirmwareVersion", "Signature", "Something", });
           internal_static_hello_SyncResponse_descriptor =
             getDescriptor().getMessageTypes().get(7);
           internal_static_hello_SyncResponse_fieldAccessorTable = new
@@ -18810,6 +19898,12 @@ public final class InputProtos {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_EventBatch_EventItem_descriptor,
               new java.lang.String[] { "StartTimestamp", "EndTimestamp", "OffsetMillis", });
+          internal_static_hello_periodic_data_descriptor =
+            getDescriptor().getMessageTypes().get(12);
+          internal_static_hello_periodic_data_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_periodic_data_descriptor,
+              new java.lang.String[] { "UnixTime", "Light", "Temperature", "Humidity", "Dust", "Name", });
           return null;
         }
       };

@@ -104,9 +104,10 @@ message ActivationResponse {
 }
 
 message SyncRequest {
-    optional string device_id = 1;
+    optional string device_id = 1; // deprecated
     optional string firmware_version = 2;
     optional bytes signature = 3;
+    optional string something = 4;
 }
 
 
@@ -199,5 +200,15 @@ message EventBatch{
     }
 
     repeated EventItem events = 1;
+}
+
+
+message periodic_data {
+    optional int32 unix_time=1;
+    optional int32 light=2;
+    optional int32 temperature=3;
+    optional int32 humidity=4;
+    optional int32 dust=5;
+    optional string name=6;
 }
 
