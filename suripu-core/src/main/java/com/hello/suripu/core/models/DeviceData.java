@@ -1,6 +1,7 @@
 package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
 import org.joda.time.DateTime;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -123,5 +124,18 @@ public class DeviceData {
         }
 
 
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(DeviceData.class)
+                .add("account_id", accountId)
+                .add("device_id", deviceId)
+                .add("ambient_temperature", ambientTemperature)
+                .add("ambient_humidity", ambientHumidity)
+                .add("ambient_light", ambientLight)
+                .add("dateTimeUTC", dateTimeUTC)
+                .add("offset_millis", offsetMillis)
+                .toString();
     }
 }
