@@ -62,8 +62,6 @@ CREATE UNIQUE INDEX uniq_device_ts_on_par_default on device_sensors_par_default(
 CREATE UNIQUE INDEX uniq_device_id_account_id_ts_on_par_default on device_sensors_par_default(device_id, account_id, ts);
 
 
-ALTER TABLE accounts ADD COLUMN last_modified TIMESTAMP;
-
 -- Trigger function for master insert
 CREATE OR REPLACE FUNCTION device_sensors_master_insert_function() RETURNS TRIGGER LANGUAGE plpgsql AS
 $BODY$
