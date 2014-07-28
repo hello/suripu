@@ -28,7 +28,6 @@ import com.hello.suripu.core.db.SoundDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
-import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthAuthenticator;
 import com.hello.suripu.core.oauth.OAuthProvider;
@@ -36,7 +35,6 @@ import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
 import com.hello.suripu.core.util.CustomJSONExceptionMapper;
 import com.hello.suripu.core.util.DropwizardServiceUtil;
-import com.librato.metrics.LibratoReporter;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -44,15 +42,13 @@ import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.jdbi.DBIFactory;
 import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
 import com.yammer.dropwizard.jdbi.bundles.DBIExceptionsBundle;
-import com.yammer.metrics.core.MetricPredicate;
+import com.yammer.metrics.reporting.GraphiteReporter;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
-import java.util.EnumSet;
 import java.util.concurrent.TimeUnit;
 
 public class SuripuApp extends Service<SuripuAppConfiguration> {
@@ -109,31 +105,11 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
 
         if(config.getMetricsEnabled()) {
-            final String libratoUsername = config.getLibrato().getUsername();
-            final String libratoApiKey = config.getLibrato().getApiKey();
+            final String hostName = config.getGraphite().getHost();
+            final String apiKey = config.getGraphite().getApiKey();
+            final Integer interval = config.getGraphite().getReportingIntervalInSeconds();
 
-            final MetricPredicate predicate = new RegexMetricPredicate("(^com\\.hello\\..*|^org\\.eclipse\\.jetty\\.servlet)");
-
-            final InetAddress addr = InetAddress.getLocalHost();
-//            final String hostname = addr.getHostName();
-            final String hostname = "suripu-app"; // Consolidate all sources to come from a "single app". Cheaper :)
-
-            LibratoReporter.enable(
-                    LibratoReporter.builder(libratoUsername, libratoApiKey, hostname)
-                            .setExpansionConfig(
-                                    new LibratoReporter.MetricExpansionConfig(
-                                            EnumSet.of(
-                                                    LibratoReporter.ExpandedMetric.COUNT,
-                                                    LibratoReporter.ExpandedMetric.MEDIAN,
-                                                    LibratoReporter.ExpandedMetric.PCT_95,
-                                                    LibratoReporter.ExpandedMetric.PCT_99,
-                                                    LibratoReporter.ExpandedMetric.RATE_1_MINUTE)
-                                    )
-                            ).setPredicate(predicate)
-                    ,
-                    config.getLibrato().getReportingIntervalInSeconds(),
-                    TimeUnit.SECONDS
-            );
+            GraphiteReporter.enable(interval, TimeUnit.SECONDS, hostName, 2003, apiKey);
             LOGGER.info("Metrics enabled.");
         } else {
             LOGGER.warn("Metrics not enabled.");

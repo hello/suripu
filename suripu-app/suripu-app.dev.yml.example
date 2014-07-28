@@ -1,8 +1,8 @@
 metrics_enabled: false
 debug: true
-librato:
-  username: tim@sayhello.com
-  api_key: 64ab12d5c69fa2b6873b7ace11aba06f4d8c93fa9b0cd7012a0cd2ba2f9c53ac
+graphite:
+  host: carbon.hostedgraphite.com
+  api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
   reporting_interval_in_seconds: 30
 
 sensors_db:
