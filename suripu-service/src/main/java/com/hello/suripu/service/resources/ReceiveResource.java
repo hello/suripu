@@ -308,8 +308,23 @@ public class ReceiveResource {
     @Path("/morpheus/pb")
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     @Timed
-    public void morpheusProtobufReceive(@Valid final InputProtos.periodic_data data) {
+    public void morpheusProtobufReceive(byte[] body) {
 
+        LOGGER.debug("Received {} bytes", body.length);
+        for(byte b : body) {
+            LOGGER.debug(Integer.toHexString(b));
+        }
+
+        InputProtos.periodic_data data = null;
+
+        try {
+            data = InputProtos.periodic_data.parseFrom(body);
+        } catch (IOException exception) {
+            LOGGER.error("Failed parsing protobuf: {}", exception.getMessage());
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("bad request").type(MediaType.TEXT_PLAIN_TYPE).build());
+        }
+
+        LOGGER.debug("Received valid protobuf");
         final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(data.getName());
         LOGGER.debug("Found {} pairs", deviceAccountPairs.size());
         long timestampMillis = data.getUnixTime() * 1000L;
@@ -447,7 +462,6 @@ public class ReceiveResource {
             for(final DeviceAccountPair pair : deviceAccountPairs) {
                 try {
                     deviceDataDAO.insertSound(pair.internalDeviceId, sample.getSoundAmplitude(), dateTimeSample, offsetMillis);
-                    LOGGER.debug("Sound timestamp = {}", sampleTimestamp);
                 } catch (UnableToExecuteStatementException exception) {
                     Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
                     if (!matcher.find()) {

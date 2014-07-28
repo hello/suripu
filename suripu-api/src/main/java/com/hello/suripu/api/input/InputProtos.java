@@ -19752,8 +19752,8 @@ public final class InputProtos {
       "ffsetMillis\030\003 \001(\005\"t\n\rperiodic_data\022\021\n\tun" +
       "ix_time\030\001 \001(\005\022\r\n\005light\030\002 \001(\005\022\023\n\013temperat" +
       "ure\030\003 \001(\005\022\020\n\010humidity\030\004 \001(\005\022\014\n\004dust\030\005 \001(",
-      "\005\022\014\n\004name\030\006 \001(\tB+\n\032com.hello.suripu.api." +
-      "inputB\013InputProtosH\001"
+      "\005\022\014\n\004name\030\006 \001(\tB)\n\032com.hello.suripu.api." +
+      "inputB\013InputProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
