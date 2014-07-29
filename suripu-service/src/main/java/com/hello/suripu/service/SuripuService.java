@@ -44,6 +44,7 @@ import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
 
 public class SuripuService extends Service<SuripuConfiguration> {
@@ -110,11 +111,16 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
 
         if(configuration.getMetricsEnabled()) {
-            final String hostName = configuration.getGraphite().getHost();
+            final String graphiteHostName = configuration.getGraphite().getHost();
             final String apiKey = configuration.getGraphite().getApiKey();
             final Integer interval = configuration.getGraphite().getReportingIntervalInSeconds();
 
-            GraphiteReporter.enable(interval, TimeUnit.SECONDS, hostName, 2003, apiKey);
+            final String env = (configuration.getDebug()) ? "dev" : "prod";
+            final String hostName = InetAddress.getLocalHost().getHostName();
+
+            final String prefix = String.format("%s.%s.%s", apiKey, env, hostName);
+
+            GraphiteReporter.enable(interval, TimeUnit.SECONDS, graphiteHostName, 2003, prefix);
 
             LOGGER.info("Metrics enabled.");
         } else {

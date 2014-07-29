@@ -40,6 +40,14 @@ public class SuripuConfiguration extends Configuration {
     }
 
     @Valid
+    @JsonProperty("debug")
+    private Boolean debug = Boolean.FALSE;
+
+    public Boolean getDebug() {
+        return debug;
+    }
+
+    @Valid
     @NotNull
     @JsonProperty("graphite")
     private GraphiteConfiguration graphite;

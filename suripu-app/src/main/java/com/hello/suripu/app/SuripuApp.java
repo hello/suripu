@@ -49,6 +49,7 @@ import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
 
 public class SuripuApp extends Service<SuripuAppConfiguration> {
@@ -67,11 +68,11 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
     }
 
     @Override
-    public void run(final SuripuAppConfiguration config, final Environment environment) throws Exception {
+    public void run(final SuripuAppConfiguration configuration, final Environment environment) throws Exception {
 
         final DBIFactory factory = new DBIFactory();
-        final DBI sensorsDB = factory.build(environment, config.getSensorsDB(), "postgresql");
-        final DBI commonDB = factory.build(environment, config.getCommonDB(), "postgresql");
+        final DBI sensorsDB = factory.build(environment, configuration.getSensorsDB(), "postgresql");
+        final DBI commonDB = factory.build(environment, configuration.getCommonDB(), "postgresql");
 
         sensorsDB.registerArgumentFactory(new JodaArgumentFactory());
         sensorsDB.registerContainerFactory(new OptionalContainerFactory());
@@ -98,28 +99,34 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
 
-        client.setEndpoint(config.getEventDBConfiguration().getEndpoint());
-        final String eventTableName = config.getEventDBConfiguration().getTableName();
+        client.setEndpoint(configuration.getEventDBConfiguration().getEndpoint());
+        final String eventTableName = configuration.getEventDBConfiguration().getTableName();
         final EventDAODynamoDB eventDAODynamoDB = new EventDAODynamoDB(client, eventTableName);
 
 
 
-        if(config.getMetricsEnabled()) {
-            final String hostName = config.getGraphite().getHost();
-            final String apiKey = config.getGraphite().getApiKey();
-            final Integer interval = config.getGraphite().getReportingIntervalInSeconds();
+        if(configuration.getMetricsEnabled()) {
+            final String graphiteHostName = configuration.getGraphite().getHost();
+            final String apiKey = configuration.getGraphite().getApiKey();
+            final Integer interval = configuration.getGraphite().getReportingIntervalInSeconds();
 
-            GraphiteReporter.enable(interval, TimeUnit.SECONDS, hostName, 2003, apiKey);
+            final String env = (configuration.getDebug()) ? "dev" : "prod";
+            final String hostName = InetAddress.getLocalHost().getHostName();
+
+            final String prefix = String.format("%s.%s.%s", apiKey, env, hostName);
+
+            GraphiteReporter.enable(interval, TimeUnit.SECONDS, graphiteHostName, 2003, prefix);
+
             LOGGER.info("Metrics enabled.");
         } else {
             LOGGER.warn("Metrics not enabled.");
         }
 
-        LOGGER.warn("DEBUG MODE = {}", config.getDebug());
+        LOGGER.warn("DEBUG MODE = {}", configuration.getDebug());
         // Custom JSON handling for responses.
         final ResourceConfig jrConfig = environment.getJerseyResourceConfig();
         DropwizardServiceUtil.deregisterDWSingletons(jrConfig);
-        environment.addProvider(new CustomJSONExceptionMapper(config.getDebug()));
+        environment.addProvider(new CustomJSONExceptionMapper(configuration.getDebug()));
 
         environment.addProvider(new OAuthProvider<AccessToken>(new OAuthAuthenticator(accessTokenStore), "protected-resources"));
 
@@ -128,12 +135,12 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new HistoryResource(soundDAO, trackerMotionDAO, deviceDAO, deviceDataDAO));
         environment.addResource(new ApplicationResource(applicationStore));
         environment.addResource(new SleepLabelResource(sleepLabelDAO));
-        environment.addProvider(new RoomConditionsResource(deviceDataDAO, config.getAllowedQueryRange()));
+        environment.addProvider(new RoomConditionsResource(deviceDataDAO, configuration.getAllowedQueryRange()));
         environment.addResource(new EventResource(eventDAODynamoDB));
 
         LOGGER.debug("{}", DateTime.now(DateTimeZone.UTC).getMillis());
 
-        if(config.getDebug()) {
+        if(configuration.getDebug()) {
             environment.addResource(new VersionResource());
             environment.addResource(new PingResource());
         }
