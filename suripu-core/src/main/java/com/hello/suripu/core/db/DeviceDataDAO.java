@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.binders.BindDeviceData;
+import com.hello.suripu.core.db.mappers.DeviceDataBucketMapper;
 import com.hello.suripu.core.db.mappers.DeviceDataMapper;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
@@ -51,7 +52,7 @@ public abstract class DeviceDataDAO {
 
 
 
-    @RegisterMapper(DeviceDataMapper.class)
+    @RegisterMapper(DeviceDataBucketMapper.class)
     @SqlQuery("SELECT\n" +
             "MAX(account_id) AS account_id," +
             "MAX(device_id) AS device_id," +
@@ -60,11 +61,11 @@ public abstract class DeviceDataDAO {
             "ROUND(AVG(ambient_humidity)) as ambient_humidity," +
             "ROUND(AVG(ambient_air_quality)) as ambient_air_quality," +
             "ROUND(MIN(offset_millis)) as offset_millis," +
-            "date_trunc('hour', ts) + (CAST(date_part('minute', ts) AS integer) / :slot_duration) * :slot_duration * interval '1 min' AS ts " +
+            "date_trunc('hour', ts) + (CAST(date_part('minute', ts) AS integer) / :slot_duration) * :slot_duration * interval '1 min' AS ts_bucket " +
             "FROM device_sensors_master " +
-            "WHERE account_id = :account_id AND ts >= :start_ts AND ts < :end_ts " +
-            "GROUP BY ts " +
-            "ORDER BY ts ASC")
+            "WHERE account_id = :account_id AND local_utc_ts >= :start_ts AND local_utc_ts < :end_ts " +
+            "GROUP BY ts_bucket " +
+            "ORDER BY ts_bucket ASC")
     public abstract ImmutableList<DeviceData> getBetweenByLocalTimeAggregateBySlotDuration(
             @Bind("account_id") Long accountId,
             @Bind("start_ts") DateTime start,
@@ -130,6 +131,8 @@ public abstract class DeviceDataDAO {
                 sensorValue = deviceData.ambientTemperature;
             } else if (sensor.equals("particulates")) {
                 sensorValue = deviceData.ambientAirQuality;
+            } else if (sensor.equals("light")) {
+                sensorValue = deviceData.ambientLight;
             } else {
                 LOGGER.warn("Sensor {} is not supported for account_id: {}. Returning early", sensor, accountId);
                 return new ArrayList<>();
