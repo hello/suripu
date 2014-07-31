@@ -65,6 +65,20 @@ public class RoomConditionsResource {
         return deviceDataDAO.generateTimeSerie(clientUtcTimestamp, accessToken.accountId, slotDurationInMinutes, queryDurationInHours, sensor);
     }
 
+    @GET
+    @Path("/admin/{sensor}/day")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Sample> getLast24hoursAdmin(
+            @Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
+            @PathParam("sensor") String sensor,
+            @QueryParam("account") Long accountId,
+            @QueryParam("from") Long clientUtcTimestamp) {
+
+        final int slotDurationInMinutes = 1;
+        final int  queryDurationInHours = 24;
+
+        return deviceDataDAO.generateTimeSerie(clientUtcTimestamp, accountId, slotDurationInMinutes, queryDurationInHours, sensor);
+    }
 
     /**
      * Validates that the current request start range is within reasonable bounds
