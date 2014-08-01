@@ -45,6 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 public class SuripuService extends Service<SuripuConfiguration> {
@@ -52,6 +53,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
     private final static Logger LOGGER = LoggerFactory.getLogger(SuripuService.class);
 
     public static void main(String[] args) throws Exception {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         new SuripuService().run(args);
     }
 

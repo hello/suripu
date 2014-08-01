@@ -50,12 +50,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 public class SuripuApp extends Service<SuripuAppConfiguration> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SuripuApp.class);
 
     public static void main(final String[] args) throws Exception {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         new SuripuApp().run(args);
     }
 

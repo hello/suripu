@@ -79,7 +79,7 @@ public class SleepLabelResource {
             final DateTime userLocalDateTime = new DateTime(sleepLabel.dateUTC.getMillis(), userLocalTimeZone);
             LOGGER.debug("Received sleep label for the night of {}", userLocalDateTime.toString("MM/dd/yyyy HH:mm:ss Z"));
 
-            // Round on the user lcoal time instead of the UTC tme.
+            // Round on the user local time instead of the UTC tme.
             final DateTime roundedUserLocalDateTime = userLocalDateTime.withTimeAtStartOfDay();
             final DateTime roundedUserLocalTimeInUTC = new DateTime(roundedUserLocalDateTime.getMillis(), DateTimeZone.UTC);
 

@@ -17,10 +17,13 @@ import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 
+import java.util.TimeZone;
+
 public class SuripuFactory extends Service<SuripuFactoryConfiguration>{
 
 
     public static void main(String[] args) throws Exception {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         new SuripuFactory().run(args);
     }
 
