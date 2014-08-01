@@ -4,6 +4,7 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
+import com.google.common.base.Joiner;
 import com.hello.dropwizard.mikkusu.helpers.JacksonProtobufProvider;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
@@ -23,6 +24,7 @@ import com.hello.suripu.core.health.KinesisHealthCheck;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.managers.DynamoDBClientManaged;
 import com.hello.suripu.core.managers.KinesisClientManaged;
+import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
@@ -39,6 +41,7 @@ import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.jdbi.DBIFactory;
 import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
 import com.yammer.dropwizard.jdbi.bundles.DBIExceptionsBundle;
+import com.yammer.metrics.Metrics;
 import com.yammer.metrics.reporting.GraphiteReporter;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
@@ -46,6 +49,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.util.TimeZone;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class SuripuService extends Service<SuripuConfiguration> {
@@ -122,7 +126,11 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
             final String prefix = String.format("%s.%s.%s", apiKey, env, hostName);
 
-            GraphiteReporter.enable(interval, TimeUnit.SECONDS, graphiteHostName, 2003, prefix);
+            final List<String> metrics = configuration.getGraphite().getIncludeMetrics();
+            final RegexMetricPredicate predicate = new RegexMetricPredicate(metrics);
+            final Joiner joiner = Joiner.on(", ");
+            LOGGER.info("Logging the following metrics: {}", joiner.join(metrics));
+            GraphiteReporter.enable(Metrics.defaultRegistry(), interval, TimeUnit.SECONDS, graphiteHostName, 2003, prefix, predicate);
 
             LOGGER.info("Metrics enabled.");
         } else {

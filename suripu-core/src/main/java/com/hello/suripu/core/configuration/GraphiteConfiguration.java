@@ -1,12 +1,15 @@
 package com.hello.suripu.core.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableList;
 import com.yammer.dropwizard.config.Configuration;
+import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 public class GraphiteConfiguration extends Configuration {
     @Valid
@@ -35,5 +38,15 @@ public class GraphiteConfiguration extends Configuration {
 
     public Integer getReportingIntervalInSeconds() {
         return reportingIntervalInSeconds;
+    }
+
+
+    @NotEmpty
+    @JsonProperty("include_metrics")
+    private List<String> includeMetrics;
+
+
+    public List<String> getIncludeMetrics() {
+        return ImmutableList.copyOf(includeMetrics);
     }
 }
