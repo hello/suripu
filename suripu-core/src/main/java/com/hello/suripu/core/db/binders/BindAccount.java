@@ -25,6 +25,7 @@ public @interface BindAccount {
                     q.bind("name", arg.name);
                     q.bind("email", arg.email);
                     q.bind("password", arg.password);
+                    q.bind("gender", arg.gender.toString());
 //q.bind("age", arg.age); // TODO: add age
                     q.bind("height", arg.height);
                     q.bind("weight", arg.weight);

@@ -3,6 +3,7 @@ package com.hello.suripu.app;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.google.common.base.Joiner;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.app.cli.CreateDynamoDBEventTableCommand;
@@ -28,6 +29,7 @@ import com.hello.suripu.core.db.SoundDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
+import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthAuthenticator;
 import com.hello.suripu.core.oauth.OAuthProvider;
@@ -42,6 +44,7 @@ import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.jdbi.DBIFactory;
 import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
 import com.yammer.dropwizard.jdbi.bundles.DBIExceptionsBundle;
+import com.yammer.metrics.Metrics;
 import com.yammer.metrics.reporting.GraphiteReporter;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -50,12 +53,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
+import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 public class SuripuApp extends Service<SuripuAppConfiguration> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SuripuApp.class);
 
     public static void main(final String[] args) throws Exception {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         new SuripuApp().run(args);
     }
 
@@ -115,7 +121,12 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
             final String prefix = String.format("%s.%s.%s", apiKey, env, hostName);
 
-            GraphiteReporter.enable(interval, TimeUnit.SECONDS, graphiteHostName, 2003, prefix);
+            final List<String> metrics = configuration.getGraphite().getIncludeMetrics();
+            final RegexMetricPredicate predicate = new RegexMetricPredicate(metrics);
+            final Joiner joiner = Joiner.on(", ");
+            LOGGER.info("Logging the following metrics: {}", joiner.join(metrics));
+
+            GraphiteReporter.enable(Metrics.defaultRegistry(), interval, TimeUnit.SECONDS, graphiteHostName, 2003, prefix, predicate);
 
             LOGGER.info("Metrics enabled.");
         } else {
