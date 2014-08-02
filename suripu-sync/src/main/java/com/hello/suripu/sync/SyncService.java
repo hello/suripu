@@ -15,9 +15,12 @@ import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 
+import java.util.TimeZone;
+
 public class SyncService extends Service<SyncConfiguration> {
 
     public static void main(final String[] args) throws Exception {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         new SyncService().run(args);
     }
 

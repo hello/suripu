@@ -84,6 +84,7 @@ public abstract class DeviceDataDAO {
     @Timed
     public List<Sample> generateTimeSerie(final Long clientUtcTimestamp, final Long accountId, final int slotDurationInMinutes, final int queryDurationInHours, final String sensor) {
 
+        // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(clientUtcTimestamp, DateTimeZone.UTC);
         final DateTime queryStartTime = queryEndTime.minusHours(queryDurationInHours);
 
@@ -94,8 +95,9 @@ public abstract class DeviceDataDAO {
             return new ArrayList<>();
         }
 
+        // create buckets with keys in UTC-Time
         final int currentOffsetMillis = rows.get(0).offsetMillis;
-        final DateTime now = queryEndTime.withSecondOfMinute(0).withMillisOfSecond(0);
+        final DateTime now = queryEndTime.withSecondOfMinute(0).withMillisOfSecond(0).minusMillis(currentOffsetMillis);
         final int remainder = now.getMinuteOfHour() % slotDurationInMinutes;
         final int minuteBucket = now.getMinuteOfHour() - remainder;
         // if 4:36 -> bucket = 4:35
@@ -120,6 +122,7 @@ public abstract class DeviceDataDAO {
         for(final DeviceData deviceData: rows) {
             if(!map.containsKey(deviceData.dateTimeUTC.getMillis())) {
                 LOGGER.debug("NOT IN MAP: {}", deviceData.dateTimeUTC);
+                continue;
             }
 
             // TODO: refactor this
