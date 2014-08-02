@@ -124,6 +124,14 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
                     .build();
         }
 
+        if (webAppException.getResponse().getStatus() == 415) {
+            return Response
+                    .status(415)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(new JsonError(415, "Unsupported Media Type"))
+                    .build();
+        }
+
 
 
         LOGGER.error("WebApplicationException not caught: {} {}", webAppException.getResponse().getStatus(), webAppException.getMessage());
