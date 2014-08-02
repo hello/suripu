@@ -1,14 +1,14 @@
 -- 1. Create the new table and its new indices
 
-CREATE TABLE tracker_motion_par_2014_07() INHERITS (tracker_motion_master);
-GRANT ALL PRIVILEGES ON tracker_motion_par_2014_07 TO ingress_user;
+CREATE TABLE tracker_motion_par_2014_08() INHERITS (tracker_motion_master);
+GRANT ALL PRIVILEGES ON tracker_motion_par_2014_08 TO ingress_user;
 
-CREATE UNIQUE INDEX uniq_tracker_ts_on_par_2014_07 on tracker_motion_par_2014_07(tracker_id, ts);
-CREATE UNIQUE INDEX uniq_tracker_id_account_id_ts_on_par_2014_07 on tracker_motion_par_2014_07(tracker_id, account_id, ts);
+CREATE UNIQUE INDEX uniq_tracker_ts_on_par_2014_08 on tracker_motion_par_2014_08(tracker_id, ts);
+CREATE UNIQUE INDEX uniq_tracker_id_account_id_ts_on_par_2014_08 on tracker_motion_par_2014_08(tracker_id, account_id, ts);
 
 
 
-ALTER TABLE tracker_motion_par_2014_07 ADD CHECK (local_utc_ts >= '2014-07-01 00:00:00' AND local_utc_ts < '2014-08-01 00:00:00');
+ALTER TABLE tracker_motion_par_2014_08 ADD CHECK (local_utc_ts >= '2014-08-01 00:00:00' AND local_utc_ts < '2014-09-01 00:00:00');
 -- 2. Update the trigger function
 
 -- I don't know if this has to be re-created for every function update
@@ -27,6 +27,8 @@ DECLARE
 BEGIN
     IF NEW.local_utc_ts >= '2014-07-01 00:00:00' AND NEW.local_utc_ts < '2014-08-01 00:00:00' THEN
         INSERT INTO tracker_motion_par_2014_07 VALUES (NEW.*);
+    ELSIF NEW.local_utc_ts >= '2014-08-01 00:00:00' AND NEW.local_utc_ts < '2014-09-01 00:00:00' THEN
+        INSERT INTO tracker_motion_par_2014_08 VALUES (NEW.*);
     ELSE
         INSERT INTO tracker_motion_par_default VALUES (NEW.*);
     END IF;
@@ -34,5 +36,3 @@ BEGIN
     RETURN NULL;
 END
 $BODY$;
-
--- 3. Add to your calendar the day you need to update this script. Usually 15 days before you run out of tables.
