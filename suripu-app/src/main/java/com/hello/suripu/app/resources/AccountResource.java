@@ -19,6 +19,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -85,9 +86,8 @@ public class AccountResource {
         throw new WebApplicationException(Response.serverError().build());
     }
 
-    @POST
+    @PUT
     @Timed
-    @Path("/update")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Account modify(
@@ -100,14 +100,15 @@ public class AccountResource {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
-        if(account.email.isEmpty()) {
-            LOGGER.warn("Email was empty for account id = {}. Refusing to update account.");
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(new JsonError(400, "Email missing.")).build());
-        }
+//        if(account.email.isEmpty()) {
+//            LOGGER.warn("Email was empty for account id = {}. Refusing to update account.");
+//            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(new JsonError(400, "Email missing.")).build());
+//        }
 
-        if(accountDAO.update(account, accessToken.accountId)) {
-            return account;
-        };
+        final Optional<Account> optionalAccount = accountDAO.update(account, accessToken.accountId);
+        if(optionalAccount.isPresent()) {
+            return optionalAccount.get();
+        }
 
         LOGGER.warn("Failed updating account with id = {}, email = {}. Requested by accessToken = {}", accessToken.accountId, account.email, accessToken);
         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());

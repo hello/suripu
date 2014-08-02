@@ -214,6 +214,7 @@ public class Account {
                 .add("email", email)
                 .add("height", height)
                 .add("weight", weight)
+                .add("gender", gender)
                 .add("created", created)
                 .toString();
     }

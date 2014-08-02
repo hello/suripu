@@ -7,6 +7,8 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.mindrot.jbcrypt.BCrypt;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class Registration {
 
     public final String name;
@@ -42,6 +44,8 @@ public class Registration {
             @JsonProperty("age") final Integer age,
             @JsonProperty("tz") final Integer tzOffsetMillis
     ) {
+        checkNotNull(email, "email cannot be null");
+        checkNotNull(email, "password cannot be null");
         this.name = name;
         this.email = email;
         this.password = password;

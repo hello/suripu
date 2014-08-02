@@ -80,15 +80,15 @@ public abstract class AccountDAOImpl implements AccountDAO {
         return accountOptional;
     }
 
-    @SqlUpdate("UPDATE accounts SET name=:name, email=:email, height=:height, weight=:weight, tz_offset=:tz_offset WHERE id=:account_id;")
+    @SqlUpdate("UPDATE accounts SET name=:name, gender=:gender, height=:height, weight=:weight, tz_offset=:tz_offset WHERE id=:account_id;")
     protected abstract Integer updateAccount(@BindAccount Account account, @Bind("account_id") Long accountId);
 
 
-    public boolean update(final Account account, final Long accountId) {
+    public Optional<Account> update(final Account account, final Long accountId) {
         try {
             int updated = updateAccount(account, accountId);
             LOGGER.debug("Update: {} row updated for account_id = {}", updated, accountId);
-            return Boolean.TRUE ? (updated == 1) : Boolean.FALSE;
+            return getById(accountId);
         } catch (UnableToExecuteStatementException exception) {
             final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
 
@@ -99,6 +99,6 @@ public abstract class AccountDAOImpl implements AccountDAO {
             LOGGER.warn("Update account failed: {}", exception.getMessage());
         }
 
-        return Boolean.FALSE;
+        return Optional.absent();
     }
 }

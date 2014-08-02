@@ -22,6 +22,7 @@ public class AccountMapper implements ResultSetMapper<Account> {
         builder.withId(r.getLong("id"));
         builder.withTzOffsetMillis(r.getInt("tz_offset"));
         builder.withPassword(r.getString("password_hash"));
+        builder.withGender(r.getString("gender"));
 
         final Account account = builder.build();
 
