@@ -1,12 +1,28 @@
 package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import org.joda.time.DateTime;
 
 public class CurrentRoomState {
 
     public static class State {
 
+        public enum Unit {
+            CELCIUS("c"),
+            PERCENT("%"),
+            PPM("ppm");
+
+            private final String value;
+            private Unit(final String value) {
+                this.value = value;
+            }
+
+            @JsonValue
+            public String getValue() {
+                return value;
+            }
+        }
         public enum Condition {
             UNKNOWN(0),
             IDEAL(1),
@@ -32,11 +48,15 @@ public class CurrentRoomState {
         @JsonProperty("last_updated_utc")
         public final DateTime lastUpdated;
 
-        public State(final int value, final String message, final Condition condition, final DateTime lastUpdated) {
+        @JsonProperty("unit")
+        public final Unit unit;
+
+        public State(final int value, final String message, final Condition condition, final DateTime lastUpdated, final Unit unit) {
             this.value = value;
             this.message = message;
             this.condition = condition;
             this.lastUpdated = lastUpdated;
+            this.unit = unit;
         }
     }
 
@@ -73,30 +93,30 @@ public class CurrentRoomState {
 
         // Temp
         if (temp >= 54 && temp < 60 || temp > 72 && temp <= 75) {
-            temperatureState = new State(temp, "Global ideal range: 60 -- 72", State.Condition.WARNING, data.dateTimeUTC);
+            temperatureState = new State(temp, "Global ideal range: 60 -- 72", State.Condition.WARNING, data.dateTimeUTC, State.Unit.CELCIUS);
         } else if (temp  < 54) {
-            temperatureState = new State(temp, "It’s pretty cold in here.", State.Condition.ALERT, data.dateTimeUTC);
+            temperatureState = new State(temp, "It’s pretty cold in here.", State.Condition.ALERT, data.dateTimeUTC, State.Unit.CELCIUS);
         } else if (temp > 75) {
-            temperatureState = new State(temp, "It’s pretty hot in here.", State.Condition.ALERT, data.dateTimeUTC);
+            temperatureState = new State(temp, "It’s pretty hot in here.", State.Condition.ALERT, data.dateTimeUTC, State.Unit.CELCIUS);
         } else { // temp >= 60 && temp <= 72
-            temperatureState = new State(temp, "", State.Condition.IDEAL, data.dateTimeUTC);
+            temperatureState = new State(temp, "", State.Condition.IDEAL, data.dateTimeUTC, State.Unit.CELCIUS);
         }
 
         // Humidity
         if (humidity  < 30) {
-            humidityState = new State(humidity, "It’s pretty dry in here.", State.Condition.WARNING, data.dateTimeUTC);
+            humidityState = new State(humidity, "It’s pretty dry in here.", State.Condition.WARNING, data.dateTimeUTC, State.Unit.PERCENT);
         } else if (humidity > 60) {
-            humidityState = new State(humidity, "It’s pretty humid in here.", State.Condition.WARNING, data.dateTimeUTC);
+            humidityState = new State(humidity, "It’s pretty humid in here.", State.Condition.WARNING, data.dateTimeUTC, State.Unit.PERCENT);
         } else { // humidity >= 30 && humidity<= 60
-            humidityState = new State(humidity, "", State.Condition.IDEAL, data.dateTimeUTC);
+            humidityState = new State(humidity, "", State.Condition.IDEAL, data.dateTimeUTC, State.Unit.PERCENT);
         }
 
 
         // Air Quality
         if (particulates > 35) {
-            particulatesState = new State(particulates, "Air Particulates EPA standard: Daily: 35 µg/m3, AQI = 99", State.Condition.WARNING, data.dateTimeUTC);
+            particulatesState = new State(particulates, "Air Particulates EPA standard: Daily: 35 µg/m3, AQI = 99", State.Condition.WARNING, data.dateTimeUTC, State.Unit.PPM);
         } else{
-            particulatesState = new State(particulates, "", State.Condition.IDEAL, data.dateTimeUTC);
+            particulatesState = new State(particulates, "", State.Condition.IDEAL, data.dateTimeUTC, State.Unit.PPM);
         }
 
         final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState);

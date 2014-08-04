@@ -142,7 +142,9 @@ public class Account {
 
         @JsonProperty("gender")
         public Builder withGender(final String gender) {
-            this.gender = Gender.valueOf(gender);
+            if(gender != null) {
+                this.gender = Gender.valueOf(gender);
+            }
             return this;
         }
 
