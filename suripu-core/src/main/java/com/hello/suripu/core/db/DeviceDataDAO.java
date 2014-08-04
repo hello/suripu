@@ -112,7 +112,7 @@ public abstract class DeviceDataDAO {
 
         final Map<Long, Sample> map = new HashMap<>();
         for(int i = 0; i < numberOfBuckets; i++) {
-            LOGGER.debug("Inserting {}", nowRounded.minusMinutes(i * slotDurationInMinutes));
+            LOGGER.trace("Inserting {}", nowRounded.minusMinutes(i * slotDurationInMinutes));
             // TODO: try to remove the null value. Use optional maybe?
             map.put(nowRounded.minusMinutes(i * slotDurationInMinutes).getMillis(), new Sample(nowRounded.minusMinutes(i * slotDurationInMinutes).getMillis(), 0, null));
         }
