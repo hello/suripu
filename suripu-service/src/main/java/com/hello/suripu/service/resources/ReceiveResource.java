@@ -248,11 +248,11 @@ public class ReceiveResource {
                     final int temperature = Integer.parseInt(nextLine[3]);
                     final int humidity = Integer.parseInt(nextLine[4]);
                     final int dust = Integer.parseInt(nextLine[5]);
-                    final String deviceId = nextLine[6];
-                    LOGGER.info("Time was: {}, light was: {} for device {}", time, light, deviceId);
-                    LOGGER.info("Temperature was: {}, humidity was: {}, dust was {} for device {}", temperature, humidity, dust, deviceId);
+                    final String deviceName = nextLine[6];
+                    LOGGER.info("Time was: {}, light was: {} for device {}", time, light, deviceName);
+                    LOGGER.info("Temperature was: {}, humidity was: {}, dust was {} for device {}", temperature, humidity, dust, deviceName);
 
-                    final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceId);
+                    final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceName);
                     LOGGER.debug("Found {} pairs", deviceAccountPairs.size());
 
                     final DateTime roundedDateTime = new DateTime(time, DateTimeZone.UTC).withSecondOfMinute(0);
@@ -374,7 +374,8 @@ public class ReceiveResource {
         // it will soon be removed and rely on device_id and signature from Morpheus
         // TODO: make transition from access token to signature based happen.
 
-        final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(batch.getDeviceId());
+        final String deviceName = batch.getDeviceId(); // protobuf deviceId is really device_name in table
+        final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceName);
 
         if(deviceAccountPairs.isEmpty()) {
             LOGGER.warn("No account found for device_id: {}", batch.getDeviceId());

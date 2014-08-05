@@ -13,11 +13,11 @@ ALTER ROLE ingress_user REPLICATION;
 CREATE TABLE account_device_map(
     id SERIAL PRIMARY KEY,
     account_id BIGINT,
-    device_id VARCHAR(100),
+    device_name VARCHAR(100),
     created_at TIMESTAMP default current_timestamp
 );
 
-CREATE UNIQUE INDEX uniq_account_device on account_device_map(account_id, device_id);
+CREATE UNIQUE INDEX uniq_account_device_name on account_device_map(account_id, device_name);
 
 GRANT ALL PRIVILEGES ON account_device_map TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE account_device_map_id_seq TO ingress_user;
