@@ -146,7 +146,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new HistoryResource(soundDAO, trackerMotionDAO, deviceDAO, deviceDataDAO));
         environment.addResource(new ApplicationResource(applicationStore));
         environment.addResource(new SleepLabelResource(sleepLabelDAO));
-        environment.addProvider(new RoomConditionsResource(deviceDataDAO, configuration.getAllowedQueryRange()));
+        environment.addProvider(new RoomConditionsResource(deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
         environment.addResource(new EventResource(eventDAODynamoDB));
 
         LOGGER.debug("{}", DateTime.now(DateTimeZone.UTC).getMillis());

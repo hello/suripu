@@ -14,19 +14,26 @@ import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 public interface DeviceDAO {
 
     @SingleValueResult(Long.class)
-    @SqlQuery("SELECT id FROM account_device_map WHERE account_id = :account_id AND device_id = :device_id LIMIT 1;")
-    Optional<Long> getDeviceForAccountId(@Bind("account_id") Long accountId, @Bind("device_id") String deviceId);
+    @SqlQuery("SELECT id FROM account_device_map WHERE account_id = :account_id AND device_name = :device_name LIMIT 1;")
+    Optional<Long> getDeviceForAccountId(@Bind("account_id") Long accountId, @Bind("device_name") String deviceName);
 
     @GetGeneratedKeys
-    @SqlUpdate("INSERT INTO account_device_map (account_id, device_id) VALUES(:account_id, :device_id)")
-    Long registerDevice(@Bind("account_id") Long accountId, @Bind("device_id") String deviceId);
+    @SqlUpdate("INSERT INTO account_device_map (account_id, device_name) VALUES(:account_id, :device_name)")
+    Long registerDevice(@Bind("account_id") Long accountId, @Bind("device_name") String deviceName);
 
-    // TODO : make it work for when we own multiple devices
+    // Returns the latest device connected to this account, in the case of multiple devices
     @SingleValueResult(Long.class)
-    @SqlQuery("SELECT id FROM account_device_map WHERE account_id = :account_id LIMIT 1;")
+    @SqlQuery("SELECT id FROM account_device_map WHERE account_id = :account_id ORDER BY id DESC LIMIT 1;")
     Optional<Long> getByAccountId(@Bind("account_id") Long accountId);
 
     @RegisterMapper(DeviceAccountPairMapper.class)
-    @SqlQuery("SELECT * FROM account_device_map WHERE device_id = :device_id;")
-    ImmutableList<DeviceAccountPair> getAccountIdsForDeviceId(@Bind("device_id") String device_id);
+    @SqlQuery("SELECT * FROM account_device_map WHERE device_name = :device_name;")
+    ImmutableList<DeviceAccountPair> getAccountIdsForDeviceId(@Bind("device_name") String deviceName);
+
+    @SingleValueResult(Long.class)
+    @SqlQuery("SELECT id FROM account_device_map WHERE account_id = :account_id AND device_name = :device_name;")
+    Optional<Long> getIdForAccountIdDeviceId(
+            @Bind("account_id") Long accountId,
+            @Bind("device_name") String deviceName);
+
 }
