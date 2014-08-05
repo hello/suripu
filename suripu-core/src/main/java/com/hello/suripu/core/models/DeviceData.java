@@ -8,7 +8,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class DeviceData {
 
-    public static final float FLOAT_2_INT_MULTIPLER = 1000;
+    public static final float FLOAT_2_INT_MULTIPLIER = 100;
 
     @JsonProperty("account_id")
     public final Long accountId;
@@ -59,11 +59,11 @@ public class DeviceData {
     }
 
     public static int floatToDBInt(final float value){
-        return (int)(value * FLOAT_2_INT_MULTIPLER);
+        return (int)(value * FLOAT_2_INT_MULTIPLIER);
     }
 
     public static float dbIntToFloat(final int valueFromDB){
-        return valueFromDB / FLOAT_2_INT_MULTIPLER;
+        return valueFromDB / FLOAT_2_INT_MULTIPLIER;
     }
 
 
