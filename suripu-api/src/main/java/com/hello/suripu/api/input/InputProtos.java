@@ -18734,6 +18734,46 @@ public final class InputProtos {
      */
     com.google.protobuf.ByteString
         getNameBytes();
+
+    // optional bytes mac = 7;
+    /**
+     * <code>optional bytes mac = 7;</code>
+     */
+    boolean hasMac();
+    /**
+     * <code>optional bytes mac = 7;</code>
+     */
+    com.google.protobuf.ByteString getMac();
+
+    // optional int32 light_variability = 8;
+    /**
+     * <code>optional int32 light_variability = 8;</code>
+     */
+    boolean hasLightVariability();
+    /**
+     * <code>optional int32 light_variability = 8;</code>
+     */
+    int getLightVariability();
+
+    // optional int32 light_tonality = 9;
+    /**
+     * <code>optional int32 light_tonality = 9;</code>
+     */
+    boolean hasLightTonality();
+    /**
+     * <code>optional int32 light_tonality = 9;</code>
+     */
+    int getLightTonality();
+
+    // optional int32 firmware_version = 10;
+    /**
+     * <code>optional int32 firmware_version = 10;</code>
+     */
+    boolean hasFirmwareVersion();
+    /**
+     * <code>optional int32 firmware_version = 10;</code>
+     */
+    int getFirmwareVersion();
   }
   /**
    * Protobuf type {@code hello.periodic_data}
@@ -18814,6 +18854,26 @@ public final class InputProtos {
             case 50: {
               bitField0_ |= 0x00000020;
               name_ = input.readBytes();
+              break;
+            }
+            case 58: {
+              bitField0_ |= 0x00000040;
+              mac_ = input.readBytes();
+              break;
+            }
+            case 64: {
+              bitField0_ |= 0x00000080;
+              lightVariability_ = input.readInt32();
+              break;
+            }
+            case 72: {
+              bitField0_ |= 0x00000100;
+              lightTonality_ = input.readInt32();
+              break;
+            }
+            case 80: {
+              bitField0_ |= 0x00000200;
+              firmwareVersion_ = input.readInt32();
               break;
             }
           }
@@ -18979,6 +19039,70 @@ public final class InputProtos {
       }
     }
 
+    // optional bytes mac = 7;
+    public static final int MAC_FIELD_NUMBER = 7;
+    private com.google.protobuf.ByteString mac_;
+    /**
+     * <code>optional bytes mac = 7;</code>
+     */
+    public boolean hasMac() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional bytes mac = 7;</code>
+     */
+    public com.google.protobuf.ByteString getMac() {
+      return mac_;
+    }
+
+    // optional int32 light_variability = 8;
+    public static final int LIGHT_VARIABILITY_FIELD_NUMBER = 8;
+    private int lightVariability_;
+    /**
+     * <code>optional int32 light_variability = 8;</code>
+     */
+    public boolean hasLightVariability() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    /**
+     * <code>optional int32 light_variability = 8;</code>
+     */
+    public int getLightVariability() {
+      return lightVariability_;
+    }
+
+    // optional int32 light_tonality = 9;
+    public static final int LIGHT_TONALITY_FIELD_NUMBER = 9;
+    private int lightTonality_;
+    /**
+     * <code>optional int32 light_tonality = 9;</code>
+     */
+    public boolean hasLightTonality() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional int32 light_tonality = 9;</code>
+     */
+    public int getLightTonality() {
+      return lightTonality_;
+    }
+
+    // optional int32 firmware_version = 10;
+    public static final int FIRMWARE_VERSION_FIELD_NUMBER = 10;
+    private int firmwareVersion_;
+    /**
+     * <code>optional int32 firmware_version = 10;</code>
+     */
+    public boolean hasFirmwareVersion() {
+      return ((bitField0_ & 0x00000200) == 0x00000200);
+    }
+    /**
+     * <code>optional int32 firmware_version = 10;</code>
+     */
+    public int getFirmwareVersion() {
+      return firmwareVersion_;
+    }
+
     private void initFields() {
       unixTime_ = 0;
       light_ = 0;
@@ -18986,6 +19110,10 @@ public final class InputProtos {
       humidity_ = 0;
       dust_ = 0;
       name_ = "";
+      mac_ = com.google.protobuf.ByteString.EMPTY;
+      lightVariability_ = 0;
+      lightTonality_ = 0;
+      firmwareVersion_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -19016,6 +19144,18 @@ public final class InputProtos {
       }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeBytes(6, getNameBytes());
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeBytes(7, mac_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeInt32(8, lightVariability_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeInt32(9, lightTonality_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        output.writeInt32(10, firmwareVersion_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -19049,6 +19189,22 @@ public final class InputProtos {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(6, getNameBytes());
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(7, mac_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(8, lightVariability_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(9, lightTonality_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(10, firmwareVersion_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -19178,6 +19334,14 @@ public final class InputProtos {
         bitField0_ = (bitField0_ & ~0x00000010);
         name_ = "";
         bitField0_ = (bitField0_ & ~0x00000020);
+        mac_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000040);
+        lightVariability_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000080);
+        lightTonality_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000100);
+        firmwareVersion_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
 
@@ -19230,6 +19394,22 @@ public final class InputProtos {
           to_bitField0_ |= 0x00000020;
         }
         result.name_ = name_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.mac_ = mac_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.lightVariability_ = lightVariability_;
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        result.lightTonality_ = lightTonality_;
+        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+          to_bitField0_ |= 0x00000200;
+        }
+        result.firmwareVersion_ = firmwareVersion_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -19265,6 +19445,18 @@ public final class InputProtos {
           bitField0_ |= 0x00000020;
           name_ = other.name_;
           onChanged();
+        }
+        if (other.hasMac()) {
+          setMac(other.getMac());
+        }
+        if (other.hasLightVariability()) {
+          setLightVariability(other.getLightVariability());
+        }
+        if (other.hasLightTonality()) {
+          setLightTonality(other.getLightTonality());
+        }
+        if (other.hasFirmwareVersion()) {
+          setFirmwareVersion(other.getFirmwareVersion());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -19532,6 +19724,141 @@ public final class InputProtos {
         return this;
       }
 
+      // optional bytes mac = 7;
+      private com.google.protobuf.ByteString mac_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes mac = 7;</code>
+       */
+      public boolean hasMac() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional bytes mac = 7;</code>
+       */
+      public com.google.protobuf.ByteString getMac() {
+        return mac_;
+      }
+      /**
+       * <code>optional bytes mac = 7;</code>
+       */
+      public Builder setMac(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000040;
+        mac_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes mac = 7;</code>
+       */
+      public Builder clearMac() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        mac_ = getDefaultInstance().getMac();
+        onChanged();
+        return this;
+      }
+
+      // optional int32 light_variability = 8;
+      private int lightVariability_ ;
+      /**
+       * <code>optional int32 light_variability = 8;</code>
+       */
+      public boolean hasLightVariability() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional int32 light_variability = 8;</code>
+       */
+      public int getLightVariability() {
+        return lightVariability_;
+      }
+      /**
+       * <code>optional int32 light_variability = 8;</code>
+       */
+      public Builder setLightVariability(int value) {
+        bitField0_ |= 0x00000080;
+        lightVariability_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 light_variability = 8;</code>
+       */
+      public Builder clearLightVariability() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        lightVariability_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 light_tonality = 9;
+      private int lightTonality_ ;
+      /**
+       * <code>optional int32 light_tonality = 9;</code>
+       */
+      public boolean hasLightTonality() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional int32 light_tonality = 9;</code>
+       */
+      public int getLightTonality() {
+        return lightTonality_;
+      }
+      /**
+       * <code>optional int32 light_tonality = 9;</code>
+       */
+      public Builder setLightTonality(int value) {
+        bitField0_ |= 0x00000100;
+        lightTonality_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 light_tonality = 9;</code>
+       */
+      public Builder clearLightTonality() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        lightTonality_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 firmware_version = 10;
+      private int firmwareVersion_ ;
+      /**
+       * <code>optional int32 firmware_version = 10;</code>
+       */
+      public boolean hasFirmwareVersion() {
+        return ((bitField0_ & 0x00000200) == 0x00000200);
+      }
+      /**
+       * <code>optional int32 firmware_version = 10;</code>
+       */
+      public int getFirmwareVersion() {
+        return firmwareVersion_;
+      }
+      /**
+       * <code>optional int32 firmware_version = 10;</code>
+       */
+      public Builder setFirmwareVersion(int value) {
+        bitField0_ |= 0x00000200;
+        firmwareVersion_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 firmware_version = 10;</code>
+       */
+      public Builder clearFirmwareVersion() {
+        bitField0_ = (bitField0_ & ~0x00000200);
+        firmwareVersion_ = 0;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:hello.periodic_data)
     }
 
@@ -19749,11 +20076,13 @@ public final class InputProtos {
       "ventBatch\022+\n\006events\030\001 \003(\0132\033.hello.EventB" +
       "atch.EventItem\032Q\n\tEventItem\022\027\n\017start_tim" +
       "estamp\030\001 \001(\003\022\025\n\rend_timestamp\030\002 \001(\003\022\024\n\014o" +
-      "ffsetMillis\030\003 \001(\005\"t\n\rperiodic_data\022\021\n\tun" +
-      "ix_time\030\001 \001(\005\022\r\n\005light\030\002 \001(\005\022\023\n\013temperat" +
-      "ure\030\003 \001(\005\022\020\n\010humidity\030\004 \001(\005\022\014\n\004dust\030\005 \001(",
-      "\005\022\014\n\004name\030\006 \001(\tB)\n\032com.hello.suripu.api." +
-      "inputB\013InputProtos"
+      "ffsetMillis\030\003 \001(\005\"\316\001\n\rperiodic_data\022\021\n\tu" +
+      "nix_time\030\001 \001(\005\022\r\n\005light\030\002 \001(\005\022\023\n\013tempera" +
+      "ture\030\003 \001(\005\022\020\n\010humidity\030\004 \001(\005\022\014\n\004dust\030\005 \001",
+      "(\005\022\014\n\004name\030\006 \001(\t\022\013\n\003mac\030\007 \001(\014\022\031\n\021light_v" +
+      "ariability\030\010 \001(\005\022\026\n\016light_tonality\030\t \001(\005" +
+      "\022\030\n\020firmware_version\030\n \001(\005B)\n\032com.hello." +
+      "suripu.api.inputB\013InputProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -19903,7 +20232,7 @@ public final class InputProtos {
           internal_static_hello_periodic_data_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_periodic_data_descriptor,
-              new java.lang.String[] { "UnixTime", "Light", "Temperature", "Humidity", "Dust", "Name", });
+              new java.lang.String[] { "UnixTime", "Light", "Temperature", "Humidity", "Dust", "Name", "Mac", "LightVariability", "LightTonality", "FirmwareVersion", });
           return null;
         }
       };
