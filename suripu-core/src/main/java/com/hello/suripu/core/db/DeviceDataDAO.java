@@ -63,11 +63,13 @@ public abstract class DeviceDataDAO {
             "ROUND(MIN(offset_millis)) as offset_millis," +
             "date_trunc('hour', ts) + (CAST(date_part('minute', ts) AS integer) / :slot_duration) * :slot_duration * interval '1 min' AS ts_bucket " +
             "FROM device_sensors_master " +
-            "WHERE account_id = :account_id AND local_utc_ts >= :start_ts AND local_utc_ts < :end_ts " +
+            "WHERE account_id = :account_id AND device_id = :device_id " +
+            "AND local_utc_ts >= :start_ts AND local_utc_ts < :end_ts " +
             "GROUP BY ts_bucket " +
             "ORDER BY ts_bucket ASC")
     public abstract ImmutableList<DeviceData> getBetweenByLocalTimeAggregateBySlotDuration(
             @Bind("account_id") Long accountId,
+            @Bind("device_id") Long deviceId,
             @Bind("start_ts") DateTime start,
             @Bind("end_ts") DateTime end,
             @Bind("slot_duration") Integer slotDuration);
@@ -82,13 +84,13 @@ public abstract class DeviceDataDAO {
 
 
     @Timed
-    public List<Sample> generateTimeSerie(final Long clientUtcTimestamp, final Long accountId, final int slotDurationInMinutes, final int queryDurationInHours, final String sensor) {
+    public List<Sample> generateTimeSerie(final Long clientUtcTimestamp, final Long accountId, final Long deviceId, final int slotDurationInMinutes, final int queryDurationInHours, final String sensor) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(clientUtcTimestamp, DateTimeZone.UTC);
         final DateTime queryStartTime = queryEndTime.minusHours(queryDurationInHours);
 
-        final List<DeviceData> rows = getBetweenByLocalTimeAggregateBySlotDuration(accountId, queryStartTime, queryEndTime, slotDurationInMinutes);
+        final List<DeviceData> rows = getBetweenByLocalTimeAggregateBySlotDuration(accountId, deviceId, queryStartTime, queryEndTime, slotDurationInMinutes);
         LOGGER.debug("Retrieved {} rows from database", rows.size());
 
         if(rows.size() == 0) {

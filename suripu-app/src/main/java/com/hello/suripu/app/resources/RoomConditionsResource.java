@@ -1,6 +1,7 @@
 package com.hello.suripu.app.resources;
 
 import com.google.common.base.Optional;
+import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.DeviceData;
@@ -27,10 +28,12 @@ public class RoomConditionsResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RoomConditionsResource.class);
     private final DeviceDataDAO deviceDataDAO;
+    private final DeviceDAO deviceDAO;
     private final long allowedRangeInSeconds;
 
-    public RoomConditionsResource(final DeviceDataDAO deviceDataDAO, final long allowedRangeInSeconds) {
+    public RoomConditionsResource(final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO, final long allowedRangeInSeconds) {
         this.deviceDataDAO = deviceDataDAO;
+        this.deviceDAO = deviceDAO;
         this.allowedRangeInSeconds = allowedRangeInSeconds;
     }
 
@@ -62,7 +65,35 @@ public class RoomConditionsResource {
         final int slotDurationInMinutes = 5;
         final int  queryDurationInHours = 24;
 
-        return deviceDataDAO.generateTimeSerie(clientUtcTimestamp, accessToken.accountId, slotDurationInMinutes, queryDurationInHours, sensor);
+        // get latest device connected to this account
+        final Optional<Long> deviceId = deviceDAO.getByAccountId(accessToken.accountId);
+        if(!deviceId.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
+
+        return deviceDataDAO.generateTimeSerie(clientUtcTimestamp, accessToken.accountId, deviceId.get(), slotDurationInMinutes, queryDurationInHours, sensor);
+    }
+
+    @GET
+    @Path("/{sensor}/{device_id}/day")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Sample> getLast24hoursDeviceId(
+            @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
+            @PathParam("sensor") String sensor,
+            @PathParam("device_id") String deviceId,
+            @QueryParam("from") Long clientUtcTimestamp) {
+
+        // validateQueryRange(clientUtcTimestamp, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
+
+        final int slotDurationInMinutes = 5;
+        final int  queryDurationInHours = 24;
+
+        final Optional<Long> id = deviceDAO.getIdForAccountIdDeviceId(accessToken.accountId, deviceId);
+        if (!id.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
+
+        return deviceDataDAO.generateTimeSerie(clientUtcTimestamp, accessToken.accountId, id.get(), slotDurationInMinutes, queryDurationInHours, sensor);
     }
 
     @GET
@@ -77,7 +108,13 @@ public class RoomConditionsResource {
         final int slotDurationInMinutes = 1;
         final int  queryDurationInHours = 24;
 
-        return deviceDataDAO.generateTimeSerie(clientUtcTimestamp, accountId, slotDurationInMinutes, queryDurationInHours, sensor);
+        // get latest device connected to this account
+        final Optional<Long> deviceId = deviceDAO.getByAccountId(accessToken.accountId);
+        if(!deviceId.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
+
+        return deviceDataDAO.generateTimeSerie(clientUtcTimestamp, accountId, deviceId.get(), slotDurationInMinutes, queryDurationInHours, sensor);
     }
 
     /**
@@ -109,8 +146,14 @@ public class RoomConditionsResource {
         final int slotDurationInMinutes = 60;
         final int  queryDurationInHours = 24 * 7; // 7 days
 
+        // get latest device connected to this account
+        final Optional<Long> deviceId = deviceDAO.getByAccountId(accessToken.accountId);
+        if(!deviceId.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
+
         validateQueryRange(clientUtcTimestamp, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
-        return deviceDataDAO.generateTimeSerie(clientUtcTimestamp, accessToken.accountId, slotDurationInMinutes, queryDurationInHours, sensor);
+        return deviceDataDAO.generateTimeSerie(clientUtcTimestamp, accessToken.accountId, deviceId.get(), slotDurationInMinutes, queryDurationInHours, sensor);
     }
 
 }
