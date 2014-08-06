@@ -110,7 +110,7 @@ public class RoomConditionsResource {
         final int  queryDurationInHours = 24;
 
         // get latest device_id connected to this account
-        final Optional<Long> deviceId = deviceDAO.getByAccountId(accessToken.accountId);
+        final Optional<Long> deviceId = deviceDAO.getByAccountId(accountId);
         if(!deviceId.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
