@@ -4,6 +4,7 @@ import au.com.bytecode.opencsv.CSVReader;
 import com.google.common.base.Optional;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.TextFormat;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.api.input.InputProtos.SimpleSensorBatch;
@@ -24,6 +25,7 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
+import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
@@ -44,6 +46,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -216,104 +219,10 @@ public class ReceiveResource {
     }
 
     @POST
-    @Path("/morpheus")
-    @Deprecated // only used for chris testing.
-    @Timed
-    public void morpheusReceive(byte[] body) {
-
-        LOGGER.debug("Body length = {}", body.length);
-        ByteArrayInputStream byteArrayInputStream = null;
-
-        /*
-            "%d,%d,%d,%d,%d,%d,%s",
-            MSG_VER,
-            data->time,
-            data->light,
-            data->temp,
-            data->humid,
-            data->dust,
-            MORPH_NAME
-         */
-        try {
-            byteArrayInputStream = new ByteArrayInputStream(body);
-
-            final CSVReader reader = new CSVReader(new InputStreamReader(byteArrayInputStream), ',');
-            String[] nextLine;
-            LOGGER.info("Attempting to parse csv");
-            while ((nextLine = reader.readNext()) != null) {
-                if (nextLine != null) {
-                    final int version = Integer.parseInt(nextLine[0]);
-                    final long time = Long.parseLong(nextLine[1]) * 1000;
-                    final int light = Integer.parseInt(nextLine[2]);
-                    final int temperature = Integer.parseInt(nextLine[3]);
-                    final int humidity = Integer.parseInt(nextLine[4]);
-                    final int dust = Integer.parseInt(nextLine[5]);
-                    final String deviceId = nextLine[6];
-                    LOGGER.info("Time was: {}, light was: {} for device {}", time, light, deviceId);
-                    LOGGER.info("Temperature was: {}, humidity was: {}, dust was {} for device {}", temperature, humidity, dust, deviceId);
-
-                    final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceId);
-                    LOGGER.debug("Found {} pairs", deviceAccountPairs.size());
-
-                    final DateTime roundedDateTime = new DateTime(time, DateTimeZone.UTC).withSecondOfMinute(0);
-                    for (final DeviceAccountPair pair : deviceAccountPairs) {
-                        final DeviceData.Builder builder = new DeviceData.Builder()
-                                .withAccountId(pair.accountId)
-                                .withDeviceId(pair.internalDeviceId)
-                                .withAmbientTemperature(temperature)
-                                .withAmbientAirQuality(dust)
-                                .withAmbientHumidity(humidity)
-                                .withAmbientLight(light)
-                                .withOffsetMillis(-25200000) //TODO: GET THIS FROM MORPHEUS PAYLOAD
-                                .withDateTimeUTC(roundedDateTime);
-
-                        final DeviceData data = builder.build();
-
-                        try {
-                            deviceDataDAO.insert(data);
-                            LOGGER.info("Data saved to DB: {}", data);
-                        } catch (UnableToExecuteStatementException exception) {
-                            final Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
-                            if (!matcher.find()) {
-                                LOGGER.error(exception.getMessage());
-                                throw new WebApplicationException(
-                                        Response.status(Response.Status.BAD_REQUEST)
-                                                .entity(exception.getMessage())
-                                                .type(MediaType.TEXT_PLAIN_TYPE)
-                                                .build());
-                            }
-
-                            LOGGER.warn("Duplicate device sensor value for account_id = {}, time: {}", pair.accountId, roundedDateTime);
-
-                        }
-                    }
-                }
-            }
-        } catch(IOException exception) {
-            LOGGER.error("{}", exception.getMessage());
-        } finally {
-            if(byteArrayInputStream != null) {
-                try {
-                    byteArrayInputStream.close();
-                } catch (IOException exception ) {
-                    LOGGER.error("{}", exception.getMessage());
-                }
-            }
-        }
-        LOGGER.info("Done receiving");
-    }
-
-
-    @POST
     @Path("/morpheus/pb")
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     @Timed
     public void morpheusProtobufReceive(byte[] body) {
-
-        LOGGER.debug("Received {} bytes", body.length);
-        for(byte b : body) {
-            LOGGER.debug(Integer.toHexString(b));
-        }
 
         InputProtos.periodic_data data = null;
 
@@ -324,8 +233,15 @@ public class ReceiveResource {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("bad request").type(MediaType.TEXT_PLAIN_TYPE).build());
         }
 
-        LOGGER.debug("Received valid protobuf");
-        final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(data.getName());
+        // get MAC address of morpheus
+        final byte[] mac = Arrays.copyOf(data.getMac().toByteArray(), 6);
+        final String deviceName = new String(Hex.encodeHex(mac));
+
+        LOGGER.debug("Received valid protobuf {}", deviceName.toString());
+        LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
+
+
+        final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceName.toString());
         LOGGER.debug("Found {} pairs", deviceAccountPairs.size());
         long timestampMillis = data.getUnixTime() * 1000L;
         final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
@@ -374,7 +290,8 @@ public class ReceiveResource {
         // it will soon be removed and rely on device_id and signature from Morpheus
         // TODO: make transition from access token to signature based happen.
 
-        final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(batch.getDeviceId());
+        final String deviceName = batch.getDeviceId(); // protobuf deviceId is really device_name in table
+        final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceName);
 
         if(deviceAccountPairs.isEmpty()) {
             LOGGER.warn("No account found for device_id: {}", batch.getDeviceId());

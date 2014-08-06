@@ -210,5 +210,9 @@ message periodic_data {
     optional int32 humidity=4;
     optional int32 dust=5;
     optional string name=6;
+    optional bytes mac=7;
+    optional int32 light_variability=8;
+    optional int32 light_tonality=9;
+    optional int32 firmware_version=10;
 }
 
