@@ -4,6 +4,7 @@ import au.com.bytecode.opencsv.CSVReader;
 import com.google.common.base.Optional;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.TextFormat;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.api.input.InputProtos.SimpleSensorBatch;
@@ -230,11 +231,15 @@ public class ReceiveResource {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("bad request").type(MediaType.TEXT_PLAIN_TYPE).build());
         }
 
-        LOGGER.debug("Received valid protobuf {}", new String(data.getMac().toByteArray()));
-        LOGGER.debug("Humidity {}", data.getHumidity());
-        LOGGER.debug("Temp {}", data.getTemperature());
-        LOGGER.debug("Light Dust {} {}", data.getLight(), data.getDust());
-        final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(data.getMac().toString());
+        StringBuilder deviceName = new StringBuilder();
+        for (byte b:data.getMac().toByteArray()) {
+            deviceName.append(b);
+        }
+        LOGGER.debug("Received valid protobuf {}", deviceName.toString());
+        LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
+
+
+        final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceName.toString());
         LOGGER.debug("Found {} pairs", deviceAccountPairs.size());
         long timestampMillis = data.getUnixTime() * 1000L;
         final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
