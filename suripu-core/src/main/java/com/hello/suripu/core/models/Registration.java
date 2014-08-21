@@ -45,7 +45,7 @@ public class Registration {
             @JsonProperty("tz") final Integer tzOffsetMillis
     ) {
         checkNotNull(email, "email cannot be null");
-        checkNotNull(email, "password cannot be null");
+        checkNotNull(password, "password cannot be null");
         this.name = name;
         this.email = email;
         this.password = password;
