@@ -12,6 +12,7 @@ import com.hello.suripu.app.cli.RecreateEventsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.resources.AccountResource;
 import com.hello.suripu.app.resources.ApplicationResource;
+import com.hello.suripu.app.resources.DeviceResources;
 import com.hello.suripu.app.resources.EventResource;
 import com.hello.suripu.app.resources.HistoryResource;
 import com.hello.suripu.app.resources.OAuthResource;
@@ -148,6 +149,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new SleepLabelResource(sleepLabelDAO));
         environment.addProvider(new RoomConditionsResource(deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
         environment.addResource(new EventResource(eventDAODynamoDB));
+        environment.addResource(new DeviceResources(deviceDAO));
 
         LOGGER.debug("{}", DateTime.now(DateTimeZone.UTC).getMillis());
 
