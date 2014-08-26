@@ -37,14 +37,14 @@ public class DeviceResources {
     @Produces(MediaType.APPLICATION_JSON)
     public void registerPill(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final PillRegistration pillRegistration) {
         try {
-            final Integer trackerId = deviceDAO.registerTracker(pillRegistration.accountId, pillRegistration.pillId);
-            LOGGER.info("Account {} registered pill {} with internal id = {}", pillRegistration.accountId, pillRegistration.pillId, trackerId);
+            final Integer trackerId = deviceDAO.registerTracker(accessToken.accountId, pillRegistration.pillId);
+            LOGGER.info("Account {} registered pill {} with internal id = {}", accessToken.accountId, pillRegistration.pillId, trackerId);
             return;
         } catch (UnableToExecuteStatementException exception) {
             final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
 
             if(matcher.find()) {
-                LOGGER.error("Failed to register pill for account id = {} and pill id = {} : {}", pillRegistration.accountId, pillRegistration.pillId, exception.getMessage());
+                LOGGER.error("Failed to register pill for account id = {} and pill id = {} : {}", accessToken.accountId, pillRegistration.pillId, exception.getMessage());
                 throw new WebApplicationException(Response.status(Response.Status.CONFLICT)
                         .entity(new JsonError(409, "Pill already exists for this account.")).build());
             }
