@@ -35,7 +35,7 @@ public class DeviceResources {
     @Path("/pill")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void registerPill(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid PillRegistration pillRegistration) {
+    public void registerPill(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final PillRegistration pillRegistration) {
         try {
             final Integer trackerId = deviceDAO.registerTracker(pillRegistration.accountId, pillRegistration.pillId);
             LOGGER.info("Account {} registered pill {} with internal id = {}", pillRegistration.accountId, pillRegistration.pillId, trackerId);
