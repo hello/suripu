@@ -67,6 +67,14 @@ public class SuripuConfiguration extends Configuration {
     }
 
 
+    @Valid
+    @NotNull
+    @JsonProperty("audio_bucket_name")
+    private String audioBucketName;
+
+    public String getAudioBucketName() {
+        return audioBucketName;
+    }
     /*
     @Valid
     @NotNull
