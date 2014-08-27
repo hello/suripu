@@ -4,6 +4,7 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.common.base.Joiner;
 import com.hello.dropwizard.mikkusu.helpers.JacksonProtobufProvider;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
@@ -34,6 +35,7 @@ import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
+import com.hello.suripu.service.resources.AudioResource;
 import com.hello.suripu.service.resources.ReceiveResource;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -97,6 +99,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
 
         final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);
+        final String bucketName = configuration.getAudioBucketName();
 
 
         final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider);
@@ -144,6 +148,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 publicKeyStore, kinesisLoggerFactory));
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());
+        environment.addResource(new AudioResource(s3Client, bucketName));
 
         // Manage the lifecycle of our clients
         environment.manage(new DynamoDBClientManaged(dynamoDBClient));
