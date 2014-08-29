@@ -145,7 +145,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
         environment.addResource(new ReceiveResource(dao, deviceDAO, scoreDAO,
                 trackerMotionDAO,
-                publicKeyStore, kinesisLoggerFactory));
+                publicKeyStore, kinesisLoggerFactory, configuration.getDebug()));
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());
         environment.addResource(new AudioResource(s3Client, bucketName));

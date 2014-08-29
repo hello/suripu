@@ -1,6 +1,5 @@
 package com.hello.suripu.service.resources;
 
-import au.com.bytecode.opencsv.CSVReader;
 import com.google.common.base.Optional;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.protobuf.ByteString;
@@ -24,6 +23,7 @@ import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.service.SignedMessage;
 import com.yammer.metrics.annotation.Timed;
 import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
@@ -45,7 +45,6 @@ import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -68,13 +67,15 @@ public class ReceiveResource {
 
     private final KinesisLoggerFactory kinesisLoggerFactory;
     private final CryptoHelper cryptoHelper;
+    private final Boolean debug;
 
     public ReceiveResource(final DeviceDataDAO deviceDataDAO,
                            final DeviceDAO deviceDAO,
                            final ScoreDAO scoreDAO,
                            final TrackerMotionDAO trackerMotionDAO,
                            final PublicKeyStore publicKeyStore,
-                           final KinesisLoggerFactory kinesisLoggerFactory) {
+                           final KinesisLoggerFactory kinesisLoggerFactory,
+                           final Boolean debug) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.scoreDAO = scoreDAO;
@@ -83,6 +84,7 @@ public class ReceiveResource {
         this.publicKeyStore = publicKeyStore;
         cryptoHelper = new CryptoHelper();
         this.kinesisLoggerFactory = kinesisLoggerFactory;
+        this.debug = debug;
     }
 
 
@@ -219,24 +221,113 @@ public class ReceiveResource {
     }
 
     @POST
+    @Path("/morpheus/pb2")
+    @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
+    @Timed
+    public String morpheusProtobufReceiveEncrypted(final byte[] body) {
+
+
+        final SignedMessage signedMessage = SignedMessage.parse(body);
+
+        InputProtos.periodic_data data = null;
+
+        try {
+            data = InputProtos.periodic_data.parseFrom(signedMessage.body);
+        } catch (IOException exception) {
+            final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
+            LOGGER.error(errorMessage);
+
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity((debug) ? errorMessage : "bad request")
+                    .type(MediaType.TEXT_PLAIN_TYPE).build()
+            );
+        }
+
+
+        // get MAC address of morpheus
+        final byte[] mac = Arrays.copyOf(data.getMac().toByteArray(), 6);
+        final String deviceName = new String(Hex.encodeHex(mac));
+        LOGGER.debug("Received valid protobuf {}", deviceName.toString());
+        LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
+
+        // TODO: Fetch key from Datastore
+        final byte[] keyBytes = "1234567891234567".getBytes();
+        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytes);
+
+        if(error.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity((debug) ? error.get().message : "bad request")
+                    .type(MediaType.TEXT_PLAIN_TYPE).build()
+            );
+        }
+
+
+        final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceName.toString());
+        LOGGER.debug("Found {} pairs", deviceAccountPairs.size());
+        long timestampMillis = data.getUnixTime() * 1000L;
+        final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
+
+        for (final DeviceAccountPair pair : deviceAccountPairs) {
+            final DeviceData.Builder builder = new DeviceData.Builder()
+                    .withAccountId(pair.accountId)
+                    .withDeviceId(pair.internalDeviceId)
+                    .withAmbientTemperature(data.getTemperature())
+                    .withAmbientAirQuality(data.getDust())
+                    .withAmbientHumidity(data.getHumidity())
+                    .withAmbientLight(data.getLight())
+                    .withOffsetMillis(-25200000) //TODO: GET THIS FROM MORPHEUS PAYLOAD
+                    .withDateTimeUTC(roundedDateTime);
+
+            final DeviceData deviceData = builder.build();
+
+            try {
+                deviceDataDAO.insert(deviceData);
+                LOGGER.info("Data saved to DB: {}", data);
+            } catch (UnableToExecuteStatementException exception) {
+                final Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
+                if (!matcher.find()) {
+                    LOGGER.error(exception.getMessage());
+                    throw new WebApplicationException(
+                            Response.status(Response.Status.BAD_REQUEST)
+                                    .entity(exception.getMessage())
+                                    .type(MediaType.TEXT_PLAIN_TYPE)
+                                    .build());
+                }
+
+                LOGGER.warn("Duplicate device sensor value for account_id = {}, time: {}", pair.accountId, roundedDateTime);
+            }
+        }
+
+        return "OK";
+    }
+
+
+
+    @POST
     @Path("/morpheus/pb")
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     @Timed
-    public void morpheusProtobufReceive(byte[] body) {
+    public String morpheusProtobufReceive(final byte[] body) {
+
 
         InputProtos.periodic_data data = null;
 
         try {
             data = InputProtos.periodic_data.parseFrom(body);
         } catch (IOException exception) {
-            LOGGER.error("Failed parsing protobuf: {}", exception.getMessage());
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("bad request").type(MediaType.TEXT_PLAIN_TYPE).build());
+            final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
+            LOGGER.error(errorMessage);
+
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity((debug) ? errorMessage : "bad request")
+                    .type(MediaType.TEXT_PLAIN_TYPE).build()
+            );
         }
+
 
         // get MAC address of morpheus
         final byte[] mac = Arrays.copyOf(data.getMac().toByteArray(), 6);
         final String deviceName = new String(Hex.encodeHex(mac));
-
         LOGGER.debug("Received valid protobuf {}", deviceName.toString());
         LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
 
@@ -276,6 +367,8 @@ public class ReceiveResource {
                 LOGGER.warn("Duplicate device sensor value for account_id = {}, time: {}", pair.accountId, roundedDateTime);
             }
         }
+
+        return "OK";
     }
 
 
