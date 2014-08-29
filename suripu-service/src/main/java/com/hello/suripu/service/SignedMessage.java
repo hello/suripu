@@ -62,8 +62,8 @@ public class SignedMessage {
          *
          *  1. Extract pb body, IV and signature
          *  2. Sha-1 pb body
-         *  3. Encrypt hash with key
-         *  4. Compare signature
+         *  3. Decrypt signature with key
+         *  4. Compare sha
          *
          */
 
