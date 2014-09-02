@@ -63,7 +63,7 @@ public class RoomConditionsResource {
         validateQueryRange(clientUtcTimestamp, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
 
         final int slotDurationInMinutes = 5;
-        final int  queryDurationInHours = 24;
+        final int queryDurationInHours = 24;
 
         // get latest device_id connected to this account
         final Optional<Long> deviceId = deviceDAO.getByAccountId(accessToken.accountId);

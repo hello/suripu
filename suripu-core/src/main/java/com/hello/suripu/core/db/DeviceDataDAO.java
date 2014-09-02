@@ -2,10 +2,10 @@ package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.binders.BindDeviceData;
 import com.hello.suripu.core.db.mappers.DeviceDataBucketMapper;
 import com.hello.suripu.core.db.mappers.DeviceDataMapper;
+import com.hello.suripu.core.db.util.Bucketing;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
 import com.yammer.metrics.annotation.Timed;
@@ -20,9 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -83,12 +81,32 @@ public abstract class DeviceDataDAO {
     public abstract Optional<DeviceData> getMostRecent(@Bind("account_id") final Long accountId);
 
 
+    /**
+     * Generate time serie for given sensor. Return empty list if no data
+     * @param clientUtcTimestamp
+     * @param accountId
+     * @param deviceId
+     * @param slotDurationInMinutes
+     * @param queryDurationInHours
+     * @param sensor
+     * @return
+     */
     @Timed
-    public List<Sample> generateTimeSerie(final Long clientUtcTimestamp, final Long accountId, final Long deviceId, final int slotDurationInMinutes, final int queryDurationInHours, final String sensor) {
+    public List<Sample> generateTimeSerie(
+            final Long clientUtcTimestamp,
+            final Long accountId,
+            final Long deviceId,
+            final int slotDurationInMinutes,
+            final int queryDurationInHours,
+            final String sensor) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(clientUtcTimestamp, DateTimeZone.UTC);
         final DateTime queryStartTime = queryEndTime.minusHours(queryDurationInHours);
+
+        LOGGER.debug("Client utcTimeStamp : {} ({})", clientUtcTimestamp, new DateTime(clientUtcTimestamp));
+        LOGGER.debug("QueryEndTime: {} ({})", queryEndTime, queryEndTime.getMillis());
+        LOGGER.debug("QueryStartTime: {} ({})", queryStartTime, queryStartTime.getMillis());
 
         final List<DeviceData> rows = getBetweenByLocalTimeAggregateBySlotDuration(accountId, deviceId, queryStartTime, queryEndTime, slotDurationInMinutes);
         LOGGER.debug("Retrieved {} rows from database", rows.size());
@@ -99,76 +117,37 @@ public abstract class DeviceDataDAO {
 
         // create buckets with keys in UTC-Time
         final int currentOffsetMillis = rows.get(0).offsetMillis;
-        final DateTime now = queryEndTime.withSecondOfMinute(0).withMillisOfSecond(0).minusMillis(currentOffsetMillis);
+        final DateTime now = queryEndTime.withSecondOfMinute(0).withMillisOfSecond(0);
         final int remainder = now.getMinuteOfHour() % slotDurationInMinutes;
         final int minuteBucket = now.getMinuteOfHour() - remainder;
         // if 4:36 -> bucket = 4:35
 
         final DateTime nowRounded = now.minusMinutes(remainder);
-        LOGGER.debug("Now (rounded) = {}", nowRounded);
-
+        LOGGER.debug("Current Offset Milis = {}", currentOffsetMillis);
+        LOGGER.debug("Remainder = {}", remainder);
+        LOGGER.debug("Now (rounded) = {} ({})", nowRounded, nowRounded.getMillis());
 
 
 //        int numberOfBuckets= (12 * 24) + 1;
         final int numberOfBuckets= (queryDurationInHours * 60 / slotDurationInMinutes) + 1;
 
-        final Map<Long, Sample> map = new HashMap<>();
-        for(int i = 0; i < numberOfBuckets; i++) {
-            LOGGER.trace("Inserting {}", nowRounded.minusMinutes(i * slotDurationInMinutes));
-            // TODO: try to remove the null value. Use optional maybe?
-            map.put(nowRounded.minusMinutes(i * slotDurationInMinutes).getMillis(), new Sample(nowRounded.minusMinutes(i * slotDurationInMinutes).getMillis(), 0, null));
-        }
+        final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes);
 
         LOGGER.debug("Map size = {}", map.size());
 
-        for(final DeviceData deviceData: rows) {
-            if(!map.containsKey(deviceData.dateTimeUTC.getMillis())) {
-                LOGGER.debug("NOT IN MAP: {}", deviceData.dateTimeUTC);
-                continue;
-            }
 
-            // TODO: refactor this
+        final Optional<Map<Long, Sample>> optionalPopulatedMap = Bucketing.populateMap(rows, sensor);
 
-            int sensorValue = 0;
-            if(sensor.equals("humidity")) {
-                sensorValue = deviceData.ambientHumidity;
-            } else if(sensor.equals("temperature")) {
-                sensorValue = deviceData.ambientTemperature;
-            } else if (sensor.equals("particulates")) {
-                sensorValue = deviceData.ambientAirQuality;
-            } else if (sensor.equals("light")) {
-                sensorValue = deviceData.ambientLight;
-            } else {
-                LOGGER.warn("Sensor {} is not supported for account_id: {}. Returning early", sensor, accountId);
-                return new ArrayList<>();
-            }
-
-            map.put(deviceData.dateTimeUTC.getMillis(), new Sample(deviceData.dateTimeUTC.getMillis(), sensorValue, deviceData.offsetMillis));
+        if(!optionalPopulatedMap.isPresent()) {
+            return Collections.EMPTY_LIST;
         }
 
-        LOGGER.debug("New map size = {}", map.size());
+        // Override map with values from DB
+        final Map<Long, Sample> merged = Bucketing.mergeResults(map, optionalPopulatedMap.get());
 
-        final Sample[] samples = map.values().toArray(new Sample[0]);
+        LOGGER.debug("New map size = {}", merged.size());
 
-        Arrays.sort(samples, new Comparator<Sample>() {
-            @Override
-            public int compare(Sample o1, Sample o2) {
-                return Long.compare(o1.dateTime, o2.dateTime);
-            }
-        });
-
-        int lastOffsetMillis = -1;
-        for(final Sample sample : samples) {
-            if(sample.offsetMillis == null) {
-                if(lastOffsetMillis == -1) {
-                    sample.offsetMillis = currentOffsetMillis;
-                } else {
-                    sample.offsetMillis = lastOffsetMillis;
-                }
-            }
-
-            lastOffsetMillis = sample.offsetMillis;
-        }
-        return Lists.newArrayList(samples);
+        final List<Sample> sortedList = Bucketing.sortResults(merged, currentOffsetMillis);
+        return sortedList;
     }
 }

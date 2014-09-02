@@ -36,6 +36,7 @@ public interface DeviceDAO {
             @Bind("account_id") Long accountId,
             @Bind("device_name") String deviceName);
 
+    @GetGeneratedKeys
     @SingleValueResult(Integer.class)
     @SqlUpdate("INSERT INTO account_tracker_map (account_id, device_id) VALUES(:account_id, :tracker_id)")
     Integer registerTracker(@Bind("account_id") Long accountId, @Bind("tracker_id") String trackerId);
