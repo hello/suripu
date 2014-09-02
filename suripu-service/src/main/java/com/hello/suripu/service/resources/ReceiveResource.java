@@ -87,37 +87,6 @@ public class ReceiveResource {
         this.debug = debug;
     }
 
-
-    @PUT
-    @Timed
-    @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
-    public Response receiveDevicePayload(@Valid SimpleSensorBatch batch) {
-
-        final Optional<byte[]> optionalPublicKeyBase64Encoded = publicKeyStore.get(batch.getDeviceId());
-        if(!optionalPublicKeyBase64Encoded.isPresent()) {
-            LOGGER.warn("Public key does not exist");
-            return Response.status(Response.Status.BAD_REQUEST).build();
-        }
-
-        final byte[] publicKeyBase64Encoded = optionalPublicKeyBase64Encoded.get();
-
-
-        // TODO: agree on which part of the data is signed
-        final boolean verified = cryptoHelper.validate(
-                batch.getSamples(0).getDeviceData().toByteArray(),
-                batch.getSamples(0).getDeviceDataSignature().toByteArray(),
-                publicKeyBase64Encoded
-        );
-
-        if(!verified) {
-            // TODO: make distinction server error and malformed request?
-            // TODO: let's not give potential attackers too much information
-            return Response.serverError().build();
-        }
-
-        return Response.ok().build();
-    }
-
     @POST
     @Timed
     @Path("/temp/tracker")
