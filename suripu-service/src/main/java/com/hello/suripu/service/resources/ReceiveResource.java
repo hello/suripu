@@ -192,8 +192,9 @@ public class ReceiveResource {
     @POST
     @Path("/morpheus/pb2")
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Timed
-    public String morpheusProtobufReceiveEncrypted(final byte[] body) {
+    public byte[] morpheusProtobufReceiveEncrypted(final byte[] body) {
 
 
         final SignedMessage signedMessage = SignedMessage.parse(body);
@@ -267,7 +268,29 @@ public class ReceiveResource {
             }
         }
 
-        return "OK";
+
+        final InputProtos.SyncResponse.Alarm alarm = InputProtos.SyncResponse.Alarm.newBuilder()
+                .setRingtoneId(99)
+                .setStartTime((int) (DateTime.now().getMillis()/ 1000))
+                .setEndTime((int) (DateTime.now().plusSeconds(30).getMillis()/ 1000))
+                .build();
+
+        final InputProtos.SyncResponse syncResponse = InputProtos.SyncResponse.newBuilder()
+                .setAlarm(alarm)
+                .build();
+
+        LOGGER.debug("Len pb = {}", syncResponse.toByteArray().length);
+
+        final Optional<byte[]> signedResponse = SignedMessage.sign(syncResponse.toByteArray(), keyBytes);
+        if(!signedResponse.isPresent()) {
+            LOGGER.error("Failed signing message");
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity((debug) ? "Failed signing message" : "server error")
+                    .type(MediaType.TEXT_PLAIN_TYPE).build()
+            );
+        }
+
+        return signedResponse.get();
     }
 
 

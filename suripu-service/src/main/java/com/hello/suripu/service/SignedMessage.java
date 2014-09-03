@@ -11,11 +11,15 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Random;
 
 public class SignedMessage {
 
@@ -83,12 +87,12 @@ public class SignedMessage {
         try {
             final MessageDigest md = MessageDigest.getInstance("SHA1");
             md.update(body);
-            byte[] output = md.digest();
+            final byte[] output = md.digest();
 
             LOGGER.debug("HexDigest: {}", new String(Hex.encodeHex(output)));
             LOGGER.debug("Output length: {}", output.length);
 
-            byte[] padded = new byte[32];
+            final byte[] padded = new byte[32];
             for(int i = 0; i < output.length; i++) {
                 padded[i] = output[i];
             }
@@ -103,7 +107,7 @@ public class SignedMessage {
             final SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
             cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, new IvParameterSpec(IV));
 
-            byte[] decryptedBytes = cipher.doFinal(sig);
+            final byte[] decryptedBytes = cipher.doFinal(sig);
 
             for(int i = 0; i < 20; i ++) {
                 if(decryptedBytes[i] != output[i]) {
@@ -146,5 +150,76 @@ public class SignedMessage {
 
         LOGGER.error("Signatures don't match");
         return Optional.of(new Error(sb.toString()));
+    }
+
+
+    /**
+     * Sign message for Sense
+     * Format = IV + sig + pb
+     * @param body
+     * @param key
+     * @return
+     */
+    public static Optional<byte[]> sign(final byte[] body, final byte[] key) {
+        final Random r = new SecureRandom();
+        final byte[] IV = new byte[IV_LENGTH];
+        r.nextBytes(IV);
+        LOGGER.debug("random IV = {}", Hex.encodeHex(IV));
+
+        final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        try {
+
+            final MessageDigest md = MessageDigest.getInstance("SHA1");
+            md.update(body);
+            final byte[] output = md.digest();
+            LOGGER.debug("Sha = {}", Hex.encodeHex(output));
+
+            final byte[] paddedSha = new byte[32];
+            for(int i= output.length; i < paddedSha.length; i++) {
+                paddedSha[i] = 0;
+            }
+
+            final Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+            final SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
+            cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, new IvParameterSpec(IV));
+
+
+            final byte[] sig = cipher.doFinal(paddedSha);
+
+            LOGGER.debug("Sig = {}", Hex.encodeHex(sig));
+
+            byteArrayOutputStream.write(IV);
+            byteArrayOutputStream.write(sig);
+            byteArrayOutputStream.write(body);
+
+            final byte[] data = byteArrayOutputStream.toByteArray();
+
+            LOGGER.debug("Body = {}", Hex.encodeHex(data));
+            return Optional.of(data);
+
+        } catch (NoSuchAlgorithmException e) {
+            LOGGER.error(e.getMessage());
+        } catch (NoSuchPaddingException e) {
+            LOGGER.error(e.getMessage());
+        } catch (InvalidAlgorithmParameterException e) {
+            LOGGER.error(e.getMessage());
+        } catch (InvalidKeyException e) {
+            LOGGER.error(e.getMessage());
+        } catch (BadPaddingException e) {
+            LOGGER.error(e.getMessage());
+        } catch (IllegalBlockSizeException e) {
+            LOGGER.error(e.getMessage());
+        } catch (IOException e) {
+            LOGGER.error(e.getMessage());
+        } finally {
+            try {
+                byteArrayOutputStream.close();
+            } catch(IOException exception) {
+                LOGGER.warn("Failed closing stream");
+            }
+        }
+
+        return Optional.absent();
     }
 }
