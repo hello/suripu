@@ -65,6 +65,9 @@ public class AccountResource {
         LOGGER.info("Attempting to register account with email: {}", registration.email);
 
         final Registration securedRegistration = Registration.encryptPassword(registration);
+        LOGGER.debug("Lat: {}", securedRegistration.latitude);
+        LOGGER.debug("Lon: {}", securedRegistration.longitude);
+        // TODO: Persist location somewhere
 
         try {
             final Account account = accountDAO.register(securedRegistration);

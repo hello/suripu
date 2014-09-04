@@ -22,8 +22,6 @@ public class Account {
         }
     }
 
-    // TODO: add age or DoB
-
     @NotNull
     @JsonIgnore
     public final Optional<Long> id;
@@ -55,9 +53,16 @@ public class Account {
     @JsonIgnore
     public final DateTime created;
 
+    @JsonProperty("last_modified")
+    public final Long lastModified;
+
+    @JsonProperty("dob")
+    public final DateTime DOB;
+
     /**
      *
      * @param id
+     * @param externalID
      * @param email
      * @param password
      * @param tzOffsetMillis
@@ -65,17 +70,22 @@ public class Account {
      * @param gender
      * @param height
      * @param weight
+     * @param created
+     * @param lastModified
+     * @param DOB
      */
     private Account(final Optional<Long> id,
-                   final String externalID,
-                   final String email,
-                   final String password,
-                   final Integer tzOffsetMillis,
-                   final String name,
-                   final Gender gender,
-                   final Integer height,
-                   final Integer weight,
-                   final DateTime created) {
+                    final String externalID,
+                    final String email,
+                    final String password,
+                    final Integer tzOffsetMillis,
+                    final String name,
+                    final Gender gender,
+                    final Integer height,
+                    final Integer weight,
+                    final DateTime created,
+                    final Long lastModified,
+                    final DateTime DOB) {
 
         this.id = id;
         this.externalID = externalID;
@@ -90,6 +100,8 @@ public class Account {
 
         this.created = created;
 
+        this.lastModified = lastModified;
+        this.DOB = DOB;
     }
 
     /**
@@ -106,7 +118,8 @@ public class Account {
 
         final String digest = DigestUtils.md5Hex(sb.toString());
         return new Account(Optional.fromNullable(id), digest, registration.email, registration.password, registration.tzOffsetMillis,
-                registration.name, registration.gender, registration.height, registration.weight, registration.created);
+                registration.name, registration.gender, registration.height, registration.weight, registration.created,
+                DateTime.now(DateTimeZone.UTC).getMillis(), registration.DOB);
     }
 
 
@@ -121,6 +134,8 @@ public class Account {
         private String email;
         private Integer tzOffsetMillis;
         private DateTime created;
+        private Long lastModified;
+        private DateTime DOB;
 
         public Builder() {
             this.id = Optional.absent();
@@ -132,6 +147,8 @@ public class Account {
             this.password = "";
             this.email = "";
             this.created = DateTime.now(DateTimeZone.UTC);
+            this.lastModified = DateTime.now(DateTimeZone.UTC).getMillis();
+            this.DOB = DateTime.now().withHourOfDay(0).withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfDay(0);
         }
 
         @JsonProperty("name")
@@ -197,10 +214,28 @@ public class Account {
             return this;
         }
 
+        @JsonIgnore
+        public Builder withLastModified(final Long lastModified) {
+            this.lastModified = lastModified;
+            return this;
+        }
+
+        @JsonProperty("dob")
+        public Builder withDOB(final String DOB) {
+            this.DOB = DateTime.parse(DOB);
+            return this;
+        }
+
+        @JsonIgnore
+        public Builder withDOB(final DateTime DOB) {
+            this.DOB = DOB;
+            return this;
+        }
+
         public Account build() throws MyAccountCreationException {
             checkNotNull(id, "ID can not be null");
             checkNotNull(email, "Email can not be null");
-            return new Account(id, externalId, email, password, tzOffsetMillis, name, gender, height, weight, created);
+            return new Account(id, externalId, email, password, tzOffsetMillis, name, gender, height, weight, created, lastModified, DOB);
         }
     }
 
@@ -218,6 +253,8 @@ public class Account {
                 .add("weight", weight)
                 .add("gender", gender)
                 .add("created", created)
+                .add("last_modified", lastModified)
+                .add("DOB", DOB)
                 .toString();
     }
 
