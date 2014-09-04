@@ -24,7 +24,7 @@ public @interface BindRegistration {
                     q.bind("name", arg.name);
                     q.bind("email", arg.email);
                     q.bind("password", arg.password);
-                    q.bind("age", arg.age);
+                    q.bind("dob", arg.DOB);
                     q.bind("height", arg.height);
                     q.bind("weight", arg.weight);
                     q.bind("tz_offset", arg.tzOffsetMillis);

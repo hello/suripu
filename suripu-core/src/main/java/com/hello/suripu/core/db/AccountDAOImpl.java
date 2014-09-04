@@ -35,7 +35,7 @@ public abstract class AccountDAOImpl implements AccountDAO {
     @SingleValueResult(Account.class)
     public abstract Optional<Account> getByEmail(@Bind("email") final String email);
 
-    @SqlUpdate("INSERT INTO accounts (name, email, password_hash, age, height, weight, tz_offset, created) VALUES(:name, :email, :password, :age, :height, :weight, :tz_offset, :created)")
+    @SqlUpdate("INSERT INTO accounts (name, email, password_hash, dob, height, weight, tz_offset, created) VALUES(:name, :email, :password, :dob, :height, :weight, :tz_offset, :created)")
     @GetGeneratedKeys
     public abstract long insertAccount(@BindRegistration Registration registration);
 
@@ -80,7 +80,7 @@ public abstract class AccountDAOImpl implements AccountDAO {
         return accountOptional;
     }
 
-    @SqlUpdate("UPDATE accounts SET name=:name, gender=:gender, height=:height, weight=:weight, tz_offset=:tz_offset WHERE id=:account_id;")
+    @SqlUpdate("UPDATE accounts SET name=:name, gender=:gender, dob=:dob, height=:height, weight=:weight, tz_offset=:tz_offset WHERE id=:account_id;")
     protected abstract Integer updateAccount(@BindAccount Account account, @Bind("account_id") Long accountId);
 
 
@@ -88,7 +88,8 @@ public abstract class AccountDAOImpl implements AccountDAO {
         try {
             int updated = updateAccount(account, accountId);
             LOGGER.debug("Update: {} row updated for account_id = {}", updated, accountId);
-            return getById(accountId);
+            final Optional<Account> accountFromDB = getById(accountId);
+            return accountFromDB;
         } catch (UnableToExecuteStatementException exception) {
             final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
 

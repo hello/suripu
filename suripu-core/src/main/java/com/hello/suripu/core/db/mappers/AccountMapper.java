@@ -1,6 +1,8 @@
 package com.hello.suripu.core.db.mappers;
 
 import com.hello.suripu.core.models.Account;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import org.slf4j.Logger;
@@ -23,6 +25,8 @@ public class AccountMapper implements ResultSetMapper<Account> {
         builder.withTzOffsetMillis(r.getInt("tz_offset"));
         builder.withPassword(r.getString("password_hash"));
         builder.withGender(r.getString("gender"));
+
+        builder.withDOB(new DateTime(r.getTimestamp("dob"), DateTimeZone.UTC));
 
         final Account account = builder.build();
 

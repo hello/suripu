@@ -35,6 +35,8 @@ UPDATE accounts SET name = firstname || ' ' || lastname;
 ALTER TABLE accounts ALTER COLUMN name set NOT NULL;
 
 
+
+
 --
 -- UPDATES TO ACCOUNT TABLE 2014-07-17
 --
@@ -42,6 +44,7 @@ ALTER TABLE accounts ALTER COLUMN name set NOT NULL;
 ALTER TABLE accounts ADD COLUMN tz_offset INTEGER;
 ALTER TABLE accounts ADD COLUMN last_modified TIMESTAMP;
 -- ALTER TABLE accounts DROP COLUMN tz;
+ALTER TABLE accounts ADD COLUMN dob TIMESTAMP;
 
 --
 -- OAUTH
