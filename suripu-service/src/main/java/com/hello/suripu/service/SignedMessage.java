@@ -176,8 +176,12 @@ public class SignedMessage {
             LOGGER.debug("Sha = {}", Hex.encodeHex(output));
 
             final byte[] paddedSha = new byte[32];
-            for(int i= output.length; i < paddedSha.length; i++) {
-                paddedSha[i] = 0;
+            for(int i= 0; i < paddedSha.length; i++) {
+                if(i < output.length) {
+                    paddedSha[i] = output[i];
+                } else {
+                    paddedSha[i] = 0;
+                }
             }
 
             final Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
