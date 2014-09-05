@@ -1,6 +1,8 @@
 package com.hello.suripu.core.db.binders;
 
 import com.hello.suripu.core.models.Registration;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
@@ -29,6 +31,7 @@ public @interface BindRegistration {
                     q.bind("weight", arg.weight);
                     q.bind("tz_offset", arg.tzOffsetMillis);
                     q.bind("created", arg.created);
+                    q.bind("last_modified", DateTime.now(DateTimeZone.UTC));
                 }
             };
         }

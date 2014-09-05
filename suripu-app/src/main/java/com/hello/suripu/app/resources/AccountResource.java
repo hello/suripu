@@ -50,6 +50,7 @@ public class AccountResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
+        LOGGER.info("Last modified = {}", account.get().lastModified);
         return account.get();
     }
 
@@ -97,24 +98,32 @@ public class AccountResource {
             @Scope({OAuthScope.USER_EXTENDED}) final AccessToken accessToken,
             @Valid final Account account) {
 
+        // TODO: Remove this
         final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
 
         if(!accountOptional.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
-//        if(account.email.isEmpty()) {
-//            LOGGER.warn("Email was empty for account id = {}. Refusing to update account.");
-//            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(new JsonError(400, "Email missing.")).build());
-//        }
+        LOGGER.info("Last modified (modify) = {}", account.lastModified);
 
         final Optional<Account> optionalAccount = accountDAO.update(account, accessToken.accountId);
-        if(optionalAccount.isPresent()) {
-            return optionalAccount.get();
+
+        if(!optionalAccount.isPresent()) {
+            LOGGER.warn("Failed updating account with id = {}, email = {}. Requested by accessToken = {}", accessToken.accountId, account.email, accessToken);
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
-        LOGGER.warn("Failed updating account with id = {}, email = {}. Requested by accessToken = {}", accessToken.accountId, account.email, accessToken);
-        throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+        Long diffInMillis = optionalAccount.get().lastModified.getMillis() - account.lastModified.getMillis();
+        if(diffInMillis < 5) {
+            LOGGER.warn("Last modified condition did not match data from DB for account_id= {}, diff in ms = {}", accessToken.accountId, diffInMillis);
+            final JsonError error = new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), "pre condition failed");
+            throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED)
+                    .entity(error).build());
+        }
+
+        return optionalAccount.get();
+
     }
 
     @POST

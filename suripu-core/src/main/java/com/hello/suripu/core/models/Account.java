@@ -27,7 +27,15 @@ public class Account {
     public final Optional<Long> id;
 
     @JsonProperty("id")
-    public final String externalID;
+    public String generateExternalId() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(id);
+        sb.append("|");
+        sb.append(created.getMillis());
+
+        final String digest = DigestUtils.md5Hex(sb.toString());
+        return digest;
+    };
 
     @JsonProperty("email")
     public final String email;
@@ -54,7 +62,7 @@ public class Account {
     public final DateTime created;
 
     @JsonProperty("last_modified")
-    public final Long lastModified;
+    public final DateTime lastModified;
 
     @JsonProperty("dob")
     public final DateTime DOB;
@@ -62,7 +70,6 @@ public class Account {
     /**
      *
      * @param id
-     * @param externalID
      * @param email
      * @param password
      * @param tzOffsetMillis
@@ -75,7 +82,6 @@ public class Account {
      * @param DOB
      */
     private Account(final Optional<Long> id,
-                    final String externalID,
                     final String email,
                     final String password,
                     final Integer tzOffsetMillis,
@@ -84,11 +90,10 @@ public class Account {
                     final Integer height,
                     final Integer weight,
                     final DateTime created,
-                    final Long lastModified,
+                    final DateTime lastModified,
                     final DateTime DOB) {
 
         this.id = id;
-        this.externalID = externalID;
         this.email = email;
         this.password = password;
         this.tzOffsetMillis = tzOffsetMillis;
@@ -111,21 +116,14 @@ public class Account {
      * @return
      */
     public static Account fromRegistration(final Registration registration, final Long id) {
-        final StringBuilder sb = new StringBuilder();
-        sb.append(id);
-        sb.append("|");
-        sb.append(registration.created.getMillis());
-
-        final String digest = DigestUtils.md5Hex(sb.toString());
-        return new Account(Optional.fromNullable(id), digest, registration.email, registration.password, registration.tzOffsetMillis,
+        return new Account(Optional.fromNullable(id), registration.email, registration.password, registration.tzOffsetMillis,
                 registration.name, registration.gender, registration.height, registration.weight, registration.created,
-                DateTime.now(DateTimeZone.UTC).getMillis(), registration.DOB);
+                DateTime.now(DateTimeZone.UTC), registration.DOB);
     }
 
 
     public static class Builder {
         private Optional<Long> id;
-        private String externalId;
         private String name;
         private Gender gender;
         private Integer height;
@@ -134,12 +132,11 @@ public class Account {
         private String email;
         private Integer tzOffsetMillis;
         private DateTime created;
-        private Long lastModified;
+        private DateTime lastModified;
         private DateTime DOB;
 
         public Builder() {
             this.id = Optional.absent();
-            this.externalId = "";
             this.name = "";
             this.gender = Gender.OTHER;
             this.height = 0;
@@ -147,8 +144,8 @@ public class Account {
             this.password = "";
             this.email = "";
             this.created = DateTime.now(DateTimeZone.UTC);
-            this.lastModified = DateTime.now(DateTimeZone.UTC).getMillis();
-            this.DOB = DateTime.now().withHourOfDay(0).withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfDay(0);
+            this.lastModified = new DateTime(1970, 1 ,1, 0, 0, DateTimeZone.UTC);
+            this.DOB = new DateTime(1900,1,1,0,0, DateTimeZone.UTC);
         }
 
         @JsonProperty("name")
@@ -215,8 +212,20 @@ public class Account {
         }
 
         @JsonIgnore
-        public Builder withLastModified(final Long lastModified) {
+        public Builder withCreated(final DateTime created) {
+            this.created = created;
+            return this;
+        }
+
+        @JsonProperty("last_modified")
+        public Builder withLastModified(final DateTime lastModified) {
             this.lastModified = lastModified;
+            return this;
+        }
+
+        @JsonIgnore
+        public Builder withLastModified(final Long lastModified) {
+            this.lastModified = new DateTime(lastModified, DateTimeZone.UTC);
             return this;
         }
 
@@ -235,7 +244,7 @@ public class Account {
         public Account build() throws MyAccountCreationException {
             checkNotNull(id, "ID can not be null");
             checkNotNull(email, "Email can not be null");
-            return new Account(id, externalId, email, password, tzOffsetMillis, name, gender, height, weight, created, lastModified, DOB);
+            return new Account(id, email, password, tzOffsetMillis, name, gender, height, weight, created, lastModified, DOB);
         }
     }
 
@@ -243,7 +252,7 @@ public class Account {
     public String toString() {
         return Objects.toStringHelper(Account.class)
                 .add("id", (id.isPresent()) ? id.get() : "N/A")
-                .add("external_id", externalID)
+                .add("external_id", generateExternalId())
                 .add("email", email)
                 .add("password", obscurePassword(password))
                 .add("tz", tzOffsetMillis)
