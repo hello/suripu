@@ -35,7 +35,7 @@ public abstract class AccountDAOImpl implements AccountDAO {
     @SingleValueResult(Account.class)
     public abstract Optional<Account> getByEmail(@Bind("email") final String email);
 
-    @SqlUpdate("INSERT INTO accounts (name, email, password_hash, dob, height, weight, tz_offset, created) VALUES(:name, :email, :password, :dob, :height, :weight, :tz_offset, :created)")
+    @SqlUpdate("INSERT INTO accounts (name, email, password_hash, dob, height, weight, tz_offset, created, last_modified) VALUES(:name, :email, :password, :dob, :height, :weight, :tz_offset, :created, :last_modified)")
     @GetGeneratedKeys
     public abstract long insertAccount(@BindRegistration Registration registration);
 
@@ -80,12 +80,14 @@ public abstract class AccountDAOImpl implements AccountDAO {
         return accountOptional;
     }
 
-    @SqlUpdate("UPDATE accounts SET name=:name, gender=:gender, dob=:dob, height=:height, weight=:weight, tz_offset=:tz_offset WHERE id=:account_id;")
+    @SqlUpdate("UPDATE accounts SET name=:name, gender=:gender, dob=:dob, height=:height, weight=:weight, " +
+            "tz_offset=:tz_offset, last_modified=:last_modified WHERE id=:account_id AND last_modified=:last_modified;")
     protected abstract Integer updateAccount(@BindAccount Account account, @Bind("account_id") Long accountId);
 
 
     public Optional<Account> update(final Account account, final Long accountId) {
         try {
+            LOGGER.debug("attempting update with Last modified = {}", account.lastModified);
             int updated = updateAccount(account, accountId);
             LOGGER.debug("Update: {} row updated for account_id = {}", updated, accountId);
             final Optional<Account> accountFromDB = getById(accountId);

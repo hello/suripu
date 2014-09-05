@@ -1,6 +1,8 @@
 package com.hello.suripu.core.db.binders;
 
 import com.hello.suripu.core.models.Account;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
@@ -30,6 +32,7 @@ public @interface BindAccount {
                     q.bind("height", arg.height);
                     q.bind("weight", arg.weight);
                     q.bind("tz_offset", arg.tzOffsetMillis);
+                    q.bind("last_modified", new DateTime(arg.lastModified, DateTimeZone.UTC));
                 }
             };
         }
