@@ -84,4 +84,4 @@ timezone_history_db:
 
 kinesis_logger:
   stream_name: logs
-  enabled : true
+  enabled : false
