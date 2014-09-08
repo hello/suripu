@@ -5,7 +5,7 @@ For up to date information see our [wiki](https://github.com/hello/suripu/wiki)
 It is suggested to install the following git hook:
 
 ```
-$ sudo pip install -r requirements.txt
+$ pip install -r requirements.txt --user
 $ ln -s -f ../../hooks/pre-commit .git/hooks/pre-commit
 $ chmod +x hooks/pre-commit
 ```
@@ -42,3 +42,12 @@ To deploy jars locally into the `repo` folder:
 2. run `mvn package`
 3. cd into the target `directory`
 4. run `mvn deploy:deploy-file -Durl=file:///path/to/Suripu/repo/ -Dfile=dropwizard-mikkusu-0.0.1.jar -DgroupId=com.hello.dropwizard -DartifactId=dropwizard-mikkusu -Dpackaging=jar -Dversion=0.0.1`
+
+
+To tail the logs:
+
+1. Make sure you ran `pip install -r requirements.txt --user`
+2. Make sure you have your `AWS_ACCESS_KEY_ID` and `AWS_SECRET_KEY` environmnent variable set up properly.
+3. cd into `/logging`
+4. python kinesis.py
+5. Enjoy
