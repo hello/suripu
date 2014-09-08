@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.MessageFormatter;
 
 import java.nio.ByteBuffer;
-import java.util.Iterator;
 
 
 public abstract class KinesisLoggerBundle<T extends Configuration> implements ConfiguredBundle<T> {
@@ -109,27 +108,13 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
             appender.addFilter(new Filter<ILoggingEvent>() {
                 @Override
                 public FilterReply decide(ILoggingEvent event) {
-//                    if(!event.getLoggerName().contains("com.hello")) {
-//                        return FilterReply.ACCEPT;
-//                    }
-
+                    // TODO: Filter unwanted logs
                     return FilterReply.ACCEPT;
                 }
             });
 
-            final Logger httpLogger = (Logger) LoggerFactory.getLogger("http.request");
-//            httpLogger.setAdditive(false);
-            final LoggerContext context = httpLogger.getLoggerContext();
-            appender.setContext(context);
 
-            appender.start();
-            httpLogger.addAppender(appender);
             root.addAppender(appender);
-            final Iterator<Appender<ILoggingEvent>> itr = root.iteratorForAppenders();
-            while(itr.hasNext()) {
-                System.out.println(itr.next().getName());
-            }
-
         }
     }
 
