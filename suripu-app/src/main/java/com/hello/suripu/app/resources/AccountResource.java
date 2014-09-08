@@ -114,7 +114,7 @@ public class AccountResource {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
-        Long diffInMillis = optionalAccount.get().lastModified.getMillis() - account.lastModified.getMillis();
+        final Long diffInMillis = optionalAccount.get().lastModified.getMillis() - account.lastModified.getMillis();
         if(diffInMillis < 5) {
             LOGGER.warn("Last modified condition did not match data from DB for account_id= {}, diff in ms = {}", accessToken.accountId, diffInMillis);
             final JsonError error = new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), "pre condition failed");

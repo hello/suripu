@@ -67,6 +67,7 @@ public class Account {
     @JsonProperty("dob")
     public final DateTime DOB;
 
+
     /**
      *
      * @param id
@@ -267,11 +268,18 @@ public class Account {
                 .toString();
     }
 
+    /**
+     * We don't want to leak the password in the logs, do we?
+     * @param password
+     * @return
+     */
     private String obscurePassword(final String password) {
-        StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
+
         for(int i=0; i < password.length(); i++) {
             sb.append("*");
         }
+
         return sb.toString();
     }
 
