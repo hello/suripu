@@ -113,7 +113,7 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
                 }
             });
 
-
+            appender.start();
             root.addAppender(appender);
         }
     }
