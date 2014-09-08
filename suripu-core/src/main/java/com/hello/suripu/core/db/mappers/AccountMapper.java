@@ -27,7 +27,7 @@ public class AccountMapper implements ResultSetMapper<Account> {
         builder.withGender(r.getString("gender"));
 
         builder.withDOB(new DateTime(r.getTimestamp("dob"), DateTimeZone.UTC));
-        builder.withLastModified(new DateTime(r.getTimestamp("last_modified"), DateTimeZone.UTC));
+        builder.withLastModified(r.getTimestamp("last_modified").getTime());
         builder.withCreated(new DateTime(r.getTimestamp("created"), DateTimeZone.UTC));
         final Account account = builder.build();
 

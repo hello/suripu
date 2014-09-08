@@ -62,7 +62,7 @@ public class Account {
     public final DateTime created;
 
     @JsonProperty("last_modified")
-    public final DateTime lastModified;
+    public final Long lastModified;
 
     @JsonProperty("dob")
     public final DateTime DOB;
@@ -91,7 +91,7 @@ public class Account {
                     final Integer height,
                     final Integer weight,
                     final DateTime created,
-                    final DateTime lastModified,
+                    final Long lastModified,
                     final DateTime DOB) {
 
         this.id = id;
@@ -119,7 +119,7 @@ public class Account {
     public static Account fromRegistration(final Registration registration, final Long id) {
         return new Account(Optional.fromNullable(id), registration.email, registration.password, registration.tzOffsetMillis,
                 registration.name, registration.gender, registration.height, registration.weight, registration.created,
-                DateTime.now(DateTimeZone.UTC), registration.DOB);
+                DateTime.now(DateTimeZone.UTC).getMillis(), registration.DOB);
     }
 
 
@@ -133,7 +133,7 @@ public class Account {
         private String email;
         private Integer tzOffsetMillis;
         private DateTime created;
-        private DateTime lastModified;
+        private Long lastModified;
         private DateTime DOB;
 
         public Builder() {
@@ -145,7 +145,7 @@ public class Account {
             this.password = "";
             this.email = "";
             this.created = DateTime.now(DateTimeZone.UTC);
-            this.lastModified = new DateTime(1970, 1 ,1, 0, 0, DateTimeZone.UTC);
+            this.lastModified = new DateTime(1970, 1 ,1, 0, 0, DateTimeZone.UTC).getMillis();
             this.DOB = new DateTime(1900,1,1,0,0, DateTimeZone.UTC);
         }
 
@@ -219,14 +219,8 @@ public class Account {
         }
 
         @JsonProperty("last_modified")
-        public Builder withLastModified(final DateTime lastModified) {
-            this.lastModified = lastModified;
-            return this;
-        }
-
-        @JsonIgnore
         public Builder withLastModified(final Long lastModified) {
-            this.lastModified = new DateTime(lastModified, DateTimeZone.UTC);
+            this.lastModified = lastModified;
             return this;
         }
 
