@@ -81,3 +81,7 @@ timezone_history_db:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: timezone_history
+
+kinesis_logger:
+  stream_name: logs
+  enabled : true
