@@ -1,0 +1,13 @@
+package hello;
+
+option java_package = "com.hello.suripu.api.logging";
+option java_outer_classname = "LoggingProtos";
+// option optimize_for = SPEED;
+
+
+message LogMessage {
+    optional string origin = 1;
+    optional string message = 2;
+    optional int64 ts = 3;
+    optional bool production = 4 [default = false];
+}
