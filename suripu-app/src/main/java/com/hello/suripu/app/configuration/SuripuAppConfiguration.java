@@ -3,6 +3,7 @@ package com.hello.suripu.app.configuration;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hello.suripu.core.configuration.DynamoDBConfiguration;
 import com.hello.suripu.core.configuration.GraphiteConfiguration;
+import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
@@ -89,5 +90,13 @@ public class SuripuAppConfiguration extends Configuration {
 
     public Long getAllowedQueryRange() {
         return allowedQueryRange;
+    }
+
+
+    @JsonProperty("kinesis_logger")
+    private KinesisLoggerConfiguration kinesisLoggerConfiguration;
+
+    public KinesisLoggerConfiguration getKinesisLoggerConfiguration() {
+        return kinesisLoggerConfiguration;
     }
 }

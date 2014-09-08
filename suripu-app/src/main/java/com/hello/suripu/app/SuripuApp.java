@@ -18,6 +18,8 @@ import com.hello.suripu.app.resources.HistoryResource;
 import com.hello.suripu.app.resources.OAuthResource;
 import com.hello.suripu.app.resources.RoomConditionsResource;
 import com.hello.suripu.app.resources.SleepLabelResource;
+import com.hello.suripu.core.bundles.KinesisLoggerBundle;
+import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
@@ -72,6 +74,13 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         bootstrap.addCommand(new RecreateEventsCommand());
         bootstrap.addCommand(new CreateDynamoDBEventTableCommand());
         bootstrap.addCommand(new CreateDynamoDBTimeZoneHistoryTableCommand());
+
+        bootstrap.addBundle(new KinesisLoggerBundle<SuripuAppConfiguration>() {
+            @Override
+            public KinesisLoggerConfiguration getConfiguration(final SuripuAppConfiguration configuration) {
+                return configuration.getKinesisLoggerConfiguration();
+            }
+        });
     }
 
     @Override
