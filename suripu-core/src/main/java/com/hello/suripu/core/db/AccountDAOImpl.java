@@ -33,11 +33,11 @@ public abstract class AccountDAOImpl implements AccountDAO {
 
     @SqlUpdate("INSERT INTO accounts (name, email, password_hash, dob, height, weight, tz_offset, created, last_modified) VALUES(:name, :email, :password, :dob, :height, :weight, :tz_offset, :created, :last_modified)")
     @GetGeneratedKeys
-    public abstract long insertAccount(@BindRegistration Registration registration);
+    public abstract long insertAccount(@BindRegistration Registration registration, @Bind("last_modified") Long lastModified);
 
 
     public Account register(final Registration registration) {
-        long id = insertAccount(registration);
+        long id = insertAccount(registration, registration.created.getMillis());
         return Account.fromRegistration(registration, id);
     }
 
@@ -77,7 +77,7 @@ public abstract class AccountDAOImpl implements AccountDAO {
     }
 
     @SqlUpdate("UPDATE accounts SET name=:name, gender=:gender, dob=:dob, height=:height, weight=:weight, " +
-            "tz_offset=:tz_offset, last_modified=:now WHERE id=:account_id AND last_modified=:last_modified;")
+            "tz_offset=:tz_offset, last_modified= extract(epoch from date_trunc('milliseconds', now())) * 1000 WHERE id=:account_id AND last_modified=:last_modified;")
     protected abstract Integer updateAccount(@BindAccount Account account, @Bind("account_id") Long accountId);
 
 

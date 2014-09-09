@@ -119,7 +119,7 @@ public class Account {
     public static Account fromRegistration(final Registration registration, final Long id) {
         return new Account(Optional.fromNullable(id), registration.email, registration.password, registration.tzOffsetMillis,
                 registration.name, registration.gender, registration.height, registration.weight, registration.created,
-                DateTime.now(DateTimeZone.UTC).getMillis(), registration.DOB);
+                registration.created.getMillis(), registration.DOB);
     }
 
 

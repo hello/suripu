@@ -23,6 +23,7 @@ public @interface BindAccount {
         public Binder build(Annotation annotation) {
 
             final Long now = DateTime.now(DateTimeZone.UTC).getMillis();
+
             return new Binder<BindAccount, Account>() {
                 public void bind(SQLStatement q, BindAccount bind, Account arg) {
                     q.bind("name", arg.name);
