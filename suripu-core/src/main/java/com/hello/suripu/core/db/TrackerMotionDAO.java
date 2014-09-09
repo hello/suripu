@@ -30,6 +30,21 @@ public interface TrackerMotionDAO {
                                                    @Bind("start_timestamp") DateTime startTimestampUTC,
                                                    @Bind("end_timestamp") DateTime endTimestampUTC);
 
+    @SqlQuery("SELECT MAX(account_id) as account_id, " +
+            "MIN(id) as id, " +
+            "MAX(tracker_id) as tracker_id, " +
+            "ROUND(AVG(svm_no_gravity)) as svm_no_gravity, " +
+            "date_trunc('hour', ts) + (CAST(date_part('minute', ts) AS integer) / :slot_duration) * :slot_duration * interval '1 min' AS ts, " +
+            "MAX(offset_millis) as offset_millis " +
+            "FROM tracker_motion_master " +
+            "WHERE account_id = :account_id AND local_utc_ts >= :start_timestamp AND local_utc_ts <= :end_timestamp " +
+            "GROUP BY ts " +
+            "ORDER BY ts ASC;"
+    )
+    public ImmutableList<TrackerMotion> getBetweenGrouped(@Bind("account_id") long accountId,
+                                                   @Bind("start_timestamp") DateTime startTimestampUTC,
+                                                   @Bind("end_timestamp") DateTime endTimestampUTC,
+                                                   @Bind("slot_duration") Integer slotDuration);
 
     @GetGeneratedKeys
     @SqlUpdate("INSERT INTO tracker_motion_master (account_id, tracker_id, svm_no_gravity, ts, offset_millis, local_utc_ts) " +

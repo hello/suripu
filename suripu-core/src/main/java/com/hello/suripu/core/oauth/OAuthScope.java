@@ -19,7 +19,8 @@ public enum OAuthScope {
     ADMINISTRATION_READ(8),   // Used for dev website, or other tools which will help create/register/list applications
     ADMINISTRATION_WRITE(9),
     API_INTERNAL_DATA_READ(10),
-    API_INTERNAL_DATA_WRITE(11);
+    API_INTERNAL_DATA_WRITE(11),
+    SLEEP_TIMELINE(12);
 
     private int value;
 
