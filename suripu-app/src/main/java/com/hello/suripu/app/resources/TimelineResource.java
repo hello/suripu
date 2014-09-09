@@ -42,7 +42,7 @@ public class TimelineResource {
     @Produces(MediaType.APPLICATION_JSON)
     @GET
     public List<Timeline> getTimelines(
-            @Scope(OAuthScope.SCORE_READ)final AccessToken accessToken,
+            @Scope(OAuthScope.SLEEP_TIMELINE)final AccessToken accessToken,
             @PathParam("date") String date) {
 
 
@@ -53,7 +53,7 @@ public class TimelineResource {
 
         final Random r = new Random();
 
-        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(8, targetDate.minusHours(12), targetDate, 5);
+        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accessToken.accountId, targetDate.minusHours(12), targetDate, 5);
         LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
         final List<SleepSegment> sleepSegments = new ArrayList<>();
 
