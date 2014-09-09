@@ -54,7 +54,7 @@ public class TimelineResource {
 
         final Random r = new Random();
 
-        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accessToken.accountId, targetDate.plusHours(12), targetDate, 5);
+        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accessToken.accountId, targetDate, targetDate.plusHours(12), 5);
         LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
         final List<SleepSegment> sleepSegments = new ArrayList<>();
 
