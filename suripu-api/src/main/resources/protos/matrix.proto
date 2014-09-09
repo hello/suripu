@@ -1,0 +1,30 @@
+package hello;
+
+option java_package = "com.hello.suripu.api.audio";
+option java_outer_classname = "MatrixProtos";
+// option optimize_for = SPEED;
+
+message MatrixClientMessage {
+  optional bytes mac = 1;
+  optional int32 unix_time = 2;
+  optional Matrix matrix_payload  = 3;
+}
+
+message Matrix {
+  enum DataType {
+    FLOAT = 0;
+    INT = 1;
+  }
+
+  required string id = 1;
+  required int32 rows = 2;
+  required int32 cols = 3;
+  required DataType datatype = 4;
+  repeated sint32 idata = 5;
+  repeated float fdata = 6;
+  required int64 time1 = 7;
+  required int64 time2 = 8;
+  required string tags = 9;
+  required string source = 10;
+
+}
