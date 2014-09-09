@@ -135,17 +135,17 @@ GRANT ALL PRIVILEGES ON SEQUENCE sleep_label_id_seq TO ingress_user;
 --
 -- UPDATE LAST_MODIFIED COLUMN
 --
-CREATE OR REPLACE FUNCTION update_modified_column() RETURNS TRIGGER LANGUAGE plpgsql AS
-$BODY$
-BEGIN
-    NEW.last_modified = now();
-    RETURN NEW;
-END;
-$BODY$;
-
-
-CREATE TRIGGER update_modified_column_trigger
-BEFORE UPDATE
-ON accounts
-FOR EACH ROW
-EXECUTE PROCEDURE update_modified_column();
+--CREATE OR REPLACE FUNCTION update_modified_column() RETURNS TRIGGER LANGUAGE plpgsql AS
+--$BODY$
+--BEGIN
+--    NEW.last_modified = now();
+--    RETURN NEW;
+--END;
+--$BODY$;
+--
+--
+--CREATE TRIGGER update_modified_column_trigger
+--BEFORE UPDATE
+--ON accounts
+--FOR EACH ROW
+--EXECUTE PROCEDURE update_modified_column();

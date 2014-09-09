@@ -19,7 +19,9 @@ import java.lang.annotation.Target;
 @Target({ElementType.PARAMETER})
 public @interface BindRegistration {
 
+
     public static class BindRegistrationFactory implements BinderFactory {
+
         public Binder build(Annotation annotation) {
             return new Binder<BindRegistration, Registration>() {
                 public void bind(SQLStatement q, BindRegistration bind, Registration arg) {
@@ -31,7 +33,7 @@ public @interface BindRegistration {
                     q.bind("weight", arg.weight);
                     q.bind("tz_offset", arg.tzOffsetMillis);
                     q.bind("created", arg.created);
-                    q.bind("last_modified", DateTime.now(DateTimeZone.UTC));
+                    q.bind("last_modified", DateTime.now(DateTimeZone.UTC).getMillis());
                 }
             };
         }

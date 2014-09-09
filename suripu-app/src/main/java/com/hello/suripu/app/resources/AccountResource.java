@@ -98,25 +98,20 @@ public class AccountResource {
             @Scope({OAuthScope.USER_EXTENDED}) final AccessToken accessToken,
             @Valid final Account account) {
 
-        // TODO: Remove this
-        final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
-
-        if(!accountOptional.isPresent()) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
-        }
+//        // TODO: Remove this
+//        final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
+//
+//        if(!accountOptional.isPresent()) {
+//            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+//        }
 
         LOGGER.info("Last modified (modify) = {}", account.lastModified);
 
         final Optional<Account> optionalAccount = accountDAO.update(account, accessToken.accountId);
 
-        if(!optionalAccount.isPresent()) {
-            LOGGER.warn("Failed updating account with id = {}, email = {}. Requested by accessToken = {}", accessToken.accountId, account.email, accessToken);
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
-        }
 
-        final Long diffInMillis = optionalAccount.get().lastModified - account.lastModified;
-        if(diffInMillis < 50) {
-            LOGGER.warn("Last modified condition did not match data from DB for account_id= {}, diff in ms = {}", accessToken.accountId, diffInMillis);
+        if(!optionalAccount.isPresent()) {
+            LOGGER.warn("Last modified condition did not match data from DB for account_id= {}, diff last_modified (got {})", accessToken.accountId, account.lastModified);
             final JsonError error = new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), "pre condition failed");
             throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED)
                     .entity(error).build());
