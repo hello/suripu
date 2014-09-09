@@ -162,6 +162,21 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new DeviceResources(deviceDAO));
         environment.addResource(new TimelineResource(eventDAODynamoDB, trackerMotionDAO));
 
+
+
+        environment.addResource(new com.hello.suripu.app.resources.v1.OAuthResource(accessTokenStore, applicationStore, accountDAO));
+        environment.addResource(new com.hello.suripu.app.resources.v1.AccountResource(accountDAO));
+        environment.addResource(new com.hello.suripu.app.resources.v1.HistoryResource(soundDAO, trackerMotionDAO, deviceDAO, deviceDataDAO));
+        environment.addResource(new com.hello.suripu.app.resources.v1.ApplicationResource(applicationStore));
+        environment.addResource(new com.hello.suripu.app.resources.v1.SleepLabelResource(sleepLabelDAO));
+        environment.addProvider(new com.hello.suripu.app.resources.v1.RoomConditionsResource(deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
+        environment.addResource(new com.hello.suripu.app.resources.v1.EventResource(eventDAODynamoDB));
+        environment.addResource(new com.hello.suripu.app.resources.v1.DeviceResources(deviceDAO));
+        environment.addResource(new com.hello.suripu.app.resources.v1.TimelineResource(eventDAODynamoDB, trackerMotionDAO));
+
+
+
+
         LOGGER.debug("{}", DateTime.now(DateTimeZone.UTC).getMillis());
 
         if(configuration.getDebug()) {

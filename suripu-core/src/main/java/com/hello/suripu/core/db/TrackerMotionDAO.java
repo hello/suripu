@@ -3,6 +3,7 @@ package com.hello.suripu.core.db;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.binders.BindTrackerMotion;
 import com.hello.suripu.core.db.mappers.DeviceAccountPairMapper;
+import com.hello.suripu.core.db.mappers.GroupedTrackerMotionMapper;
 import com.hello.suripu.core.db.mappers.TrackerMotionMapper;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -18,10 +19,9 @@ import java.util.List;
 /**
  * Created by pangwu on 5/8/14.
  */
-@RegisterMapper(TrackerMotionMapper.class)
 public interface TrackerMotionDAO {
 
-
+    @RegisterMapper(TrackerMotionMapper.class)
     @SqlQuery("SELECT * FROM tracker_motion_master WHERE " +
             "account_id = :account_id AND ts >= :start_timestamp AND ts <= :end_timestamp " +
             "ORDER BY ts ASC;"
@@ -30,16 +30,17 @@ public interface TrackerMotionDAO {
                                                    @Bind("start_timestamp") DateTime startTimestampUTC,
                                                    @Bind("end_timestamp") DateTime endTimestampUTC);
 
+    @RegisterMapper(GroupedTrackerMotionMapper.class)
     @SqlQuery("SELECT MAX(account_id) as account_id, " +
             "MIN(id) as id, " +
             "MAX(tracker_id) as tracker_id, " +
             "ROUND(AVG(svm_no_gravity)) as svm_no_gravity, " +
-            "date_trunc('hour', ts) + (CAST(date_part('minute', ts) AS integer) / :slot_duration) * :slot_duration * interval '1 min' AS ts, " +
+            "date_trunc('hour', ts) + (CAST(date_part('minute', ts) AS integer) / :slot_duration) * :slot_duration * interval '1 min' AS ts_bucket, " +
             "MAX(offset_millis) as offset_millis " +
             "FROM tracker_motion_master " +
             "WHERE account_id = :account_id AND local_utc_ts >= :start_timestamp AND local_utc_ts <= :end_timestamp " +
-            "GROUP BY ts " +
-            "ORDER BY ts ASC;"
+            "GROUP BY ts_bucket " +
+            "ORDER BY ts_bucket ASC;"
     )
     public ImmutableList<TrackerMotion> getBetweenGrouped(@Bind("account_id") long accountId,
                                                    @Bind("start_timestamp") DateTime startTimestampUTC,
