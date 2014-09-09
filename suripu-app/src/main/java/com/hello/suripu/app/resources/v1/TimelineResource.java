@@ -12,6 +12,7 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,14 +47,14 @@ public class TimelineResource {
             @PathParam("date") String date) {
 
 
-        final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT)).withHourOfDay(10);
+        final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT)).withZone(DateTimeZone.UTC).withHourOfDay(22);
         LOGGER.debug("Target date: {}", targetDate);
 
         final List<Event> events = new ArrayList<>();
 
         final Random r = new Random();
 
-        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accessToken.accountId, targetDate.minusHours(12), targetDate, 5);
+        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accessToken.accountId, targetDate.plusHours(12), targetDate, 5);
         LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
         final List<SleepSegment> sleepSegments = new ArrayList<>();
 
