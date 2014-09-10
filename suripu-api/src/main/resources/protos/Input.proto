@@ -176,6 +176,14 @@ message PillData {
     optional bytes  data = 3;
 }
 
+// pill data msg in Kinesis
+message PillDataKinesis {
+    optional string pill_id = 1;
+    optional string account_id = 2;
+    optional int64 timestamp = 3;
+    optional int64 value = 4;
+    optional int32 offsetMillis = 5;
+}
 
 message PillBlobHeader {
     optional string first_sequence_number = 1;

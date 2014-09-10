@@ -18,7 +18,6 @@ import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
-import com.hello.suripu.core.models.SensorSample;
 import com.hello.suripu.core.models.TempTrackerData;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -166,23 +165,19 @@ public class ReceiveResource {
 
             // add to kinesis - 1 sample per min
             // convert SensorSample to bytes
-            final SensorSample pillData = new SensorSample(roundedDateTimeUTC, tempTrackerData.value, offsetMillis);
-            final byte[] data = pillData.getBytes();
-            if (data != null) {
-                final String pillID = trackerId.toString();
-                final InputProtos.PillData pillKinesisData = InputProtos.PillData.newBuilder()
-                        .setData(ByteString.copyFrom(data))
-                        .setPillId(pillID)
-                        .setAccountId(accessToken.accountId.toString())
-                        .build();
+            final String pillID = trackerId.toString();
+            final InputProtos.PillDataKinesis pillKinesisData = InputProtos.PillDataKinesis.newBuilder()
+                    .setAccountId(accessToken.accountId.toString())
+                    .setPillId(pillID)
+                    .setTimestamp(tempTrackerData.timestamp)
+                    .setValue(tempTrackerData.value)
+                    .setOffsetMillis(offsetMillis)
+                    .build();
 
-                final byte[] pillDataBytes = pillKinesisData.toByteArray();
-                final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.PILL_DATA);
-                final String sequenceNumber = dataLogger.put(pillID, pillDataBytes);
-                LOGGER.debug("Pill Data added to Kinesis with sequenceNumber = {}", sequenceNumber);
-            } else {
-                LOGGER.error("Sensor Sample getBytes fail");
-            }
+            final byte[] pillDataBytes = pillKinesisData.toByteArray();
+            final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.PILL_DATA);
+            final String sequenceNumber = dataLogger.put(pillID, pillDataBytes);
+            LOGGER.debug("Pill Data added to Kinesis with sequenceNumber = {}", sequenceNumber);
         }
     }
 
