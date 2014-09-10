@@ -21,9 +21,6 @@ public class SleepScore {
     @JsonProperty("pill_id")
     public long pillID;
 
-    @JsonProperty("device_id")
-    public long deviceID;
-
     @JsonProperty("sleep_duration")
     public int sleepDuration;
 
@@ -40,7 +37,7 @@ public class SleepScore {
     public int agitationNum;
 
     @JsonProperty("agitation_tot")
-    public int agitationTot;
+    public long agitationTot;
 
     @JsonProperty("updated")
     public DateTime updated;
@@ -54,13 +51,12 @@ public class SleepScore {
             final long accountId,
             final DateTime date,
             final long pillID,
-            final long deviceID,
             final int sleepDuration,
             final int totalHourScore,
             final boolean custom,
             final String saxSymbols,
             final int agitationNum,
-            final int agitationTot,
+            final long agitationTot,
             final DateTime updated,
             final int timeZoneOffset
     ){
@@ -68,7 +64,6 @@ public class SleepScore {
         this.accountId = accountId;
         this.dateHourUTC = date;
         this.pillID = pillID;
-        this.deviceID = deviceID;
         this.sleepDuration = sleepDuration;
         this.totalHourScore = totalHourScore;
         this.custom = custom;

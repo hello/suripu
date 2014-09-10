@@ -21,22 +21,21 @@ public interface SleepScoreDAO extends Transactional<SleepScoreDAO> {
 
     @GetGeneratedKeys
     @SqlUpdate("INSERT INTO sleep_score " +
-            "(account_id, date_hour_utc, pill_id, device_id, offset_millis, sleep_duration, custom, " +
+            "(account_id, date_hour_utc, pill_id, offset_millis, sleep_duration, custom, " +
             "total_hour_score, sax_symbols, agitation_num, agitation_tot, updated) " +
-            "VALUES(:account_id, :date_utc, :pill_id, :device_id, :offset_millis, :sleep_duration, :custom" +
+            "VALUES(:account_id, :date_utc, :pill_id, :offset_millis, :sleep_duration, :custom" +
             ":total_hour_score, :sax_symbols, :agitation_num, :agitation_tot, :updated)")
     @TransactionIsolation(TransactionIsolationLevel.SERIALIZABLE)
     Long insert(@Bind("account_id") long accountId,
                 @Bind("date_utc") DateTime dateUTC,
                 @Bind("pill_id") long pillID,
-                @Bind("device_id") long deviceID,
                 @Bind("offset_millis") int timeZoneOffset,
                 @Bind("sleep_duration") int sleepDuration,
                 @Bind("custom") boolean custom,
                 @Bind("total_hour_score") int totalHourScore,
                 @Bind("sax_symbols") String saxSymbols,
                 @Bind("agitation_num") int agitationNum,
-                @Bind("agitation_tot") int agitationTot,
+                @Bind("agitation_tot") long agitationTot,
                 @Bind("updated") DateTime updated
 
     );

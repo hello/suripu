@@ -24,17 +24,4 @@ public class SensorSample {
         this.val = val;
         this.timeZoneOffset = timeZoneOffset;
     }
-
-    public byte[] getBytes() {
-        this.toString();
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        final DataOutputStream dos = new DataOutputStream(bos);
-        try {
-            dos.writeBytes(this.toString());
-            return bos.toByteArray();
-        } catch (IOException e) {
-            return null;
-        }
-
-    }
 }

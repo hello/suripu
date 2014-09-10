@@ -11,9 +11,9 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.core.db.SleepScoreDAO;
-import com.hello.suripu.core.models.SensorSample;
-import com.hello.suripu.core.models.TempTrackerData;
-import org.roaringbitmap.RoaringBitmap;
+import com.hello.suripu.core.models.SleepScore;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,11 +31,14 @@ public class PillScoreProcessor implements IRecordProcessor {
     private final static Logger LOGGER = LoggerFactory.getLogger(PillScoreProcessor.class);
 
     private final SleepScoreDAO sleepScoreDAO;
-    private final Map<Long, List<Map<String, SensorSample>>> accountData;
+    private final Map<String, List<InputProtos.PillDataKinesis>> accountPillData = new HashMap<>();
+    private final Map<String, List<String>> accountSequenceNumber = new HashMap<>();
+
+    private static int PROCESS_THRESHOLD = 15; // process every 15 mins
+    private static final String EMPTY_STRING = "";
 
     public PillScoreProcessor(final SleepScoreDAO sleepScoreDAO) {
         this.sleepScoreDAO = sleepScoreDAO;
-        this.accountData = null;
     }
 
     @Override
@@ -47,35 +50,34 @@ public class PillScoreProcessor implements IRecordProcessor {
     public void processRecords(final List<Record> records, final IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
         LOGGER.debug("Size = {}", records.size());
 
-        final InputProtos.PillBlob.Builder builder = InputProtos.PillBlob.newBuilder();
-        final ArrayList<String> sequenceNumbers = new ArrayList<String>();
-        final ArrayList<String> accountIds = new ArrayList<String>();
-
+        final ArrayList<String> toProcessIds = new ArrayList<String>();
 
         for(Record record : records) {
-            sequenceNumbers.add(record.getSequenceNumber());
             LOGGER.debug("PartitionKey: {}", record.getPartitionKey());
 
             try {
-                final InputProtos.PillData data = InputProtos.PillData.parseFrom(record.getData().array());
-                // Adding account ids to sort them later
-                accountIds.add(data.getAccountId());
-                builder.addItems(data);
+                final InputProtos.PillDataKinesis data = InputProtos.PillDataKinesis.parseFrom(record.getData().array());
+                final String accountID = data.getAccountId();
+                if (!this.accountPillData.containsKey(accountID)) {
+                    this.accountPillData.put(accountID, new ArrayList<InputProtos.PillDataKinesis>());
+                    this.accountSequenceNumber.put(accountID, new ArrayList<String>());
+                }
+                this.accountPillData.get(accountID).add(data);
+                this.accountSequenceNumber.get(accountID).add(record.getSequenceNumber());
+                if (this.accountSequenceNumber.get(accountID).size() >= 5) { // this.PROCESS_THRESHOLD) {
+                    toProcessIds.add(accountID);
+                }
             } catch (InvalidProtocolBufferException e) {
                 LOGGER.error("Failed to decode protobuf: {}", e.getMessage());
                 // TODO: increment error counter somewhere
             }
         }
 
-        try {
-            if(persistData(builder, sequenceNumbers, accountIds)) {
-                iRecordProcessorCheckpointer.checkpoint();
-            }
-        } catch (InvalidStateException e) {
-            LOGGER.error("{}", e.getMessage());
-        } catch (ShutdownException e) {
-            LOGGER.error("Received shutdown command, bailing. {}", e.getMessage());
+        for (String accountId : toProcessIds) {
+            SleepScore score = this.computeSleepScore(accountId, this.accountPillData.get(accountId));
+            this.saveScore(score);
         }
+
     }
 
     @Override
@@ -83,58 +85,58 @@ public class PillScoreProcessor implements IRecordProcessor {
         LOGGER.warn("SHUTDOWN: {}", shutdownReason.toString());
     }
 
-    private Optional<byte[]> buildIndex(final List<String> accountIds) {
-        final RoaringBitmap roaringBitmap = new RoaringBitmap();
-        for(String accountId : accountIds) {
-            roaringBitmap.add(Integer.valueOf(accountId));
-        }
+    private SleepScore computeSleepScore(String accountID, List<InputProtos.PillDataKinesis> pillData) {
+        final InputProtos.PillDataKinesis firstData = pillData.get(0);
+        final Long firstTimestamp = firstData.getTimestamp();
+        final DateTime firstDateTime = new DateTime(firstTimestamp, DateTimeZone.UTC);
+        final DateTime dateHourUTC = new DateTime(firstDateTime.getYear(),
+                firstDateTime.getMonthOfYear(),
+                firstDateTime.getDayOfMonth(),
+                firstDateTime.getHourOfDay(),
+                0,  // zero-th minute
+                DateTimeZone.UTC);
+        final int timeZoneOffset = firstData.getOffsetMillis();
 
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        final DataOutputStream dos = new DataOutputStream(bos);
-        try {
-            roaringBitmap.serialize(dos);
-            return Optional.of(bos.toByteArray());
-        } catch (IOException e) {
-            LOGGER.error("Failed generating Bitmap index: {}", e.getMessage());
-            return Optional.absent();
-        } finally {
-            try {
-                bos.close();
-                dos.close();
-            } catch (IOException e) {
-                LOGGER.error("{}", e.getMessage());
+        int agitationNum = 0;
+        long agitationTot = 0;
+        int duration = 0;
+        for (InputProtos.PillDataKinesis data: pillData) {
+            final long value = data.getValue();
+            if (value != -1) {
+                agitationNum++;
+                agitationTot = agitationTot + value;
             }
+            duration++;
         }
+        final int score = (int) (((double) agitationNum)/((double) duration) * 100.0);
+        SleepScore sleepScore = new SleepScore(0L,
+                Long.parseLong(accountID),
+                dateHourUTC,
+                Long.parseLong(firstData.getPillId()),
+                duration,
+                score,
+                false,
+                this.EMPTY_STRING,
+                agitationNum,
+                agitationTot,
+                DateTime.now(),
+                firstData.getOffsetMillis()
+        );
 
+        return sleepScore;
     }
 
-
-    /**
-     * Persist Pill Data
-     * @param builder
-     * @param sequenceNumbers
-     * @param accountIds
-     */
-    private boolean persistData(final InputProtos.PillBlob.Builder builder, final List<String> sequenceNumbers, final List<String> accountIds) {
-        final String filename = String.format("%s-%s", sequenceNumbers.get(0), sequenceNumbers.get(sequenceNumbers.size() -1));
-        final String headerFilename = String.format("%s-header", filename);
-
-        final Optional<byte[]> compressedIndex = buildIndex(accountIds);
-        if(!compressedIndex.isPresent()) {
-            LOGGER.warn("Failed to compress accountId index. Bailing.");
-            return false;
+    private void saveScore(SleepScore score) {
+        Optional<SleepScore> sleepScoreOptional = this.sleepScoreDAO.getByAccountAndDateHour
+                (score.accountId, score.dateHourUTC, score.timeZoneOffset);
+        if (sleepScoreOptional.isPresent()) {
+            this.sleepScoreDAO.updateBySleepScoreId(sleepScoreOptional.get().id, score.totalHourScore);
+        } else {
+            this.sleepScoreDAO.insert(score.accountId, score.dateHourUTC, score.pillID,
+                    score.timeZoneOffset, score.sleepDuration, score.custom,
+                    score.totalHourScore, score.saxSymbols,
+                    score.agitationNum, score.agitationTot,
+                    score.updated);
         }
-
-        final InputProtos.PillBlobHeader pillBlodHeader = InputProtos.PillBlobHeader.newBuilder()
-                .setCompressedBitmapAccountIds(ByteString.copyFrom(compressedIndex.get()))
-                .setFirstSequenceNumber(sequenceNumbers.get(0))
-                .setLastSequenceNumber(sequenceNumbers.get(sequenceNumbers.size() - 1))
-                .setDataFileName(filename)
-                .setNumItems(sequenceNumbers.size())
-                .build();
-
-        // TODO write scoring results to DB
-
-        return true;
     }
 }

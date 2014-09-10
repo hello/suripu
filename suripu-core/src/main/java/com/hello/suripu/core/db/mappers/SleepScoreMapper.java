@@ -18,7 +18,6 @@ public class SleepScoreMapper implements ResultSetMapper<SleepScore> {
                 resultSet.getLong("account_id"),
                 new DateTime(resultSet.getTimestamp("date_hour_utc"), DateTimeZone.UTC),
                 resultSet.getLong("pill_id"),
-                resultSet.getLong("device_id"),
                 resultSet.getInt("sleep_duration"),
                 resultSet.getInt("total_hour_score"),
                 resultSet.getBoolean("custom"),
