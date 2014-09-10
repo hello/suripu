@@ -7,7 +7,7 @@ import com.google.protobuf.TextFormat;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.api.input.InputProtos.SimpleSensorBatch;
-import com.hello.suripu.core.configuration.QueueNames;
+import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.crypto.CryptoHelper;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -43,6 +43,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -102,7 +105,6 @@ public class ReceiveResource {
             return;
         }
 
-
         final List<DeviceAccountPair> pairs = trackerMotionDAO.getTrackerIds(accessToken.accountId);
 
         final Map<String, Long> pairsLookup = new HashMap<String, Long>(pairs.size());
@@ -159,11 +161,36 @@ public class ReceiveResource {
                     LOGGER.error(exception.getMessage());
                     throw new WebApplicationException(Response.serverError().build());
                 }
-
                 LOGGER.warn("Duplicate sensor value for account_id = {}", accessToken.accountId);
-
             }
+
         }
+
+        // add to kinesis
+        // convert tracker data to bytes
+        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        final DataOutputStream dos = new DataOutputStream(bos);
+        try {
+            dos.writeBytes(trackerData.toString());
+        } catch (IOException e) {
+            LOGGER.error("Failed to write pill data to ByteArrayOutputStream", e.getMessage());
+        }
+
+        final byte[] data = bos.toByteArray();
+        final String pillID = trackerData.get(0).trackerId.toString();
+        final InputProtos.PillData pillData = InputProtos.PillData.newBuilder()
+                .setData(ByteString.copyFrom(data))
+                .setPillId(pillID)
+                .setAccountId(accessToken.accountId.toString())
+                .build();
+
+        final byte[] pillDataBytes = pillData.toByteArray();
+        final String shardingKey = pillID;
+
+        final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.PILL_DATA);
+        final String sequenceNumber = dataLogger.put(shardingKey, pillDataBytes);
+        LOGGER.debug("Pill Data added to Kinesis with sequenceNumber = {}", sequenceNumber);
+
     }
 
     @PUT
@@ -173,7 +200,7 @@ public class ReceiveResource {
             @Scope({OAuthScope.SENSORS_BASIC}) AccessToken accessToken,
             @PathParam("pill_id") String pillID,
             byte[] data) {
-        final DataLogger dataLogger = kinesisLoggerFactory.get(QueueNames.PILL_DATA);
+        final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.PILL_DATA);
 
         final InputProtos.PillData pillData = InputProtos.PillData.newBuilder()
                     .setData(ByteString.copyFrom(data))

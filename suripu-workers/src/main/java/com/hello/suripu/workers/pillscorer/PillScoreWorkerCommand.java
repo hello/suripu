@@ -1,4 +1,4 @@
-package com.hello.suripu.workers.pill;
+package com.hello.suripu.workers.pillscorer;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
@@ -9,24 +9,48 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.configuration.QueueName;
+import com.hello.suripu.core.db.SleepScoreDAO;
+import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
+import com.yammer.dropwizard.db.ManagedDataSource;
+import com.yammer.dropwizard.db.ManagedDataSourceFactory;
+import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
+import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
+import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
+import com.yammer.dropwizard.jdbi.args.OptionalArgumentFactory;
 import net.sourceforge.argparse4j.inf.Namespace;
+import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 
-public final class PillWorkerCommand extends ConfiguredCommand<PillWorkerConfiguration> {
+public final class PillScoreWorkerCommand extends ConfiguredCommand<PillScoreWorkerConfiguration> {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(PillWorkerCommand.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(PillScoreWorkerCommand.class);
 
-    public PillWorkerCommand(String name, String description) {
+    public PillScoreWorkerCommand(String name, String description) {
         super(name, description);
     }
 
     @Override
-    public final void run(Bootstrap<PillWorkerConfiguration> bootstrap, Namespace namespace, PillWorkerConfiguration configuration) throws Exception {
+    public final void run(Bootstrap<PillScoreWorkerConfiguration> bootstrap,
+                          Namespace namespace,
+                          PillScoreWorkerConfiguration configuration) throws Exception {
+
+        final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
+        final ManagedDataSource dataSource = managedDataSourceFactory.build(configuration.getCommonDB());
+
+        final DBI jdbi = new DBI(dataSource);
+        jdbi.registerArgumentFactory(new OptionalArgumentFactory(configuration.getCommonDB().getDriverClass()));
+        jdbi.registerContainerFactory(new ImmutableListContainerFactory());
+        jdbi.registerContainerFactory(new ImmutableSetContainerFactory());
+        jdbi.registerContainerFactory(new OptionalContainerFactory());
+        jdbi.registerArgumentFactory(new JodaArgumentFactory());
+
+        final SleepScoreDAO SleepScoreDAO = jdbi.onDemand(SleepScoreDAO.class);
+
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
         LOGGER.debug("{}", queueNames);
@@ -34,8 +58,6 @@ public final class PillWorkerCommand extends ConfiguredCommand<PillWorkerConfigu
         LOGGER.info("\n\n\n!!! This worker is using the following queue: {} !!!\n\n\n", queueName);
 
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
-        final AmazonS3Client s3Client= new AmazonS3Client(awsCredentialsProvider);
-
         final String workerId = InetAddress.getLocalHost().getCanonicalHostName();
         final KinesisClientLibConfiguration kinesisConfig = new KinesisClientLibConfiguration(
                 configuration.getAppName(),
@@ -46,17 +68,9 @@ public final class PillWorkerCommand extends ConfiguredCommand<PillWorkerConfigu
 
         kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
 
-        final IRecordProcessorFactory factory = new S3RecordProcessorFactory(s3Client, "hello-data", kinesisConfig);
+        final IRecordProcessorFactory factory = new PillScoreProcessorFactory(SleepScoreDAO,  kinesisConfig);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
 
-//        final S3Object headerBlob = s3Client.getObject("hello-data", "49540234611938095003552389818111531279102041887843811329-49540234611938095003552389818111531279102041887843811329-header");
-//        final InputProtos.PillBlobHeader header = InputProtos.PillBlobHeader.parseFrom(headerBlob.getObjectContent());
-//
-//        final S3Object dataBlob = s3Client.getObject("hello-data", "49540234611938095003552389818111531279102041887843811329-49540234611938095003552389818111531279102041887843811329");
-//        final InputProtos.PillBlob blob = InputProtos.PillBlob.parseFrom(dataBlob.getObjectContent());
-//
-//        System.out.println("Header -> Num of records = " + header.getNumItems());
-//        System.out.println("Blob -> Num of records = " + blob.getItemsCount());
     }
 }

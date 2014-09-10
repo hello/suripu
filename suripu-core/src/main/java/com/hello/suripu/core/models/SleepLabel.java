@@ -52,10 +52,10 @@ public class SleepLabel {
 
     @JsonCreator
     public SleepLabel(
-            @JsonProperty("date_utc") final long date,
+            @JsonProperty("date_utc") final long date,  // in millisecs
             @JsonProperty("rating") final SleepRating sleepRating,
-            @JsonProperty("sleep_at_utc") final long sleepTime,
-            @JsonProperty("wakeup_at_utc") final long wakeUpTime,
+            @JsonProperty("sleep_at_utc") final long sleepTime, // in millisecs
+            @JsonProperty("wakeup_at_utc") final long wakeUpTime,   // in millisecs
             @JsonProperty("timezone_offset") final int timeZoneOffset
     ){
 
