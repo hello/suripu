@@ -112,5 +112,6 @@ kinesis:
   streams :
     pill_data : test-pill-suripu
     morpheus_data : test-morpheus-suripu
+    audio_features : audio_features
 
 audio_bucket_name : hello-data

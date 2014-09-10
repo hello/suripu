@@ -5,7 +5,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 public enum QueueNames {
 
     PILL_DATA ("pill_data"),
-    MORPHEUS_DATA ("morpheus_data");
+    MORPHEUS_DATA ("morpheus_data"),
+    AUDIO_FEATURES("audio_features");
 
     private String value;
 
