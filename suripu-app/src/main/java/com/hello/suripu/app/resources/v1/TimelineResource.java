@@ -48,13 +48,15 @@ public class TimelineResource {
 
 
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT)).withZone(DateTimeZone.UTC).withHourOfDay(22);
+        final DateTime endDate = targetDate.plusHours(12);
         LOGGER.debug("Target date: {}", targetDate);
+        LOGGER.debug("End date: {}", endDate);
 
         final List<Event> events = new ArrayList<>();
 
         final Random r = new Random();
 
-        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accessToken.accountId, targetDate, targetDate.plusHours(12), 5);
+        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accessToken.accountId, targetDate, endDate, 5);
         LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
         final List<SleepSegment> sleepSegments = new ArrayList<>();
 
