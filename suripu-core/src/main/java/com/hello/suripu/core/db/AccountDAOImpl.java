@@ -4,11 +4,9 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.db.binders.BindAccount;
 import com.hello.suripu.core.db.binders.BindRegistration;
 import com.hello.suripu.core.db.mappers.AccountMapper;
-import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Registration;
 import org.mindrot.jbcrypt.BCrypt;
-import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -17,8 +15,6 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.regex.Matcher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -37,11 +33,11 @@ public abstract class AccountDAOImpl implements AccountDAO {
 
     @SqlUpdate("INSERT INTO accounts (name, email, password_hash, dob, height, weight, tz_offset, created, last_modified) VALUES(:name, :email, :password, :dob, :height, :weight, :tz_offset, :created, :last_modified)")
     @GetGeneratedKeys
-    public abstract long insertAccount(@BindRegistration Registration registration);
+    public abstract long insertAccount(@BindRegistration Registration registration, @Bind("last_modified") Long lastModified);
 
 
     public Account register(final Registration registration) {
-        long id = insertAccount(registration);
+        long id = insertAccount(registration, registration.created.getMillis());
         return Account.fromRegistration(registration, id);
     }
 
@@ -81,27 +77,21 @@ public abstract class AccountDAOImpl implements AccountDAO {
     }
 
     @SqlUpdate("UPDATE accounts SET name=:name, gender=:gender, dob=:dob, height=:height, weight=:weight, " +
-            "tz_offset=:tz_offset, last_modified=:last_modified WHERE id=:account_id AND last_modified=:last_modified;")
+            "tz_offset=:tz_offset, last_modified= extract(epoch from date_trunc('milliseconds', now())) * 1000 WHERE id=:account_id AND last_modified=:last_modified;")
     protected abstract Integer updateAccount(@BindAccount Account account, @Bind("account_id") Long accountId);
 
 
     public Optional<Account> update(final Account account, final Long accountId) {
-        try {
-            LOGGER.debug("attempting update with Last modified = {}", account.lastModified);
-            int updated = updateAccount(account, accountId);
-            LOGGER.debug("Update: {} row updated for account_id = {}", updated, accountId);
-            final Optional<Account> accountFromDB = getById(accountId);
-            return accountFromDB;
-        } catch (UnableToExecuteStatementException exception) {
-            final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
+        LOGGER.debug("attempting update with Last modified = {}", account.lastModified);
+        int updated = updateAccount(account, accountId);
+        LOGGER.debug("Update: {} row updated for account_id = {}", updated, accountId);
 
-            if(matcher.find()) {
-                LOGGER.warn("Update: Account with email {} already exists.", account.email);
-            }
-
-            LOGGER.warn("Update account failed: {}", exception.getMessage());
+        if(updated == 0) {
+            LOGGER.warn("No row was updated for account_id = {} and last_modified = {}", accountId, account.lastModified);
+            return Optional.absent();
         }
 
-        return Optional.absent();
+        final Optional<Account> accountFromDB = getById(accountId);
+        return accountFromDB;
     }
 }

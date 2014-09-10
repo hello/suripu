@@ -42,7 +42,7 @@ ALTER TABLE accounts ALTER COLUMN name set NOT NULL;
 --
 
 ALTER TABLE accounts ADD COLUMN tz_offset INTEGER;
-ALTER TABLE accounts ADD COLUMN last_modified TIMESTAMP;
+ALTER TABLE accounts ADD COLUMN last_modified BIGINT;
 -- ALTER TABLE accounts DROP COLUMN tz;
 ALTER TABLE accounts ADD COLUMN dob TIMESTAMP;
 
@@ -155,17 +155,17 @@ GRANT ALL PRIVILEGES ON SEQUENCE sleep_scores_id_seq TO ingress_user;
 --
 -- UPDATE LAST_MODIFIED COLUMN
 --
-CREATE OR REPLACE FUNCTION update_modified_column() RETURNS TRIGGER LANGUAGE plpgsql AS
-$BODY$
-BEGIN
-    NEW.last_modified = now();
-    RETURN NEW;
-END;
-$BODY$;
-
-
-CREATE TRIGGER update_modified_column_trigger
-BEFORE UPDATE
-ON accounts
-FOR EACH ROW
-EXECUTE PROCEDURE update_modified_column();
+--CREATE OR REPLACE FUNCTION update_modified_column() RETURNS TRIGGER LANGUAGE plpgsql AS
+--$BODY$
+--BEGIN
+--    NEW.last_modified = now();
+--    RETURN NEW;
+--END;
+--$BODY$;
+--
+--
+--CREATE TRIGGER update_modified_column_trigger
+--BEFORE UPDATE
+--ON accounts
+--FOR EACH ROW
+--EXECUTE PROCEDURE update_modified_column();

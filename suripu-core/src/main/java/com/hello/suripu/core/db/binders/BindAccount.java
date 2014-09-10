@@ -14,16 +14,18 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@BindingAnnotation(BindAccount.BindRegistrationFactory.class)
+@BindingAnnotation(BindAccount.BindAccountFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface BindAccount {
 
-    public static class BindRegistrationFactory implements BinderFactory {
+    public static class BindAccountFactory implements BinderFactory {
         public Binder build(Annotation annotation) {
+
+            final Long now = DateTime.now(DateTimeZone.UTC).getMillis();
+
             return new Binder<BindAccount, Account>() {
                 public void bind(SQLStatement q, BindAccount bind, Account arg) {
-                    q.bind("id", arg.id);
                     q.bind("name", arg.name);
                     q.bind("email", arg.email);
                     q.bind("password", arg.password);
@@ -32,7 +34,8 @@ public @interface BindAccount {
                     q.bind("height", arg.height);
                     q.bind("weight", arg.weight);
                     q.bind("tz_offset", arg.tzOffsetMillis);
-                    q.bind("last_modified", new DateTime(arg.lastModified, DateTimeZone.UTC));
+                    q.bind("last_modified", arg.lastModified);
+                    q.bind("now", now);
                 }
             };
         }

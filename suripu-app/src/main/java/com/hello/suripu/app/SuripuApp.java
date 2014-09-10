@@ -18,6 +18,8 @@ import com.hello.suripu.app.resources.HistoryResource;
 import com.hello.suripu.app.resources.OAuthResource;
 import com.hello.suripu.app.resources.RoomConditionsResource;
 import com.hello.suripu.app.resources.SleepLabelResource;
+import com.hello.suripu.app.resources.TimelineResource;
+import com.hello.suripu.app.resources.v1.QuestionsResource;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.db.AccessTokenDAO;
@@ -159,6 +161,22 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addProvider(new RoomConditionsResource(deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
         environment.addResource(new EventResource(eventDAODynamoDB));
         environment.addResource(new DeviceResources(deviceDAO));
+        environment.addResource(new TimelineResource(eventDAODynamoDB, trackerMotionDAO));
+
+
+
+        environment.addResource(new com.hello.suripu.app.resources.v1.OAuthResource(accessTokenStore, applicationStore, accountDAO));
+        environment.addResource(new com.hello.suripu.app.resources.v1.AccountResource(accountDAO));
+        environment.addResource(new com.hello.suripu.app.resources.v1.HistoryResource(soundDAO, trackerMotionDAO, deviceDAO, deviceDataDAO));
+        environment.addResource(new com.hello.suripu.app.resources.v1.ApplicationResource(applicationStore));
+        environment.addResource(new com.hello.suripu.app.resources.v1.SleepLabelResource(sleepLabelDAO));
+        environment.addProvider(new com.hello.suripu.app.resources.v1.RoomConditionsResource(deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
+        environment.addResource(new com.hello.suripu.app.resources.v1.EventResource(eventDAODynamoDB));
+        environment.addResource(new com.hello.suripu.app.resources.v1.DeviceResources(deviceDAO));
+        environment.addResource(new com.hello.suripu.app.resources.v1.TimelineResource(eventDAODynamoDB, trackerMotionDAO));
+
+        environment.addResource(new QuestionsResource(accountDAO));
+
 
         LOGGER.debug("{}", DateTime.now(DateTimeZone.UTC).getMillis());
 

@@ -27,11 +27,13 @@ public class AccountMapper implements ResultSetMapper<Account> {
         builder.withGender(r.getString("gender"));
 
         builder.withDOB(new DateTime(r.getTimestamp("dob"), DateTimeZone.UTC));
-        builder.withLastModified(new DateTime(r.getTimestamp("last_modified"), DateTimeZone.UTC));
+        builder.withLastModified(r.getLong("last_modified"));
         builder.withCreated(new DateTime(r.getTimestamp("created"), DateTimeZone.UTC));
         final Account account = builder.build();
 
-        LOGGER.debug("{}", account);
+        LOGGER.trace("last_modified from DB = {}", r.getLong("last_modified"));
+        LOGGER.trace("Account from DB: {}", account);
+
         return account;
     }
 }
