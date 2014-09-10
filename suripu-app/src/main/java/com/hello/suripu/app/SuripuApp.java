@@ -19,6 +19,7 @@ import com.hello.suripu.app.resources.OAuthResource;
 import com.hello.suripu.app.resources.RoomConditionsResource;
 import com.hello.suripu.app.resources.SleepLabelResource;
 import com.hello.suripu.app.resources.TimelineResource;
+import com.hello.suripu.app.resources.v1.QuestionsResource;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.db.AccessTokenDAO;
@@ -174,7 +175,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new com.hello.suripu.app.resources.v1.DeviceResources(deviceDAO));
         environment.addResource(new com.hello.suripu.app.resources.v1.TimelineResource(eventDAODynamoDB, trackerMotionDAO));
 
-
+        environment.addResource(new QuestionsResource(accountDAO));
 
 
         LOGGER.debug("{}", DateTime.now(DateTimeZone.UTC).getMillis());

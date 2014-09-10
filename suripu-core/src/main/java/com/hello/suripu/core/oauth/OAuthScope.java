@@ -20,7 +20,9 @@ public enum OAuthScope {
     ADMINISTRATION_WRITE(9),
     API_INTERNAL_DATA_READ(10),
     API_INTERNAL_DATA_WRITE(11),
-    SLEEP_TIMELINE(12);
+    SLEEP_TIMELINE(12),
+    QUESTIONS_READ(13),
+    QUESTIONS_WRITE(14);
 
     private int value;
 
