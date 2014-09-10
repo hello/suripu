@@ -42,7 +42,7 @@ ALTER TABLE accounts ALTER COLUMN name set NOT NULL;
 --
 
 ALTER TABLE accounts ADD COLUMN tz_offset INTEGER;
-ALTER TABLE accounts ADD COLUMN last_modified TIMESTAMP;
+ALTER TABLE accounts ADD COLUMN last_modified BIGINT;
 -- ALTER TABLE accounts DROP COLUMN tz;
 ALTER TABLE accounts ADD COLUMN dob TIMESTAMP;
 

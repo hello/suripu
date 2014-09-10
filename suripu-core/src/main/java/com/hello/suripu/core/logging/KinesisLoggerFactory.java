@@ -10,11 +10,14 @@ import java.util.Set;
 
 public class KinesisLoggerFactory {
 
-    private final AmazonKinesisAsyncClient client;
     private final ImmutableMap<QueueNames, DataLogger> loggers;
 
+    /**
+     * Builds a Map of KinesisLogger with pre-configured stream name
+     * @param client
+     * @param streamNames
+     */
     public KinesisLoggerFactory(final AmazonKinesisAsyncClient client, final Map<QueueNames, String> streamNames) {
-        this.client = client;
 
         final Set<QueueNames> keys = streamNames.keySet();
         final Map<QueueNames, DataLogger> streamNameDataLoggerMap = new HashMap<QueueNames, DataLogger>(streamNames.size());
@@ -31,7 +34,12 @@ public class KinesisLoggerFactory {
     }
 
 
-
+    /**
+     * Get DataLogger (KinesisLogger) from the map. Will blow up if streamName does not exist
+     * and that's what we want.
+     * @param streamName
+     * @return
+     */
     public DataLogger get(final QueueNames streamName) {
         if(!loggers.containsKey(streamName)) {
             throw new RuntimeException("Missing Kinesis streamName");
