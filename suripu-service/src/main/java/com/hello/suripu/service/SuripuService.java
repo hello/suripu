@@ -9,6 +9,7 @@ import com.google.common.base.Joiner;
 import com.hello.dropwizard.mikkusu.helpers.JacksonProtobufProvider;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
+import com.hello.suripu.core.configuration.QueueNames;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -22,6 +23,7 @@ import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.health.DynamoDbHealthCheck;
 import com.hello.suripu.core.health.KinesisHealthCheck;
+import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.managers.DynamoDBClientManaged;
 import com.hello.suripu.core.managers.KinesisClientManaged;
@@ -148,7 +150,9 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 publicKeyStore, kinesisLoggerFactory, configuration.getDebug()));
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());
-        environment.addResource(new AudioResource(s3Client, bucketName));
+
+        final DataLogger audioDataLogger = kinesisLoggerFactory.get(QueueNames.AUDIO_FEATURES);
+        environment.addResource(new AudioResource(s3Client, bucketName, audioDataLogger, deviceDAO));
 
         // Manage the lifecycle of our clients
         environment.manage(new DynamoDBClientManaged(dynamoDBClient));
