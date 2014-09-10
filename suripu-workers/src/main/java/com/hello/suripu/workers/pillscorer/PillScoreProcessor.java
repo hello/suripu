@@ -11,6 +11,8 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.core.db.SleepScoreDAO;
+import com.hello.suripu.core.models.SensorSample;
+import com.hello.suripu.core.models.TempTrackerData;
 import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,17 +22,20 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PillScoreProcessor implements IRecordProcessor {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(PillScoreProcessor.class);
 
     private final SleepScoreDAO sleepScoreDAO;
-
+    private final Map<Long, List<Map<String, SensorSample>>> accountData;
 
     public PillScoreProcessor(final SleepScoreDAO sleepScoreDAO) {
         this.sleepScoreDAO = sleepScoreDAO;
+        this.accountData = null;
     }
 
     @Override

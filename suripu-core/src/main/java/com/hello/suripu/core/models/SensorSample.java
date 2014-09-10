@@ -3,6 +3,10 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.joda.time.DateTime;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 public class SensorSample {
 
     @JsonProperty("datetime_utc")
@@ -19,5 +23,18 @@ public class SensorSample {
         this.dateTime = dateTime;
         this.val = val;
         this.timeZoneOffset = timeZoneOffset;
+    }
+
+    public byte[] getBytes() {
+        this.toString();
+        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        final DataOutputStream dos = new DataOutputStream(bos);
+        try {
+            dos.writeBytes(this.toString());
+            return bos.toByteArray();
+        } catch (IOException e) {
+            return null;
+        }
+
     }
 }

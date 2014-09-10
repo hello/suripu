@@ -18,6 +18,7 @@ import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.SensorSample;
 import com.hello.suripu.core.models.TempTrackerData;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -152,7 +153,6 @@ public class ReceiveResource {
                     offsetMillis
             );
 
-
             try {
                 final Long id = trackerMotionDAO.insertTrackerMotion(trackerMotion);
             } catch (UnableToExecuteStatementException exception) {
@@ -164,33 +164,26 @@ public class ReceiveResource {
                 LOGGER.warn("Duplicate sensor value for account_id = {}", accessToken.accountId);
             }
 
+            // add to kinesis - 1 sample per min
+            // convert SensorSample to bytes
+            final SensorSample pillData = new SensorSample(roundedDateTimeUTC, tempTrackerData.value, offsetMillis);
+            final byte[] data = pillData.getBytes();
+            if (data != null) {
+                final String pillID = trackerId.toString();
+                final InputProtos.PillData pillKinesisData = InputProtos.PillData.newBuilder()
+                        .setData(ByteString.copyFrom(data))
+                        .setPillId(pillID)
+                        .setAccountId(accessToken.accountId.toString())
+                        .build();
+
+                final byte[] pillDataBytes = pillKinesisData.toByteArray();
+                final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.PILL_DATA);
+                final String sequenceNumber = dataLogger.put(pillID, pillDataBytes);
+                LOGGER.debug("Pill Data added to Kinesis with sequenceNumber = {}", sequenceNumber);
+            } else {
+                LOGGER.error("Sensor Sample getBytes fail");
+            }
         }
-
-        // add to kinesis
-        // convert tracker data to bytes
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        final DataOutputStream dos = new DataOutputStream(bos);
-        try {
-            dos.writeBytes(trackerData.toString());
-        } catch (IOException e) {
-            LOGGER.error("Failed to write pill data to ByteArrayOutputStream", e.getMessage());
-        }
-
-        final byte[] data = bos.toByteArray();
-        final String pillID = trackerData.get(0).trackerId.toString();
-        final InputProtos.PillData pillData = InputProtos.PillData.newBuilder()
-                .setData(ByteString.copyFrom(data))
-                .setPillId(pillID)
-                .setAccountId(accessToken.accountId.toString())
-                .build();
-
-        final byte[] pillDataBytes = pillData.toByteArray();
-        final String shardingKey = pillID;
-
-        final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.PILL_DATA);
-        final String sequenceNumber = dataLogger.put(shardingKey, pillDataBytes);
-        LOGGER.debug("Pill Data added to Kinesis with sequenceNumber = {}", sequenceNumber);
-
     }
 
     @PUT
