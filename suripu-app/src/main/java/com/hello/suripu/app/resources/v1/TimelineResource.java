@@ -84,7 +84,7 @@ public class TimelineResource {
                     trackerMotion.offsetMillis,
                     60, // in seconds
                     sleepDepth,
-                    (sleepDepth != 100) ? Event.Type.MOTION.toString() : null,
+                    (sleepDepth < 50) ? Event.Type.MOTION.toString() : null, // TODO: put these in a config file or DB
                     "something smart",
                     new ArrayList<SensorSample>()
             );
