@@ -47,7 +47,7 @@ public class RoomConditionsResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final CurrentRoomState roomState = CurrentRoomState.fromDeviceData(data.get());
+        final CurrentRoomState roomState = CurrentRoomState.fromDeviceData(data.get(), DateTime.now(), 15);
         return roomState;
     }
 
