@@ -53,7 +53,7 @@ public class QuestionsResource {
         // TODO: remove this once we hook up the database
         final DateTime today = DateTime.now(DateTimeZone.forTimeZone(TimeZone.getTimeZone("America/Los_Angeles")));
         LOGGER.debug("today = {}", today);
-        if(!date.equals(today.toString("yyyy-MM-dd"))) {
+        if(date != null && !date.equals(today.toString("yyyy-MM-dd"))) {
             return Collections.EMPTY_LIST;
         }
 
