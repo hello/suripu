@@ -8,17 +8,20 @@ import com.hello.suripu.core.db.SleepScoreDAO;
 public class PillScoreProcessorFactory implements IRecordProcessorFactory {
 
     private SleepScoreDAO sleepScoreDAO;
+    private int processThreshold;
     private final KinesisClientLibConfiguration configuration;
 
     public PillScoreProcessorFactory(
             final SleepScoreDAO sleepScoreDAO,
+            final int processThreshold,
             final KinesisClientLibConfiguration configuration) {
         this.sleepScoreDAO = sleepScoreDAO;
+        this.processThreshold = processThreshold;
         this.configuration = configuration;
     }
 
     @Override
     public IRecordProcessor createProcessor() {
-        return new PillScoreProcessor(sleepScoreDAO);
+        return new PillScoreProcessor(sleepScoreDAO, processThreshold);
     }
 }

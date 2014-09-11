@@ -23,7 +23,7 @@ public interface SleepScoreDAO extends Transactional<SleepScoreDAO> {
     @SqlUpdate("INSERT INTO sleep_score " +
             "(account_id, date_hour_utc, pill_id, offset_millis, sleep_duration, custom, " +
             "total_hour_score, sax_symbols, agitation_num, agitation_tot, updated) " +
-            "VALUES(:account_id, :date_utc, :pill_id, :offset_millis, :sleep_duration, :custom" +
+            "VALUES(:account_id, :date_utc, :pill_id, :offset_millis, :sleep_duration, :custom, " +
             ":total_hour_score, :sax_symbols, :agitation_num, :agitation_tot, :updated)")
     @TransactionIsolation(TransactionIsolationLevel.SERIALIZABLE)
     Long insert(@Bind("account_id") long accountId,

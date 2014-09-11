@@ -25,11 +25,11 @@
             <artifactId>suripu-core</artifactId>
             <version>0.1.44-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>org.jdbi</groupId>
-            <artifactId>jdbi</artifactId>
-            <version>2.53</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.jdbi</groupId>-->
+            <!--<artifactId>jdbi</artifactId>-->
+            <!--<version>2.53</version>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk</artifactId>
@@ -47,9 +47,19 @@
         </dependency>
         <!-- used for its cli commands -->
         <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>9.2-1004-jdbc4</version>
+        </dependency>
+        <dependency>
             <groupId>com.yammer.dropwizard</groupId>
             <artifactId>dropwizard-core</artifactId>
-            <version>0.6.2</version>
+            <version>${dropwizard.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.yammer.dropwizard</groupId>
+            <artifactId>dropwizard-jdbi</artifactId>
+            <version>${dropwizard.version}</version>
         </dependency>
     </dependencies>
 

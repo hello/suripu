@@ -38,7 +38,10 @@ common_db:
 
 queues:
   pill_data: test-pill-suripu
+
 app_name: PillScoreConsumer
+
 max_records: 1000
 
+process_threshold: 2
 

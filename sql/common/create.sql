@@ -131,7 +131,7 @@ CREATE UNIQUE INDEX uniq_account_target_date on sleep_label(account_id, date_utc
 GRANT ALL PRIVILEGES ON sleep_label TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE sleep_label_id_seq TO ingress_user;
 
-CREATE TABLE sleep_scores (
+CREATE TABLE sleep_score (
     id BIGSERIAL PRIMARY KEY,
     account_id BIGINT,
     device_id BIGINT,
@@ -147,10 +147,10 @@ CREATE TABLE sleep_scores (
     updated TIMESTAMP default current_timestamp  -- server time when record was last updated
 );
 
-CREATE UNIQUE INDEX unique_account_id_date_hour_utc on sleep_scores(account_id, date_hour_utc);
+CREATE UNIQUE INDEX unique_account_id_date_hour_utc on sleep_score(account_id, date_hour_utc);
 
-GRANT ALL PRIVILEGES ON sleep_scores TO ingress_user;
-GRANT ALL PRIVILEGES ON SEQUENCE sleep_scores_id_seq TO ingress_user;
+GRANT ALL PRIVILEGES ON sleep_score TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE sleep_score_id_seq TO ingress_user;
 
 --
 -- UPDATE LAST_MODIFIED COLUMN

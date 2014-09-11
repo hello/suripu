@@ -31,14 +31,17 @@ public class PillScoreProcessor implements IRecordProcessor {
     private final static Logger LOGGER = LoggerFactory.getLogger(PillScoreProcessor.class);
 
     private final SleepScoreDAO sleepScoreDAO;
+    private int processThreshold; // process data every this number of records
+
     private final Map<String, List<InputProtos.PillDataKinesis>> accountPillData = new HashMap<>();
     private final Map<String, List<String>> accountSequenceNumber = new HashMap<>();
 
-    private static int PROCESS_THRESHOLD = 15; // process every 15 mins
+
     private static final String EMPTY_STRING = "";
 
-    public PillScoreProcessor(final SleepScoreDAO sleepScoreDAO) {
+    public PillScoreProcessor(final SleepScoreDAO sleepScoreDAO, final int processThreshold) {
         this.sleepScoreDAO = sleepScoreDAO;
+        this.processThreshold = processThreshold;
     }
 
     @Override
@@ -58,6 +61,7 @@ public class PillScoreProcessor implements IRecordProcessor {
             try {
                 final InputProtos.PillDataKinesis data = InputProtos.PillDataKinesis.parseFrom(record.getData().array());
                 final String accountID = data.getAccountId();
+                LOGGER.debug("Pill data for {}", accountID);
                 if (!this.accountPillData.containsKey(accountID)) {
                     this.accountPillData.put(accountID, new ArrayList<InputProtos.PillDataKinesis>());
                     this.accountSequenceNumber.put(accountID, new ArrayList<String>());
@@ -65,14 +69,14 @@ public class PillScoreProcessor implements IRecordProcessor {
                 this.accountPillData.get(accountID).add(data);
                 this.accountSequenceNumber.get(accountID).add(record.getSequenceNumber());
                 if (this.accountSequenceNumber.get(accountID).size() >= 5) { // this.PROCESS_THRESHOLD) {
-                    toProcessIds.add(accountID);
+                    toProcessIds.add(accountID); // TODO need unique list
                 }
             } catch (InvalidProtocolBufferException e) {
                 LOGGER.error("Failed to decode protobuf: {}", e.getMessage());
                 // TODO: increment error counter somewhere
             }
         }
-
+        // what happens when we don't have 15 mins of data, say pill died
         for (String accountId : toProcessIds) {
             SleepScore score = this.computeSleepScore(accountId, this.accountPillData.get(accountId));
             this.saveScore(score);

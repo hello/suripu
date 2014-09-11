@@ -51,4 +51,15 @@ public class PillScoreWorkerConfiguration extends Configuration {
     public Integer getMaxRecords() {
         return maxRecords;
     }
+
+    @Valid
+    @NotNull
+    @Max(1000)
+    @JsonProperty("process_threshold")
+    private Integer processThreshold;
+
+    public Integer getProcessThreshold() {
+        return processThreshold;
+    }
+
 }
