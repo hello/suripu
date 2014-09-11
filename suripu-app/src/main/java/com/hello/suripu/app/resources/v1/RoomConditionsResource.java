@@ -42,12 +42,14 @@ public class RoomConditionsResource {
     @Path("/current")
     @Produces(MediaType.APPLICATION_JSON)
     public CurrentRoomState current(@Scope({OAuthScope.SENSORS_BASIC}) final AccessToken token) {
+
         final Optional<DeviceData> data = deviceDataDAO.getMostRecent(token.accountId);
         if(!data.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final CurrentRoomState roomState = CurrentRoomState.fromDeviceData(data.get());
+        final DeviceData deviceData = data.get();
+        final CurrentRoomState roomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), 15);
         return roomState;
     }
 
