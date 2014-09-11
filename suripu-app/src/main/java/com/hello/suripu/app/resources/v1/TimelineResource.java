@@ -1,5 +1,6 @@
 package com.hello.suripu.app.resources.v1;
 
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.EventDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Event;
@@ -56,7 +57,10 @@ public class TimelineResource {
 
         final Random r = new Random();
 
-        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accessToken.accountId, targetDate, endDate, 5);
+        int groupBy = 10; // group by 10 minutes
+        int threshold = 30; // events with scores < threshold will be considered motion events
+
+        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accessToken.accountId, targetDate, endDate, groupBy);
         LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
         final List<SleepSegment> sleepSegments = new ArrayList<>();
 
@@ -67,7 +71,7 @@ public class TimelineResource {
         }
 
         LOGGER.debug("Max SVM = {}", maxSVM);
-
+        int i = 0;
         for(final TrackerMotion trackerMotion : trackerMotions) {
 
 
@@ -78,20 +82,40 @@ public class TimelineResource {
                 LOGGER.trace("Sleep Depth = {}", sleepDepth);
 
             }
+
+            String eventType = (sleepDepth < threshold) ? Event.Type.MOTION.toString() : null; // TODO: put these in a config file or DB
+            if(i == 0) {
+                eventType = "SLEEP";
+            } else if (i == trackerMotions.size() -1) {
+                eventType = "WAKE_UP";
+            }
+
             final SleepSegment sleepSegment = new SleepSegment(
                     trackerMotion.id,
                     trackerMotion.timestamp,
                     trackerMotion.offsetMillis,
-                    60, // in seconds
+                    60 * groupBy, // in seconds
                     sleepDepth,
-                    (sleepDepth < 50) ? Event.Type.MOTION.toString() : null, // TODO: put these in a config file or DB
+                    eventType,
                     "something smart",
                     new ArrayList<SensorSample>()
             );
             sleepSegments.add(sleepSegment);
+            i++;
         }
+        final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
-        final Timeline timeline = new Timeline(r.nextInt(100), "hello world", date, sleepSegments);
+        final List<String> messages = new ArrayList<>();
+
+        messages.add("You slept for an hour more than usual");
+        messages.add("You were in bed for 0-24 hours and asleep for 0-24 hours");
+        messages.add("You went to bed a bit late and your sleep quality suffered as a result");
+        messages.add("It was a bit warmer than usual");
+        messages.add("Maybe cut down on the Netflix binges?");
+
+        final String timeLineMessage = messages.get(r.nextInt(messages.size()));
+
+        final Timeline timeline = new Timeline(r.nextInt(100), timeLineMessage, date, reversed );
         final List<Timeline> timelines = new ArrayList<>();
         timelines.add(timeline);
 
