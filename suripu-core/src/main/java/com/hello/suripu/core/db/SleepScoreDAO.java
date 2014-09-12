@@ -18,10 +18,10 @@ public interface SleepScoreDAO  {
     @SqlUpdate("INSERT INTO sleep_score " +
             "(account_id, date_hour_utc, pill_id, offset_millis, sleep_duration, custom, " +
             "total_hour_score, sax_symbols, agitation_num, agitation_tot, updated) " +
-            "VALUES(:account_id, :date_utc, :pill_id, :offset_millis, :sleep_duration, :custom, " +
+            "VALUES(:account_id, :date_hour_utc, :pill_id, :offset_millis, :sleep_duration, :custom, " +
             ":total_hour_score, :sax_symbols, :agitation_num, :agitation_tot, :updated)")
     long insert(@Bind("account_id") long accountId,
-                @Bind("date_utc") DateTime dateUTC,
+                @Bind("date_hour_utc") DateTime dateHourUTC,
                 @Bind("pill_id") long pillID,
                 @Bind("offset_millis") int timeZoneOffset,
                 @Bind("sleep_duration") int sleepDuration,

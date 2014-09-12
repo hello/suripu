@@ -121,6 +121,7 @@ public class ReceiveResource {
             LOGGER.warn("Too many trackers ({}) for account = {}", pairs.size(), accessToken.accountId);
         }
 
+        final double countsInGs = Math.pow((4.0  * 9.81)/ 65536.0, 2);
         for(final TempTrackerData tempTrackerData : trackerData) {
 
             final Long trackerId = pairsLookup.get(tempTrackerData.trackerId);
@@ -165,19 +166,22 @@ public class ReceiveResource {
 
             // add to kinesis - 1 sample per min
             // convert SensorSample to bytes
-            final String pillID = trackerId.toString();
-            final InputProtos.PillDataKinesis pillKinesisData = InputProtos.PillDataKinesis.newBuilder()
-                    .setAccountId(accessToken.accountId.toString())
-                    .setPillId(pillID)
-                    .setTimestamp(tempTrackerData.timestamp)
-                    .setValue(tempTrackerData.value)
-                    .setOffsetMillis(offsetMillis)
-                    .build();
+            if (tempTrackerData.value > 0) {
+                final String pillID = trackerId.toString();
+                final double trackerValueInG = Math.sqrt(tempTrackerData.value.doubleValue() * countsInGs) - 9.81;
+                final InputProtos.PillDataKinesis pillKinesisData = InputProtos.PillDataKinesis.newBuilder()
+                        .setAccountId(accessToken.accountId.toString())
+                        .setPillId(pillID)
+                        .setTimestamp(tempTrackerData.timestamp)
+                        .setValue((long) (trackerValueInG * 1000))
+                        .setOffsetMillis(offsetMillis)
+                        .build();
 
-            final byte[] pillDataBytes = pillKinesisData.toByteArray();
-            final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.PILL_DATA);
-            final String sequenceNumber = dataLogger.put(pillID, pillDataBytes);
-            LOGGER.debug("Pill Data added to Kinesis with sequenceNumber = {}", sequenceNumber);
+                final byte[] pillDataBytes = pillKinesisData.toByteArray();
+                final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.PILL_DATA);
+                final String sequenceNumber = dataLogger.put(pillID, pillDataBytes);
+                LOGGER.debug("Pill Data added to Kinesis with sequenceNumber = {}", sequenceNumber);
+            }
         }
     }
 

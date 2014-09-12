@@ -22,21 +22,17 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.NavigableSet;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.TreeSet;
 
 public class PillScoreProcessor implements IRecordProcessor {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(PillScoreProcessor.class);
+    private final static Logger LOGGER = (Logger) LoggerFactory.getLogger(PillScoreProcessor.class);
 
     private final SleepScoreDAO sleepScoreDAO;
     private int processThreshold; // process data every this number of records
@@ -60,6 +56,7 @@ public class PillScoreProcessor implements IRecordProcessor {
         this.pillData = TreeMultimap.create();
         this.accountSequenceNumber = ArrayListMultimap.create();
         this.numPillsProcessed = 0;
+
     }
 
     @Override
@@ -78,7 +75,7 @@ public class PillScoreProcessor implements IRecordProcessor {
             try {
                 final InputProtos.PillDataKinesis data = InputProtos.PillDataKinesis.parseFrom(record.getData().array());
                 // only keep instances where value != -1 to save space
-                if (data.getValue() == -1) {
+                if (data.getValue() < 0) {
                     continue;
                 }
 
@@ -114,6 +111,7 @@ public class PillScoreProcessor implements IRecordProcessor {
 
         // what happens when we don't have 15 mins of data, say pill died
         for (String pillID : toProcessPillIds) {
+            LOGGER.debug("Processing Pill data for ID {}", pillID);
             SleepScore score = this.computeSleepScore(this.pillAccountID.get(pillID), pillID, this.pillData.get(pillID));
             final boolean saved = this.saveScore(score);
             if (saved) {

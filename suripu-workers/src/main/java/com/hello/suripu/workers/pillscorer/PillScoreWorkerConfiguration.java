@@ -62,4 +62,8 @@ public class PillScoreWorkerConfiguration extends Configuration {
         return processThreshold;
     }
 
+    @Valid
+    @JsonProperty("debug")
+    private Boolean debug = Boolean.FALSE;
+
 }
