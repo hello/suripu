@@ -3,7 +3,6 @@ package com.hello.suripu.app;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.base.Joiner;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
@@ -92,8 +91,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final DBIFactory factory = new DBIFactory();
         final DBI sensorsDB = factory.build(environment, configuration.getSensorsDB(), "postgresql");
         final DBI commonDB = factory.build(environment, configuration.getCommonDB(), "postgresql");
-
-        environment.getObjectMapperFactory().setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
         sensorsDB.registerArgumentFactory(new JodaArgumentFactory());
         sensorsDB.registerContainerFactory(new OptionalContainerFactory());
