@@ -134,7 +134,7 @@ public class CurrentRoomState {
 
         // Air Quality
         if(particulates == null) {
-            particulatesState = new State(null, "Could not retrieve recent particulates reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.PERCENT);
+            particulatesState = new State(null, "Could not retrieve recent particulates reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.PPM);
         } else if (particulates > 35) {
             particulatesState = new State(particulates, "Air Particulates EPA standard: Daily: 35 µg/m3, AQI = 99", State.Condition.WARNING, data.dateTimeUTC, State.Unit.PPM);
         } else{
