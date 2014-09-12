@@ -7,24 +7,32 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorC
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
 import com.google.common.base.Optional;
-import com.google.protobuf.ByteString;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.SortedSetMultimap;
+import com.google.common.collect.TreeMultimap;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.core.db.SleepScoreDAO;
+import com.hello.suripu.core.models.SensorSample;
 import com.hello.suripu.core.models.SleepScore;
+import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 public class PillScoreProcessor implements IRecordProcessor {
 
@@ -32,16 +40,26 @@ public class PillScoreProcessor implements IRecordProcessor {
 
     private final SleepScoreDAO sleepScoreDAO;
     private int processThreshold; // process data every this number of records
+    private int processThresholdMillis;
 
-    private final Map<String, List<InputProtos.PillDataKinesis>> accountPillData = new HashMap<>();
-    private final Map<String, List<String>> accountSequenceNumber = new HashMap<>();
+    // keeping states
+    private final Map<String, String> pillAccountID;
+    private final SortedSetMultimap<String, SensorSample> pillData;
+    private final ListMultimap<String, String> accountSequenceNumber;
+    private int numPillsProcessed;
 
 
+    private static int MAX_PILLS_PROCESSED = 1;
     private static final String EMPTY_STRING = "";
 
     public PillScoreProcessor(final SleepScoreDAO sleepScoreDAO, final int processThreshold) {
         this.sleepScoreDAO = sleepScoreDAO;
         this.processThreshold = processThreshold;
+        this.processThresholdMillis = processThreshold * 1000;
+        this.pillAccountID = new HashMap<>();
+        this.pillData = TreeMultimap.create();
+        this.accountSequenceNumber = ArrayListMultimap.create();
+        this.numPillsProcessed = 0;
     }
 
     @Override
@@ -50,38 +68,69 @@ public class PillScoreProcessor implements IRecordProcessor {
     }
 
     @Override
+    @Timed
     public void processRecords(final List<Record> records, final IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
         LOGGER.debug("Size = {}", records.size());
 
-        final ArrayList<String> toProcessIds = new ArrayList<String>();
+        final Set<String> toProcessPillIds = new HashSet<String>();
 
-        for(Record record : records) {
-            LOGGER.debug("PartitionKey: {}", record.getPartitionKey());
-
+        for(final Record record : records) {
             try {
                 final InputProtos.PillDataKinesis data = InputProtos.PillDataKinesis.parseFrom(record.getData().array());
+                // only keep instances where value != -1 to save space
+                if (data.getValue() == -1) {
+                    continue;
+                }
+
                 final String accountID = data.getAccountId();
-                LOGGER.debug("Pill data for {}", accountID);
-                if (!this.accountPillData.containsKey(accountID)) {
-                    this.accountPillData.put(accountID, new ArrayList<InputProtos.PillDataKinesis>());
-                    this.accountSequenceNumber.put(accountID, new ArrayList<String>());
+                final String pillID = data.getPillId();
+                LOGGER.debug("Valid pill data for {}", accountID);
+
+                this.pillAccountID.put(pillID, accountID);
+
+                final DateTime sampleDT = new DateTime(data.getTimestamp(), DateTimeZone.UTC);
+                final DateTime dateHourMinUTC = sampleDT.withSecondOfMinute(0);
+                final SensorSample sample = new SensorSample(dateHourMinUTC, data.getValue(), data.getOffsetMillis());
+                this.pillData.put(pillID, sample);
+
+                this.accountSequenceNumber.put(accountID, record.getSequenceNumber());
+
+                // check if we want to process the account-pillID pair
+                if (this.pillData.get(pillID).size() >= this.processThreshold) {
+                    toProcessPillIds.add(pillID);
+                } else {
+                    // first stored datetime and current datetime exceeded threshold
+                    final SensorSample firstData = this.pillData.get(pillID).first();
+                    if (dateHourMinUTC.getMillis() - firstData.dateTime.getMillis() >= this.processThresholdMillis) {
+                        toProcessPillIds.add(pillID);
+                    }
                 }
-                this.accountPillData.get(accountID).add(data);
-                this.accountSequenceNumber.get(accountID).add(record.getSequenceNumber());
-                if (this.accountSequenceNumber.get(accountID).size() >= 5) { // this.PROCESS_THRESHOLD) {
-                    toProcessIds.add(accountID); // TODO need unique list
-                }
+
             } catch (InvalidProtocolBufferException e) {
                 LOGGER.error("Failed to decode protobuf: {}", e.getMessage());
                 // TODO: increment error counter somewhere
             }
         }
+
         // what happens when we don't have 15 mins of data, say pill died
-        for (String accountId : toProcessIds) {
-            SleepScore score = this.computeSleepScore(accountId, this.accountPillData.get(accountId));
-            this.saveScore(score);
+        for (String pillID : toProcessPillIds) {
+            SleepScore score = this.computeSleepScore(this.pillAccountID.get(pillID), pillID, this.pillData.get(pillID));
+            final boolean saved = this.saveScore(score);
+            if (saved) {
+                this.numPillsProcessed++;
+            }
         }
 
+        if (this.numPillsProcessed % this.MAX_PILLS_PROCESSED == 0) {
+            // TODO: checkpoint everytime we have processed some numbers of pills
+            try {
+                iRecordProcessorCheckpointer.checkpoint();
+            } catch (InvalidStateException e) {
+                LOGGER.error("checkpoint {}", e.getMessage());
+            } catch (ShutdownException e) {
+                LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
+            }
+        }
     }
 
     @Override
@@ -89,23 +138,16 @@ public class PillScoreProcessor implements IRecordProcessor {
         LOGGER.warn("SHUTDOWN: {}", shutdownReason.toString());
     }
 
-    private SleepScore computeSleepScore(String accountID, List<InputProtos.PillDataKinesis> pillData) {
-        final InputProtos.PillDataKinesis firstData = pillData.get(0);
-        final Long firstTimestamp = firstData.getTimestamp();
-        final DateTime firstDateTime = new DateTime(firstTimestamp, DateTimeZone.UTC);
-        final DateTime dateHourUTC = new DateTime(firstDateTime.getYear(),
-                firstDateTime.getMonthOfYear(),
-                firstDateTime.getDayOfMonth(),
-                firstDateTime.getHourOfDay(),
-                0,  // zero-th minute
-                DateTimeZone.UTC);
-        final int timeZoneOffset = firstData.getOffsetMillis();
+    private SleepScore computeSleepScore(String accountID, String pillID, SortedSet<SensorSample> pillData) {
+        final SensorSample firstData = pillData.first();
+        final DateTime dateHourUTC = firstData.dateTime;
+        final int timeZoneOffset = firstData.timeZoneOffset;
 
         int agitationNum = 0;
-        long agitationTot = 0;
+        float agitationTot = 0;
         int duration = 0;
-        for (InputProtos.PillDataKinesis data: pillData) {
-            final long value = data.getValue();
+        for (final SensorSample data: pillData) {
+            final float value = data.val;
             if (value != -1) {
                 agitationNum++;
                 agitationTot = agitationTot + value;
@@ -116,31 +158,36 @@ public class PillScoreProcessor implements IRecordProcessor {
         SleepScore sleepScore = new SleepScore(0L,
                 Long.parseLong(accountID),
                 dateHourUTC,
-                Long.parseLong(firstData.getPillId()),
+                Long.parseLong(pillID),
                 duration,
                 score,
                 false,
                 this.EMPTY_STRING,
                 agitationNum,
-                agitationTot,
+                (long) agitationTot,
                 DateTime.now(),
-                firstData.getOffsetMillis()
+                firstData.timeZoneOffset
         );
 
         return sleepScore;
     }
 
-    private void saveScore(SleepScore score) {
+    private boolean saveScore(SleepScore score) {
+        long saved = 0;
         Optional<SleepScore> sleepScoreOptional = this.sleepScoreDAO.getByAccountAndDateHour
                 (score.accountId, score.dateHourUTC, score.timeZoneOffset);
         if (sleepScoreOptional.isPresent()) {
-            this.sleepScoreDAO.updateBySleepScoreId(sleepScoreOptional.get().id, score.totalHourScore);
+            saved = this.sleepScoreDAO.updateBySleepScoreId(sleepScoreOptional.get().id, score.totalHourScore);
         } else {
-            this.sleepScoreDAO.insert(score.accountId, score.dateHourUTC, score.pillID,
+            saved = this.sleepScoreDAO.insert(score.accountId, score.dateHourUTC, score.pillID,
                     score.timeZoneOffset, score.sleepDuration, score.custom,
                     score.totalHourScore, score.saxSymbols,
                     score.agitationNum, score.agitationTot,
                     score.updated);
         }
+
+        if (saved > 0)
+            return true;
+        return false;
     }
 }
