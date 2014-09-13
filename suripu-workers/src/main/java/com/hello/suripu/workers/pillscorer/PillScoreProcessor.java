@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -74,6 +75,7 @@ public class PillScoreProcessor implements IRecordProcessor {
         for(final Record record : records) {
             try {
                 final InputProtos.PillDataKinesis data = InputProtos.PillDataKinesis.parseFrom(record.getData().array());
+
                 // only keep instances where value != -1 to save space
                 if (data.getValue() < 0) {
                     continue;
@@ -81,7 +83,6 @@ public class PillScoreProcessor implements IRecordProcessor {
 
                 final String accountID = data.getAccountId();
                 final String pillID = data.getPillId();
-                LOGGER.debug("Valid pill data for {}", accountID);
 
                 this.pillAccountID.put(pillID, accountID);
 
@@ -94,6 +95,7 @@ public class PillScoreProcessor implements IRecordProcessor {
 
                 // check if we want to process the account-pillID pair
                 if (this.pillData.get(pillID).size() >= this.processThreshold) {
+                    LOGGER.debug("Amount of data for this pill {}, {}", pillID, this.pillData.get(pillID).size());
                     toProcessPillIds.add(pillID);
                 } else {
                     // first stored datetime and current datetime exceeded threshold
@@ -102,7 +104,6 @@ public class PillScoreProcessor implements IRecordProcessor {
                         toProcessPillIds.add(pillID);
                     }
                 }
-
             } catch (InvalidProtocolBufferException e) {
                 LOGGER.error("Failed to decode protobuf: {}", e.getMessage());
                 // TODO: increment error counter somewhere
@@ -110,17 +111,21 @@ public class PillScoreProcessor implements IRecordProcessor {
         }
 
         // what happens when we don't have 15 mins of data, say pill died
+        // need to iterate through all, and check timestamp, do this every 15 mins or so.
+        LOGGER.debug("Number of pills to process each round {}", toProcessPillIds.size());
         for (String pillID : toProcessPillIds) {
             LOGGER.debug("Processing Pill data for ID {}", pillID);
-            SleepScore score = this.computeSleepScore(this.pillAccountID.get(pillID), pillID, this.pillData.get(pillID));
-            final boolean saved = this.saveScore(score);
-            if (saved) {
+            List<SleepScore> scores = this.computeSleepScore(this.pillAccountID.get(pillID), pillID, this.pillData.get(pillID));
+            final int saved = this.saveScore(scores);
+            if (saved > 0) {
                 this.numPillsProcessed++;
+                this.pillData.removeAll(pillID);
             }
         }
 
-        if (this.numPillsProcessed % this.MAX_PILLS_PROCESSED == 0) {
-            // TODO: checkpoint everytime we have processed some numbers of pills
+        if (toProcessPillIds.size() > 0 && this.numPillsProcessed % this.MAX_PILLS_PROCESSED == 0) {
+            // TODO: checkpoint every time we have processed some numbers of pills
+            LOGGER.debug("Checkpoint {}", this.numPillsProcessed);
             try {
                 iRecordProcessorCheckpointer.checkpoint();
             } catch (InvalidStateException e) {
@@ -136,15 +141,47 @@ public class PillScoreProcessor implements IRecordProcessor {
         LOGGER.warn("SHUTDOWN: {}", shutdownReason.toString());
     }
 
-    private SleepScore computeSleepScore(String accountID, String pillID, SortedSet<SensorSample> pillData) {
+    private List<SleepScore> computeSleepScore(String accountID, String pillID, SortedSet<SensorSample> pillData) {
+
+        final List<SleepScore> sleepScores = new ArrayList<>();
+
         final SensorSample firstData = pillData.first();
-        final DateTime dateHourUTC = firstData.dateTime;
         final int timeZoneOffset = firstData.timeZoneOffset;
 
         int agitationNum = 0;
         float agitationTot = 0;
         int duration = 0;
+        int minute = (int) firstData.dateTime.getMinuteOfHour()/this.processThreshold;
+        DateTime lastBucket = firstData.dateTime.withMinuteOfHour(minute * this.processThreshold);
+        LOGGER.debug("======= Computing scores for this pill {}, {}", pillID, accountID);
+
         for (final SensorSample data: pillData) {
+            minute = (int) data.dateTime.getMinuteOfHour() / this.processThreshold;
+            final DateTime bucket = data.dateTime.withMinuteOfHour(minute * this.processThreshold);
+            if (bucket.compareTo(lastBucket) != 0) {
+                final int score = (int) (((double) agitationNum)/((double) this.processThreshold) * 100.0);
+                SleepScore sleepScore = new SleepScore(0L,
+                        Long.parseLong(accountID),
+                        lastBucket,
+                        Long.parseLong(pillID),
+                        duration,
+                        score,
+                        false, // no customized score for now
+                        this.EMPTY_STRING, // no SAX yet
+                        agitationNum,
+                        (long) agitationTot,
+                        DateTime.now(),
+                        timeZoneOffset
+                );
+                LOGGER.debug("created new score object for {}, {}, {}, {}", lastBucket, score, agitationNum, agitationTot);
+                sleepScores.add(sleepScore);
+                agitationNum = 0;
+                agitationTot = 0;
+                duration = 0;
+                lastBucket = bucket;
+            }
+
+            LOGGER.debug("Sensor Sample {}", data.toString());
             final float value = data.val;
             if (value != -1) {
                 agitationNum++;
@@ -152,40 +189,62 @@ public class PillScoreProcessor implements IRecordProcessor {
             }
             duration++;
         }
-        final int score = (int) (((double) agitationNum)/((double) duration) * 100.0);
-        SleepScore sleepScore = new SleepScore(0L,
-                Long.parseLong(accountID),
-                dateHourUTC,
-                Long.parseLong(pillID),
-                duration,
-                score,
-                false,
-                this.EMPTY_STRING,
-                agitationNum,
-                (long) agitationTot,
-                DateTime.now(),
-                firstData.timeZoneOffset
-        );
 
-        return sleepScore;
+        if (duration != 0) {
+            final int score = (int) (((double) agitationNum)/((double) this.processThreshold) * 100.0);
+            SleepScore sleepScore = new SleepScore(0L,
+                    Long.parseLong(accountID),
+                    lastBucket,
+                    Long.parseLong(pillID),
+                    duration,
+                    score,
+                    false, // no customized score for now
+                    this.EMPTY_STRING, // no SAX yet
+                    agitationNum,
+                    (long) agitationTot,
+                    DateTime.now(),
+                    timeZoneOffset
+            );
+            LOGGER.debug("created new score object for {}, {}, {}, {}", lastBucket, score, agitationNum, agitationTot);
+            sleepScores.add(sleepScore);
+
+        }
+        return sleepScores;
     }
 
-    private boolean saveScore(SleepScore score) {
-        long saved = 0;
-        Optional<SleepScore> sleepScoreOptional = this.sleepScoreDAO.getByAccountAndDateHour
-                (score.accountId, score.dateHourUTC, score.timeZoneOffset);
-        if (sleepScoreOptional.isPresent()) {
-            saved = this.sleepScoreDAO.updateBySleepScoreId(sleepScoreOptional.get().id, score.totalHourScore);
-        } else {
-            saved = this.sleepScoreDAO.insert(score.accountId, score.dateHourUTC, score.pillID,
-                    score.timeZoneOffset, score.sleepDuration, score.custom,
-                    score.totalHourScore, score.saxSymbols,
-                    score.agitationNum, score.agitationTot,
-                    score.updated);
-        }
+    private int saveScore(List<SleepScore> scores) {
+        int saved = 0;
+        for (final SleepScore score : scores) {
+            LOGGER.debug("Saving Score: account {}, datetime {}, val {}", score.accountId, score.dateHourUTC.toString(), score.timeZoneOffset);
 
-        if (saved > 0)
-            return true;
-        return false;
+            // this is expensive, TODO: refactor
+            Optional<SleepScore> sleepScoreOptional = this.sleepScoreDAO.getByAccountAndDateHour
+                    (score.accountId, score.dateHourUTC, score.timeZoneOffset);
+
+            if (sleepScoreOptional.isPresent()) {
+                final SleepScore existingScore = sleepScoreOptional.get();
+                LOGGER.debug("Score exist, updating {} with {}", existingScore.totalHourScore, score.totalHourScore);
+                final long updated = this.sleepScoreDAO.updateBySleepScoreId(sleepScoreOptional.get().id,
+                        score.totalHourScore + existingScore.totalHourScore,
+                        score.sleepDuration + existingScore.sleepDuration,
+                        score.agitationNum + existingScore.agitationNum,
+                        score.agitationTot + existingScore.agitationTot
+                        );
+                if (updated > 0) {
+                    saved++;
+                }
+            } else {
+                LOGGER.debug("Insert new score {}", score.totalHourScore);
+                final long inserted = this.sleepScoreDAO.insert(score.accountId, score.dateHourUTC, score.pillID,
+                        score.timeZoneOffset, score.sleepDuration, score.custom,
+                        score.totalHourScore, score.saxSymbols,
+                        score.agitationNum, score.agitationTot,
+                        score.updated);
+                if (inserted > 0) {
+                    saved++;
+                }
+            }
+        }
+        return saved;
     }
 }

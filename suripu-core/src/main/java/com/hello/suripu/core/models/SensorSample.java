@@ -30,4 +30,10 @@ public class SensorSample implements Comparable {
         SensorSample sample = (SensorSample) o;
         return this.dateTime.compareTo(sample.dateTime);
     }
+
+    @Override
+    public String toString() {
+        return "Date: " + this.dateTime + ", Offset: " + this.timeZoneOffset +
+                ", Value: " + this.val;
+    }
 }

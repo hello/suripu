@@ -1,3 +1,5 @@
+debug: true
+
 common_db:
   # the name of your JDBC driver
   driverClass: org.postgresql.Driver
@@ -43,5 +45,17 @@ app_name: PillScoreConsumer
 
 max_records: 1000
 
-process_threshold: 2
+process_threshold: 15
+
+# Logging settings.
+logging:
+
+  # The default level of all loggers. Can be OFF, ERROR, WARN, INFO, DEBUG, TRACE, or ALL.
+  level: INFO
+
+  # Logger-specific levels.
+  loggers:
+
+    # Sets the level for 'com.example.app' to DEBUG.
+    com.hello.suripu.workers: DEBUG
 

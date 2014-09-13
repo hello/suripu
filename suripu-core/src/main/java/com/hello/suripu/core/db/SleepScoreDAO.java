@@ -42,15 +42,28 @@ public interface SleepScoreDAO  {
                                              @Bind("date_hour_utc") DateTime dateHourUTC,
                                              @Bind("offset_millis") int timeZoneOffset);
 
-    @SqlUpdate("UPDATE sleep_score SET total_hour_score = :total_hour_score WHERE id = :id")
+    @SqlUpdate("UPDATE sleep_score SET total_hour_score = :total_hour_score, " +
+            "sleep_duration = :sleep_duration, " +
+            "agitation_num = :agitation_num, " +
+            "agitation_tot = :agitation_tot " +
+            "WHERE id = :id")
     long updateBySleepScoreId(@Bind("id") Long sleepLabelId,
-                              @Bind("total_hour_score") int totalHourScore);
+                              @Bind("total_hour_score") int totalHourScore,
+                              @Bind("sleep_duration") int sleepDuration,
+                              @Bind("agitation_num") int agitationNum,
+                              @Bind("agitation_tot") long agitationTot);
 
     @SqlUpdate("UPDATE sleep_score " +
             "SET total_hour_score = :total_hour_score " +
+            "sleep_duration = :sleep_duration, " +
+            "agitation_num = :agitation_num, " +
+            "agitation_tot = :agitation_tot " +
             "WHERE account_id = :account_id AND date_hour_utc = :date_hour_utc")
     long updateBySleepScoreDateHour(@Bind("account_id") long accountId,
                               @Bind("total_hour_score") int totalHourScore,
+                              @Bind("sleep_duration") int sleepDuration,
+                              @Bind("agitation_num") int agitationNum,
+                              @Bind("agitation_tot") long agitationTot,
                               @Bind("date_hour_utc") DateTime dateHourUTC);
 
 
