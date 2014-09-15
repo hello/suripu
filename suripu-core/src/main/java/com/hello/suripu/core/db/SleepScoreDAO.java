@@ -21,8 +21,8 @@ public interface SleepScoreDAO  {
             "VALUES(:account_id, :date_hour_utc, :pill_id, :offset_millis, :sleep_duration, :custom, " +
             ":total_hour_score, :sax_symbols, :agitation_num, :agitation_tot, :updated)")
     long insert(@Bind("account_id") long accountId,
-                @Bind("date_hour_utc") DateTime dateHourUTC,
                 @Bind("pill_id") long pillID,
+                @Bind("date_hour_utc") DateTime dateHourUTC,
                 @Bind("offset_millis") int timeZoneOffset,
                 @Bind("sleep_duration") int sleepDuration,
                 @Bind("custom") boolean custom,
@@ -47,7 +47,7 @@ public interface SleepScoreDAO  {
             "agitation_num = :agitation_num, " +
             "agitation_tot = :agitation_tot " +
             "WHERE id = :id")
-    long updateBySleepScoreId(@Bind("id") Long sleepLabelId,
+    long updateSleepScoreById(@Bind("id") Long sleepLabelId,
                               @Bind("total_hour_score") int totalHourScore,
                               @Bind("sleep_duration") int sleepDuration,
                               @Bind("agitation_num") int agitationNum,
@@ -58,13 +58,29 @@ public interface SleepScoreDAO  {
             "sleep_duration = :sleep_duration, " +
             "agitation_num = :agitation_num, " +
             "agitation_tot = :agitation_tot " +
-            "WHERE account_id = :account_id AND date_hour_utc = :date_hour_utc")
-    long updateBySleepScoreDateHour(@Bind("account_id") long accountId,
+            "WHERE pill_id = :pill_id AND date_hour_utc = :date_hour_utc")
+    long updateSleepScoreByDateHour(@Bind("pill_id") long pillID,
                               @Bind("total_hour_score") int totalHourScore,
                               @Bind("sleep_duration") int sleepDuration,
                               @Bind("agitation_num") int agitationNum,
                               @Bind("agitation_tot") long agitationTot,
                               @Bind("date_hour_utc") DateTime dateHourUTC);
+
+    @SqlUpdate("UPDATE sleep_score SET " +
+            "total_hour_score = total_hour_score + :total_hour_score, " +
+            "sleep_duration = sleep_duration + :sleep_duration, " +
+            "agitation_num = agitation_num + :agitation_num, " +
+            "agitation_tot = agitation_tot + :agitation_tot, " +
+            "updated = :updated " +
+            "WHERE pill_id = :pill_id AND date_hour_utc = :date_hour_utc")
+    long incrementSleepScoreByPillDateHour(
+            @Bind("pill_id") Long pillID,
+            @Bind("date_hour_utc") DateTime dateHourUTC,
+            @Bind("total_hour_score") int totalHourScore,
+            @Bind("sleep_duration") int sleepDuration,
+            @Bind("agitation_num") int agitationNum,
+            @Bind("agitation_tot") long agitationTot,
+            @Bind("updated") DateTime updated);
 
 
 }

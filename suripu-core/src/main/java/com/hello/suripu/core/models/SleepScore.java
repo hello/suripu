@@ -88,5 +88,13 @@ public class SleepScore {
 
     }
 
+    @Override
+    public String toString() {
+        return "Pill: " + this.pillID + ", Account:" + this.accountId +
+                ", Date: " + this.dateHourUTC + ", Offset: " + this.timeZoneOffset +
+                ", Score: " + this.totalHourScore + ", Agitation_Num: " +
+                this.agitationNum + ", Agitation_Tot: " + this.agitationTot;
+    }
+
 
 }

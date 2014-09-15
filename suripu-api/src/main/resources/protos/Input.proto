@@ -181,7 +181,7 @@ message PillDataKinesis {
     optional string pill_id = 1;
     optional string account_id = 2;
     optional int64 timestamp = 3;
-    optional int64 value = 4;
+    optional int64 value = 4;   // data in milli-g
     optional int32 offsetMillis = 5;
 }
 
