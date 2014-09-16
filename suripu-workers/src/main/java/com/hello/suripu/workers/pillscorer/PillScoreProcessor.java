@@ -6,7 +6,6 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
-import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SortedSetMultimap;
@@ -43,8 +42,6 @@ public class PillScoreProcessor implements IRecordProcessor {
 
 
     private final SleepScoreDAO sleepScoreDAO;
-    private int processThreshold; // process data every this number of records
-    private int processThresholdMillis;
 
     // keeping states
     private final Map<String, String> pillAccountID;
@@ -55,13 +52,17 @@ public class PillScoreProcessor implements IRecordProcessor {
     private int numUpdates = 0;
     private int numScores = 0;
 
-    private static int MAX_PILLS_PROCESSED = 1;
+    // bunch of constants
+    private int CHECKPOINT_THRESHOLD = 1;
+    private int PROCESS_THRESHOLD; // process data every this number of records
+    private int PROCESS_THRESHOLD_MILLIS;
     private static final String EMPTY_STRING = "";
 
-    public PillScoreProcessor(final SleepScoreDAO sleepScoreDAO, final int processThreshold) {
+    public PillScoreProcessor(final SleepScoreDAO sleepScoreDAO, final int processThreshold, final int checkpointThreshold) {
         this.sleepScoreDAO = sleepScoreDAO;
-        this.processThreshold = processThreshold;
-        this.processThresholdMillis = processThreshold * 1000;
+        this.PROCESS_THRESHOLD = processThreshold;
+        this.PROCESS_THRESHOLD_MILLIS = processThreshold * 1000;
+        this.CHECKPOINT_THRESHOLD = checkpointThreshold;
         this.pillAccountID = new HashMap<>();
         this.pillData = TreeMultimap.create();
         this.accountSequenceNumber = ArrayListMultimap.create();
@@ -104,12 +105,12 @@ public class PillScoreProcessor implements IRecordProcessor {
 
                 // check if we want to process the account-pillID pair
                 if (!toProcessPillIds.contains(pillID)) {
-                    if (this.pillData.get(pillID).size() >= this.processThreshold) {
+                    if (this.pillData.get(pillID).size() >= this.PROCESS_THRESHOLD) {
                         toProcessPillIds.add(pillID);
                     } else {
                         // first stored datetime and current datetime exceeded threshold
                         final SensorSample firstData = this.pillData.get(pillID).first();
-                        if (dateHourMinUTC.getMillis() - firstData.dateTime.getMillis() >= this.processThresholdMillis) {
+                        if (dateHourMinUTC.getMillis() - firstData.dateTime.getMillis() >= this.PROCESS_THRESHOLD_MILLIS) {
                             toProcessPillIds.add(pillID);
                         }
                     }
@@ -139,7 +140,7 @@ public class PillScoreProcessor implements IRecordProcessor {
         LOGGER.debug("Summary: Scores: {}, Inserts: {}, Updates: {}",
                 this.numScores, this.numInserts, this.numUpdates);
 
-        if (toProcessPillIds.size() > 0 && this.numPillsProcessed % this.MAX_PILLS_PROCESSED == 0) {
+        if (toProcessPillIds.size() > 0 && this.numPillsProcessed % this.CHECKPOINT_THRESHOLD == 0) {
             // TODO: checkpoint every time we have processed some numbers of pills
             LOGGER.debug("Checkpoint {}", this.numPillsProcessed);
             try {
@@ -167,19 +168,19 @@ public class PillScoreProcessor implements IRecordProcessor {
         int agitationNum = 0;
         float agitationTot = 0;
         int duration = 0;
-        int minute = (int) firstData.dateTime.getMinuteOfHour()/this.processThreshold;
-        DateTime lastBucketDT = firstData.dateTime.withMinuteOfHour(minute * this.processThreshold);
+        int minute = (int) firstData.dateTime.getMinuteOfHour()/this.PROCESS_THRESHOLD;
+        DateTime lastBucketDT = firstData.dateTime.withMinuteOfHour(minute * this.PROCESS_THRESHOLD);
         LOGGER.debug("======= Computing scores for this pill {}, {}", pillID, accountID);
 
         for (final SensorSample data: pillData) {
-            minute = (int) data.dateTime.getMinuteOfHour() / this.processThreshold;
-            final DateTime bucket = data.dateTime.withMinuteOfHour(minute * this.processThreshold);
+            minute = (int) data.dateTime.getMinuteOfHour() / this.PROCESS_THRESHOLD;
+            final DateTime bucket = data.dateTime.withMinuteOfHour(minute * this.PROCESS_THRESHOLD);
             if (bucket.compareTo(lastBucketDT) != 0) {
                 SleepScore sleepScore = new SleepScore(0L, Long.parseLong(accountID),
                         lastBucketDT,
                         Long.parseLong(pillID),
                         duration,
-                        (int) (((double) agitationNum)/((double) this.processThreshold) * 100.0), // score
+                        (int) (((double) agitationNum)/((double) this.PROCESS_THRESHOLD) * 100.0), // score
                         false, // no customized score yet
                         this.EMPTY_STRING, // no SAX yet
                         agitationNum,
@@ -211,7 +212,7 @@ public class PillScoreProcessor implements IRecordProcessor {
                     lastBucketDT,
                     Long.parseLong(pillID),
                     duration,
-                    (int) (((double) agitationNum)/((double) this.processThreshold) * 100.0),
+                    (int) (((double) agitationNum)/((double) this.PROCESS_THRESHOLD) * 100.0),
                     false, // no customized score for now
                     this.EMPTY_STRING, // no SAX yet
                     agitationNum,

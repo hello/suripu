@@ -54,12 +54,22 @@ public class PillScoreWorkerConfiguration extends Configuration {
 
     @Valid
     @NotNull
-    @Max(1000)
+    @Max(60)
     @JsonProperty("process_threshold")
     private Integer processThreshold;
 
     public Integer getProcessThreshold() {
         return processThreshold;
+    }
+
+    @Valid
+    @NotNull
+    @Max(100)
+    @JsonProperty("checkpoint_threshold")
+    private Integer checkpointThreshold;
+
+    public Integer getCheckpointThreshold() {
+        return checkpointThreshold;
     }
 
     @Valid

@@ -9,19 +9,22 @@ public class PillScoreProcessorFactory implements IRecordProcessorFactory {
 
     private SleepScoreDAO sleepScoreDAO;
     private int processThreshold;
+    private int checkpointThreshold;
     private final KinesisClientLibConfiguration configuration;
 
     public PillScoreProcessorFactory(
             final SleepScoreDAO sleepScoreDAO,
             final int processThreshold,
+            final int checkpointThreshold,
             final KinesisClientLibConfiguration configuration) {
         this.sleepScoreDAO = sleepScoreDAO;
         this.processThreshold = processThreshold;
+        this.checkpointThreshold = checkpointThreshold;
         this.configuration = configuration;
     }
 
     @Override
     public IRecordProcessor createProcessor() {
-        return new PillScoreProcessor(sleepScoreDAO, processThreshold);
+        return new PillScoreProcessor(sleepScoreDAO, processThreshold, checkpointThreshold);
     }
 }
