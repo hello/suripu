@@ -30,6 +30,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.EventDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
+import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.SoundDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
@@ -108,6 +109,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final DeviceDAO deviceDAO = sensorsDB.onDemand(DeviceDAO.class);
 
         final SleepLabelDAO sleepLabelDAO = commonDB.onDemand(SleepLabelDAO.class);
+        final SleepScoreDAO sleepScoreDAO = commonDB.onDemand(SleepScoreDAO.class);
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
 
@@ -161,7 +163,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addProvider(new RoomConditionsResource(deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
         environment.addResource(new EventResource(eventDAODynamoDB));
         environment.addResource(new DeviceResources(deviceDAO));
-        environment.addResource(new TimelineResource(eventDAODynamoDB, trackerMotionDAO));
+        environment.addResource(new TimelineResource(eventDAODynamoDB, accountDAO, trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, configuration.getScoreThreshold()));
 
 
 
