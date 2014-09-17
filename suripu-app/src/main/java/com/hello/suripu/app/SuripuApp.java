@@ -163,7 +163,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addProvider(new RoomConditionsResource(deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
         environment.addResource(new EventResource(eventDAODynamoDB));
         environment.addResource(new DeviceResources(deviceDAO));
-        environment.addResource(new TimelineResource(eventDAODynamoDB, accountDAO, trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, configuration.getScoreThreshold()));
+        environment.addResource(new TimelineResource(eventDAODynamoDB, trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, configuration.getScoreThreshold()));
 
 
 
@@ -175,7 +175,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addProvider(new com.hello.suripu.app.resources.v1.RoomConditionsResource(deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
         environment.addResource(new com.hello.suripu.app.resources.v1.EventResource(eventDAODynamoDB));
         environment.addResource(new com.hello.suripu.app.resources.v1.DeviceResources(deviceDAO));
-        environment.addResource(new com.hello.suripu.app.resources.v1.TimelineResource(eventDAODynamoDB, accountDAO, trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, configuration.getScoreThreshold()));
+        environment.addResource(new com.hello.suripu.app.resources.v1.TimelineResource(eventDAODynamoDB, trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, configuration.getScoreThreshold()));
 
         environment.addResource(new QuestionsResource(accountDAO));
 

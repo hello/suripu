@@ -1,7 +1,6 @@
 package com.hello.suripu.app.resources.v1;
 
 import com.google.common.collect.Lists;
-import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.EventDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
@@ -37,20 +36,17 @@ public class TimelineResource {
 
     private final EventDAODynamoDB eventDAODynamoDB;
     private final TrackerMotionDAO trackerMotionDAO;
-    private final AccountDAO accountDAO;
     private final SleepScoreDAO sleepScoreDAO;
     private final SleepLabelDAO sleepLabelDAO;
     private final int dateBucketPeriod;
 
     public TimelineResource(final EventDAODynamoDB eventDAODynamoDB,
-                            final AccountDAO accountDAO,
                             final TrackerMotionDAO trackerMotionDAO,
                             final SleepLabelDAO sleepLabelDAO,
                             final SleepScoreDAO sleepScoreDAO,
                             final int dateBucketPeriod
     ) {
         this.eventDAODynamoDB = eventDAODynamoDB;
-        this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.sleepLabelDAO = sleepLabelDAO;
         this.sleepScoreDAO = sleepScoreDAO;
