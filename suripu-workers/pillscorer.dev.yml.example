@@ -1,12 +1,17 @@
-debug: false
+debug: true
 
 common_db:
+  # the name of your JDBC driver
   driverClass: org.postgresql.Driver
-  user: ingress_user
-  password: hello ingress user
-  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
-  properties:
-    hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
+
+  # the username
+  user: your postgresql username
+
+  # the password
+  password: your postgresql password
+
+  # the JDBC URL
+  url: jdbc:postgresql://localhost:5432/[your postgresql database name]
 
   # any properties specific to your JDBC driver:
   properties:

@@ -8,23 +8,23 @@ import com.hello.suripu.core.db.SleepScoreDAO;
 public class PillScoreProcessorFactory implements IRecordProcessorFactory {
 
     private SleepScoreDAO sleepScoreDAO;
-    private int processThreshold;
+    private int dateMinuteBucket;
     private int checkpointThreshold;
     private final KinesisClientLibConfiguration configuration;
 
     public PillScoreProcessorFactory(
             final SleepScoreDAO sleepScoreDAO,
-            final int processThreshold,
+            final int dateMinuteBucket,
             final int checkpointThreshold,
             final KinesisClientLibConfiguration configuration) {
         this.sleepScoreDAO = sleepScoreDAO;
-        this.processThreshold = processThreshold;
+        this.dateMinuteBucket = dateMinuteBucket;
         this.checkpointThreshold = checkpointThreshold;
         this.configuration = configuration;
     }
 
     @Override
     public IRecordProcessor createProcessor() {
-        return new PillScoreProcessor(sleepScoreDAO, processThreshold, checkpointThreshold);
+        return new PillScoreProcessor(sleepScoreDAO, dateMinuteBucket, checkpointThreshold);
     }
 }

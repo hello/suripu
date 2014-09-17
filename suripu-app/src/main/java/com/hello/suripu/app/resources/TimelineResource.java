@@ -1,6 +1,5 @@
 package com.hello.suripu.app.resources;
 
-import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.EventDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
@@ -8,8 +7,6 @@ import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SensorSample;
-import com.hello.suripu.core.models.SleepLabel;
-import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -29,7 +26,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 @Path("/timeline")
 public class TimelineResource {
@@ -41,21 +37,21 @@ public class TimelineResource {
     private final AccountDAO accountDAO;
     private final SleepScoreDAO sleepScoreDAO;
     private final SleepLabelDAO sleepLabelDAO;
-    private final int scoreThreshold;
+    private final int dateBucketPeriod;
 
     public TimelineResource(final EventDAODynamoDB eventDAODynamoDB,
                             final AccountDAO accountDAO,
                             final TrackerMotionDAO trackerMotionDAO,
                             final SleepLabelDAO sleepLabelDAO,
                             final SleepScoreDAO sleepScoreDAO,
-                            final int scoreThreshold
-                            ) {
+                            final int dateBucketPeriod
+    ) {
         this.eventDAODynamoDB = eventDAODynamoDB;
         this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.sleepLabelDAO = sleepLabelDAO;
         this.sleepScoreDAO = sleepScoreDAO;
-        this.scoreThreshold = scoreThreshold;
+        this.dateBucketPeriod = dateBucketPeriod;
     }
 
     @Path("/{date}")
@@ -66,12 +62,10 @@ public class TimelineResource {
             @PathParam("date") String date) {
 
 
-        final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT)).withHourOfDay(10);
+        final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT)).withHourOfDay(22);
         LOGGER.debug("Target date: {}", targetDate);
 
-        final List<Event> events = new ArrayList<>();
-
-        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accessToken.accountId, targetDate.minusHours(12), targetDate, 5);
+        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accessToken.accountId, targetDate, targetDate.plusHours(12), 5);
         LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
         final List<SleepSegment> sleepSegments = new ArrayList<>();
 
@@ -105,57 +99,12 @@ public class TimelineResource {
             );
             sleepSegments.add(sleepSegment);
         }
-
-        final int sleepScore = this.getSleepScore(accessToken.accountId, targetDate);
+        final int offsetMillis = trackerMotions.get(0).offsetMillis;
+        final int sleepScore = sleepScoreDAO.getSleepScoreForNight(accessToken.accountId, targetDate.withTimeAtStartOfDay(), offsetMillis, this.dateBucketPeriod, sleepLabelDAO);
         final Timeline timeline = new Timeline(sleepScore, "hello world", date, sleepSegments);
         final List<Timeline> timelines = new ArrayList<>();
         timelines.add(timeline);
 
         return timelines;
-    }
-
-    private int getSleepScore(final Long accountId, final DateTime targetDate) {
-        // grab data from 10pm to 10am of the next day
-        final DateTime nightDate = targetDate.minusHours(10);
-        LOGGER.debug("Target date: {}, Night date: {}", targetDate, nightDate);
-
-        // get sleep and wakeup time from sleep_labels or use default
-        DateTime sleepUTC, wakeUTC;
-        final Optional<SleepLabel> sleepLabelOptional = sleepLabelDAO.getByAccountAndDate(accountId, nightDate);
-        if (!sleepLabelOptional.isPresent()) {
-            sleepUTC = targetDate.minusHours(12); // 10pm last night
-            wakeUTC = targetDate; // 10am today
-        } else {
-            sleepUTC = sleepLabelOptional.get().sleepTimeUTC;
-            wakeUTC = sleepLabelOptional.get().wakeUpTimeUTC;
-        }
-
-        // set minute values to datetime bucket boundaries
-        // e.g. sleep at 1:08am, query starts at 1:00am
-        // wake at 7:55am, query ends at 8:00am
-        final int sleepMinute = (sleepUTC.getMinuteOfHour() / this.scoreThreshold) * this.scoreThreshold;
-        final int wakeMinutes = ((wakeUTC.getMinuteOfHour() / this.scoreThreshold) + 1) * this.scoreThreshold;
-        final List<SleepScore> scores = sleepScoreDAO.getByAccountBetweenDateBucket(accountId,
-                sleepUTC.withMinuteOfHour(sleepMinute),
-                wakeUTC.withMinuteOfHour(0).plusMinutes(wakeMinutes));
-
-        if (scores.size() == 0) {
-            // for now, shouldn't happen IRL
-            LOGGER.debug("Random Score");
-            return  new Random().nextInt(100);
-        }
-
-        // TODO: continue to work on actual scoring
-        float totalScore = 0.0f;
-        float totalCounts = 0.0f;
-
-        LOGGER.debug("Length of scores: {}", scores.size());
-        for (final SleepScore score: scores) {
-            LOGGER.debug("score {}, {}, {}", score.dateBucketUTC, score.bucketScore, score.sleepDuration);
-            totalScore += score.bucketScore;
-            totalCounts++;
-        }
-        LOGGER.debug("TOTAL score: {}, {}", String.valueOf(totalScore), String.valueOf(totalCounts));
-        return Math.round(totalScore / totalCounts * 100.0f);
     }
 }

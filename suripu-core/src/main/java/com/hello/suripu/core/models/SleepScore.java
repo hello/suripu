@@ -1,11 +1,9 @@
 package com.hello.suripu.core.models;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,7 +82,7 @@ public class SleepScore {
                 .add("pill", pillID)
                 .add("account", accountId)
                 .add("date_bucket_utc", dateBucketUTC)
-                .add("timzone_offset", timeZoneOffset)
+                .add("tz_offset", timeZoneOffset)
                 .add("score", this.bucketScore)
                 .add("agitation_num", agitationNum)
                 .add("agitation_tot", agitationTot)
@@ -95,6 +93,9 @@ public class SleepScore {
                                                      final String pillID,
                                                      final SortedSet<SensorSample> pillData,
                                                      final int processThreshold) {
+
+        LOGGER.debug("======= Computing scores for this pill {}, {}", pillID, accountID);
+
         final List<SleepScore> sleepScores = new ArrayList<>();
         final SensorSample firstData = pillData.first();
         final int timeZoneOffset = firstData.timeZoneOffset;
@@ -104,7 +105,6 @@ public class SleepScore {
         int duration = 0;
         int minute = (int) firstData.dateTime.getMinuteOfHour()/processThreshold;
         DateTime lastBucketDT = firstData.dateTime.withMinuteOfHour(minute * processThreshold);
-        LOGGER.debug("======= Computing scores for this pill {}, {}", pillID, accountID);
 
         for (final SensorSample data: pillData) {
             minute = (int) data.dateTime.getMinuteOfHour() / processThreshold;
@@ -140,8 +140,7 @@ public class SleepScore {
         }
 
         if (duration != 0) {
-            SleepScore sleepScore = new SleepScore(0L,
-                    accountID,
+            SleepScore sleepScore = new SleepScore(0L, accountID,
                     lastBucketDT,
                     Long.parseLong(pillID),
                     duration,

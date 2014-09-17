@@ -1,12 +1,8 @@
 package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
 import org.joda.time.DateTime;
-import java.util.Comparator;
-
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 
 public class SensorSample implements Comparable {
 
@@ -33,7 +29,10 @@ public class SensorSample implements Comparable {
 
     @Override
     public String toString() {
-        return "Date: " + this.dateTime + ", Offset: " + this.timeZoneOffset +
-                ", Value: " + this.val;
+        return Objects.toStringHelper(SensorSample.class)
+                .add("date", dateTime)
+                .add("tz_offset", timeZoneOffset)
+                .add("value", val)
+                .toString();
     }
 }

@@ -67,7 +67,7 @@ public final class PillScoreWorkerCommand extends ConfiguredCommand<PillScoreWor
         kinesisConfig.withKinesisEndpoint(configuration.getKinesisEndpoint());
         kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
 
-        final IRecordProcessorFactory factory = new PillScoreProcessorFactory(SleepScoreDAO, configuration.getProcessThreshold(), configuration.getCheckpointThreshold(), kinesisConfig);
+        final IRecordProcessorFactory factory = new PillScoreProcessorFactory(SleepScoreDAO, configuration.getDateMinuteBucket(), configuration.getCheckpointThreshold(), kinesisConfig);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
 

@@ -4,9 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
-import com.yammer.dropwizard.db.DatabaseConfiguration;
 import com.yammer.dropwizard.config.Configuration;
-import org.hibernate.validator.constraints.NotEmpty;
+import com.yammer.dropwizard.db.DatabaseConfiguration;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
@@ -62,11 +61,11 @@ public class PillScoreWorkerConfiguration extends Configuration {
     @Valid
     @NotNull
     @Max(60)
-    @JsonProperty("process_threshold")
-    private Integer processThreshold;
+    @JsonProperty("date_minutes_bucket")
+    private Integer dateMinuteBucket;
 
-    public Integer getProcessThreshold() {
-        return processThreshold;
+    public Integer getDateMinuteBucket() {
+        return dateMinuteBucket;
     }
 
     @Valid

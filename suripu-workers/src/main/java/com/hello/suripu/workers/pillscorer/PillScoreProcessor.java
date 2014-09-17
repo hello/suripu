@@ -36,6 +36,8 @@ public class PillScoreProcessor implements IRecordProcessor {
     // keeping states
     private final Map<String, Long> pillAccountID;
     private final SortedSetMultimap<String, SensorSample> pillData;
+
+    // tracking process stats
     private int numPillsProcessed;
     private int numInserts = 0;
     private int numUpdates = 0;
@@ -43,13 +45,13 @@ public class PillScoreProcessor implements IRecordProcessor {
 
     // bunch of constants
     private int checkpointThreshold = 1; // no. of pills processed before we checkpoint kinesis
-    private int processThreshold; // data size threshold to process the pill
+    private int dateMinuteBucket; // data size threshold to process the pill
     private int processThresholdMillis;
 
-    public PillScoreProcessor(final SleepScoreDAO sleepScoreDAO, final int processThreshold, final int checkpointThreshold) {
+    public PillScoreProcessor(final SleepScoreDAO sleepScoreDAO, final int dateMinuteBucket, final int checkpointThreshold) {
         this.sleepScoreDAO = sleepScoreDAO;
-        this.processThreshold = processThreshold;
-        this.processThresholdMillis = processThreshold * 1000;
+        this.dateMinuteBucket = dateMinuteBucket;
+        this.processThresholdMillis = dateMinuteBucket * 1000;
         this.checkpointThreshold = checkpointThreshold;
         this.pillAccountID = new HashMap<>();
         this.pillData = TreeMultimap.create();
@@ -90,7 +92,7 @@ public class PillScoreProcessor implements IRecordProcessor {
 
                 // check if we want to process the account-pillID pair
                 if (!toProcessPillIds.contains(pillID)) {
-                    if (this.pillData.get(pillID).size() >= this.processThreshold) {
+                    if (this.pillData.get(pillID).size() >= this.dateMinuteBucket) {
                         toProcessPillIds.add(pillID);
                     } else {
                         // first stored datetime and current datetime exceeded threshold
@@ -139,13 +141,14 @@ public class PillScoreProcessor implements IRecordProcessor {
 
             final Long accountID = this.pillAccountID.get(pillID);
             SortedSet<SensorSample> pillData = this.pillData.get(pillID);
-            List<SleepScore> scores = SleepScore.computeSleepScore(accountID, pillID, pillData, this.processThreshold);
+            List<SleepScore> scores = SleepScore.computeSleepScore(accountID, pillID, pillData, this.dateMinuteBucket);
 
             final Map<String, Integer> stats = this.sleepScoreDAO.saveScores(scores);
 
             final int saved = (stats.get("updated") + stats.get("inserted"));
             this.numUpdates += stats.get("updated");
             this.numInserts += stats.get("inserted");
+            this.numScores += scores.size();
             if (saved > 0) {
                 this.numPillsProcessed++;
                 this.pillData.removeAll(pillID);

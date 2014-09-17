@@ -1,11 +1,14 @@
 package com.hello.suripu.core.db;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.binders.BindSleepScore;
 import com.hello.suripu.core.db.mappers.SleepScoreMapper;
+import com.hello.suripu.core.models.SleepLabel;
 import com.hello.suripu.core.models.SleepScore;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
@@ -18,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,6 +29,9 @@ public abstract class SleepScoreDAO  {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepScoreDAO.class);
     private static final Pattern PG_UNIQ_PATTERN = Pattern.compile("ERROR: duplicate key value violates unique constraint \"(\\w+)\"");
+
+    private static float SCORE_MIN = 10.0f;
+    private static float SCORE_RANGE = 80.0f; // max score is 90
 
     @GetGeneratedKeys
     @SqlUpdate("INSERT INTO sleep_score " +
@@ -41,19 +48,6 @@ public abstract class SleepScoreDAO  {
     public abstract ImmutableList<SleepScore> getByAccountBetweenDateBucket(@Bind("account_id") Long account_id,
                                                  @Bind("sleep_utc") DateTime sleepUTC,
                                                  @Bind("awake_utc") DateTime awakeUTC);
-
-    @SqlUpdate("UPDATE sleep_score " +
-            "SET bucket_score = :bucket_score " +
-            "sleep_duration = :sleep_duration, " +
-            "agitation_num = :agitation_num, " +
-            "agitation_tot = :agitation_tot " +
-            "WHERE pill_id = :pill_id AND date_bucket_utc = :date_bucket_utc")
-    public abstract long updateSleepScoreByDateBucket(@Bind("pill_id") long pillID,
-                                      @Bind("bucket_score") int bucketScore,
-                                      @Bind("sleep_duration") int sleepDuration,
-                                      @Bind("agitation_num") int agitationNum,
-                                      @Bind("agitation_tot") long agitationTot,
-                                      @Bind("date_bucket_utc") DateTime dateBucketUTC);
 
     @SqlUpdate("UPDATE sleep_score SET " +
             "bucket_score = bucket_score + :bucket_score, sleep_duration = sleep_duration + :sleep_duration, " +
@@ -104,6 +98,7 @@ public abstract class SleepScoreDAO  {
                     }
                 } else {
                     LOGGER.error(exception.getMessage());
+                    // TODO: decide what to do when updating row fails
                 }
             }
 
@@ -114,5 +109,55 @@ public abstract class SleepScoreDAO  {
         stats.put("inserted", numInserts);
 
         return stats;
+    }
+
+    @Timed
+    public int getSleepScoreForNight(final Long accountID, final DateTime nightDate, final int offsetMillis, final int dateBucketPeriod, final SleepLabelDAO sleepLabelDAO) {
+
+        // get sleep and wakeup time from sleep_labels or use default
+        final DateTimeZone userLocalTimeZone = DateTimeZone.forOffsetMillis(offsetMillis);
+        final DateTime userLocalDateTime = new DateTime(nightDate.getYear(),
+                nightDate.getMonthOfYear(),
+                nightDate.getDayOfMonth(), 0, 0,
+                userLocalTimeZone).withTimeAtStartOfDay();
+        final DateTime roundedUserLocalTimeInUTC = new DateTime(userLocalDateTime.getMillis(), DateTimeZone.UTC);
+        LOGGER.debug("Score for night of : {}, {}, {}", nightDate, userLocalDateTime, roundedUserLocalTimeInUTC);
+
+        final Optional<SleepLabel> sleepLabelOptional = sleepLabelDAO.getByAccountAndDate(accountID, roundedUserLocalTimeInUTC, offsetMillis);
+        DateTime sleepUTC, wakeUTC;
+        if (sleepLabelOptional.isPresent()) {
+            sleepUTC = sleepLabelOptional.get().sleepTimeUTC;
+            wakeUTC = sleepLabelOptional.get().wakeUpTimeUTC;
+        } else {
+            sleepUTC = nightDate.withHourOfDay(22); // default starts at 10pm
+            wakeUTC = sleepUTC.plusHours(12); // next morning 10am
+        }
+        LOGGER.debug("User {} sleeps at {}, wakes at {}", accountID, sleepUTC, wakeUTC);
+
+        // set minute values to datetime bucket boundaries
+        // sleep = 1:08am, query starts at 1:00am
+        // wake = 7:55am, query ends at 8:00am
+        final int sleepMinute = (sleepUTC.getMinuteOfHour() / dateBucketPeriod) * dateBucketPeriod;
+        final int wakeMinutes = ((wakeUTC.getMinuteOfHour() / dateBucketPeriod) + 1) * dateBucketPeriod;
+        final List<SleepScore> scores = this.getByAccountBetweenDateBucket(accountID,
+                sleepUTC.withMinuteOfHour(sleepMinute),
+                wakeUTC.withMinuteOfHour(0).plusMinutes(wakeMinutes));
+        LOGGER.debug("Length of scores: {}", scores.size());
+
+        if (scores.size() == 0) {
+            // for now, shouldn't happen IRL
+            LOGGER.debug("Random Score");
+            return  new Random().nextInt(100);
+        }
+
+        // TODO: continue to work on actual scoring
+        float totalScore = 0.0f;
+        for (final SleepScore score: scores) {
+            totalScore += score.bucketScore;
+        }
+        final float score =  100.0f - (totalScore / (float) scores.size());
+        LOGGER.debug("TOTAL score: {}, {}", String.valueOf(totalScore), score);
+
+        return Math.round((score / 100.0f) * this.SCORE_RANGE + this.SCORE_MIN);
     }
 }
