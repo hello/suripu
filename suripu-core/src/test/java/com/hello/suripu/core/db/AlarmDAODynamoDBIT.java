@@ -28,7 +28,7 @@ import static org.hamcrest.core.Is.is;
 /**
  * Created by pangwu on 9/16/14.
  */
-public class AlarmDAODynamoDBTest {
+public class AlarmDAODynamoDBIT {
 
     private BasicAWSCredentials awsCredentials;
     private AmazonDynamoDBClient amazonDynamoDBClient;
