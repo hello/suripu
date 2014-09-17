@@ -9,7 +9,7 @@ import com.google.common.base.Joiner;
 import com.hello.dropwizard.mikkusu.helpers.JacksonProtobufProvider;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
-import com.hello.suripu.core.configuration.QueueNames;
+import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -151,7 +151,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());
 
-        final DataLogger audioDataLogger = kinesisLoggerFactory.get(QueueNames.AUDIO_FEATURES);
+        final DataLogger audioDataLogger = kinesisLoggerFactory.get(QueueName.AUDIO_FEATURES);
         environment.addResource(new AudioResource(s3Client, bucketName, audioDataLogger, deviceDAO));
 //        environment.addResource(new DropboxResource());
 

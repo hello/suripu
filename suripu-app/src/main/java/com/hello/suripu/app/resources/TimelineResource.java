@@ -1,6 +1,8 @@
 package com.hello.suripu.app.resources;
 
 import com.hello.suripu.core.db.EventDAODynamoDB;
+import com.hello.suripu.core.db.SleepLabelDAO;
+import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SensorSample;
@@ -23,7 +25,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 @Path("/timeline")
 public class TimelineResource {
@@ -32,10 +33,21 @@ public class TimelineResource {
 
     private final EventDAODynamoDB eventDAODynamoDB;
     private final TrackerMotionDAO trackerMotionDAO;
+    private final SleepScoreDAO sleepScoreDAO;
+    private final SleepLabelDAO sleepLabelDAO;
+    private final int dateBucketPeriod;
 
-    public TimelineResource(final EventDAODynamoDB eventDAODynamoDB, final TrackerMotionDAO trackerMotionDAO) {
+    public TimelineResource(final EventDAODynamoDB eventDAODynamoDB,
+                            final TrackerMotionDAO trackerMotionDAO,
+                            final SleepLabelDAO sleepLabelDAO,
+                            final SleepScoreDAO sleepScoreDAO,
+                            final int dateBucketPeriod
+    ) {
         this.eventDAODynamoDB = eventDAODynamoDB;
         this.trackerMotionDAO = trackerMotionDAO;
+        this.sleepLabelDAO = sleepLabelDAO;
+        this.sleepScoreDAO = sleepScoreDAO;
+        this.dateBucketPeriod = dateBucketPeriod;
     }
 
     @Path("/{date}")
@@ -46,14 +58,10 @@ public class TimelineResource {
             @PathParam("date") String date) {
 
 
-        final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT)).withHourOfDay(10);
+        final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT)).withHourOfDay(22);
         LOGGER.debug("Target date: {}", targetDate);
 
-        final List<Event> events = new ArrayList<>();
-
-        final Random r = new Random();
-
-        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accessToken.accountId, targetDate.minusHours(12), targetDate, 5);
+        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accessToken.accountId, targetDate, targetDate.plusHours(12), 5);
         LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
         final List<SleepSegment> sleepSegments = new ArrayList<>();
 
@@ -87,8 +95,9 @@ public class TimelineResource {
             );
             sleepSegments.add(sleepSegment);
         }
-
-        final Timeline timeline = new Timeline(r.nextInt(100), "hello world", date, sleepSegments);
+        final int offsetMillis = trackerMotions.get(0).offsetMillis;
+        final int sleepScore = sleepScoreDAO.getSleepScoreForNight(accessToken.accountId, targetDate.withTimeAtStartOfDay(), offsetMillis, this.dateBucketPeriod, sleepLabelDAO);
+        final Timeline timeline = new Timeline(sleepScore, "hello world", date, sleepSegments);
         final List<Timeline> timelines = new ArrayList<>();
         timelines.add(timeline);
 

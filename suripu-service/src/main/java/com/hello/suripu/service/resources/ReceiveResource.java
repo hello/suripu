@@ -7,7 +7,7 @@ import com.google.protobuf.TextFormat;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.api.input.InputProtos.SimpleSensorBatch;
-import com.hello.suripu.core.configuration.QueueNames;
+import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.crypto.CryptoHelper;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -43,6 +43,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -68,6 +71,10 @@ public class ReceiveResource {
     private final KinesisLoggerFactory kinesisLoggerFactory;
     private final CryptoHelper cryptoHelper;
     private final Boolean debug;
+
+    // for transforming pill-data counts into acceleration
+    private static final double COUNTS_IN_G = Math.pow((4.0  * 9.81)/ 65536.0, 2);
+    private static final double GRAVITY = 9.81;
 
     public ReceiveResource(final DeviceDataDAO deviceDataDAO,
                            final DeviceDAO deviceDAO,
@@ -101,7 +108,6 @@ public class ReceiveResource {
             LOGGER.info("Account {} tries to upload empty payload.", accessToken.accountId);
             return;
         }
-
 
         final List<DeviceAccountPair> pairs = trackerMotionDAO.getTrackerIds(accessToken.accountId);
 
@@ -150,7 +156,6 @@ public class ReceiveResource {
                     offsetMillis
             );
 
-
             try {
                 final Long id = trackerMotionDAO.insertTrackerMotion(trackerMotion);
             } catch (UnableToExecuteStatementException exception) {
@@ -159,9 +164,26 @@ public class ReceiveResource {
                     LOGGER.error(exception.getMessage());
                     throw new WebApplicationException(Response.serverError().build());
                 }
-
                 LOGGER.warn("Duplicate sensor value for account_id = {}", accessToken.accountId);
+            }
 
+            // add to kinesis - 1 sample per min
+            // convert SensorSample to bytes
+            if (tempTrackerData.value > 0) {
+                final String pillID = trackerId.toString();
+                final double trackerValueInG = Math.sqrt(tempTrackerData.value.doubleValue() * this.COUNTS_IN_G) - this.GRAVITY;
+                final InputProtos.PillDataKinesis pillKinesisData = InputProtos.PillDataKinesis.newBuilder()
+                        .setAccountId(accessToken.accountId.toString())
+                        .setPillId(pillID)
+                        .setTimestamp(tempTrackerData.timestamp)
+                        .setValue((long) (trackerValueInG * 1000))
+                        .setOffsetMillis(offsetMillis)
+                        .build();
+
+                final byte[] pillDataBytes = pillKinesisData.toByteArray();
+                final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.PILL_DATA);
+                final String sequenceNumber = dataLogger.put(pillID, pillDataBytes);
+                LOGGER.debug("Pill Data added to Kinesis with sequenceNumber = {}", sequenceNumber);
             }
         }
     }
@@ -173,7 +195,7 @@ public class ReceiveResource {
             @Scope({OAuthScope.SENSORS_BASIC}) AccessToken accessToken,
             @PathParam("pill_id") String pillID,
             byte[] data) {
-        final DataLogger dataLogger = kinesisLoggerFactory.get(QueueNames.PILL_DATA);
+        final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.PILL_DATA);
 
         final InputProtos.PillData pillData = InputProtos.PillData.newBuilder()
                     .setData(ByteString.copyFrom(data))

@@ -2,6 +2,8 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.EventDAODynamoDB;
+import com.hello.suripu.core.db.SleepLabelDAO;
+import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SensorSample;
@@ -34,10 +36,21 @@ public class TimelineResource {
 
     private final EventDAODynamoDB eventDAODynamoDB;
     private final TrackerMotionDAO trackerMotionDAO;
+    private final SleepScoreDAO sleepScoreDAO;
+    private final SleepLabelDAO sleepLabelDAO;
+    private final int dateBucketPeriod;
 
-    public TimelineResource(final EventDAODynamoDB eventDAODynamoDB, final TrackerMotionDAO trackerMotionDAO) {
+    public TimelineResource(final EventDAODynamoDB eventDAODynamoDB,
+                            final TrackerMotionDAO trackerMotionDAO,
+                            final SleepLabelDAO sleepLabelDAO,
+                            final SleepScoreDAO sleepScoreDAO,
+                            final int dateBucketPeriod
+    ) {
         this.eventDAODynamoDB = eventDAODynamoDB;
         this.trackerMotionDAO = trackerMotionDAO;
+        this.sleepLabelDAO = sleepLabelDAO;
+        this.sleepScoreDAO = sleepScoreDAO;
+        this.dateBucketPeriod = dateBucketPeriod;
     }
 
     @Path("/{date}")
@@ -54,8 +67,6 @@ public class TimelineResource {
         LOGGER.debug("End date: {}", endDate);
 
         final List<Event> events = new ArrayList<>();
-
-        final Random r = new Random();
 
         int groupBy = 10; // group by 10 minutes
         int threshold = 30; // events with scores < threshold will be considered motion events
@@ -113,9 +124,18 @@ public class TimelineResource {
         messages.add("It was a bit warmer than usual");
         messages.add("Maybe cut down on the Netflix binges?");
 
-        final String timeLineMessage = messages.get(r.nextInt(messages.size()));
+        final Random r = new Random();
+        String timeLineMessage = messages.get(r.nextInt(messages.size()));
 
-        final Timeline timeline = new Timeline(r.nextInt(100), timeLineMessage, date, reversed );
+        int sleepScore = 0;
+        if (trackerMotions.size() > 0) {
+            final int userOffsetMillis = trackerMotions.get(0).offsetMillis;
+            sleepScore = sleepScoreDAO.getSleepScoreForNight(accessToken.accountId, targetDate.withTimeAtStartOfDay(), userOffsetMillis, this.dateBucketPeriod, sleepLabelDAO);
+        } else {
+            timeLineMessage = "You haven't been sleeping!";
+        }
+
+        final Timeline timeline = new Timeline(sleepScore, timeLineMessage, date, reversed );
         final List<Timeline> timelines = new ArrayList<>();
         timelines.add(timeline);
 
