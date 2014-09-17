@@ -13,7 +13,10 @@ import java.util.List;
 
 /**
  * Created by pangwu on 6/16/14.
+ *
+ * We don't need event detection algorithm anymore, since the firmware is doing it.
  */
+@Deprecated
 public class EventDetectionAlgorithm {
 
     private final DataSource<AmplitudeData> dataSource;
