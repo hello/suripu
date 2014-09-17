@@ -6,6 +6,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.google.common.base.Joiner;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
+import com.hello.suripu.app.cli.CreateAlarmDynamoDBTableCommand;
 import com.hello.suripu.app.cli.CreateDynamoDBEventTableCommand;
 import com.hello.suripu.app.cli.CreateDynamoDBTimeZoneHistoryTableCommand;
 import com.hello.suripu.app.cli.RecreateEventsCommand;
@@ -19,12 +20,14 @@ import com.hello.suripu.app.resources.OAuthResource;
 import com.hello.suripu.app.resources.RoomConditionsResource;
 import com.hello.suripu.app.resources.SleepLabelResource;
 import com.hello.suripu.app.resources.TimelineResource;
+import com.hello.suripu.app.resources.v1.AlarmResource;
 import com.hello.suripu.app.resources.v1.QuestionsResource;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
+import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -76,6 +79,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         bootstrap.addCommand(new RecreateEventsCommand());
         bootstrap.addCommand(new CreateDynamoDBEventTableCommand());
         bootstrap.addCommand(new CreateDynamoDBTimeZoneHistoryTableCommand());
+        bootstrap.addCommand(new CreateAlarmDynamoDBTableCommand());
 
         bootstrap.addBundle(new KinesisLoggerBundle<SuripuAppConfiguration>() {
             @Override
@@ -120,6 +124,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         client.setEndpoint(configuration.getEventDBConfiguration().getEndpoint());
         final String eventTableName = configuration.getEventDBConfiguration().getTableName();
         final EventDAODynamoDB eventDAODynamoDB = new EventDAODynamoDB(client, eventTableName);
+
+        final AlarmDAODynamoDB alarmDAODynamoDB = new AlarmDAODynamoDB(client, configuration.getAlarmDBConfiguration().getTableName());
+
 
 
 
@@ -174,6 +181,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new com.hello.suripu.app.resources.v1.EventResource(eventDAODynamoDB));
         environment.addResource(new com.hello.suripu.app.resources.v1.DeviceResources(deviceDAO));
         environment.addResource(new com.hello.suripu.app.resources.v1.TimelineResource(eventDAODynamoDB, trackerMotionDAO));
+        environment.addResource(new AlarmResource(alarmDAODynamoDB));
 
         environment.addResource(new QuestionsResource(accountDAO));
 

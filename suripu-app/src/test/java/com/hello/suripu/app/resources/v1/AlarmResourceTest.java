@@ -6,7 +6,6 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
-import com.hello.suripu.app.resources.v1.AlarmResource;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmSound;
@@ -26,7 +25,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 /**
  * Created by pangwu on 9/17/14.
  */
-public class TestAlarmResource {
+public class AlarmResourceTest {
 
 
     private BasicAWSCredentials awsCredentials;
