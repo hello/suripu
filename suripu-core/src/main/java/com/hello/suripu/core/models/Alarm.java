@@ -66,7 +66,10 @@ public class Alarm {
         }
 
         final Alarm convertedObject = (Alarm) other;
-        return Objects.equal(convertedObject.hourOfDay, this.hourOfDay) &&
+        return Objects.equal(convertedObject.year, this.year) &&
+                Objects.equal(convertedObject.month, this.month) &&
+                Objects.equal(convertedObject.day, this.day) &&
+                Objects.equal(convertedObject.hourOfDay, this.hourOfDay) &&
                 Objects.equal(convertedObject.minuteOfHour, this.minuteOfHour) &&
                 Objects.equal(convertedObject.isRepeated, this.isRepeated) &&
                 Objects.equal(convertedObject.soundId, this.soundId) &&
