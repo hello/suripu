@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 
-import java.util.Arrays;
-
 /**
  * Created by pangwu on 9/16/14.
  */
@@ -30,7 +28,7 @@ public class Alarm {
     public final boolean isRepeated;
 
     @JsonProperty("day_of_week")
-    public final int[] dayOfWeek;
+    public final int dayOfWeek;
 
     @JsonProperty("sound_id")
     public final long soundId;
@@ -41,13 +39,14 @@ public class Alarm {
                  @JsonProperty("day_of_month") int day,
                  @JsonProperty("hour")int hourOfDay,
                  @JsonProperty("minute") int minuteOfHour,
-                 @JsonProperty("days") int[] dayOfWeek,
+                 @JsonProperty("day_of_week") int dayOfWeek,
                  @JsonProperty("repeated") boolean isRepeated,
                  @JsonProperty("sound_id") long soundId){
         this.dayOfWeek = dayOfWeek;
         this.hourOfDay = hourOfDay;
         this.minuteOfHour = minuteOfHour;
         this.isRepeated = isRepeated;
+
         this.soundId = soundId;
 
         this.year = year;
@@ -73,6 +72,6 @@ public class Alarm {
                 Objects.equal(convertedObject.minuteOfHour, this.minuteOfHour) &&
                 Objects.equal(convertedObject.isRepeated, this.isRepeated) &&
                 Objects.equal(convertedObject.soundId, this.soundId) &&
-                Arrays.equals(convertedObject.dayOfWeek, this.dayOfWeek);
+                Objects.equal(convertedObject.dayOfWeek, this.dayOfWeek);
     }
 }

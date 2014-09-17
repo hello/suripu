@@ -95,8 +95,8 @@ public class AlarmDAODynamoDBTest {
         final List<Alarm> expected = new ArrayList<Alarm>();
 
         final DateTime now = DateTime.now();
-        expected.add(new Alarm(0, 0, 0, 0, 1, new int[]{ DateTimeConstants.MONDAY}, true, 0));
-        expected.add(new Alarm(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), 1, 1, new int[0], false, 1));
+        expected.add(new Alarm(0, 0, 0, 0, 1, DateTimeConstants.MONDAY, true, 0));
+        expected.add(new Alarm(2014, 9, 16, 1, 1, DateTimeConstants.TUESDAY, false, 1));
 
         this.alarmDAODynamoDB.setAlarms(accountId, expected);
         final ImmutableList<Alarm> actual = this.alarmDAODynamoDB.getAlarms(accountId);
@@ -110,9 +110,21 @@ public class AlarmDAODynamoDBTest {
         final List<Alarm> expected = new ArrayList<Alarm>();
 
         for(int i = 0; i < AlarmDAODynamoDB.MAX_ALARM_COUNT + 1; i++) {
-            expected.add(new Alarm(0, 0, 0, 0, i + 1, new int[]{DateTimeConstants.MONDAY}, true, 0));
+            expected.add(new Alarm(0, 0, 0, 0, i + 1, DateTimeConstants.MONDAY + i, true, 0));
         }
 
+        this.alarmDAODynamoDB.setAlarms(accountId, expected);
+    }
+
+
+    @Test(expected = RuntimeException.class)
+    public void testTwoAlarmsInOneDay(){
+        long accountId = 1;
+        final List<Alarm> expected = new ArrayList<Alarm>();
+
+        final DateTime now = DateTime.now();
+        expected.add(new Alarm(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), 1, 1, now.getDayOfWeek(), false, 1));
+        expected.add(new Alarm(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), 2, 1, now.getDayOfWeek(), false, 1));
         this.alarmDAODynamoDB.setAlarms(accountId, expected);
     }
 

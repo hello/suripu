@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by pangwu on 9/16/14.
@@ -65,6 +66,15 @@ public class AlarmDAODynamoDB {
 
         if(alarms.size() == 0){
             LOGGER.warn("Account {} set empty data for alarms.");
+        }
+
+        final Set<Integer> alarmDays = new HashSet<Integer>();
+        for(final Alarm alarm:alarms){
+            if(alarmDays.contains(alarm.dayOfWeek)){
+                throw new RuntimeException("Cannot schedule two alarm at the same day.");
+            }else{
+                alarmDays.add(alarm.dayOfWeek);
+            }
         }
 
         final ObjectMapper mapper = new ObjectMapper();
