@@ -26,7 +26,7 @@ public class AlarmSound {
 
     @Override
     public int hashCode(){
-        return (int)id;
+        return Objects.hashCode(this.id);
     }
 
     @Override

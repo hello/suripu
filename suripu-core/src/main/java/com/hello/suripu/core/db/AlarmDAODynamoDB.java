@@ -92,7 +92,7 @@ public class AlarmDAODynamoDB {
 
 
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             LOGGER.error("Serialize alarms failed for account id: {}, error {}", accountId, e.getMessage());
         }
 
@@ -138,7 +138,7 @@ public class AlarmDAODynamoDB {
                 return ImmutableList.copyOf(alarms);
 
             } catch (IOException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
                 LOGGER.error("Parse alarm for account id {}, failed: {}", accountId, e.getMessage());
             }
         }
