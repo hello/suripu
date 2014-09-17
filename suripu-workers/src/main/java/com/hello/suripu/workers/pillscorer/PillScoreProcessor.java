@@ -46,12 +46,12 @@ public class PillScoreProcessor implements IRecordProcessor {
     // bunch of constants
     private int checkpointThreshold = 1; // no. of pills processed before we checkpoint kinesis
     private int dateMinuteBucket; // data size threshold to process the pill
-    private int processThresholdMillis;
+    private int dateMinuteBucketMillis;
 
     public PillScoreProcessor(final SleepScoreDAO sleepScoreDAO, final int dateMinuteBucket, final int checkpointThreshold) {
         this.sleepScoreDAO = sleepScoreDAO;
         this.dateMinuteBucket = dateMinuteBucket;
-        this.processThresholdMillis = dateMinuteBucket * 1000;
+        this.dateMinuteBucketMillis = dateMinuteBucket * 1000;
         this.checkpointThreshold = checkpointThreshold;
         this.pillAccountID = new HashMap<>();
         this.pillData = TreeMultimap.create();
@@ -97,7 +97,7 @@ public class PillScoreProcessor implements IRecordProcessor {
                     } else {
                         // first stored datetime and current datetime exceeded threshold
                         final SensorSample firstData = this.pillData.get(pillID).first();
-                        if (dateHourMinUTC.getMillis() - firstData.dateTime.getMillis() >= this.processThresholdMillis) {
+                        if (dateHourMinUTC.getMillis() - firstData.dateTime.getMillis() >= this.dateMinuteBucketMillis) {
                             toProcessPillIds.add(pillID);
                         }
                     }
