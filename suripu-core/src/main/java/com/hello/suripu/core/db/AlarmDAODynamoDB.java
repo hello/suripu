@@ -70,10 +70,12 @@ public class AlarmDAODynamoDB {
 
         final Set<Integer> alarmDays = new HashSet<Integer>();
         for(final Alarm alarm:alarms){
-            if(alarmDays.contains(alarm.dayOfWeek)){
-                throw new RuntimeException("Cannot schedule two alarm at the same day.");
-            }else{
-                alarmDays.add(alarm.dayOfWeek);
+            for(final Integer dayOfWeek:alarm.dayOfWeek) {
+                if (alarmDays.contains(dayOfWeek)) {
+                    throw new RuntimeException("Cannot schedule two alarm at the same day.");
+                } else {
+                    alarmDays.add(dayOfWeek);
+                }
             }
         }
 

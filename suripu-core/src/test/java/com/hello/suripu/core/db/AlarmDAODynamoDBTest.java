@@ -8,6 +8,7 @@ import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.Alarm;
+import com.hello.suripu.core.models.AlarmSound;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.junit.After;
@@ -16,6 +17,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -95,8 +97,40 @@ public class AlarmDAODynamoDBTest {
         final List<Alarm> expected = new ArrayList<Alarm>();
 
         final DateTime now = DateTime.now();
-        expected.add(new Alarm(0, 0, 0, 0, 1, DateTimeConstants.MONDAY, true, 0));
-        expected.add(new Alarm(2014, 9, 16, 1, 1, DateTimeConstants.TUESDAY, false, 1));
+
+        final Alarm.Builder builder = new Alarm.Builder();
+
+        HashSet<Integer> dayOfWeek = new HashSet<Integer>();
+        dayOfWeek.add(DateTimeConstants.TUESDAY);
+
+        builder.withYear(2014)
+                .withMonth(9)
+                .withDay(15)
+                .withDayOfWeek(dayOfWeek)
+                .withHour(0)
+                .withMinute(1)
+                .withIsRepeated(true)
+                .withIsEnabled(true)
+                .withIsEditable(true)
+                .withAlarmSound(new AlarmSound(1, "god save the queen"));
+
+        expected.add(builder.build());
+
+        dayOfWeek = new HashSet<Integer>();
+        dayOfWeek.add(DateTimeConstants.WEDNESDAY);
+
+        builder.withYear(2014)
+                .withMonth(9)
+                .withDay(16)
+                .withDayOfWeek(dayOfWeek)
+                .withHour(0)
+                .withMinute(1)
+                .withIsRepeated(false)
+                .withIsEnabled(true)
+                .withIsEditable(true)
+                .withAlarmSound(new AlarmSound(1, "god save the queen"));
+
+        expected.add(builder.build());
 
         this.alarmDAODynamoDB.setAlarms(accountId, expected);
         final ImmutableList<Alarm> actual = this.alarmDAODynamoDB.getAlarms(accountId);
@@ -108,9 +142,24 @@ public class AlarmDAODynamoDBTest {
     public void testSetTooMuchAlarms(){
         long accountId = 1;
         final List<Alarm> expected = new ArrayList<Alarm>();
+        final Alarm.Builder builder = new Alarm.Builder();
 
         for(int i = 0; i < AlarmDAODynamoDB.MAX_ALARM_COUNT + 1; i++) {
-            expected.add(new Alarm(0, 0, 0, 0, i + 1, DateTimeConstants.MONDAY + i, true, 0));
+            HashSet<Integer> dayOfWeek = new HashSet<Integer>();
+            dayOfWeek.add(DateTimeConstants.MONDAY + 1);
+
+            builder.withYear(2014)
+                    .withMonth(9)
+                    .withDay(14)
+                    .withDayOfWeek(dayOfWeek)
+                    .withHour(1)
+                    .withMinute(1)
+                    .withIsRepeated(false)
+                    .withIsEnabled(true)
+                    .withIsEditable(true)
+                    .withAlarmSound(new AlarmSound(1, "god save the queen"));
+
+            expected.add(builder.build());
         }
 
         this.alarmDAODynamoDB.setAlarms(accountId, expected);
@@ -122,9 +171,29 @@ public class AlarmDAODynamoDBTest {
         long accountId = 1;
         final List<Alarm> expected = new ArrayList<Alarm>();
 
+        final Alarm.Builder builder = new Alarm.Builder();
         final DateTime now = DateTime.now();
-        expected.add(new Alarm(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), 1, 1, now.getDayOfWeek(), false, 1));
-        expected.add(new Alarm(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), 2, 1, now.getDayOfWeek(), false, 1));
+
+        HashSet<Integer> dayOfWeek = new HashSet<Integer>();
+        dayOfWeek.add(now.getDayOfWeek());
+
+        builder.withYear(now.getYear())
+                .withMonth(now.getMonthOfYear())
+                .withDay(now.getDayOfMonth())
+                .withDayOfWeek(dayOfWeek)
+                .withHour(1)
+                .withMinute(1)
+                .withIsRepeated(false)
+                .withIsEnabled(true)
+                .withIsEditable(true)
+                .withAlarmSound(new AlarmSound(1, "god save the queen"));
+
+
+        expected.add(builder.build());
+
+        builder.withHour(2);
+
+        expected.add(builder.build());
         this.alarmDAODynamoDB.setAlarms(accountId, expected);
     }
 
