@@ -2,6 +2,7 @@ package com.hello.suripu.workers.pillscorer;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
+import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 import com.yammer.dropwizard.config.Configuration;
@@ -34,13 +35,19 @@ public class PillScoreWorkerConfiguration extends Configuration {
     }
 
     @Valid
-    @NotEmpty
-    @JsonProperty("queues")
+    @NotNull
+    @JsonProperty("kinesis")
+    private KinesisConfiguration kinesisConfiguration;
     private Map<QueueName,String> queues = new HashMap<QueueName, String>();
 
-    public ImmutableMap<QueueName,String> getQueues() {
-        return ImmutableMap.copyOf(queues);
+    public String getKinesisEndpoint() {
+        return kinesisConfiguration.getEndpoint();
     }
+
+    public ImmutableMap<QueueName,String> getQueues() {
+        return ImmutableMap.copyOf(kinesisConfiguration.getStreams());
+    }
+
 
     @Valid
     @NotNull
@@ -75,5 +82,7 @@ public class PillScoreWorkerConfiguration extends Configuration {
     @Valid
     @JsonProperty("debug")
     private Boolean debug = Boolean.FALSE;
+
+    public Boolean getDebug() { return debug; }
 
 }

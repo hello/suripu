@@ -25,11 +25,6 @@
             <artifactId>suripu-core</artifactId>
             <version>0.1.49-SNAPSHOT</version>
         </dependency>
-        <!--<dependency>-->
-            <!--<groupId>org.jdbi</groupId>-->
-            <!--<artifactId>jdbi</artifactId>-->
-            <!--<version>2.53</version>-->
-        <!--</dependency>-->
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk</artifactId>

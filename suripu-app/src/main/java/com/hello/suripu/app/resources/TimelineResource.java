@@ -6,7 +6,6 @@ import com.hello.suripu.core.db.EventDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
-import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SensorSample;
 import com.hello.suripu.core.models.SleepLabel;
@@ -27,7 +26,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.List;
@@ -137,7 +135,7 @@ public class TimelineResource {
         // wake at 7:55am, query ends at 8:00am
         final int sleepMinute = (sleepUTC.getMinuteOfHour() / this.scoreThreshold) * this.scoreThreshold;
         final int wakeMinutes = ((wakeUTC.getMinuteOfHour() / this.scoreThreshold) + 1) * this.scoreThreshold;
-        final List<SleepScore> scores = sleepScoreDAO.getByAccountBetweenDateHour(accountId,
+        final List<SleepScore> scores = sleepScoreDAO.getByAccountBetweenDateBucket(accountId,
                 sleepUTC.withMinuteOfHour(sleepMinute),
                 wakeUTC.withMinuteOfHour(0).plusMinutes(wakeMinutes));
 
@@ -153,8 +151,8 @@ public class TimelineResource {
 
         LOGGER.debug("Length of scores: {}", scores.size());
         for (final SleepScore score: scores) {
-            LOGGER.debug("score {}, {}, {}", score.dateHourUTC, score.totalHourScore, score.sleepDuration);
-            totalScore += score.totalHourScore;
+            LOGGER.debug("score {}, {}, {}", score.dateBucketUTC, score.bucketScore, score.sleepDuration);
+            totalScore += score.bucketScore;
             totalCounts++;
         }
         LOGGER.debug("TOTAL score: {}, {}", String.valueOf(totalScore), String.valueOf(totalCounts));

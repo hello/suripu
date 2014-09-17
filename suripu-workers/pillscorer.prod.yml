@@ -1,17 +1,12 @@
-debug: true
+debug: false
 
 common_db:
-  # the name of your JDBC driver
   driverClass: org.postgresql.Driver
-
-  # the username
   user: ingress_user
-
-  # the password
   password: hello ingress user
-
-  # the JDBC URL
-  url: jdbc:postgresql://localhost:5432/hello_2014_07_29
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
+  properties:
+    hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
   # any properties specific to your JDBC driver:
   properties:
@@ -38,8 +33,10 @@ common_db:
   # the maximum lifetime of an idle connection
   closeConnectionIfIdleFor: 1 minute
 
-queues:
-  pill_data: test-pill-suripu
+kinesis:
+  endpoint : https://kinesis.us-east-1.amazonaws.com
+  streams :
+    pill_data : test-pill-suripu
 
 app_name: PillScoreConsumer
 

@@ -64,7 +64,7 @@ public final class PillScoreWorkerCommand extends ConfiguredCommand<PillScoreWor
                 awsCredentialsProvider,
                 workerId);
         kinesisConfig.withMaxRecords(configuration.getMaxRecords());
-
+        kinesisConfig.withKinesisEndpoint(configuration.getKinesisEndpoint());
         kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
 
         final IRecordProcessorFactory factory = new PillScoreProcessorFactory(SleepScoreDAO, configuration.getProcessThreshold(), configuration.getCheckpointThreshold(), kinesisConfig);

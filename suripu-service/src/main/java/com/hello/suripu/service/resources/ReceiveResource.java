@@ -72,6 +72,10 @@ public class ReceiveResource {
     private final CryptoHelper cryptoHelper;
     private final Boolean debug;
 
+    // for transforming pill-data counts into acceleration
+    private static final double COUNTS_IN_G = Math.pow((4.0  * 9.81)/ 65536.0, 2);
+    private static final double GRAVITY = 9.81;
+
     public ReceiveResource(final DeviceDataDAO deviceDataDAO,
                            final DeviceDAO deviceDAO,
                            final ScoreDAO scoreDAO,
@@ -121,7 +125,6 @@ public class ReceiveResource {
             LOGGER.warn("Too many trackers ({}) for account = {}", pairs.size(), accessToken.accountId);
         }
 
-        final double countsInGs = Math.pow((4.0  * 9.81)/ 65536.0, 2);
         for(final TempTrackerData tempTrackerData : trackerData) {
 
             final Long trackerId = pairsLookup.get(tempTrackerData.trackerId);
@@ -168,7 +171,7 @@ public class ReceiveResource {
             // convert SensorSample to bytes
             if (tempTrackerData.value > 0) {
                 final String pillID = trackerId.toString();
-                final double trackerValueInG = Math.sqrt(tempTrackerData.value.doubleValue() * countsInGs) - 9.81;
+                final double trackerValueInG = Math.sqrt(tempTrackerData.value.doubleValue() * this.COUNTS_IN_G) - this.GRAVITY;
                 final InputProtos.PillDataKinesis pillKinesisData = InputProtos.PillDataKinesis.newBuilder()
                         .setAccountId(accessToken.accountId.toString())
                         .setPillId(pillID)

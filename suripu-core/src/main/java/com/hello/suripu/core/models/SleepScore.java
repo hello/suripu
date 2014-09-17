@@ -3,11 +3,19 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.SortedSet;
 
 
 public class SleepScore {
+    private final static Logger LOGGER = LoggerFactory.getLogger(SleepScore.class);
 
     @JsonIgnore
     public Long id;
@@ -16,7 +24,7 @@ public class SleepScore {
     public long accountId;
 
     @JsonProperty("date_hour_utc")
-    public DateTime dateHourUTC;
+    public DateTime dateBucketUTC;
 
     @JsonProperty("pill_id")
     public long pillID;
@@ -28,10 +36,7 @@ public class SleepScore {
     public boolean custom;
 
     @JsonProperty("total_hour_score")
-    public int totalHourScore;
-
-    @JsonProperty("sax_symbols")
-    public String saxSymbols;
+    public int bucketScore;
 
     @JsonProperty("agitation_num")
     public int agitationNum;
@@ -52,9 +57,8 @@ public class SleepScore {
             final DateTime date,
             final long pillID,
             final int sleepDuration,
-            final int totalHourScore,
+            final int bucketScore,
             final boolean custom,
-            final String saxSymbols,
             final int agitationNum,
             final long agitationTot,
             final DateTime updated,
@@ -62,12 +66,11 @@ public class SleepScore {
     ){
         this.id = id;
         this.accountId = accountId;
-        this.dateHourUTC = date;
+        this.dateBucketUTC = date;
         this.pillID = pillID;
         this.sleepDuration = sleepDuration;
-        this.totalHourScore = totalHourScore;
+        this.bucketScore = bucketScore;
         this.custom = custom;
-        this.saxSymbols = saxSymbols;
         this.agitationNum = agitationNum;
         this.agitationTot = agitationTot;
         this.updated = updated;
@@ -75,26 +78,85 @@ public class SleepScore {
 
     }
 
-    @JsonCreator
-    public SleepScore(
-            @JsonProperty("date_utc") final long date,  // in millisecs
-            @JsonProperty("updated") final int updated,
-            @JsonProperty("timezone_offset") final int timeZoneOffset
-    ){
-        // TODO
-        this.dateHourUTC = new DateTime(date, DateTimeZone.UTC);
-        this.updated = new DateTime(updated, DateTimeZone.UTC);
-        this.timeZoneOffset = timeZoneOffset;
-
-    }
-
     @Override
     public String toString() {
-        return "Pill: " + this.pillID + ", Account:" + this.accountId +
-                ", Date: " + this.dateHourUTC + ", Offset: " + this.timeZoneOffset +
-                ", Score: " + this.totalHourScore + ", Agitation_Num: " +
-                this.agitationNum + ", Agitation_Tot: " + this.agitationTot;
+        return Objects.toStringHelper(SleepScore.class)
+                .add("pill", pillID)
+                .add("account", accountId)
+                .add("date_bucket_utc", dateBucketUTC)
+                .add("timzone_offset", timeZoneOffset)
+                .add("score", this.bucketScore)
+                .add("agitation_num", agitationNum)
+                .add("agitation_tot", agitationTot)
+                .toString();
     }
 
+    public static List<SleepScore> computeSleepScore(final Long accountID,
+                                                     final String pillID,
+                                                     final SortedSet<SensorSample> pillData,
+                                                     final int processThreshold) {
+        final List<SleepScore> sleepScores = new ArrayList<>();
+        final SensorSample firstData = pillData.first();
+        final int timeZoneOffset = firstData.timeZoneOffset;
+
+        float agitationNum = 0;
+        float agitationTot = 0;
+        int duration = 0;
+        int minute = (int) firstData.dateTime.getMinuteOfHour()/processThreshold;
+        DateTime lastBucketDT = firstData.dateTime.withMinuteOfHour(minute * processThreshold);
+        LOGGER.debug("======= Computing scores for this pill {}, {}", pillID, accountID);
+
+        for (final SensorSample data: pillData) {
+            minute = (int) data.dateTime.getMinuteOfHour() / processThreshold;
+            final DateTime bucket = data.dateTime.withMinuteOfHour(minute * processThreshold);
+            if (bucket.compareTo(lastBucketDT) != 0) {
+                SleepScore sleepScore = new SleepScore(0L, accountID,
+                        lastBucketDT,
+                        Long.parseLong(pillID),
+                        duration,
+                        (int) (agitationNum/((float) processThreshold) * 100.0), // score
+                        false, // no customized score yet
+                        (int) agitationNum,
+                        (long) agitationTot,
+                        DateTime.now(),
+                        timeZoneOffset
+                );
+                LOGGER.debug("created new score object for {}", sleepScore.toString());
+                sleepScores.add(sleepScore);
+
+                agitationNum = 0;
+                agitationTot = 0;
+                duration = 0;
+                lastBucketDT = bucket;
+            }
+
+            LOGGER.debug("Sensor Sample {}", data.toString());
+            final float value = data.val;
+            if (value != -1) {
+                agitationNum++;
+                agitationTot = agitationTot + value;
+            }
+            duration++;
+        }
+
+        if (duration != 0) {
+            SleepScore sleepScore = new SleepScore(0L,
+                    accountID,
+                    lastBucketDT,
+                    Long.parseLong(pillID),
+                    duration,
+                    (int) ((agitationNum)/((float) processThreshold) * 100.0),
+                    false, // no customized score for now
+                    (int) agitationNum,
+                    (long) agitationTot,
+                    DateTime.now(),
+                    timeZoneOffset
+            );
+            LOGGER.debug("created new score object for {}", sleepScore.toString());
+            sleepScores.add(sleepScore);
+
+        }
+        return sleepScores;
+    }
 
 }
