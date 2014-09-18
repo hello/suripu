@@ -10,14 +10,17 @@ import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmSound;
 import com.hello.suripu.core.oauth.AccessToken;
+import com.hello.suripu.core.oauth.OAuthScope;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.ws.rs.WebApplicationException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -40,7 +43,15 @@ public class AlarmResourceTest {
     private final List<Alarm> tooMuchAlarmList = new ArrayList<Alarm>();
     private final List<Alarm> twoAlarmInADayList = new ArrayList<Alarm>();
 
-    private final AccessToken token = new AccessToken.Builder().withAccountId(1L).build();
+    private final AccessToken token = new AccessToken.Builder()
+            .withAccountId(1L)
+            .withCreatedAt(DateTime.now())
+            .withExpiresIn(DateTime.now().plusHours(1).getMillis())
+            .withRefreshToken(UUID.randomUUID())
+            .withToken(UUID.randomUUID())
+            .withScopes(new OAuthScope[]{ OAuthScope.API_INTERNAL_DATA_READ, OAuthScope.API_INTERNAL_DATA_WRITE })
+            .withAppId(1L)
+            .build();
 
 
     @Before
@@ -161,6 +172,21 @@ public class AlarmResourceTest {
         final List<Alarm> expected = this.validList;
 
         assertThat(actual, containsInAnyOrder(expected.toArray()));
+    }
+
+    @Test(expected = WebApplicationException.class)
+    public void testSetTooMuchAlarm(){
+        this.alarmResource.setAlarms(this.token, DateTime.now().getMillis(), this.tooMuchAlarmList);
+    }
+
+    @Test(expected = WebApplicationException.class)
+    public void testSetTwoAlarmInADay(){
+        this.alarmResource.setAlarms(this.token, DateTime.now().getMillis(), this.twoAlarmInADayList);
+    }
+
+    @Test(expected = WebApplicationException.class)
+    public void testInvalidClientTime(){
+        this.alarmResource.setAlarms(this.token, DateTime.now().minusMinutes(2).getMillis(), this.validList);
     }
 
 }
