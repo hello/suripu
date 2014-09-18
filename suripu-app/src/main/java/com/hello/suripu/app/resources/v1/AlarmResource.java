@@ -20,9 +20,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by pangwu on 9/17/14.
@@ -40,7 +38,7 @@ public class AlarmResource {
     @Timed
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Alarm> getAlarms(@Scope({OAuthScope.API_INTERNAL_DATA_READ}) final AccessToken token){
+    public List<Alarm> getAlarms(@Scope({OAuthScope.ALARM_READ}) final AccessToken token){
         final List<Alarm> alarms = alarmDAODynamoDB.getAlarms(token.accountId);
         return alarms;
 
@@ -52,7 +50,7 @@ public class AlarmResource {
     @Path("/{client_time_utc}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void setAlarms(@Scope({OAuthScope.API_INTERNAL_DATA_WRITE}) final AccessToken token,
+    public void setAlarms(@Scope({OAuthScope.ALARM_WRITE}) final AccessToken token,
                           @PathParam("client_time_utc") long clientTime,
                           final List<Alarm> alarms){
 
