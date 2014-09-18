@@ -67,6 +67,7 @@ public class SleepLabelResource {
         }
     }
 
+    @Timed
     @Path("/save")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
