@@ -60,12 +60,6 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.amazonaws</groupId>
-                <artifactId>aws-java-sdk</artifactId>
-                <version>${aws.sdk.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>com.hello.dropwizard</groupId>
                 <artifactId>dropwizard-mikkusu</artifactId>
                 <version>0.0.1</version>
