@@ -38,7 +38,7 @@ import java.util.Set;
  */
 public class AlarmDAODynamoDB {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(TimeZoneHistoryDAODynamoDB.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(AlarmDAODynamoDB.class);
     private final AmazonDynamoDBClient dynamoDBClient;
     private final String tableName;
 
