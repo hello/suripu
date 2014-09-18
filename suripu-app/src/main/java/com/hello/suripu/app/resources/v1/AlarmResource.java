@@ -57,6 +57,7 @@ public class AlarmResource {
                           final List<Alarm> alarms){
 
         if(Math.abs(DateTime.now().getMillis() - clientTime) > DateTimeConstants.MILLIS_PER_MINUTE){
+            LOGGER.error("account_id {} set alarm failed, client time too off.", token.accountId);
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
@@ -64,6 +65,7 @@ public class AlarmResource {
         for(final Alarm alarm:alarms){
             for(final Integer dayOfWeek:alarm.dayOfWeek) {
                 if (alarmDays.contains(dayOfWeek)) {
+                    LOGGER.error("account id {} set alarm failed, two alarm in the same day.", token.accountId);
                     throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
                 } else {
                     alarmDays.add(dayOfWeek);
