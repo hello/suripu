@@ -2,7 +2,7 @@ package com.hello.suripu.workers.pill;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
-import com.hello.suripu.core.configuration.QueueNames;
+import com.hello.suripu.core.configuration.QueueName;
 import com.yammer.dropwizard.config.Configuration;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -26,9 +26,9 @@ public class PillWorkerConfiguration extends Configuration {
     @Valid
     @NotEmpty
     @JsonProperty("queues")
-    private Map<QueueNames,String> queues = new HashMap<QueueNames, String>();
+    private Map<QueueName,String> queues = new HashMap<QueueName, String>();
 
-    public ImmutableMap<QueueNames,String> getQueues() {
+    public ImmutableMap<QueueName,String> getQueues() {
         return ImmutableMap.copyOf(queues);
     }
 

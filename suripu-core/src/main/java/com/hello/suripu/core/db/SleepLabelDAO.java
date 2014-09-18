@@ -39,6 +39,12 @@ public interface SleepLabelDAO extends Transactional<SleepLabelDAO> {
                                                          @Bind("date_utc") DateTime dateUTC,
                                                          @Bind("offset_millis") int timeZoneOffset);
 
+    @SqlQuery("SELECT * FROM sleep_label " +
+            "WHERE account_id = :account_id AND date_utc = :date_utc LIMIT 1;")
+    @SingleValueResult(SleepLabel.class)
+    Optional<SleepLabel> getByAccountAndDate(@Bind("account_id") Long account_id,
+                                             @Bind("date_utc") DateTime dateUTC);
+
     @SqlUpdate("UPDATE sleep_label " +
             "SET rating = :rating, sleep_at_utc = :sleep_at_utc, wakeup_at_utc = :wakeup_at_utc " +
             "WHERE id = :id")

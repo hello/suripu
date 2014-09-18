@@ -70,8 +70,9 @@ public class SleepLabelResource {
     @Path("/save")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public void saveLabel(@Valid final SleepLabel sleepLabel,
-                              @Scope({OAuthScope.SLEEP_LABEL_WRITE}) final AccessToken accessToken){
+    public void saveLabel(@Scope({OAuthScope.SLEEP_LABEL_WRITE}) final AccessToken accessToken,
+            @Valid final SleepLabel sleepLabel)
+    {
 
 
         try{

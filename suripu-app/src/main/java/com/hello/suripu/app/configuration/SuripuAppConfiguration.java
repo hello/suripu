@@ -107,4 +107,13 @@ public class SuripuAppConfiguration extends Configuration {
     public KinesisLoggerConfiguration getKinesisLoggerConfiguration() {
         return kinesisLoggerConfiguration;
     }
+
+    @Valid
+    @JsonProperty("score_threshold")
+    private int scoreThreshold;
+
+    public int getScoreThreshold() {
+        return scoreThreshold;
+    }
+
 }

@@ -9,7 +9,7 @@ import com.google.common.base.Joiner;
 import com.hello.dropwizard.mikkusu.helpers.JacksonProtobufProvider;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
-import com.hello.suripu.core.configuration.QueueNames;
+import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -38,6 +38,7 @@ import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
 import com.hello.suripu.service.resources.AudioResource;
+import com.hello.suripu.service.resources.DownloadResource;
 import com.hello.suripu.service.resources.ReceiveResource;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -52,8 +53,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
-import java.util.TimeZone;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 public class SuripuService extends Service<SuripuConfiguration> {
@@ -68,7 +69,6 @@ public class SuripuService extends Service<SuripuConfiguration> {
     @Override
     public void initialize(Bootstrap<SuripuConfiguration> bootstrap) {
         bootstrap.addBundle(new DBIExceptionsBundle());
-
     }
 
     @Override
@@ -151,8 +151,12 @@ public class SuripuService extends Service<SuripuConfiguration> {
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());
 
-        final DataLogger audioDataLogger = kinesisLoggerFactory.get(QueueNames.AUDIO_FEATURES);
+        final DataLogger audioDataLogger = kinesisLoggerFactory.get(QueueName.AUDIO_FEATURES);
         environment.addResource(new AudioResource(s3Client, bucketName, audioDataLogger, deviceDAO));
+//        environment.addResource(new DropboxResource());
+
+        environment.addResource(new DownloadResource(s3Client, "hello-firmware"));
+
 
         // Manage the lifecycle of our clients
         environment.manage(new DynamoDBClientManaged(dynamoDBClient));

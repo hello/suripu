@@ -2,7 +2,7 @@ package com.hello.suripu.core.logging;
 
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
 import com.google.common.collect.ImmutableMap;
-import com.hello.suripu.core.configuration.QueueNames;
+import com.hello.suripu.core.configuration.QueueName;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,19 +10,19 @@ import java.util.Set;
 
 public class KinesisLoggerFactory {
 
-    private final ImmutableMap<QueueNames, DataLogger> loggers;
+    private final ImmutableMap<QueueName, DataLogger> loggers;
 
     /**
      * Builds a Map of KinesisLogger with pre-configured stream name
      * @param client
      * @param streamNames
      */
-    public KinesisLoggerFactory(final AmazonKinesisAsyncClient client, final Map<QueueNames, String> streamNames) {
+    public KinesisLoggerFactory(final AmazonKinesisAsyncClient client, final Map<QueueName, String> streamNames) {
 
-        final Set<QueueNames> keys = streamNames.keySet();
-        final Map<QueueNames, DataLogger> streamNameDataLoggerMap = new HashMap<QueueNames, DataLogger>(streamNames.size());
+        final Set<QueueName> keys = streamNames.keySet();
+        final Map<QueueName, DataLogger> streamNameDataLoggerMap = new HashMap<QueueName, DataLogger>(streamNames.size());
 
-        for(final QueueNames queueNames : keys) {
+        for(final QueueName queueNames : keys) {
             final String streamName = streamNames.get(queueNames);
             if(streamName == null) {
                 throw new RuntimeException("Stream name is null");
@@ -40,7 +40,7 @@ public class KinesisLoggerFactory {
      * @param streamName
      * @return
      */
-    public DataLogger get(final QueueNames streamName) {
+    public DataLogger get(final QueueName streamName) {
         if(!loggers.containsKey(streamName)) {
             throw new RuntimeException("Missing Kinesis streamName");
         }

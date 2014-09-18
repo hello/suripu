@@ -15501,6 +15501,884 @@ public final class InputProtos {
     // @@protoc_insertion_point(class_scope:hello.PillData)
   }
 
+  public interface PillDataKinesisOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional string pill_id = 1;
+    /**
+     * <code>optional string pill_id = 1;</code>
+     */
+    boolean hasPillId();
+    /**
+     * <code>optional string pill_id = 1;</code>
+     */
+    java.lang.String getPillId();
+    /**
+     * <code>optional string pill_id = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getPillIdBytes();
+
+    // optional string account_id = 2;
+    /**
+     * <code>optional string account_id = 2;</code>
+     */
+    boolean hasAccountId();
+    /**
+     * <code>optional string account_id = 2;</code>
+     */
+    java.lang.String getAccountId();
+    /**
+     * <code>optional string account_id = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getAccountIdBytes();
+
+    // optional int64 timestamp = 3;
+    /**
+     * <code>optional int64 timestamp = 3;</code>
+     */
+    boolean hasTimestamp();
+    /**
+     * <code>optional int64 timestamp = 3;</code>
+     */
+    long getTimestamp();
+
+    // optional int64 value = 4;
+    /**
+     * <code>optional int64 value = 4;</code>
+     */
+    boolean hasValue();
+    /**
+     * <code>optional int64 value = 4;</code>
+     */
+    long getValue();
+
+    // optional int32 offsetMillis = 5;
+    /**
+     * <code>optional int32 offsetMillis = 5;</code>
+     */
+    boolean hasOffsetMillis();
+    /**
+     * <code>optional int32 offsetMillis = 5;</code>
+     */
+    int getOffsetMillis();
+  }
+  /**
+   * Protobuf type {@code hello.PillDataKinesis}
+   *
+   * <pre>
+   * pill data msg in Kinesis
+   * </pre>
+   */
+  public static final class PillDataKinesis extends
+      com.google.protobuf.GeneratedMessage
+      implements PillDataKinesisOrBuilder {
+    // Use PillDataKinesis.newBuilder() to construct.
+    private PillDataKinesis(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private PillDataKinesis(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final PillDataKinesis defaultInstance;
+    public static PillDataKinesis getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public PillDataKinesis getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private PillDataKinesis(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              pillId_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              accountId_ = input.readBytes();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              timestamp_ = input.readInt64();
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000008;
+              value_ = input.readInt64();
+              break;
+            }
+            case 40: {
+              bitField0_ |= 0x00000010;
+              offsetMillis_ = input.readInt32();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.suripu.api.input.InputProtos.internal_static_hello_PillDataKinesis_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.suripu.api.input.InputProtos.internal_static_hello_PillDataKinesis_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.suripu.api.input.InputProtos.PillDataKinesis.class, com.hello.suripu.api.input.InputProtos.PillDataKinesis.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<PillDataKinesis> PARSER =
+        new com.google.protobuf.AbstractParser<PillDataKinesis>() {
+      public PillDataKinesis parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new PillDataKinesis(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<PillDataKinesis> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional string pill_id = 1;
+    public static final int PILL_ID_FIELD_NUMBER = 1;
+    private java.lang.Object pillId_;
+    /**
+     * <code>optional string pill_id = 1;</code>
+     */
+    public boolean hasPillId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string pill_id = 1;</code>
+     */
+    public java.lang.String getPillId() {
+      java.lang.Object ref = pillId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          pillId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string pill_id = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getPillIdBytes() {
+      java.lang.Object ref = pillId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        pillId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string account_id = 2;
+    public static final int ACCOUNT_ID_FIELD_NUMBER = 2;
+    private java.lang.Object accountId_;
+    /**
+     * <code>optional string account_id = 2;</code>
+     */
+    public boolean hasAccountId() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string account_id = 2;</code>
+     */
+    public java.lang.String getAccountId() {
+      java.lang.Object ref = accountId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          accountId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string account_id = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getAccountIdBytes() {
+      java.lang.Object ref = accountId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        accountId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional int64 timestamp = 3;
+    public static final int TIMESTAMP_FIELD_NUMBER = 3;
+    private long timestamp_;
+    /**
+     * <code>optional int64 timestamp = 3;</code>
+     */
+    public boolean hasTimestamp() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional int64 timestamp = 3;</code>
+     */
+    public long getTimestamp() {
+      return timestamp_;
+    }
+
+    // optional int64 value = 4;
+    public static final int VALUE_FIELD_NUMBER = 4;
+    private long value_;
+    /**
+     * <code>optional int64 value = 4;</code>
+     */
+    public boolean hasValue() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional int64 value = 4;</code>
+     */
+    public long getValue() {
+      return value_;
+    }
+
+    // optional int32 offsetMillis = 5;
+    public static final int OFFSETMILLIS_FIELD_NUMBER = 5;
+    private int offsetMillis_;
+    /**
+     * <code>optional int32 offsetMillis = 5;</code>
+     */
+    public boolean hasOffsetMillis() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional int32 offsetMillis = 5;</code>
+     */
+    public int getOffsetMillis() {
+      return offsetMillis_;
+    }
+
+    private void initFields() {
+      pillId_ = "";
+      accountId_ = "";
+      timestamp_ = 0L;
+      value_ = 0L;
+      offsetMillis_ = 0;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getPillIdBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, getAccountIdBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeInt64(3, timestamp_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeInt64(4, value_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeInt32(5, offsetMillis_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getPillIdBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getAccountIdBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(3, timestamp_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(4, value_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(5, offsetMillis_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.suripu.api.input.InputProtos.PillDataKinesis parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.input.InputProtos.PillDataKinesis parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.PillDataKinesis parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.input.InputProtos.PillDataKinesis parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.PillDataKinesis parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.input.InputProtos.PillDataKinesis parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.PillDataKinesis parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.suripu.api.input.InputProtos.PillDataKinesis parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.PillDataKinesis parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.input.InputProtos.PillDataKinesis parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.suripu.api.input.InputProtos.PillDataKinesis prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code hello.PillDataKinesis}
+     *
+     * <pre>
+     * pill data msg in Kinesis
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.input.InputProtos.PillDataKinesisOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_PillDataKinesis_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_PillDataKinesis_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.input.InputProtos.PillDataKinesis.class, com.hello.suripu.api.input.InputProtos.PillDataKinesis.Builder.class);
+      }
+
+      // Construct using com.hello.suripu.api.input.InputProtos.PillDataKinesis.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        pillId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        accountId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        timestamp_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        value_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        offsetMillis_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_PillDataKinesis_descriptor;
+      }
+
+      public com.hello.suripu.api.input.InputProtos.PillDataKinesis getDefaultInstanceForType() {
+        return com.hello.suripu.api.input.InputProtos.PillDataKinesis.getDefaultInstance();
+      }
+
+      public com.hello.suripu.api.input.InputProtos.PillDataKinesis build() {
+        com.hello.suripu.api.input.InputProtos.PillDataKinesis result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.suripu.api.input.InputProtos.PillDataKinesis buildPartial() {
+        com.hello.suripu.api.input.InputProtos.PillDataKinesis result = new com.hello.suripu.api.input.InputProtos.PillDataKinesis(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.pillId_ = pillId_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.accountId_ = accountId_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.timestamp_ = timestamp_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.value_ = value_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.offsetMillis_ = offsetMillis_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.suripu.api.input.InputProtos.PillDataKinesis) {
+          return mergeFrom((com.hello.suripu.api.input.InputProtos.PillDataKinesis)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.suripu.api.input.InputProtos.PillDataKinesis other) {
+        if (other == com.hello.suripu.api.input.InputProtos.PillDataKinesis.getDefaultInstance()) return this;
+        if (other.hasPillId()) {
+          bitField0_ |= 0x00000001;
+          pillId_ = other.pillId_;
+          onChanged();
+        }
+        if (other.hasAccountId()) {
+          bitField0_ |= 0x00000002;
+          accountId_ = other.accountId_;
+          onChanged();
+        }
+        if (other.hasTimestamp()) {
+          setTimestamp(other.getTimestamp());
+        }
+        if (other.hasValue()) {
+          setValue(other.getValue());
+        }
+        if (other.hasOffsetMillis()) {
+          setOffsetMillis(other.getOffsetMillis());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.suripu.api.input.InputProtos.PillDataKinesis parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.suripu.api.input.InputProtos.PillDataKinesis) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional string pill_id = 1;
+      private java.lang.Object pillId_ = "";
+      /**
+       * <code>optional string pill_id = 1;</code>
+       */
+      public boolean hasPillId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string pill_id = 1;</code>
+       */
+      public java.lang.String getPillId() {
+        java.lang.Object ref = pillId_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          pillId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string pill_id = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getPillIdBytes() {
+        java.lang.Object ref = pillId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          pillId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string pill_id = 1;</code>
+       */
+      public Builder setPillId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        pillId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string pill_id = 1;</code>
+       */
+      public Builder clearPillId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        pillId_ = getDefaultInstance().getPillId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string pill_id = 1;</code>
+       */
+      public Builder setPillIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        pillId_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string account_id = 2;
+      private java.lang.Object accountId_ = "";
+      /**
+       * <code>optional string account_id = 2;</code>
+       */
+      public boolean hasAccountId() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string account_id = 2;</code>
+       */
+      public java.lang.String getAccountId() {
+        java.lang.Object ref = accountId_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          accountId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string account_id = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getAccountIdBytes() {
+        java.lang.Object ref = accountId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          accountId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string account_id = 2;</code>
+       */
+      public Builder setAccountId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        accountId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string account_id = 2;</code>
+       */
+      public Builder clearAccountId() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        accountId_ = getDefaultInstance().getAccountId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string account_id = 2;</code>
+       */
+      public Builder setAccountIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        accountId_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional int64 timestamp = 3;
+      private long timestamp_ ;
+      /**
+       * <code>optional int64 timestamp = 3;</code>
+       */
+      public boolean hasTimestamp() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional int64 timestamp = 3;</code>
+       */
+      public long getTimestamp() {
+        return timestamp_;
+      }
+      /**
+       * <code>optional int64 timestamp = 3;</code>
+       */
+      public Builder setTimestamp(long value) {
+        bitField0_ |= 0x00000004;
+        timestamp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 timestamp = 3;</code>
+       */
+      public Builder clearTimestamp() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        timestamp_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional int64 value = 4;
+      private long value_ ;
+      /**
+       * <code>optional int64 value = 4;</code>
+       */
+      public boolean hasValue() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional int64 value = 4;</code>
+       */
+      public long getValue() {
+        return value_;
+      }
+      /**
+       * <code>optional int64 value = 4;</code>
+       */
+      public Builder setValue(long value) {
+        bitField0_ |= 0x00000008;
+        value_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 value = 4;</code>
+       */
+      public Builder clearValue() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        value_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 offsetMillis = 5;
+      private int offsetMillis_ ;
+      /**
+       * <code>optional int32 offsetMillis = 5;</code>
+       */
+      public boolean hasOffsetMillis() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional int32 offsetMillis = 5;</code>
+       */
+      public int getOffsetMillis() {
+        return offsetMillis_;
+      }
+      /**
+       * <code>optional int32 offsetMillis = 5;</code>
+       */
+      public Builder setOffsetMillis(int value) {
+        bitField0_ |= 0x00000010;
+        offsetMillis_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 offsetMillis = 5;</code>
+       */
+      public Builder clearOffsetMillis() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        offsetMillis_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:hello.PillDataKinesis)
+    }
+
+    static {
+      defaultInstance = new PillDataKinesis(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:hello.PillDataKinesis)
+  }
+
   public interface PillBlobHeaderOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
@@ -19966,6 +20844,11 @@ public final class InputProtos {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_PillData_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_hello_PillDataKinesis_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_hello_PillDataKinesis_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_PillBlobHeader_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -20066,23 +20949,26 @@ public final class InputProtos {
       "Action\032@\n\tLEDAction\022\r\n\005color\030\001 \001(\005\022\022\n\nst" +
       "art_time\030\002 \001(\005\022\020\n\010end_time\030\003 \001(\005\"=\n\010Pill" +
       "Data\022\017\n\007pill_id\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(" +
-      "\t\022\014\n\004data\030\003 \001(\014\"\324\001\n\016PillBlobHeader\022\035\n\025fi" +
-      "rst_sequence_number\030\001 \001(\t\022\034\n\024last_sequen" +
-      "ce_number\030\002 \001(\t\022\031\n\021first_sample_date\030\003 \001",
-      "(\t\022\030\n\020last_sample_date\030\004 \001(\t\022%\n\035compress" +
-      "ed_bitmap_account_ids\030\005 \001(\014\022\026\n\016data_file" +
-      "_name\030\006 \001(\t\022\021\n\tnum_items\030\007 \001(\005\"*\n\010PillBl" +
-      "ob\022\036\n\005items\030\001 \003(\0132\017.hello.PillData\"\214\001\n\nE" +
-      "ventBatch\022+\n\006events\030\001 \003(\0132\033.hello.EventB" +
-      "atch.EventItem\032Q\n\tEventItem\022\027\n\017start_tim" +
-      "estamp\030\001 \001(\003\022\025\n\rend_timestamp\030\002 \001(\003\022\024\n\014o" +
-      "ffsetMillis\030\003 \001(\005\"\316\001\n\rperiodic_data\022\021\n\tu" +
-      "nix_time\030\001 \001(\005\022\r\n\005light\030\002 \001(\005\022\023\n\013tempera" +
-      "ture\030\003 \001(\005\022\020\n\010humidity\030\004 \001(\005\022\014\n\004dust\030\005 \001",
-      "(\005\022\014\n\004name\030\006 \001(\t\022\013\n\003mac\030\007 \001(\014\022\031\n\021light_v" +
-      "ariability\030\010 \001(\005\022\026\n\016light_tonality\030\t \001(\005" +
-      "\022\030\n\020firmware_version\030\n \001(\005B)\n\032com.hello." +
-      "suripu.api.inputB\013InputProtos"
+      "\t\022\014\n\004data\030\003 \001(\014\"n\n\017PillDataKinesis\022\017\n\007pi" +
+      "ll_id\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(\t\022\021\n\ttimes" +
+      "tamp\030\003 \001(\003\022\r\n\005value\030\004 \001(\003\022\024\n\014offsetMilli",
+      "s\030\005 \001(\005\"\324\001\n\016PillBlobHeader\022\035\n\025first_sequ" +
+      "ence_number\030\001 \001(\t\022\034\n\024last_sequence_numbe" +
+      "r\030\002 \001(\t\022\031\n\021first_sample_date\030\003 \001(\t\022\030\n\020la" +
+      "st_sample_date\030\004 \001(\t\022%\n\035compressed_bitma" +
+      "p_account_ids\030\005 \001(\014\022\026\n\016data_file_name\030\006 " +
+      "\001(\t\022\021\n\tnum_items\030\007 \001(\005\"*\n\010PillBlob\022\036\n\005it" +
+      "ems\030\001 \003(\0132\017.hello.PillData\"\214\001\n\nEventBatc" +
+      "h\022+\n\006events\030\001 \003(\0132\033.hello.EventBatch.Eve" +
+      "ntItem\032Q\n\tEventItem\022\027\n\017start_timestamp\030\001" +
+      " \001(\003\022\025\n\rend_timestamp\030\002 \001(\003\022\024\n\014offsetMil",
+      "lis\030\003 \001(\005\"\316\001\n\rperiodic_data\022\021\n\tunix_time" +
+      "\030\001 \001(\005\022\r\n\005light\030\002 \001(\005\022\023\n\013temperature\030\003 \001" +
+      "(\005\022\020\n\010humidity\030\004 \001(\005\022\014\n\004dust\030\005 \001(\005\022\014\n\004na" +
+      "me\030\006 \001(\t\022\013\n\003mac\030\007 \001(\014\022\031\n\021light_variabili" +
+      "ty\030\010 \001(\005\022\026\n\016light_tonality\030\t \001(\005\022\030\n\020firm" +
+      "ware_version\030\n \001(\005B)\n\032com.hello.suripu.a" +
+      "pi.inputB\013InputProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -20203,20 +21089,26 @@ public final class InputProtos {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_PillData_descriptor,
               new java.lang.String[] { "PillId", "AccountId", "Data", });
-          internal_static_hello_PillBlobHeader_descriptor =
+          internal_static_hello_PillDataKinesis_descriptor =
             getDescriptor().getMessageTypes().get(9);
+          internal_static_hello_PillDataKinesis_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_PillDataKinesis_descriptor,
+              new java.lang.String[] { "PillId", "AccountId", "Timestamp", "Value", "OffsetMillis", });
+          internal_static_hello_PillBlobHeader_descriptor =
+            getDescriptor().getMessageTypes().get(10);
           internal_static_hello_PillBlobHeader_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_PillBlobHeader_descriptor,
               new java.lang.String[] { "FirstSequenceNumber", "LastSequenceNumber", "FirstSampleDate", "LastSampleDate", "CompressedBitmapAccountIds", "DataFileName", "NumItems", });
           internal_static_hello_PillBlob_descriptor =
-            getDescriptor().getMessageTypes().get(10);
+            getDescriptor().getMessageTypes().get(11);
           internal_static_hello_PillBlob_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_PillBlob_descriptor,
               new java.lang.String[] { "Items", });
           internal_static_hello_EventBatch_descriptor =
-            getDescriptor().getMessageTypes().get(11);
+            getDescriptor().getMessageTypes().get(12);
           internal_static_hello_EventBatch_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_EventBatch_descriptor,
@@ -20228,7 +21120,7 @@ public final class InputProtos {
               internal_static_hello_EventBatch_EventItem_descriptor,
               new java.lang.String[] { "StartTimestamp", "EndTimestamp", "OffsetMillis", });
           internal_static_hello_periodic_data_descriptor =
-            getDescriptor().getMessageTypes().get(12);
+            getDescriptor().getMessageTypes().get(13);
           internal_static_hello_periodic_data_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_periodic_data_descriptor,

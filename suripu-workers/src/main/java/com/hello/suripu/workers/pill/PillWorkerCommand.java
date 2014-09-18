@@ -8,7 +8,7 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibC
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.common.collect.ImmutableMap;
-import com.hello.suripu.core.configuration.QueueNames;
+import com.hello.suripu.core.configuration.QueueName;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -27,10 +27,10 @@ public final class PillWorkerCommand extends ConfiguredCommand<PillWorkerConfigu
 
     @Override
     public final void run(Bootstrap<PillWorkerConfiguration> bootstrap, Namespace namespace, PillWorkerConfiguration configuration) throws Exception {
-        final ImmutableMap<QueueNames, String> queueNames = configuration.getQueues();
+        final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
         LOGGER.debug("{}", queueNames);
-        final String queueName = queueNames.get(QueueNames.PILL_DATA);
+        final String queueName = queueNames.get(QueueName.PILL_DATA);
         LOGGER.info("\n\n\n!!! This worker is using the following queue: {} !!!\n\n\n", queueName);
 
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();

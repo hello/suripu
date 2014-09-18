@@ -22,9 +22,9 @@ public class KinesisConfiguration {
     @Valid
     @NotNull
     @JsonProperty("streams")
-    private Map<QueueNames, String> streams;
+    private Map<QueueName, String> streams;
 
-    public ImmutableMap<QueueNames, String> getStreams() {
+    public ImmutableMap<QueueName, String> getStreams() {
         return ImmutableMap.copyOf(streams);
     }
 }

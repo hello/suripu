@@ -33,6 +33,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.EventDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
+import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.SoundDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
@@ -112,6 +113,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final DeviceDAO deviceDAO = sensorsDB.onDemand(DeviceDAO.class);
 
         final SleepLabelDAO sleepLabelDAO = commonDB.onDemand(SleepLabelDAO.class);
+        final SleepScoreDAO sleepScoreDAO = commonDB.onDemand(SleepScoreDAO.class);
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
 
@@ -168,7 +170,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addProvider(new RoomConditionsResource(deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
         environment.addResource(new EventResource(eventDAODynamoDB));
         environment.addResource(new DeviceResources(deviceDAO));
-        environment.addResource(new TimelineResource(eventDAODynamoDB, trackerMotionDAO));
+        environment.addResource(new TimelineResource(eventDAODynamoDB, trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, configuration.getScoreThreshold()));
 
 
 
@@ -180,8 +182,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addProvider(new com.hello.suripu.app.resources.v1.RoomConditionsResource(deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
         environment.addResource(new com.hello.suripu.app.resources.v1.EventResource(eventDAODynamoDB));
         environment.addResource(new com.hello.suripu.app.resources.v1.DeviceResources(deviceDAO));
-        environment.addResource(new com.hello.suripu.app.resources.v1.TimelineResource(eventDAODynamoDB, trackerMotionDAO));
+
         environment.addResource(new AlarmResource(alarmDAODynamoDB));
+        environment.addResource(new com.hello.suripu.app.resources.v1.TimelineResource(eventDAODynamoDB, trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, configuration.getScoreThreshold()));
 
         environment.addResource(new QuestionsResource(accountDAO));
 
