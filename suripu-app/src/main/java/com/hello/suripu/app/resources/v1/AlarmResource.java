@@ -61,16 +61,9 @@ public class AlarmResource {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
-        final Set<Integer> alarmDays = new HashSet<Integer>();
-        for(final Alarm alarm:alarms){
-            for(final Integer dayOfWeek:alarm.dayOfWeek) {
-                if (alarmDays.contains(dayOfWeek)) {
-                    LOGGER.error("account id {} set alarm failed, two alarm in the same day.", token.accountId);
-                    throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
-                } else {
-                    alarmDays.add(dayOfWeek);
-                }
-            }
+        if(!Alarm.Utils.isValidSmartAlarms(alarms)){
+            LOGGER.error("account id {} set alarm failed, two alarm in the same day.", token.accountId);
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
         this.alarmDAODynamoDB.setAlarms(token.accountId, alarms);
