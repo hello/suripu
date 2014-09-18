@@ -28,7 +28,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 /**
  * Created by pangwu on 9/17/14.
  */
-public class AlarmResourceTest {
+public class AlarmResourceTestIT {
 
 
     private BasicAWSCredentials awsCredentials;
