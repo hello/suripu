@@ -8,6 +8,7 @@ import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -38,6 +39,7 @@ public class QuestionsResource {
         this.accountDAO = accountDAO;
     }
 
+    @Timed
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Question> getQuestions(
@@ -71,6 +73,7 @@ public class QuestionsResource {
         return questions;
     }
 
+    @Timed
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public void saveAnswer(@Scope(OAuthScope.QUESTIONS_WRITE) final AccessToken accessToken, @Valid final Choice choice) {

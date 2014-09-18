@@ -9,6 +9,7 @@ import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,7 @@ public class RoomConditionsResource {
     }
 
 
+    @Timed
     @GET
     @Path("/current")
     @Produces(MediaType.APPLICATION_JSON)
@@ -54,6 +56,7 @@ public class RoomConditionsResource {
     }
 
 
+    @Timed
     @GET
     @Path("/{sensor}/day")
     @Produces(MediaType.APPLICATION_JSON)
@@ -76,6 +79,7 @@ public class RoomConditionsResource {
         return deviceDataDAO.generateTimeSerie(clientUtcTimestamp, accessToken.accountId, deviceId.get(), slotDurationInMinutes, queryDurationInHours, sensor);
     }
 
+    @Timed
     @GET
     @Path("/{sensor}/{device_name}/day")
     @Produces(MediaType.APPLICATION_JSON)
@@ -99,6 +103,7 @@ public class RoomConditionsResource {
         return deviceDataDAO.generateTimeSerie(clientUtcTimestamp, accessToken.accountId, deviceId.get(), slotDurationInMinutes, queryDurationInHours, sensor);
     }
 
+    @Timed
     @GET
     @Path("/admin/{sensor}/day")
     @Produces(MediaType.APPLICATION_JSON)
@@ -138,6 +143,7 @@ public class RoomConditionsResource {
     }
 
 
+    @Timed
     @GET
     @Path("/{sensor}/week")
     @Produces(MediaType.APPLICATION_JSON)
