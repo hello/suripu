@@ -1,5 +1,6 @@
 package com.hello.suripu.app.resources.v1;
 
+import com.amazonaws.AmazonServiceException;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -39,8 +40,14 @@ public class AlarmResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Alarm> getAlarms(@Scope({OAuthScope.ALARM_READ}) final AccessToken token){
-        final List<Alarm> alarms = alarmDAODynamoDB.getAlarms(token.accountId);
-        return alarms;
+
+        try {
+            final List<Alarm> alarms = alarmDAODynamoDB.getAlarms(token.accountId);
+            return alarms;
+        }catch (AmazonServiceException awsException){
+            LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
+        }
 
     }
 
@@ -64,7 +71,12 @@ public class AlarmResource {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
-        this.alarmDAODynamoDB.setAlarms(token.accountId, alarms);
+        try {
+            this.alarmDAODynamoDB.setAlarms(token.accountId, alarms);
+        }catch (AmazonServiceException awsException){
+            LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
+        }
 
     }
 }

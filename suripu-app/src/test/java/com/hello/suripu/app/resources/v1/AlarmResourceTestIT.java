@@ -49,7 +49,7 @@ public class AlarmResourceTestIT {
             .withExpiresIn(DateTime.now().plusHours(1).getMillis())
             .withRefreshToken(UUID.randomUUID())
             .withToken(UUID.randomUUID())
-            .withScopes(new OAuthScope[]{ OAuthScope.API_INTERNAL_DATA_READ, OAuthScope.API_INTERNAL_DATA_WRITE })
+            .withScopes(new OAuthScope[]{ OAuthScope.ALARM_READ, OAuthScope.ALARM_WRITE })
             .withAppId(1L)
             .build();
 
