@@ -30,51 +30,18 @@ public class MobilePushRegistrationResource {
     @Timed
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public void registerDevice(@Scope(OAuthScope.USER_EXTENDED) final AccessToken accessToken,
+    public void registerDevice(@Scope(OAuthScope.PUSH_NOTIFICATIONS) final AccessToken accessToken,
                                final @Valid MobilePushRegistration mobilePushRegistration) {
 
         LOGGER.debug("{}", mobilePushRegistration);
         notificationSubscriptionsDAO.subscribe(accessToken.accountId, mobilePushRegistration);
     }
 
-
-//    @GET
-//    @Path("/trigger")
-//    public void trigger(@Scope(OAuthScope.SENSORS_BASIC) final AccessToken accessToken) {
-//
-//        final Map<String, String> helloMessage = new HashMap<>();
-//        helloMessage.put("hello", "world");
-//
-//        final List<MobilePushRegistration> list = notificationSubscriptionsDAO.getSubscriptions(accessToken.accountId);
-//        LOGGER.debug("Found {} mobilepush registrations", list.size());
-//        for(final MobilePushRegistration m : list) {
-//            final ObjectMapper mapper = new ObjectMapper();
-//            try {
-//                final GetEndpointAttributesRequest endpointAttributesRequest = new GetEndpointAttributesRequest();
-//                endpointAttributesRequest.withEndpointArn(m.endpoint.get());
-//
-//                GetEndpointAttributesResult res = amazonSNSClient.getEndpointAttributes(endpointAttributesRequest);
-//                Map<String, String> attr = res.getAttributes();
-//                LOGGER.debug("{}", attr);
-//
-//                final PublishRequest request = new PublishRequest();
-//                request.setMessage(mapper.writeValueAsString(helloMessage));
-//                request.setTargetArn(m.endpoint.get());
-//                amazonSNSClient.publish(request);
-//                LOGGER.debug("Push notification sent");
-//            } catch (JsonProcessingException e) {
-//                LOGGER.error(e.getMessage());
-//            } catch (Exception e) {
-//                LOGGER.error("Exception: {}", e.getMessage() );
-//            }
-//        }
-//    }
-
     @DELETE
     @Timed
     @Consumes(MediaType.APPLICATION_JSON)
     public void delete(
-            @Scope(OAuthScope.SENSORS_BASIC) final AccessToken accessToken,
+            @Scope(OAuthScope.PUSH_NOTIFICATIONS) final AccessToken accessToken,
             @Valid MobilePushRegistration mobilePushRegistration) {
 
         boolean deleted = notificationSubscriptionsDAO.unsubscribe(accessToken.accountId, mobilePushRegistration.deviceToken);

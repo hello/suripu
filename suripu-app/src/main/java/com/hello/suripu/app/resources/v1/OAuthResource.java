@@ -172,7 +172,7 @@ public class OAuthResource {
     @DELETE
     @Path("/token")
     @Timed
-    public void delete(@Scope(OAuthScope.USER_EXTENDED) final AccessToken accessToken) {
+    public void delete(@Scope(OAuthScope.USER_BASIC) final AccessToken accessToken) {
         LOGGER.debug("Should delete token");
 
     }
