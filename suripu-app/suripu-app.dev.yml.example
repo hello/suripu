@@ -82,6 +82,11 @@ timezone_history_db:
   region: us-east-1
   table_name: timezone_history
 
+alarm_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: alarm
+
 kinesis_logger:
   stream_name: logs
   enabled : false

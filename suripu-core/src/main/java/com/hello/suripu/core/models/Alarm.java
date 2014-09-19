@@ -4,7 +4,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
+import org.joda.time.DateTimeZone;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -68,6 +73,18 @@ public class Alarm {
 
         this.isEnabled = isEnabled;
         this.isEditable = isEditable;
+
+        for(final Integer d:dayOfWeek){
+            if(d < DateTimeConstants.MONDAY || d > DateTimeConstants.SUNDAY){
+                throw new IllegalArgumentException("Invalid day of week.");
+            }
+        }
+
+        if(!isRepeated){
+            if(new DateTime(year, month, day, hourOfDay, minuteOfHour, DateTimeZone.UTC).getDayOfWeek() != dayOfWeek.toArray()[0]){
+                throw new IllegalArgumentException("Invalid day of week.");
+            }
+        }
     }
 
     @Override
@@ -179,6 +196,27 @@ public class Alarm {
                     this.isEnabled,
                     this.isEditable,
                     this.sound);
+        }
+
+
+
+    }
+
+
+    public static class Utils{
+        public static boolean isValidSmartAlarms(final List<Alarm> alarms){
+            final Set<Integer> alarmDays = new HashSet<Integer>();
+            for(final Alarm alarm:alarms){
+                for(final Integer dayOfWeek:alarm.dayOfWeek) {
+                    if (alarmDays.contains(dayOfWeek)) {
+                        return false;
+                    } else {
+                        alarmDays.add(dayOfWeek);
+                    }
+                }
+            }
+
+            return true;
         }
     }
 }

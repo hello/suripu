@@ -86,6 +86,14 @@ public class SuripuAppConfiguration extends Configuration {
 
     @Valid
     @NotNull
+    @JsonProperty("alarm_db")
+    private DynamoDBConfiguration alarmDBConfiguration;
+    public DynamoDBConfiguration getAlarmDBConfiguration(){
+        return this.alarmDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
     @JsonProperty("allowed_query_range_seconds")
     private Long allowedQueryRange;
 
