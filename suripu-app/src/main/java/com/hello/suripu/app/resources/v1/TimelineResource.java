@@ -14,6 +14,7 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.util.DateTimeUtil;
+import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -53,6 +54,7 @@ public class TimelineResource {
         this.dateBucketPeriod = dateBucketPeriod;
     }
 
+    @Timed
     @Path("/{date}")
     @Produces(MediaType.APPLICATION_JSON)
     @GET
