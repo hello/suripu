@@ -11,6 +11,8 @@ import com.hello.suripu.core.oauth.ClientAuthenticationException;
 import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
 import com.hello.suripu.core.oauth.GrantTypeParam;
+import com.hello.suripu.core.oauth.OAuthScope;
+import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.oauth.stores.ApplicationStore;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.yammer.metrics.annotation.Timed;
@@ -18,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -164,5 +167,13 @@ public class OAuthResource {
 //        }
 //        final String uri = clientDetails.redirectUri + "?code=" + credentials.tokenOrCode;
 //        return Response.temporaryRedirect(URI.create(uri)).build();
+    }
+
+    @DELETE
+    @Path("/token")
+    @Timed
+    public void delete(@Scope(OAuthScope.USER_EXTENDED) final AccessToken accessToken) {
+        LOGGER.debug("Should delete token");
+
     }
 }

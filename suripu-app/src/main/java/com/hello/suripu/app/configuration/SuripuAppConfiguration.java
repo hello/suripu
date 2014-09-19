@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hello.suripu.core.configuration.DynamoDBConfiguration;
 import com.hello.suripu.core.configuration.GraphiteConfiguration;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
+import com.hello.suripu.core.configuration.PushNotificationsConfiguration;
 import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
@@ -106,6 +107,15 @@ public class SuripuAppConfiguration extends Configuration {
 
     public int getScoreThreshold() {
         return scoreThreshold;
+    }
+
+
+    @Valid
+    @JsonProperty("push_notifications")
+    private PushNotificationsConfiguration pushNotificationsConfiguration;
+
+    public PushNotificationsConfiguration getPushNotificationsConfiguration() {
+        return pushNotificationsConfiguration;
     }
 
 }

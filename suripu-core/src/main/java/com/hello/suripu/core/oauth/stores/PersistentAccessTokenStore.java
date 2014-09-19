@@ -150,6 +150,11 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         return Optional.absent();
     }
 
+    @Override
+    public void disable(final AccessToken accessToken) {
+        accessTokenDAO.disable(accessToken.token);
+    }
+
 
     /**
      * Generates an access token

@@ -119,3 +119,10 @@ kinesis_logger:
   enabled : true
 
 score_threshold : 15 # minutes bucket for sleep-scores
+
+push_notifications:
+  arns:
+    ios: arn:aws:sns:us-east-1:053216739513:app/APNS/hello-sense-ios-dev
+    android: arn:aws:sns:us-east-1:053216739513:app/GCM/hello-sense-android-dev
+
+  table_name: notifications
