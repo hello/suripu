@@ -3,6 +3,7 @@ package com.hello.suripu.app;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.sns.AmazonSNSClient;
 import com.google.common.base.Joiner;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
@@ -19,6 +20,7 @@ import com.hello.suripu.app.resources.OAuthResource;
 import com.hello.suripu.app.resources.RoomConditionsResource;
 import com.hello.suripu.app.resources.SleepLabelResource;
 import com.hello.suripu.app.resources.TimelineResource;
+import com.hello.suripu.app.resources.v1.MobilePushRegistrationResource;
 import com.hello.suripu.app.resources.v1.QuestionsResource;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
@@ -33,6 +35,8 @@ import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.SoundDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.notifications.DynamoDBNotificationSubscriptionDAO;
+import com.hello.suripu.core.db.notifications.NotificationSubscriptionsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
@@ -118,10 +122,13 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final AmazonSNSClient snsClient = new AmazonSNSClient(awsCredentialsProvider);
 
         client.setEndpoint(configuration.getEventDBConfiguration().getEndpoint());
         final String eventTableName = configuration.getEventDBConfiguration().getTableName();
         final EventDAODynamoDB eventDAODynamoDB = new EventDAODynamoDB(client, eventTableName);
+
+        final NotificationSubscriptionsDAO subscriptionDAO = new DynamoDBNotificationSubscriptionDAO(client, "notifications");
 
 
 
@@ -165,6 +172,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new DeviceResources(deviceDAO));
         environment.addResource(new TimelineResource(eventDAODynamoDB, trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, configuration.getScoreThreshold()));
 
+//        final InMemoryNotificationSubscriptionDAO subscriptionDAO = new InMemoryNotificationSubscriptionDAO();
+        environment.addResource(new MobilePushRegistrationResource(snsClient, subscriptionDAO));
 
 
         environment.addResource(new com.hello.suripu.app.resources.v1.OAuthResource(accessTokenStore, applicationStore, accountDAO));
