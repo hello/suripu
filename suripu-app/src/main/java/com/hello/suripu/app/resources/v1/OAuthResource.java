@@ -3,6 +3,7 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.notifications.NotificationSubscriptionsDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.Application;
@@ -38,15 +39,18 @@ public class OAuthResource {
     private final OAuthTokenStore<AccessToken,ClientDetails, ClientCredentials> tokenStore;
     private final ApplicationStore applicationStore;
     private final AccountDAO accountDAO;
+    private final NotificationSubscriptionsDAO notificationSubscriptionsDAO;
 
     public OAuthResource(
             final OAuthTokenStore<AccessToken,ClientDetails, ClientCredentials> tokenStore,
             final ApplicationStore<Application, ApplicationRegistration> applicationStore,
-            final AccountDAO accountDAO) {
+            final AccountDAO accountDAO,
+            final NotificationSubscriptionsDAO notificationSubscriptionsDAO) {
 
         this.tokenStore = tokenStore;
         this.applicationStore = applicationStore;
         this.accountDAO = accountDAO;
+        this.notificationSubscriptionsDAO = notificationSubscriptionsDAO;
     }
 
     @POST
@@ -173,7 +177,12 @@ public class OAuthResource {
     @Path("/token")
     @Timed
     public void delete(@Scope(OAuthScope.USER_BASIC) final AccessToken accessToken) {
-        LOGGER.debug("Should delete token");
-
+        tokenStore.disable(accessToken);
+        LOGGER.debug("AccessToken {} deleted", accessToken);
+        if(accessToken.hasScope(OAuthScope.PUSH_NOTIFICATIONS)) {
+            LOGGER.debug("AccessToken {} has PUSH_NOTIFICATIONS_SCOPE");
+            notificationSubscriptionsDAO.unsubscribe(accessToken);
+            LOGGER.debug("Unsubscribed from push notifications");
+        }
     }
 }

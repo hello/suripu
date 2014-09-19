@@ -18,6 +18,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.models.MobilePushRegistration;
+import com.hello.suripu.core.oauth.AccessToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,6 +99,22 @@ public class DynamoDBNotificationSubscriptionDAO implements NotificationSubscrip
     }
 
 
+    @Override
+    public boolean unsubscribe(final AccessToken accessToken) {
+
+        final List<MobilePushRegistration> registrations = this.getSubscriptions(accessToken.accountId);
+
+        for(final MobilePushRegistration registration : registrations) {
+            if(registration.oauthToken.equals(accessToken.serializeAccessToken())) {
+                unsubscribe(accessToken.accountId, registration.deviceToken);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
     /**
      * Converts a dynamoDB Items list to a list of MobilePushRegistration
      * @param items
@@ -111,16 +128,18 @@ public class DynamoDBNotificationSubscriptionDAO implements NotificationSubscrip
             final String endpoint = item.get("endpoint").getS();
             final String token = item.get("token").getS();
 
-            // TODO: retrieve these from the object
-            final String os = "ios";
-            final String version = "7.1.2";
-            final String appVersion = "1.0";
+            final String os = (item.containsKey("ios")) ? item.get("ios").getS() : "";
+            final String version = (item.containsKey("version")) ? item.get("version").getS() : "";
+            final String appVersion = (item.containsKey("app_version")) ? item.get("app_version").getS() : "";
+            final String oauthToken = (item.containsKey("oauth_token")) ? item.get("oauth_token").getS() : "";
+
             final MobilePushRegistration m = new MobilePushRegistration(
                     Long.parseLong(mAccountId),
                     os,
                     version,
                     appVersion,
                     token,
+                    oauthToken,
                     endpoint
             );
             registrations.add(m);
@@ -203,6 +222,12 @@ public class DynamoDBNotificationSubscriptionDAO implements NotificationSubscrip
         return dynamoDB.query(queryRequest);
     }
 
+    /**
+     * Query DynamoDB for the MobilePushRegistration associated with given account and deviceToken
+     * @param accountId
+     * @param deviceToken
+     * @return
+     */
     private QueryResult query(final Long accountId, final String deviceToken) {
         final String key = accountId.toString();
 

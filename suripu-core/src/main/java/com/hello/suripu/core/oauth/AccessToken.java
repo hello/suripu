@@ -192,4 +192,13 @@ public class AccessToken {
 
         return Optional.of(Long.parseLong(dirtyToken.substring(0, dotIndex)));
     }
+
+    public Boolean hasScope(final OAuthScope scope) {
+        for(final OAuthScope s: scopes) {
+            if(s.equals(scope)) {
+                return Boolean.TRUE;
+            }
+        }
+        return Boolean.FALSE;
+    }
 }

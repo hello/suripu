@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hello.suripu.core.models.MobilePushRegistration;
+import com.hello.suripu.core.oauth.AccessToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +62,12 @@ public class InMemoryNotificationSubscriptionDAO implements NotificationSubscrip
     @Override
     public boolean unsubscribe(Long accountId, String deviceToken) {
         store.removeAll(accountId);
+        return true;
+    }
+
+    @Override
+    public boolean unsubscribe(final AccessToken accessToken) {
+        store.removeAll(accessToken.accountId);
         return true;
     }
 }
