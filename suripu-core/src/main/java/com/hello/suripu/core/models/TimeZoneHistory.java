@@ -10,11 +10,15 @@ public class TimeZoneHistory {
     @JsonProperty("updated_at")
     public final long updatedAt;
 
-    @JsonProperty("tiemzone_offset")
+    @JsonProperty("timezone_offset")
     public final int offsetMillis;
 
-    public TimeZoneHistory(final long updatedAt, final int offsetMillis){
+    @JsonProperty("timezone_id")
+    public final String timeZoneId;
+
+    public TimeZoneHistory(long updatedAt, int offsetMillis, final String timeZoneId){
         this.updatedAt = updatedAt;
         this.offsetMillis = offsetMillis;
+        this.timeZoneId = timeZoneId;
     }
 }

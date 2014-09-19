@@ -18,6 +18,7 @@ import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,8 @@ public class TimeZoneHistoryDAODynamoDB {
     public static final String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
 
     public static final String UPDATED_AT_ATTRIBUTE_NAME = "updated_at_server_time_millis";
-    public static final String OFFSET_MILLIS_ATTRIBUTE_NAME = "offset_millis";
+    //public static final String OFFSET_MILLIS_ATTRIBUTE_NAME = "offset_millis";
+    public static final String TIMEZONE_NAME_ATTRIBUTE_NAME = "time_zone_name";
 
     private static int MAX_CALL_COUNT = 3;
 
@@ -51,27 +53,38 @@ public class TimeZoneHistoryDAODynamoDB {
     }
 
 
-    public Optional<TimeZoneHistory> updateTimeZone(final long accountId, final int offsetMillis){
+    public Optional<TimeZoneHistory> updateTimeZone(long accountId, final String clientTimeZoneId, int clientTimeZoneOffsetMillis){
 
         final long updatedAt = DateTime.now().getMillis();
+        DateTimeZone clientTimeZone = DateTimeZone.UTC;
+
+        try{
+            clientTimeZone = DateTimeZone.forID(clientTimeZoneId);
+        }catch (IllegalArgumentException ex){
+            clientTimeZone = DateTimeZone.forOffsetMillis(clientTimeZoneOffsetMillis);
+        }
+
+        String timeZoneId = clientTimeZone.getID();
+
+
         final Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
         item.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
         item.put(UPDATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(updatedAt)));
-        item.put(OFFSET_MILLIS_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(offsetMillis)));
+        item.put(TIMEZONE_NAME_ATTRIBUTE_NAME, new AttributeValue().withS(timeZoneId));
 
         final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, item);
         final PutItemResult putItemResult = dynamoDBClient.putItem(putItemRequest);
 
         if(putItemResult != null){
-            return Optional.of(new TimeZoneHistory(updatedAt, offsetMillis));
+            return Optional.of(new TimeZoneHistory(updatedAt, clientTimeZone.getOffset(DateTime.now().getMillis()), timeZoneId));
         }
 
         return Optional.absent();
 
     }
 
-    public Optional<TimeZoneHistory> getLastTimeZoneOffset(final long accountId){
 
+    public Optional<TimeZoneHistory> getTimeZoneAt(long accountId, long instant){
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
 
         final Condition selectDateCondition = new Condition()
@@ -91,7 +104,7 @@ public class TimeZoneHistoryDAODynamoDB {
         final Collection<String> targetAttributeSet = new HashSet<String>();
         Collections.addAll(targetAttributeSet,
                 UPDATED_AT_ATTRIBUTE_NAME,
-                OFFSET_MILLIS_ATTRIBUTE_NAME);
+                TIMEZONE_NAME_ATTRIBUTE_NAME);
 
 
         final QueryRequest queryRequest = new QueryRequest()
@@ -114,14 +127,26 @@ public class TimeZoneHistoryDAODynamoDB {
                 continue;
             }
 
-            final long updatedTime = Long.valueOf(item.get(UPDATED_AT_ATTRIBUTE_NAME).getN());
-            final int timeZone = Integer.valueOf(item.get(OFFSET_MILLIS_ATTRIBUTE_NAME).getN());
 
-            return Optional.of(new TimeZoneHistory(updatedTime, timeZone));
+            final DateTimeZone dateTimeZoneFromId = DateTimeZone.forID(item.get(TIMEZONE_NAME_ATTRIBUTE_NAME).getS());
+
+            final int offsetMillis = dateTimeZoneFromId.getOffset(instant);
+            final long updatedAt = Long.valueOf(item.get(UPDATED_AT_ATTRIBUTE_NAME).getN());
+            return Optional.of(new TimeZoneHistory(updatedAt, offsetMillis, dateTimeZoneFromId.getID()));
         }
 
 
         return Optional.absent();
+    }
+
+    public Optional<TimeZoneHistory> getCurrentTimeZone(final long accountId){
+
+        final Optional<TimeZoneHistory> lastTimeZone = getTimeZoneAt(accountId, DateTime.now().getMillis());
+        if(!lastTimeZone.isPresent()){
+            return Optional.absent();
+        }
+
+        return lastTimeZone;
 
     }
 
