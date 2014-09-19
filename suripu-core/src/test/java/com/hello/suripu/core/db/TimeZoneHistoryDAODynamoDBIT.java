@@ -15,6 +15,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
 
 /**
@@ -119,6 +120,8 @@ public class TimeZoneHistoryDAODynamoDBIT {
         assertThat(updated.get().offsetMillis, is(offsetMillis - 1));
         assertThat(updated.get().timeZoneId, is(zoneFromOffset.getID()));
 
+        // This timezone, created from offset millis, should not appear in the standard timezone id list.
+        assertThat(DateTimeZone.getAvailableIDs().contains(zoneFromOffset.getID()), is(false));
 
     }
 
@@ -141,5 +144,24 @@ public class TimeZoneHistoryDAODynamoDBIT {
         assertThat(updated.get().timeZoneId, is(timeZone.getID()));
 
 
+    }
+
+
+    @Test
+    public void testInvalidTimeZoneId(){
+        // Test the scenario that mobile provides a wrong time zone id.
+        // server should use the offset to create local timezone.
+
+        final long accountId = 1;
+        int offsetMillis  = DateTime.now().getZone().getOffset(DateTime.now());
+        final DateTimeZone timeZone = DateTimeZone.getDefault();
+        this.timeZoneHistoryDAODynamoDB.updateTimeZone(accountId, "Invalid time zone id", offsetMillis);
+
+
+        final Optional<TimeZoneHistory> updated = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
+        assertThat(updated.isPresent(), is(true));
+
+        assertThat(updated.get().offsetMillis, is(offsetMillis));
+        assertThat(updated.get().timeZoneId, not(timeZone.getID()));
     }
 }
