@@ -1,13 +1,14 @@
 package com.hello.suripu.core.db;
 
+import com.google.common.io.Resources;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -17,7 +18,7 @@ import static org.hamcrest.Matchers.not;
 /**
  * Created by pangwu on 9/18/14.
  */
-public class TomeZoneChangeTest {
+public class TimeZoneChangeTest {
     @Test
     public void testDayLightSavingTimeZoneName(){
         final DateTimeZone PST = DateTimeZone.forID("America/Los_Angeles");
@@ -47,12 +48,13 @@ public class TomeZoneChangeTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testiOSTimeZoneIDToJodaTimeTimeZoneId(){
-        final InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("ios_timezone_ids.txt");
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        final File resourceFile = new File(Resources.getResource("ios_timezone_ids.txt").getFile());
+
 
         final Set<String> jodaTimeZoneNames = DateTimeZone.getAvailableIDs();
 
         try {
+            final BufferedReader reader = new BufferedReader(new FileReader(resourceFile));
             String line = reader.readLine();
             while (line != null) {
                 if(line.endsWith(",")){
@@ -68,7 +70,6 @@ public class TomeZoneChangeTest {
             }
 
             reader.close();
-            inputStream.close();
         }catch (IOException ex){
 
         }
