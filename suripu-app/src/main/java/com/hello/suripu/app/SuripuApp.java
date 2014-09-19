@@ -22,6 +22,7 @@ import com.hello.suripu.app.resources.SleepLabelResource;
 import com.hello.suripu.app.resources.TimelineResource;
 import com.hello.suripu.app.resources.v1.AlarmResource;
 import com.hello.suripu.app.resources.v1.QuestionsResource;
+import com.hello.suripu.app.resources.v1.TimeZoneResource;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.db.AccessTokenDAO;
@@ -35,6 +36,7 @@ import com.hello.suripu.core.db.EventDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.SoundDAO;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
@@ -126,8 +128,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         client.setEndpoint(configuration.getEventDBConfiguration().getEndpoint());
         final String eventTableName = configuration.getEventDBConfiguration().getTableName();
         final EventDAODynamoDB eventDAODynamoDB = new EventDAODynamoDB(client, eventTableName);
-
         final AlarmDAODynamoDB alarmDAODynamoDB = new AlarmDAODynamoDB(client, configuration.getAlarmDBConfiguration().getTableName());
+        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(client, configuration.getTimeZoneHistoryDBConfiguration().getTableName());
 
 
 
@@ -184,6 +186,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new com.hello.suripu.app.resources.v1.DeviceResources(deviceDAO));
 
         environment.addResource(new AlarmResource(alarmDAODynamoDB));
+        environment.addResource(new TimeZoneResource(timeZoneHistoryDAODynamoDB));
+
         environment.addResource(new com.hello.suripu.app.resources.v1.TimelineResource(eventDAODynamoDB, trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, configuration.getScoreThreshold()));
 
         environment.addResource(new QuestionsResource(accountDAO));
