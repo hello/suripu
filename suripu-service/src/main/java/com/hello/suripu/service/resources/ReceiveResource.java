@@ -1,5 +1,6 @@
 package com.hello.suripu.service.resources;
 
+import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.protobuf.ByteString;
@@ -9,16 +10,20 @@ import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.api.input.InputProtos.SimpleSensorBatch;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.crypto.CryptoHelper;
+import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.ScoreDAO;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
+import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.TempTrackerData;
+import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -27,6 +32,7 @@ import com.hello.suripu.service.SignedMessage;
 import com.yammer.metrics.annotation.Timed;
 import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
@@ -43,12 +49,11 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +73,9 @@ public class ReceiveResource {
     private final TrackerMotionDAO trackerMotionDAO;
     private final PublicKeyStore publicKeyStore;
 
+    private final AlarmDAODynamoDB alarmDAODynamoDB;
+    private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
+
     private final KinesisLoggerFactory kinesisLoggerFactory;
     private final CryptoHelper cryptoHelper;
     private final Boolean debug;
@@ -82,6 +90,8 @@ public class ReceiveResource {
                            final TrackerMotionDAO trackerMotionDAO,
                            final PublicKeyStore publicKeyStore,
                            final KinesisLoggerFactory kinesisLoggerFactory,
+                           final AlarmDAODynamoDB alarmDAODynamoDB,
+                           final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB,
                            final Boolean debug) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
@@ -91,6 +101,10 @@ public class ReceiveResource {
         this.publicKeyStore = publicKeyStore;
         cryptoHelper = new CryptoHelper();
         this.kinesisLoggerFactory = kinesisLoggerFactory;
+
+        this.alarmDAODynamoDB = alarmDAODynamoDB;
+        this.timeZoneHistoryDAODynamoDB = timeZoneHistoryDAODynamoDB;
+
         this.debug = debug;
     }
 
@@ -259,7 +273,31 @@ public class ReceiveResource {
         long timestampMillis = data.getUnixTime() * 1000L;
         final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
 
+        final ArrayList<Long> ringTimes = new ArrayList<Long>();
+
         for (final DeviceAccountPair pair : deviceAccountPairs) {
+
+            // This is the default timezone.
+            DateTimeZone userTimeZone = DateTimeZone.forID("American/Los_Angeles");
+
+            try {
+                // TODO: Warining, since we query dynamoDB based on user input, the user can generate a lot of
+                // requests to break our bank(Assume that Dynamo DB never goes down).
+                // May be we should somehow cache these data to reduce load & cost.
+                // Could be some simple HashMap class variable that is cleared periodically.
+
+                // Get the timezone for current user.
+                final Optional<TimeZoneHistory> timeZoneHistoryOptional = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(pair.accountId);
+                if(timeZoneHistoryOptional.isPresent()){
+                    userTimeZone = DateTimeZone.forID(timeZoneHistoryOptional.get().timeZoneId);
+                }else{
+                    LOGGER.warn("Failed to get user timezone for account {}", pair.accountId);
+                }
+            }catch (AmazonServiceException awsException){
+                // I guess this endpoint should never bail out?
+                LOGGER.error("AWS error when retrieving user timezone for account {}", pair.accountId);
+            }
+
             final DeviceData.Builder builder = new DeviceData.Builder()
                     .withAccountId(pair.accountId)
                     .withDeviceId(pair.internalDeviceId)
@@ -267,7 +305,7 @@ public class ReceiveResource {
                     .withAmbientAirQuality(data.getDust())
                     .withAmbientHumidity(data.getHumidity())
                     .withAmbientLight(data.getLight())
-                    .withOffsetMillis(-25200000) //TODO: GET THIS FROM MORPHEUS PAYLOAD
+                    .withOffsetMillis(userTimeZone.getOffset(roundedDateTime))
                     .withDateTimeUTC(roundedDateTime);
 
             final DeviceData deviceData = builder.build();
@@ -288,18 +326,56 @@ public class ReceiveResource {
 
                 LOGGER.warn("Duplicate device sensor value for account_id = {}, time: {}", pair.accountId, roundedDateTime);
             }
+
+
+            try{
+                // Get alarms templates for a user
+                final List<Alarm> alarms = this.alarmDAODynamoDB.getAlarms(pair.accountId);
+
+                // Based on current time, the user's alarm template & user's current timezone, compute
+                // the next ringing moment.
+
+                // Here we set the current time to 1 minutes before, so we can have one minute drift tolerance.
+                long nextRingTime = Alarm.Utils.getNextRingTimestamp(alarms, DateTime.now().minusMinutes(1).getMillis(), userTimeZone);
+                if(nextRingTime > 0){
+                    ringTimes.add(nextRingTime);  // Add the alarm of this user to the list.
+                }else{
+                    LOGGER.debug("No alarm set for account {}", pair.accountId);
+                }
+
+
+            }catch (AmazonServiceException awsException){
+                LOGGER.error("AWS error when retrieving alarm for account {}.", pair.accountId);
+            }
         }
 
+        // Now we loop over all the users, we get a list of ring time for all users.
+        // Let's pick the nearest one and tell morpheus what is the next ring time.
+        final Long[] shortedRingTime = ringTimes.toArray(new Long[0]);
+        Arrays.sort(shortedRingTime, new Comparator<Long>() {
+            @Override
+            public int compare(Long o1, Long o2) {
+                return o1.compareTo(o2);
+            }
+        });
 
-        final InputProtos.SyncResponse.Alarm alarm = InputProtos.SyncResponse.Alarm.newBuilder()
-                .setRingtoneId(99)
-                .setStartTime((int) (DateTime.now().getMillis()/ 1000))
-                .setEndTime((int) (DateTime.now().plusSeconds(30).getMillis()/ 1000))
-                .build();
+        final InputProtos.SyncResponse.Builder responseBuilder = InputProtos.SyncResponse.newBuilder();
 
-        final InputProtos.SyncResponse syncResponse = InputProtos.SyncResponse.newBuilder()
-                .setAlarm(alarm)
-                .build();
+        // Now the ring time for different users is sorted, get the nearest one.
+        if(shortedRingTime.length > 0) {
+            long nextRingTimestamp = shortedRingTime[0];
+            int ringDurationInMS = 30 * DateTimeConstants.MILLIS_PER_SECOND;  // TODO: make this flexible so we can adjust based on user preferences.
+
+            final InputProtos.SyncResponse.Alarm alarm = InputProtos.SyncResponse.Alarm.newBuilder()
+                    .setRingtoneId(99)
+                    .setStartTime((int) (nextRingTimestamp / DateTimeConstants.MILLIS_PER_SECOND))
+                    .setEndTime((int) ((nextRingTimestamp + ringDurationInMS) / DateTimeConstants.MILLIS_PER_SECOND))
+                    .build();
+
+            responseBuilder.setAlarm(alarm);
+        }
+
+        final InputProtos.SyncResponse syncResponse = responseBuilder.build();
 
         LOGGER.debug("Len pb = {}", syncResponse.toByteArray().length);
 

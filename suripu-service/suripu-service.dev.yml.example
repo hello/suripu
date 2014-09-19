@@ -115,3 +115,14 @@ kinesis:
     audio_features : audio_features
 
 audio_bucket_name : hello-data
+
+timezone_history_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: timezone_history
+
+
+alarm_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: alarm

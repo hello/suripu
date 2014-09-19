@@ -11,6 +11,7 @@ import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
+import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -18,6 +19,7 @@ import com.hello.suripu.core.db.EventDAO;
 import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.PublicKeyStoreDynamoDB;
 import com.hello.suripu.core.db.ScoreDAO;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
@@ -104,6 +106,10 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);
         final String bucketName = configuration.getAudioBucketName();
 
+        final AlarmDAODynamoDB alarmDAODynamoDB = new AlarmDAODynamoDB(dynamoDBClient, configuration.getAlarmDBConfiguration().getTableName());
+        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(dynamoDBClient, configuration.getTimeZoneHistoryDBConfiguration().getTableName());
+
+
 
         final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider);
         kinesisClient.setEndpoint(configuration.getKinesisConfiguration().getEndpoint());
@@ -147,7 +153,12 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
         environment.addResource(new ReceiveResource(dao, deviceDAO, scoreDAO,
                 trackerMotionDAO,
-                publicKeyStore, kinesisLoggerFactory, configuration.getDebug()));
+                publicKeyStore,
+                kinesisLoggerFactory,
+                alarmDAODynamoDB,
+                timeZoneHistoryDAODynamoDB,
+                configuration.getDebug()));
+
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());
 

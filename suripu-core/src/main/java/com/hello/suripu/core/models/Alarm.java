@@ -8,6 +8,9 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -217,6 +220,55 @@ public class Alarm {
             }
 
             return true;
+        }
+
+        public static long getNextRingTimestamp(final List<Alarm> alarms, long currentTimestampUTC, final DateTimeZone timeZone){
+            if(!isValidSmartAlarms(alarms)){
+                throw new IllegalArgumentException("Invalid alarms.");
+            }
+
+            final ArrayList<DateTime> possibleRings = new ArrayList<DateTime>();
+            final DateTime currentLocalTime = new DateTime(currentTimestampUTC, timeZone);
+            for(final Alarm alarm:alarms){
+                if(!alarm.isEnabled){
+                    continue;
+                }
+
+                if(alarm.isRepeated){
+                    for(final Integer dayOfWeek:alarm.dayOfWeek){
+                        int dayDifference = dayOfWeek - currentLocalTime.getDayOfWeek();
+                        DateTime ringTime = currentLocalTime.withTimeAtStartOfDay().plusDays(dayDifference).plusHours(alarm.hourOfDay).plusMinutes(alarm.minuteOfHour);
+                        if(dayOfWeek < currentLocalTime.getDayOfWeek()){
+                            // this alarm should be in next week.
+                            ringTime = ringTime.plusDays(DateTimeConstants.DAYS_PER_WEEK);
+                        }
+
+                        if(ringTime.isAfter(currentLocalTime)) {
+                            possibleRings.add(ringTime);
+                        }
+                    }
+                }else{
+                    // None repeated alarm, check if still valid
+                    final DateTime ringTime = new DateTime(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour, 0, timeZone);
+                    if(ringTime.isAfter(currentLocalTime)){
+                        possibleRings.add(ringTime);
+                    }
+                }
+            }
+
+            final DateTime[] rings = possibleRings.toArray(new DateTime[0]);
+            Arrays.sort(rings, new Comparator<DateTime>() {
+                @Override
+                public int compare(DateTime o1, DateTime o2) {
+                    return Long.valueOf(o1.getMillis()).compareTo(Long.valueOf(o2.getMillis()));
+                }
+            });
+
+            if(rings.length > 0){
+                return rings[0].getMillis();
+            }
+
+            return -1;
         }
     }
 }
