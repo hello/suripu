@@ -278,7 +278,7 @@ public class ReceiveResource {
         for (final DeviceAccountPair pair : deviceAccountPairs) {
 
             // This is the default timezone.
-            DateTimeZone userTimeZone = DateTimeZone.forID("American/Los_Angeles");
+            DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
 
             try {
                 // TODO: Warining, since we query dynamoDB based on user input, the user can generate a lot of
