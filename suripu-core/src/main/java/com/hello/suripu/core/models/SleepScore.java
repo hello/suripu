@@ -92,7 +92,7 @@ public class SleepScore {
     public static List<SleepScore> computeSleepScore(final Long accountID,
                                                      final String pillID,
                                                      final SortedSet<SensorSample> pillData,
-                                                     final int processThreshold) {
+                                                     final int dateBucketPeriod) {
 
         LOGGER.debug("======= Computing scores for this pill {}, {}", pillID, accountID);
 
@@ -103,18 +103,18 @@ public class SleepScore {
         float agitationNum = 0;
         float agitationTot = 0;
         int duration = 0;
-        int minute = (int) firstData.dateTime.getMinuteOfHour()/processThreshold;
-        DateTime lastBucketDT = firstData.dateTime.withMinuteOfHour(minute * processThreshold);
+        int minute = (int) firstData.dateTime.getMinuteOfHour()/dateBucketPeriod;
+        DateTime lastBucketDT = firstData.dateTime.withMinuteOfHour(minute * dateBucketPeriod);
 
         for (final SensorSample data: pillData) {
-            minute = (int) data.dateTime.getMinuteOfHour() / processThreshold;
-            final DateTime bucket = data.dateTime.withMinuteOfHour(minute * processThreshold);
+            minute = (int) data.dateTime.getMinuteOfHour() / dateBucketPeriod;
+            final DateTime bucket = data.dateTime.withMinuteOfHour(minute * dateBucketPeriod);
             if (bucket.compareTo(lastBucketDT) != 0) {
                 SleepScore sleepScore = new SleepScore(0L, accountID,
                         lastBucketDT,
                         Long.parseLong(pillID),
                         duration,
-                        (int) (agitationNum/((float) processThreshold) * 100.0), // score
+                        (int) (agitationNum/((float) dateBucketPeriod) * 100.0), // score
                         false, // no customized score yet
                         (int) agitationNum,
                         (long) agitationTot,
@@ -144,7 +144,7 @@ public class SleepScore {
                     lastBucketDT,
                     Long.parseLong(pillID),
                     duration,
-                    (int) ((agitationNum)/((float) processThreshold) * 100.0),
+                    (int) ((agitationNum)/((float) dateBucketPeriod) * 100.0),
                     false, // no customized score for now
                     (int) agitationNum,
                     (long) agitationTot,
