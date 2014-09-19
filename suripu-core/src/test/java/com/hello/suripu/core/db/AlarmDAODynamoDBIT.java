@@ -197,5 +197,4 @@ public class AlarmDAODynamoDBIT {
         this.alarmDAODynamoDB.setAlarms(accountId, expected);
     }
 
-
 }
