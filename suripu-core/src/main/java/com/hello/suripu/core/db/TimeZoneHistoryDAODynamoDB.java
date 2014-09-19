@@ -76,9 +76,11 @@ public class TimeZoneHistoryDAODynamoDB {
         final PutItemResult putItemResult = dynamoDBClient.putItem(putItemRequest);
 
         if(putItemResult != null){
+            LOGGER.debug("Update time zone for account: {}, offset: {}, id: {}", accountId, clientTimeZone.getOffset(DateTime.now().getMillis()), timeZoneId);
             return Optional.of(new TimeZoneHistory(updatedAt, clientTimeZone.getOffset(DateTime.now().getMillis()), timeZoneId));
         }
 
+        LOGGER.warn("Account {} update timezone failed, AWS error.", accountId);
         return Optional.absent();
 
     }
@@ -132,10 +134,11 @@ public class TimeZoneHistoryDAODynamoDB {
 
             final int offsetMillis = dateTimeZoneFromId.getOffset(instant);
             final long updatedAt = Long.valueOf(item.get(UPDATED_AT_ATTRIBUTE_NAME).getN());
+            LOGGER.debug("Get time zone for account: {}, offset: {}, id: {}", accountId, offsetMillis, dateTimeZoneFromId.getID());
             return Optional.of(new TimeZoneHistory(updatedAt, offsetMillis, dateTimeZoneFromId.getID()));
         }
 
-
+        LOGGER.warn("Account {} get timezone failed, no data or aws error.", accountId);
         return Optional.absent();
     }
 
