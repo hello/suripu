@@ -6,6 +6,9 @@ import org.joda.time.DateTime;
 
 public class SensorSample implements Comparable {
 
+    @JsonProperty("id")
+    public String id;
+
     @JsonProperty("datetime_utc")
     public final DateTime dateTime;
 
@@ -19,6 +22,11 @@ public class SensorSample implements Comparable {
         this.dateTime = dateTime;
         this.val = val;
         this.timeZoneOffset = timeZoneOffset;
+        this.id = null;
+    }
+
+    public void setID(String id) {
+        this.id = id;
     }
 
     @Override
@@ -30,6 +38,7 @@ public class SensorSample implements Comparable {
     @Override
     public String toString() {
         return Objects.toStringHelper(SensorSample.class)
+                .add("id", id)
                 .add("date", dateTime)
                 .add("tz_offset", timeZoneOffset)
                 .add("value", val)
