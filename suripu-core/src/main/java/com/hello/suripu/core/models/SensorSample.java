@@ -29,6 +29,10 @@ public class SensorSample implements Comparable {
         this.id = id;
     }
 
+    public String getID() {
+        return this.id;
+    }
+
     @Override
     public int compareTo(Object o) {
         SensorSample sample = (SensorSample) o;

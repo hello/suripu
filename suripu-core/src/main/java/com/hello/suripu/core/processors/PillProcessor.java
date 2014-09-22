@@ -46,7 +46,7 @@ public class PillProcessor {
     public PillProcessor(SleepScoreDAO sleepScoreDAO, final int dateMinuteBucket, final int checkpointThreshold) {
         this.sleepScoreDAO = sleepScoreDAO;
         this.dateMinuteBucket = dateMinuteBucket;
-        this.dateMinuteBucketMillis = dateMinuteBucket * 1000;
+        this.dateMinuteBucketMillis = dateMinuteBucket * 60 * 1000;
         this.tooOldThreshold = (long) this.dateMinuteBucketMillis * 2L;
         this.checkpointThreshold = checkpointThreshold;
         this.pillAccountID = new HashMap<>();
@@ -69,6 +69,7 @@ public class PillProcessor {
         // check all data in memory, process those that are too old
         final int added = checkAllPillData(lastTimestampMillis);
 
+        LOGGER.debug("number of pills to process = {}, added={}", this.getToProcessIdsCount(), added);
         // compute scores and save to DB
         final int numSavedScores = this.computeAndSaveScores();
 
@@ -78,6 +79,21 @@ public class PillProcessor {
         return false;
     }
 
+    public int getNumInserted() {
+        return this.numInserts;
+    }
+
+    public int getNumUpdates() {
+        return this.numUpdates;
+    }
+    public int getToProcessIdsCount() {
+        return this.toProccessedIDs.size();
+    }
+
+    public int getPillIDDataSize(final String pillID) {
+        return this.pillData.get(pillID).size();
+    }
+
     /**
      * Add each record to in-memory maps
      * @param pillRecords
@@ -85,23 +101,25 @@ public class PillProcessor {
      */
     private long parsePillRecords(final ListMultimap<Long, SensorSample> pillRecords) {
         long lastTimestampMillis = 0;
-        for (final Long accountID : pillRecords.keySet()) {
-            List<SensorSample> records = pillRecords.get(accountID);
 
+        for (final Long accountID : pillRecords.keySet()) {
+
+            List<SensorSample> records = pillRecords.get(accountID);
             for (final SensorSample record : records) {
-                final String pillID = record.id;
-                this.pillAccountID.put(pillID, accountID);
-                this.pillData.put(pillID, record);
+                final String pillID = record.getID();
+
+                this.pillAccountID.put(pillID, accountID); // map pill-id to account-id
+                this.pillData.put(pillID, record); // stores pill data
 
                 if (!this.toProccessedIDs.contains(pillID)) {
                     final SortedSet<SensorSample> data = this.pillData.get(pillID);
                     if (checkPillDataForScoring(data)) {
-                        this.toProccessedIDs.add(pillID);
+                        this.toProccessedIDs.add(pillID); // pill is ready for scoring
                     }
                 }
 
                 if (record.dateTime.getMillis() > lastTimestampMillis) {
-                    lastTimestampMillis = record.dateTime.getMillis();
+                    lastTimestampMillis = record.dateTime.getMillis(); // track last-seen timestamp
                 }
 
             }
@@ -116,13 +134,13 @@ public class PillProcessor {
      */
     private boolean checkPillDataForScoring(final SortedSet<SensorSample> samples) {
         if (samples.size() > this.dateMinuteBucket) {
-            return true;
+            return true; // sufficient samples
         }
 
         SensorSample firstSample = samples.first();
         SensorSample lastSample = samples.last();
         if (lastSample.dateTime.getMillis() - firstSample.dateTime.getMillis() >= this.dateMinuteBucketMillis) {
-            return true;
+            return true; // accumulate more than one required bucket of data
         }
         return false;
     }
@@ -133,20 +151,25 @@ public class PillProcessor {
      * @return
      */
     private int checkAllPillData(final long lastTimestampMillis) {
-        if (lastTimestampMillis - this.lastRecordDTMillis < this.dateMinuteBucketMillis) {
+        // note: pill data can arrive out of order, timestamp from data is not always increasing
+        long timestampDiff = lastTimestampMillis - this.lastRecordDTMillis;
+        if (timestampDiff > 0 && timestampDiff < this.dateMinuteBucketMillis) {
             return 0;
+        }
+
+        if (timestampDiff > 0) {
+            this.lastRecordDTMillis = lastTimestampMillis;
         }
 
         int added = 0;
         for (final String pillID : this.pillAccountID.keySet()) {
             if (!this.toProccessedIDs.contains(pillID)) {
                 final SensorSample lastSample = this.pillData.get(pillID).last();
-                if (lastTimestampMillis - lastSample.dateTime.getMillis() > tooOldThreshold) {
+                if (this.lastRecordDTMillis - lastSample.dateTime.getMillis() > this.tooOldThreshold) {
                     this.toProccessedIDs.add(pillID);
                 }
             }
         }
-        this.lastRecordDTMillis = lastTimestampMillis;
         return added;
     }
 

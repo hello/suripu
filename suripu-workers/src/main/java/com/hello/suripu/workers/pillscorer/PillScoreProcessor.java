@@ -48,7 +48,6 @@ public class PillScoreProcessor implements IRecordProcessor {
 
                 final Long accountID = Long.parseLong(data.getAccountId());
                 final String pillID = data.getPillId();
-
                 final DateTime sampleDT = new DateTime(data.getTimestamp(), DateTimeZone.UTC).withSecondOfMinute(0);
 
                 final SensorSample sample = new SensorSample(sampleDT, data.getValue(), data.getOffsetMillis());
