@@ -85,8 +85,11 @@ public class TimelineResource {
 
         LOGGER.debug("Max SVM = {}", maxSVM);
         int i = 0;
+        long tracker_id = trackerMotions.get(0).trackerId;
         for(final TrackerMotion trackerMotion : trackerMotions) {
-
+            if (trackerMotion.trackerId != tracker_id) {
+                break; // if user has multiple pill, only use data from the latest tracker_id
+            }
 
             int sleepDepth = 100;
             if(trackerMotion.value > -1) {
