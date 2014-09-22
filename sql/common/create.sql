@@ -33,7 +33,7 @@ GRANT ALL PRIVILEGES ON SEQUENCE accounts_id_seq TO ingress_user;
 ALTER TABLE accounts ADD COLUMN name VARCHAR (255);
 UPDATE accounts SET name = firstname || ' ' || lastname;
 ALTER TABLE accounts ALTER COLUMN name set NOT NULL;
-
+ALTER TABLE accounts ALTER COLUMN weight SET DATA TYPE INTEGER;
 
 
 

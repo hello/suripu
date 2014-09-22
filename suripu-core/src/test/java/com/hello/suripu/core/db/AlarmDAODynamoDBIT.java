@@ -101,7 +101,7 @@ public class AlarmDAODynamoDBIT {
         final Alarm.Builder builder = new Alarm.Builder();
 
         HashSet<Integer> dayOfWeek = new HashSet<Integer>();
-        dayOfWeek.add(DateTimeConstants.TUESDAY);
+        dayOfWeek.add(DateTimeConstants.MONDAY);
 
         builder.withYear(2014)
                 .withMonth(9)
@@ -117,7 +117,7 @@ public class AlarmDAODynamoDBIT {
         expected.add(builder.build());
 
         dayOfWeek = new HashSet<Integer>();
-        dayOfWeek.add(DateTimeConstants.WEDNESDAY);
+        dayOfWeek.add(DateTimeConstants.TUESDAY);
 
         builder.withYear(2014)
                 .withMonth(9)
@@ -146,7 +146,7 @@ public class AlarmDAODynamoDBIT {
 
         for(int i = 0; i < AlarmDAODynamoDB.MAX_ALARM_COUNT + 1; i++) {
             HashSet<Integer> dayOfWeek = new HashSet<Integer>();
-            dayOfWeek.add(DateTimeConstants.MONDAY + 1);
+            dayOfWeek.add((DateTimeConstants.MONDAY + i) % 7);
 
             builder.withYear(2014)
                     .withMonth(9)

@@ -25,4 +25,6 @@ public interface OAuthTokenStore<T, I, C> {
     C storeAuthorizationCode(I clientDetails) throws ClientAuthenticationException;
 
     Optional<I> getClientDetailsByAuthorizationCode(String code);
+
+    void disable(T accessToken);
 }

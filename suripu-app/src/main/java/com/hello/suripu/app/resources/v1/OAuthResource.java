@@ -3,6 +3,7 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.notifications.NotificationSubscriptionsDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.Application;
@@ -11,6 +12,8 @@ import com.hello.suripu.core.oauth.ClientAuthenticationException;
 import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
 import com.hello.suripu.core.oauth.GrantTypeParam;
+import com.hello.suripu.core.oauth.OAuthScope;
+import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.oauth.stores.ApplicationStore;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.yammer.metrics.annotation.Timed;
@@ -18,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -35,15 +39,18 @@ public class OAuthResource {
     private final OAuthTokenStore<AccessToken,ClientDetails, ClientCredentials> tokenStore;
     private final ApplicationStore applicationStore;
     private final AccountDAO accountDAO;
+    private final NotificationSubscriptionsDAO notificationSubscriptionsDAO;
 
     public OAuthResource(
             final OAuthTokenStore<AccessToken,ClientDetails, ClientCredentials> tokenStore,
             final ApplicationStore<Application, ApplicationRegistration> applicationStore,
-            final AccountDAO accountDAO) {
+            final AccountDAO accountDAO,
+            final NotificationSubscriptionsDAO notificationSubscriptionsDAO) {
 
         this.tokenStore = tokenStore;
         this.applicationStore = applicationStore;
         this.accountDAO = accountDAO;
+        this.notificationSubscriptionsDAO = notificationSubscriptionsDAO;
     }
 
     @POST
@@ -164,5 +171,18 @@ public class OAuthResource {
 //        }
 //        final String uri = clientDetails.redirectUri + "?code=" + credentials.tokenOrCode;
 //        return Response.temporaryRedirect(URI.create(uri)).build();
+    }
+
+    @DELETE
+    @Path("/token")
+    @Timed
+    public void delete(@Scope(OAuthScope.USER_BASIC) final AccessToken accessToken) {
+        tokenStore.disable(accessToken);
+        LOGGER.debug("AccessToken {} deleted", accessToken);
+        if(accessToken.hasScope(OAuthScope.PUSH_NOTIFICATIONS)) {
+            LOGGER.debug("AccessToken {} has PUSH_NOTIFICATIONS_SCOPE");
+            notificationSubscriptionsDAO.unsubscribe(accessToken);
+            LOGGER.debug("Unsubscribed from push notifications");
+        }
     }
 }

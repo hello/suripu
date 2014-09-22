@@ -3,28 +3,33 @@ package com.hello.suripu.app;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.sns.AmazonSNSClient;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
+import com.hello.suripu.app.cli.CreateAlarmDynamoDBTableCommand;
 import com.hello.suripu.app.cli.CreateDynamoDBEventTableCommand;
 import com.hello.suripu.app.cli.CreateDynamoDBTimeZoneHistoryTableCommand;
 import com.hello.suripu.app.cli.RecreateEventsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
-import com.hello.suripu.app.resources.AccountResource;
-import com.hello.suripu.app.resources.ApplicationResource;
-import com.hello.suripu.app.resources.DeviceResources;
-import com.hello.suripu.app.resources.EventResource;
-import com.hello.suripu.app.resources.HistoryResource;
-import com.hello.suripu.app.resources.OAuthResource;
-import com.hello.suripu.app.resources.RoomConditionsResource;
-import com.hello.suripu.app.resources.SleepLabelResource;
-import com.hello.suripu.app.resources.TimelineResource;
+import com.hello.suripu.app.resources.v1.AccountResource;
+import com.hello.suripu.app.resources.v1.ApplicationResource;
+import com.hello.suripu.app.resources.v1.DeviceResources;
+import com.hello.suripu.app.resources.v1.EventResource;
+import com.hello.suripu.app.resources.v1.HistoryResource;
+import com.hello.suripu.app.resources.v1.MobilePushRegistrationResource;
+import com.hello.suripu.app.resources.v1.OAuthResource;
 import com.hello.suripu.app.resources.v1.QuestionsResource;
+import com.hello.suripu.app.resources.v1.RoomConditionsResource;
+import com.hello.suripu.app.resources.v1.SleepLabelResource;
+import com.hello.suripu.app.resources.v1.TimelineResource;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
+import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -32,7 +37,10 @@ import com.hello.suripu.core.db.EventDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.SoundDAO;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.notifications.DynamoDBNotificationSubscriptionDAO;
+import com.hello.suripu.core.db.notifications.NotificationSubscriptionsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
@@ -77,6 +85,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         bootstrap.addCommand(new RecreateEventsCommand());
         bootstrap.addCommand(new CreateDynamoDBEventTableCommand());
         bootstrap.addCommand(new CreateDynamoDBTimeZoneHistoryTableCommand());
+        bootstrap.addCommand(new CreateAlarmDynamoDBTableCommand());
 
         bootstrap.addBundle(new KinesisLoggerBundle<SuripuAppConfiguration>() {
             @Override
@@ -117,13 +126,23 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
 
         final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
-        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final AmazonSNSClient snsClient = new AmazonSNSClient(awsCredentialsProvider);
 
-        client.setEndpoint(configuration.getEventDBConfiguration().getEndpoint());
+        dynamoDBClient.setEndpoint(configuration.getEventDBConfiguration().getEndpoint());
         final String eventTableName = configuration.getEventDBConfiguration().getTableName();
-        final EventDAODynamoDB eventDAODynamoDB = new EventDAODynamoDB(client, eventTableName);
 
+        final EventDAODynamoDB eventDAODynamoDB = new EventDAODynamoDB(dynamoDBClient, eventTableName);
+        final AlarmDAODynamoDB alarmDAODynamoDB = new AlarmDAODynamoDB(dynamoDBClient, configuration.getAlarmDBConfiguration().getTableName());
+        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(dynamoDBClient, configuration.getTimeZoneHistoryDBConfiguration().getTableName());
 
+        final ImmutableMap<String, String> arns = ImmutableMap.copyOf(configuration.getPushNotificationsConfiguration().getArns());
+        final NotificationSubscriptionsDAO subscriptionDAO = new DynamoDBNotificationSubscriptionDAO(
+                dynamoDBClient,
+                configuration.getPushNotificationsConfiguration().getTableName(),
+                snsClient,
+                arns
+        );
 
         if(configuration.getMetricsEnabled()) {
             final String graphiteHostName = configuration.getGraphite().getHost();
@@ -155,7 +174,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addProvider(new OAuthProvider<AccessToken>(new OAuthAuthenticator(accessTokenStore), "protected-resources"));
 
-        environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO));
+        environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, subscriptionDAO));
         environment.addResource(new AccountResource(accountDAO));
         environment.addResource(new HistoryResource(soundDAO, trackerMotionDAO, deviceDAO, deviceDataDAO));
         environment.addResource(new ApplicationResource(applicationStore));
@@ -165,17 +184,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new DeviceResources(deviceDAO));
         environment.addResource(new TimelineResource(eventDAODynamoDB, trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, configuration.getScoreThreshold()));
 
-
-
-        environment.addResource(new com.hello.suripu.app.resources.v1.OAuthResource(accessTokenStore, applicationStore, accountDAO));
-        environment.addResource(new com.hello.suripu.app.resources.v1.AccountResource(accountDAO));
-        environment.addResource(new com.hello.suripu.app.resources.v1.HistoryResource(soundDAO, trackerMotionDAO, deviceDAO, deviceDataDAO));
-        environment.addResource(new com.hello.suripu.app.resources.v1.ApplicationResource(applicationStore));
-        environment.addResource(new com.hello.suripu.app.resources.v1.SleepLabelResource(sleepLabelDAO));
-        environment.addProvider(new com.hello.suripu.app.resources.v1.RoomConditionsResource(deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
-        environment.addResource(new com.hello.suripu.app.resources.v1.EventResource(eventDAODynamoDB));
-        environment.addResource(new com.hello.suripu.app.resources.v1.DeviceResources(deviceDAO));
-        environment.addResource(new com.hello.suripu.app.resources.v1.TimelineResource(eventDAODynamoDB, trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, configuration.getScoreThreshold()));
+        environment.addResource(new MobilePushRegistrationResource(subscriptionDAO));
 
         environment.addResource(new QuestionsResource(accountDAO));
 

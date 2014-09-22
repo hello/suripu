@@ -95,5 +95,10 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
         return Optional.of(clientDetails);
     }
 
+    @Override
+    public void disable(AccessToken accessToken) {
+        tokens.remove(accessToken.token);
+    }
+
 
 }

@@ -23,7 +23,10 @@ public enum OAuthScope {
     SLEEP_TIMELINE(12),
     QUESTIONS_READ(13),
     QUESTIONS_WRITE(14),
-    FIRMWARE_UPDATE(15);
+    FIRMWARE_UPDATE(15),
+    ALARM_READ(16),
+    ALARM_WRITE(17),
+    PUSH_NOTIFICATIONS(18);
 
     private int value;
 
