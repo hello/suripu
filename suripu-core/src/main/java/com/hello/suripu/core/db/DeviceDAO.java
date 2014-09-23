@@ -13,15 +13,19 @@ import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 
 public interface DeviceDAO {
 
-    @SingleValueResult(Long.class)
-    @SqlQuery("SELECT id FROM account_device_map WHERE account_id = :account_id AND device_name = :device_name LIMIT 1;")
-    Optional<Long> getDeviceForAccountId(@Bind("account_id") Long accountId, @Bind("device_name") String deviceName);
+    @RegisterMapper(DeviceAccountPairMapper.class)
+    @SqlQuery("SELECT * FROM account_device_map WHERE account_id = :account_id;")
+    ImmutableList<DeviceAccountPair> getSensesForAccountId(@Bind("account_id") Long accountId);
+
+    @RegisterMapper(DeviceAccountPairMapper.class)
+    @SqlQuery("SELECT * FROM account_tracker_map WHERE account_id = :account_id;")
+    ImmutableList<DeviceAccountPair> getPillsForAccountId(@Bind("account_id") Long accountId);
 
     @GetGeneratedKeys
-    @SqlUpdate("INSERT INTO account_device_map (account_id, device_name) VALUES(:account_id, :device_name)")
-    Long registerDevice(@Bind("account_id") Long accountId, @Bind("device_name") String deviceName);
+    @SqlUpdate("INSERT INTO account_device_map (account_id, device_name, device_id) VALUES(:account_id, :device_name, :device_id)")
+    Long registerSense(@Bind("account_id") Long accountId, @Bind("device_name") String deviceName, @Bind("device_id") String deviceId);
 
-    // Returns the latest device connected to this account, in the case of multiple devices
+    // Returns the latest sense connected to this account, in the case of multiple senses
     @SingleValueResult(Long.class)
     @SqlQuery("SELECT id FROM account_device_map WHERE account_id = :account_id ORDER BY id DESC LIMIT 1;")
     Optional<Long> getByAccountId(@Bind("account_id") Long accountId);
