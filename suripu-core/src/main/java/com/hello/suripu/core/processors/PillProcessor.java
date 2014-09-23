@@ -70,11 +70,14 @@ public class PillProcessor {
         final int added = checkAllPillData(lastTimestampMillis);
 
         LOGGER.debug("number of pills to process = {}, added={}", this.getToProcessIdsCount(), added);
-        // compute scores and save to DB
-        final int numSavedScores = this.computeAndSaveScores();
 
-        if (numSavedScores > 0 && this.numPillsProcessed % this.checkpointThreshold == 0) {
-            return true; // okay checkpoint
+        // compute scores and save to DB
+        if (!this.toProccessedIDs.isEmpty()) {
+            final int numSavedScores = this.computeAndSaveScores();
+
+            if (numSavedScores > 0 && this.numPillsProcessed % this.checkpointThreshold == 0) {
+                return true; // okay checkpoint
+            }
         }
         return false;
     }
@@ -179,6 +182,8 @@ public class PillProcessor {
      */
     private int computeAndSaveScores() {
         int processed = 0;
+        Set<String> successPillIDs = new HashSet<>();
+
         for (final String pillID: this.toProccessedIDs) {
             final Long accountID = this.pillAccountID.get(pillID);
             final SortedSet<PillSample> data = this.pillData.get(pillID);
@@ -197,13 +202,18 @@ public class PillProcessor {
             this.numInserts += stats.get("inserted");
             this.numScores += scores.size();
             if (saved > 0) {
-                this.numPillsProcessed++;
-                this.pillData.removeAll(pillID);
-                this.pillAccountID.remove(pillID);
-                this.toProccessedIDs.remove(pillID);
+                successPillIDs.add(pillID);
                 processed++;
             }
         }
+
+        for (final String pillID: successPillIDs) {
+            this.pillData.removeAll(pillID);
+            this.pillAccountID.remove(pillID);
+            this.toProccessedIDs.remove(pillID);
+        }
+
+        this.numPillsProcessed += processed;
         return processed;
     }
 }
