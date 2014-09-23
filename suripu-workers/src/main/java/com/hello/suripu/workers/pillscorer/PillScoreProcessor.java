@@ -58,15 +58,18 @@ public class PillScoreProcessor implements IRecordProcessor {
                 this.decodeErrors++;
             }
         }
-        final boolean okayToCheckpoint = this.pillProcessor.processPillRecords(samples);
 
-        if (okayToCheckpoint) {
-            try {
-                iRecordProcessorCheckpointer.checkpoint();
-            } catch (InvalidStateException e) {
-                LOGGER.error("checkpoint {}", e.getMessage());
-            } catch (ShutdownException e) {
-                LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
+        if (samples.size() > 0) {
+            final boolean okayToCheckpoint = this.pillProcessor.processPillRecords(samples);
+
+            if (okayToCheckpoint) {
+                try {
+                    iRecordProcessorCheckpointer.checkpoint();
+                } catch (InvalidStateException e) {
+                    LOGGER.error("checkpoint {}", e.getMessage());
+                } catch (ShutdownException e) {
+                    LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
+                }
             }
         }
     }
