@@ -26,7 +26,8 @@ public enum OAuthScope {
     FIRMWARE_UPDATE(15),
     ALARM_READ(16),
     ALARM_WRITE(17),
-    PUSH_NOTIFICATIONS(18);
+    PUSH_NOTIFICATIONS(18),
+    DEVICE_INFORMATION_READ(19);
 
     private int value;
 

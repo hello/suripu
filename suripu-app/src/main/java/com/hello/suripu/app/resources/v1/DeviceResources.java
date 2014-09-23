@@ -72,7 +72,7 @@ public class DeviceResources {
     @GET
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Device> getDevices(@Scope(OAuthScope.SENSORS_BASIC) final AccessToken accessToken) {
+    public List<Device> getDevices(@Scope(OAuthScope.DEVICE_INFORMATION_READ) final AccessToken accessToken) {
 
         LOGGER.debug("{}", accessToken);
         final Optional<Account> account = accountDAO.getById(accessToken.accountId);
