@@ -43,7 +43,7 @@ kinesis:
   streams :
     pill_data : test-pill-suripu
 
-app_name: PillScoreConsumer
+app_name: PillScoreConsumerDev
 
 max_records: 1000
 
