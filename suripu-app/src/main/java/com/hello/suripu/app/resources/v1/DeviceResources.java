@@ -37,7 +37,7 @@ public class DeviceResources {
     @Produces(MediaType.APPLICATION_JSON)
     public void registerPill(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final PillRegistration pillRegistration) {
         try {
-            final Integer trackerId = deviceDAO.registerTracker(accessToken.accountId, pillRegistration.pillId);
+            final Long trackerId = deviceDAO.registerTracker(accessToken.accountId, pillRegistration.pillId);
             LOGGER.info("Account {} registered pill {} with internal id = {}", accessToken.accountId, pillRegistration.pillId, trackerId);
             return;
         } catch (UnableToExecuteStatementException exception) {
