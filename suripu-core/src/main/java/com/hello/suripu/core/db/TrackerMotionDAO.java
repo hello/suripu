@@ -39,8 +39,8 @@ public interface TrackerMotionDAO {
             "MAX(offset_millis) as offset_millis " +
             "FROM tracker_motion_master " +
             "WHERE account_id = :account_id AND local_utc_ts >= :start_timestamp AND local_utc_ts <= :end_timestamp " +
-            "GROUP BY ts_bucket " +
-            "ORDER BY ts_bucket ASC;"
+            "GROUP BY ts_bucket, tracker_id " +
+            "ORDER BY tracker_id DESC, ts_bucket ASC;"
     )
     public ImmutableList<TrackerMotion> getBetweenGrouped(@Bind("account_id") long accountId,
                                                    @Bind("start_timestamp") DateTime startTimestampUTC,
