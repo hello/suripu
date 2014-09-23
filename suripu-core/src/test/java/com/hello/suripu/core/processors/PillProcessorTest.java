@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.binders.BindSleepScore;
-import com.hello.suripu.core.models.SensorSample;
+import com.hello.suripu.core.models.PillSample;
 import com.hello.suripu.core.models.SleepScore;
 import org.joda.time.DateTime;
 import org.junit.Test;
@@ -52,14 +52,13 @@ public class PillProcessorTest {
     @Test
     public void checkPillForScoringPassSize() {
         LOGGER.debug("---- Testing for inserts based on data size ----");
-        final ListMultimap<Long, SensorSample> samples = ArrayListMultimap.create();
+        final ListMultimap<Long, PillSample> samples = ArrayListMultimap.create();
         Random r = new Random(5);
         final int dateMinuteBucket = 10;
 
         // create pill data for accountID
         for (int i=0; i < dateMinuteBucket + 1; i++) {
-            final SensorSample sample = new SensorSample(this.startTime.withMinuteOfHour(i), r.nextFloat(), this.OFFSET_MILLIS);
-            sample.setID(this.pillID);
+            final PillSample sample = new PillSample(this.pillID, this.startTime.withMinuteOfHour(i), r.nextFloat(), this.OFFSET_MILLIS);
             samples.put(this.accountID, sample);
         }
 
@@ -72,14 +71,13 @@ public class PillProcessorTest {
     @Test
     public void checkPillForScoringPassTime() {
         LOGGER.debug("---- Testing for inserts based on Time ----");
-        final ListMultimap<Long, SensorSample> samples = ArrayListMultimap.create();
+        final ListMultimap<Long, PillSample> samples = ArrayListMultimap.create();
         Random r = new Random(5);
         final int dateMinuteBucket = 10;
 
         // create pill data for accountID
         for (int i=0; i < 5; i++) {
-            final SensorSample sample = new SensorSample(this.startTime.withMinuteOfHour(i*5), r.nextFloat(), this.OFFSET_MILLIS);
-            sample.setID(this.pillID);
+            final PillSample sample = new PillSample(this.pillID, this.startTime.withMinuteOfHour(i*5), r.nextFloat(), this.OFFSET_MILLIS);
             samples.put(this.accountID, sample);
         }
 
@@ -92,14 +90,13 @@ public class PillProcessorTest {
     @Test
     public void checkPillForScoringZero() {
         LOGGER.debug("---- Testing for zero inserts, and pill data size ----");
-        final ListMultimap<Long, SensorSample> samples = ArrayListMultimap.create();
+        final ListMultimap<Long, PillSample> samples = ArrayListMultimap.create();
         Random r = new Random(5);
         final int dateMinuteBucket = 20;
 
         // create pill data for accountID
         for (int i=0; i < 5; i++) {
-            final SensorSample sample = new SensorSample(startTime.withMinuteOfHour(i*2), r.nextFloat(), this.OFFSET_MILLIS);
-            sample.setID(this.pillID);
+            final PillSample sample = new PillSample(this.pillID, startTime.withMinuteOfHour(i*2), r.nextFloat(), this.OFFSET_MILLIS);
             samples.put(this.accountID, sample);
         }
 
@@ -115,14 +112,13 @@ public class PillProcessorTest {
     @Test
     public void checkPillForScoringUpdates() {
         LOGGER.debug("---- Testing for inserts ----");
-        final ListMultimap<Long, SensorSample> samples = ArrayListMultimap.create();
+        final ListMultimap<Long, PillSample> samples = ArrayListMultimap.create();
         Random r = new Random(5);
         final int dateMinuteBucket = 10;
 
         // create pill data for accountID
         for (int i=0; i < dateMinuteBucket + 2; i++) {
-            final SensorSample sample = new SensorSample(startTime.withMinuteOfHour(i*3), r.nextFloat(), this.OFFSET_MILLIS);
-            sample.setID(this.pillID);
+            final PillSample sample = new PillSample(this.pillID, startTime.withMinuteOfHour(i*3), r.nextFloat(), this.OFFSET_MILLIS);
             samples.put(this.accountID, sample);
         }
 
@@ -139,16 +135,13 @@ public class PillProcessorTest {
 
         LOGGER.debug("samples size = {}", samples.get(this.accountID).size());
 
-        final SensorSample sample1 = new SensorSample(startTime.withMinuteOfHour(1), r.nextFloat(), this.OFFSET_MILLIS);
-        sample1.setID(this.pillID);
+        final PillSample sample1 = new PillSample(this.pillID, startTime.withMinuteOfHour(1), r.nextFloat(), this.OFFSET_MILLIS);
         samples.put(this.accountID, sample1);
 
-        final SensorSample sample2 = new SensorSample(startTime.withMinuteOfHour(5), r.nextFloat(), this.OFFSET_MILLIS);
-        sample2.setID(this.pillID);
+        final PillSample sample2 = new PillSample(this.pillID, startTime.withMinuteOfHour(5), r.nextFloat(), this.OFFSET_MILLIS);
         samples.put(this.accountID, sample2);
 
-        final SensorSample sample3 = new SensorSample(startTime.withMinuteOfHour(39), r.nextFloat(), this.OFFSET_MILLIS);
-        sample3.setID(this.pillID);
+        final PillSample sample3 = new PillSample(this.pillID, startTime.withMinuteOfHour(39), r.nextFloat(), this.OFFSET_MILLIS);
         samples.put(this.accountID, sample3);
 
         LOGGER.debug("re-added samples size = {}", samples.get(this.accountID).size());
@@ -163,18 +156,16 @@ public class PillProcessorTest {
     @Test
     public void checkPillForScoringTooOldCondition() {
         LOGGER.debug("---- Testing for too old condition ----");
-        final ListMultimap<Long, SensorSample> samples = ArrayListMultimap.create();
+        final ListMultimap<Long, PillSample> samples = ArrayListMultimap.create();
         Random r = new Random(5);
         final int dateMinuteBucket = 10;
 
         final PillProcessor pillProcessor = new PillProcessor(this.sleepScoreDAO, dateMinuteBucket, this.CHECKPOINT_THRESHOLD);
 
-        final SensorSample sample1 = new SensorSample(startTime.withMinuteOfHour(1), r.nextFloat(), this.OFFSET_MILLIS);
-        sample1.setID(this.pillID);
+        final PillSample sample1 = new PillSample(this.pillID, startTime.withMinuteOfHour(1), r.nextFloat(), this.OFFSET_MILLIS);
         samples.put(this.accountID, sample1);
 
-        final SensorSample sample2 = new SensorSample(startTime.withMinuteOfHour(5), r.nextFloat(), this.OFFSET_MILLIS);
-        sample2.setID(this.pillID);
+        final PillSample sample2 = new PillSample(this.pillID, startTime.withMinuteOfHour(5), r.nextFloat(), this.OFFSET_MILLIS);
         samples.put(this.accountID, sample2);
 
         boolean ok = pillProcessor.processPillRecords(samples);
@@ -189,15 +180,14 @@ public class PillProcessorTest {
         samples.removeAll(this.accountID);
         LOGGER.debug("samples size = {}", samples.get(this.accountID).size());
 
-        final SensorSample sample3 = new SensorSample(startTime.withMinuteOfHour(55), r.nextFloat(), this.OFFSET_MILLIS);
-        sample3.setID("11");
+        final PillSample sample3 = new PillSample(this.pillID, startTime.withMinuteOfHour(55), r.nextFloat(), this.OFFSET_MILLIS);
         samples.put(2L, sample3);
 
         LOGGER.debug("re-added samples size = {}", samples.get(2L).size());
 
         ok = pillProcessor.processPillRecords(samples);
         final int numInsertedAgain = pillProcessor.getNumInserted();
-        assertThat(numInsertedAgain, is(1));
+        assertThat(numInsertedAgain, is(2));
 
 
     }

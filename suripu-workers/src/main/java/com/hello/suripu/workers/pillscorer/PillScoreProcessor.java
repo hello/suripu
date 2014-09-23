@@ -9,10 +9,10 @@ import com.amazonaws.services.kinesis.model.Record;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.hello.suripu.core.processors.PillProcessor;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.core.db.SleepScoreDAO;
-import com.hello.suripu.core.models.SensorSample;
+import com.hello.suripu.core.models.PillSample;
+import com.hello.suripu.core.processors.PillProcessor;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -41,7 +41,7 @@ public class PillScoreProcessor implements IRecordProcessor {
         LOGGER.debug("Size = {}", records.size());
 
         // parse kinesis records
-        final ListMultimap<Long, SensorSample> samples = ArrayListMultimap.create();
+        final ListMultimap<Long, PillSample> samples = ArrayListMultimap.create();
         for (final Record record : records) {
             try {
                 final InputProtos.PillDataKinesis data = InputProtos.PillDataKinesis.parseFrom(record.getData().array());
@@ -50,8 +50,7 @@ public class PillScoreProcessor implements IRecordProcessor {
                 final String pillID = data.getPillId();
                 final DateTime sampleDT = new DateTime(data.getTimestamp(), DateTimeZone.UTC).withSecondOfMinute(0);
 
-                final SensorSample sample = new SensorSample(sampleDT, data.getValue(), data.getOffsetMillis());
-                sample.setID(pillID);
+                final PillSample sample = new PillSample(pillID, sampleDT, data.getValue(), data.getOffsetMillis());
                 samples.put(accountID, sample);
 
             } catch (InvalidProtocolBufferException e) {

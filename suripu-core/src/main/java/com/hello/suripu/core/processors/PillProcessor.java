@@ -4,7 +4,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 import com.hello.suripu.core.db.SleepScoreDAO;
-import com.hello.suripu.core.models.SensorSample;
+import com.hello.suripu.core.models.PillSample;
 import com.hello.suripu.core.models.SleepScore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +26,7 @@ public class PillProcessor {
 
     // keeping states
     private final Map<String, Long> pillAccountID; // k: pillID, v: accountID
-    private final SortedSetMultimap<String, SensorSample> pillData; // k: pillID
+    private final SortedSetMultimap<String, PillSample> pillData; // k: pillID
     private final Set<String> toProccessedIDs;
     private long lastRecordDTMillis = 0;
 
@@ -38,9 +38,9 @@ public class PillProcessor {
     private int decodeErrors = 0;
 
     // bunch of constants
-    private int checkpointThreshold = 1; // no. of pills processed before we checkpoint kinesis
-    private int dateMinuteBucket; // data size threshold to process the pill
-    private int dateMinuteBucketMillis;
+    private final int checkpointThreshold; // no. of pills processed before we checkpoint kinesis
+    private final int dateMinuteBucket; // data size threshold to process the pill
+    private final int dateMinuteBucketMillis;
     private long tooOldThreshold;
 
     public PillProcessor(SleepScoreDAO sleepScoreDAO, final int dateMinuteBucket, final int checkpointThreshold) {
@@ -61,7 +61,7 @@ public class PillProcessor {
      * @param pillRecords
      * @return
      */
-    public boolean processPillRecords(final ListMultimap<Long, SensorSample> pillRecords) {
+    public boolean processPillRecords(final ListMultimap<Long, PillSample> pillRecords) {
 
         // add records to memory store
         final long lastTimestampMillis = this.parsePillRecords(pillRecords);
@@ -99,20 +99,20 @@ public class PillProcessor {
      * @param pillRecords
      * @return timestamp for the last record in this set
      */
-    private long parsePillRecords(final ListMultimap<Long, SensorSample> pillRecords) {
+    private long parsePillRecords(final ListMultimap<Long, PillSample> pillRecords) {
         long lastTimestampMillis = 0;
 
         for (final Long accountID : pillRecords.keySet()) {
 
-            List<SensorSample> records = pillRecords.get(accountID);
-            for (final SensorSample record : records) {
-                final String pillID = record.getID();
+            List<PillSample> records = pillRecords.get(accountID);
+            for (final PillSample record : records) {
+                final String pillID = record.sampleID;
 
                 this.pillAccountID.put(pillID, accountID); // map pill-id to account-id
                 this.pillData.put(pillID, record); // stores pill data
 
                 if (!this.toProccessedIDs.contains(pillID)) {
-                    final SortedSet<SensorSample> data = this.pillData.get(pillID);
+                    final SortedSet<PillSample> data = this.pillData.get(pillID);
                     if (checkPillDataForScoring(data)) {
                         this.toProccessedIDs.add(pillID); // pill is ready for scoring
                     }
@@ -132,13 +132,13 @@ public class PillProcessor {
      * @param samples
      * @return
      */
-    private boolean checkPillDataForScoring(final SortedSet<SensorSample> samples) {
+    private boolean checkPillDataForScoring(final SortedSet<PillSample> samples) {
         if (samples.size() > this.dateMinuteBucket) {
             return true; // sufficient samples
         }
 
-        SensorSample firstSample = samples.first();
-        SensorSample lastSample = samples.last();
+        final PillSample firstSample = samples.first();
+        final PillSample lastSample = samples.last();
         if (lastSample.dateTime.getMillis() - firstSample.dateTime.getMillis() >= this.dateMinuteBucketMillis) {
             return true; // accumulate more than one required bucket of data
         }
@@ -152,7 +152,7 @@ public class PillProcessor {
      */
     private int checkAllPillData(final long lastTimestampMillis) {
         // note: pill data can arrive out of order, timestamp from data is not always increasing
-        long timestampDiff = lastTimestampMillis - this.lastRecordDTMillis;
+        final long timestampDiff = lastTimestampMillis - this.lastRecordDTMillis;
         if (timestampDiff > 0 && timestampDiff < this.dateMinuteBucketMillis) {
             return 0;
         }
@@ -164,7 +164,7 @@ public class PillProcessor {
         int added = 0;
         for (final String pillID : this.pillAccountID.keySet()) {
             if (!this.toProccessedIDs.contains(pillID)) {
-                final SensorSample lastSample = this.pillData.get(pillID).last();
+                final PillSample lastSample = this.pillData.get(pillID).last();
                 if (this.lastRecordDTMillis - lastSample.dateTime.getMillis() > this.tooOldThreshold) {
                     this.toProccessedIDs.add(pillID);
                 }
@@ -179,9 +179,9 @@ public class PillProcessor {
      */
     private int computeAndSaveScores() {
         int processed = 0;
-        for (String pillID: this.toProccessedIDs) {
+        for (final String pillID: this.toProccessedIDs) {
             final Long accountID = this.pillAccountID.get(pillID);
-            final SortedSet<SensorSample> data = this.pillData.get(pillID);
+            final SortedSet<PillSample> data = this.pillData.get(pillID);
 
             if (data.isEmpty()) {
                 LOGGER.error("No data for scoring {}", pillID);

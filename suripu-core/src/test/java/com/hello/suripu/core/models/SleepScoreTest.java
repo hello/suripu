@@ -26,10 +26,10 @@ public class SleepScoreTest {
         final Long accountID = 1L;
         final String pillID = "10";
         final int dateBucketPeriod = 15;
-        final SortedSet<SensorSample> data = new TreeSet<>();
+        final SortedSet<PillSample> data = new TreeSet<>();
 
         Random r = new Random(1);
-        final SensorSample s = new SensorSample(DateTime.now(), r.nextFloat(), this.OFFSET_MILLIS);
+        final PillSample s = new PillSample(pillID, DateTime.now(), r.nextFloat(), this.OFFSET_MILLIS);
         data.add(s);
         List<SleepScore> scores = SleepScore.computeSleepScore(accountID, pillID, data, dateBucketPeriod);
         assertThat(scores.isEmpty(), is(Boolean.FALSE));
@@ -44,7 +44,7 @@ public class SleepScoreTest {
         //let's create 3 groups, 2 samples per group
         final int numGroups = 3;
         final int numSamplesPerGroup = 3;
-        final SortedSet<SensorSample> data = this.createSamples(numGroups, numSamplesPerGroup, dateBucketPeriod);
+        final SortedSet<PillSample> data = this.createSamples(pillID, numGroups, numSamplesPerGroup, dateBucketPeriod);
 
         List<SleepScore> scores = SleepScore.computeSleepScore(accountID, pillID, data, dateBucketPeriod);
         assertThat(scores.size(), is(numGroups));
@@ -59,7 +59,7 @@ public class SleepScoreTest {
         //let's create 3 groups, 2 samples per group
         final int numGroups = 4;
         final int numSamplesPerGroup = 3;
-        final SortedSet<SensorSample> data = this.createSamples(numGroups, numSamplesPerGroup, dateBucketPeriod);
+        final SortedSet<PillSample> data = this.createSamples(pillID, numGroups, numSamplesPerGroup, dateBucketPeriod);
 
         List<SleepScore> scores = SleepScore.computeSleepScore(accountID, pillID, data, dateBucketPeriod);
         for (int i=0; i<scores.size(); i++) {
@@ -69,19 +69,19 @@ public class SleepScoreTest {
         }
     }
 
-    private SortedSet<SensorSample> createSamples(final int numGroups, final int numSamplesPerGroup, final int dateBucketPeriod) {
+    private SortedSet<PillSample> createSamples(final String pillID, final int numGroups, final int numSamplesPerGroup, final int dateBucketPeriod) {
         final DateTime startTime = DateTime.now().withTimeAtStartOfDay();
         startTime.withHourOfDay(12);
         Random r = new Random(2);
 
         //let's create X groups, Y samples per group
         final int randomMax = (dateBucketPeriod / numSamplesPerGroup) - 1;
-        final SortedSet<SensorSample> data = new TreeSet<>();
+        final SortedSet<PillSample> data = new TreeSet<>();
         for (int i=0; i<numGroups; i++ ) {
             int minutes = i * dateBucketPeriod;
             for (int j=0; j<numSamplesPerGroup; j++) {
                 minutes += r.nextInt(randomMax) + 1;
-                final SensorSample sample = new SensorSample(startTime.withMinuteOfHour(minutes), r.nextFloat(), this.OFFSET_MILLIS);
+                final PillSample sample = new PillSample(pillID, startTime.withMinuteOfHour(minutes), r.nextFloat(), this.OFFSET_MILLIS);
                 LOGGER.debug("sample {}", sample);
                 data.add(sample);
             }

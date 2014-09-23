@@ -91,13 +91,13 @@ public class SleepScore {
 
     public static List<SleepScore> computeSleepScore(final Long accountID,
                                                      final String pillID,
-                                                     final SortedSet<SensorSample> pillData,
+                                                     final SortedSet<PillSample> pillData,
                                                      final int dateBucketPeriod) {
 
         LOGGER.debug("======= Computing scores for this pill {}, {}", pillID, accountID);
 
         final List<SleepScore> sleepScores = new ArrayList<>();
-        final SensorSample firstData = pillData.first();
+        final PillSample firstData = pillData.first();
         final int timeZoneOffset = firstData.timeZoneOffset;
 
         float agitationNum = 0;
@@ -106,7 +106,7 @@ public class SleepScore {
         int minute = (int) firstData.dateTime.getMinuteOfHour()/dateBucketPeriod;
         DateTime lastBucketDT = firstData.dateTime.withMinuteOfHour(minute * dateBucketPeriod);
 
-        for (final SensorSample data: pillData) {
+        for (final PillSample data: pillData) {
             minute = (int) data.dateTime.getMinuteOfHour() / dateBucketPeriod;
             final DateTime bucket = data.dateTime.withMinuteOfHour(minute * dateBucketPeriod);
             if (bucket.compareTo(lastBucketDT) != 0) {
