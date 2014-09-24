@@ -238,9 +238,9 @@ public class Alarm {
                     for(final Integer dayOfWeek:alarm.dayOfWeek){
                         int dayDifference = dayOfWeek - currentLocalTime.getDayOfWeek();
                         DateTime ringTime = currentLocalTime.withTimeAtStartOfDay().plusDays(dayDifference).plusHours(alarm.hourOfDay).plusMinutes(alarm.minuteOfHour);
-                        if(dayOfWeek < currentLocalTime.getDayOfWeek()){
+                        if(ringTime.isBefore(currentLocalTime)){
                             // this alarm should be in next week.
-                            ringTime = ringTime.plusDays(DateTimeConstants.DAYS_PER_WEEK);
+                            ringTime = ringTime.plusWeeks(1);
                         }
 
                         if(ringTime.isAfter(currentLocalTime)) {
