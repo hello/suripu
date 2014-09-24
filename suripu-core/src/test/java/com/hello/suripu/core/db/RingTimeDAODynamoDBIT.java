@@ -12,7 +12,7 @@ import static org.mockito.Mockito.mock;
 /**
  * Created by pangwu on 9/19/14.
  */
-public class RingTimeIT {
+public class RingTimeDAODynamoDBIT {
     private AlarmDAODynamoDB alarmDAODynamoDB = mock(AlarmDAODynamoDB.class);
     private TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = mock(TimeZoneHistoryDAODynamoDB.class);
     private List<Alarm> alarms = new ArrayList<Alarm>();
