@@ -12,7 +12,6 @@ import com.hello.suripu.core.crypto.CryptoHelper;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.PublicKeyStore;
-import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
@@ -43,9 +42,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -64,7 +60,6 @@ public class ReceiveResource {
 
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
-    private final ScoreDAO scoreDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final PublicKeyStore publicKeyStore;
 
@@ -78,14 +73,12 @@ public class ReceiveResource {
 
     public ReceiveResource(final DeviceDataDAO deviceDataDAO,
                            final DeviceDAO deviceDAO,
-                           final ScoreDAO scoreDAO,
                            final TrackerMotionDAO trackerMotionDAO,
                            final PublicKeyStore publicKeyStore,
                            final KinesisLoggerFactory kinesisLoggerFactory,
                            final Boolean debug) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
-        this.scoreDAO = scoreDAO;
         this.trackerMotionDAO = trackerMotionDAO;
 
         this.publicKeyStore = publicKeyStore;
@@ -176,7 +169,7 @@ public class ReceiveResource {
                         .setAccountId(accessToken.accountId.toString())
                         .setPillId(pillID)
                         .setTimestamp(tempTrackerData.timestamp)
-                        .setValue((long) (trackerValueInG * 1000))
+                        .setValue((long) (trackerValueInG * 1000)) // in milli-g
                         .setOffsetMillis(offsetMillis)
                         .build();
 
