@@ -41,18 +41,11 @@ common_db:
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
-    pill_data : test-pill-suripu
+    morpheus_data : test-morpheus-suripu  # TODO: set name
 
-app_name: PillScoreConsumerDev
+app_name: AlarmWorker
 
 max_records: 1000
-
-# minutes of data to store in memory before processing
-date_minutes_bucket: 15
-
-# no. of pills to process before kinesis checkpoint
-# we want this number to be roughly no. of pills in the wild
-checkpoint_threshold: 1
 
 # Logging settings.
 logging:
@@ -65,4 +58,20 @@ logging:
 
     # Sets the level for 'com.example.app' to DEBUG.
     com.hello.suripu.workers: DEBUG
+
+
+ring_time_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: ring_time
+
+timezone_history_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: timezone_history
+
+alarm_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: alarm
 

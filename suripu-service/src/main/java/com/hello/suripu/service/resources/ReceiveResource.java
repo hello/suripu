@@ -10,16 +10,15 @@ import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.api.input.InputProtos.SimpleSensorBatch;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.crypto.CryptoHelper;
-import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.PublicKeyStore;
+import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
-import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.TempTrackerData;
@@ -51,9 +50,7 @@ import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +70,7 @@ public class ReceiveResource {
     private final TrackerMotionDAO trackerMotionDAO;
     private final PublicKeyStore publicKeyStore;
 
-    private final AlarmDAODynamoDB alarmDAODynamoDB;
+    private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
     private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
 
     private final KinesisLoggerFactory kinesisLoggerFactory;
@@ -90,7 +87,7 @@ public class ReceiveResource {
                            final TrackerMotionDAO trackerMotionDAO,
                            final PublicKeyStore publicKeyStore,
                            final KinesisLoggerFactory kinesisLoggerFactory,
-                           final AlarmDAODynamoDB alarmDAODynamoDB,
+                           final RingTimeDAODynamoDB ringTimeDAODynamoDB,
                            final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB,
                            final Boolean debug) {
         this.deviceDataDAO = deviceDataDAO;
@@ -102,7 +99,7 @@ public class ReceiveResource {
         cryptoHelper = new CryptoHelper();
         this.kinesisLoggerFactory = kinesisLoggerFactory;
 
-        this.alarmDAODynamoDB = alarmDAODynamoDB;
+        this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
         this.timeZoneHistoryDAODynamoDB = timeZoneHistoryDAODynamoDB;
 
         this.debug = debug;
@@ -231,10 +228,7 @@ public class ReceiveResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Timed
     public byte[] morpheusProtobufReceiveEncrypted(final byte[] body) {
-
-
         final SignedMessage signedMessage = SignedMessage.parse(body);
-
         InputProtos.periodic_data data = null;
 
         try {
@@ -272,14 +266,10 @@ public class ReceiveResource {
         LOGGER.debug("Found {} pairs", deviceAccountPairs.size());
         long timestampMillis = data.getUnixTime() * 1000L;
         final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
-
-        final ArrayList<Long> ringTimes = new ArrayList<Long>();
+        // This is the default timezone.
+        DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
 
         for (final DeviceAccountPair pair : deviceAccountPairs) {
-
-            // This is the default timezone.
-            DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
-
             try {
                 // TODO: Warining, since we query dynamoDB based on user input, the user can generate a lot of
                 // requests to break our bank(Assume that Dynamo DB never goes down).
@@ -327,52 +317,34 @@ public class ReceiveResource {
                 LOGGER.warn("Duplicate device sensor value for account_id = {}, time: {}", pair.accountId, roundedDateTime);
             }
 
+            final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.MORPHEUS_DATA);
+            final byte[] morpheusDataInBytes = data.toByteArray();
+            final String shardingKey = deviceName;
 
-            try{
-                // Get alarms templates for a user
-                final List<Alarm> alarms = this.alarmDAODynamoDB.getAlarms(pair.accountId);
+            final String sequenceNumber = dataLogger.put(shardingKey, morpheusDataInBytes);
 
-                // Based on current time, the user's alarm template & user's current timezone, compute
-                // the next ringing moment.
-
-                // Here we set the current time to 1 minutes before, so we can have one minute drift tolerance.
-                long nextRingTime = Alarm.Utils.getNextRingTimestamp(alarms, DateTime.now().minusMinutes(1).getMillis(), userTimeZone);
-                if(nextRingTime > 0){
-                    ringTimes.add(nextRingTime);  // Add the alarm of this user to the list.
-                }else{
-                    LOGGER.debug("No alarm set for account {}", pair.accountId);
-                }
-
-
-            }catch (AmazonServiceException awsException){
-                LOGGER.error("AWS error when retrieving alarm for account {}.", pair.accountId);
-            }
         }
 
-        // Now we loop over all the users, we get a list of ring time for all users.
-        // Let's pick the nearest one and tell morpheus what is the next ring time.
-        final Long[] shortedRingTime = ringTimes.toArray(new Long[0]);
-        Arrays.sort(shortedRingTime, new Comparator<Long>() {
-            @Override
-            public int compare(Long o1, Long o2) {
-                return o1.compareTo(o2);
-            }
-        });
 
         final InputProtos.SyncResponse.Builder responseBuilder = InputProtos.SyncResponse.newBuilder();
+        final Optional<DateTime> ringTimeForToday = this.ringTimeDAODynamoDB.getRingTime(deviceName,
+                new DateTime(DateTime.now().getMillis(), userTimeZone).withTimeAtStartOfDay());
 
         // Now the ring time for different users is sorted, get the nearest one.
-        if(shortedRingTime.length > 0) {
-            long nextRingTimestamp = shortedRingTime[0];
-            int ringDurationInMS = 30 * DateTimeConstants.MILLIS_PER_SECOND;  // TODO: make this flexible so we can adjust based on user preferences.
+        if(ringTimeForToday.isPresent()) {
 
-            final InputProtos.SyncResponse.Alarm alarm = InputProtos.SyncResponse.Alarm.newBuilder()
-                    .setRingtoneId(99)
-                    .setStartTime((int) (nextRingTimestamp / DateTimeConstants.MILLIS_PER_SECOND))
-                    .setEndTime((int) ((nextRingTimestamp + ringDurationInMS) / DateTimeConstants.MILLIS_PER_SECOND))
-                    .build();
+            if(ringTimeForToday.get().isAfter(DateTime.now().minusMinutes(1))) {
+                long nextRingTimestamp = ringTimeForToday.get().getMillis();
+                int ringDurationInMS = 30 * DateTimeConstants.MILLIS_PER_SECOND;  // TODO: make this flexible so we can adjust based on user preferences.
 
-            responseBuilder.setAlarm(alarm);
+                final InputProtos.SyncResponse.Alarm alarm = InputProtos.SyncResponse.Alarm.newBuilder()
+                        .setRingtoneId(99)
+                        .setStartTime((int) (nextRingTimestamp / DateTimeConstants.MILLIS_PER_SECOND))
+                        .setEndTime((int) ((nextRingTimestamp + ringDurationInMS) / DateTimeConstants.MILLIS_PER_SECOND))
+                        .build();
+
+                responseBuilder.setAlarm(alarm);
+            }
         }
 
         final InputProtos.SyncResponse syncResponse = responseBuilder.build();

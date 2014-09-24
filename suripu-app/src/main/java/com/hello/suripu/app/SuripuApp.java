@@ -11,6 +11,7 @@ import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.app.cli.CreateAlarmDynamoDBTableCommand;
 import com.hello.suripu.app.cli.CreateDynamoDBEventTableCommand;
 import com.hello.suripu.app.cli.CreateDynamoDBTimeZoneHistoryTableCommand;
+import com.hello.suripu.app.cli.CreateRingTimeDynamoDBTable;
 import com.hello.suripu.app.cli.RecreateEventsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.resources.v1.AccountResource;
@@ -86,6 +87,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         bootstrap.addCommand(new CreateDynamoDBEventTableCommand());
         bootstrap.addCommand(new CreateDynamoDBTimeZoneHistoryTableCommand());
         bootstrap.addCommand(new CreateAlarmDynamoDBTableCommand());
+        bootstrap.addCommand(new CreateRingTimeDynamoDBTable());
 
         bootstrap.addBundle(new KinesisLoggerBundle<SuripuAppConfiguration>() {
             @Override

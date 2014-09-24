@@ -131,3 +131,8 @@ push_notifications:
     android: arn:aws:sns:us-east-1:053216739513:app/GCM/hello-sense-android-dev
 
   table_name: notifications
+
+ring_time_db:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: ring_time

@@ -126,4 +126,12 @@ public class SuripuAppConfiguration extends Configuration {
         return pushNotificationsConfiguration;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty("ring_time_db")
+    private DynamoDBConfiguration ringTimeDBConfiguration;
+    public DynamoDBConfiguration getRingTimeDBConfiguration(){
+        return this.ringTimeDBConfiguration;
+    }
+
 }

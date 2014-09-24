@@ -106,6 +106,15 @@ public class SuripuConfiguration extends Configuration {
 
     @Valid
     @NotNull
+    @JsonProperty("ring_time_db")
+    private DynamoDBConfiguration ringTimeDBConfiguration;
+    public DynamoDBConfiguration getRingTimeDBConfiguration(){
+        return this.ringTimeDBConfiguration;
+    }
+
+
+    @Valid
+    @NotNull
     @JsonProperty("kinesis")
     private KinesisConfiguration kinesisConfiguration;
 
