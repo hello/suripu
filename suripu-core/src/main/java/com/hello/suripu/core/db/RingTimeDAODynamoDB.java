@@ -15,9 +15,8 @@ import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
-import com.google.common.base.Optional;
+import com.hello.suripu.core.models.RingTime;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,8 +38,10 @@ public class RingTimeDAODynamoDB {
 
     public static final String MORPHEUS_ID_ATTRIBUTE_NAME = "device_id";
 
-    public static final String RING_AT_ATTRIBUTE_NAME = "ring_time";
-    public static final String ALARM_DATE_LOCAL_UTC_ATTRIBUTE_NAME = "alarm_local_date";
+    public static final String RING_AT_ATTRIBUTE_NAME = "ring_time_utc";
+    public static final String EXPECTED_AT_ATTRIBUTE_NAME = "expected_ring_time_utc";
+    public static final String CREATED_AT_ATTRIBUTE_NAME = "created_at_utc";
+
 
 
     public RingTimeDAODynamoDB(final AmazonDynamoDBClient dynamoDBClient, final String tableName){
@@ -49,14 +50,14 @@ public class RingTimeDAODynamoDB {
     }
 
 
-    public Optional<DateTime> getRingTime(final String deviceId, final DateTime dateLocalUTC){
+    public RingTime getNextRingTime(final String deviceId){
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
         final Condition selectDateCondition = new Condition()
-                .withComparisonOperator(ComparisonOperator.EQ.toString())
-                .withAttributeValueList(new AttributeValue().withN(String.valueOf(dateLocalUTC.getMillis())));
+                .withComparisonOperator(ComparisonOperator.LE.toString())
+                .withAttributeValueList(new AttributeValue().withN(String.valueOf(DateTime.now().getMillis())));
 
 
-        queryConditions.put(ALARM_DATE_LOCAL_UTC_ATTRIBUTE_NAME, selectDateCondition);
+        queryConditions.put(CREATED_AT_ATTRIBUTE_NAME, selectDateCondition);
 
 
         final Condition selectAccountIdCondition = new Condition()
@@ -68,17 +69,18 @@ public class RingTimeDAODynamoDB {
         Collections.addAll(targetAttributeSet,
                 MORPHEUS_ID_ATTRIBUTE_NAME,
                 RING_AT_ATTRIBUTE_NAME,
-                ALARM_DATE_LOCAL_UTC_ATTRIBUTE_NAME);
+                EXPECTED_AT_ATTRIBUTE_NAME,
+                CREATED_AT_ATTRIBUTE_NAME);
 
         final QueryRequest queryRequest = new QueryRequest(this.tableName)
                 .withKeyConditions(queryConditions)
                 .withAttributesToGet(targetAttributeSet)
                 .withLimit(1)
-                .withScanIndexForward(true);
+                .withScanIndexForward(false);
 
         final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
         if(queryResult.getItems() == null){
-            return Optional.absent();
+            return RingTime.createEmpty();
         }
 
         final List<Map<String, AttributeValue>> items = queryResult.getItems();
@@ -90,27 +92,28 @@ public class RingTimeDAODynamoDB {
             }
 
             try {
-                return Optional.of(new DateTime(Long.valueOf(item.get(RING_AT_ATTRIBUTE_NAME).getN()), DateTimeZone.UTC));
+                long expected = Long.valueOf(item.get(EXPECTED_AT_ATTRIBUTE_NAME).getN());
+                long actual = Long.valueOf(item.get(RING_AT_ATTRIBUTE_NAME).getN());
+                long createdAt = Long.valueOf(item.get(CREATED_AT_ATTRIBUTE_NAME).getN());
+                final RingTime ringTime = new RingTime(actual, expected, createdAt);
+
+                return ringTime;
             }catch (Exception ex){
-                LOGGER.error("Get ring time failed for device {} on date {}", deviceId, new DateTime(dateLocalUTC, DateTimeZone.UTC));
+                LOGGER.error("Get ring time failed for device {}.", deviceId);
             }
         }
 
-        return Optional.absent();
+        return RingTime.createEmpty();
     }
 
-    public void setRingTime(final String deviceId, final DateTime dateLocalUTC, final DateTime ringTime, final DateTimeZone localTimeZone){
-        final DateTime localRingTime = new DateTime(ringTime.getMillis(), localTimeZone);
-        if(dateLocalUTC.getYear() != localRingTime.getYear() ||
-                dateLocalUTC.getMonthOfYear() != localRingTime.getMonthOfYear() ||
-                dateLocalUTC.getDayOfMonth() != localRingTime.getDayOfMonth()){
-            throw new IllegalArgumentException("The alarm is not for the target date!");
-        }
+    public void setNextRingTime(final String deviceId, final RingTime ringTime){
+
 
         final HashMap<String, AttributeValue> items = new HashMap<String, AttributeValue>();
         items.put(MORPHEUS_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
-        items.put(ALARM_DATE_LOCAL_UTC_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(dateLocalUTC.getMillis())));
-        items.put(RING_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(ringTime.getMillis())));
+        items.put(EXPECTED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(ringTime.expectedRingTimeUTC)));
+        items.put(RING_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(ringTime.actualRingTimeUTC)));
+        items.put(CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(DateTime.now().getMillis())));
 
         final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, items);
         final PutItemResult result = this.dynamoDBClient.putItem(putItemRequest);
@@ -123,12 +126,12 @@ public class RingTimeDAODynamoDB {
 
         request.withKeySchema(
                 new KeySchemaElement().withAttributeName(MORPHEUS_ID_ATTRIBUTE_NAME).withKeyType(KeyType.HASH),
-                new KeySchemaElement().withAttributeName(ALARM_DATE_LOCAL_UTC_ATTRIBUTE_NAME).withKeyType(KeyType.RANGE)
+                new KeySchemaElement().withAttributeName(CREATED_AT_ATTRIBUTE_NAME).withKeyType(KeyType.RANGE)
         );
 
         request.withAttributeDefinitions(
                 new AttributeDefinition().withAttributeName(MORPHEUS_ID_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.S),
-                new AttributeDefinition().withAttributeName(ALARM_DATE_LOCAL_UTC_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.N)
+                new AttributeDefinition().withAttributeName(CREATED_AT_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.N)
 
         );
 

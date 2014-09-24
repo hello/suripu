@@ -222,12 +222,12 @@ public class Alarm {
             return true;
         }
 
-        public static long getNextRingTimestamp(final List<Alarm> alarms, long currentTimestampUTC, final DateTimeZone timeZone){
+        public static RingTime getNextRingTimestamp(final List<Alarm> alarms, long currentTimestampUTC, final DateTimeZone timeZone){
             if(!isValidSmartAlarms(alarms)){
                 throw new IllegalArgumentException("Invalid alarms.");
             }
 
-            final ArrayList<DateTime> possibleRings = new ArrayList<DateTime>();
+            final ArrayList<RingTime> possibleRings = new ArrayList<RingTime>();
             final DateTime currentLocalTime = new DateTime(currentTimestampUTC, timeZone);
             for(final Alarm alarm:alarms){
                 if(!alarm.isEnabled){
@@ -244,31 +244,31 @@ public class Alarm {
                         }
 
                         if(ringTime.isAfter(currentLocalTime)) {
-                            possibleRings.add(ringTime);
+                            possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), DateTime.now().getMillis()));
                         }
                     }
                 }else{
                     // None repeated alarm, check if still valid
                     final DateTime ringTime = new DateTime(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour, 0, timeZone);
                     if(ringTime.isAfter(currentLocalTime)){
-                        possibleRings.add(ringTime);
+                        possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), DateTime.now().getMillis()));
                     }
                 }
             }
 
-            final DateTime[] rings = possibleRings.toArray(new DateTime[0]);
-            Arrays.sort(rings, new Comparator<DateTime>() {
+            final RingTime[] rings = possibleRings.toArray(new RingTime[0]);
+            Arrays.sort(rings, new Comparator<RingTime>() {
                 @Override
-                public int compare(DateTime o1, DateTime o2) {
-                    return Long.valueOf(o1.getMillis()).compareTo(Long.valueOf(o2.getMillis()));
+                public int compare(final RingTime o1, final RingTime o2) {
+                    return Long.valueOf(o1.actualRingTimeUTC).compareTo(Long.valueOf(o2.actualRingTimeUTC));
                 }
             });
 
             if(rings.length > 0){
-                return rings[0].getMillis();
+                return rings[0];
             }
 
-            return -1;
+            return RingTime.createEmpty();
         }
     }
 }

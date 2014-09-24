@@ -1,6 +1,5 @@
-package com.hello.suripu.core.db;
+package com.hello.suripu.core.models;
 
-import com.hello.suripu.core.models.Alarm;
 import org.joda.time.DateTime;
 import org.junit.Test;
 

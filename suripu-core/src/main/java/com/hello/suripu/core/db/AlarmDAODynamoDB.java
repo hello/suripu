@@ -111,8 +111,7 @@ public class AlarmDAODynamoDB {
         final QueryRequest queryRequest = new QueryRequest(this.tableName)
                 .withKeyConditions(queryConditions)
                 .withAttributesToGet(targetAttributes)
-                .withLimit(1)
-                .withScanIndexForward(true);
+                .withLimit(1);
 
         final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
         if(queryResult.getItems() == null){

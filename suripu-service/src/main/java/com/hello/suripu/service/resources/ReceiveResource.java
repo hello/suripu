@@ -21,6 +21,7 @@ import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.TempTrackerData;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -327,14 +328,13 @@ public class ReceiveResource {
 
 
         final InputProtos.SyncResponse.Builder responseBuilder = InputProtos.SyncResponse.newBuilder();
-        final Optional<DateTime> ringTimeForToday = this.ringTimeDAODynamoDB.getRingTime(deviceName,
-                new DateTime(DateTime.now().getMillis(), userTimeZone).withTimeAtStartOfDay());
+        final RingTime nextRingTime = this.ringTimeDAODynamoDB.getNextRingTime(deviceName);
 
         // Now the ring time for different users is sorted, get the nearest one.
-        if(ringTimeForToday.isPresent()) {
+        if(!nextRingTime.isEmpty()) {
 
-            if(ringTimeForToday.get().isAfter(DateTime.now().minusMinutes(1))) {
-                long nextRingTimestamp = ringTimeForToday.get().getMillis();
+            if(new DateTime(nextRingTime.actualRingTimeUTC, DateTimeZone.UTC).isAfter(DateTime.now().minusMinutes(1))) {
+                long nextRingTimestamp = nextRingTime.actualRingTimeUTC;
                 int ringDurationInMS = 30 * DateTimeConstants.MILLIS_PER_SECOND;  // TODO: make this flexible so we can adjust based on user preferences.
 
                 final InputProtos.SyncResponse.Alarm alarm = InputProtos.SyncResponse.Alarm.newBuilder()
