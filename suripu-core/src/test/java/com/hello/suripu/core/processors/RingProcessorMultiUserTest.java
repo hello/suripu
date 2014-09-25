@@ -496,4 +496,60 @@ public class RingProcessorMultiUserTest {
         assertThat(ringTime.isRegular(), is(true));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
     }
+
+
+
+
+    @Test
+    public void testTwoAlarmsFromDifferentUsersAtSameTimeShouldHaveMultipleSoundIds(){
+        // Test how two alarms from different users at the same day behave when time goes by.
+
+        final List<Alarm> alarmList = new ArrayList<Alarm>();
+        final HashSet<Integer> dayOfWeek = new HashSet<Integer>();
+        dayOfWeek.add(DateTimeConstants.TUESDAY);
+
+        alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
+                true, true, true,
+                new AlarmSound(100, "The Star Spangled Banner")));
+
+        final List<Alarm> alarmList2 = new ArrayList<Alarm>();
+        final HashSet<Integer> dayOfWeek2 = new HashSet<Integer>();
+        dayOfWeek2.add(DateTimeConstants.TUESDAY);
+        alarmList2.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek2,
+                true, true, true,
+                new AlarmSound(101, "God Save the Queen")));
+
+        when(this.alarmDAODynamoDB.getAlarms(1)).thenReturn(ImmutableList.copyOf(alarmList));
+        when(this.alarmDAODynamoDB.getAlarms(2)).thenReturn(ImmutableList.copyOf(alarmList2));
+
+        when(this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(2)).thenReturn(Optional.<TimeZoneHistory>of(
+                new TimeZoneHistory(DateTime.now().getMillis(),
+                        DateTimeZone.forID("America/Los_Angeles").getOffset(DateTime.now()),
+                        "America/Los_Angeles")));
+
+        when(this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(1)).thenReturn(Optional.<TimeZoneHistory>of(
+                new TimeZoneHistory(DateTime.now().getMillis(),
+                        DateTimeZone.forID("America/Los_Angeles").getOffset(DateTime.now()),
+                        "America/Los_Angeles")));
+
+        final List<DeviceAccountPair> deviceAccountPairs = new ArrayList<DeviceAccountPair>();
+        deviceAccountPairs.add(new DeviceAccountPair(1L, 1L, testDeviceId));
+        deviceAccountPairs.add(new DeviceAccountPair(2L, 1L, testDeviceId));
+
+        when(this.deviceDAO.getAccountIdsForDeviceId(testDeviceId)).thenReturn(ImmutableList.copyOf(deviceAccountPairs));
+
+        RingTime ringTime = RingProcessor.getNextRegularRingTime(this.alarmDAODynamoDB,
+                this.timeZoneHistoryDAODynamoDB,
+                this.deviceDAO,
+                this.testDeviceId,
+                new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")));
+
+        final DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
+        final DateTime expectRingTime = new DateTime(2014,9,23,8,20, DateTimeZone.forID("America/Los_Angeles"));
+
+        assertThat(actualRingTime, is(expectRingTime));
+        assertThat(ringTime.isRegular(), is(true));
+        assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{100L, 101L}));
+
+    }
 }

@@ -27,6 +27,8 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -245,6 +247,7 @@ public class RingProcessor {
 
         final ArrayList<RingTime> ringTimes = new ArrayList<RingTime>();
         DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
+        final HashMap<Long, ArrayList<RingTime>> groupedRingTime = new HashMap<>();
 
         for (final DeviceAccountPair pair : deviceAccountPairs) {
             try {
@@ -274,6 +277,11 @@ public class RingProcessor {
                 final RingTime nextRingTime = Alarm.Utils.getNextRingTime(alarms, currentTime.getMillis(), userTimeZone);
                 if (!nextRingTime.isEmpty()) {
                     ringTimes.add(nextRingTime);  // Add the alarm of this user to the list.
+                    if(!groupedRingTime.containsKey(nextRingTime.expectedRingTimeUTC)){
+                        groupedRingTime.put(nextRingTime.expectedRingTimeUTC, new ArrayList<RingTime>());
+                    }
+
+                    groupedRingTime.get(nextRingTime.expectedRingTimeUTC).add(nextRingTime);
                 } else {
                     LOGGER.debug("Alarm worker: No alarm set for account {}", pair.accountId);
                 }
@@ -298,7 +306,14 @@ public class RingProcessor {
 
         if (shortedRingTime.length > 0) {
             final RingTime nextRingTime = shortedRingTime[0];
-            ringTime = nextRingTime;
+            final HashSet<Long> soundIds = new HashSet<>();
+            final List<RingTime> sameRingFromDifferentUsers = groupedRingTime.get(nextRingTime.expectedRingTimeUTC);
+            for(final RingTime ring:sameRingFromDifferentUsers){
+                for(long soundId:ring.soundIds){
+                    soundIds.add(soundId);
+                }
+            }
+            ringTime = new RingTime(nextRingTime.actualRingTimeUTC, nextRingTime.expectedRingTimeUTC, soundIds.toArray(new Long[0]));
         }
 
         return ringTime;

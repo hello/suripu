@@ -24,7 +24,7 @@ public class RingTime {
     @JsonCreator
     public RingTime(@JsonProperty("actual_ring_time_utc") long actual,
                     @JsonProperty("expected_ring_time_utc") long expected,
-                    @JsonProperty("sound_ids") long[] soundIds){
+                    @JsonProperty("sound_ids") final long[] soundIds){
         if(expected < actual){
             throw new IllegalArgumentException("Actual ring behind deadline.");
         }
@@ -32,6 +32,22 @@ public class RingTime {
         this.actualRingTimeUTC = actual;
         this.expectedRingTimeUTC = expected;
         this.soundIds = soundIds;
+
+    }
+
+    public RingTime(long actual, long expected, final Long[] soundIds){
+        if(expected < actual){
+            throw new IllegalArgumentException("Actual ring behind deadline.");
+        }
+
+        this.actualRingTimeUTC = actual;
+        this.expectedRingTimeUTC = expected;
+        this.soundIds  = new long[soundIds.length];
+        for(int i = 0; i < soundIds.length; i++){
+            this.soundIds[i] = soundIds[i];
+        }
+
+
 
     }
 
