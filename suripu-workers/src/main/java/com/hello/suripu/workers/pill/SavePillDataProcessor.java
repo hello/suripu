@@ -73,14 +73,16 @@ public class SavePillDataProcessor implements IRecordProcessor {
             }
         }
 
-        this.trackerMotionDAO.batchInsertTrackerMotionData(trackerData, this.batchSize);
+        if (trackerData.size() > 0) {
+            this.trackerMotionDAO.batchInsertTrackerMotionData(trackerData, this.batchSize);
 
-        try {
-            iRecordProcessorCheckpointer.checkpoint();
-        } catch (InvalidStateException e) {
-            LOGGER.error("checkpoint {}", e.getMessage());
-        } catch (ShutdownException e) {
-            LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
+            try {
+                iRecordProcessorCheckpointer.checkpoint();
+            } catch (InvalidStateException e) {
+                LOGGER.error("checkpoint {}", e.getMessage());
+            } catch (ShutdownException e) {
+                LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
+            }
         }
 
     }

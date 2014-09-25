@@ -34,7 +34,7 @@ CREATE TABLE tracker_motion_master(
 GRANT ALL PRIVILEGES ON tracker_motion_master TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE tracker_motion_master_id_seq TO ingress_user;
 
-
+CREATE UNIQUE INDEX uniq_account_tracker_ts on tracker_motion_master(account_id, tracker_id, ts);
 
 --
 -- ALWAYS CREATE A DEFAULT TABLE

@@ -102,7 +102,7 @@ public class ReceiveResource {
             return;
         }
 
-        final List<DeviceAccountPair> pairs = trackerMotionDAO.getTrackerIds(accessToken.accountId);
+        final List<DeviceAccountPair> pairs = deviceDAO.getTrackerIds(accessToken.accountId);
 
         final Map<String, Long> pairsLookup = new HashMap<String, Long>(pairs.size());
         for (DeviceAccountPair pair: pairs) {
