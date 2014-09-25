@@ -1,17 +1,17 @@
-debug: true
+debug: false
 
 common_db:
   # the name of your JDBC driver
   driverClass: org.postgresql.Driver
 
   # the username
-  user: your postgresql username
+  user: ingress_user
 
   # the password
-  password: hello ingress user
+  password: your postgresql password
 
   # the JDBC URL
-  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
+  url: jdbc:postgresql://localhost:5432/[your postgresql database name]
 
   # any properties specific to your JDBC driver:
   properties:
@@ -43,7 +43,7 @@ kinesis:
   streams :
       morpheus_data : test-morpheus-suripu
 
-app_name: AlarmWorkerDev
+app_name: AlarmWorker
 
 max_records: 1000
 
