@@ -83,7 +83,8 @@ public class AlarmRecordProcessor implements IRecordProcessor {
                     morpheusId,
                     currentTime,
                     this.configuration.getProcessAheadTimeInMinutes(),
-                    this.configuration.getAggregateWindowSizeInMinute()
+                    this.configuration.getAggregateWindowSizeInMinute(),
+                    this.configuration.getLightSleepThreshold()
                     );
         }
 

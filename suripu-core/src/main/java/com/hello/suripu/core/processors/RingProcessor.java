@@ -78,8 +78,9 @@ public class RingProcessor {
                                           final TrackerMotionDAO trackerMotionDAO,
                                           final String morpheusId,
                                           final DateTime currentTime,
-                                          int smartAlarmProcessAheadInMinutes,
-                                          int slidingWindowSizeInMinutes){
+                                          final int smartAlarmProcessAheadInMinutes,
+                                          final int slidingWindowSizeInMinutes,
+                                          final float lightSleepThreshold){
         final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(morpheusId);
         RingTime currentRingTime = ringTimeDAODynamoDB.getNextRingTime(morpheusId);
 
@@ -189,7 +190,7 @@ public class RingProcessor {
                             }else{
                                 final PipeDataSource pipeDataSource = new PipeDataSource(pillData);
                                 final SleepCycleAlgorithm sleepCycleAlgorithm = new SleepCycleAlgorithm(pipeDataSource, slidingWindowSizeInMinutes);
-                                final List<Segment> sleepCycles = sleepCycleAlgorithm.getCycles(new DateTime(nextRingTime.expectedRingTimeUTC, userTimeZone));
+                                final List<Segment> sleepCycles = sleepCycleAlgorithm.getCycles(new DateTime(nextRingTime.expectedRingTimeUTC, userTimeZone), lightSleepThreshold);
                                 final DateTime smartAlarmRingTimeUTC = sleepCycleAlgorithm.getSmartAlarmTimeUTC(sleepCycles, currentTime.getMillis(), nextRingTime.expectedRingTimeUTC);
                                 LOGGER.info("User {} smartAlarm time is {}", pair.accountId, new DateTime(smartAlarmRingTimeUTC, userTimeZone));
                                 smartAlarmRings[index] = smartAlarmRingTimeUTC.getMillis();

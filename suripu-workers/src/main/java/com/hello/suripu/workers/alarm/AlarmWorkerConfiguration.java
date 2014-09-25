@@ -77,6 +77,16 @@ public class AlarmWorkerConfiguration extends Configuration {
 
     @Valid
     @NotNull
+    @JsonProperty("light_sleep_init_threshold")
+    private Float lightSleepThreshold;
+
+    public Float getLightSleepThreshold(){
+        return this.lightSleepThreshold;
+    }
+
+
+    @Valid
+    @NotNull
     @JsonProperty("aggregate_window_size_min")
     private Integer aggregateWindowSizeInMinute;
 

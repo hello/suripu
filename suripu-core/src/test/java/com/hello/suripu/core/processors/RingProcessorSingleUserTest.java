@@ -127,7 +127,8 @@ public class RingProcessorSingleUserTest {
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 7, 0, DateTimeZone.forID("America/Los_Angeles")),
                 20,
-                15);
+                15,
+                0.2f);
 
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
@@ -144,7 +145,8 @@ public class RingProcessorSingleUserTest {
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles")),
                 20,
-                15);
+                15,
+                0.2f);
 
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
@@ -180,7 +182,8 @@ public class RingProcessorSingleUserTest {
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")),
                 20,
-                15);
+                15,
+                0.2f);
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -196,7 +199,8 @@ public class RingProcessorSingleUserTest {
                 this.testDeviceId,
                 dataCollectionTime,
                 20,
-                15);
+                15,
+                0.2f);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.getMillis(), is(deadline.getMillis()));
@@ -230,7 +234,8 @@ public class RingProcessorSingleUserTest {
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")),
                 20,
-                15);
+                15,
+                0.2f);
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -247,7 +252,8 @@ public class RingProcessorSingleUserTest {
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles")),
                 20,
-                15);
+                15,
+                0.2f);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
@@ -281,7 +287,8 @@ public class RingProcessorSingleUserTest {
                 this.testDeviceId,
                 dataCollectionTime,
                 20,
-                15);
+                15,
+                0.2f);
 
 
         assertThat(ringTime.isEmpty(), is(true));
@@ -305,7 +312,8 @@ public class RingProcessorSingleUserTest {
                 this.testDeviceId,
                 dataCollectionTime,
                 20,
-                15);
+                15,
+                0.2f);
 
 
         assertThat(ringTime.isEmpty(), is(true));
@@ -328,7 +336,8 @@ public class RingProcessorSingleUserTest {
                 this.testDeviceId,
                 dataCollectionTime,
                 20,
-                15);
+                15,
+                0.2f);
 
 
         assertThat(ringTime.isEmpty(), is(true));
@@ -359,7 +368,8 @@ public class RingProcessorSingleUserTest {
                 this.testDeviceId,
                 dataCollectionTime,
                 20,
-                15);
+                15,
+                0.2f);
 
         final DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.getMillis(), is(deadline.getMillis()));
@@ -396,7 +406,8 @@ public class RingProcessorSingleUserTest {
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 7, 0, DateTimeZone.forID("America/Los_Angeles")),
                 20,
-                15);
+                15,
+                0.2f);
 
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
@@ -414,7 +425,8 @@ public class RingProcessorSingleUserTest {
                 this.testDeviceId,
                 dataCollectionTime,
                 20,
-                15);
+                15,
+                0.2f);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
@@ -455,7 +467,8 @@ public class RingProcessorSingleUserTest {
                 this.testDeviceId,
                 dataCollectionTime,
                 20,
-                15);
+                15,
+                0.2f);
 
         final DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -489,7 +502,8 @@ public class RingProcessorSingleUserTest {
                 this.testDeviceId,
                 dataCollectionTime,
                 20,
-                15);
+                15,
+                0.2f);
 
         assertThat(ringTime.isEmpty(), is(true));
     }
@@ -520,7 +534,8 @@ public class RingProcessorSingleUserTest {
                 this.testDeviceId,
                 dataCollectionTime,
                 20,
-                15);
+                15,
+                0.2f);
 
         assertThat(ringTime.isEmpty(), is(true));
     }
@@ -558,7 +573,8 @@ public class RingProcessorSingleUserTest {
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")),
                 20,
-                15);
+                15,
+                0.2f);
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -576,7 +592,8 @@ public class RingProcessorSingleUserTest {
                 this.testDeviceId,
                 dataCollectionTime,
                 20,
-                15);
+                15,
+                0.2f);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
@@ -594,7 +611,8 @@ public class RingProcessorSingleUserTest {
                 this.testDeviceId,
                 new DateTime(2014, 9, 24, 7, 20, DateTimeZone.forID("America/Los_Angeles")),
                 20,
-                15);
+                15,
+                0.2f);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -624,7 +642,8 @@ public class RingProcessorSingleUserTest {
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 7, 0, DateTimeZone.forID("America/Los_Angeles")),
                 20,
-                15);
+                15,
+                0.2f);
 
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
@@ -640,7 +659,8 @@ public class RingProcessorSingleUserTest {
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles")),
                 20,
-                15);
+                15,
+                0.2f);
 
 
         assertThat(ringTime.actualRingTimeUTC, is(deadline.minusMinutes(3).getMillis()));
