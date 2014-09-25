@@ -48,6 +48,16 @@ public class AlarmWorkerConfiguration extends Configuration {
 
     @Valid
     @NotNull
+    @JsonProperty("smart_alarm_process_ahead_in_minutes")
+    private Integer processAheadTimeInMinutes;
+
+    public Integer getProcessAheadTimeInMinutes() {
+        return this.processAheadTimeInMinutes;
+    }
+
+
+    @Valid
+    @NotNull
     @Max(1000)
     @JsonProperty("max_records")
     private Integer maxRecords;

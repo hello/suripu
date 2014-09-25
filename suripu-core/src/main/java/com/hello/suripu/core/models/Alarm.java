@@ -244,14 +244,14 @@ public class Alarm {
                         }
 
                         if(ringTime.isAfter(currentLocalTime)) {
-                            possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), DateTime.now().getMillis()));
+                            possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), DateTime.now().getMillis(), alarm.sound.id));
                         }
                     }
                 }else{
                     // None repeated alarm, check if still valid
                     final DateTime ringTime = new DateTime(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour, 0, timeZone);
                     if(ringTime.isAfter(currentLocalTime)){
-                        possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), DateTime.now().getMillis()));
+                        possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), DateTime.now().getMillis(), alarm.sound.id));
                     }
                 }
             }

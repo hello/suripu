@@ -4,10 +4,11 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.DataSource;
 import com.hello.suripu.algorithm.core.Segment;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,6 +21,8 @@ import java.util.Random;
  * Created by pangwu on 9/5/14.
  */
 public class SleepCycleAlgorithm {
+    private final static Logger LOGGER = LoggerFactory.getLogger(SleepCycleAlgorithm.class);
+
     private DataSource<AmplitudeData> dataSource;
     private int slidingWindowSizeInMinutes = 15;
 
@@ -136,27 +139,28 @@ public class SleepCycleAlgorithm {
     }
 
 
-    public DateTime getSmartAlarmTimeUTC(final List<Segment> sleepCycles, final DateTime alarmTime, int advanceMinutes){
+    public DateTime getSmartAlarmTimeUTC(final List<Segment> sleepCycles,
+                                         long dataCollectionMoment, long alarmDeadline){
 
-        final long alarmDeadline = alarmTime.getMillis();
         final Segment lastCycle = sleepCycles.get(sleepCycles.size() - 1);
-        long deepSleepMoment = lastCycle.getEndTimestamp() + advanceMinutes * DateTimeConstants.MILLIS_PER_MINUTE;
-        long dataCollectionMoment = alarmDeadline - advanceMinutes * DateTimeConstants.MILLIS_PER_MINUTE;
+        long deepSleepMoment = lastCycle.getEndTimestamp() + 20 * DateTimeConstants.MILLIS_PER_MINUTE;
+
         DateTime smartAlarmTime = new DateTime(alarmDeadline, DateTimeZone.UTC);
 
         int possibleSpanInMinutes = (int)(deepSleepMoment - dataCollectionMoment) / DateTimeConstants.MILLIS_PER_MINUTE;
         final Random random = new Random();
 
         if(possibleSpanInMinutes > 0) {
-
-            smartAlarmTime = smartAlarmTime.minusMinutes(advanceMinutes).plusMinutes(random.nextInt(possibleSpanInMinutes) + 1);
+            LOGGER.debug("User still in light sleep. Next deep sleep moment: " + new DateTime(deepSleepMoment));
+            smartAlarmTime = new DateTime(dataCollectionMoment, DateTimeZone.UTC).plusMinutes(random.nextInt(possibleSpanInMinutes) + 1);
         }else{
             // User already in deep sleep.
             long sleepCycleLength = (long)(1.5 * DateTimeConstants.MILLIS_PER_HOUR);
-            long cycleNumberInTheMiddle = (dataCollectionMoment- lastCycle.getEndTimestamp()) / sleepCycleLength;
+            long cycleNumberInTheMiddle = (alarmDeadline - lastCycle.getEndTimestamp()) / sleepCycleLength;
 
             // It is possible that cycleNumberInTheMiddle > 0. In that case we need to guess the cycle.
             long nextLightSleepMoment = lastCycle.getEndTimestamp() + cycleNumberInTheMiddle * sleepCycleLength;
+            LOGGER.debug("User already in deep sleep. Next light sleep moment: " + new DateTime(nextLightSleepMoment));
 
             if(nextLightSleepMoment > dataCollectionMoment && nextLightSleepMoment < alarmDeadline){
                 smartAlarmTime = new DateTime(nextLightSleepMoment, DateTimeZone.UTC);
@@ -164,6 +168,8 @@ public class SleepCycleAlgorithm {
                 smartAlarmTime = smartAlarmTime.minusMinutes(5).plusMinutes(random.nextInt(5) + 1);
             }
         }
+
+        LOGGER.debug("Smart alarm time: " + smartAlarmTime);
 
         return smartAlarmTime;
     }

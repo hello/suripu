@@ -16,6 +16,7 @@ import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.hello.suripu.core.models.RingTime;
+import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,8 @@ public class RingTimeDAODynamoDB {
 
     public static final String RING_AT_ATTRIBUTE_NAME = "ring_time_utc";
     public static final String EXPECTED_AT_ATTRIBUTE_NAME = "expected_ring_time_utc";
+    public static final String SOUND_ID_ATTRIBUTE_NAME = "sound_id";
+
     public static final String CREATED_AT_ATTRIBUTE_NAME = "created_at_utc";
 
 
@@ -50,6 +53,7 @@ public class RingTimeDAODynamoDB {
     }
 
 
+    @Timed
     public RingTime getNextRingTime(final String deviceId){
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
         final Condition selectDateCondition = new Condition()
@@ -70,6 +74,7 @@ public class RingTimeDAODynamoDB {
                 MORPHEUS_ID_ATTRIBUTE_NAME,
                 RING_AT_ATTRIBUTE_NAME,
                 EXPECTED_AT_ATTRIBUTE_NAME,
+                SOUND_ID_ATTRIBUTE_NAME,
                 CREATED_AT_ATTRIBUTE_NAME);
 
         final QueryRequest queryRequest = new QueryRequest(this.tableName)
@@ -95,7 +100,9 @@ public class RingTimeDAODynamoDB {
                 long expected = Long.valueOf(item.get(EXPECTED_AT_ATTRIBUTE_NAME).getN());
                 long actual = Long.valueOf(item.get(RING_AT_ATTRIBUTE_NAME).getN());
                 long createdAt = Long.valueOf(item.get(CREATED_AT_ATTRIBUTE_NAME).getN());
-                final RingTime ringTime = new RingTime(actual, expected, createdAt);
+                long soundId = Integer.valueOf(item.get(SOUND_ID_ATTRIBUTE_NAME).getN());
+
+                final RingTime ringTime = new RingTime(actual, expected, createdAt, soundId);
 
                 return ringTime;
             }catch (Exception ex){
@@ -106,6 +113,7 @@ public class RingTimeDAODynamoDB {
         return RingTime.createEmpty();
     }
 
+    @Timed
     public void setNextRingTime(final String deviceId, final RingTime ringTime){
 
 
@@ -113,6 +121,8 @@ public class RingTimeDAODynamoDB {
         items.put(MORPHEUS_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
         items.put(EXPECTED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(ringTime.expectedRingTimeUTC)));
         items.put(RING_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(ringTime.actualRingTimeUTC)));
+        items.put(SOUND_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(ringTime.soundId)));
+
         items.put(CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(DateTime.now().getMillis())));
 
         final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, items);

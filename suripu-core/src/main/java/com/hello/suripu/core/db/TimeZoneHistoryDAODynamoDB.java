@@ -17,6 +17,7 @@ import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.TimeZoneHistory;
+import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -53,6 +54,7 @@ public class TimeZoneHistoryDAODynamoDB {
     }
 
 
+    @Timed
     public Optional<TimeZoneHistory> updateTimeZone(long accountId, final String clientTimeZoneId, int clientTimeZoneOffsetMillis){
 
         final long updatedAt = DateTime.now().getMillis();
@@ -86,6 +88,7 @@ public class TimeZoneHistoryDAODynamoDB {
     }
 
 
+    @Timed
     public Optional<TimeZoneHistory> getTimeZoneAt(long accountId, long instant){
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
 
@@ -142,6 +145,7 @@ public class TimeZoneHistoryDAODynamoDB {
         return Optional.absent();
     }
 
+    @Timed
     public Optional<TimeZoneHistory> getCurrentTimeZone(final long accountId){
 
         final Optional<TimeZoneHistory> lastTimeZone = getTimeZoneAt(accountId, DateTime.now().getMillis());

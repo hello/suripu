@@ -69,17 +69,17 @@ public class RingTimeDAODynamoDBIT {
 
         final DateTime alarmTime1 = new DateTime(2014, 9, 23, 8, 20, 0, localTimeZone);
         final DateTime actualTime1 = new DateTime(2014, 9, 23, 8, 10, 0, localTimeZone);
-        final RingTime ringTime1 = new RingTime(actualTime1.getMillis(), alarmTime1.getMillis(), DateTime.now().getMillis());
+        final RingTime ringTime1 = new RingTime(actualTime1.getMillis(), alarmTime1.getMillis(), DateTime.now().getMillis(), 0);
 
         final DateTime alarmTime2 = new DateTime(2014, 9, 24, 9, 10, 0, localTimeZone);
         final DateTime actualTime2 = new DateTime(2014, 9, 24, 9, 0, 0, localTimeZone);
-        final RingTime ringTime2 = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), DateTime.now().getMillis());
+        final RingTime ringTime2 = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), DateTime.now().getMillis(), 0);
 
         this.ringTimeDAODynamoDB.setNextRingTime(deviceId, ringTime1);
         this.ringTimeDAODynamoDB.setNextRingTime(deviceId, ringTime2);
 
         final RingTime nextRingTime = this.ringTimeDAODynamoDB.getNextRingTime(deviceId);
-        final RingTime expected = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), DateTime.now().getMillis());
+        final RingTime expected = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), DateTime.now().getMillis(), 0);
 
         assertThat(nextRingTime, is(expected));
     }

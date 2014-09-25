@@ -18,6 +18,7 @@ public class AlarmRecordProcessorFactory implements IRecordProcessorFactory {
     private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDAO deviceDAO;
+    private final AlarmWorkerConfiguration configuration;
 
 
     public AlarmRecordProcessorFactory(
@@ -25,18 +26,20 @@ public class AlarmRecordProcessorFactory implements IRecordProcessorFactory {
             final RingTimeDAODynamoDB ringTimeDAODynamoDB,
             final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB,
             final TrackerMotionDAO trackerMotionDAO,
-            final DeviceDAO deviceDAO) {
+            final DeviceDAO deviceDAO,
+            final AlarmWorkerConfiguration configuration) {
         this.alarmDAODynamoDB = alarmDAODynamoDB;
         this.trackerMotionDAO = trackerMotionDAO;
         this.timeZoneHistoryDAODynamoDB = timeZoneHistoryDAODynamoDB;
         this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
         this.deviceDAO = deviceDAO;
+        this.configuration = configuration;
     }
 
 
     @Override
     public IRecordProcessor createProcessor() {
         return new AlarmRecordProcessor(this.alarmDAODynamoDB, this.ringTimeDAODynamoDB, this.timeZoneHistoryDAODynamoDB,
-                this.trackerMotionDAO, this.deviceDAO);
+                this.trackerMotionDAO, this.deviceDAO, this.configuration);
     }
 }

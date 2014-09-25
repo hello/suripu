@@ -15,7 +15,6 @@ import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
-import com.hello.suripu.workers.pillscorer.PillScoreProcessor;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.db.ManagedDataSource;
@@ -36,7 +35,7 @@ import java.util.UUID;
  * Created by pangwu on 9/23/14.
  */
 public class AlarmWorkerCommand extends ConfiguredCommand<AlarmWorkerConfiguration> {
-    private final static Logger LOGGER = LoggerFactory.getLogger(PillScoreProcessor.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(AlarmWorkerCommand.class);
 
     protected AlarmWorkerCommand(String name, String description) {
         super(name, description);
@@ -85,7 +84,7 @@ public class AlarmWorkerCommand extends ConfiguredCommand<AlarmWorkerConfigurati
         kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
 
         final IRecordProcessorFactory factory = new AlarmRecordProcessorFactory(alarmDAODynamoDB, ringTimeDAODynamoDB, timeZoneHistoryDAODynamoDB,
-                trackerMotionDAO, deviceDAO);
+                trackerMotionDAO, deviceDAO, configuration);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
     }
