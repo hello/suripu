@@ -10010,6 +10010,20 @@ public final class InputProtos {
        * <code>optional int32 ringtone_id = 3 [default = 1];</code>
        */
       int getRingtoneId();
+
+      // repeated int64 ringtone_ids = 4 [packed = true];
+      /**
+       * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+       */
+      java.util.List<java.lang.Long> getRingtoneIdsList();
+      /**
+       * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+       */
+      int getRingtoneIdsCount();
+      /**
+       * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+       */
+      long getRingtoneIds(int index);
     }
     /**
      * Protobuf type {@code hello.SyncResponse.Alarm}
@@ -10077,6 +10091,27 @@ public final class InputProtos {
                 ringtoneId_ = input.readInt32();
                 break;
               }
+              case 32: {
+                if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+                  ringtoneIds_ = new java.util.ArrayList<java.lang.Long>();
+                  mutable_bitField0_ |= 0x00000008;
+                }
+                ringtoneIds_.add(input.readInt64());
+                break;
+              }
+              case 34: {
+                int length = input.readRawVarint32();
+                int limit = input.pushLimit(length);
+                if (!((mutable_bitField0_ & 0x00000008) == 0x00000008) && input.getBytesUntilLimit() > 0) {
+                  ringtoneIds_ = new java.util.ArrayList<java.lang.Long>();
+                  mutable_bitField0_ |= 0x00000008;
+                }
+                while (input.getBytesUntilLimit() > 0) {
+                  ringtoneIds_.add(input.readInt64());
+                }
+                input.popLimit(limit);
+                break;
+              }
             }
           }
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -10085,6 +10120,9 @@ public final class InputProtos {
           throw new com.google.protobuf.InvalidProtocolBufferException(
               e.getMessage()).setUnfinishedMessage(this);
         } finally {
+          if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+            ringtoneIds_ = java.util.Collections.unmodifiableList(ringtoneIds_);
+          }
           this.unknownFields = unknownFields.build();
           makeExtensionsImmutable();
         }
@@ -10165,10 +10203,35 @@ public final class InputProtos {
         return ringtoneId_;
       }
 
+      // repeated int64 ringtone_ids = 4 [packed = true];
+      public static final int RINGTONE_IDS_FIELD_NUMBER = 4;
+      private java.util.List<java.lang.Long> ringtoneIds_;
+      /**
+       * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+       */
+      public java.util.List<java.lang.Long>
+          getRingtoneIdsList() {
+        return ringtoneIds_;
+      }
+      /**
+       * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+       */
+      public int getRingtoneIdsCount() {
+        return ringtoneIds_.size();
+      }
+      /**
+       * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+       */
+      public long getRingtoneIds(int index) {
+        return ringtoneIds_.get(index);
+      }
+      private int ringtoneIdsMemoizedSerializedSize = -1;
+
       private void initFields() {
         startTime_ = 0;
         endTime_ = 0;
         ringtoneId_ = 1;
+        ringtoneIds_ = java.util.Collections.emptyList();
       }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
@@ -10191,6 +10254,13 @@ public final class InputProtos {
         if (((bitField0_ & 0x00000004) == 0x00000004)) {
           output.writeInt32(3, ringtoneId_);
         }
+        if (getRingtoneIdsList().size() > 0) {
+          output.writeRawVarint32(34);
+          output.writeRawVarint32(ringtoneIdsMemoizedSerializedSize);
+        }
+        for (int i = 0; i < ringtoneIds_.size(); i++) {
+          output.writeInt64NoTag(ringtoneIds_.get(i));
+        }
         getUnknownFields().writeTo(output);
       }
 
@@ -10211,6 +10281,20 @@ public final class InputProtos {
         if (((bitField0_ & 0x00000004) == 0x00000004)) {
           size += com.google.protobuf.CodedOutputStream
             .computeInt32Size(3, ringtoneId_);
+        }
+        {
+          int dataSize = 0;
+          for (int i = 0; i < ringtoneIds_.size(); i++) {
+            dataSize += com.google.protobuf.CodedOutputStream
+              .computeInt64SizeNoTag(ringtoneIds_.get(i));
+          }
+          size += dataSize;
+          if (!getRingtoneIdsList().isEmpty()) {
+            size += 1;
+            size += com.google.protobuf.CodedOutputStream
+                .computeInt32SizeNoTag(dataSize);
+          }
+          ringtoneIdsMemoizedSerializedSize = dataSize;
         }
         size += getUnknownFields().getSerializedSize();
         memoizedSerializedSize = size;
@@ -10334,6 +10418,8 @@ public final class InputProtos {
           bitField0_ = (bitField0_ & ~0x00000002);
           ringtoneId_ = 1;
           bitField0_ = (bitField0_ & ~0x00000004);
+          ringtoneIds_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000008);
           return this;
         }
 
@@ -10374,6 +10460,11 @@ public final class InputProtos {
             to_bitField0_ |= 0x00000004;
           }
           result.ringtoneId_ = ringtoneId_;
+          if (((bitField0_ & 0x00000008) == 0x00000008)) {
+            ringtoneIds_ = java.util.Collections.unmodifiableList(ringtoneIds_);
+            bitField0_ = (bitField0_ & ~0x00000008);
+          }
+          result.ringtoneIds_ = ringtoneIds_;
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -10398,6 +10489,16 @@ public final class InputProtos {
           }
           if (other.hasRingtoneId()) {
             setRingtoneId(other.getRingtoneId());
+          }
+          if (!other.ringtoneIds_.isEmpty()) {
+            if (ringtoneIds_.isEmpty()) {
+              ringtoneIds_ = other.ringtoneIds_;
+              bitField0_ = (bitField0_ & ~0x00000008);
+            } else {
+              ensureRingtoneIdsIsMutable();
+              ringtoneIds_.addAll(other.ringtoneIds_);
+            }
+            onChanged();
           }
           this.mergeUnknownFields(other.getUnknownFields());
           return this;
@@ -10521,6 +10622,72 @@ public final class InputProtos {
         public Builder clearRingtoneId() {
           bitField0_ = (bitField0_ & ~0x00000004);
           ringtoneId_ = 1;
+          onChanged();
+          return this;
+        }
+
+        // repeated int64 ringtone_ids = 4 [packed = true];
+        private java.util.List<java.lang.Long> ringtoneIds_ = java.util.Collections.emptyList();
+        private void ensureRingtoneIdsIsMutable() {
+          if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+            ringtoneIds_ = new java.util.ArrayList<java.lang.Long>(ringtoneIds_);
+            bitField0_ |= 0x00000008;
+           }
+        }
+        /**
+         * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+         */
+        public java.util.List<java.lang.Long>
+            getRingtoneIdsList() {
+          return java.util.Collections.unmodifiableList(ringtoneIds_);
+        }
+        /**
+         * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+         */
+        public int getRingtoneIdsCount() {
+          return ringtoneIds_.size();
+        }
+        /**
+         * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+         */
+        public long getRingtoneIds(int index) {
+          return ringtoneIds_.get(index);
+        }
+        /**
+         * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+         */
+        public Builder setRingtoneIds(
+            int index, long value) {
+          ensureRingtoneIdsIsMutable();
+          ringtoneIds_.set(index, value);
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+         */
+        public Builder addRingtoneIds(long value) {
+          ensureRingtoneIdsIsMutable();
+          ringtoneIds_.add(value);
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+         */
+        public Builder addAllRingtoneIds(
+            java.lang.Iterable<? extends java.lang.Long> values) {
+          ensureRingtoneIdsIsMutable();
+          super.addAll(values, ringtoneIds_);
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+         */
+        public Builder clearRingtoneIds() {
+          ringtoneIds_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000008);
           onChanged();
           return this;
         }
@@ -15547,10 +15714,18 @@ public final class InputProtos {
     // optional int64 value = 4;
     /**
      * <code>optional int64 value = 4;</code>
+     *
+     * <pre>
+     * data in milli-g
+     * </pre>
      */
     boolean hasValue();
     /**
      * <code>optional int64 value = 4;</code>
+     *
+     * <pre>
+     * data in milli-g
+     * </pre>
      */
     long getValue();
 
@@ -15791,12 +15966,20 @@ public final class InputProtos {
     private long value_;
     /**
      * <code>optional int64 value = 4;</code>
+     *
+     * <pre>
+     * data in milli-g
+     * </pre>
      */
     public boolean hasValue() {
       return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
      * <code>optional int64 value = 4;</code>
+     *
+     * <pre>
+     * data in milli-g
+     * </pre>
      */
     public long getValue() {
       return value_;
@@ -16306,18 +16489,30 @@ public final class InputProtos {
       private long value_ ;
       /**
        * <code>optional int64 value = 4;</code>
+       *
+       * <pre>
+       * data in milli-g
+       * </pre>
        */
       public boolean hasValue() {
         return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
        * <code>optional int64 value = 4;</code>
+       *
+       * <pre>
+       * data in milli-g
+       * </pre>
        */
       public long getValue() {
         return value_;
       }
       /**
        * <code>optional int64 value = 4;</code>
+       *
+       * <pre>
+       * data in milli-g
+       * </pre>
        */
       public Builder setValue(long value) {
         bitField0_ |= 0x00000008;
@@ -16327,6 +16522,10 @@ public final class InputProtos {
       }
       /**
        * <code>optional int64 value = 4;</code>
+       *
+       * <pre>
+       * data in milli-g
+       * </pre>
        */
       public Builder clearValue() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -20922,7 +21121,7 @@ public final class InputProtos {
       "\022\021\n\tsignature\030\005 \001(\014\"%\n\022ActivationRespons" +
       "e\022\017\n\007success\030\001 \001(\010\"`\n\013SyncRequest\022\021\n\tdev" +
       "ice_id\030\001 \001(\t\022\030\n\020firmware_version\030\002 \001(\t\022\021",
-      "\n\tsignature\030\003 \001(\014\022\021\n\tsomething\030\004 \001(\t\"\341\007\n" +
+      "\n\tsignature\030\003 \001(\014\022\021\n\tsomething\030\004 \001(\t\"\373\007\n" +
       "\014SyncResponse\022\024\n\014upload_cycle\030\001 \001(\005\022\022\n\ns" +
       "ync_cycle\030\002 \001(\005\022\025\n\racc_scan_cyle\030\003 \001(\005\022\035" +
       "\n\025acc_sampling_interval\030\004 \001(\005\022 \n\030device_" +
@@ -20931,44 +21130,45 @@ public final class InputProtos {
       "ion\030\007 \001(\0132!.hello.SyncResponse.PairingAc" +
       "tion\0223\n\013white_noise\030\010 \001(\0132\036.hello.SyncRe" +
       "sponse.WhiteNoise\0225\n\014flash_action\030\t \001(\0132" +
-      "\037.hello.SyncResponse.FlashAction\032E\n\005Alar",
+      "\037.hello.SyncResponse.FlashAction\032_\n\005Alar",
       "m\022\022\n\nstart_time\030\001 \001(\005\022\020\n\010end_time\030\002 \001(\005\022" +
-      "\026\n\013ringtone_id\030\003 \001(\005:\0011\032}\n\rPairingAction" +
-      "\022\014\n\004ssid\030\001 \001(\t\022:\n\004type\030\002 \001(\0162,.hello.Syn" +
-      "cResponse.PairingAction.ActionType\"\"\n\nAc" +
-      "tionType\022\010\n\004PAIR\020\000\022\n\n\006UNPAIR\020\001\032D\n\nWhiteN" +
-      "oise\022\022\n\nstart_time\030\001 \001(\005\022\020\n\010end_time\030\002 \001" +
-      "(\005\022\020\n\010sound_id\030\003 \001(\005\032\361\002\n\013FlashAction\0228\n\005" +
-      "led_1\030\001 \001(\0132).hello.SyncResponse.FlashAc" +
-      "tion.LEDAction\0228\n\005led_2\030\002 \001(\0132).hello.Sy" +
-      "ncResponse.FlashAction.LEDAction\0228\n\005led_",
-      "3\030\003 \001(\0132).hello.SyncResponse.FlashAction" +
-      ".LEDAction\0228\n\005led_4\030\004 \001(\0132).hello.SyncRe" +
-      "sponse.FlashAction.LEDAction\0228\n\005led_5\030\005 " +
-      "\001(\0132).hello.SyncResponse.FlashAction.LED" +
-      "Action\032@\n\tLEDAction\022\r\n\005color\030\001 \001(\005\022\022\n\nst" +
-      "art_time\030\002 \001(\005\022\020\n\010end_time\030\003 \001(\005\"=\n\010Pill" +
-      "Data\022\017\n\007pill_id\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(" +
-      "\t\022\014\n\004data\030\003 \001(\014\"n\n\017PillDataKinesis\022\017\n\007pi" +
-      "ll_id\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(\t\022\021\n\ttimes" +
-      "tamp\030\003 \001(\003\022\r\n\005value\030\004 \001(\003\022\024\n\014offsetMilli",
-      "s\030\005 \001(\005\"\324\001\n\016PillBlobHeader\022\035\n\025first_sequ" +
-      "ence_number\030\001 \001(\t\022\034\n\024last_sequence_numbe" +
-      "r\030\002 \001(\t\022\031\n\021first_sample_date\030\003 \001(\t\022\030\n\020la" +
-      "st_sample_date\030\004 \001(\t\022%\n\035compressed_bitma" +
-      "p_account_ids\030\005 \001(\014\022\026\n\016data_file_name\030\006 " +
-      "\001(\t\022\021\n\tnum_items\030\007 \001(\005\"*\n\010PillBlob\022\036\n\005it" +
-      "ems\030\001 \003(\0132\017.hello.PillData\"\214\001\n\nEventBatc" +
-      "h\022+\n\006events\030\001 \003(\0132\033.hello.EventBatch.Eve" +
-      "ntItem\032Q\n\tEventItem\022\027\n\017start_timestamp\030\001" +
-      " \001(\003\022\025\n\rend_timestamp\030\002 \001(\003\022\024\n\014offsetMil",
-      "lis\030\003 \001(\005\"\316\001\n\rperiodic_data\022\021\n\tunix_time" +
-      "\030\001 \001(\005\022\r\n\005light\030\002 \001(\005\022\023\n\013temperature\030\003 \001" +
-      "(\005\022\020\n\010humidity\030\004 \001(\005\022\014\n\004dust\030\005 \001(\005\022\014\n\004na" +
-      "me\030\006 \001(\t\022\013\n\003mac\030\007 \001(\014\022\031\n\021light_variabili" +
-      "ty\030\010 \001(\005\022\026\n\016light_tonality\030\t \001(\005\022\030\n\020firm" +
-      "ware_version\030\n \001(\005B)\n\032com.hello.suripu.a" +
-      "pi.inputB\013InputProtos"
+      "\026\n\013ringtone_id\030\003 \001(\005:\0011\022\030\n\014ringtone_ids\030" +
+      "\004 \003(\003B\002\020\001\032}\n\rPairingAction\022\014\n\004ssid\030\001 \001(\t" +
+      "\022:\n\004type\030\002 \001(\0162,.hello.SyncResponse.Pair" +
+      "ingAction.ActionType\"\"\n\nActionType\022\010\n\004PA" +
+      "IR\020\000\022\n\n\006UNPAIR\020\001\032D\n\nWhiteNoise\022\022\n\nstart_" +
+      "time\030\001 \001(\005\022\020\n\010end_time\030\002 \001(\005\022\020\n\010sound_id" +
+      "\030\003 \001(\005\032\361\002\n\013FlashAction\0228\n\005led_1\030\001 \001(\0132)." +
+      "hello.SyncResponse.FlashAction.LEDAction" +
+      "\0228\n\005led_2\030\002 \001(\0132).hello.SyncResponse.Fla",
+      "shAction.LEDAction\0228\n\005led_3\030\003 \001(\0132).hell" +
+      "o.SyncResponse.FlashAction.LEDAction\0228\n\005" +
+      "led_4\030\004 \001(\0132).hello.SyncResponse.FlashAc" +
+      "tion.LEDAction\0228\n\005led_5\030\005 \001(\0132).hello.Sy" +
+      "ncResponse.FlashAction.LEDAction\032@\n\tLEDA" +
+      "ction\022\r\n\005color\030\001 \001(\005\022\022\n\nstart_time\030\002 \001(\005" +
+      "\022\020\n\010end_time\030\003 \001(\005\"=\n\010PillData\022\017\n\007pill_i" +
+      "d\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(\t\022\014\n\004data\030\003 \001(" +
+      "\014\"n\n\017PillDataKinesis\022\017\n\007pill_id\030\001 \001(\t\022\022\n" +
+      "\naccount_id\030\002 \001(\t\022\021\n\ttimestamp\030\003 \001(\003\022\r\n\005",
+      "value\030\004 \001(\003\022\024\n\014offsetMillis\030\005 \001(\005\"\324\001\n\016Pi" +
+      "llBlobHeader\022\035\n\025first_sequence_number\030\001 " +
+      "\001(\t\022\034\n\024last_sequence_number\030\002 \001(\t\022\031\n\021fir" +
+      "st_sample_date\030\003 \001(\t\022\030\n\020last_sample_date" +
+      "\030\004 \001(\t\022%\n\035compressed_bitmap_account_ids\030" +
+      "\005 \001(\014\022\026\n\016data_file_name\030\006 \001(\t\022\021\n\tnum_ite" +
+      "ms\030\007 \001(\005\"*\n\010PillBlob\022\036\n\005items\030\001 \003(\0132\017.he" +
+      "llo.PillData\"\214\001\n\nEventBatch\022+\n\006events\030\001 " +
+      "\003(\0132\033.hello.EventBatch.EventItem\032Q\n\tEven" +
+      "tItem\022\027\n\017start_timestamp\030\001 \001(\003\022\025\n\rend_ti",
+      "mestamp\030\002 \001(\003\022\024\n\014offsetMillis\030\003 \001(\005\"\316\001\n\r" +
+      "periodic_data\022\021\n\tunix_time\030\001 \001(\005\022\r\n\005ligh" +
+      "t\030\002 \001(\005\022\023\n\013temperature\030\003 \001(\005\022\020\n\010humidity" +
+      "\030\004 \001(\005\022\014\n\004dust\030\005 \001(\005\022\014\n\004name\030\006 \001(\t\022\013\n\003ma" +
+      "c\030\007 \001(\014\022\031\n\021light_variability\030\010 \001(\005\022\026\n\016li" +
+      "ght_tonality\030\t \001(\005\022\030\n\020firmware_version\030\n" +
+      " \001(\005B)\n\032com.hello.suripu.api.inputB\013Inpu" +
+      "tProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -21058,7 +21258,7 @@ public final class InputProtos {
           internal_static_hello_SyncResponse_Alarm_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_SyncResponse_Alarm_descriptor,
-              new java.lang.String[] { "StartTime", "EndTime", "RingtoneId", });
+              new java.lang.String[] { "StartTime", "EndTime", "RingtoneId", "RingtoneIds", });
           internal_static_hello_SyncResponse_PairingAction_descriptor =
             internal_static_hello_SyncResponse_descriptor.getNestedTypes().get(1);
           internal_static_hello_SyncResponse_PairingAction_fieldAccessorTable = new

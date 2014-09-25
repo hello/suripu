@@ -37,7 +37,7 @@ import static org.mockito.Mockito.when;
 /**
  * Created by pangwu on 9/24/14.
  */
-public class RingProcessorTest {
+public class RingProcessorSingleUserTest {
 
     private final AlarmDAODynamoDB alarmDAODynamoDB = mock(AlarmDAODynamoDB.class);
     private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = mock(TimeZoneHistoryDAODynamoDB.class);
@@ -68,7 +68,7 @@ public class RingProcessorTest {
                 DateTimeZone.forID("America/Los_Angeles").getOffset(DateTime.now()),
                 "America/Los_Angeles")));
 
-        final RingTime ringTime = Alarm.Utils.getNextRingTimestamp(alarmList,
+        final RingTime ringTime = Alarm.Utils.getNextRingTime(alarmList,
                 new DateTime(2014, 9, 23, 8, 0, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
@@ -116,7 +116,6 @@ public class RingProcessorTest {
 
         when(this.ringTimeDAODynamoDB.getNextRingTime(testDeviceId)).thenReturn(new RingTime(deadline.getMillis(),
                 deadline.getMillis(),
-                dataCollectionTime.getMillis(),
                 100));
 
         // For minutes that not yet trigger smart alarm computation
@@ -236,6 +235,8 @@ public class RingProcessorTest {
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
         assertThat(ringTime.isSmart(), is(false));
+
+        when(this.ringTimeDAODynamoDB.getNextRingTime(testDeviceId)).thenReturn(ringTime);
 
         // For moments that triggered smart alarm computation
         ringTime = RingProcessor.updateNextRingTime(this.alarmDAODynamoDB,
@@ -402,6 +403,8 @@ public class RingProcessorTest {
         assertThat(actualRingTime.isEqual(deadline), is(true));
         assertThat(ringTime.isRegular(), is(true));
 
+        when(this.ringTimeDAODynamoDB.getNextRingTime(testDeviceId)).thenReturn(ringTime);
+
         // Minutes after smart alarm triggered but before deadline.
         ringTime = RingProcessor.updateNextRingTime(this.alarmDAODynamoDB,
                 this.timeZoneHistoryDAODynamoDB,
@@ -524,15 +527,91 @@ public class RingProcessorTest {
 
 
     @Test
+    public void testAlarmTransitionByTime(){
+        // Test how alarm behave when time goes by.
+
+        final List<Alarm> alarmList = new ArrayList<Alarm>();
+        final HashSet<Integer> dayOfWeek = new HashSet<Integer>();
+        dayOfWeek.add(DateTimeConstants.TUESDAY);
+
+        alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
+                false, true, true,
+                new AlarmSound(100, "The Star Spangled Banner")));
+
+        final HashSet<Integer> dayOfWeek2 = new HashSet<Integer>();
+        dayOfWeek2.add(DateTimeConstants.WEDNESDAY);
+        alarmList.add(new Alarm(2014, 9, 24, 9, 20, dayOfWeek2,
+                false, true, true,
+                new AlarmSound(100, "The Star Spangled Banner")));
+
+        when(this.alarmDAODynamoDB.getAlarms(1)).thenReturn(ImmutableList.copyOf(alarmList));
+
+        DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
+        final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
+
+        // Minutes before alarm triggered
+        RingTime ringTime = RingProcessor.updateNextRingTime(this.alarmDAODynamoDB,
+                this.timeZoneHistoryDAODynamoDB,
+                this.ringTimeDAODynamoDB,
+                this.deviceDAO,
+                this.trackerMotionDAO,
+                this.testDeviceId,
+                new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")),
+                20,
+                15);
+
+        DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
+        assertThat(actualRingTime.isEqual(deadline), is(true));
+        assertThat(ringTime.isRegular(), is(true));
+
+        when(this.ringTimeDAODynamoDB.getNextRingTime(testDeviceId)).thenReturn(ringTime);
+
+
+        // Minute that trigger smart alarm processing
+        ringTime = RingProcessor.updateNextRingTime(this.alarmDAODynamoDB,
+                this.timeZoneHistoryDAODynamoDB,
+                this.ringTimeDAODynamoDB,
+                this.deviceDAO,
+                this.trackerMotionDAO,
+                this.testDeviceId,
+                dataCollectionTime,
+                20,
+                15);
+
+        actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
+        assertThat(actualRingTime.isBefore(deadline), is(true));
+        assertThat(ringTime.isSmart(), is(true));
+
+        when(this.ringTimeDAODynamoDB.getNextRingTime(testDeviceId)).thenReturn(ringTime);
+
+        // Minutes after smart alarm processing but before next smart alarm process triggered.
+        deadline = new DateTime(2014, 9, 24, 9, 20, DateTimeZone.forID("America/Los_Angeles"));
+        ringTime = RingProcessor.updateNextRingTime(this.alarmDAODynamoDB,
+                this.timeZoneHistoryDAODynamoDB,
+                this.ringTimeDAODynamoDB,
+                this.deviceDAO,
+                this.trackerMotionDAO,
+                this.testDeviceId,
+                new DateTime(2014, 9, 24, 7, 20, DateTimeZone.forID("America/Los_Angeles")),
+                20,
+                15);
+
+        actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
+        assertThat(actualRingTime.isEqual(deadline), is(true));
+        assertThat(ringTime.isRegular(), is(true));
+    }
+
+
+    @Test
     public void testSmartAlarmAlreadySetOn_09_23_2014_Update(){
         // Test scenario when computation get triggered, a smart alarm in the future is set.
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
 
         // Set the smart alarm in the future.
-        when(this.ringTimeDAODynamoDB.getNextRingTime(testDeviceId)).thenReturn(new RingTime(deadline.minusMinutes(3).getMillis(),
+        when(this.ringTimeDAODynamoDB.getNextRingTime(testDeviceId)).thenReturn(
+                new RingTime(deadline.minusMinutes(3).getMillis(),
                 deadline.getMillis(),
-                dataCollectionTime.getMillis(),
                 100));
 
 
@@ -567,4 +646,7 @@ public class RingProcessorTest {
         assertThat(ringTime.actualRingTimeUTC, is(deadline.minusMinutes(3).getMillis()));
         assertThat(ringTime.isSmart(), is(true));
     }
+
+
+
 }

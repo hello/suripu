@@ -222,7 +222,7 @@ public class Alarm {
             return true;
         }
 
-        public static RingTime getNextRingTimestamp(final List<Alarm> alarms, long currentTimestampUTC, final DateTimeZone timeZone){
+        public static RingTime getNextRingTime(final List<Alarm> alarms, long currentTimestampUTC, final DateTimeZone timeZone){
             if(!isValidSmartAlarms(alarms)){
                 throw new IllegalArgumentException("Invalid alarms.");
             }
@@ -244,14 +244,14 @@ public class Alarm {
                         }
 
                         if(ringTime.isAfter(currentLocalTime)) {
-                            possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), DateTime.now().getMillis(), alarm.sound.id));
+                            possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), alarm.sound.id));
                         }
                     }
                 }else{
                     // None repeated alarm, check if still valid
                     final DateTime ringTime = new DateTime(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour, 0, timeZone);
                     if(ringTime.isAfter(currentLocalTime)){
-                        possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), DateTime.now().getMillis(), alarm.sound.id));
+                        possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), alarm.sound.id));
                     }
                 }
             }

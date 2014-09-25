@@ -10,6 +10,7 @@ import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.api.input.InputProtos.SimpleSensorBatch;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.crypto.CryptoHelper;
+import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.PublicKeyStore;
@@ -28,6 +29,7 @@ import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.service.SignedMessage;
 import com.yammer.metrics.annotation.Timed;
 import org.apache.commons.codec.binary.Hex;
@@ -71,6 +73,7 @@ public class ReceiveResource {
     private final TrackerMotionDAO trackerMotionDAO;
     private final PublicKeyStore publicKeyStore;
 
+    private final AlarmDAODynamoDB alarmDAODynamoDB;
     private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
     private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
 
@@ -88,6 +91,8 @@ public class ReceiveResource {
                            final TrackerMotionDAO trackerMotionDAO,
                            final PublicKeyStore publicKeyStore,
                            final KinesisLoggerFactory kinesisLoggerFactory,
+
+                           final AlarmDAODynamoDB alarmDAODynamoDB,
                            final RingTimeDAODynamoDB ringTimeDAODynamoDB,
                            final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB,
                            final Boolean debug) {
@@ -100,6 +105,7 @@ public class ReceiveResource {
         cryptoHelper = new CryptoHelper();
         this.kinesisLoggerFactory = kinesisLoggerFactory;
 
+        this.alarmDAODynamoDB = alarmDAODynamoDB;
         this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
         this.timeZoneHistoryDAODynamoDB = timeZoneHistoryDAODynamoDB;
 
@@ -328,24 +334,31 @@ public class ReceiveResource {
 
 
         final InputProtos.SyncResponse.Builder responseBuilder = InputProtos.SyncResponse.newBuilder();
-        final RingTime nextRingTime = this.ringTimeDAODynamoDB.getNextRingTime(deviceName);
+        final RingTime nextRingTimeFromWorker = this.ringTimeDAODynamoDB.getNextRingTime(deviceName);
+        final RingTime nextRegularRingTime = RingProcessor.getNextRegularRingTime(this.alarmDAODynamoDB, this.timeZoneHistoryDAODynamoDB,
+                this.deviceDAO,
+                deviceName,
+                DateTime.now());
 
+        RingTime replyRingTime = nextRegularRingTime;
         // Now the ring time for different users is sorted, get the nearest one.
-        if(!nextRingTime.isEmpty()) {
-
-            if(new DateTime(nextRingTime.actualRingTimeUTC, DateTimeZone.UTC).isAfter(DateTime.now().minusMinutes(1))) {
-                long nextRingTimestamp = nextRingTime.actualRingTimeUTC;
-                int ringDurationInMS = 30 * DateTimeConstants.MILLIS_PER_SECOND;  // TODO: make this flexible so we can adjust based on user preferences.
-
-                final InputProtos.SyncResponse.Alarm alarm = InputProtos.SyncResponse.Alarm.newBuilder()
-                        .setRingtoneId(99)
-                        .setStartTime((int) (nextRingTimestamp / DateTimeConstants.MILLIS_PER_SECOND))
-                        .setEndTime((int) ((nextRingTimestamp + ringDurationInMS) / DateTimeConstants.MILLIS_PER_SECOND))
-                        .build();
-
-                responseBuilder.setAlarm(alarm);
-            }
+        if(nextRegularRingTime.equals(nextRingTimeFromWorker)) {
+            replyRingTime = nextRingTimeFromWorker;
         }
+
+        long nextRingTimestamp = replyRingTime.actualRingTimeUTC;
+        int ringDurationInMS = 30 * DateTimeConstants.MILLIS_PER_SECOND;  // TODO: make this flexible so we can adjust based on user preferences.
+
+        final InputProtos.SyncResponse.Alarm.Builder alarmBuilder = InputProtos.SyncResponse.Alarm.newBuilder()
+                .setStartTime((int) (nextRingTimestamp / DateTimeConstants.MILLIS_PER_SECOND))
+                .setEndTime((int) ((nextRingTimestamp + ringDurationInMS) / DateTimeConstants.MILLIS_PER_SECOND));
+
+        for(int i = 0; i < replyRingTime.soundIds.length; i++){
+            alarmBuilder.setRingtoneIds(i, replyRingTime.soundIds[i]);
+        }
+
+        responseBuilder.setAlarm(alarmBuilder.build());
+
 
         final InputProtos.SyncResponse syncResponse = responseBuilder.build();
 

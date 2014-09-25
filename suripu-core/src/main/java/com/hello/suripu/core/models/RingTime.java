@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
-import org.joda.time.DateTime;
 
 /**
  * Created by pangwu on 9/23/14.
@@ -19,30 +18,36 @@ public class RingTime {
     @JsonProperty("expected_ring_time_utc")
     public final long expectedRingTimeUTC;
 
-    @JsonProperty("sound_id")
-    public final long soundId;
-
-    @JsonProperty("created_at_utc")
-    public final long createdAtUTC;
+    @JsonProperty("sound_ids")
+    public final long[] soundIds;
 
     @JsonCreator
     public RingTime(@JsonProperty("actual_ring_time_utc") long actual,
                     @JsonProperty("expected_ring_time_utc") long expected,
-                    @JsonProperty("created_at_utc") long createdAt,
-                    @JsonProperty("sound_id") long soundId){
+                    @JsonProperty("sound_ids") long[] soundIds){
         if(expected < actual){
             throw new IllegalArgumentException("Actual ring behind deadline.");
         }
 
         this.actualRingTimeUTC = actual;
         this.expectedRingTimeUTC = expected;
-        this.createdAtUTC = createdAt;
-        this.soundId = soundId;
+        this.soundIds = soundIds;
+
+    }
+
+    public RingTime(long actual, long expected, long soundId){
+        if(expected < actual){
+            throw new IllegalArgumentException("Actual ring behind deadline.");
+        }
+
+        this.actualRingTimeUTC = actual;
+        this.expectedRingTimeUTC = expected;
+        this.soundIds = new long[]{ soundId };
 
     }
 
     public static RingTime createEmpty(){
-        return new RingTime(EMPTY, EMPTY, DateTime.now().getMillis(), -1);
+        return new RingTime(EMPTY, EMPTY, new long[0]);
     }
 
     @JsonIgnore
