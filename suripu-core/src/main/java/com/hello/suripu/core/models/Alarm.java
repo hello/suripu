@@ -207,9 +207,15 @@ public class Alarm {
 
 
     public static class Utils{
+
+        /**
+         * Make sure there is only one alarm per user per day
+         * @param alarms
+         * @return
+         */
         public static boolean isValidSmartAlarms(final List<Alarm> alarms){
             final Set<Integer> alarmDays = new HashSet<Integer>();
-            for(final Alarm alarm:alarms){
+            for(final Alarm alarm: alarms){
                 for(final Integer dayOfWeek:alarm.dayOfWeek) {
                     if (alarmDays.contains(dayOfWeek)) {
                         return false;
@@ -222,7 +228,15 @@ public class Alarm {
             return true;
         }
 
+        /**
+         * Computes the next moment at which the alarm should ring
+         * @param alarms list of alarm templates
+         * @param currentTimestampUTC - current moment
+         * @param timeZone - time zone of the user's Sense
+         * @return
+         */
         public static RingTime getNextRingTime(final List<Alarm> alarms, long currentTimestampUTC, final DateTimeZone timeZone){
+
             if(!isValidSmartAlarms(alarms)){
                 throw new IllegalArgumentException("Invalid alarms.");
             }
