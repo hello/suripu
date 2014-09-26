@@ -12,14 +12,11 @@ import com.hello.suripu.core.crypto.CryptoHelper;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.PublicKeyStore;
-import com.hello.suripu.core.db.ScoreDAO;
-import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.TempTrackerData;
-import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -43,9 +40,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -61,11 +55,10 @@ public class ReceiveResource {
 
     private static final Pattern PG_UNIQ_PATTERN = Pattern.compile("ERROR: duplicate key value violates unique constraint \"(\\w+)\"");
     private static final Logger LOGGER = LoggerFactory.getLogger(ReceiveResource.class);
+    private static final int OFFSET_MILLIS = -25200000;
 
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
-    private final ScoreDAO scoreDAO;
-    private final TrackerMotionDAO trackerMotionDAO;
     private final PublicKeyStore publicKeyStore;
 
     private final KinesisLoggerFactory kinesisLoggerFactory;
@@ -78,15 +71,11 @@ public class ReceiveResource {
 
     public ReceiveResource(final DeviceDataDAO deviceDataDAO,
                            final DeviceDAO deviceDAO,
-                           final ScoreDAO scoreDAO,
-                           final TrackerMotionDAO trackerMotionDAO,
                            final PublicKeyStore publicKeyStore,
                            final KinesisLoggerFactory kinesisLoggerFactory,
                            final Boolean debug) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
-        this.scoreDAO = scoreDAO;
-        this.trackerMotionDAO = trackerMotionDAO;
 
         this.publicKeyStore = publicKeyStore;
         cryptoHelper = new CryptoHelper();
@@ -109,7 +98,7 @@ public class ReceiveResource {
             return;
         }
 
-        final List<DeviceAccountPair> pairs = trackerMotionDAO.getTrackerIds(accessToken.accountId);
+        final List<DeviceAccountPair> pairs = deviceDAO.getTrackerIds(accessToken.accountId);
 
         final Map<String, Long> pairsLookup = new HashMap<String, Long>(pairs.size());
         for (DeviceAccountPair pair: pairs) {
@@ -133,42 +122,7 @@ public class ReceiveResource {
                 throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
             }
 
-            final DateTime originalDateTime = new DateTime(tempTrackerData.timestamp, DateTimeZone.UTC);
-            int offsetMillis = -25200000;
-
-            final DateTime roundedDateTimeUTC = new DateTime(
-                    originalDateTime.getYear(),
-                    originalDateTime.getMonthOfYear(),
-                    originalDateTime.getDayOfMonth(),
-                    originalDateTime.getHourOfDay(),
-                    originalDateTime.getMinuteOfHour(),
-                    DateTimeZone.UTC
-            );
-
-            // Query tracker / user
-
-            final TrackerMotion trackerMotion = new TrackerMotion(
-                    0,
-                    accessToken.accountId,
-                    trackerId,
-                    roundedDateTimeUTC.getMillis(),
-                    tempTrackerData.value,
-                    offsetMillis
-            );
-
-            try {
-                final Long id = trackerMotionDAO.insertTrackerMotion(trackerMotion);
-            } catch (UnableToExecuteStatementException exception) {
-                Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
-                if (!matcher.find()) {
-                    LOGGER.error(exception.getMessage());
-                    throw new WebApplicationException(Response.serverError().build());
-                }
-                LOGGER.warn("Duplicate sensor value for account_id = {}", accessToken.accountId);
-            }
-
             // add to kinesis - 1 sample per min
-            // convert SensorSample to bytes
             if (tempTrackerData.value > 0) {
                 final String pillID = trackerId.toString();
                 final double trackerValueInG = Math.sqrt(tempTrackerData.value.doubleValue() * this.COUNTS_IN_G) - this.GRAVITY;
@@ -176,8 +130,8 @@ public class ReceiveResource {
                         .setAccountId(accessToken.accountId.toString())
                         .setPillId(pillID)
                         .setTimestamp(tempTrackerData.timestamp)
-                        .setValue((long) (trackerValueInG * 1000))
-                        .setOffsetMillis(offsetMillis)
+                        .setValue((long) (trackerValueInG * 1000)) // in milli-g
+                        .setOffsetMillis(this.OFFSET_MILLIS)
                         .build();
 
                 final byte[] pillDataBytes = pillKinesisData.toByteArray();
@@ -195,6 +149,7 @@ public class ReceiveResource {
             @Scope({OAuthScope.SENSORS_BASIC}) AccessToken accessToken,
             @PathParam("pill_id") String pillID,
             byte[] data) {
+        // TODO
         final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.PILL_DATA);
 
         final InputProtos.PillData pillData = InputProtos.PillData.newBuilder()

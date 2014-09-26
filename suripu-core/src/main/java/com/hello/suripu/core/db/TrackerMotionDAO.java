@@ -2,31 +2,40 @@ package com.hello.suripu.core.db;
 
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.binders.BindTrackerMotion;
-import com.hello.suripu.core.db.mappers.DeviceAccountPairMapper;
 import com.hello.suripu.core.db.mappers.GroupedTrackerMotionMapper;
 import com.hello.suripu.core.db.mappers.TrackerMotionMapper;
-import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
+import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by pangwu on 5/8/14.
  */
-public interface TrackerMotionDAO {
+public abstract class TrackerMotionDAO {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TrackerMotionDAO.class);
+    private static final Pattern PG_UNIQ_PATTERN = Pattern.compile("ERROR: duplicate key value violates unique constraint \"(\\w+)\"");
 
     @RegisterMapper(TrackerMotionMapper.class)
     @SqlQuery("SELECT * FROM tracker_motion_master WHERE " +
             "account_id = :account_id AND ts >= :start_timestamp AND ts <= :end_timestamp " +
             "ORDER BY ts ASC;"
     )
-    public ImmutableList<TrackerMotion> getBetween(@Bind("account_id") long accountId,
+    public abstract ImmutableList<TrackerMotion> getBetween(@Bind("account_id") long accountId,
                                                    @Bind("start_timestamp") DateTime startTimestampUTC,
                                                    @Bind("end_timestamp") DateTime endTimestampUTC);
 
@@ -42,17 +51,121 @@ public interface TrackerMotionDAO {
             "GROUP BY ts_bucket, tracker_id " +
             "ORDER BY tracker_id DESC, ts_bucket ASC;"
     )
-    public ImmutableList<TrackerMotion> getBetweenGrouped(@Bind("account_id") long accountId,
+    public abstract ImmutableList<TrackerMotion> getBetweenGrouped(@Bind("account_id") long accountId,
                                                    @Bind("start_timestamp") DateTime startTimestampUTC,
                                                    @Bind("end_timestamp") DateTime endTimestampUTC,
                                                    @Bind("slot_duration") Integer slotDuration);
 
-    @GetGeneratedKeys
+    @SingleValueResult(Integer.class)
     @SqlUpdate("INSERT INTO tracker_motion_master (account_id, tracker_id, svm_no_gravity, ts, offset_millis, local_utc_ts) " +
             "VALUES(:account_id, :tracker_id, :svm_no_gravity, :ts, :offset_millis, :local_utc_ts);")
-    Long insertTrackerMotion(@BindTrackerMotion TrackerMotion trackerMotion);
+    public abstract Integer insertTrackerMotion(@BindTrackerMotion TrackerMotion trackerMotion);
 
-    @RegisterMapper(DeviceAccountPairMapper.class)
-    @SqlQuery("SELECT * FROM account_tracker_map WHERE account_id = :account_id;")
-    List<DeviceAccountPair> getTrackerIds(@Bind("account_id") Long accountId);
+
+    @SqlBatch("INSERT INTO tracker_motion_master (account_id, tracker_id, svm_no_gravity, ts, offset_millis, local_utc_ts) " +
+            "VALUES(:account_ids, :tracker_ids, :svm_no_gravity, :ts, :offset_millis, :local_utc_ts);")
+    public abstract void batchInsert(
+            @Bind("account_ids") List<Long> accountIDs,
+            @Bind("tracker_ids") List<Long> trackerIDs,
+            @Bind("svm_no_gravity") List<Integer> pillValues,
+            @Bind("ts") List<DateTime> timestamps,
+            @Bind("offset_millis") List<Integer> offsets,
+            @Bind("local_utc_ts") List<DateTime> local_utc
+            );
+
+    @SqlUpdate("DELETE FROM tracker_motion_master WHERE tracker_id = :tracker_id")
+    public abstract Integer deleteDataTrackerID(@Bind("tracker_id") Long trackerID);
+
+
+    @Timed
+    public int batchInsertTrackerMotionData(final List<TrackerMotion> trackerMotionData, final int batchSize) {
+
+        final List<Long> accountIDs = new ArrayList<>();
+        final List<Long> trackerIDs = new ArrayList<>();
+        final List<Integer> values = new ArrayList<>();
+        final List<Long> rawTimestamps = new ArrayList<>();
+        final List<DateTime> timestamps = new ArrayList<>();
+        final List<Integer> offsets = new ArrayList<>();
+        final List<DateTime> local_utc_ts = new ArrayList<>();
+        final List<TrackerMotion> trackerMotions = new ArrayList<>();
+
+        int totalInserted = 0;
+        int numIterations = 0;
+        int numProcessed = 0;
+        final int dataSize = trackerMotionData.size();
+        LOGGER.debug("Dataset Size {}", dataSize);
+
+        for (final TrackerMotion trackerMotion : trackerMotionData) {
+
+            trackerMotions.add(trackerMotion);
+            accountIDs.add(trackerMotion.accountId);
+            trackerIDs.add(trackerMotion.trackerId);
+            values.add(trackerMotion.value);
+            rawTimestamps.add(trackerMotion.timestamp);
+            offsets.add(trackerMotion.offsetMillis);
+
+            final DateTime ts = new DateTime(trackerMotion.timestamp, DateTimeZone.UTC);
+            timestamps.add(ts);
+            local_utc_ts.add(ts.plusMillis(trackerMotion.offsetMillis));
+
+            numProcessed++;
+
+
+            if (accountIDs.size() < batchSize && numProcessed != dataSize) {
+                continue;
+            }
+
+            numIterations++;
+            int inserted = 0;
+            try {
+                this.batchInsert(accountIDs, trackerIDs, values, timestamps, offsets, local_utc_ts);
+                inserted = accountIDs.size();
+            } catch (UnableToExecuteStatementException exception) {
+                LOGGER.warn("Batch insert fails, duplicate records!");
+            }
+
+            if (inserted != accountIDs.size()) {
+                inserted = this.insertSingleTrackerMotion(trackerMotions); // batch insert fail, do individual inserts
+            }
+
+            LOGGER.debug("Round {}, inserted {} / {}", numIterations, inserted, accountIDs.size());
+
+            totalInserted += inserted;
+
+            accountIDs.clear();
+            trackerIDs.clear();
+            values.clear();
+            rawTimestamps.clear();
+            timestamps.clear();
+            offsets.clear();
+            local_utc_ts.clear();
+            trackerMotions.clear();
+        }
+
+        LOGGER.debug("expected iteration: {}, actual: {}", Math.round(dataSize / (float) batchSize), numIterations);
+        return totalInserted;
+    }
+
+    public int insertSingleTrackerMotion(final List<TrackerMotion> trackerMotions) {
+        int inserted = 0;
+        for (final TrackerMotion trackerMotion : trackerMotions) {
+            try {
+                LOGGER.debug("individual insert {}", trackerMotion);
+                final Integer id = this.insertTrackerMotion(trackerMotion);
+
+                if (id == null) {
+                    LOGGER.debug("id is null");
+                    continue;
+                }
+            } catch (UnableToExecuteStatementException exception) {
+                Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
+                if (matcher.find()) {
+                    LOGGER.debug("Dupe: Account {} Pill {} ts {}", trackerMotion.accountId, trackerMotion.trackerId, trackerMotion.timestamp);
+                }
+            }
+            inserted++;
+        }
+        return inserted;
+    }
+
 }

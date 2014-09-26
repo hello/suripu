@@ -6,12 +6,20 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorF
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibConfiguration;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker;
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.configuration.QueueName;
+import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
+import com.yammer.dropwizard.db.ManagedDataSource;
+import com.yammer.dropwizard.db.ManagedDataSourceFactory;
+import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
+import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
+import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
+import com.yammer.dropwizard.jdbi.args.OptionalArgumentFactory;
 import net.sourceforge.argparse4j.inf.Namespace;
+import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +35,18 @@ public final class PillWorkerCommand extends ConfiguredCommand<PillWorkerConfigu
 
     @Override
     public final void run(Bootstrap<PillWorkerConfiguration> bootstrap, Namespace namespace, PillWorkerConfiguration configuration) throws Exception {
+        final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
+        final ManagedDataSource sensorDataSource = managedDataSourceFactory.build(configuration.getSensorDB());
+
+        final DBI jdbiSensor = new DBI(sensorDataSource);
+        jdbiSensor.registerArgumentFactory(new OptionalArgumentFactory(configuration.getSensorDB().getDriverClass()));
+        jdbiSensor.registerContainerFactory(new ImmutableListContainerFactory());
+        jdbiSensor.registerContainerFactory(new ImmutableSetContainerFactory());
+        jdbiSensor.registerContainerFactory(new OptionalContainerFactory());
+        jdbiSensor.registerArgumentFactory(new JodaArgumentFactory());
+
+        final TrackerMotionDAO trackerMotionDAO = jdbiSensor.onDemand(TrackerMotionDAO.class);
+
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
         LOGGER.debug("{}", queueNames);
@@ -34,8 +54,6 @@ public final class PillWorkerCommand extends ConfiguredCommand<PillWorkerConfigu
         LOGGER.info("\n\n\n!!! This worker is using the following queue: {} !!!\n\n\n", queueName);
 
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
-        final AmazonS3Client s3Client= new AmazonS3Client(awsCredentialsProvider);
-
         final String workerId = InetAddress.getLocalHost().getCanonicalHostName();
         final KinesisClientLibConfiguration kinesisConfig = new KinesisClientLibConfiguration(
                 configuration.getAppName(),
@@ -43,10 +61,10 @@ public final class PillWorkerCommand extends ConfiguredCommand<PillWorkerConfigu
                 awsCredentialsProvider,
                 workerId);
         kinesisConfig.withMaxRecords(configuration.getMaxRecords());
-
+        kinesisConfig.withKinesisEndpoint(configuration.getKinesisEndpoint());
         kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
 
-        final IRecordProcessorFactory factory = new S3RecordProcessorFactory(s3Client, "hello-data", kinesisConfig);
+        final IRecordProcessorFactory factory = new SavePillDataProcessorFactory(trackerMotionDAO, configuration.getBatchSize(), kinesisConfig);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
 

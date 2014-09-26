@@ -2,9 +2,10 @@ package com.hello.suripu.workers.pill;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
+import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
 import com.yammer.dropwizard.config.Configuration;
-import org.hibernate.validator.constraints.NotEmpty;
+import com.yammer.dropwizard.db.DatabaseConfiguration;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
@@ -16,6 +17,15 @@ public class PillWorkerConfiguration extends Configuration {
 
     @Valid
     @NotNull
+    @JsonProperty("sensors_db")
+    private DatabaseConfiguration sensorDB = new DatabaseConfiguration();
+
+    public DatabaseConfiguration getSensorDB() {
+        return sensorDB;
+    }
+
+    @Valid
+    @NotNull
     @JsonProperty("app_name")
     private String appName;
 
@@ -24,13 +34,19 @@ public class PillWorkerConfiguration extends Configuration {
     }
 
     @Valid
-    @NotEmpty
-    @JsonProperty("queues")
+    @NotNull
+    @JsonProperty("kinesis")
+    private KinesisConfiguration kinesisConfiguration;
     private Map<QueueName,String> queues = new HashMap<QueueName, String>();
 
-    public ImmutableMap<QueueName,String> getQueues() {
-        return ImmutableMap.copyOf(queues);
+    public String getKinesisEndpoint() {
+        return kinesisConfiguration.getEndpoint();
     }
+
+    public ImmutableMap<QueueName,String> getQueues() {
+        return ImmutableMap.copyOf(kinesisConfiguration.getStreams());
+    }
+
 
     @Valid
     @NotNull
@@ -41,4 +57,21 @@ public class PillWorkerConfiguration extends Configuration {
     public Integer getMaxRecords() {
         return maxRecords;
     }
+
+    @Valid
+    @NotNull
+    @Max(100)
+    @JsonProperty("batch_size")
+    private Integer batchSize;
+
+    public Integer getBatchSize() {
+        return batchSize;
+    }
+
+    @Valid
+    @JsonProperty("debug")
+    private Boolean debug = Boolean.FALSE;
+
+    public Boolean getDebug() { return debug; }
+
 }
