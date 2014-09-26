@@ -145,8 +145,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
         environment.addProvider(new OAuthProvider<AccessToken>(new OAuthAuthenticator(tokenStore), "protected-resources"));
 
-        environment.addResource(new ReceiveResource(dao, deviceDAO, trackerMotionDAO,
-                publicKeyStore, kinesisLoggerFactory, configuration.getDebug()));
+        environment.addResource(new ReceiveResource(dao, deviceDAO, publicKeyStore, kinesisLoggerFactory, configuration.getDebug()));
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());
 
