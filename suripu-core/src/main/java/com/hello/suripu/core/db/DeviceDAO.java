@@ -57,7 +57,7 @@ public interface DeviceDAO {
 
     @GetGeneratedKeys
     @SqlUpdate("INSERT INTO account_tracker_map (account_id, device_id) VALUES(:account_id, :tracker_id)")
-    Integer registerTracker(@Bind("account_id") Long accountId, @Bind("tracker_id") String trackerId);
+    Long registerTracker(@Bind("account_id") Long accountId, @Bind("tracker_id") String trackerId);
 
     @SqlUpdate("DELETE FROM account_tracker_map WHERE id = :id")
     Integer unregisterTracker(@Bind("id") Long id);

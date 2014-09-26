@@ -1,6 +1,5 @@
 package com.hello.suripu.core.db;
 
-import com.google.common.base.Optional;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
@@ -26,8 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
 
 /**
@@ -37,7 +36,7 @@ public class TrackerMotionDAOIT {
     private final static Logger LOGGER = LoggerFactory.getLogger(TrackerMotionDAOIT.class);
 
     private final static Long ACCOUNT_ID = 3L;
-    private final static Long BACKUP_TRACKER_ID = 422L;
+    private final static Long BACKUP_TRACKER_ID = 9L;
     private final static int OFFSET_MILLIS = -25200000;
     private final static int MINUTE_MILLIS = 60 * 1000;
 
@@ -66,16 +65,12 @@ public class TrackerMotionDAOIT {
             this.deviceDAO = jdbi.onDemand(DeviceDAO.class);
             final String deviceName = "Test_" + String.valueOf(DateTime.now().getMillis() / 1000L);
             try {
-                final Integer id = this.deviceDAO.registerTracker(this.ACCOUNT_ID, deviceName);
+                final Long id = this.deviceDAO.registerTracker(this.ACCOUNT_ID, deviceName);
+                this.trackerID = id;
             } catch (UnableToExecuteStatementException exception) {
-            }
-
-            Optional<Long> deviceID = this.deviceDAO.getPillIdForAccountIdDeviceId(this.ACCOUNT_ID, deviceName);
-            if (deviceID.isPresent()) {
-                this.trackerID = deviceID.get().longValue();
-            } else {
                 this.trackerID = this.BACKUP_TRACKER_ID;
             }
+
             this.trackerMotionDAO.deleteDataTrackerID(this.trackerID);
 
         } catch (ClassNotFoundException e) {
