@@ -19,13 +19,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SavePillDataProcessor implements IRecordProcessor {
-
     private final static Logger LOGGER = LoggerFactory.getLogger(SavePillDataProcessor.class);
 
     private final TrackerMotionDAO trackerMotionDAO;
     private final int batchSize;
-
-    private int decodeErrors = 0;
 
     public SavePillDataProcessor(final TrackerMotionDAO trackerMotionDAO, final int batchSize) {
         this.trackerMotionDAO = trackerMotionDAO;
@@ -34,7 +31,6 @@ public class SavePillDataProcessor implements IRecordProcessor {
 
     @Override
     public void initialize(String s) {
-
     }
 
     @Override
@@ -42,34 +38,25 @@ public class SavePillDataProcessor implements IRecordProcessor {
         LOGGER.debug("Size = {}", records.size());
 
         // parse kinesis records
-        ArrayList<TrackerMotion> trackerData = new ArrayList<>();
+        final ArrayList<TrackerMotion> trackerData = new ArrayList<>();
         for (final Record record : records) {
             try {
                 final InputProtos.PillDataKinesis data = InputProtos.PillDataKinesis.parseFrom(record.getData().array());
 
                 final Long accountID = Long.parseLong(data.getAccountId());
                 final Long pillID = Long.parseLong(data.getPillId());
-                final DateTime sampleDT = new DateTime(data.getTimestamp(), DateTimeZone.UTC);
-                final DateTime roundedDateTimeUTC = new DateTime(
-                        sampleDT.getYear(),
-                        sampleDT.getMonthOfYear(),
-                        sampleDT.getDayOfMonth(),
-                        sampleDT.getHourOfDay(),
-                        sampleDT.getMinuteOfHour(),
-                        DateTimeZone.UTC
-                );
+                final DateTime sampleDT = new DateTime(data.getTimestamp(), DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
                 final TrackerMotion trackerMotion = new TrackerMotion(
-                        0,
+                        0L,
                         accountID,
                         pillID,
-                        roundedDateTimeUTC.getMillis(),
+                        sampleDT.getMillis(),
                         (int) data.getValue(),
                         data.getOffsetMillis()
                 );
                 trackerData.add(trackerMotion);
             } catch (InvalidProtocolBufferException e) {
                 LOGGER.error("Failed to decode protobuf: {}", e.getMessage());
-                this.decodeErrors++;
             }
         }
 

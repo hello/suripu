@@ -150,7 +150,7 @@ public class ReceiveResource {
             );
 
             try {
-                final Long id = trackerMotionDAO.insertTrackerMotion(trackerMotion);
+                final Integer id = trackerMotionDAO.insertTrackerMotion(trackerMotion);
             } catch (UnableToExecuteStatementException exception) {
                 Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
                 if (!matcher.find()) {

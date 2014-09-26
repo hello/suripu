@@ -17,7 +17,7 @@ public class PillWorkerConfiguration extends Configuration {
 
     @Valid
     @NotNull
-    @JsonProperty("sensor_db")
+    @JsonProperty("sensors_db")
     private DatabaseConfiguration sensorDB = new DatabaseConfiguration();
 
     public DatabaseConfiguration getSensorDB() {
@@ -60,7 +60,7 @@ public class PillWorkerConfiguration extends Configuration {
 
     @Valid
     @NotNull
-    @Max(60)
+    @Max(100)
     @JsonProperty("batch_size")
     private Integer batchSize;
 

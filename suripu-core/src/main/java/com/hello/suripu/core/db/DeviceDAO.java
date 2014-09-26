@@ -56,13 +56,8 @@ public interface DeviceDAO {
     public abstract ImmutableList<DeviceAccountPair> getTrackerIds(@Bind("account_id") Long accountId);
 
     @GetGeneratedKeys
-    @SingleValueResult(Integer.class)
     @SqlUpdate("INSERT INTO account_tracker_map (account_id, device_id) VALUES(:account_id, :tracker_id)")
     Integer registerTracker(@Bind("account_id") Long accountId, @Bind("tracker_id") String trackerId);
-
-    // for testing
-    @SqlUpdate("INSERT INTO account_tracker_map (account_id, device_id) VALUES(:account_id, :tracker_id)")
-    Integer registerTestTracker(@Bind("account_id") Long accountId, @Bind("tracker_id") String trackerId);
 
     @SqlUpdate("DELETE FROM account_tracker_map WHERE id = :id")
     Integer unregisterTracker(@Bind("id") Long id);

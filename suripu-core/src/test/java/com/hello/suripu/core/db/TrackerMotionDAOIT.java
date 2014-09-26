@@ -66,7 +66,7 @@ public class TrackerMotionDAOIT {
             this.deviceDAO = jdbi.onDemand(DeviceDAO.class);
             final String deviceName = "Test_" + String.valueOf(DateTime.now().getMillis() / 1000L);
             try {
-                final Integer id = this.deviceDAO.registerTestTracker(this.ACCOUNT_ID, deviceName);
+                final Integer id = this.deviceDAO.registerTracker(this.ACCOUNT_ID, deviceName);
             } catch (UnableToExecuteStatementException exception) {
             }
 

@@ -1,4 +1,5 @@
 debug: true
+
 sensors_db:
   # the name of your JDBC driver
   driverClass: org.postgresql.Driver
@@ -44,10 +45,10 @@ kinesis:
 
 app_name: SavePillDataConsumerDev
 
-max_records: 100
+max_records: 1000
 
 # batch save to DB size
-batch_size: 100
+batch_size: 80
 
 # Logging settings.
 logging:

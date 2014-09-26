@@ -10,11 +10,11 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,16 +56,15 @@ public abstract class TrackerMotionDAO {
                                                    @Bind("end_timestamp") DateTime endTimestampUTC,
                                                    @Bind("slot_duration") Integer slotDuration);
 
-    @GetGeneratedKeys
+    @SingleValueResult(Integer.class)
     @SqlUpdate("INSERT INTO tracker_motion_master (account_id, tracker_id, svm_no_gravity, ts, offset_millis, local_utc_ts) " +
             "VALUES(:account_id, :tracker_id, :svm_no_gravity, :ts, :offset_millis, :local_utc_ts);")
-    public abstract Long insertTrackerMotion(@BindTrackerMotion TrackerMotion trackerMotion);
+    public abstract Integer insertTrackerMotion(@BindTrackerMotion TrackerMotion trackerMotion);
 
 
-    @GetGeneratedKeys
     @SqlBatch("INSERT INTO tracker_motion_master (account_id, tracker_id, svm_no_gravity, ts, offset_millis, local_utc_ts) " +
             "VALUES(:account_ids, :tracker_ids, :svm_no_gravity, :ts, :offset_millis, :local_utc_ts);")
-    public abstract int[] batchInsert(
+    public abstract void batchInsert(
             @Bind("account_ids") List<Long> accountIDs,
             @Bind("tracker_ids") List<Long> trackerIDs,
             @Bind("svm_no_gravity") List<Integer> pillValues,
@@ -78,33 +77,38 @@ public abstract class TrackerMotionDAO {
     public abstract Integer deleteDataTrackerID(@Bind("tracker_id") Long trackerID);
 
 
-    @Timed public int batchInsertTrackerMotionData(List<TrackerMotion> trackerMotionData, int batchSize) {
+    @Timed
+    public int batchInsertTrackerMotionData(final List<TrackerMotion> trackerMotionData, final int batchSize) {
 
-        List<Long> accountIDs = new ArrayList<>();
-        List<Long> trackerIDs = new ArrayList<>();
-        List<Integer> values = new ArrayList<>();
-        List<Long> rawTimestamps = new ArrayList<>();
-        List<DateTime> timestamps = new ArrayList<>();
-        List<Integer> offsets = new ArrayList<>();
-        List<DateTime> local_utc_ts = new ArrayList<>();
+        final List<Long> accountIDs = new ArrayList<>();
+        final List<Long> trackerIDs = new ArrayList<>();
+        final List<Integer> values = new ArrayList<>();
+        final List<Long> rawTimestamps = new ArrayList<>();
+        final List<DateTime> timestamps = new ArrayList<>();
+        final List<Integer> offsets = new ArrayList<>();
+        final List<DateTime> local_utc_ts = new ArrayList<>();
+        final List<TrackerMotion> trackerMotions = new ArrayList<>();
 
         int totalInserted = 0;
         int numIterations = 0;
         int numProcessed = 0;
         final int dataSize = trackerMotionData.size();
         LOGGER.debug("Dataset Size {}", dataSize);
-        for (final TrackerMotion trackerMotion : trackerMotionData) {
-            DateTime ts = new DateTime(trackerMotion.timestamp, DateTimeZone.UTC);
-            DateTime local_ts = new DateTime(trackerMotion.timestamp, DateTimeZone.UTC).plusMillis(trackerMotion.offsetMillis);
 
+        for (final TrackerMotion trackerMotion : trackerMotionData) {
+
+            trackerMotions.add(trackerMotion);
             accountIDs.add(trackerMotion.accountId);
             trackerIDs.add(trackerMotion.trackerId);
             values.add(trackerMotion.value);
             rawTimestamps.add(trackerMotion.timestamp);
-            timestamps.add(ts);
             offsets.add(trackerMotion.offsetMillis);
-            local_utc_ts.add(local_ts);
-            numProcessed ++;
+
+            final DateTime ts = new DateTime(trackerMotion.timestamp, DateTimeZone.UTC);
+            timestamps.add(ts);
+            local_utc_ts.add(ts.plusMillis(trackerMotion.offsetMillis));
+
+            numProcessed++;
 
 
             if (accountIDs.size() < batchSize && numProcessed != dataSize) {
@@ -113,43 +117,18 @@ public abstract class TrackerMotionDAO {
 
             numIterations++;
             int inserted = 0;
-            int dupes = 0;
             try {
-                int [] resultSet = this.batchInsert(accountIDs, trackerIDs, values, timestamps, offsets, local_utc_ts);
-                inserted = resultSet.length;
+                this.batchInsert(accountIDs, trackerIDs, values, timestamps, offsets, local_utc_ts);
+                inserted = accountIDs.size();
             } catch (UnableToExecuteStatementException exception) {
-                Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
-                if (matcher.find()) {
-                    LOGGER.error("Batch insert fails, duplicate records!");
-                }
+                LOGGER.warn("Batch insert fails, duplicate records!");
             }
 
             if (inserted != accountIDs.size()) {
-                // batch insert fail, do individual inserts
-                for (int i = 0; i < accountIDs.size(); i++) {
-                    final TrackerMotion singleTrackerMotion = new TrackerMotion(
-                            0L, accountIDs.get(i),
-                            trackerIDs.get(i),
-                            rawTimestamps.get(i),
-                            values.get(i),
-                            offsets.get(i)
-                    );
-                    try {
-                        Long id = this.insertTrackerMotion(singleTrackerMotion);
-                        if (id > 0L) {
-                            inserted++;
-                        }
-                    } catch (UnableToExecuteStatementException exception) {
-                        Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
-                        if (matcher.find()) {
-                            dupes++;
-                            LOGGER.info("Tracker data exist {}, {}", singleTrackerMotion.accountId, singleTrackerMotion.timestamp);
-                        }
-                    }
-                }
+                inserted = this.insertSingleTrackerMotion(trackerMotions); // batch insert fail, do individual inserts
             }
 
-            LOGGER.debug("Round {}, inserted {} / {}, dupes {}", numIterations, inserted, accountIDs.size(), dupes);
+            LOGGER.debug("Round {}, inserted {} / {}", numIterations, inserted, accountIDs.size());
 
             totalInserted += inserted;
 
@@ -160,11 +139,33 @@ public abstract class TrackerMotionDAO {
             timestamps.clear();
             offsets.clear();
             local_utc_ts.clear();
+            trackerMotions.clear();
         }
 
         LOGGER.debug("expected iteration: {}, actual: {}", Math.round(dataSize / (float) batchSize), numIterations);
         return totalInserted;
     }
 
+    public int insertSingleTrackerMotion(final List<TrackerMotion> trackerMotions) {
+        int inserted = 0;
+        for (final TrackerMotion trackerMotion : trackerMotions) {
+            try {
+                LOGGER.debug("individual insert {}", trackerMotion);
+                final Integer id = this.insertTrackerMotion(trackerMotion);
+
+                if (id == null) {
+                    LOGGER.debug("id is null");
+                    continue;
+                }
+            } catch (UnableToExecuteStatementException exception) {
+                Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
+                if (matcher.find()) {
+                    LOGGER.debug("Dupe: Account {} Pill {} ts {}", trackerMotion.accountId, trackerMotion.trackerId, trackerMotion.timestamp);
+                }
+            }
+            inserted++;
+        }
+        return inserted;
+    }
 
 }
