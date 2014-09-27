@@ -117,4 +117,12 @@ public class AlarmWorkerConfiguration extends Configuration {
     public DynamoDBConfiguration getAlarmDBConfiguration(){
         return this.alarmDBConfiguration;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("alarm_info_db")
+    private DynamoDBConfiguration alarmInfoDynamoDBConfiguration;
+    public DynamoDBConfiguration getAlarmInfoDynamoDBConfiguration(){
+        return this.alarmInfoDynamoDBConfiguration;
+    }
 }

@@ -99,6 +99,7 @@ public class AlarmDAODynamoDB {
     }
 
     @Timed
+    @Deprecated
     public ImmutableList<Alarm> getAlarms(long accountId){
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
         final Condition selectByAccountId  = new Condition()

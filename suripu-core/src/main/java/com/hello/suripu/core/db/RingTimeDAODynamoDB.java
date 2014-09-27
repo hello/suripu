@@ -52,6 +52,7 @@ public class RingTimeDAODynamoDB {
     }
 
 
+    @Deprecated
     @Timed
     public RingTime getNextRingTime(final String deviceId){
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();

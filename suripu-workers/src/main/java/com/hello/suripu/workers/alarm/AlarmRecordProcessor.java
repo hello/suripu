@@ -8,10 +8,8 @@ import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.InputProtos;
-import com.hello.suripu.core.db.AlarmDAODynamoDB;
-import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
-import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.processors.RingProcessor;
 import org.apache.commons.codec.binary.Hex;
@@ -29,24 +27,21 @@ import java.util.Set;
  */
 public class AlarmRecordProcessor implements IRecordProcessor {
     private final static Logger LOGGER = LoggerFactory.getLogger(AlarmRecordProcessor.class);
-    private final AlarmDAODynamoDB alarmDAODynamoDB;
+    private final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
     private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
-    private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
+
     private final TrackerMotionDAO trackerMotionDAO;
-    private final DeviceDAO deviceDAO;
     private final AlarmWorkerConfiguration configuration;
 
-    public AlarmRecordProcessor(final AlarmDAODynamoDB alarmDAODynamoDB,
+    public AlarmRecordProcessor(final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
                                 final RingTimeDAODynamoDB ringTimeDAODynamoDB,
-                                final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB,
                                 final TrackerMotionDAO trackerMotionDAO,
-                                final DeviceDAO deviceDAO,
                                 final AlarmWorkerConfiguration configuration){
-        this.alarmDAODynamoDB = alarmDAODynamoDB;
+
+        this.mergedAlarmInfoDynamoDB = mergedAlarmInfoDynamoDB;
         this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
         this.trackerMotionDAO = trackerMotionDAO;
-        this.timeZoneHistoryDAODynamoDB = timeZoneHistoryDAODynamoDB;
-        this.deviceDAO = deviceDAO;
+
         this.configuration = configuration;
     }
 
@@ -78,8 +73,9 @@ public class AlarmRecordProcessor implements IRecordProcessor {
 
         final DateTime currentTime = DateTime.now().minusMinutes(1);
         for(final String morpheusId:deviceIds) {
-            RingProcessor.updateNextRingTime(this.alarmDAODynamoDB, this.timeZoneHistoryDAODynamoDB, this.ringTimeDAODynamoDB,
-                    this.deviceDAO, this.trackerMotionDAO,
+            RingProcessor.updateNextRingTime(this.mergedAlarmInfoDynamoDB,
+                    this.ringTimeDAODynamoDB,
+                    this.trackerMotionDAO,
                     morpheusId,
                     currentTime,
                     this.configuration.getProcessAheadTimeInMinutes(),

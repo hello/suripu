@@ -88,6 +88,7 @@ public class TimeZoneHistoryDAODynamoDB {
     }
 
 
+    @Deprecated
     @Timed
     public Optional<TimeZoneHistory> getTimeZoneAt(long accountId, long instant){
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
@@ -145,6 +146,7 @@ public class TimeZoneHistoryDAODynamoDB {
         return Optional.absent();
     }
 
+    @Deprecated
     @Timed
     public Optional<TimeZoneHistory> getCurrentTimeZone(final long accountId){
 

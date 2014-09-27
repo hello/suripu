@@ -7,6 +7,8 @@ import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.base.Optional;
+import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -22,6 +24,8 @@ import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Created by pangwu on 9/19/14.
@@ -33,7 +37,8 @@ public class TimeZoneResourceIT {
     private TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
 
     private TimeZoneResource timeZoneResource;
-    private final String tableName = "alarm_test";
+    private final String tableName = "timezone_test";
+    private final String alarmInfoTableName = "alarm_info_test";
 
 
     private final AccessToken token = new AccessToken.Builder()
@@ -58,13 +63,25 @@ public class TimeZoneResourceIT {
         cleanUp();
 
         try {
-            TimeZoneHistoryDAODynamoDB.createTable(tableName, this.amazonDynamoDBClient);
+            TimeZoneHistoryDAODynamoDB.createTable(this.tableName, this.amazonDynamoDBClient);
             this.timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(
                     this.amazonDynamoDBClient,
                     tableName
             );
 
-            this.timeZoneResource = new TimeZoneResource(this.timeZoneHistoryDAODynamoDB);
+
+            MergedAlarmInfoDynamoDB.createTable(this.alarmInfoTableName, this.amazonDynamoDBClient);
+            final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB = new MergedAlarmInfoDynamoDB(
+                    this.amazonDynamoDBClient,
+                    this.alarmInfoTableName
+            );
+
+
+            final DeviceDAO deviceDAO = mock(DeviceDAO.class);
+            when(deviceDAO.getDeviceIdFromAccountId(1L)).thenReturn(Optional.of("test morpheus"));
+
+            this.timeZoneResource = new TimeZoneResource(this.timeZoneHistoryDAODynamoDB,
+                    mergedAlarmInfoDynamoDB, deviceDAO);
 
 
         }catch (ResourceInUseException rie){
@@ -76,10 +93,22 @@ public class TimeZoneResourceIT {
 
     @After
     public void cleanUp(){
-        final DeleteTableRequest deleteTableRequest = new DeleteTableRequest()
-                .withTableName(tableName);
+
         try {
-            this.amazonDynamoDBClient.deleteTable(deleteTableRequest);
+            this.amazonDynamoDBClient.deleteTable(new DeleteTableRequest()
+                    .withTableName(tableName));
+
+
+        }catch (ResourceNotFoundException ex){
+            ex.printStackTrace();
+        }
+
+
+        try {
+            this.amazonDynamoDBClient.deleteTable(new DeleteTableRequest()
+                    .withTableName(this.alarmInfoTableName));
+
+
         }catch (ResourceNotFoundException ex){
             ex.printStackTrace();
         }

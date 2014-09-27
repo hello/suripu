@@ -15,6 +15,7 @@ import com.hello.suripu.app.cli.CreateRingTimeDynamoDBTable;
 import com.hello.suripu.app.cli.RecreateEventsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.resources.v1.AccountResource;
+import com.hello.suripu.app.resources.v1.AlarmResource;
 import com.hello.suripu.app.resources.v1.ApplicationResource;
 import com.hello.suripu.app.resources.v1.DeviceResources;
 import com.hello.suripu.app.resources.v1.EventResource;
@@ -24,6 +25,7 @@ import com.hello.suripu.app.resources.v1.OAuthResource;
 import com.hello.suripu.app.resources.v1.QuestionsResource;
 import com.hello.suripu.app.resources.v1.RoomConditionsResource;
 import com.hello.suripu.app.resources.v1.SleepLabelResource;
+import com.hello.suripu.app.resources.v1.TimeZoneResource;
 import com.hello.suripu.app.resources.v1.TimelineResource;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
@@ -35,6 +37,7 @@ import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.EventDAODynamoDB;
+import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.SoundDAO;
@@ -137,6 +140,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final EventDAODynamoDB eventDAODynamoDB = new EventDAODynamoDB(dynamoDBClient, eventTableName);
         final AlarmDAODynamoDB alarmDAODynamoDB = new AlarmDAODynamoDB(dynamoDBClient, configuration.getAlarmDBConfiguration().getTableName());
         final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(dynamoDBClient, configuration.getTimeZoneHistoryDBConfiguration().getTableName());
+        final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB = new MergedAlarmInfoDynamoDB(dynamoDBClient, configuration.getAlarmInfoDynamoDBConfiguration().getTableName());
 
         final ImmutableMap<String, String> arns = ImmutableMap.copyOf(configuration.getPushNotificationsConfiguration().getArns());
         final NotificationSubscriptionsDAO subscriptionDAO = new DynamoDBNotificationSubscriptionDAO(
@@ -185,6 +189,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new EventResource(eventDAODynamoDB));
         environment.addResource(new DeviceResources(deviceDAO));
         environment.addResource(new TimelineResource(eventDAODynamoDB, trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, configuration.getScoreThreshold()));
+        environment.addResource(new TimeZoneResource(timeZoneHistoryDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO));
+        environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO));
 
         environment.addResource(new MobilePushRegistrationResource(subscriptionDAO));
 

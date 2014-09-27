@@ -16,9 +16,9 @@ import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.EventDAO;
+import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.PublicKeyStoreDynamoDB;
-import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
@@ -108,7 +108,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final String bucketName = configuration.getAudioBucketName();
 
         final AlarmDAODynamoDB alarmDAODynamoDB = new AlarmDAODynamoDB(dynamoDBClient, configuration.getAlarmDBConfiguration().getTableName());
-        final RingTimeDAODynamoDB ringTimeDAODynamoDB = new RingTimeDAODynamoDB(dynamoDBClient, configuration.getRingTimeDBConfiguration().getTableName());
+        final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB = new MergedAlarmInfoDynamoDB(dynamoDBClient,
+                configuration.getAlarmInfoDynamoDBConfiguration().getTableName());
         final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(dynamoDBClient, configuration.getTimeZoneHistoryDBConfiguration().getTableName());
 
 
@@ -157,9 +158,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 trackerMotionDAO,
                 publicKeyStore,
                 kinesisLoggerFactory,
-                alarmDAODynamoDB,
-                ringTimeDAODynamoDB,
-                timeZoneHistoryDAODynamoDB,
+                mergedAlarmInfoDynamoDB,
                 configuration.getDebug()));
 
         environment.addResource(new PingResource());
