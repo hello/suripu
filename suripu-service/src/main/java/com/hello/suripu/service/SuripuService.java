@@ -153,9 +153,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         }
 
         environment.addProvider(new OAuthProvider<AccessToken>(new OAuthAuthenticator(tokenStore), "protected-resources"));
-
-        environment.addResource(new ReceiveResource(dao, deviceDAO, scoreDAO,
-                trackerMotionDAO,
+        environment.addResource(new ReceiveResource(dao, deviceDAO,
                 publicKeyStore,
                 kinesisLoggerFactory,
                 mergedAlarmInfoDynamoDB,

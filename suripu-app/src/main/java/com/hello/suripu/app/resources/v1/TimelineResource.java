@@ -70,8 +70,10 @@ public class TimelineResource {
 
         final List<Event> events = new ArrayList<>();
 
-        int groupBy = 10; // group by 10 minutes
-        int threshold = 30; // events with scores < threshold will be considered motion events
+        int groupBy = 5; // group by 5 minutes
+
+        int threshold = 10; // events with scores < threshold will be considered motion events
+        // TODO: compute this threshold dynamically
 
         final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accessToken.accountId, targetDate, endDate, groupBy);
         LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
@@ -84,6 +86,7 @@ public class TimelineResource {
         }
 
         LOGGER.debug("Max SVM = {}", maxSVM);
+
         int i = 0;
         long tracker_id = trackerMotions.get(0).trackerId;
         for(final TrackerMotion trackerMotion : trackerMotions) {
@@ -92,19 +95,37 @@ public class TimelineResource {
             }
 
             int sleepDepth = 100;
-            if(trackerMotion.value > -1) {
-                sleepDepth = (int) Math.round(new Double(trackerMotion.value)/ maxSVM * 100);
+            if(trackerMotion.value == -1) {
+                sleepDepth = 100;
+            } else if(trackerMotion.value > -1) {
+                sleepDepth = 100 - (int) (new Double(trackerMotion.value) / maxSVM * 100);
                 LOGGER.trace("Ratio = ({} / {}) = {}", trackerMotion.value, maxSVM, new Double(trackerMotion.value) / maxSVM * 100);
                 LOGGER.trace("Sleep Depth = {}", sleepDepth);
 
             }
 
-            String eventType = (sleepDepth < threshold) ? Event.Type.MOTION.toString() : null; // TODO: put these in a config file or DB
+            String eventType = (sleepDepth <= threshold) ? Event.Type.MOTION.toString() : null; // TODO: put these in a config file or DB
             if(i == 0) {
                 eventType = "SLEEP";
             } else if (i == trackerMotions.size() -1) {
                 eventType = "WAKE_UP";
             }
+
+            // TODO: make this work
+            if (trackerMotion.value == maxSVM) {
+                eventType = Event.Type.MOTION.toString();
+            }
+
+            if( sleepDepth <=10) {
+                sleepDepth = 10;
+            } else if(sleepDepth > 10 && sleepDepth <= 40) {
+                sleepDepth = 40;
+            } else if(sleepDepth > 40 && sleepDepth <= 70) {
+                sleepDepth = 70;
+            } else if (sleepDepth > 70 && sleepDepth <= 100) {
+                sleepDepth = 100;
+            }
+
 
             final SleepSegment sleepSegment = new SleepSegment(
                     trackerMotion.id,
@@ -119,6 +140,7 @@ public class TimelineResource {
             sleepSegments.add(sleepSegment);
             i++;
         }
+
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
         final List<String> messages = new ArrayList<>();

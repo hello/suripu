@@ -1,5 +1,0 @@
-queues:
-  pill_data: test-pill-suripu
-app_name: PillDataConsumer
-max_records: 1000
-

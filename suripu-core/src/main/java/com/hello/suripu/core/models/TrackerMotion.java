@@ -69,4 +69,16 @@ public class TrackerMotion {
                 && Objects.equal(this.value, convertedObject.value)
                 && Objects.equal(this.offsetMillis, convertedObject.offsetMillis);
     }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(TrackerMotion.class)
+                .add("id", id)
+                .add("account", accountId)
+                .add("tracker_id", trackerId)
+                .add("ts", timestamp)
+                .add("value", value)
+                .add("offset", offsetMillis)
+                .toString();
+    }
 }
