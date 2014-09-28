@@ -75,9 +75,10 @@ public class MergedAlarmInfoDynamoDBIT {
                 Optional.<List<Alarm>>absent(),
                 Optional.<RingTime>absent(),
                 Optional.of(DateTimeZone.UTC));
+        this.mergedAlarmInfoDynamoDB.setInfo(alarmInfo);
         final Optional<AlarmInfo> retrieved = this.mergedAlarmInfoDynamoDB.getInfo(this.deviceId, this.accountId);
         assertThat(retrieved.isPresent(), is(true));
-        assertThat(retrieved.get().ringTime.isPresent(), is(true));
+        assertThat(retrieved.get().timeZone.isPresent(), is(true));
     }
 
     @Test
