@@ -546,7 +546,7 @@ public class RingProcessorMultiUserTest {
                 Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
 
 
-        RingTime ringTime = RingProcessor.getNextRegularRingTime(this.mergedAlarmInfoDynamoDB,
+        RingTime ringTime = RingProcessor.getNextRegularRingTime(this.alarmInfoList,
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")));
 

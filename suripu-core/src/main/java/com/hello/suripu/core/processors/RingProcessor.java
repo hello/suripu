@@ -213,7 +213,7 @@ public class RingProcessor {
 
 
     @Timed
-    public static RingTime getNextRegularRingTime(final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
+    public static RingTime getNextRegularRingTime(final List<AlarmInfo> alarmInfoList,
                                               final String morpheusId,
                                               final DateTime currentTime){
 
@@ -223,7 +223,7 @@ public class RingProcessor {
 
 
         try {
-            final List<AlarmInfo> alarmInfoList = mergedAlarmInfoDynamoDB.getInfo(morpheusId);
+
             for (final AlarmInfo alarmInfo:alarmInfoList){
                 if(alarmInfo.alarmList.isPresent()){
                     final List<Alarm> alarms = alarmInfo.alarmList.get();

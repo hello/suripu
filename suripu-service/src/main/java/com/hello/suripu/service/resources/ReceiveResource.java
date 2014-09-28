@@ -313,7 +313,7 @@ public class ReceiveResource {
 
 
         final InputProtos.SyncResponse.Builder responseBuilder = InputProtos.SyncResponse.newBuilder();
-        final RingTime nextRegularRingTime = RingProcessor.getNextRegularRingTime(this.mergedAlarmInfoDynamoDB,
+        final RingTime nextRegularRingTime = RingProcessor.getNextRegularRingTime(alarmInfoList,
                 deviceName,
                 DateTime.now());
 
