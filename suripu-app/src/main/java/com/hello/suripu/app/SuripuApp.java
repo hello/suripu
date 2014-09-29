@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableMap;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.app.cli.CreateAlarmDynamoDBTableCommand;
+import com.hello.suripu.app.cli.CreateAlarmInfoDynamoDBTable;
 import com.hello.suripu.app.cli.CreateDynamoDBEventTableCommand;
 import com.hello.suripu.app.cli.CreateDynamoDBTimeZoneHistoryTableCommand;
 import com.hello.suripu.app.cli.CreateRingTimeDynamoDBTable;
@@ -91,6 +92,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         bootstrap.addCommand(new CreateDynamoDBTimeZoneHistoryTableCommand());
         bootstrap.addCommand(new CreateAlarmDynamoDBTableCommand());
         bootstrap.addCommand(new CreateRingTimeDynamoDBTable());
+        bootstrap.addCommand(new CreateAlarmInfoDynamoDBTable());
 
         bootstrap.addBundle(new KinesisLoggerBundle<SuripuAppConfiguration>() {
             @Override
