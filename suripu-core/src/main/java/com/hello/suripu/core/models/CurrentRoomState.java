@@ -95,6 +95,7 @@ public class CurrentRoomState {
         State humidityState;
         State particulatesState;
 
+        LOGGER.debug("temp = {}, humidity = {}, particulates = {}", temp, humidity, particulates);
 
         if(referenceTime.minusMinutes(thresholdInMinutes).getMillis() > data.dateTimeUTC.getMillis()) {
 
@@ -108,21 +109,18 @@ public class CurrentRoomState {
 
         // Temp
         if(temp == null) {
-           temperatureState = new State(null, "Could not retrieve recent temperature reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.CELCIUS);
-        }
-        else if (temp >= 54 && temp < 60 || temp > 72 && temp <= 75) {
-            temperatureState = new State(null, "Global ideal range: 60 -- 72", State.Condition.WARNING, data.dateTimeUTC, State.Unit.CELCIUS);
-        } else if (temp  < 54) {
-            temperatureState = new State(null, "It’s pretty cold in here.", State.Condition.ALERT, data.dateTimeUTC, State.Unit.CELCIUS);
-        } else if (temp > 75) {
-            temperatureState = new State(null, "It’s pretty hot in here.", State.Condition.ALERT, data.dateTimeUTC, State.Unit.CELCIUS);
+           temperatureState = new State(temp, "Could not retrieve recent temperature reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.CELCIUS);
+        } else if (temp  < 15) {
+            temperatureState = new State(temp, "It’s pretty cold in here.", State.Condition.ALERT, data.dateTimeUTC, State.Unit.CELCIUS);
+        } else if (temp > 30) {
+            temperatureState = new State(temp, "It’s pretty hot in here.", State.Condition.ALERT, data.dateTimeUTC, State.Unit.CELCIUS);
         } else { // temp >= 60 && temp <= 72
-            temperatureState = new State(null, "", State.Condition.IDEAL, data.dateTimeUTC, State.Unit.CELCIUS);
+            temperatureState = new State(temp, "", State.Condition.IDEAL, data.dateTimeUTC, State.Unit.CELCIUS);
         }
 
         // Humidity
         if(humidity == null) {
-            humidityState = new State(null, "Could not retrieve recent humidity reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.PERCENT);
+            humidityState = new State(humidity, "Could not retrieve recent humidity reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.PERCENT);
         } else if (humidity  < 30) {
             humidityState = new State(humidity, "It’s pretty dry in here.", State.Condition.WARNING, data.dateTimeUTC, State.Unit.PERCENT);
         } else if (humidity > 60) {
@@ -134,7 +132,7 @@ public class CurrentRoomState {
 
         // Air Quality
         if(particulates == null) {
-            particulatesState = new State(null, "Could not retrieve recent particulates reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.PPM);
+            particulatesState = new State(humidity, "Could not retrieve recent particulates reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.PPM);
         } else if (particulates > 35) {
             particulatesState = new State(particulates, "Air Particulates EPA standard: Daily: 35 µg/m3, AQI = 99", State.Condition.WARNING, data.dateTimeUTC, State.Unit.PPM);
         } else{
