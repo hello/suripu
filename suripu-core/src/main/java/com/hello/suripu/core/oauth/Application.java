@@ -80,4 +80,13 @@ public class Application {
                 GrantTypeParam.GrantType.AUTH_CODE
         );
     }
+
+    public Boolean hasScope (final OAuthScope scope) {
+        if (this.scopes != null) {
+            for (OAuthScope myScope : this.scopes) {
+                if (myScope.equals(scope)) return Boolean.TRUE;
+            }
+        }
+        return Boolean.FALSE;
+    }
 }

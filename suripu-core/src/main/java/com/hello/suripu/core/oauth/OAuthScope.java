@@ -27,7 +27,8 @@ public enum OAuthScope {
     ALARM_READ(16),
     ALARM_WRITE(17),
     PUSH_NOTIFICATIONS(18),
-    DEVICE_INFORMATION_READ(19);
+    DEVICE_INFORMATION_READ(19),
+    AUTH(20);
 
     private int value;
 
