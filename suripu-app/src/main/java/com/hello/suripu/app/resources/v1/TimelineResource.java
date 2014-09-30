@@ -6,6 +6,7 @@ import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SleepSegment;
+import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -27,7 +28,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 @Path("/v1/timeline")
 public class TimelineResource {
@@ -42,8 +42,7 @@ public class TimelineResource {
     public TimelineResource(final TrackerMotionDAO trackerMotionDAO,
                             final SleepLabelDAO sleepLabelDAO,
                             final SleepScoreDAO sleepScoreDAO,
-                            final int dateBucketPeriod
-    ) {
+                            final int dateBucketPeriod) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.sleepLabelDAO = sleepLabelDAO;
         this.sleepScoreDAO = sleepScoreDAO;
@@ -59,7 +58,8 @@ public class TimelineResource {
             @PathParam("date") String date) {
 
 
-        final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT)).withZone(DateTimeZone.UTC).withHourOfDay(22);
+        final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                .withZone(DateTimeZone.UTC).withHourOfDay(22);
         final DateTime endDate = targetDate.plusHours(12);
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
@@ -74,30 +74,27 @@ public class TimelineResource {
         final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accessToken.accountId, targetDate, endDate, groupBy);
         LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
 
+        if(trackerMotions.isEmpty()) {
+            LOGGER.debug("No data for account_id = {} and day = {}", accessToken.accountId, targetDate);
+            final Timeline timeline = new Timeline(0, "You haven't been sleeping!", date, new ArrayList<SleepSegment>());
+            final List<Timeline> timelines = new ArrayList<>();
+            timelines.add(timeline);
+            return timelines;
+        }
+
         final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, groupBy);
         final List<SleepSegment> normalized = TimelineUtils.categorizeSleepDepth(segments);
         final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(normalized, threshold);
+        final SleepStats sleepStats = TimelineUtils.computeStats(mergedSegments);
         final List<SleepSegment> reversed = Lists.reverse(mergedSegments);
 
-        final List<String> messages = new ArrayList<>();
 
-        messages.add("You slept for an hour more than usual");
-        messages.add("You were in bed for 0-24 hours and asleep for 0-24 hours");
-        messages.add("You went to bed a bit late and your sleep quality suffered as a result");
-        messages.add("It was a bit warmer than usual");
-        messages.add("Maybe cut down on the Netflix binges?");
+        final int userOffsetMillis = trackerMotions.get(0).offsetMillis;
+        final Integer sleepScore = sleepScoreDAO.getSleepScoreForNight(accessToken.accountId, targetDate.withTimeAtStartOfDay(),
+                userOffsetMillis, this.dateBucketPeriod, sleepLabelDAO);
+        final String timeLineMessage = TimelineUtils.generateMessage(sleepStats);
 
-        final Random r = new Random();
-        String timeLineMessage = messages.get(r.nextInt(messages.size()));
-
-        int sleepScore = 0;
-        if (trackerMotions.size() > 0) {
-            final int userOffsetMillis = trackerMotions.get(0).offsetMillis;
-            sleepScore = sleepScoreDAO.getSleepScoreForNight(accessToken.accountId, targetDate.withTimeAtStartOfDay(), userOffsetMillis, this.dateBucketPeriod, sleepLabelDAO);
-        } else {
-            timeLineMessage = "You haven't been sleeping!";
-        }
-
+        LOGGER.debug("Score for account_id = {} is {}", accessToken.accountId, sleepScore);
         final Timeline timeline = new Timeline(sleepScore, timeLineMessage, date, reversed);
         final List<Timeline> timelines = new ArrayList<>();
         timelines.add(timeline);

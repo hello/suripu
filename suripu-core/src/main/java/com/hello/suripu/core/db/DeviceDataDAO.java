@@ -51,7 +51,7 @@ public abstract class DeviceDataDAO {
 
 
     @RegisterMapper(DeviceDataBucketMapper.class)
-    @SqlQuery("SELECT\n" +
+    @SqlQuery("SELECT " +
             "MAX(account_id) AS account_id," +
             "MAX(device_id) AS device_id," +
             "ROUND(AVG(ambient_temp)) as ambient_temp," +
