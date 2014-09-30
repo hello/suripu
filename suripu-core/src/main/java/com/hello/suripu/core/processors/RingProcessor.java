@@ -7,15 +7,12 @@ import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.DataSource;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.event.SleepCycleAlgorithm;
-import com.hello.suripu.core.db.AlarmDAODynamoDB;
-import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
-import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Alarm;
-import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.AlarmInfo;
 import com.hello.suripu.core.models.RingTime;
-import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -71,56 +68,131 @@ public class RingProcessor {
     }
 
     @Timed
-    public static RingTime updateNextRingTime(final AlarmDAODynamoDB alarmDAODynamoDB,
-                                          final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB,
+    public static RingTime updateNextRingTime(final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
                                           final RingTimeDAODynamoDB ringTimeDAODynamoDB,
-                                          final DeviceDAO deviceDAO,
                                           final TrackerMotionDAO trackerMotionDAO,
                                           final String morpheusId,
                                           final DateTime currentTime,
-                                          int smartAlarmProcessAheadInMinutes,
-                                          int slidingWindowSizeInMinutes){
-        final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(morpheusId);
-        RingTime currentRingTime = ringTimeDAODynamoDB.getNextRingTime(morpheusId);
+                                          final int smartAlarmProcessAheadInMinutes,
+                                          final int slidingWindowSizeInMinutes,
+                                          final float lightSleepThreshold){
 
-        final ArrayList<RingTime> ringTimes = new ArrayList<RingTime>();
-        DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
+        final List<AlarmInfo> alarmInfoList = mergedAlarmInfoDynamoDB.getInfo(morpheusId);
 
-        for (final DeviceAccountPair pair : deviceAccountPairs) {
-            try {
-                // TODO: Warning, since we query dynamoDB based on user input, the user can generate a lot of
-                // requests to break our bank(Assume that Dynamo DB never goes down).
+        final List<RingTime> ringTimes = new ArrayList<RingTime>();
 
-                // Get the timezone for current user.
-                final Optional<TimeZoneHistory> timeZoneHistoryOptional = timeZoneHistoryDAODynamoDB.getCurrentTimeZone(pair.accountId);
-                if (timeZoneHistoryOptional.isPresent()) {
-                    userTimeZone = DateTimeZone.forID(timeZoneHistoryOptional.get().timeZoneId);
-                } else {
-                    LOGGER.warn("Failed to get user timezone for account {}", pair.accountId);
-                }
-            } catch (AmazonServiceException awsException) {
-                // I guess this endpoint should never bail out?
-                LOGGER.error("AWS error when retrieving user timezone for account {}", pair.accountId);
-            }
+        for(final AlarmInfo alarmInfo:alarmInfoList){
+            final RingTime currentRingTime = alarmInfo.ringTime.isPresent() ? alarmInfo.ringTime.get() : RingTime.createEmpty();
 
-
-            try {
-                // Get alarms templates for a user
-                final List<Alarm> alarms = alarmDAODynamoDB.getAlarms(pair.accountId);
+            if(alarmInfo.alarmList.isPresent()) {
+                final List<Alarm> alarms = alarmInfo.alarmList.get();
 
                 // Based on current time, the user's alarm template & user's current timezone, compute
                 // the next ring moment.
+                if(!alarmInfo.timeZone.isPresent()){
+                    LOGGER.warn("Timezone not set for user {} on device {}", alarmInfo.accountId, alarmInfo.deviceId);
+                }else {
 
-                final RingTime nextRingTime = Alarm.Utils.getNextRingTime(alarms, currentTime.getMillis(), userTimeZone);
-                if (!nextRingTime.isEmpty()) {
-                    ringTimes.add(nextRingTime);  // Add the alarm of this user to the list.
-                } else {
-                    LOGGER.debug("Alarm worker: No alarm set for account {}", pair.accountId);
+                    RingTime nextRingTime = Alarm.Utils.getNextRingTime(alarms, currentTime.getMillis(), alarmInfo.timeZone.get());
+
+                    if(nextRingTime.isEmpty()){
+                        LOGGER.debug("Alarm worker: No alarm set for account {}", alarmInfo.accountId);
+                        continue;
+                    }
+
+                    if(currentRingTime.isEmpty()){
+                        // There is no current ring time. The next ring is the first alarm this device have.
+                        // At this time, the next ring is a regular alarm, not smart yet.
+
+                        mergedAlarmInfoDynamoDB.setInfo(new AlarmInfo(morpheusId, alarmInfo.accountId,
+                                Optional.<List<Alarm>>absent(),
+                                Optional.of(nextRingTime),
+                                Optional.<DateTimeZone>absent()));
+
+                    } else {
+                        if (currentRingTime.equals(nextRingTime)) {
+                            // The next alarm is already generated.
+                            // let's see if it is time to trigger the smart alarm processing.
+
+                            if (!currentRingTime.isSmart()) {
+
+                                // Try to get smart alarm time.
+                                // Check if the current time is N min before next ring.
+                                final DateTime actualRingTimeLocal = new DateTime(nextRingTime.actualRingTimeUTC, alarmInfo.timeZone.get());
+                                if (currentTime.plusMinutes(smartAlarmProcessAheadInMinutes).isAfter(actualRingTimeLocal) ||
+                                        currentTime.plusMinutes(smartAlarmProcessAheadInMinutes).isEqual(actualRingTimeLocal)) {
+                                    // It is time to compute sleep cycles.
+
+                                    final DateTime dataCollectionTime = new DateTime(currentTime, alarmInfo.timeZone.get());
+                                    // Convert the local data collection time to local UTC time, for select motion data.
+                                    final DateTime dataCollectionTimeLocalUTC = new DateTime(dataCollectionTime.getYear(),
+                                            dataCollectionTime.getMonthOfYear(),
+                                            dataCollectionTime.getDayOfMonth(),
+                                            dataCollectionTime.getHourOfDay(),
+                                            dataCollectionTime.getMinuteOfHour(),
+                                            0,
+                                            0,
+                                            DateTimeZone.UTC);
+
+                                    // Get the end time for pill data select.
+                                    final DateTime selectStartTimeLocalUTC = dataCollectionTimeLocalUTC.minusHours(8);
+                                    final List<TrackerMotion> pillData = trackerMotionDAO.getBetweenLocalUTC(alarmInfo.accountId, selectStartTimeLocalUTC, dataCollectionTimeLocalUTC);
+                                    long selectedSmartAlarmTime = currentRingTime.expectedRingTimeUTC;
+
+                                    if (pillData.size() == 0) {
+                                        LOGGER.info("The user {} have no motion data upload from {} to {}, in Local UTC, ring set to {}",
+                                                alarmInfo.accountId,
+                                                selectStartTimeLocalUTC, dataCollectionTime,
+                                                new DateTime(nextRingTime.actualRingTimeUTC, alarmInfo.timeZone.get()));
+                                        selectedSmartAlarmTime = nextRingTime.actualRingTimeUTC;
+                                    } else {
+                                        final PipeDataSource pipeDataSource = new PipeDataSource(pillData);
+                                        final SleepCycleAlgorithm sleepCycleAlgorithm = new SleepCycleAlgorithm(pipeDataSource, slidingWindowSizeInMinutes);
+                                        final List<Segment> sleepCycles = sleepCycleAlgorithm.getCycles(new DateTime(nextRingTime.expectedRingTimeUTC, alarmInfo.timeZone.get()),
+                                                lightSleepThreshold);
+                                        final DateTime smartAlarmRingTimeUTC = sleepCycleAlgorithm.getSmartAlarmTimeUTC(sleepCycles,
+                                                currentTime.getMillis(),
+                                                nextRingTime.expectedRingTimeUTC);
+                                        LOGGER.info("User {} smartAlarm time is {}", alarmInfo.accountId, new DateTime(smartAlarmRingTimeUTC, alarmInfo.timeZone.get()));
+                                        selectedSmartAlarmTime = smartAlarmRingTimeUTC.getMillis();
+                                    }
+
+                                    final RingTime smartAlarmRingTime = new RingTime(selectedSmartAlarmTime, nextRingTime.expectedRingTimeUTC, nextRingTime.soundIds);
+
+                                    LOGGER.info("Device {} ring time updated to {}", morpheusId, new DateTime(smartAlarmRingTime.actualRingTimeUTC, alarmInfo.timeZone.get()));
+                                    mergedAlarmInfoDynamoDB.setInfo(new AlarmInfo(alarmInfo.deviceId, alarmInfo.accountId,
+                                            Optional.<List<Alarm>>absent(),
+                                            Optional.of(smartAlarmRingTime),
+                                            Optional.<DateTimeZone>absent()));
+                                    nextRingTime = smartAlarmRingTime;
+
+                                } else {
+                                    // Too early to compute smart alarm time. There are two cases:
+                                    // 1) Next ring time is already set at this moment, but a regular one.
+                                    // 2) this is the first ring for the user, already saved.
+                                    // No need to update.
+                                }
+
+                            }else{
+                                // the smart alarm is generated, and the ring time is not passed yet.
+                                // the nextRIngTime here is an out-dated regular ring time.
+                                // set nextRingTime to current because the current time is a smart alarm.
+                                nextRingTime = currentRingTime;
+                            }
+                        } else {
+                            // the next ringtime is generated by this worker, update ringTime.
+                            final DateTime nextRingTimeLocal = new DateTime(nextRingTime.actualRingTimeUTC, alarmInfo.timeZone.get());
+
+                            LOGGER.info("Device {} ring time updated to {}", morpheusId, nextRingTimeLocal);
+                            mergedAlarmInfoDynamoDB.setInfo(new AlarmInfo(alarmInfo.deviceId, alarmInfo.accountId,
+                                    Optional.<List<Alarm>>absent(),
+                                    Optional.of(nextRingTime),
+                                    Optional.<DateTimeZone>absent()));
+                        }
+                    }
+
+                    ringTimes.add(nextRingTime);
                 }
-
-
-            } catch (AmazonServiceException awsException) {
-                LOGGER.error("AWS error when retrieving alarm for account {}.", pair.accountId);
             }
         }
 
@@ -134,166 +206,52 @@ public class RingProcessor {
             }
         });
 
-        RingTime ringTime = RingTime.createEmpty();
-
-        if (shortedRingTime.length > 0) {
-            final RingTime nextRingTime = shortedRingTime[0];
-
-            if(currentRingTime.isEmpty()){
-                // There is no current ring time. The next ring is the first alarm this device have.
-                // At this time, the next ring is a regular alarm, not smart yet.
-                currentRingTime = nextRingTime;  // Set current to next and try to trigger smart alarm computation.
-                ringTimeDAODynamoDB.setNextRingTime(morpheusId, nextRingTime);
-            }
-
-            if(currentRingTime.equals(nextRingTime)) {
-                if (currentRingTime.isSmart()) {
-                    // Skip, don't need to do anything, wait for update after this alarm passed.
-                    ringTime = currentRingTime;
-                } else {
-
-                    // Try to get smart alarm time.
-                    // Check if the current time is N min before next ring.
-                    final DateTime actualRingTimeLocal = new DateTime(nextRingTime.actualRingTimeUTC, userTimeZone);
-                    if(currentTime.plusMinutes(smartAlarmProcessAheadInMinutes).isAfter(actualRingTimeLocal) ||
-                            currentTime.plusMinutes(smartAlarmProcessAheadInMinutes).isEqual(actualRingTimeLocal)){
-                        // Compute sleep cycles.
-
-                        final Long[] smartAlarmRings = new Long[deviceAccountPairs.size()];
-                        int index = 0;
-                        // Loop through all the fucking users connected to this morpheus
-                        for (final DeviceAccountPair pair : deviceAccountPairs) {
-                            // Select data from NOW back to 8 hours before.
-
-                            // Convert the dataCollectionTime to local time.
-                            final DateTime dataCollectionTime = new DateTime(currentTime, userTimeZone);
-                            // Convert the local data collection time to local UTC time, for select motion data.
-                            final DateTime dataCollectionTimeLocalUTC = new DateTime(dataCollectionTime.getYear(),
-                                    dataCollectionTime.getMonthOfYear(),
-                                    dataCollectionTime.getDayOfMonth(),
-                                    dataCollectionTime.getHourOfDay(),
-                                    dataCollectionTime.getMinuteOfHour(),
-                                    0,
-                                    0,
-                                    DateTimeZone.UTC);
-
-                            // Get the end time for pill data select.
-                            final DateTime selectStartTimeLocalUTC = dataCollectionTimeLocalUTC.minusHours(8);
-                            final List<TrackerMotion> pillData = trackerMotionDAO.getBetweenLocalUTC(pair.accountId, selectStartTimeLocalUTC, dataCollectionTimeLocalUTC);
-
-                            if(pillData.size() == 0){
-                                LOGGER.info("The user {} have no motion data upload from {} to {}, in Local UTC, ring set to {}",
-                                        pair.accountId, selectStartTimeLocalUTC, dataCollectionTime,
-                                        new DateTime(nextRingTime.actualRingTimeUTC, userTimeZone));
-                                smartAlarmRings[index] = nextRingTime.actualRingTimeUTC;
-                            }else{
-                                final PipeDataSource pipeDataSource = new PipeDataSource(pillData);
-                                final SleepCycleAlgorithm sleepCycleAlgorithm = new SleepCycleAlgorithm(pipeDataSource, slidingWindowSizeInMinutes);
-                                final List<Segment> sleepCycles = sleepCycleAlgorithm.getCycles(new DateTime(nextRingTime.expectedRingTimeUTC, userTimeZone));
-                                final DateTime smartAlarmRingTimeUTC = sleepCycleAlgorithm.getSmartAlarmTimeUTC(sleepCycles, currentTime.getMillis(), nextRingTime.expectedRingTimeUTC);
-                                LOGGER.info("User {} smartAlarm time is {}", pair.accountId, new DateTime(smartAlarmRingTimeUTC, userTimeZone));
-                                smartAlarmRings[index] = smartAlarmRingTimeUTC.getMillis();
-                            }
-
-                            index++;
-                        }
-                        // Sort all the smart alarms from users.
-                        Arrays.sort(smartAlarmRings, new Comparator<Long>() {
-                            @Override
-                            public int compare(Long o1, Long o2) {
-                                return -Long.compare(o1, o2);
-                            }
-                        });
-
-                        // Select the latest smart alarm, let the user sleep as long as possible.
-                        long selectedSmartAlarmTime = smartAlarmRings[0];
-                        ringTime = new RingTime(selectedSmartAlarmTime, nextRingTime.expectedRingTimeUTC, nextRingTime.soundIds);
-
-                        LOGGER.info("Device {} ring time updated to {}", morpheusId, new DateTime(ringTime.actualRingTimeUTC, userTimeZone));
-                        ringTimeDAODynamoDB.setNextRingTime(morpheusId, ringTime);
-                    }else{
-                        // Too early to compute smart alarm time. There are two cases:
-                        // 1) Next ring time is already set at this moment, but a regular one.
-                        // 2) this is the first ring for the user, already saved.
-                        // No need to update.
-                        ringTime = currentRingTime;
-                    }
-
-                }
-            }else{
-                // update ringTime.
-                final DateTime nextRingTimeLocal = new DateTime(nextRingTime.actualRingTimeUTC, userTimeZone);
-                LOGGER.info("Device {} ring time updated to {}", morpheusId, nextRingTimeLocal);
-                ringTimeDAODynamoDB.setNextRingTime(morpheusId, nextRingTime);
-                ringTime = nextRingTime;
-            }
-        }else{
-            // Mark the user don't have alarm.
-            ringTime = RingTime.createEmpty();
-            ringTimeDAODynamoDB.setNextRingTime(morpheusId, ringTime);
-        }
-
-        return ringTime;
+        final RingTime result = shortedRingTime.length > 0 ? shortedRingTime[0] : RingTime.createEmpty();
+        ringTimeDAODynamoDB.setNextRingTime(morpheusId, result);  // Just for backing up the history.
+        return result;
     }
 
 
     @Timed
-    public static RingTime getNextRegularRingTime(final AlarmDAODynamoDB alarmDAODynamoDB,
-                                              final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB,
-                                              final DeviceDAO deviceDAO,
+    public static RingTime getNextRegularRingTime(final List<AlarmInfo> alarmInfoList,
                                               final String morpheusId,
                                               final DateTime currentTime){
-        final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(morpheusId);
 
         final ArrayList<RingTime> ringTimes = new ArrayList<RingTime>();
         DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
         final HashMap<Long, ArrayList<RingTime>> groupedRingTime = new HashMap<>();
 
-        for (final DeviceAccountPair pair : deviceAccountPairs) {
-            try {
-                // TODO: Warning, since we query dynamoDB based on user input, the user can generate a lot of
-                // requests to break our bank(Assume that Dynamo DB never goes down).
 
-                // Get the timezone for current user.
-                final Optional<TimeZoneHistory> timeZoneHistoryOptional = timeZoneHistoryDAODynamoDB.getCurrentTimeZone(pair.accountId);
-                if (timeZoneHistoryOptional.isPresent()) {
-                    userTimeZone = DateTimeZone.forID(timeZoneHistoryOptional.get().timeZoneId);
-                } else {
-                    LOGGER.warn("Failed to get user timezone for account {}", pair.accountId);
-                }
-            } catch (AmazonServiceException awsException) {
-                // I guess this endpoint should never bail out?
-                LOGGER.error("AWS error when retrieving user timezone for account {}", pair.accountId);
-            }
+        try {
 
+            for (final AlarmInfo alarmInfo:alarmInfoList){
+                if(alarmInfo.alarmList.isPresent()){
+                    final List<Alarm> alarms = alarmInfo.alarmList.get();
+                    final RingTime nextRingTime = Alarm.Utils.getNextRingTime(alarms, currentTime.getMillis(), userTimeZone);
 
-            try {
-                // Get alarms templates for a user
-                final List<Alarm> alarms = alarmDAODynamoDB.getAlarms(pair.accountId);
+                    if (!nextRingTime.isEmpty()) {
+                        ringTimes.add(nextRingTime);  // Add the alarm of this user to the list.
+                        if(!groupedRingTime.containsKey(nextRingTime.expectedRingTimeUTC)){
+                            groupedRingTime.put(nextRingTime.expectedRingTimeUTC, new ArrayList<RingTime>());
+                        }
 
-                // Based on current time, the user's alarm template & user's current timezone, compute
-                // the next ring moment.
-
-                final RingTime nextRingTime = Alarm.Utils.getNextRingTime(alarms, currentTime.getMillis(), userTimeZone);
-                if (!nextRingTime.isEmpty()) {
-                    ringTimes.add(nextRingTime);  // Add the alarm of this user to the list.
-                    if(!groupedRingTime.containsKey(nextRingTime.expectedRingTimeUTC)){
-                        groupedRingTime.put(nextRingTime.expectedRingTimeUTC, new ArrayList<RingTime>());
+                        // Group alarms based on their alarm deadlines
+                        // So we can know if users had set same alarms.
+                        groupedRingTime.get(nextRingTime.expectedRingTimeUTC).add(nextRingTime);
+                    } else {
+                        LOGGER.debug("Alarm worker: No alarm set for account {}", alarmInfo.accountId);
                     }
-
-                    groupedRingTime.get(nextRingTime.expectedRingTimeUTC).add(nextRingTime);
-                } else {
-                    LOGGER.debug("Alarm worker: No alarm set for account {}", pair.accountId);
                 }
-
-
-            } catch (AmazonServiceException awsException) {
-                LOGGER.error("AWS error when retrieving alarm for account {}.", pair.accountId);
             }
+
+
+        } catch (AmazonServiceException awsException) {
+            LOGGER.error("AWS error when retrieving alarm for device {}.", morpheusId);
         }
 
+
         // Now we loop over all the users, we get a list of ring time for all users.
-        // Let's pick the nearest one and tell morpheus what is the next ring time.
+        // Let's pick the closest one to the current time.
         final RingTime[] shortedRingTime = ringTimes.toArray(new RingTime[0]);
         Arrays.sort(shortedRingTime, new Comparator<RingTime>() {
             @Override
@@ -307,6 +265,9 @@ public class RingProcessor {
         if (shortedRingTime.length > 0) {
             final RingTime nextRingTime = shortedRingTime[0];
             final HashSet<Long> soundIds = new HashSet<>();
+
+            // Okay, now we have the closest ring time, let's check if multiple users
+            // had set alarms at the same ring time.
             final List<RingTime> sameRingFromDifferentUsers = groupedRingTime.get(nextRingTime.expectedRingTimeUTC);
             for(final RingTime ring:sameRingFromDifferentUsers){
                 for(long soundId:ring.soundIds){

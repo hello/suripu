@@ -32,6 +32,9 @@ public class SleepCycleAlgorithm {
 
     public SleepCycleAlgorithm(final DataSource<AmplitudeData> dataSource, final int slidingWindowSizeInMinutes){
         this.dataSource = dataSource;
+        if(slidingWindowSizeInMinutes <= 0){
+            throw new IllegalArgumentException("slidingWindowSizeInMinutes should be greater than 0");
+        }
         this.slidingWindowSizeInMinutes = slidingWindowSizeInMinutes; // TODO: should not allow 0;
     }
 
@@ -62,11 +65,11 @@ public class SleepCycleAlgorithm {
      * This is the main function.
      * Generates list of Segments based on the data from the data source
      * @param dateTime date of sleeping night
+     * @param minDensity initial threshold for light sleep detection
      * @return
      */
-    public ImmutableList<Segment> getCycles(final DateTime dateTime){
+    public ImmutableList<Segment> getCycles(final DateTime dateTime, final float minDensity){
 
-        float minDensity = 1f / 5f;
         final ArrayList<Float> densities = new ArrayList<Float>();
         final LinkedList<AmplitudeData> eventBuffer = new LinkedList<AmplitudeData>();  // sliding window
 
@@ -87,9 +90,9 @@ public class SleepCycleAlgorithm {
         // Add for the remaining state
         densities.add(getDensity(eventBuffer));
 
-        minDensity = computeMinDensity(densities, minDensity);
+        float actualDensityThreshold = computeMinDensity(densities, minDensity);
 
-        final List<Segment> segments = generateSegmentsFromAmplitudeData(data, minDensity, slidingWindowSizeInMinutes);
+        final List<Segment> segments = generateSegmentsFromAmplitudeData(data, actualDensityThreshold, slidingWindowSizeInMinutes);
         return ImmutableList.copyOf(segments);
     }
 

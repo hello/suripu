@@ -52,6 +52,7 @@ public class RingTimeDAODynamoDB {
     }
 
 
+    @Deprecated
     @Timed
     public RingTime getNextRingTime(final String deviceId){
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
@@ -88,19 +89,9 @@ public class RingTimeDAODynamoDB {
         final List<Map<String, AttributeValue>> items = queryResult.getItems();
 
         for(final Map<String, AttributeValue> item:items){
-            if(!item.keySet().containsAll(targetAttributeSet)){
-                LOGGER.warn("Missing field in item {}", item);
-                continue;
-            }
-
-            try {
-                final String ringTimeJSON = item.get(RING_TIME_ATTRIBUTE_NAME).getS();
-                final ObjectMapper mapper = new ObjectMapper();
-                final RingTime ringTime = mapper.readValue(ringTimeJSON, RingTime.class);
-
+            final RingTime ringTime = ringTimeFromItemSet(deviceId, targetAttributeSet, item);
+            if(ringTime != null){
                 return ringTime;
-            }catch (Exception ex){
-                LOGGER.error("Get ring time failed for device {}.", deviceId);
             }
         }
 
@@ -108,7 +99,34 @@ public class RingTimeDAODynamoDB {
     }
 
     @Timed
+    public static RingTime ringTimeFromItemSet(final String deviceId, final Collection<String> targetAttributeSet, final Map<String, AttributeValue> item){
+
+        if(!item.keySet().containsAll(targetAttributeSet)){
+            LOGGER.warn("Missing field in item {}", item);
+            return null;
+        }
+
+        try {
+            final String ringTimeJSON = item.get(RING_TIME_ATTRIBUTE_NAME).getS();
+            final ObjectMapper mapper = new ObjectMapper();
+            final RingTime ringTime = mapper.readValue(ringTimeJSON, RingTime.class);
+
+            return ringTime;
+        }catch (Exception ex){
+            LOGGER.error("Get ring time failed for device {}.", deviceId);
+        }
+
+        return null;
+
+    }
+
+    @Timed
     public void setNextRingTime(final String deviceId, final RingTime ringTime){
+        this.setNextRingTime(deviceId, ringTime, DateTime.now());
+    }
+
+    @Timed
+    public void setNextRingTime(final String deviceId, final RingTime ringTime, final DateTime currentTime){
 
 
         final HashMap<String, AttributeValue> items = new HashMap<String, AttributeValue>();
@@ -116,7 +134,7 @@ public class RingTimeDAODynamoDB {
         final ObjectMapper mapper = new ObjectMapper();
         try {
             final String ringTimeJSON = mapper.writeValueAsString(ringTime);
-            items.put(CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(DateTime.now().getMillis())));
+            items.put(CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(currentTime.getMillis())));
             items.put(RING_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(ringTimeJSON));
 
             final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, items);

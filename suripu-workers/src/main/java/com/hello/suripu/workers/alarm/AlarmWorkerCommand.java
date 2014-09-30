@@ -9,10 +9,9 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibC
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.configuration.QueueName;
-import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
-import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
@@ -61,8 +60,8 @@ public class AlarmWorkerCommand extends ConfiguredCommand<AlarmWorkerConfigurati
 
         final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
 
-        final AlarmDAODynamoDB alarmDAODynamoDB = new AlarmDAODynamoDB(dynamoDBClient, configuration.getAlarmDBConfiguration().getTableName());
-        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(dynamoDBClient, configuration.getTimeZoneHistoryDBConfiguration().getTableName());
+        final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB = new MergedAlarmInfoDynamoDB(dynamoDBClient,
+                configuration.getAlarmInfoDynamoDBConfiguration().getTableName());
         final RingTimeDAODynamoDB ringTimeDAODynamoDB = new RingTimeDAODynamoDB(dynamoDBClient, configuration.getRingTimeDBConfiguration().getTableName());
 
 
@@ -83,8 +82,10 @@ public class AlarmWorkerCommand extends ConfiguredCommand<AlarmWorkerConfigurati
         kinesisConfig.withKinesisEndpoint(configuration.getKinesisEndpoint());
         kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
 
-        final IRecordProcessorFactory factory = new AlarmRecordProcessorFactory(alarmDAODynamoDB, ringTimeDAODynamoDB, timeZoneHistoryDAODynamoDB,
-                trackerMotionDAO, deviceDAO, configuration);
+        final IRecordProcessorFactory factory = new AlarmRecordProcessorFactory(mergedAlarmInfoDynamoDB,
+                ringTimeDAODynamoDB,
+                trackerMotionDAO,
+                configuration);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
     }

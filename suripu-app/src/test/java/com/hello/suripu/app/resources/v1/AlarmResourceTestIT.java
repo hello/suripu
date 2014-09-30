@@ -6,7 +6,10 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
+import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
+import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmSound;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -24,6 +27,8 @@ import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Created by pangwu on 9/17/14.
@@ -37,6 +42,7 @@ public class AlarmResourceTestIT {
 
     private AlarmResource alarmResource;
     private final String tableName = "alarm_test";
+    private final String alarmInfoTableName = "alarm_info_test";
 
 
     private final List<Alarm> validList = new ArrayList<Alarm>();
@@ -65,13 +71,23 @@ public class AlarmResourceTestIT {
         cleanUp();
 
         try {
-            AlarmDAODynamoDB.createTable(tableName, this.amazonDynamoDBClient);
+            AlarmDAODynamoDB.createTable(this.tableName, this.amazonDynamoDBClient);
             this.alarmDAODynamoDB = new AlarmDAODynamoDB(
                     this.amazonDynamoDBClient,
-                    tableName
+                    this.tableName
             );
 
-            this.alarmResource = new AlarmResource(this.alarmDAODynamoDB);
+            MergedAlarmInfoDynamoDB.createTable(this.alarmInfoTableName, this.amazonDynamoDBClient);
+            final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB = new MergedAlarmInfoDynamoDB(
+                    this.amazonDynamoDBClient,
+                    this.alarmInfoTableName
+            );
+
+
+            final DeviceDAO deviceDAO = mock(DeviceDAO.class);
+            when(deviceDAO.getDeviceIdFromAccountId(1L)).thenReturn(Optional.of("test morpheus"));
+
+            this.alarmResource = new AlarmResource(this.alarmDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO);
 
 
         }catch (ResourceInUseException rie){
@@ -151,10 +167,21 @@ public class AlarmResourceTestIT {
 
     @After
     public void cleanUp(){
-        final DeleteTableRequest deleteTableRequest = new DeleteTableRequest()
-                .withTableName(tableName);
+
         try {
-            this.amazonDynamoDBClient.deleteTable(deleteTableRequest);
+            this.amazonDynamoDBClient.deleteTable(new DeleteTableRequest()
+                    .withTableName(this.tableName));
+
+
+        }catch (ResourceNotFoundException ex){
+            ex.printStackTrace();
+        }
+
+        try {
+            this.amazonDynamoDBClient.deleteTable(new DeleteTableRequest()
+                    .withTableName(this.alarmInfoTableName));
+
+
         }catch (ResourceNotFoundException ex){
             ex.printStackTrace();
         }

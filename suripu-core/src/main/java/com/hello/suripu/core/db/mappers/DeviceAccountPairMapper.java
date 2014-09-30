@@ -14,7 +14,7 @@ public class DeviceAccountPairMapper implements ResultSetMapper<DeviceAccountPai
         return new DeviceAccountPair(
                 r.getLong("account_id"),
                 r.getLong("id"),
-                r.getString("device_id")
+                r.getString("device_name")
         );
     }
 }

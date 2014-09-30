@@ -134,4 +134,13 @@ public class SuripuAppConfiguration extends Configuration {
         return this.ringTimeDBConfiguration;
     }
 
+
+    @Valid
+    @NotNull
+    @JsonProperty("alarm_info_db")
+    private DynamoDBConfiguration alarmInfoDynamoDBConfiguration;
+    public DynamoDBConfiguration getAlarmInfoDynamoDBConfiguration(){
+        return this.alarmInfoDynamoDBConfiguration;
+    }
+
 }

@@ -10,19 +10,17 @@ import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.api.input.InputProtos.SimpleSensorBatch;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.crypto.CryptoHelper;
-import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.PublicKeyStore;
-import com.hello.suripu.core.db.RingTimeDAODynamoDB;
-import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
+import com.hello.suripu.core.models.AlarmInfo;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.TempTrackerData;
-import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -68,10 +66,7 @@ public class ReceiveResource {
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
     private final PublicKeyStore publicKeyStore;
-
-    private final AlarmDAODynamoDB alarmDAODynamoDB;
-    private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
-    private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
+    private final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
 
     private final KinesisLoggerFactory kinesisLoggerFactory;
     private final CryptoHelper cryptoHelper;
@@ -86,9 +81,7 @@ public class ReceiveResource {
                            final PublicKeyStore publicKeyStore,
                            final KinesisLoggerFactory kinesisLoggerFactory,
 
-                           final AlarmDAODynamoDB alarmDAODynamoDB,
-                           final RingTimeDAODynamoDB ringTimeDAODynamoDB,
-                           final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB,
+                           final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
                            final Boolean debug) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
@@ -97,9 +90,7 @@ public class ReceiveResource {
         cryptoHelper = new CryptoHelper();
         this.kinesisLoggerFactory = kinesisLoggerFactory;
 
-        this.alarmDAODynamoDB = alarmDAODynamoDB;
-        this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
-        this.timeZoneHistoryDAODynamoDB = timeZoneHistoryDAODynamoDB;
+        this.mergedAlarmInfoDynamoDB = mergedAlarmInfoDynamoDB;
 
         this.debug = debug;
     }
@@ -226,27 +217,57 @@ public class ReceiveResource {
             );
         }
 
+        // TODO: Warining, since we query dynamoDB based on user input, the user can generate a lot of
+        // requests to break our bank(Assume that Dynamo DB never goes down).
+        // May be we should somehow cache these data to reduce load & cost.
+        final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceName);
+        final List<AlarmInfo> alarmInfoList = this.mergedAlarmInfoDynamoDB.getInfo(deviceName);  // get alarm related info from DynamoDB "cache".
+        RingTime nextRingTimeFromWorker = RingTime.createEmpty();
 
-        final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceName.toString());
         LOGGER.debug("Found {} pairs", deviceAccountPairs.size());
+
         long timestampMillis = data.getUnixTime() * 1000L;
         final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
         // This is the default timezone.
         DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
 
+        // Here comes to a discussion: Shall we loop over the device_id:account_id relation based on the
+        // DynamoDB "cache" or PostgresSQL accout_device_map table?
+        // Looping over DynamoDB can save a hit to the PostgresSQL every minute for every Morpheus,
+        // but may run into data consistency issue if the alarm_info table is not update correctly.
+        // Looping over the PostgresSQL table can avoid the issue of data consistency, since everything
+        // is checked on actual device:account pair. However, this might bring in availability concern.
+        //
+        // For now, I rely on the actual device_account_map table instead of the dynamo DB cache.
+        // Because I think it will make the implementation much simpler. If the PostgreSQL is down, sensor data
+        // will not be stored anyway.
+        //
+        // Pang, 09/26/2014
         for (final DeviceAccountPair pair : deviceAccountPairs) {
             try {
-                // TODO: Warining, since we query dynamoDB based on user input, the user can generate a lot of
-                // requests to break our bank(Assume that Dynamo DB never goes down).
-                // May be we should somehow cache these data to reduce load & cost.
-                // Could be some simple HashMap class variable that is cleared periodically.
-
                 // Get the timezone for current user.
-                final Optional<TimeZoneHistory> timeZoneHistoryOptional = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(pair.accountId);
-                if(timeZoneHistoryOptional.isPresent()){
-                    userTimeZone = DateTimeZone.forID(timeZoneHistoryOptional.get().timeZoneId);
-                }else{
-                    LOGGER.warn("Failed to get user timezone for account {}", pair.accountId);
+                for(final AlarmInfo alarmInfo:alarmInfoList){
+                    if(alarmInfo.accountId == pair.accountId){
+                        if(alarmInfo.timeZone.isPresent()){
+                            userTimeZone = alarmInfo.timeZone.get();
+                        }else{
+                            LOGGER.warn("User {} on device {} time zone not set.", pair.accountId, alarmInfo.deviceId);
+                        }
+
+                        if(alarmInfo.ringTime.isPresent()){
+                            if(alarmInfo.ringTime.get().isEmpty()){
+                                continue;
+                            }
+
+                            if(nextRingTimeFromWorker.isEmpty()){
+                                nextRingTimeFromWorker = alarmInfo.ringTime.get();
+                            }else{
+                                if(alarmInfo.ringTime.get().actualRingTimeUTC < nextRingTimeFromWorker.actualRingTimeUTC){
+                                    nextRingTimeFromWorker = alarmInfo.ringTime.get();
+                                }
+                            }
+                        }
+                    }
                 }
             }catch (AmazonServiceException awsException){
                 // I guess this endpoint should never bail out?
@@ -292,9 +313,7 @@ public class ReceiveResource {
 
 
         final InputProtos.SyncResponse.Builder responseBuilder = InputProtos.SyncResponse.newBuilder();
-        final RingTime nextRingTimeFromWorker = this.ringTimeDAODynamoDB.getNextRingTime(deviceName);
-        final RingTime nextRegularRingTime = RingProcessor.getNextRegularRingTime(this.alarmDAODynamoDB, this.timeZoneHistoryDAODynamoDB,
-                this.deviceDAO,
+        final RingTime nextRegularRingTime = RingProcessor.getNextRegularRingTime(alarmInfoList,
                 deviceName,
                 DateTime.now());
 

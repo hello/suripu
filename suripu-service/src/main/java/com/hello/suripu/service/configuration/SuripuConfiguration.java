@@ -121,4 +121,13 @@ public class SuripuConfiguration extends Configuration {
     public KinesisConfiguration getKinesisConfiguration() {
         return kinesisConfiguration;
     }
+
+
+    @Valid
+    @NotNull
+    @JsonProperty("alarm_info_db")
+    private DynamoDBConfiguration alarmInfoDynamoDBConfiguration;
+    public DynamoDBConfiguration getAlarmInfoDynamoDBConfiguration(){
+        return this.alarmInfoDynamoDBConfiguration;
+    }
 }

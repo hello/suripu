@@ -2,10 +2,8 @@ package com.hello.suripu.workers.alarm;
 
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
-import com.hello.suripu.core.db.AlarmDAODynamoDB;
-import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
-import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 
 /**
@@ -13,33 +11,30 @@ import com.hello.suripu.core.db.TrackerMotionDAO;
  */
 public class AlarmRecordProcessorFactory implements IRecordProcessorFactory {
 
-    private final AlarmDAODynamoDB alarmDAODynamoDB;
+    private final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
     private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
-    private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
     private final TrackerMotionDAO trackerMotionDAO;
-    private final DeviceDAO deviceDAO;
     private final AlarmWorkerConfiguration configuration;
 
 
     public AlarmRecordProcessorFactory(
-            final AlarmDAODynamoDB alarmDAODynamoDB,
+            final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
             final RingTimeDAODynamoDB ringTimeDAODynamoDB,
-            final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB,
             final TrackerMotionDAO trackerMotionDAO,
-            final DeviceDAO deviceDAO,
             final AlarmWorkerConfiguration configuration) {
-        this.alarmDAODynamoDB = alarmDAODynamoDB;
+
+        this.mergedAlarmInfoDynamoDB = mergedAlarmInfoDynamoDB;
         this.trackerMotionDAO = trackerMotionDAO;
-        this.timeZoneHistoryDAODynamoDB = timeZoneHistoryDAODynamoDB;
         this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
-        this.deviceDAO = deviceDAO;
         this.configuration = configuration;
     }
 
 
     @Override
     public IRecordProcessor createProcessor() {
-        return new AlarmRecordProcessor(this.alarmDAODynamoDB, this.ringTimeDAODynamoDB, this.timeZoneHistoryDAODynamoDB,
-                this.trackerMotionDAO, this.deviceDAO, this.configuration);
+        return new AlarmRecordProcessor(this.mergedAlarmInfoDynamoDB,
+                this.ringTimeDAODynamoDB,
+                this.trackerMotionDAO,
+                this.configuration);
     }
 }

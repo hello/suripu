@@ -35,7 +35,6 @@ public abstract class TrackerMotionDAO {
             "account_id = :account_id AND ts >= :start_timestamp AND ts <= :end_timestamp " +
             "ORDER BY ts ASC;"
     )
-
     public abstract ImmutableList<TrackerMotion> getBetween(@Bind("account_id") long accountId,
                                                    @Bind("start_timestamp") final DateTime startTimestampUTC,
                                                    @Bind("end_timestamp") final DateTime endTimestampUTC);
@@ -48,6 +47,7 @@ public abstract class TrackerMotionDAO {
     public abstract ImmutableList<TrackerMotion> getBetweenLocalUTC(@Bind("account_id") long accountId,
                                                    @Bind("start_timestamp_local_utc") final DateTime startTimestampLocalUTC,
                                                    @Bind("end_timestamp_local_utc") final DateTime endTimestampLocalUTC);
+
 
     @RegisterMapper(GroupedTrackerMotionMapper.class)
     @SqlQuery("SELECT MAX(account_id) as account_id, " +
