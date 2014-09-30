@@ -82,16 +82,6 @@ public class OAuthResource {
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
 
-
-        final Optional<Account> accountOptional = accountDAO.exists(username, password);
-        if(!accountOptional.isPresent()) {
-            LOGGER.error("Account wasn't found", username, password);
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
-        }
-
-        final Account account = accountOptional.get();
-
-
         // FIXME: this is confusing, are we checking for application, or for installed application for this user
         // FIXME: if that's what we are doing, how did they get a token in the first place?
         // TODO: BE SMARTER
@@ -101,10 +91,24 @@ public class OAuthResource {
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
 
-        if(!applicationOptional.get().grantType.equals(grantType.getType())) {
+        final Application application = applicationOptional.get();
+        if (!application.hasScope(OAuthScope.AUTH)) {
+            LOGGER.error("application does not have proper scope : {}", clientId);
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
+        }
+
+        if(!application.grantType.equals(grantType.getType())) {
             LOGGER.error("Grant types don't match : {} and {}", applicationOptional.get().grantType, grantType.getType());
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
+
+        final Optional<Account> accountOptional = accountDAO.exists(username, password);
+        if(!accountOptional.isPresent()) {
+            LOGGER.error("Account wasn't found", username, password);
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
+        }
+
+        final Account account = accountOptional.get();
 
         // Important : when using password flow, we should not send / nor expect the client_secret
         final ClientDetails details = new ClientDetails(
@@ -176,7 +180,7 @@ public class OAuthResource {
     @DELETE
     @Path("/token")
     @Timed
-    public void delete(@Scope(OAuthScope.USER_BASIC) final AccessToken accessToken) {
+    public void delete(@Scope({OAuthScope.AUTH}) final AccessToken accessToken) {
         tokenStore.disable(accessToken);
         LOGGER.debug("AccessToken {} deleted", accessToken);
         if(accessToken.hasScope(OAuthScope.PUSH_NOTIFICATIONS)) {
