@@ -89,10 +89,45 @@ public class SuripuConfiguration extends Configuration {
 
     @Valid
     @NotNull
+    @JsonProperty("timezone_history_db")
+    private DynamoDBConfiguration timeZoneHistoryDBConfiguration;
+    public DynamoDBConfiguration getTimeZoneHistoryDBConfiguration(){
+        return this.timeZoneHistoryDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("alarm_db")
+    private DynamoDBConfiguration alarmDBConfiguration;
+    public DynamoDBConfiguration getAlarmDBConfiguration(){
+        return this.alarmDBConfiguration;
+    }
+
+
+    @Valid
+    @NotNull
+    @JsonProperty("ring_time_db")
+    private DynamoDBConfiguration ringTimeDBConfiguration;
+    public DynamoDBConfiguration getRingTimeDBConfiguration(){
+        return this.ringTimeDBConfiguration;
+    }
+
+
+    @Valid
+    @NotNull
     @JsonProperty("kinesis")
     private KinesisConfiguration kinesisConfiguration;
 
     public KinesisConfiguration getKinesisConfiguration() {
         return kinesisConfiguration;
+    }
+
+
+    @Valid
+    @NotNull
+    @JsonProperty("alarm_info_db")
+    private DynamoDBConfiguration alarmInfoDynamoDBConfiguration;
+    public DynamoDBConfiguration getAlarmInfoDynamoDBConfiguration(){
+        return this.alarmInfoDynamoDBConfiguration;
     }
 }

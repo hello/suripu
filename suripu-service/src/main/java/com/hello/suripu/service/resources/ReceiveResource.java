@@ -1,5 +1,6 @@
 package com.hello.suripu.service.resources;
 
+import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.protobuf.ByteString;
@@ -11,19 +12,24 @@ import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.crypto.CryptoHelper;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
+import com.hello.suripu.core.models.AlarmInfo;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.TempTrackerData;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.service.SignedMessage;
 import com.yammer.metrics.annotation.Timed;
 import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
@@ -60,6 +66,7 @@ public class ReceiveResource {
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
     private final PublicKeyStore publicKeyStore;
+    private final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
 
     private final KinesisLoggerFactory kinesisLoggerFactory;
     private final CryptoHelper cryptoHelper;
@@ -73,6 +80,8 @@ public class ReceiveResource {
                            final DeviceDAO deviceDAO,
                            final PublicKeyStore publicKeyStore,
                            final KinesisLoggerFactory kinesisLoggerFactory,
+
+                           final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
                            final Boolean debug) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
@@ -80,6 +89,9 @@ public class ReceiveResource {
         this.publicKeyStore = publicKeyStore;
         cryptoHelper = new CryptoHelper();
         this.kinesisLoggerFactory = kinesisLoggerFactory;
+
+        this.mergedAlarmInfoDynamoDB = mergedAlarmInfoDynamoDB;
+
         this.debug = debug;
     }
 
@@ -172,10 +184,7 @@ public class ReceiveResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Timed
     public byte[] morpheusProtobufReceiveEncrypted(final byte[] body) {
-
-
         final SignedMessage signedMessage = SignedMessage.parse(body);
-
         InputProtos.periodic_data data = null;
 
         try {
@@ -208,13 +217,63 @@ public class ReceiveResource {
             );
         }
 
+        // TODO: Warining, since we query dynamoDB based on user input, the user can generate a lot of
+        // requests to break our bank(Assume that Dynamo DB never goes down).
+        // May be we should somehow cache these data to reduce load & cost.
+        final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceName);
+        final List<AlarmInfo> alarmInfoList = this.mergedAlarmInfoDynamoDB.getInfo(deviceName);  // get alarm related info from DynamoDB "cache".
+        RingTime nextRingTimeFromWorker = RingTime.createEmpty();
 
-        final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceName.toString());
         LOGGER.debug("Found {} pairs", deviceAccountPairs.size());
+
         long timestampMillis = data.getUnixTime() * 1000L;
         final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
+        // This is the default timezone.
+        DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
 
+        // Here comes to a discussion: Shall we loop over the device_id:account_id relation based on the
+        // DynamoDB "cache" or PostgresSQL accout_device_map table?
+        // Looping over DynamoDB can save a hit to the PostgresSQL every minute for every Morpheus,
+        // but may run into data consistency issue if the alarm_info table is not update correctly.
+        // Looping over the PostgresSQL table can avoid the issue of data consistency, since everything
+        // is checked on actual device:account pair. However, this might bring in availability concern.
+        //
+        // For now, I rely on the actual device_account_map table instead of the dynamo DB cache.
+        // Because I think it will make the implementation much simpler. If the PostgreSQL is down, sensor data
+        // will not be stored anyway.
+        //
+        // Pang, 09/26/2014
         for (final DeviceAccountPair pair : deviceAccountPairs) {
+            try {
+                // Get the timezone for current user.
+                for(final AlarmInfo alarmInfo:alarmInfoList){
+                    if(alarmInfo.accountId == pair.accountId){
+                        if(alarmInfo.timeZone.isPresent()){
+                            userTimeZone = alarmInfo.timeZone.get();
+                        }else{
+                            LOGGER.warn("User {} on device {} time zone not set.", pair.accountId, alarmInfo.deviceId);
+                        }
+
+                        if(alarmInfo.ringTime.isPresent()){
+                            if(alarmInfo.ringTime.get().isEmpty()){
+                                continue;
+                            }
+
+                            if(nextRingTimeFromWorker.isEmpty()){
+                                nextRingTimeFromWorker = alarmInfo.ringTime.get();
+                            }else{
+                                if(alarmInfo.ringTime.get().actualRingTimeUTC < nextRingTimeFromWorker.actualRingTimeUTC){
+                                    nextRingTimeFromWorker = alarmInfo.ringTime.get();
+                                }
+                            }
+                        }
+                    }
+                }
+            }catch (AmazonServiceException awsException){
+                // I guess this endpoint should never bail out?
+                LOGGER.error("AWS error when retrieving user timezone for account {}", pair.accountId);
+            }
+
             final DeviceData.Builder builder = new DeviceData.Builder()
                     .withAccountId(pair.accountId)
                     .withDeviceId(pair.internalDeviceId)
@@ -222,7 +281,7 @@ public class ReceiveResource {
                     .withAmbientAirQuality(data.getDust())
                     .withAmbientHumidity(data.getHumidity())
                     .withAmbientLight(data.getLight())
-                    .withOffsetMillis(-25200000) //TODO: GET THIS FROM MORPHEUS PAYLOAD
+                    .withOffsetMillis(userTimeZone.getOffset(roundedDateTime))
                     .withDateTimeUTC(roundedDateTime);
 
             final DeviceData deviceData = builder.build();
@@ -243,18 +302,42 @@ public class ReceiveResource {
 
                 LOGGER.warn("Duplicate device sensor value for account_id = {}, time: {}", pair.accountId, roundedDateTime);
             }
+
+            final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.MORPHEUS_DATA);
+            final byte[] morpheusDataInBytes = data.toByteArray();
+            final String shardingKey = deviceName;
+
+            final String sequenceNumber = dataLogger.put(shardingKey, morpheusDataInBytes);
+
         }
 
 
-        final InputProtos.SyncResponse.Alarm alarm = InputProtos.SyncResponse.Alarm.newBuilder()
-                .setRingtoneId(99)
-                .setStartTime((int) (DateTime.now().getMillis()/ 1000))
-                .setEndTime((int) (DateTime.now().plusSeconds(30).getMillis()/ 1000))
-                .build();
+        final InputProtos.SyncResponse.Builder responseBuilder = InputProtos.SyncResponse.newBuilder();
+        final RingTime nextRegularRingTime = RingProcessor.getNextRegularRingTime(alarmInfoList,
+                deviceName,
+                DateTime.now());
 
-        final InputProtos.SyncResponse syncResponse = InputProtos.SyncResponse.newBuilder()
-                .setAlarm(alarm)
-                .build();
+        RingTime replyRingTime = nextRegularRingTime;
+        // Now the ring time for different users is sorted, get the nearest one.
+        if(nextRegularRingTime.equals(nextRingTimeFromWorker)) {
+            replyRingTime = nextRingTimeFromWorker;
+        }
+
+        long nextRingTimestamp = replyRingTime.actualRingTimeUTC;
+        int ringDurationInMS = 30 * DateTimeConstants.MILLIS_PER_SECOND;  // TODO: make this flexible so we can adjust based on user preferences.
+
+        final InputProtos.SyncResponse.Alarm.Builder alarmBuilder = InputProtos.SyncResponse.Alarm.newBuilder()
+                .setStartTime((int) (nextRingTimestamp / DateTimeConstants.MILLIS_PER_SECOND))
+                .setEndTime((int) ((nextRingTimestamp + ringDurationInMS) / DateTimeConstants.MILLIS_PER_SECOND));
+
+        for(int i = 0; i < replyRingTime.soundIds.length; i++){
+            alarmBuilder.setRingtoneIds(i, replyRingTime.soundIds[i]);
+        }
+
+        responseBuilder.setAlarm(alarmBuilder.build());
+
+
+        final InputProtos.SyncResponse syncResponse = responseBuilder.build();
 
         LOGGER.debug("Len pb = {}", syncResponse.toByteArray().length);
 

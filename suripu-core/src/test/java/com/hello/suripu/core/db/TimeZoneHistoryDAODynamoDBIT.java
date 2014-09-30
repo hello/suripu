@@ -164,4 +164,12 @@ public class TimeZoneHistoryDAODynamoDBIT {
         assertThat(updated.get().offsetMillis, is(offsetMillis));
         assertThat(updated.get().timeZoneId, not(timeZone.getID()));
     }
+
+    @Test
+    public void testRetrieveEmptyHistory(){
+        long accountId = 1;
+        final Optional<TimeZoneHistory> optional = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
+        assertThat(optional.isPresent(), is(false));
+
+    }
 }

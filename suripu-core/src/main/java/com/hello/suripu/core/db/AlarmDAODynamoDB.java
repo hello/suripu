@@ -99,6 +99,7 @@ public class AlarmDAODynamoDB {
     }
 
     @Timed
+    @Deprecated
     public ImmutableList<Alarm> getAlarms(long accountId){
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
         final Condition selectByAccountId  = new Condition()
@@ -111,8 +112,7 @@ public class AlarmDAODynamoDB {
         final QueryRequest queryRequest = new QueryRequest(this.tableName)
                 .withKeyConditions(queryConditions)
                 .withAttributesToGet(targetAttributes)
-                .withLimit(1)
-                .withScanIndexForward(true);
+                .withLimit(1);
 
         final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
         if(queryResult.getItems() == null){

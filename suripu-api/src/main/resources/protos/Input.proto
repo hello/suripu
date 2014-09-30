@@ -120,6 +120,7 @@ message SyncResponse {
         optional int32 start_time = 1;
         optional int32 end_time = 2;
         optional int32 ringtone_id = 3 [default = 1];
+        repeated int64 ringtone_ids = 4 [packed = true];
     }
 
     message PairingAction {
@@ -223,4 +224,3 @@ message periodic_data {
     optional int32 light_tonality=9;
     optional int32 firmware_version=10;
 }
-

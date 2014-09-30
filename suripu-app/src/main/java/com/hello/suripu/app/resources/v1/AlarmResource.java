@@ -1,14 +1,20 @@
 package com.hello.suripu.app.resources.v1;
 
 import com.amazonaws.AmazonServiceException;
+import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
+import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.models.Alarm;
+import com.hello.suripu.core.models.AlarmInfo;
+import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,9 +37,16 @@ public class AlarmResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AlarmResource.class);
     private final AlarmDAODynamoDB alarmDAODynamoDB;
+    private final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
+    private final DeviceDAO deviceDAO;
 
-    public AlarmResource(final AlarmDAODynamoDB alarmDAODynamoDB){
+
+    public AlarmResource(final AlarmDAODynamoDB alarmDAODynamoDB,
+                         final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
+                         final DeviceDAO deviceDAO){
         this.alarmDAODynamoDB = alarmDAODynamoDB;
+        this.mergedAlarmInfoDynamoDB = mergedAlarmInfoDynamoDB;
+        this.deviceDAO = deviceDAO;
     }
 
     @Timed
@@ -41,9 +54,19 @@ public class AlarmResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<Alarm> getAlarms(@Scope({OAuthScope.ALARM_READ}) final AccessToken token){
 
+        final Optional<String> deviceIdOptional = this.deviceDAO.getDeviceIdFromAccountId(token.accountId);
+        if(!deviceIdOptional.isPresent()){
+            LOGGER.error("User {} tries to retrieve alarm without paired with a Morpheus.", token.accountId);
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
         try {
-            final List<Alarm> alarms = alarmDAODynamoDB.getAlarms(token.accountId);
-            return alarms;
+            final Optional<AlarmInfo> alarmInfoOptional = this.mergedAlarmInfoDynamoDB.getInfo(deviceIdOptional.get(), token.accountId);
+            if(!alarmInfoOptional.isPresent()){
+                LOGGER.error("Merge alarm info table doesn't have record for device {}, account {}.", deviceIdOptional.get(), token.accountId);
+                throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            }
+            return alarmInfoOptional.get().alarmList.get();
         }catch (AmazonServiceException awsException){
             LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
@@ -71,7 +94,18 @@ public class AlarmResource {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
+        final Optional<String> deviceIdOptional = deviceDAO.getDeviceIdFromAccountId(token.accountId);
+        if(!deviceIdOptional.isPresent()){
+            LOGGER.error("User tries to set alarm without connected to a Morpheus.", token.accountId);
+            throw new WebApplicationException(Response.Status.FORBIDDEN);
+        }
+
         try {
+            final AlarmInfo alarmInfo = new AlarmInfo(deviceIdOptional.get(), token.accountId,
+                    Optional.of(alarms),
+                    Optional.<RingTime>absent(),
+                    Optional.<DateTimeZone>absent());
+            this.mergedAlarmInfoDynamoDB.setInfo(alarmInfo);
             this.alarmDAODynamoDB.setAlarms(token.accountId, alarms);
         }catch (AmazonServiceException awsException){
             LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);
