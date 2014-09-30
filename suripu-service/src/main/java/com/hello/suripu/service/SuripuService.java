@@ -11,13 +11,16 @@ import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
+import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.EventDAO;
+import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.PublicKeyStoreDynamoDB;
 import com.hello.suripu.core.db.ScoreDAO;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
@@ -87,7 +90,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         sensorsDB.registerContainerFactory(new OptionalContainerFactory());
         sensorsDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
 
-        final DeviceDataDAO dao = sensorsDB.onDemand(DeviceDataDAO.class);
+        final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final AccessTokenDAO accessTokenDAO = commonDB.onDemand(AccessTokenDAO.class);
         final DeviceDAO deviceDAO = sensorsDB.onDemand(DeviceDAO.class);
         final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
@@ -103,6 +106,12 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
         final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);
         final String bucketName = configuration.getAudioBucketName();
+
+        final AlarmDAODynamoDB alarmDAODynamoDB = new AlarmDAODynamoDB(dynamoDBClient, configuration.getAlarmDBConfiguration().getTableName());
+        final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB = new MergedAlarmInfoDynamoDB(dynamoDBClient,
+                configuration.getAlarmInfoDynamoDBConfiguration().getTableName());
+        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(dynamoDBClient, configuration.getTimeZoneHistoryDBConfiguration().getTableName());
+
 
 
         final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider);
@@ -144,8 +153,13 @@ public class SuripuService extends Service<SuripuConfiguration> {
         }
 
         environment.addProvider(new OAuthProvider<AccessToken>(new OAuthAuthenticator(tokenStore), "protected-resources"));
+        environment.addResource(new ReceiveResource(deviceDataDAO, deviceDAO,
+                publicKeyStore,
+                kinesisLoggerFactory,
+                mergedAlarmInfoDynamoDB,
+                configuration.getDebug()));
 
-        environment.addResource(new ReceiveResource(dao, deviceDAO, publicKeyStore, kinesisLoggerFactory, configuration.getDebug()));
+
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());
 

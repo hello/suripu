@@ -1,0 +1,18 @@
+2014-09-23 08:00:50: com.hello.pirupea.SmartAlarmTestService created.
+2014-09-23 08:00:50: Discovering pills...
+2014-09-23 08:01:10: Paired pill detected: Pill-EC
+2014-09-23 08:01:10: Connecting to Pill-EC ....
+2014-09-23 08:01:10: Ring scheduled for 2014-09-23T08:20:00.000-07:00
+2014-09-23 08:01:10: Ring time set to default: 2014-09-23T08:20:00.000-07:00
+2014-09-23 08:01:21: Pill-EC connected.
+2014-09-23 08:01:27: Time in Pill-EC: 2014-09-23T08:01:36.000-07:00
+2014-09-23 08:01:52: Dump data from Pill-EC,EC8A9527DAD862C4 completed. data size: 539
+2014-09-23 08:01:52: User still in light sleep. Next deep sleep moment: 2014-09-23T08:16:37.000-07:00
+2014-09-23 08:01:52: Smart alarm time: 2014-09-23T08:11:00.000-07:00
+2014-09-23 08:01:52: Ring scheduled for 2014-09-23T08:11:00.000-07:00
+2014-09-23 08:01:59: upload data for pill EC8A9527DAD862C4 finished.
+2014-09-23 08:01:59: Pill-EC disconnected: 0
+2014-09-23 08:01:59: Next data collection starts at: 2014-09-24T08:00:00.000-07:00
+2014-09-23 08:01:59: com.hello.pirupea.SmartAlarmTestService destroyed.
+2014-09-23 08:11:00: Ring started.
+2014-09-23 08:11:06: Ring stop.
