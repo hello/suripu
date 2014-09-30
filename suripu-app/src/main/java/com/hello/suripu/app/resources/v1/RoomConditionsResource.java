@@ -51,6 +51,7 @@ public class RoomConditionsResource {
         }
 
         final DeviceData deviceData = data.get();
+        LOGGER.debug("Last device data in db = {}", deviceData);
         final CurrentRoomState roomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), 15);
         return roomState;
     }

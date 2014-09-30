@@ -90,7 +90,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         sensorsDB.registerContainerFactory(new OptionalContainerFactory());
         sensorsDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
 
-        final DeviceDataDAO dao = sensorsDB.onDemand(DeviceDataDAO.class);
+        final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final AccessTokenDAO accessTokenDAO = commonDB.onDemand(AccessTokenDAO.class);
         final DeviceDAO deviceDAO = sensorsDB.onDemand(DeviceDAO.class);
         final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
@@ -153,15 +153,11 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
         environment.addProvider(new OAuthProvider<AccessToken>(new OAuthAuthenticator(tokenStore), "protected-resources"));
 
-        environment.addResource(new ReceiveResource(dao, deviceDAO, scoreDAO,
-                trackerMotionDAO,
-                publicKeyStore,
-                kinesisLoggerFactory,
+        environment.addResource(new ReceiveResource(deviceDataDAO, deviceDAO, publicKeyStore,  kinesisLoggerFactory,
                 alarmDAODynamoDB,
                 ringTimeDAODynamoDB,
                 timeZoneHistoryDAODynamoDB,
                 configuration.getDebug()));
-
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());
 
