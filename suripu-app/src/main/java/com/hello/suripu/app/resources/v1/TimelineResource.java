@@ -1,12 +1,10 @@
 package com.hello.suripu.app.resources.v1;
 
 import com.google.common.collect.Lists;
-import com.hello.suripu.core.db.EventDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Event;
-import com.hello.suripu.core.models.SensorSample;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -14,6 +12,7 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.util.DateTimeUtil;
+import com.hello.suripu.core.util.TimelineUtils;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -35,19 +34,16 @@ public class TimelineResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineResource.class);
 
-    private final EventDAODynamoDB eventDAODynamoDB;
     private final TrackerMotionDAO trackerMotionDAO;
     private final SleepScoreDAO sleepScoreDAO;
     private final SleepLabelDAO sleepLabelDAO;
     private final int dateBucketPeriod;
 
-    public TimelineResource(final EventDAODynamoDB eventDAODynamoDB,
-                            final TrackerMotionDAO trackerMotionDAO,
+    public TimelineResource(final TrackerMotionDAO trackerMotionDAO,
                             final SleepLabelDAO sleepLabelDAO,
                             final SleepScoreDAO sleepScoreDAO,
                             final int dateBucketPeriod
     ) {
-        this.eventDAODynamoDB = eventDAODynamoDB;
         this.trackerMotionDAO = trackerMotionDAO;
         this.sleepLabelDAO = sleepLabelDAO;
         this.sleepScoreDAO = sleepScoreDAO;
@@ -77,71 +73,11 @@ public class TimelineResource {
 
         final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accessToken.accountId, targetDate, endDate, groupBy);
         LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
-        final List<SleepSegment> sleepSegments = new ArrayList<>();
 
-
-        Long maxSVM = 0L;
-        for(final TrackerMotion trackerMotion : trackerMotions) {
-            maxSVM = Math.max(maxSVM, trackerMotion.value);
-        }
-
-        LOGGER.debug("Max SVM = {}", maxSVM);
-
-        int i = 0;
-        long tracker_id = trackerMotions.get(0).trackerId;
-        for(final TrackerMotion trackerMotion : trackerMotions) {
-            if (trackerMotion.trackerId != tracker_id) {
-                break; // if user has multiple pill, only use data from the latest tracker_id
-            }
-
-            int sleepDepth = 100;
-            if(trackerMotion.value == -1) {
-                sleepDepth = 100;
-            } else if(trackerMotion.value > -1) {
-                sleepDepth = 100 - (int) (new Double(trackerMotion.value) / maxSVM * 100);
-                LOGGER.trace("Ratio = ({} / {}) = {}", trackerMotion.value, maxSVM, new Double(trackerMotion.value) / maxSVM * 100);
-                LOGGER.trace("Sleep Depth = {}", sleepDepth);
-
-            }
-
-            String eventType = (sleepDepth <= threshold) ? Event.Type.MOTION.toString() : null; // TODO: put these in a config file or DB
-            if(i == 0) {
-                eventType = "SLEEP";
-            } else if (i == trackerMotions.size() -1) {
-                eventType = "WAKE_UP";
-            }
-
-            // TODO: make this work
-            if (trackerMotion.value == maxSVM) {
-                eventType = Event.Type.MOTION.toString();
-            }
-
-            if( sleepDepth <=10) {
-                sleepDepth = 10;
-            } else if(sleepDepth > 10 && sleepDepth <= 40) {
-                sleepDepth = 40;
-            } else if(sleepDepth > 40 && sleepDepth <= 70) {
-                sleepDepth = 70;
-            } else if (sleepDepth > 70 && sleepDepth <= 100) {
-                sleepDepth = 100;
-            }
-
-
-            final SleepSegment sleepSegment = new SleepSegment(
-                    trackerMotion.id,
-                    trackerMotion.timestamp,
-                    trackerMotion.offsetMillis,
-                    60 * groupBy, // in seconds
-                    sleepDepth,
-                    eventType,
-                    "something smart",
-                    new ArrayList<SensorSample>()
-            );
-            sleepSegments.add(sleepSegment);
-            i++;
-        }
-
-        final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
+        final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, groupBy);
+        final List<SleepSegment> normalized = TimelineUtils.categorizeSleepDepth(segments);
+        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(normalized, threshold);
+        final List<SleepSegment> reversed = Lists.reverse(mergedSegments);
 
         final List<String> messages = new ArrayList<>();
 
@@ -162,7 +98,7 @@ public class TimelineResource {
             timeLineMessage = "You haven't been sleeping!";
         }
 
-        final Timeline timeline = new Timeline(sleepScore, timeLineMessage, date, reversed );
+        final Timeline timeline = new Timeline(sleepScore, timeLineMessage, date, reversed);
         final List<Timeline> timelines = new ArrayList<>();
         timelines.add(timeline);
 
