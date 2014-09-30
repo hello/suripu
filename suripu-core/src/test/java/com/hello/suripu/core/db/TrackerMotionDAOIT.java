@@ -13,7 +13,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
@@ -90,7 +89,7 @@ public class TrackerMotionDAOIT {
     }
 
 
-    @Test
+//    @Test
     public void testBatchInsertPass() {
         LOGGER.debug("===== Batch insert Test");
         final int batchSize = 80;
@@ -100,7 +99,7 @@ public class TrackerMotionDAOIT {
         assertThat(inserted, is(dataSize));
     }
 
-    @Test
+//    @Test
     public void testBatchInsertWithDupes() {
         LOGGER.debug("===== Dupes Test");
         final int batchSize = 80;
