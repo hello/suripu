@@ -121,7 +121,7 @@ alarm_db:
 
 kinesis_logger:
   stream_name: logs
-  enabled : true
+  enabled : false
 
 score_threshold : 15 # minutes bucket for sleep-scores
 

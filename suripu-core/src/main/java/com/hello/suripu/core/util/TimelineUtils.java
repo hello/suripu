@@ -3,7 +3,9 @@ package com.hello.suripu.core.util;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SensorSample;
 import com.hello.suripu.core.models.SleepSegment;
+import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +24,7 @@ public class TimelineUtils {
      * @param segments
      * @return
      */
+    @Timed
     public static SleepSegment merge(final List<SleepSegment> segments, int threshold) {
         checkNotNull(segments, "segments can not be null");
         if(segments.isEmpty()) {
@@ -53,6 +56,7 @@ public class TimelineUtils {
      * @param groupBy
      * @return
      */
+    @Timed
     public static List<SleepSegment> generateSleepSegments(final List<TrackerMotion> trackerMotions, final int threshold, final int groupBy) {
 
         final List<SleepSegment> sleepSegments = new ArrayList<>();
@@ -115,6 +119,7 @@ public class TimelineUtils {
      * @param segments
      * @return
      */
+    @Timed
     public static List<SleepSegment> mergeConsecutiveSleepSegments(final List<SleepSegment> segments, int threshold) {
         if(segments.isEmpty()) {
             throw new RuntimeException("segments can not be empty");
@@ -144,6 +149,12 @@ public class TimelineUtils {
         return mergedSegments;
     }
 
+
+    /**
+     * Categorize sleep depth (MOTION, LIGHT, MEDIUM, DEEP)
+     * @param sleepSegments
+     * @return
+     */
     public static List<SleepSegment> categorizeSleepDepth(List<SleepSegment> sleepSegments) {
         List<SleepSegment> normalizedSegments = new ArrayList<>();
 
@@ -165,6 +176,13 @@ public class TimelineUtils {
         return normalizedSegments;
     }
 
+
+    /**
+     * Normalize sleep depth based on max value seen.
+     * @param value
+     * @param maxValue
+     * @return
+     */
     public static Integer normalizeSleepDepth(final Integer value, final Long maxValue) {
         int sleepDepth = 100;
         if(value == -1) {
@@ -175,5 +193,52 @@ public class TimelineUtils {
             LOGGER.trace("Sleep Depth = {}", sleepDepth);
         }
         return sleepDepth;
+    }
+
+
+    /**
+     * Compute the night's statistics based on the sleep segments
+     * @param segments
+     * @return
+     */
+    public static SleepStats computeStats(final List<SleepSegment> segments) {
+        Integer soundSleepDuration = 0;
+        Integer lightSleepDuration = 0;
+        Integer sleepDuration = 0;
+        Integer numberOfMotionEvents = 0;
+
+        for(final SleepSegment segment : segments) {
+            if (segment.sleepDepth >= 70) {
+                soundSleepDuration += segment.durationInSeconds;
+            } else if(segment.sleepDepth > 10 && segment.sleepDepth < 70) {
+                lightSleepDuration += segment.durationInSeconds;
+            } else {
+                numberOfMotionEvents += 1;
+            }
+            LOGGER.trace("duration in seconds = {}", segment.durationInSeconds);
+            sleepDuration += segment.durationInSeconds;
+        }
+
+
+        Integer soundSleepDurationInMinutes = Math.round(new Float(soundSleepDuration)/60);
+        Integer lightSleepDurationInMinutes = Math.round(new Float(lightSleepDuration)/60);
+        Integer sleepDurationInMinutes = Math.round(new Float(sleepDuration) / 60);
+
+        final SleepStats sleepStats = new SleepStats(soundSleepDurationInMinutes,lightSleepDurationInMinutes,sleepDurationInMinutes,numberOfMotionEvents);
+        LOGGER.debug("Sleepstats = {}", sleepStats);
+
+        return sleepStats;
+    }
+
+
+    /**
+     * Generate string representation of the sleep stats
+     * @param sleepStats
+     * @return
+     */
+    public static String generateMessage(final SleepStats sleepStats) {
+        final Integer percentageOfSoundSleep = Math.round(new Float(sleepStats.soundSleepDurationInMinutes) /sleepStats.sleepDurationInMinutes * 100);
+        return String.format("You slept for a total of *%d mins*, soundly for %d minutes (%d %%) & moved %d times",
+                sleepStats.sleepDurationInMinutes, sleepStats.soundSleepDurationInMinutes, percentageOfSoundSleep, sleepStats.numberOfMotionEvents);
     }
 }
