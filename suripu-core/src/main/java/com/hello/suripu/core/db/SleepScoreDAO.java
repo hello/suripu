@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -146,8 +145,9 @@ public abstract class SleepScoreDAO  {
 
         if (scores.size() == 0) {
             // for now, shouldn't happen IRL
-            LOGGER.debug("Random Score");
-            return  new Random().nextInt(100);
+            LOGGER.warn("No scores for this night {} for account_id = {}", nightDate, accountID);
+//            return  new Random().nextInt(100);
+            return 0;
         }
 
         // TODO: continue to work on actual scoring

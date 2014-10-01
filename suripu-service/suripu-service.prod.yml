@@ -99,7 +99,7 @@ kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
     pill_data : test-pill-suripu
-    morpheus_data : test-morpheus-suripu
+    morpheus_data : test-stream-suripu
     audio_features : audio_features
 
 audio_bucket_name : hello-data

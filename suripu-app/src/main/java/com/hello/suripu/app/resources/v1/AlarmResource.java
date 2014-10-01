@@ -32,7 +32,7 @@ import java.util.List;
 /**
  * Created by pangwu on 9/17/14.
  */
-@Path("/v1/alarm")
+@Path("/v1/alarms")
 public class AlarmResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AlarmResource.class);
