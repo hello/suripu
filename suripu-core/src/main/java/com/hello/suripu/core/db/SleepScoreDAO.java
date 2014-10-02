@@ -4,11 +4,18 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.binders.BindSleepScore;
 import com.hello.suripu.core.db.mappers.SleepScoreMapper;
+import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.SleepLabel;
 import com.hello.suripu.core.models.SleepScore;
+import com.hello.suripu.core.models.SleepSegment;
+import com.hello.suripu.core.models.SleepStats;
+import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.util.DateTimeUtil;
+import com.hello.suripu.core.util.TimelineUtils;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
@@ -18,6 +25,7 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +39,9 @@ public abstract class SleepScoreDAO  {
 
     private static float SCORE_MIN = 10.0f;
     private static float SCORE_RANGE = 80.0f; // max score is 90
+
+    private static String SLEEP_SCORE_VERSION = "0.1"; // update this when score computation changes
+    private static String SCORE_TYPE = "sleep";
 
     @GetGeneratedKeys
     @SqlUpdate("INSERT INTO sleep_score " +
@@ -159,5 +170,55 @@ public abstract class SleepScoreDAO  {
         LOGGER.debug("TOTAL score: {}, {}", String.valueOf(totalScore), score);
 
         return Math.round((score / 100.0f) * this.SCORE_RANGE + this.SCORE_MIN);
+    }
+
+    @Timed
+    public List<AggregateScore> getSleepScores(final Long accountID, final DateTime endDate, final int numDays,
+                                               final int dateBucketPeriod,
+                                               final TrackerMotionDAO trackerMotionDAO,
+                                               final SleepLabelDAO sleepLabelDAO) {
+
+        final List<AggregateScore> scores = new ArrayList<>();
+
+        // TODO: check if we already have scores in persistent storage. If not, compute and save.
+
+        final int groupBy = 5; // group by 15 mins
+        final int threshold = 10;
+
+        for (int i = 0; i < numDays; i++) {
+            final DateTime targetDate = endDate.minusDays(i).withTimeAtStartOfDay();
+            final DateTime queryStartDate = targetDate.withHourOfDay(22);
+            final DateTime queryEndDate = queryStartDate.plusHours(12);
+
+            LOGGER.debug("Dates {}, {}, {}", targetDate, queryEndDate, queryStartDate);
+
+            final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accountID, queryStartDate, queryEndDate, groupBy);
+
+            LOGGER.debug("tracker motion size {}", trackerMotions.size());
+
+            Integer score = 0;
+            String message = "You haven't been sleeping";
+
+            if (trackerMotions.size() > 0) {
+                final int offsetMillis = trackerMotions.get(0).offsetMillis;
+                score = this.getSleepScoreForNight(accountID, targetDate, offsetMillis, dateBucketPeriod, sleepLabelDAO);
+
+                // TODO: find a better way, do these just to get message....
+                final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, groupBy);
+                final List<SleepSegment> normalized = TimelineUtils.categorizeSleepDepth(segments);
+                final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(normalized, threshold);
+                final SleepStats sleepStats = TimelineUtils.computeStats(mergedSegments);
+                message = TimelineUtils.generateMessage(sleepStats);
+            }
+
+            final String dateString = DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT).print(targetDate);
+            final AggregateScore aggregateScore = new AggregateScore(score, message, dateString, this.SCORE_TYPE, this.SLEEP_SCORE_VERSION);
+
+            // TODO: save aggregateScore to DynamoDB
+
+            scores.add(aggregateScore);
+        }
+
+        return scores;
     }
 }
