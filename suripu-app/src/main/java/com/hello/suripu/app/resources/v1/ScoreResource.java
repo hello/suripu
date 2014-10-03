@@ -21,6 +21,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,16 +36,18 @@ public class ScoreResource {
     private final SleepScoreDAO sleepScoreDAO;
     private final SleepLabelDAO sleepLabelDAO;
     private final int dateBucketPeriod;
-
+    private final String sleepScoreVersion;
 
     public ScoreResource (final TrackerMotionDAO trackerMotionDAO,
                           final SleepLabelDAO sleepLabelDAO,
                           final SleepScoreDAO sleepScoreDAO,
-                          final int dateBucketPeriod) {
+                          final int dateBucketPeriod,
+                          final String sleepScoreVersion) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.sleepLabelDAO = sleepLabelDAO;
         this.sleepScoreDAO = sleepScoreDAO;
         this.dateBucketPeriod = dateBucketPeriod;
+        this.sleepScoreVersion = sleepScoreVersion;
     }
 
     @Timed
@@ -62,8 +65,10 @@ public class ScoreResource {
 
         LOGGER.debug("Target Date: {}", targetDate);
 
-        final List<AggregateScore> scores = this.sleepScoreDAO.getSleepScores(accessToken.accountId,
-                targetDate, days, this.dateBucketPeriod,this.trackerMotionDAO, this.sleepLabelDAO);
+        final List<AggregateScore> scores = new ArrayList<>();
+
+                this.sleepScoreDAO.getSleepScores(accessToken.accountId,
+                targetDate, days, this.dateBucketPeriod,this.trackerMotionDAO, this.sleepLabelDAO, this.sleepScoreVersion);
 
         return scores;
     }

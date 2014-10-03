@@ -7,6 +7,9 @@ import com.google.common.base.Objects;
  * Created by kingshy on 10/1/14.
  */
 public class AggregateScore {
+    @JsonProperty("account_id")
+    public final Long accountId;
+
     @JsonProperty("score")
     public final Integer score;
 
@@ -22,7 +25,8 @@ public class AggregateScore {
     @JsonProperty("version")
     public final String version;
 
-    public AggregateScore (final Integer score, final String message, final String date, final String scoreType, final String version) {
+    public AggregateScore (final Long accountId, final Integer score, final String message, final String date, final String scoreType, final String version) {
+        this.accountId = accountId;
         this.score = score;
         this.message = message;
         this.date = date;
@@ -33,6 +37,7 @@ public class AggregateScore {
     @Override
     public String toString() {
         return Objects.toStringHelper(Score.class)
+                .add("account", accountId)
                 .add("score", score)
                 .add("message", message)
                 .add("date", date)

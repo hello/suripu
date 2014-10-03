@@ -40,7 +40,6 @@ public abstract class SleepScoreDAO  {
     private static float SCORE_MIN = 10.0f;
     private static float SCORE_RANGE = 80.0f; // max score is 90
 
-    private static String SLEEP_SCORE_VERSION = "0.1"; // update this when score computation changes
     private static String SCORE_TYPE = "sleep";
 
     @GetGeneratedKeys
@@ -176,7 +175,8 @@ public abstract class SleepScoreDAO  {
     public List<AggregateScore> getSleepScores(final Long accountID, final DateTime endDate, final int numDays,
                                                final int dateBucketPeriod,
                                                final TrackerMotionDAO trackerMotionDAO,
-                                               final SleepLabelDAO sleepLabelDAO) {
+                                               final SleepLabelDAO sleepLabelDAO,
+                                               final String version) {
 
         final List<AggregateScore> scores = new ArrayList<>();
 
@@ -212,7 +212,7 @@ public abstract class SleepScoreDAO  {
             }
 
             final String dateString = DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT).print(targetDate);
-            final AggregateScore aggregateScore = new AggregateScore(score, message, dateString, this.SCORE_TYPE, this.SLEEP_SCORE_VERSION);
+            final AggregateScore aggregateScore = new AggregateScore(accountID, score, message, dateString, this.SCORE_TYPE, version);
 
             // TODO: save aggregateScore to DynamoDB
 
