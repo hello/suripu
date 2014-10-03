@@ -76,7 +76,8 @@ public class TimelineUtils {
         final Long trackerId = trackerMotions.get(0).trackerId;
 
         for(final TrackerMotion trackerMotion : trackerMotions) {
-            if (trackerMotion.trackerId != trackerId) {
+            if (!trackerMotion.trackerId.equals(trackerId)) {
+                LOGGER.warn("User has multiple pills: {} and {}", trackerId, trackerMotion.trackerId);
                 break; // if user has multiple pill, only use data from the latest tracker_id
             }
 
@@ -108,7 +109,7 @@ public class TimelineUtils {
             sleepSegments.add(sleepSegment);
             i++;
         }
-
+        LOGGER.debug("Generated {} segments from {} tracker motion samples", sleepSegments.size(), trackerMotions.size());
         return sleepSegments;
     }
 
@@ -155,8 +156,9 @@ public class TimelineUtils {
      * @param sleepSegments
      * @return
      */
-    public static List<SleepSegment> categorizeSleepDepth(List<SleepSegment> sleepSegments) {
-        List<SleepSegment> normalizedSegments = new ArrayList<>();
+    public static List<SleepSegment> categorizeSleepDepth(final List<SleepSegment> sleepSegments) {
+        LOGGER.debug("Attempting to categorize {} segments", sleepSegments.size());
+        final List<SleepSegment> normalizedSegments = new ArrayList<>();
 
         for(SleepSegment segment : sleepSegments) {
             Integer sleepDepth = segment.sleepDepth;
@@ -172,7 +174,7 @@ public class TimelineUtils {
             }
             normalizedSegments.add(SleepSegment.withSleepDepth(segment, sleepDepth));
         }
-
+        LOGGER.debug("Categorized {} segments", normalizedSegments.size());
         return normalizedSegments;
     }
 
