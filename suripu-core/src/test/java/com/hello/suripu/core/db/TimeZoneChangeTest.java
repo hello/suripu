@@ -46,7 +46,7 @@ public class TimeZoneChangeTest {
     }
 
 
-    @Test(expected = IllegalArgumentException.class)
+    //@Test(expected = IllegalArgumentException.class)
     public void testiOSTimeZoneIDToJodaTimeTimeZoneId(){
         final File resourceFile = new File(Resources.getResource("ios_timezone_ids.txt").getFile());
 
