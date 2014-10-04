@@ -31,8 +31,6 @@ public class SleepScoreProcessor {
                                 final int dateBucketPeriod,
                                 final String version) {
 
-        List<AggregateScore> scores = new ArrayList<>();
-
         // try getting scores from dynamoDB
         final ImmutableList<AggregateScore> dynamoScores = aggregateSleepScoreDAODynamoDB.getBatchScores(
                 accountId,
@@ -45,11 +43,12 @@ public class SleepScoreProcessor {
             return dynamoScores; // found all scores
         }
 
-
         // scores not available for all days, recompute from raw data
+
+
         if (dynamoScores.size() > 0) {
             LOGGER.debug("Some scores in DynamoDB {}", dynamoScores.size());
-
+            final List<AggregateScore> scores = new ArrayList<>();
             final List<String> retrievedDates = new ArrayList<>();
             for (final AggregateScore score : dynamoScores) {
                 retrievedDates.add(score.date); // track which dates have scores
@@ -83,7 +82,7 @@ public class SleepScoreProcessor {
 
         // no scores in dynamoDB, recompute from raw data
         LOGGER.debug("No scores in Dynamo, recompute!");
-        scores = sleepScoreDAO.getSleepScores(accountId, targetDate, days, dateBucketPeriod, trackerMotionDAO, sleepLabelDAO, version);
+        final List<AggregateScore> scores = sleepScoreDAO.getSleepScores(accountId, targetDate, days, dateBucketPeriod, trackerMotionDAO, sleepLabelDAO, version);
 
         final List<AggregateScore> saveScores = new ArrayList<>();
         final String targetDateString = DateTimeUtil.dateToYmdString(targetDate);
