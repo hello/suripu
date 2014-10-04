@@ -39,6 +39,7 @@ import com.hello.suripu.core.oauth.OAuthProvider;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
+import com.hello.suripu.service.cli.CreateKeyStoreDynamoDBTable;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
 import com.hello.suripu.service.resources.AudioResource;
 import com.hello.suripu.service.resources.DownloadResource;
@@ -72,6 +73,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
     @Override
     public void initialize(Bootstrap<SuripuConfiguration> bootstrap) {
         bootstrap.addBundle(new DBIExceptionsBundle());
+        bootstrap.addCommand(new CreateKeyStoreDynamoDBTable());
     }
 
     @Override
