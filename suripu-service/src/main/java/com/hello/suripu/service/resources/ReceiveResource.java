@@ -211,13 +211,14 @@ public class ReceiveResource {
         final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytes);
 
         if(error.isPresent()) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+            LOGGER.error(error.get().message);
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
                     .entity((debug) ? error.get().message : "bad request")
                     .type(MediaType.TEXT_PLAIN_TYPE).build()
             );
         }
 
-        // TODO: Warining, since we query dynamoDB based on user input, the user can generate a lot of
+        // TODO: Warning, since we query dynamoDB based on user input, the user can generate a lot of
         // requests to break our bank(Assume that Dynamo DB never goes down).
         // May be we should somehow cache these data to reduce load & cost.
         final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceName);

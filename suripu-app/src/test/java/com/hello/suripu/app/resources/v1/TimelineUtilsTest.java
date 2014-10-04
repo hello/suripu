@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
-import com.hello.suripu.core.models.SensorSample;
+import com.hello.suripu.core.models.SensorReading;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.TimelineUtils;
@@ -26,10 +26,10 @@ public class TimelineUtilsTest {
     public void testMerge() {
         final List<SleepSegment> sleepSegments = new ArrayList<>();
         final DateTime now = DateTime.now();
-        sleepSegments.add(new SleepSegment(1L, now.getMillis(), 0, 60, 100, "", "", new ArrayList<SensorSample>()));
-        sleepSegments.add(new SleepSegment(2L, now.plusMinutes(1).getMillis(), 0, 60, 100, "", "", new ArrayList<SensorSample>()));
-        sleepSegments.add(new SleepSegment(3L, now.plusMinutes(2).getMillis(), 0, 60, 100, "", "", new ArrayList<SensorSample>()));
-        sleepSegments.add(new SleepSegment(33L, now.plusMinutes(3).getMillis(), 0, 60, 100, "", "", new ArrayList<SensorSample>()));
+        sleepSegments.add(new SleepSegment(1L, now.getMillis(), 0, 60, 100, "", "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(2L, now.plusMinutes(1).getMillis(), 0, 60, 100, "", "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(3L, now.plusMinutes(2).getMillis(), 0, 60, 100, "", "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(33L, now.plusMinutes(3).getMillis(), 0, 60, 100, "", "", new ArrayList<SensorReading>()));
 
         final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(sleepSegments, 5);
         assertThat(mergedSegments.size(), is(1));
@@ -40,10 +40,10 @@ public class TimelineUtilsTest {
     public void testNoMerge() {
         final List<SleepSegment> sleepSegments = new ArrayList<>();
         final DateTime now = DateTime.now();
-        sleepSegments.add(new SleepSegment(3L, now.getMillis(), 0, 60, 100, "", "", new ArrayList<SensorSample>()));
-        sleepSegments.add(new SleepSegment(4L, now.plusMinutes(1).getMillis(), 0, 60, 50, "", "", new ArrayList<SensorSample>()));
-        sleepSegments.add(new SleepSegment(5L, now.plusMinutes(2).getMillis(), 0, 60, 0, "", "", new ArrayList<SensorSample>()));
-        sleepSegments.add(new SleepSegment(55L, now.plusMinutes(3).getMillis(), 0, 60, 10, "", "", new ArrayList<SensorSample>()));
+        sleepSegments.add(new SleepSegment(3L, now.getMillis(), 0, 60, 100, "", "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(4L, now.plusMinutes(1).getMillis(), 0, 60, 50, "", "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(5L, now.plusMinutes(2).getMillis(), 0, 60, 0, "", "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(55L, now.plusMinutes(3).getMillis(), 0, 60, 10, "", "", new ArrayList<SensorReading>()));
 
         final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(sleepSegments, 5);
         assertThat(mergedSegments.size(), is(sleepSegments.size()));
@@ -64,9 +64,6 @@ public class TimelineUtilsTest {
         List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, 5, 10);
         assertThat(segments.size(), is(trackerMotions.size()));
 
-        for(SleepSegment segment: segments) {
-            assertThat(segment.message, is("something smart"));
-        }
         final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(segments, 5);
         assertThat(mergedSegments.size(), is(trackerMotions.size()));
     }
@@ -121,10 +118,10 @@ public class TimelineUtilsTest {
         final List<SleepSegment> sleepSegments = new ArrayList<>();
         final DateTime now = DateTime.now();
         final Long millis = now.getMillis();
-        sleepSegments.add(new SleepSegment(3L, millis, 0, 60, 100, "", "", new ArrayList<SensorSample>()));
-        sleepSegments.add(new SleepSegment(4L, millis, 0, 60, 50, "", "", new ArrayList<SensorSample>()));
-        sleepSegments.add(new SleepSegment(5L, millis, 0, 60, 0, "", "", new ArrayList<SensorSample>()));
-        sleepSegments.add(new SleepSegment(55L, millis, 0, 60, 10, "", "", new ArrayList<SensorSample>()));
+        sleepSegments.add(new SleepSegment(3L, millis, 0, 60, 100, "", "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(4L, millis, 0, 60, 50, "", "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(5L, millis, 0, 60, 0, "", "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(55L, millis, 0, 60, 10, "", "", new ArrayList<SensorReading>()));
 
         final SleepSegment mergedSegment = TimelineUtils.merge(sleepSegments, 5);
         assertThat(mergedSegment.durationInSeconds, is(5 * 60));
@@ -136,9 +133,9 @@ public class TimelineUtilsTest {
         final DateTime now = DateTime.now();
         final Long millis = now.getMillis();
 
-        sleepSegments.add(new SleepSegment(3L, millis, 0, 60, 99, "", "", new ArrayList<SensorSample>()));
-        sleepSegments.add(new SleepSegment(4L, millis, 0, 60, 100, "", "", new ArrayList<SensorSample>()));
-        sleepSegments.add(new SleepSegment(5L, millis, 0, 60, 71, "", "", new ArrayList<SensorSample>()));
+        sleepSegments.add(new SleepSegment(3L, millis, 0, 60, 99, "", "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(4L, millis, 0, 60, 100, "", "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(5L, millis, 0, 60, 71, "", "", new ArrayList<SensorReading>()));
 
         final List<SleepSegment> normalized = TimelineUtils.categorizeSleepDepth(sleepSegments);
         for(final SleepSegment segment : normalized) {

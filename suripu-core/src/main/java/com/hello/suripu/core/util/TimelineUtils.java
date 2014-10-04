@@ -1,11 +1,14 @@
 package com.hello.suripu.core.util;
 
+import com.google.common.base.Optional;
+import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Event;
-import com.hello.suripu.core.models.SensorSample;
+import com.hello.suripu.core.models.SensorReading;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.yammer.metrics.annotation.Timed;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +40,7 @@ public class TimelineUtils {
         final Integer offsetMillis = segments.get(0).offsetMillis;
         final String eventType = segments.get(0).eventType;
         final String message = segments.get(0).message;
-        final List<SensorSample> sensors = segments.get(0).sensors;
+        final List<SensorReading> sensors = segments.get(0).sensors;
 
         Long durationInMillis = segments.get(segments.size() -1).timestamp - segments.get(0).timestamp;
 
@@ -59,7 +62,12 @@ public class TimelineUtils {
     @Timed
     public static List<SleepSegment> generateSleepSegments(final List<TrackerMotion> trackerMotions, final int threshold, final int groupBy) {
 
+        return generateSleepSegments(trackerMotions, threshold, groupBy, Optional.<DeviceData>absent());
+    }
+
+    public static List<SleepSegment> generateSleepSegments(final List<TrackerMotion> trackerMotions, final int threshold, final int groupBy, final Optional<DeviceData> deviceData) {
         final List<SleepSegment> sleepSegments = new ArrayList<>();
+
 
         if(trackerMotions.isEmpty()) {
             return sleepSegments;
@@ -76,7 +84,8 @@ public class TimelineUtils {
         final Long trackerId = trackerMotions.get(0).trackerId;
 
         for(final TrackerMotion trackerMotion : trackerMotions) {
-            if (trackerMotion.trackerId != trackerId) {
+            if (!trackerMotion.trackerId.equals(trackerId)) {
+                LOGGER.warn("User has multiple pills: {} and {}", trackerId, trackerMotion.trackerId);
                 break; // if user has multiple pill, only use data from the latest tracker_id
             }
 
@@ -90,10 +99,23 @@ public class TimelineUtils {
                 eventType = "WAKE_UP";
             }
 
+            String eventMessage = "";
+
+            if(eventType != null && eventType.equals(Event.Type.MOTION.toString())) {
+                eventMessage = String.format("We detected something at %s", new DateTime(trackerMotion.timestamp).toString());
+            }
+
             // TODO: make this work
             if (trackerMotion.value == maxSVM) {
                 eventType = Event.Type.MOTION.toString();
+
             }
+
+            final List<SensorReading> readings = new ArrayList<>();
+            if(deviceData.isPresent()) {
+                readings.addAll(SensorReading.fromDeviceData(deviceData.get()));
+            }
+
 
             final SleepSegment sleepSegment = new SleepSegment(
                     trackerMotion.id,
@@ -102,13 +124,12 @@ public class TimelineUtils {
                     60 * groupBy, // in seconds
                     sleepDepth,
                     eventType,
-                    "something smart",
-                    new ArrayList<SensorSample>()
-            );
+                    eventMessage,
+                    readings);
             sleepSegments.add(sleepSegment);
             i++;
         }
-
+        LOGGER.debug("Generated {} segments from {} tracker motion samples", sleepSegments.size(), trackerMotions.size());
         return sleepSegments;
     }
 
@@ -155,8 +176,9 @@ public class TimelineUtils {
      * @param sleepSegments
      * @return
      */
-    public static List<SleepSegment> categorizeSleepDepth(List<SleepSegment> sleepSegments) {
-        List<SleepSegment> normalizedSegments = new ArrayList<>();
+    public static List<SleepSegment> categorizeSleepDepth(final List<SleepSegment> sleepSegments) {
+        LOGGER.debug("Attempting to categorize {} segments", sleepSegments.size());
+        final List<SleepSegment> normalizedSegments = new ArrayList<>();
 
         for(SleepSegment segment : sleepSegments) {
             Integer sleepDepth = segment.sleepDepth;
@@ -172,7 +194,7 @@ public class TimelineUtils {
             }
             normalizedSegments.add(SleepSegment.withSleepDepth(segment, sleepDepth));
         }
-
+        LOGGER.debug("Categorized {} segments", normalizedSegments.size());
         return normalizedSegments;
     }
 
@@ -238,7 +260,7 @@ public class TimelineUtils {
      */
     public static String generateMessage(final SleepStats sleepStats) {
         final Integer percentageOfSoundSleep = Math.round(new Float(sleepStats.soundSleepDurationInMinutes) /sleepStats.sleepDurationInMinutes * 100);
-        return String.format("You slept for a total of *%d mins*, soundly for %d minutes (%d %%) & moved %d times",
+        return String.format("You slept for a total of **%d mins**, soundly for %d minutes (%d %%) & moved %d times",
                 sleepStats.sleepDurationInMinutes, sleepStats.soundSleepDurationInMinutes, percentageOfSoundSleep, sleepStats.numberOfMotionEvents);
     }
 }

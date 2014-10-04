@@ -1,9 +1,12 @@
 package com.hello.suripu.app.resources.v1;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
@@ -38,15 +41,18 @@ public class TimelineResource {
     private final SleepScoreDAO sleepScoreDAO;
     private final SleepLabelDAO sleepLabelDAO;
     private final int dateBucketPeriod;
+    private final DeviceDataDAO deviceDataDAO;
 
     public TimelineResource(final TrackerMotionDAO trackerMotionDAO,
                             final SleepLabelDAO sleepLabelDAO,
                             final SleepScoreDAO sleepScoreDAO,
-                            final int dateBucketPeriod) {
+                            final int dateBucketPeriod,
+                            final DeviceDataDAO deviceDataDAO) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.sleepLabelDAO = sleepLabelDAO;
         this.sleepScoreDAO = sleepScoreDAO;
         this.dateBucketPeriod = dateBucketPeriod;
+        this.deviceDataDAO = deviceDataDAO;
     }
 
     @Timed
@@ -82,12 +88,13 @@ public class TimelineResource {
             return timelines;
         }
 
-        final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, groupBy);
+        final Optional<DeviceData> data = deviceDataDAO.getAverageForNight(accessToken.accountId, targetDate, endDate);
+
+        final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, groupBy, data);
         final List<SleepSegment> normalized = TimelineUtils.categorizeSleepDepth(segments);
         final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(normalized, threshold);
         final SleepStats sleepStats = TimelineUtils.computeStats(mergedSegments);
         final List<SleepSegment> reversed = Lists.reverse(mergedSegments);
-
 
         final int userOffsetMillis = trackerMotions.get(0).offsetMillis;
         final Integer sleepScore = sleepScoreDAO.getSleepScoreForNight(accessToken.accountId, targetDate.withTimeAtStartOfDay(),
