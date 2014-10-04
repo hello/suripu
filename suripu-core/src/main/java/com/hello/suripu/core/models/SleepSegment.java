@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import org.joda.time.DateTime;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SleepSegment {
@@ -28,7 +27,7 @@ public class SleepSegment {
     final public String message;
 
     @JsonProperty("sensors")
-    final public List<SensorSample> sensors;
+    final public List<SensorReading> sensors;
 
     @JsonProperty("offset_millis")
     final public Integer offsetMillis;
@@ -45,7 +44,7 @@ public class SleepSegment {
      * @param sensors
      */
     public SleepSegment(final Long id, final Long timestamp, final Integer offsetMillis, final Integer durationInSeconds,
-                        final Integer sleepDepth, final String eventType, final String message, final List<SensorSample> sensors) {
+                        final Integer sleepDepth, final String eventType, final String message, final List<SensorReading> sensors) {
         this.id = id;
         this.timestamp = timestamp;
         this.offsetMillis = offsetMillis;
@@ -53,7 +52,7 @@ public class SleepSegment {
         this.sleepDepth = sleepDepth;
         this.eventType = eventType;
         this.message = message;
-        this.sensors = new ArrayList<>();
+        this.sensors = sensors;
     }
 
 

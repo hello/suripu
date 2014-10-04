@@ -150,4 +150,23 @@ public abstract class DeviceDataDAO {
         final List<Sample> sortedList = Bucketing.sortResults(merged, currentOffsetMillis);
         return sortedList;
     }
+
+
+    @RegisterMapper(DeviceDataMapper.class)
+    @SingleValueResult(DeviceData.class)
+    @SqlQuery("SELECT " +
+            "MAX(account_id) as account_id, " +
+            "MAX(device_id) as device_id, " +
+            "AVG(ambient_temp) as ambient_temp, " +
+            "AVG(ambient_humidity) as ambient_humidity, " +
+            "AVG(ambient_air_quality) as ambient_air_quality, " +
+            "AVG(ambient_light) as ambient_light," +
+            "MIN(ts) as ts, " +
+            "MIN(offset_millis) as offset_millis " +
+            "FROM device_sensors_master " +
+            "WHERE account_id = :account_id " +
+            "AND local_utc_ts >= :start_ts AND local_utc_ts < :end_ts;")
+    public abstract Optional<DeviceData> getAverageForNight(@Bind("account_id") final Long accountId,
+                                                            @Bind("start_ts") final DateTime targetDate,
+                                                            @Bind("end_ts") final DateTime endDate);
 }
