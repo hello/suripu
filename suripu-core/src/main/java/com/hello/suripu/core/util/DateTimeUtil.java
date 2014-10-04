@@ -11,4 +11,7 @@ public class DateTimeUtil {
 
     public static final DateTime MORPHEUS_DAY_ONE = DateTime.parse("2014-04-08", DateTimeFormat.forPattern(DYNAMO_DB_DATE_FORMAT));
 
+    public static String dateToYmdString(final DateTime date) {
+        return DateTimeFormat.forPattern(DYNAMO_DB_DATE_FORMAT).print(date);
+    }
 }

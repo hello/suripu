@@ -15,7 +15,6 @@ import com.hello.suripu.core.util.TimelineUtils;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormat;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
@@ -211,7 +210,7 @@ public abstract class SleepScoreDAO  {
                 message = TimelineUtils.generateMessage(sleepStats);
             }
 
-            final String dateString = DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT).print(targetDate);
+            final String dateString = DateTimeUtil.dateToYmdString(targetDate);
             final AggregateScore aggregateScore = new AggregateScore(accountID, score, message, dateString, this.SCORE_TYPE, version);
 
             // TODO: save aggregateScore to DynamoDB

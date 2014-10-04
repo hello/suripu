@@ -25,7 +25,8 @@ public class AggregateScore {
     @JsonProperty("version")
     public final String version;
 
-    public AggregateScore (final Long accountId, final Integer score, final String message, final String date, final String scoreType, final String version) {
+    public AggregateScore (final Long accountId, final Integer score, final String message,
+                           final String date, final String scoreType, final String version) {
         this.accountId = accountId;
         this.score = score;
         this.message = message;
@@ -45,5 +46,22 @@ public class AggregateScore {
                 .add("version", version)
                 .toString();
     }
+
+    @Override
+    public boolean equals(final Object other) {
+        boolean result = false;
+        if (getClass() == other.getClass()) {
+            AggregateScore score = (AggregateScore) other;
+            result = (this.accountId == score.accountId &&
+                    this.score == score.score &&
+                    this.date.equals(score.date) &&
+                    this.message.equals(score.message) &&
+                    this.scoreType.equals(score.scoreType) &&
+                    this.version.equals(score.version)
+            );
+        }
+        return result;
+    }
+
 
 }
