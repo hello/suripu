@@ -64,7 +64,7 @@ public class AggregateSleepScoreDAODynamoDB {
 
     @Timed
     public void writeSingleScore(final AggregateScore score) {
-
+        LOGGER.debug("Write single score: {}, {}, {}", score.accountId, score.date, score.score);
         final HashMap<String, AttributeValue> item = new HashMap<>();
         item.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(score.accountId)));
         item.put(DATE_ATTRIBUTE_NAME, new AttributeValue().withS(score.date));
@@ -84,6 +84,7 @@ public class AggregateSleepScoreDAODynamoDB {
         final List<WriteRequest> scoreList = new ArrayList<>();
 
         for (final AggregateScore score : scores) {
+                LOGGER.debug("Batch: {}, {}, {}", score.accountId, score.date, score.score);
                 final HashMap<String, AttributeValue> item = new HashMap<>();
                 item.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(score.accountId)));
                 item.put(DATE_ATTRIBUTE_NAME, new AttributeValue().withS(score.date));

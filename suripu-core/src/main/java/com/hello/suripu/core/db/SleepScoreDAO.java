@@ -220,4 +220,44 @@ public abstract class SleepScoreDAO  {
 
         return scores;
     }
+
+    @Timed
+    public AggregateScore getSingleSleepScore(final Long accountID, final DateTime targetDate,
+                                               final int dateBucketPeriod,
+                                               final TrackerMotionDAO trackerMotionDAO,
+                                               final SleepLabelDAO sleepLabelDAO,
+                                               final String version) {
+
+        final int groupBy = 5; // group by 15 mins
+        final int threshold = 10;
+
+        final DateTime queryStartDate = targetDate.withHourOfDay(22);
+        final DateTime queryEndDate = queryStartDate.plusHours(12);
+
+        LOGGER.debug("Dates {}, {}, {}", targetDate, queryEndDate, queryStartDate);
+
+        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accountID, queryStartDate, queryEndDate, groupBy);
+
+        LOGGER.debug("tracker motion size {}", trackerMotions.size());
+
+        Integer score = 0;
+        String message = "You haven't been sleeping";
+
+        if (trackerMotions.size() > 0) {
+            final int offsetMillis = trackerMotions.get(0).offsetMillis;
+            score = this.getSleepScoreForNight(accountID, targetDate, offsetMillis, dateBucketPeriod, sleepLabelDAO);
+
+            // TODO: find a better way, do these just to get message....
+            final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, groupBy);
+            final List<SleepSegment> normalized = TimelineUtils.categorizeSleepDepth(segments);
+            final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(normalized, threshold);
+            final SleepStats sleepStats = TimelineUtils.computeStats(mergedSegments);
+            message = TimelineUtils.generateMessage(sleepStats);
+        }
+
+        final String dateString = DateTimeUtil.dateToYmdString(targetDate);
+        final AggregateScore aggregateScore = new AggregateScore(accountID, score, message, dateString, this.SCORE_TYPE, version);
+
+        return aggregateScore;
+    }
 }

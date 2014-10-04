@@ -1,5 +1,6 @@
 package com.hello.suripu.app.resources.v1;
 
+import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
@@ -7,6 +8,7 @@ import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.processors.SleepScoreProcessor;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -21,7 +23,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,17 +36,20 @@ public class ScoreResource {
     private final TrackerMotionDAO trackerMotionDAO;
     private final SleepScoreDAO sleepScoreDAO;
     private final SleepLabelDAO sleepLabelDAO;
+    private final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB;
     private final int dateBucketPeriod;
     private final String sleepScoreVersion;
 
     public ScoreResource (final TrackerMotionDAO trackerMotionDAO,
                           final SleepLabelDAO sleepLabelDAO,
                           final SleepScoreDAO sleepScoreDAO,
+                          final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
                           final int dateBucketPeriod,
                           final String sleepScoreVersion) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.sleepLabelDAO = sleepLabelDAO;
         this.sleepScoreDAO = sleepScoreDAO;
+        this.aggregateSleepScoreDAODynamoDB = aggregateSleepScoreDAODynamoDB;
         this.dateBucketPeriod = dateBucketPeriod;
         this.sleepScoreVersion = sleepScoreVersion;
     }
@@ -65,10 +69,13 @@ public class ScoreResource {
 
         LOGGER.debug("Target Date: {}", targetDate);
 
-        final List<AggregateScore> scores = new ArrayList<>();
-
-                this.sleepScoreDAO.getSleepScores(accessToken.accountId,
-                targetDate, days, this.dateBucketPeriod,this.trackerMotionDAO, this.sleepLabelDAO, this.sleepScoreVersion);
+        List<AggregateScore> scores = SleepScoreProcessor.getSleepScore(accessToken.accountId, targetDate, days,
+                this.trackerMotionDAO,
+                this.sleepLabelDAO,
+                this.sleepScoreDAO,
+                this.aggregateSleepScoreDAODynamoDB,
+                this.dateBucketPeriod,
+                this.sleepScoreVersion);
 
         return scores;
     }

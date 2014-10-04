@@ -122,7 +122,7 @@ public class AggregateSleepScoreDAODynamoDBIT {
 
         final List<AggregateScore> scores = new ArrayList<>();
         final String queryEndDate = DateTimeUtil.dateToYmdString(startTime);
-        String queryStartDate = queryEndDate;
+        String queryStartDate = DateTimeUtil.dateToYmdString(startTime.minusDays(numDays - 1));
 
         Random r = new Random(numDays);
         for (int i = 0; i < numDays; i++) {
