@@ -64,9 +64,6 @@ public class TimelineUtilsTest {
         List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, 5, 10);
         assertThat(segments.size(), is(trackerMotions.size()));
 
-        for(SleepSegment segment: segments) {
-            assertThat(segment.message, is("something smart"));
-        }
         final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(segments, 5);
         assertThat(mergedSegments.size(), is(trackerMotions.size()));
     }
