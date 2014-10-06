@@ -94,7 +94,7 @@ public class TimelineUtilsTest {
         trackerMotions.add(new TrackerMotion(6L,99L,123L, now.getMillis(), 100, 0));
         trackerMotions.add(new TrackerMotion(7L,99L,123L, now.plusMinutes(1).getMillis(), 100, 0));
         trackerMotions.add(new TrackerMotion(8L,99L,123L, now.plusMinutes(2).getMillis(), 0, 0));
-        trackerMotions.add(new TrackerMotion(9L,99L,123L, now.plusMinutes(2).getMillis(), 100, 0));
+        trackerMotions.add(new TrackerMotion(9L,99L,123L, now.plusMinutes(3).getMillis(), 100, 0));
 
         final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, 5, 10);
         assertThat(segments.size(), is(trackerMotions.size()));

@@ -1,6 +1,9 @@
 package com.hello.suripu.core.oauth.stores;
 
 import com.google.common.base.Optional;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -17,6 +20,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * PersistentAccessTokenStore keeps track of assigned access tokens
@@ -29,6 +34,15 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
 
     private static final Long DEFAULT_EXPIRATION_TIME_IN_SECONDS = 86400L * 90; // 90 days
     private static final Logger LOGGER = LoggerFactory.getLogger(PersistentAccessTokenStore.class);
+
+    final LoadingCache<ClientCredentials, Optional<AccessToken>> cache;
+
+    // This is called by the cache when it doesn't contain the key
+    final CacheLoader loader = new CacheLoader<ClientCredentials, Optional<AccessToken>>() {
+        public Optional<AccessToken> load(final ClientCredentials clientCredentials) {
+            return fromDB(clientCredentials);
+        }
+    };
 
     public PersistentAccessTokenStore(final AccessTokenDAO accessTokenDAO, final ApplicationStore<Application, ApplicationRegistration> applicationStore) {
         this(accessTokenDAO, applicationStore, DEFAULT_EXPIRATION_TIME_IN_SECONDS);
@@ -50,8 +64,11 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         this.applicationStore = applicationStore;
         this.expirationTimeInSeconds = expirationTimeInSeconds;
 
+        // TODO: get expiration from Config
+        this.cache = CacheBuilder.newBuilder()
+                .expireAfterWrite(60, TimeUnit.SECONDS)
+                .build(loader);
     }
-
 
     /**
      * Validates client details and stores generated accessToken
@@ -67,7 +84,6 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
             throw new ClientAuthenticationException();
         }
 
-
         final AccessToken accessToken = generateAccessToken(
                 clientDetails,
                 DateTime.now(DateTimeZone.UTC), // this is not sent to the client. We store it to expire tokens
@@ -80,63 +96,18 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
 
 
     /**
-     * Converts the token to a proper UUID and attempts to retrieve the clientdetails based on the token string
+     * Converts the token to a proper UUID and attempts to retrieve the client details based on the token string
      * @param credentials
      * @return
      */
     @Override
     public Optional<AccessToken> getClientDetailsByToken(final ClientCredentials credentials, final DateTime now) {
-
-        final Optional<UUID> optionalTokenUUID = AccessToken.cleanUUID(credentials.tokenOrCode);
-        if(!optionalTokenUUID.isPresent()) {
-            LOGGER.warn("Invalid format for token {}", credentials.tokenOrCode);
+        final Optional<AccessToken> token = cache.getUnchecked(credentials);
+        if(!token.isPresent() || hasExpired(token.get(), now)) {
             return Optional.absent();
         }
 
-        final UUID tokenUUID = optionalTokenUUID.get();
-        final Optional<AccessToken> accessTokenOptional = accessTokenDAO.getByAccessToken(tokenUUID);
-
-        if(!accessTokenOptional.isPresent()) {
-            LOGGER.warn("{} was not found in accessTokenDAO.getByAccessToken() (UUID)", tokenUUID);
-            return Optional.absent();
-        }
-
-        final AccessToken accessToken = accessTokenOptional.get();
-        final Optional<Long> optionalAppIdFromToken = AccessToken.extractAppIdFromToken(credentials.tokenOrCode);
-        if(!optionalAppIdFromToken.isPresent()) {
-            LOGGER.warn("Invalid appId format for token {}", credentials.tokenOrCode);
-            return Optional.absent();
-        }
-
-        final Long appIdFromToken = optionalAppIdFromToken.get();
-
-        if(!appIdFromToken.equals(accessToken.appId)) {
-            LOGGER.warn("AppId from token is different from appId retrieved from DB ({} vs {})", appIdFromToken, accessToken.appId);
-            return Optional.absent();
-        }
-
-        final Optional<Application> applicationOptional = applicationStore.getApplicationById(accessToken.appId);
-
-        if(!applicationOptional.isPresent()) {
-            LOGGER.warn("No application with id = {} as specified by token {}", accessToken.appId, credentials.tokenOrCode);
-            return Optional.absent();
-        }
-
-        boolean validScopes = hasRequiredScopes(applicationOptional.get().scopes, credentials.scopes);
-        if(!validScopes) {
-            LOGGER.warn("Scopes don't match for {}", credentials.tokenOrCode);
-            return Optional.absent();
-        }
-
-        long diffInSeconds= (now.getMillis() - accessToken.createdAt.getMillis()) / 1000;
-        LOGGER.debug("Token created at = {}", accessToken.createdAt);
-        LOGGER.debug("DiffInSeconds = {}", diffInSeconds);
-        if(diffInSeconds > expirationTimeInSeconds) {
-            LOGGER.warn("Token {} has expired {} seconds ago", credentials.tokenOrCode, diffInSeconds);
-            return Optional.absent();
-        }
-
-        return accessTokenOptional;
+        return token;
     }
 
 
@@ -201,5 +172,62 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         }
 
         return valid;
+    }
+
+    private Optional<AccessToken> fromDB(final ClientCredentials credentials) {
+        final Optional<UUID> optionalTokenUUID = AccessToken.cleanUUID(credentials.tokenOrCode);
+        if(!optionalTokenUUID.isPresent()) {
+            LOGGER.warn("Invalid format for token {}", credentials.tokenOrCode);
+            return Optional.absent();
+        }
+
+        final UUID tokenUUID = optionalTokenUUID.get();
+        final Optional<AccessToken> accessTokenOptional = accessTokenDAO.getByAccessToken(tokenUUID);
+
+        if(!accessTokenOptional.isPresent()) {
+            LOGGER.warn("{} was not found in accessTokenDAO.getByAccessToken() (UUID)", tokenUUID);
+            return Optional.absent();
+        }
+
+        final AccessToken accessToken = accessTokenOptional.get();
+        final Optional<Long> optionalAppIdFromToken = AccessToken.extractAppIdFromToken(credentials.tokenOrCode);
+        if(!optionalAppIdFromToken.isPresent()) {
+            LOGGER.warn("Invalid appId format for token {}", credentials.tokenOrCode);
+            return Optional.absent();
+        }
+
+        final Long appIdFromToken = optionalAppIdFromToken.get();
+
+        if(!appIdFromToken.equals(accessToken.appId)) {
+            LOGGER.warn("AppId from token is different from appId retrieved from DB ({} vs {})", appIdFromToken, accessToken.appId);
+            return Optional.absent();
+        }
+
+        final Optional<Application> applicationOptional = applicationStore.getApplicationById(accessToken.appId);
+
+        if(!applicationOptional.isPresent()) {
+            LOGGER.warn("No application with id = {} as specified by token {}", accessToken.appId, credentials.tokenOrCode);
+            return Optional.absent();
+        }
+
+        boolean validScopes = hasRequiredScopes(applicationOptional.get().scopes, credentials.scopes);
+        if(!validScopes) {
+            LOGGER.warn("Scopes don't match for {}", credentials.tokenOrCode);
+            return Optional.absent();
+        }
+
+        return accessTokenOptional;
+    }
+
+    private Boolean hasExpired(final AccessToken accessToken, DateTime now) {
+        long diffInSeconds= (now.getMillis() - accessToken.createdAt.getMillis()) / 1000;
+        LOGGER.debug("Token created at = {}", accessToken.createdAt);
+        LOGGER.debug("DiffInSeconds = {}", diffInSeconds);
+        if(diffInSeconds > expirationTimeInSeconds) {
+            LOGGER.warn("Token {} has expired {} seconds ago", accessToken.serializeAccessToken(), diffInSeconds);
+            return true;
+        }
+
+        return false;
     }
 }
