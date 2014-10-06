@@ -26,7 +26,7 @@ import com.hello.suripu.app.resources.v1.MobilePushRegistrationResource;
 import com.hello.suripu.app.resources.v1.OAuthResource;
 import com.hello.suripu.app.resources.v1.QuestionsResource;
 import com.hello.suripu.app.resources.v1.RoomConditionsResource;
-import com.hello.suripu.app.resources.v1.ScoreResource;
+import com.hello.suripu.app.resources.v1.ScoresResource;
 import com.hello.suripu.app.resources.v1.SleepLabelResource;
 import com.hello.suripu.app.resources.v1.TimeZoneResource;
 import com.hello.suripu.app.resources.v1.TimelineResource;
@@ -197,7 +197,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
 
         environment.addResource(new TimelineResource(trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, configuration.getScoreThreshold(), deviceDataDAO));
-        environment.addResource(new ScoreResource(trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), configuration.getSleepScoreVersion()));
+        environment.addResource(new ScoresResource(trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), configuration.getSleepScoreVersion()));
 
         environment.addResource(new TimeZoneResource(timeZoneHistoryDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO));
         environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO));

@@ -29,9 +29,9 @@ import java.util.List;
  * Created by kingshy on 10/1/14.
  */
 
-@Path("/v1/score/")
-public class ScoreResource {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ScoreResource.class);
+@Path("/v1/scores/")
+public class ScoresResource {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ScoresResource.class);
 
     private final TrackerMotionDAO trackerMotionDAO;
     private final SleepScoreDAO sleepScoreDAO;
@@ -40,7 +40,7 @@ public class ScoreResource {
     private final int dateBucketPeriod;
     private final String sleepScoreVersion;
 
-    public ScoreResource (final TrackerMotionDAO trackerMotionDAO,
+    public ScoresResource(final TrackerMotionDAO trackerMotionDAO,
                           final SleepLabelDAO sleepLabelDAO,
                           final SleepScoreDAO sleepScoreDAO,
                           final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
@@ -58,11 +58,11 @@ public class ScoreResource {
     @Path("/sleep/{date}")
     @Produces(MediaType.APPLICATION_JSON)
     @GET
-    public List<AggregateScore> getSleepScore(
-            @Scope(OAuthScope.SLEEP_TIMELINE)final AccessToken accessToken,
+    public List<AggregateScore> getSleepScores(
+            @Scope(OAuthScope.SLEEP_TIMELINE) final AccessToken accessToken,
             @PathParam("date") String date,
             @QueryParam("days") Integer days
-            ) {
+    ) {
 
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withTimeAtStartOfDay();

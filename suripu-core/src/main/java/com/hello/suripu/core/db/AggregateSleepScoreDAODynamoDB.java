@@ -65,14 +65,7 @@ public class AggregateSleepScoreDAODynamoDB {
     @Timed
     public void writeSingleScore(final AggregateScore score) {
         LOGGER.debug("Write single score: {}, {}, {}", score.accountId, score.date, score.score);
-        final HashMap<String, AttributeValue> item = new HashMap<>();
-        item.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(score.accountId)));
-        item.put(DATE_ATTRIBUTE_NAME, new AttributeValue().withS(score.date));
-        item.put(SCORE_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(score.score)));
-        item.put(MESSAGE_ATTRIBUTE_NAME, new AttributeValue().withS(score.message));
-        item.put(TYPE_ATTRIBUTE_NAME, new AttributeValue().withS(score.scoreType));
-        item.put(VERSION_ATTRIBUTE_NAME, new AttributeValue().withS(score.version));
-
+        final HashMap<String, AttributeValue> item = this.createItem(score);
         final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, item);
         final PutItemResult result = this.dynamoDBClient.putItem(putItemRequest);
 
@@ -85,14 +78,7 @@ public class AggregateSleepScoreDAODynamoDB {
 
         for (final AggregateScore score : scores) {
                 LOGGER.debug("Batch: {}, {}, {}", score.accountId, score.date, score.score);
-                final HashMap<String, AttributeValue> item = new HashMap<>();
-                item.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(score.accountId)));
-                item.put(DATE_ATTRIBUTE_NAME, new AttributeValue().withS(score.date));
-                item.put(SCORE_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(score.score)));
-                item.put(MESSAGE_ATTRIBUTE_NAME, new AttributeValue().withS(score.message));
-                item.put(TYPE_ATTRIBUTE_NAME, new AttributeValue().withS(score.scoreType));
-                item.put(VERSION_ATTRIBUTE_NAME, new AttributeValue().withS(score.version));
-
+                final HashMap<String, AttributeValue> item = this.createItem(score);
                 scoreList.add(new WriteRequest().withPutRequest(new PutRequest().withItem(item)));
         }
 
@@ -116,7 +102,7 @@ public class AggregateSleepScoreDAODynamoDB {
     @Timed
     public AggregateScore getSingleScore(final Long accountId, final String date) {
 
-        Map<String, AttributeValue> key = new HashMap<>();
+        final Map<String, AttributeValue> key = new HashMap<>();
         key.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
         key.put(DATE_ATTRIBUTE_NAME, new AttributeValue().withS(date));
 
@@ -138,14 +124,7 @@ public class AggregateSleepScoreDAODynamoDB {
             return new AggregateScore(accountId, 0, "You haven't been sleeping", date, DEFAULT_SCORE_TYPE, this.version);
         }
 
-        return new AggregateScore(
-                Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN()),
-                Integer.valueOf(item.get(SCORE_ATTRIBUTE_NAME).getN()),
-                item.get(MESSAGE_ATTRIBUTE_NAME).getS(),
-                item.get(DATE_ATTRIBUTE_NAME).getS(),
-                item.get(TYPE_ATTRIBUTE_NAME).getS(),
-                item.get(VERSION_ATTRIBUTE_NAME).getS()
-        );
+        return this.createAggregateScore(item);
 
     }
 
@@ -187,14 +166,7 @@ public class AggregateSleepScoreDAODynamoDB {
                         LOGGER.warn("Missing field in item {}", item);
                         continue;
                     }
-                    final AggregateScore score = new AggregateScore(
-                            Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN()),
-                            Integer.valueOf(item.get(SCORE_ATTRIBUTE_NAME).getN()),
-                            item.get(MESSAGE_ATTRIBUTE_NAME).getS(),
-                            item.get(DATE_ATTRIBUTE_NAME).getS(),
-                            item.get(TYPE_ATTRIBUTE_NAME).getS(),
-                            item.get(VERSION_ATTRIBUTE_NAME).getS()
-                    );
+                    final AggregateScore score = this.createAggregateScore(item);
                     scoreResults.add(score);
                 }
             }
@@ -236,4 +208,26 @@ public class AggregateSleepScoreDAODynamoDB {
         return dynamoDBClient.createTable(request);
 
     }
+
+    private HashMap<String, AttributeValue> createItem(AggregateScore score) {
+        final HashMap<String, AttributeValue> item = new HashMap<>();
+        item.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(score.accountId)));
+        item.put(DATE_ATTRIBUTE_NAME, new AttributeValue().withS(score.date));
+        item.put(SCORE_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(score.score)));
+        item.put(MESSAGE_ATTRIBUTE_NAME, new AttributeValue().withS(score.message));
+        item.put(TYPE_ATTRIBUTE_NAME, new AttributeValue().withS(score.scoreType));
+        return item;
+    }
+
+    private AggregateScore createAggregateScore(Map<String, AttributeValue> item) {
+        return new AggregateScore(
+                Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN()),
+                Integer.valueOf(item.get(SCORE_ATTRIBUTE_NAME).getN()),
+                item.get(MESSAGE_ATTRIBUTE_NAME).getS(),
+                item.get(DATE_ATTRIBUTE_NAME).getS(),
+                item.get(TYPE_ATTRIBUTE_NAME).getS(),
+                item.get(VERSION_ATTRIBUTE_NAME).getS()
+        );
+    }
+
 }
