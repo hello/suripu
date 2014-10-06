@@ -45,9 +45,9 @@ public interface DeviceDAO {
             @Bind("device_name") String deviceName);
 
 
-    @SingleValueResult(String.class)
-    @SqlQuery("SELECT device_name FROM account_device_map WHERE account_id = :account_id ORDER BY id DESC LIMIT 1;")
-    Optional<String> getDeviceIdFromAccountId(@Bind("account_id") final Long accountId);
+    @RegisterMapper(DeviceAccountPairMapper.class)
+    @SqlQuery("SELECT * FROM account_device_map WHERE account_id = :account_id ORDER BY id DESC;")
+    ImmutableList<DeviceAccountPair> getDeviceAccountMapFromAccountId(@Bind("account_id") final Long accountId);
 
     // account to pill (aka tracker) map
 
