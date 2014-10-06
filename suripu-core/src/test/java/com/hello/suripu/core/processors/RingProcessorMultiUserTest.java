@@ -118,7 +118,7 @@ public class RingProcessorMultiUserTest {
                 new AlarmSound(101, "God Save the Queen")));
 
         final RingTime ringTime2 = Alarm.Utils.getNextRingTime(alarmList2,
-                new DateTime(2014, 9, 23, 8, 30, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
+                new DateTime(2014, 9, 23, 8, 30, 0, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
         alarmInfoList.add(new AlarmInfo(testDeviceId, 2L,
@@ -145,7 +145,7 @@ public class RingProcessorMultiUserTest {
             ioe.printStackTrace();
         }
 
-        final DateTime dataCollectionTimeLocalUTC = new DateTime(2014, 9, 23, 8, 21, DateTimeZone.UTC);
+        final DateTime dataCollectionTimeLocalUTC = new DateTime(2014, 9, 23, 8, 21, 0, 0, DateTimeZone.UTC);
         final DateTime startQueryTimeLocalUTC = dataCollectionTimeLocalUTC.minusHours(8);
 
         when(this.trackerMotionDAO.getBetweenLocalUTC(2, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
@@ -155,7 +155,7 @@ public class RingProcessorMultiUserTest {
                 .thenReturn(ImmutableList.copyOf(motions1));
 
 
-        final DateTime dataCollectionTimeLocalUTC1 = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.UTC);
+        final DateTime dataCollectionTimeLocalUTC1 = new DateTime(2014, 9, 23, 8, 0, 0, 0, DateTimeZone.UTC);
         final DateTime startQueryTimeLocalUTC1 = dataCollectionTimeLocalUTC1.minusHours(8);
 
         when(this.trackerMotionDAO.getBetweenLocalUTC(2, startQueryTimeLocalUTC1, dataCollectionTimeLocalUTC1))
@@ -166,7 +166,7 @@ public class RingProcessorMultiUserTest {
 
 
 
-        final DateTime dataCollectionTimeLocalUTC3 = new DateTime(2014, 9, 23, 8, 22, DateTimeZone.UTC);
+        final DateTime dataCollectionTimeLocalUTC3 = new DateTime(2014, 9, 23, 8, 22, 0, 0, DateTimeZone.UTC);
         final DateTime startQueryTimeLocalUTC3 = dataCollectionTimeLocalUTC3.minusHours(8);
 
         when(this.trackerMotionDAO.getBetweenLocalUTC(2, startQueryTimeLocalUTC3, dataCollectionTimeLocalUTC3))
@@ -184,15 +184,15 @@ public class RingProcessorMultiUserTest {
 
         when(this.deviceDAO.getAccountIdsForDeviceId(testDeviceId)).thenReturn(ImmutableList.copyOf(deviceAccountPairs));
 
-        DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
-        final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
+        DateTime deadline = new DateTime(2014, 9, 23, 8, 20, 0, 0, DateTimeZone.forID("America/Los_Angeles"));
+        final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, 0, 0, DateTimeZone.forID("America/Los_Angeles"));
 
         // Minutes before alarm triggered
         ringTime = RingProcessor.updateNextRingTime(this.mergedAlarmInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
-                new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")),
+                new DateTime(2014, 9, 23, 7, 20, 0, 0, DateTimeZone.forID("America/Los_Angeles")),
                 20,
                 15,
                 0.2f);
@@ -233,12 +233,12 @@ public class RingProcessorMultiUserTest {
 
 
         // Minute that update 2nd alarm processing
-        deadline = new DateTime(2014, 9, 23, 8, 30, DateTimeZone.forID("America/Los_Angeles"));
+        deadline = new DateTime(2014, 9, 23, 8, 30, 0, 0, DateTimeZone.forID("America/Los_Angeles"));
         ringTime = RingProcessor.updateNextRingTime(this.mergedAlarmInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
-                new DateTime(2014, 9, 23, 8, 21, DateTimeZone.forID("America/Los_Angeles")),
+                new DateTime(2014, 9, 23, 8, 21, 0, 0, DateTimeZone.forID("America/Los_Angeles")),
                 20,
                 15,
                 0.2f);
@@ -256,12 +256,12 @@ public class RingProcessorMultiUserTest {
 
 
         // Minute that trigger 2nd smart alarm processing
-        deadline = new DateTime(2014, 9, 23, 8, 30, DateTimeZone.forID("America/Los_Angeles"));
+        deadline = new DateTime(2014, 9, 23, 8, 30, 0, 0, DateTimeZone.forID("America/Los_Angeles"));
         ringTime = RingProcessor.updateNextRingTime(this.mergedAlarmInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
-                new DateTime(2014, 9, 23, 8, 22, DateTimeZone.forID("America/Los_Angeles")),
+                new DateTime(2014, 9, 23, 8, 22, 0, 0, DateTimeZone.forID("America/Los_Angeles")),
                 20,
                 15,
                 0.2f);
@@ -279,12 +279,12 @@ public class RingProcessorMultiUserTest {
 
 
         // Minutes after smart alarm processing but before next smart alarm process triggered.
-        deadline = new DateTime(2014, 9, 24, 9, 20, DateTimeZone.forID("America/Los_Angeles"));
+        deadline = new DateTime(2014, 9, 24, 9, 20, 0, 0, DateTimeZone.forID("America/Los_Angeles"));
         ringTime = RingProcessor.updateNextRingTime(this.mergedAlarmInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
-                new DateTime(2014, 9, 24, 7, 20, DateTimeZone.forID("America/Los_Angeles")),
+                new DateTime(2014, 9, 24, 7, 20, 0, 0, DateTimeZone.forID("America/Los_Angeles")),
                 20,
                 15,
                 0.2f);
