@@ -5,29 +5,31 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
-import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.PillRegistration;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.util.JsonError;
 import com.yammer.metrics.annotation.Timed;
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -42,7 +44,6 @@ public class DeviceResources {
 
     public DeviceResources(final DeviceDAO deviceDAO,
                            final AccountDAO accountDAO) {
-
         this.deviceDAO = deviceDAO;
         this.accountDAO = accountDAO;
     }
@@ -74,27 +75,51 @@ public class DeviceResources {
     @Produces(MediaType.APPLICATION_JSON)
     public List<Device> getDevices(@Scope(OAuthScope.DEVICE_INFORMATION_READ) final AccessToken accessToken) {
 
-        LOGGER.debug("{}", accessToken);
-        final Optional<Account> account = accountDAO.getById(accessToken.accountId);
-        if(!account.isPresent()) {
-            LOGGER.warn("Account not present");
-            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
-        }
-
         // TODO: make asynchronous calls to grab Pills + Senses if the following is too slow
-        ImmutableList<DeviceAccountPair> senses = deviceDAO.getSensesForAccountId(accessToken.accountId);
-        ImmutableList<DeviceAccountPair> pills = deviceDAO.getPillsForAccountId(accessToken.accountId);
-        List<Device> devices = new ArrayList<Device>();
+        final ImmutableList<DeviceAccountPair> senses = deviceDAO.getSensesForAccountId(accessToken.accountId);
+        final ImmutableList<DeviceAccountPair> pills = deviceDAO.getPillsForAccountId(accessToken.accountId);
+        final List<Device> devices = new ArrayList<Device>();
 
         // TODO: device state will always be normal for now until more information is provided by the device
         for (final DeviceAccountPair sense : senses) {
-            devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.NORMAL));
+            devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.NORMAL, "alpha-1", DateTime.now()));
         }
 
         for (final DeviceAccountPair pill : pills) {
-            devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, Device.State.NORMAL));
+            final Optional<DeviceStatus> pillStatusOptional = deviceDAO.pillStatus(pill.internalDeviceId);
+            if(!pillStatusOptional.isPresent()) {
+                LOGGER.warn("No pill status found for pill_id = {} ({}) for account: {}", pill.externalDeviceId, pill.internalDeviceId, pill.accountId);
+                devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, Device.State.UNKNOWN, null, null));
+            } else {
+                final DeviceStatus deviceStatus = pillStatusOptional.get();
+                devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, Device.State.NORMAL, deviceStatus.firmwareVersion, deviceStatus.lastSeen));
+            }
         }
 
         return devices;
+    }
+
+
+    @DELETE
+    @Timed
+    @Path("/pill/{pill_id}")
+    public void unregisterPill(@Scope(OAuthScope.DEVICE_INFORMATION_WRITE) final AccessToken accessToken,
+                               @PathParam("pill_id") String pillId) {
+        final Integer numRows = deviceDAO.unregisterTracker(pillId);
+        if(numRows == 0) {
+            LOGGER.warn("Did not find active pill to unregister");
+        }
+    }
+
+
+    @DELETE
+    @Timed
+    @Path("/sense/{sense_id}")
+    public void unregisterSense(@Scope(OAuthScope.DEVICE_INFORMATION_WRITE) final AccessToken accessToken,
+                               @PathParam("sense_id") String senseId) {
+        final Integer numRows = deviceDAO.unregisterSense(senseId);
+        if(numRows == 0) {
+            LOGGER.warn("Did not find active sense to unregister");
+        }
     }
 }

@@ -15,7 +15,7 @@ public class DropwizardServiceUtil {
 
         for (final Object s : dwSingletons) {
             if (s instanceof ExceptionMapper && (s.getClass().getName().startsWith("com.yammer.dropwizard.jersey.") ||
-                    s.getClass().getName().startsWith("com.yammer.dropwizard.auth"))) {
+                    s.getClass().getName().startsWith("com.yammer.dropwizard.auth")) || s.getClass().getName().startsWith("com.yammer.dropwizard.jdbi")) {
                 singletonsToRemove.add(s);
             }
         }

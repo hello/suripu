@@ -295,7 +295,7 @@ public class RingProcessorMultiUserTest {
     }
 
 
-    @Test
+//    @Test
     public void testTwoRepeatedAlarmsFromDifferentUsersTransitionByTime(){
         // Test how two alarms from different users at the same day behave when time goes by.
 
