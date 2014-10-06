@@ -6,12 +6,13 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
-import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmSound;
+import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import org.joda.time.DateTime;
@@ -49,6 +50,8 @@ public class AlarmResourceTestIT {
     private final List<Alarm> tooMuchAlarmList = new ArrayList<Alarm>();
     private final List<Alarm> twoAlarmInADayList = new ArrayList<Alarm>();
 
+    private final List<DeviceAccountPair> deviceAccountPairs = new ArrayList<>();
+
     private final AccessToken token = new AccessToken.Builder()
             .withAccountId(1L)
             .withCreatedAt(DateTime.now())
@@ -85,7 +88,8 @@ public class AlarmResourceTestIT {
 
 
             final DeviceDAO deviceDAO = mock(DeviceDAO.class);
-            when(deviceDAO.getDeviceIdFromAccountId(1L)).thenReturn(Optional.of("test morpheus"));
+            this.deviceAccountPairs.add(new DeviceAccountPair(1L, 1L, "test morpheus"));
+            when(deviceDAO.getDeviceAccountMapFromAccountId(1L)).thenReturn(ImmutableList.copyOf(this.deviceAccountPairs));
 
             this.alarmResource = new AlarmResource(this.alarmDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO);
 

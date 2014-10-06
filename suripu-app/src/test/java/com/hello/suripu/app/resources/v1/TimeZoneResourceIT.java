@@ -7,9 +7,11 @@ import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
+import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -20,6 +22,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import javax.ws.rs.WebApplicationException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -39,6 +43,8 @@ public class TimeZoneResourceIT {
     private TimeZoneResource timeZoneResource;
     private final String tableName = "timezone_test";
     private final String alarmInfoTableName = "alarm_info_test";
+
+    private final List<DeviceAccountPair> deviceAccountPairs = new ArrayList<>();
 
 
     private final AccessToken token = new AccessToken.Builder()
@@ -78,7 +84,8 @@ public class TimeZoneResourceIT {
 
 
             final DeviceDAO deviceDAO = mock(DeviceDAO.class);
-            when(deviceDAO.getDeviceIdFromAccountId(1L)).thenReturn(Optional.of("test morpheus"));
+            this.deviceAccountPairs.add(new DeviceAccountPair(1L, 1L, "test morpheus"));
+            when(deviceDAO.getDeviceAccountMapFromAccountId(1L)).thenReturn(ImmutableList.copyOf(this.deviceAccountPairs));
 
             this.timeZoneResource = new TimeZoneResource(this.timeZoneHistoryDAODynamoDB,
                     mergedAlarmInfoDynamoDB, deviceDAO);
