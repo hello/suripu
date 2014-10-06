@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -103,7 +102,10 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
     @Override
     public Optional<AccessToken> getClientDetailsByToken(final ClientCredentials credentials, final DateTime now) {
         final Optional<AccessToken> token = cache.getUnchecked(credentials);
-        if(!token.isPresent() || hasExpired(token.get(), now)) {
+        if(!token.isPresent()) {
+            return Optional.absent();
+        }
+        if(hasExpired(token.get(), now)) {
             return Optional.absent();
         }
 
