@@ -1,6 +1,7 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.mappers.SleepLabelMapper;
 import com.hello.suripu.core.models.SleepLabel;
 import org.joda.time.DateTime;
@@ -33,16 +34,22 @@ public interface SleepLabelDAO extends Transactional<SleepLabelDAO> {
 
 
     @SqlQuery("SELECT * FROM sleep_label " +
-            "WHERE account_id = :account_id AND date_utc = :date_utc AND offset_millis = :offset_millis LIMIT 1;")
+            "WHERE account_id = :account_id AND date_utc = :date_utc AND offset_millis = :offset_millis LIMIT 1")
     @SingleValueResult(SleepLabel.class)
     Optional<SleepLabel> getByAccountAndDate(@Bind("account_id") Long account_id,
                                                          @Bind("date_utc") DateTime dateUTC,
                                                          @Bind("offset_millis") int timeZoneOffset);
 
     @SqlQuery("SELECT * FROM sleep_label " +
-            "WHERE account_id = :account_id AND date_utc >= :start_date_utc AND date_utc < :end_date_utc ORDER BY id DESC LIMIT 1;")
+            "WHERE account_id = :account_id AND date_utc >= :start_date_utc AND date_utc < :end_date_utc ORDER BY id DESC LIMIT 1")
     @SingleValueResult(SleepLabel.class)
-    Optional<SleepLabel> getByAccountAndDates(@Bind("account_id") Long account_id,
+    Optional<SleepLabel> getByAccountAndDate(@Bind("account_id") Long account_id,
+                                             @Bind("start_date_utc") DateTime startDateUTC,
+                                             @Bind("end_date_utc") DateTime endDateUTC);
+
+    @SqlQuery("SELECT * FROM sleep_label " +
+            "WHERE account_id = :account_id AND date_utc >= :start_date_utc AND date_utc < :end_date_utc ORDER BY id DESC")
+    ImmutableList<SleepLabel> getByAccountAndDates(@Bind("account_id") Long account_id,
                                              @Bind("start_date_utc") DateTime startDateUTC,
                                              @Bind("end_date_utc") DateTime endDateUTC);
 

@@ -98,7 +98,7 @@ public class TimelineResource {
 
         final int userOffsetMillis = trackerMotions.get(0).offsetMillis;
         final Integer sleepScore = sleepScoreDAO.getSleepScoreForNight(accessToken.accountId, targetDate.withTimeAtStartOfDay(),
-                this.dateBucketPeriod, sleepLabelDAO);
+                userOffsetMillis, this.dateBucketPeriod, sleepLabelDAO);
         final String timeLineMessage = TimelineUtils.generateMessage(sleepStats);
 
         LOGGER.debug("Score for account_id = {} is {}", accessToken.accountId, sleepScore);

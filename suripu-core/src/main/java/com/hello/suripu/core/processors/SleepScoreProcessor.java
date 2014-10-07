@@ -23,13 +23,13 @@ public class SleepScoreProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepScoreProcessor.class);
 
     @Timed
-    public static List<AggregateScore> getSleepScore(final Long accountId, final DateTime targetDate, final int days,
-                                final TrackerMotionDAO trackerMotionDAO,
-                                final SleepLabelDAO sleepLabelDAO,
-                                final SleepScoreDAO sleepScoreDAO,
-                                final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
-                                final int dateBucketPeriod,
-                                final String version) {
+    public static List<AggregateScore> getSleepScores(final Long accountId, final DateTime targetDate, final int days,
+                                                      final TrackerMotionDAO trackerMotionDAO,
+                                                      final SleepLabelDAO sleepLabelDAO,
+                                                      final SleepScoreDAO sleepScoreDAO,
+                                                      final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
+                                                      final int dateBucketPeriod,
+                                                      final String version) {
 
         // try getting scores from dynamoDB
         final ImmutableList<AggregateScore> dynamoScores = aggregateSleepScoreDAODynamoDB.getBatchScores(
@@ -65,7 +65,7 @@ public class SleepScoreProcessor {
 
         // get all data from DB, filter in app
         LOGGER.debug("No scores in Dynamo, recompute!");
-        final List<AggregateScore> scores = sleepScoreDAO.getSleepScores(accountId, requiredDates, dateBucketPeriod, sleepLabelDAO, version);
+        final List<AggregateScore> scores = sleepScoreDAO.getSleepScoreForNights(accountId, requiredDates, dateBucketPeriod, trackerMotionDAO, sleepLabelDAO, version);
 
         final List<AggregateScore> saveScores = new ArrayList<>();
         final String targetDateString = DateTimeUtil.dateToYmdString(targetDate);
@@ -74,10 +74,13 @@ public class SleepScoreProcessor {
                 saveScores.add(score);
             }
             finalScores.add(score);
+            LOGGER.debug("Computed score: {}", score);
         }
 
-        LOGGER.debug("write recomputed score to DB");
-        aggregateSleepScoreDAODynamoDB.writeBatchScores(saveScores);
+        if (saveScores.size() > 0) {
+            LOGGER.debug("write recomputed score to DB");
+            aggregateSleepScoreDAODynamoDB.writeBatchScores(saveScores);
+        }
 
         return finalScores;
     }

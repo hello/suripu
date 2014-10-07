@@ -19,7 +19,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -85,6 +88,21 @@ public abstract class TrackerMotionDAO {
 
     @SqlUpdate("DELETE FROM tracker_motion_master WHERE tracker_id = :tracker_id")
     public abstract Integer deleteDataTrackerID(@Bind("tracker_id") Long trackerID);
+
+    @RegisterMapper(GroupedTrackerMotionMapper.class)
+    @SqlQuery("SELECT MAX(id) AS id, " +
+            "MAX(account_id) AS account_id, " +
+            "MAX(tracker_id) AS tracker_id, " +
+            "MAX(svm_no_gravity) AS svm_no_gravity, " +
+            "MIN(ts) AS ts, " +
+            "offset_millis, " +
+            "MIN(local_utc_ts) AS ts_bucket from tracker_motion_master " +
+            "WHERE account_id = :account_id and local_utc_ts = :start_date and local_utc_ts <= :end_date " +
+            "GROUP BY offset_millis")
+    public abstract ImmutableList<TrackerMotion> getTrackerOffsetMillis(
+            @Bind("account_id") long accountId,
+            @Bind("start_date") DateTime startDate,
+            @Bind("end_date") DateTime endDate);
 
     @Timed
     public int batchInsertTrackerMotionData(final List<TrackerMotion> trackerMotionData, final int batchSize) {
@@ -175,6 +193,47 @@ public abstract class TrackerMotionDAO {
             inserted++;
         }
         return inserted;
+    }
+
+    public Map<DateTime, Integer> getOffsetMillisForDates(final long accountId, final List<DateTime> dates) {
+        Collections.sort(dates);
+        final ImmutableList<TrackerMotion> trackerMotions = this.getTrackerOffsetMillis(accountId,
+                dates.get(0).minusDays(1), dates.get(dates.size() - 1).plusDays(1));
+
+        if (trackerMotions.size() == 0) {
+            // no data for user in this date range
+            return Collections.emptyMap();
+        }
+
+        final Map<DateTime, Integer> offsets = new HashMap<>();
+
+        if (trackerMotions.size() == 1) {
+            for (final DateTime date : dates) {
+                offsets.put(date, trackerMotions.get(0).offsetMillis);
+            }
+            return offsets;
+        }
+
+        int offsetIndex = 0;
+        for (final DateTime date: dates) {
+            final long dateTimestamp = date.getMillis();
+            for (int i = offsetIndex; i <= trackerMotions.size(); i++) {
+                final long compareStartDate = trackerMotions.get(offsetIndex).timestamp;
+                final long compareEndDate;
+                if (offsetIndex + 1 >= trackerMotions.size()) {
+                    compareEndDate = new DateTime(DateTime.now(), DateTimeZone.UTC).getMillis();
+                } else {
+                    compareEndDate = trackerMotions.get(offsetIndex + 1).timestamp;
+                }
+
+                if (dateTimestamp >= compareStartDate && dateTimestamp < compareEndDate) {
+                    offsetIndex = i;
+                    break;
+                }
+            }
+            offsets.put(date, trackerMotions.get(offsetIndex).offsetMillis);
+        }
+        return offsets;
     }
 
 }

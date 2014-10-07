@@ -69,7 +69,7 @@ public class ScoresResource {
 
         LOGGER.debug("Target Date: {}", targetDate);
 
-        final List<AggregateScore> scores = SleepScoreProcessor.getSleepScore(accessToken.accountId, targetDate, days,
+        final List<AggregateScore> scores = SleepScoreProcessor.getSleepScores(accessToken.accountId, targetDate, days,
                 this.trackerMotionDAO,
                 this.sleepLabelDAO,
                 this.sleepScoreDAO,
