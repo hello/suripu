@@ -196,7 +196,9 @@ public abstract class TrackerMotionDAO {
     }
 
     public Map<DateTime, Integer> getOffsetMillisForDates(final long accountId, final List<DateTime> dates) {
+
         Collections.sort(dates);
+
         final ImmutableList<TrackerMotion> trackerMotions = this.getTrackerOffsetMillis(accountId,
                 dates.get(0).minusDays(1), dates.get(dates.size() - 1).plusDays(1));
 
@@ -217,12 +219,10 @@ public abstract class TrackerMotionDAO {
         int offsetIndex = 0;
         for (final DateTime date: dates) {
             final long dateTimestamp = date.getMillis();
-            for (int i = offsetIndex; i <= trackerMotions.size(); i++) {
+            for (int i = offsetIndex; i < trackerMotions.size(); i++) {
                 final long compareStartDate = trackerMotions.get(offsetIndex).timestamp;
-                final long compareEndDate;
-                if (offsetIndex + 1 >= trackerMotions.size()) {
-                    compareEndDate = new DateTime(DateTime.now(), DateTimeZone.UTC).getMillis();
-                } else {
+                long compareEndDate = new DateTime(DateTime.now(), DateTimeZone.UTC).getMillis();
+                if (offsetIndex + 1 < trackerMotions.size()) {
                     compareEndDate = trackerMotions.get(offsetIndex + 1).timestamp;
                 }
 

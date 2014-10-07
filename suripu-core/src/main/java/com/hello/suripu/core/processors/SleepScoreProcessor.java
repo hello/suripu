@@ -48,8 +48,7 @@ public class SleepScoreProcessor {
         final List<AggregateScore> finalScores = new ArrayList<>();
 
         for (int i = 0; i < days; i++) {
-            final DateTime nightDate = targetDate.minusDays(i);
-            requiredDates.add(nightDate);
+            requiredDates.add(targetDate.minusDays(i));
         }
 
         if (dynamoScores.size() > 0) {
@@ -69,6 +68,7 @@ public class SleepScoreProcessor {
 
         final List<AggregateScore> saveScores = new ArrayList<>();
         final String targetDateString = DateTimeUtil.dateToYmdString(targetDate);
+
         for (final AggregateScore score : scores) {
             if (!score.date.equals(targetDateString)) {
                 saveScores.add(score);

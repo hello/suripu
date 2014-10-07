@@ -208,12 +208,13 @@ public abstract class SleepScoreDAO {
 
         Collections.sort(requiredDates);
 
-        // get timezone offsets for those dates
+        // get timezone offsets for those dates from tracker-motion
         final Map<DateTime, Integer> userOffsets = trackerMotionDAO.getOffsetMillisForDates(accountID, requiredDates);
 
         // get sleep labels for sleep & wakeup times
         final DateTime startDate = requiredDates.get(0);
         final DateTime endDate = requiredDates.get(requiredDates.size() - 1);
+
         ImmutableList<SleepLabel> sleepLabels = sleepLabelDAO.getByAccountAndDates(accountID, startDate, endDate);
         final Map<DateTime, SleepLabel> sleepWakeTimes = new HashMap<>();
         for (final SleepLabel label : sleepLabels) {
