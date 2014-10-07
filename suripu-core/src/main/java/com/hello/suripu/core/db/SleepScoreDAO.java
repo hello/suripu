@@ -7,14 +7,9 @@ import com.hello.suripu.core.db.mappers.SleepScoreMapper;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.SleepLabel;
 import com.hello.suripu.core.models.SleepScore;
-import com.hello.suripu.core.models.SleepSegment;
-import com.hello.suripu.core.models.SleepStats;
-import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.DateTimeUtil;
-import com.hello.suripu.core.util.TimelineUtils;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
@@ -31,7 +26,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class SleepScoreDAO  {
+public abstract class SleepScoreDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepScoreDAO.class);
     private static final Pattern PG_UNIQ_PATTERN = Pattern.compile("ERROR: duplicate key value violates unique constraint \"(\\w+)\"");
@@ -54,8 +49,8 @@ public abstract class SleepScoreDAO  {
             "WHERE account_id = :account_id AND " +
             "date_bucket_utc >= :sleep_utc AND date_bucket_utc < :awake_utc")
     public abstract ImmutableList<SleepScore> getByAccountBetweenDateBucket(@Bind("account_id") Long account_id,
-                                                 @Bind("sleep_utc") DateTime sleepUTC,
-                                                 @Bind("awake_utc") DateTime awakeUTC);
+                                                                            @Bind("sleep_utc") DateTime sleepUTC,
+                                                                            @Bind("awake_utc") DateTime awakeUTC);
 
     @SqlUpdate("UPDATE sleep_score SET " +
             "bucket_score = bucket_score + :bucket_score, sleep_duration = sleep_duration + :sleep_duration, " +
@@ -120,18 +115,14 @@ public abstract class SleepScoreDAO  {
     }
 
     @Timed
-    public int getSleepScoreForNight(final Long accountID, final DateTime nightDate, final int offsetMillis, final int dateBucketPeriod, final SleepLabelDAO sleepLabelDAO) {
+    public int getSleepScoreForNight(final Long accountID, final DateTime nightDate, final int dateBucketPeriod, final SleepLabelDAO sleepLabelDAO) {
 
         // get sleep and wakeup time from sleep_labels or use default
-        final DateTimeZone userLocalTimeZone = DateTimeZone.forOffsetMillis(offsetMillis);
-        final DateTime userLocalDateTime = new DateTime(nightDate.getYear(),
-                nightDate.getMonthOfYear(),
-                nightDate.getDayOfMonth(), 0, 0,
-                userLocalTimeZone).withTimeAtStartOfDay();
-        final DateTime roundedUserLocalTimeInUTC = new DateTime(userLocalDateTime.getMillis(), DateTimeZone.UTC);
-        LOGGER.debug("Score for night of : {}, {}, {}", nightDate, userLocalDateTime, roundedUserLocalTimeInUTC);
+        LOGGER.debug("Score for night of : {}", nightDate);
 
-        final Optional<SleepLabel> sleepLabelOptional = sleepLabelDAO.getByAccountAndDate(accountID, roundedUserLocalTimeInUTC, offsetMillis);
+        final DateTime startDate = nightDate.withTimeAtStartOfDay().minusHours(5);
+        final DateTime endDate = nightDate.withTimeAtStartOfDay().plusDays(1);
+        final Optional<SleepLabel> sleepLabelOptional = sleepLabelDAO.getByAccountAndDates(accountID, startDate, endDate);
         DateTime sleepUTC, wakeUTC;
         if (sleepLabelOptional.isPresent()) {
             sleepUTC = sleepLabelOptional.get().sleepTimeUTC;
@@ -161,59 +152,27 @@ public abstract class SleepScoreDAO  {
 
         // TODO: continue to work on actual scoring
         float totalScore = 0.0f;
-        for (final SleepScore score: scores) {
+        for (final SleepScore score : scores) {
             totalScore += score.bucketScore;
         }
-        final float score =  100.0f - (totalScore / (float) scores.size());
+        final float score = 100.0f - (totalScore / (float) scores.size());
         LOGGER.debug("TOTAL score: {}, {}", String.valueOf(totalScore), score);
 
         return Math.round((score / 100.0f) * this.SCORE_RANGE + this.SCORE_MIN);
     }
 
     @Timed
-    public List<AggregateScore> getSleepScores(final Long accountID, final DateTime endDate, final int numDays,
+    public List<AggregateScore> getSleepScores(final Long accountID,
+                                               final List<DateTime> requiredDates,
                                                final int dateBucketPeriod,
-                                               final TrackerMotionDAO trackerMotionDAO,
                                                final SleepLabelDAO sleepLabelDAO,
                                                final String version) {
-
         final List<AggregateScore> scores = new ArrayList<>();
-
-        // TODO: check if we already have scores in persistent storage. If not, compute and save.
-
-        final int groupBy = 5; // group by 15 mins
-        final int threshold = 10;
-
-        for (int i = 0; i < numDays; i++) {
-            final DateTime targetDate = endDate.minusDays(i).withTimeAtStartOfDay();
-            final DateTime queryStartDate = targetDate.withHourOfDay(22);
-            final DateTime queryEndDate = queryStartDate.plusHours(12);
-
-            LOGGER.debug("Dates {}, {}, {}", targetDate, queryEndDate, queryStartDate);
-
-            final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accountID, queryStartDate, queryEndDate, groupBy);
-
-            LOGGER.debug("tracker motion size {}", trackerMotions.size());
-
-            Integer score = 0;
-            String message = "You haven't been sleeping";
-
-            if (trackerMotions.size() > 0) {
-                final int offsetMillis = trackerMotions.get(0).offsetMillis;
-                score = this.getSleepScoreForNight(accountID, targetDate, offsetMillis, dateBucketPeriod, sleepLabelDAO);
-
-                // TODO: find a better way, do these just to get message....
-                final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, groupBy);
-                final List<SleepSegment> normalized = TimelineUtils.categorizeSleepDepth(segments);
-                final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(normalized, threshold);
-                final SleepStats sleepStats = TimelineUtils.computeStats(mergedSegments);
-                message = TimelineUtils.generateMessage(sleepStats);
-            }
+        for (final DateTime targetDate : requiredDates) {
+            Integer score = this.getSleepScoreForNight(accountID, targetDate.withTimeAtStartOfDay(), dateBucketPeriod, sleepLabelDAO);
 
             final String dateString = DateTimeUtil.dateToYmdString(targetDate);
-            final AggregateScore aggregateScore = new AggregateScore(accountID, score, message, dateString, this.SCORE_TYPE, version);
-
-            // TODO: save aggregateScore to DynamoDB
+            final AggregateScore aggregateScore = new AggregateScore(accountID, score, dateString, this.SCORE_TYPE, version);
 
             scores.add(aggregateScore);
         }
@@ -221,43 +180,4 @@ public abstract class SleepScoreDAO  {
         return scores;
     }
 
-    @Timed
-    public AggregateScore getSingleSleepScore(final Long accountID, final DateTime targetDate,
-                                               final int dateBucketPeriod,
-                                               final TrackerMotionDAO trackerMotionDAO,
-                                               final SleepLabelDAO sleepLabelDAO,
-                                               final String version) {
-
-        final int groupBy = 5; // group by 15 mins
-        final int threshold = 10;
-
-        final DateTime queryStartDate = targetDate.withHourOfDay(22);
-        final DateTime queryEndDate = queryStartDate.plusHours(12);
-
-        LOGGER.debug("Dates {}, {}, {}", targetDate, queryEndDate, queryStartDate);
-
-        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accountID, queryStartDate, queryEndDate, groupBy);
-
-        LOGGER.debug("tracker motion size {}", trackerMotions.size());
-
-        Integer score = 0;
-        String message = "You haven't been sleeping";
-
-        if (trackerMotions.size() > 0) {
-            final int offsetMillis = trackerMotions.get(0).offsetMillis;
-            score = this.getSleepScoreForNight(accountID, targetDate, offsetMillis, dateBucketPeriod, sleepLabelDAO);
-
-            // TODO: find a better way, do these just to get message....
-            final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, groupBy);
-            final List<SleepSegment> normalized = TimelineUtils.categorizeSleepDepth(segments);
-            final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(normalized, threshold);
-            final SleepStats sleepStats = TimelineUtils.computeStats(mergedSegments);
-            message = TimelineUtils.generateMessage(sleepStats);
-        }
-
-        final String dateString = DateTimeUtil.dateToYmdString(targetDate);
-        final AggregateScore aggregateScore = new AggregateScore(accountID, score, message, dateString, this.SCORE_TYPE, version);
-
-        return aggregateScore;
-    }
 }

@@ -13,9 +13,6 @@ public class AggregateScore {
     @JsonProperty("score")
     public final Integer score;
 
-    @JsonProperty("message")
-    public final String message;
-
     @JsonProperty("date")
     public final String date;
 
@@ -25,11 +22,10 @@ public class AggregateScore {
     @JsonProperty("version")
     public final String version;
 
-    public AggregateScore (final Long accountId, final Integer score, final String message,
+    public AggregateScore (final Long accountId, final Integer score,
                            final String date, final String scoreType, final String version) {
         this.accountId = accountId;
         this.score = score;
-        this.message = message;
         this.date = date;
         this.scoreType = scoreType;
         this.version = version;
@@ -40,7 +36,6 @@ public class AggregateScore {
         return Objects.toStringHelper(Score.class)
                 .add("account", accountId)
                 .add("score", score)
-                .add("message", message)
                 .add("date", date)
                 .add("type", scoreType)
                 .add("version", version)
@@ -55,7 +50,6 @@ public class AggregateScore {
             result = (this.accountId == score.accountId &&
                     this.score == score.score &&
                     this.date.equals(score.date) &&
-                    this.message.equals(score.message) &&
                     this.scoreType.equals(score.scoreType) &&
                     this.version.equals(score.version)
             );

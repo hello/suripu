@@ -45,7 +45,6 @@ public class AggregateSleepScoreDAODynamoDB {
     public static final String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
     public static final String DATE_ATTRIBUTE_NAME = "date";
     public static final String SCORE_ATTRIBUTE_NAME = "score";
-    public static final String MESSAGE_ATTRIBUTE_NAME = "message";
     public static final String TYPE_ATTRIBUTE_NAME = "type";
     public static final String VERSION_ATTRIBUTE_NAME = "version";
     private static final int MAX_CALL_COUNT = 5;
@@ -59,7 +58,7 @@ public class AggregateSleepScoreDAODynamoDB {
         this.tableName = tableName + "_" + version;
         this.version = version;
         this.targetAttributes = new HashSet<>();
-        Collections.addAll(targetAttributes, ACCOUNT_ID_ATTRIBUTE_NAME, DATE_ATTRIBUTE_NAME, SCORE_ATTRIBUTE_NAME, MESSAGE_ATTRIBUTE_NAME, TYPE_ATTRIBUTE_NAME, VERSION_ATTRIBUTE_NAME);
+        Collections.addAll(targetAttributes, ACCOUNT_ID_ATTRIBUTE_NAME, DATE_ATTRIBUTE_NAME, SCORE_ATTRIBUTE_NAME, TYPE_ATTRIBUTE_NAME, VERSION_ATTRIBUTE_NAME);
     }
 
     @Timed
@@ -116,12 +115,12 @@ public class AggregateSleepScoreDAODynamoDB {
 
         if (item == null) {
             LOGGER.debug("Account {} date {} score not found", accountId, date);
-            return new AggregateScore(accountId, 0, "You haven't been sleeping", date, DEFAULT_SCORE_TYPE, this.version);
+            return new AggregateScore(accountId, 0, date, DEFAULT_SCORE_TYPE, this.version);
         }
 
         if(!item.keySet().containsAll(this.targetAttributes)){
             LOGGER.warn("Missing field in item {}", item);
-            return new AggregateScore(accountId, 0, "You haven't been sleeping", date, DEFAULT_SCORE_TYPE, this.version);
+            return new AggregateScore(accountId, 0, date, DEFAULT_SCORE_TYPE, this.version);
         }
 
         return this.createAggregateScore(item);
@@ -214,8 +213,9 @@ public class AggregateSleepScoreDAODynamoDB {
         item.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(score.accountId)));
         item.put(DATE_ATTRIBUTE_NAME, new AttributeValue().withS(score.date));
         item.put(SCORE_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(score.score)));
-        item.put(MESSAGE_ATTRIBUTE_NAME, new AttributeValue().withS(score.message));
         item.put(TYPE_ATTRIBUTE_NAME, new AttributeValue().withS(score.scoreType));
+        item.put(VERSION_ATTRIBUTE_NAME, new AttributeValue().withS(score.version));
+
         return item;
     }
 
@@ -223,7 +223,6 @@ public class AggregateSleepScoreDAODynamoDB {
         return new AggregateScore(
                 Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN()),
                 Integer.valueOf(item.get(SCORE_ATTRIBUTE_NAME).getN()),
-                item.get(MESSAGE_ATTRIBUTE_NAME).getS(),
                 item.get(DATE_ATTRIBUTE_NAME).getS(),
                 item.get(TYPE_ATTRIBUTE_NAME).getS(),
                 item.get(VERSION_ATTRIBUTE_NAME).getS()

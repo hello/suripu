@@ -14,4 +14,9 @@ public class DateTimeUtil {
     public static String dateToYmdString(final DateTime date) {
         return DateTimeFormat.forPattern(DYNAMO_DB_DATE_FORMAT).print(date);
     }
+
+    public static DateTime ymdStringToDateTime(final String dateString) {
+        return DateTime.parse(dateString, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT));
+
+    }
 }

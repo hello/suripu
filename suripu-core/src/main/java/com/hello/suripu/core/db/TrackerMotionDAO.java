@@ -86,7 +86,6 @@ public abstract class TrackerMotionDAO {
     @SqlUpdate("DELETE FROM tracker_motion_master WHERE tracker_id = :tracker_id")
     public abstract Integer deleteDataTrackerID(@Bind("tracker_id") Long trackerID);
 
-
     @Timed
     public int batchInsertTrackerMotionData(final List<TrackerMotion> trackerMotionData, final int batchSize) {
 

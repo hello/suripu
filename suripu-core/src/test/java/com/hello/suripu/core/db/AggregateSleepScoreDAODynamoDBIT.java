@@ -82,9 +82,9 @@ public class AggregateSleepScoreDAODynamoDBIT {
     public void testGetNoScore(){
         LOGGER.debug("---------- Testing no score returns ----------");
         final long accountId = 3;
-        final String date = "2014-01-01";
+        final String date = "2014-02-01";
         final AggregateScore actual = this.aggregateSleepScoreDAODynamoDB.getSingleScore(accountId, date);
-        final AggregateScore expected = new AggregateScore(accountId, 0, "You haven't been sleeping", date, this.SCORE_TYPE, this.VERSION);
+        final AggregateScore expected = new AggregateScore(accountId, 0, date, this.SCORE_TYPE, this.VERSION);
         assertThat(expected, is(actual));
     }
 
@@ -93,10 +93,9 @@ public class AggregateSleepScoreDAODynamoDBIT {
         LOGGER.debug("---------- Testing write single score ----------");
 
         final long accountId = 3;
-        final String date = "2014-10-02";
+        final String date = "2014-10-07";
 
-        final AggregateScore score = new AggregateScore( accountId, 10,
-                "what have you been doing at night?",date, this.SCORE_TYPE, this.VERSION);
+        final AggregateScore score = new AggregateScore(accountId, 10, date, this.SCORE_TYPE, this.VERSION);
 
         this.aggregateSleepScoreDAODynamoDB.writeSingleScore(score);
 
@@ -127,8 +126,7 @@ public class AggregateSleepScoreDAODynamoDBIT {
         Random r = new Random(numDays);
         for (int i = 0; i < numDays; i++) {
             final DateTime targetDate = startTime.minusDays(i);
-            final AggregateScore score = new AggregateScore(accountId, r.nextInt(100), "test data point " + i,
-                    DateTimeUtil.dateToYmdString(targetDate), this.SCORE_TYPE, this.VERSION);
+            final AggregateScore score = new AggregateScore(accountId, r.nextInt(100), DateTimeUtil.dateToYmdString(targetDate), this.SCORE_TYPE, this.VERSION);
             scores.add(score);
             queryStartDate = DateTimeUtil.dateToYmdString(targetDate);
         }
