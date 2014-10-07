@@ -85,8 +85,8 @@ public class MergedAlarmInfoDynamoDB {
         final ObjectMapper mapper = new ObjectMapper();
         try {
             boolean hasUpdate = false;
-            if(info.alarmList.isPresent()){
-                final String alarmListJSON = mapper.writeValueAsString(info.alarmList.get());
+            if(!info.alarmList.isEmpty()){
+                final String alarmListJSON = mapper.writeValueAsString(info.alarmList);
                 items.put(ALARM_TEMPLATES_ATTRIBUTE_NAME, new AttributeValueUpdate()
                                 .withAction(AttributeAction.PUT)
                                 .withValue(new AttributeValue().withS(alarmListJSON)));
@@ -191,7 +191,7 @@ public class MergedAlarmInfoDynamoDB {
             }
 
             final long accountId = Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN());
-            Optional<List<Alarm>> alarmListOptional = getAlarmListFromAttributes(deviceId, accountId, item);
+            List<Alarm> alarmListOptional = getAlarmListFromAttributes(deviceId, accountId, item);
             Optional<RingTime> ringTimeOptional = getRingTimeFromAttributes(deviceId, accountId, item);
             Optional<DateTimeZone> dateTimeZoneOptional = getTimeZoneFromAttributes(deviceId, accountId, item);
             alarmInfos.add(new AlarmInfo(deviceId, accountId, alarmListOptional, ringTimeOptional, dateTimeZoneOptional));
@@ -200,24 +200,24 @@ public class MergedAlarmInfoDynamoDB {
         return ImmutableList.copyOf(alarmInfos);
     }
 
-    public static Optional<List<Alarm>> getAlarmListFromAttributes(final String deviceId, final long accountId, final Map<String, AttributeValue> item){
+    public static List<Alarm> getAlarmListFromAttributes(final String deviceId, final long accountId, final Map<String, AttributeValue> item){
         final HashSet<String> alarmAttributes = new HashSet<String>();
         Collections.addAll(alarmAttributes, ALARM_TEMPLATES_ATTRIBUTE_NAME);
 
         if(!item.keySet().containsAll(alarmAttributes)){
-            return Optional.absent();
+            return Collections.EMPTY_LIST;
         }
 
         final String alarmListJSON = item.get(ALARM_TEMPLATES_ATTRIBUTE_NAME).getS();
         final ObjectMapper mapper = new ObjectMapper();
         try {
             final List<Alarm> alarmList = mapper.readValue(alarmListJSON, new TypeReference<List<Alarm>>(){});
-            return Optional.of(alarmList);
+            return alarmList;
         } catch (IOException e) {
             LOGGER.error("Deserialize JSON for alarm list failed, device {}, account id {}.", deviceId, accountId);
         }
 
-        return Optional.absent();
+        return Collections.EMPTY_LIST;
     }
 
 

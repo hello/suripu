@@ -54,7 +54,7 @@ public class AlarmResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Alarm> getAlarms(@Scope({OAuthScope.ALARM_READ}) final AccessToken token){
-
+        LOGGER.debug("Before getting device account map from account_id");
         final List<DeviceAccountPair> deviceAccountMap = this.deviceDAO.getDeviceAccountMapFromAccountId(token.accountId);
         if(deviceAccountMap.size() == 0){
             LOGGER.error("User {} tries to retrieve alarm without paired with a Morpheus.", token.accountId);
@@ -62,12 +62,15 @@ public class AlarmResource {
         }
 
         try {
+            LOGGER.debug("Before getting device account map from account_id");
             final Optional<AlarmInfo> alarmInfoOptional = this.mergedAlarmInfoDynamoDB.getInfo(deviceAccountMap.get(0).externalDeviceId, token.accountId);
+            LOGGER.debug("Fetched alarm info optional");
             if(!alarmInfoOptional.isPresent()){
                 LOGGER.error("Merge alarm info table doesn't have record for device {}, account {}.", deviceAccountMap.get(0).externalDeviceId, token.accountId);
                 throw new WebApplicationException(Response.Status.BAD_REQUEST);
             }
-            return alarmInfoOptional.get().alarmList.get();
+            final AlarmInfo alarmInfo = alarmInfoOptional.get();
+            return alarmInfo.alarmList;
         }catch (AmazonServiceException awsException){
             LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
@@ -104,7 +107,7 @@ public class AlarmResource {
         for(final DeviceAccountPair deviceAccountPair:deviceAccountMap){
             try {
                 final AlarmInfo alarmInfo = new AlarmInfo(deviceAccountPair.externalDeviceId, token.accountId,
-                        Optional.of(alarms),
+                        alarms,
                         Optional.<RingTime>absent(),
                         Optional.<DateTimeZone>absent());
                 this.mergedAlarmInfoDynamoDB.setInfo(alarmInfo);

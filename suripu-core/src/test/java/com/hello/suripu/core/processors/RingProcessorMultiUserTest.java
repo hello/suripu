@@ -105,7 +105,7 @@ public class RingProcessorMultiUserTest {
                 DateTimeZone.forID("America/Los_Angeles")
         );
         alarmInfoList.add(new AlarmInfo(testDeviceId, 1L,
-                Optional.of(alarmList),
+                alarmList,
                 Optional.of(ringTime),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
 
@@ -122,7 +122,7 @@ public class RingProcessorMultiUserTest {
                 DateTimeZone.forID("America/Los_Angeles")
         );
         alarmInfoList.add(new AlarmInfo(testDeviceId, 2L,
-                Optional.of(alarmList2),
+                alarmList2,
                 Optional.of(ringTime2),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
 
@@ -312,7 +312,7 @@ public class RingProcessorMultiUserTest {
                 DateTimeZone.forID("America/Los_Angeles")
         );
         alarmInfoList.add(new AlarmInfo(testDeviceId, 1L,
-                Optional.of(alarmList),
+                alarmList,
                 Optional.of(ringTime),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
 
@@ -329,7 +329,7 @@ public class RingProcessorMultiUserTest {
                 DateTimeZone.forID("America/Los_Angeles")
         );
         alarmInfoList.add(new AlarmInfo(testDeviceId, 2L,
-                Optional.of(alarmList2),
+                alarmList2,
                 Optional.of(ringTime2),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
 
@@ -521,7 +521,7 @@ public class RingProcessorMultiUserTest {
                 DateTimeZone.forID("America/Los_Angeles")
         );
         this.alarmInfoList.add(new AlarmInfo(testDeviceId, 1L,
-                Optional.of(alarmList),
+                alarmList,
                 Optional.of(ringTime1),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
 
@@ -537,7 +537,7 @@ public class RingProcessorMultiUserTest {
                 DateTimeZone.forID("America/Los_Angeles")
         );
         this.alarmInfoList.add(new AlarmInfo(testDeviceId, 2L,
-                Optional.of(alarmList2),
+                alarmList2,
                 Optional.of(ringTime2),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
 

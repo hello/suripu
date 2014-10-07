@@ -5,7 +5,6 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
-import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmInfo;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.RingTime;
@@ -26,6 +25,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -66,7 +66,7 @@ public class TimeZoneResource {
         {
             try {
                 final AlarmInfo alarmInfo = new AlarmInfo(deviceAccountPair.externalDeviceId, token.accountId,
-                        Optional.<List<Alarm>>absent(),
+                        Collections.EMPTY_LIST,
                         Optional.<RingTime>absent(),
                         Optional.of(DateTimeZone.forID(timeZoneHistory.timeZoneId)));
 

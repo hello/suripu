@@ -39,6 +39,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
     // This is called by the cache when it doesn't contain the key
     final CacheLoader loader = new CacheLoader<ClientCredentials, Optional<AccessToken>>() {
         public Optional<AccessToken> load(final ClientCredentials clientCredentials) {
+            LOGGER.debug("Not in cache, fetching from DB");
             return fromDB(clientCredentials);
         }
     };

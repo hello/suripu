@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -84,8 +85,8 @@ public class RingProcessor {
         for(final AlarmInfo alarmInfo:alarmInfoList){
             final RingTime currentRingTime = alarmInfo.ringTime.isPresent() ? alarmInfo.ringTime.get() : RingTime.createEmpty();
 
-            if(alarmInfo.alarmList.isPresent()) {
-                final List<Alarm> alarms = alarmInfo.alarmList.get();
+            if(!alarmInfo.alarmList.isEmpty()) {
+                final List<Alarm> alarms = alarmInfo.alarmList;
 
                 // Based on current time, the user's alarm template & user's current timezone, compute
                 // the next ring moment.
@@ -105,7 +106,7 @@ public class RingProcessor {
                         // At this time, the next ring is a regular alarm, not smart yet.
 
                         mergedAlarmInfoDynamoDB.setInfo(new AlarmInfo(morpheusId, alarmInfo.accountId,
-                                Optional.<List<Alarm>>absent(),
+                                Collections.EMPTY_LIST,
                                 Optional.of(nextRingTime),
                                 Optional.<DateTimeZone>absent()));
 
@@ -161,7 +162,7 @@ public class RingProcessor {
 
                                     LOGGER.info("Device {} ring time updated to {}", morpheusId, new DateTime(smartAlarmRingTime.actualRingTimeUTC, alarmInfo.timeZone.get()));
                                     mergedAlarmInfoDynamoDB.setInfo(new AlarmInfo(alarmInfo.deviceId, alarmInfo.accountId,
-                                            Optional.<List<Alarm>>absent(),
+                                            Collections.EMPTY_LIST,
                                             Optional.of(smartAlarmRingTime),
                                             Optional.<DateTimeZone>absent()));
                                     nextRingTime = smartAlarmRingTime;
@@ -185,7 +186,7 @@ public class RingProcessor {
 
                             LOGGER.info("Device {} ring time updated to {}", morpheusId, nextRingTimeLocal);
                             mergedAlarmInfoDynamoDB.setInfo(new AlarmInfo(alarmInfo.deviceId, alarmInfo.accountId,
-                                    Optional.<List<Alarm>>absent(),
+                                    Collections.EMPTY_LIST,
                                     Optional.of(nextRingTime),
                                     Optional.<DateTimeZone>absent()));
                         }
@@ -225,8 +226,8 @@ public class RingProcessor {
         try {
 
             for (final AlarmInfo alarmInfo:alarmInfoList){
-                if(alarmInfo.alarmList.isPresent()){
-                    final List<Alarm> alarms = alarmInfo.alarmList.get();
+                if(!alarmInfo.alarmList.isEmpty()){
+                    final List<Alarm> alarms = alarmInfo.alarmList;
                     final RingTime nextRingTime = Alarm.Utils.getNextRingTime(alarms, currentTime.getMillis(), userTimeZone);
 
                     if (!nextRingTime.isEmpty()) {

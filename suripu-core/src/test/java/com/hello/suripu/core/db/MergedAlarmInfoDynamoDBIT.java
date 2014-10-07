@@ -7,7 +7,6 @@ import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.base.Optional;
-import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmInfo;
 import com.hello.suripu.core.models.RingTime;
 import org.joda.time.DateTime;
@@ -16,6 +15,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -72,7 +72,7 @@ public class MergedAlarmInfoDynamoDBIT {
     @Test
     public void testCreateAndRetrieve(){
         final AlarmInfo alarmInfo = new AlarmInfo(this.deviceId, this.accountId,
-                Optional.<List<Alarm>>absent(),
+                Collections.EMPTY_LIST,
                 Optional.<RingTime>absent(),
                 Optional.of(DateTimeZone.UTC));
         this.mergedAlarmInfoDynamoDB.setInfo(alarmInfo);
@@ -85,13 +85,13 @@ public class MergedAlarmInfoDynamoDBIT {
     public void testUpdateNotAppend(){
         final RingTime ringTime = new RingTime(DateTime.now().getMillis(), DateTime.now().getMillis(), new long[]{1L});
         final AlarmInfo alarmInfo = new AlarmInfo(this.deviceId, this.accountId,
-                Optional.<List<Alarm>>absent(),
+                Collections.EMPTY_LIST,
                 Optional.of(ringTime),
                 Optional.<DateTimeZone>absent());
         this.mergedAlarmInfoDynamoDB.setInfo(alarmInfo);
 
         final AlarmInfo updatedAlarmInfo = new AlarmInfo(this.deviceId, this.accountId,
-                Optional.<List<Alarm>>absent(),
+                Collections.EMPTY_LIST,
                 Optional.<RingTime>absent(),
                 Optional.of(DateTimeZone.UTC));
         this.mergedAlarmInfoDynamoDB.setInfo(updatedAlarmInfo);
