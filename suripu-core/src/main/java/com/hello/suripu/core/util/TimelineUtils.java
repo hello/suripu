@@ -14,6 +14,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -180,7 +182,7 @@ public class TimelineUtils {
         LOGGER.debug("Attempting to categorize {} segments", sleepSegments.size());
         final List<SleepSegment> normalizedSegments = new ArrayList<>();
 
-        for(SleepSegment segment : sleepSegments) {
+        for(final SleepSegment segment : sleepSegments) {
             Integer sleepDepth = segment.sleepDepth;
 
             if( segment.sleepDepth <=10) {
@@ -196,6 +198,32 @@ public class TimelineUtils {
         }
         LOGGER.debug("Categorized {} segments", normalizedSegments.size());
         return normalizedSegments;
+    }
+
+
+    /**
+     * Inserts Sunrise and Sunset segments into the timeline
+     * Could potentially work for any kind of event
+     * @param sunrise
+     * @param sunset
+     * @param original
+     * @return
+     */
+    public static List<SleepSegment> insertSegments(final SleepSegment sunrise, final SleepSegment sunset, final List<SleepSegment> original) {
+
+        final Set<SleepSegment> sleepSegments = new TreeSet<>();
+        sleepSegments.add(sunrise);
+        sleepSegments.add(sunset);
+        sleepSegments.addAll(original);
+
+
+        final List<SleepSegment> temp = new ArrayList<>();
+
+        for(SleepSegment segment : sleepSegments) {
+            temp.add(segment);
+        }
+
+        return temp;
     }
 
 
