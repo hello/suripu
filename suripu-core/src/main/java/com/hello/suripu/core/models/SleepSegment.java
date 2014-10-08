@@ -2,11 +2,12 @@ package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.google.common.collect.ComparisonChain;
 import org.joda.time.DateTime;
 
 import java.util.List;
 
-public class SleepSegment {
+public class SleepSegment implements Comparable {
 
     @JsonProperty("id")
     final public Long id;
@@ -75,5 +76,13 @@ public class SleepSegment {
                 .add("$when", new DateTime(timestamp))
                 .add("$minutes", durationInSeconds/60)
                 .toString();
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        final SleepSegment that = (SleepSegment) o;
+        return ComparisonChain.start()
+                .compare(timestamp, that.timestamp)
+                .result();
     }
 }
