@@ -141,3 +141,10 @@ alarm_info_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: alarm_info
+
+# remember to update version when changing score methods
+sleep_score_db:
+    endpoint : http://dynamodb.us-east-1.amazonaws.com
+    region: us-east-1
+    table_name: sleep_score
+sleep_score_version: v_0_1
