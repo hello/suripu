@@ -2,8 +2,10 @@ package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.core.db.mappers.DeviceStatusMapper;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.db.mappers.DeviceAccountPairMapper;
+import com.hello.suripu.core.models.DeviceStatus;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -45,9 +47,9 @@ public interface DeviceDAO {
             @Bind("device_name") String deviceName);
 
 
-    @SingleValueResult(String.class)
-    @SqlQuery("SELECT device_name FROM account_device_map WHERE account_id = :account_id ORDER BY id DESC LIMIT 1;")
-    Optional<String> getDeviceIdFromAccountId(@Bind("account_id") final Long accountId);
+    @RegisterMapper(DeviceAccountPairMapper.class)
+    @SqlQuery("SELECT * FROM account_device_map WHERE account_id = :account_id ORDER BY id DESC;")
+    ImmutableList<DeviceAccountPair> getDeviceAccountMapFromAccountId(@Bind("account_id") final Long accountId);
 
     // account to pill (aka tracker) map
 
@@ -72,4 +74,15 @@ public interface DeviceDAO {
 
     @SqlUpdate("DELETE FROM account_tracker_map WHERE id = :id")
     Integer unregisterTracker(@Bind("id") Long id);
+
+    @SqlUpdate("UPDATE account_tracker_map SET active = FALSE, last_updated = NOW() WHERE device_id = :device_id and active = TRUE;")
+    Integer unregisterTracker(@Bind("device_id") final String id);
+
+    @SqlUpdate("UPDATE account_device_map SET active = FALSE, last_updated = NOW() WHERE device_id = :device_id and active = TRUE;")
+    Integer unregisterSense(@Bind("device_id") final String id);
+
+    @RegisterMapper(DeviceStatusMapper.class)
+    @SingleValueResult(DeviceStatus.class)
+    @SqlQuery("SELECT * FROM pill_status WHERE pill_id = :pill_id;")
+    Optional<DeviceStatus> pillStatus(@Bind("pill_id") final Long pillId);
 }

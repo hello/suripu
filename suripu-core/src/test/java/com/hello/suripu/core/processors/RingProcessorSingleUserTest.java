@@ -70,7 +70,7 @@ public class RingProcessorSingleUserTest {
 
 
 
-        alarmInfoList1.add(new AlarmInfo(testDeviceId, 1L, Optional.of(alarmList), Optional.of(ringTime), Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
+        alarmInfoList1.add(new AlarmInfo(testDeviceId, 1L, alarmList, Optional.of(ringTime), Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
 
         when(this.mergedAlarmInfoDynamoDB.getInfo(testDeviceId)).thenReturn(alarmInfoList1);
 
@@ -274,7 +274,7 @@ public class RingProcessorSingleUserTest {
 
         final AlarmInfo alarmInfo1 = this.alarmInfoList1.get(0);
         this.alarmInfoList1.set(0, new AlarmInfo(alarmInfo1.deviceId, alarmInfo1.accountId,
-                Optional.of(alarmList),
+                alarmList,
                 alarmInfo1.ringTime,
                 alarmInfo1.timeZone));
 
@@ -300,7 +300,7 @@ public class RingProcessorSingleUserTest {
         // but user clear all his/her alarms after the last ring was computed.
         final AlarmInfo alarmInfo1 = this.alarmInfoList1.get(0);
         this.alarmInfoList1.set(0, new AlarmInfo(alarmInfo1.deviceId, alarmInfo1.accountId,
-                Optional.of(Collections.<Alarm>emptyList()),
+                Collections.EMPTY_LIST,
                 alarmInfo1.ringTime,
                 alarmInfo1.timeZone));
 
@@ -324,7 +324,7 @@ public class RingProcessorSingleUserTest {
         // Test scenario when computation get triggered there is no alarm for that device.
         final AlarmInfo alarmInfo1 = this.alarmInfoList1.get(0);
         this.alarmInfoList1.set(0, new AlarmInfo(alarmInfo1.deviceId, alarmInfo1.accountId,
-                Optional.of(Collections.<Alarm>emptyList()),
+                Collections.<Alarm>emptyList(),
                 Optional.of(RingTime.createEmpty()),
                 alarmInfo1.timeZone));
 
@@ -484,7 +484,7 @@ public class RingProcessorSingleUserTest {
 
         final AlarmInfo alarmInfo1 = this.alarmInfoList1.get(0);
         this.alarmInfoList1.set(0, new AlarmInfo(alarmInfo1.deviceId, alarmInfo1.accountId,
-                Optional.of(alarmList),
+                alarmList,
                 alarmInfo1.ringTime,
                 alarmInfo1.timeZone));
 
@@ -518,7 +518,7 @@ public class RingProcessorSingleUserTest {
 
         final AlarmInfo alarmInfo1 = this.alarmInfoList1.get(0);
         this.alarmInfoList1.set(0, new AlarmInfo(alarmInfo1.deviceId, alarmInfo1.accountId,
-                Optional.of(alarmList),
+                alarmList,
                 alarmInfo1.ringTime,
                 alarmInfo1.timeZone));
 
@@ -558,7 +558,7 @@ public class RingProcessorSingleUserTest {
 
         AlarmInfo alarmInfo1 = this.alarmInfoList1.get(0);
         this.alarmInfoList1.set(0, new AlarmInfo(alarmInfo1.deviceId, alarmInfo1.accountId,
-                Optional.of(alarmList),
+                alarmList,
                 alarmInfo1.ringTime,
                 alarmInfo1.timeZone));
 

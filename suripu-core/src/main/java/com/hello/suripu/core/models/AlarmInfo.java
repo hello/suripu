@@ -12,13 +12,13 @@ import java.util.List;
 public class AlarmInfo {
     public final String deviceId;
     public final long accountId;
-    public final Optional<List<Alarm>> alarmList;
+    public final List<Alarm> alarmList;
     public final Optional<RingTime> ringTime;
     public final Optional<DateTimeZone> timeZone;
 
 
     public AlarmInfo(final String deviceId, final long accountId,
-                     final Optional<List<Alarm>> alarmList,
+                     final List<Alarm> alarmList,
                      final Optional<RingTime> ringTime,
                      final Optional<DateTimeZone> timeZone){
         if(deviceId == null || alarmList == null || timeZone == null || ringTime == null){
@@ -36,13 +36,13 @@ public class AlarmInfo {
 
 
         return new AlarmInfo(deviceId, accountId,
-                Optional.of(Collections.<Alarm>emptyList()),
+                Collections.<Alarm>emptyList(),
                 Optional.of(RingTime.createEmpty()),
                 Optional.<DateTimeZone>absent());
     }
 
     public boolean isEmpty(){
-        return this.alarmList.isPresent() == false && this.ringTime.isPresent() == false
+        return this.alarmList.size() == 0 && this.ringTime.isPresent() == false
                 && this.timeZone.isPresent() == false;
     }
 }

@@ -2,6 +2,9 @@ package com.hello.suripu.service.resources;
 
 import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.TextFormat;
@@ -76,6 +79,8 @@ public class ReceiveResource {
     private static final double COUNTS_IN_G = Math.pow((4.0  * 9.81)/ 65536.0, 2);
     private static final double GRAVITY = 9.81;
 
+    private final LoadingCache<String, Optional<byte[]>> cache;
+
     public ReceiveResource(final DeviceDataDAO deviceDataDAO,
                            final DeviceDAO deviceDAO,
                            final PublicKeyStore publicKeyStore,
@@ -93,6 +98,14 @@ public class ReceiveResource {
         this.mergedAlarmInfoDynamoDB = mergedAlarmInfoDynamoDB;
 
         this.debug = debug;
+
+        CacheLoader<String, Optional<byte[]>> loader = new CacheLoader<String, Optional<byte[]>>() {
+            public Optional<byte[]> load(String key) {
+                return publicKeyStore.get(key);
+            }
+        };
+
+         cache = CacheBuilder.newBuilder().build(loader);
     }
 
     @POST

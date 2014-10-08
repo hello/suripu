@@ -7,6 +7,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmInfo;
+import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -53,20 +54,23 @@ public class AlarmResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Alarm> getAlarms(@Scope({OAuthScope.ALARM_READ}) final AccessToken token){
-
-        final Optional<String> deviceIdOptional = this.deviceDAO.getDeviceIdFromAccountId(token.accountId);
-        if(!deviceIdOptional.isPresent()){
+        LOGGER.debug("Before getting device account map from account_id");
+        final List<DeviceAccountPair> deviceAccountMap = this.deviceDAO.getDeviceAccountMapFromAccountId(token.accountId);
+        if(deviceAccountMap.size() == 0){
             LOGGER.error("User {} tries to retrieve alarm without paired with a Morpheus.", token.accountId);
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
         try {
-            final Optional<AlarmInfo> alarmInfoOptional = this.mergedAlarmInfoDynamoDB.getInfo(deviceIdOptional.get(), token.accountId);
+            LOGGER.debug("Before getting device account map from account_id");
+            final Optional<AlarmInfo> alarmInfoOptional = this.mergedAlarmInfoDynamoDB.getInfo(deviceAccountMap.get(0).externalDeviceId, token.accountId);
+            LOGGER.debug("Fetched alarm info optional");
             if(!alarmInfoOptional.isPresent()){
-                LOGGER.error("Merge alarm info table doesn't have record for device {}, account {}.", deviceIdOptional.get(), token.accountId);
+                LOGGER.error("Merge alarm info table doesn't have record for device {}, account {}.", deviceAccountMap.get(0).externalDeviceId, token.accountId);
                 throw new WebApplicationException(Response.Status.BAD_REQUEST);
             }
-            return alarmInfoOptional.get().alarmList.get();
+            final AlarmInfo alarmInfo = alarmInfoOptional.get();
+            return alarmInfo.alarmList;
         }catch (AmazonServiceException awsException){
             LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
@@ -94,23 +98,26 @@ public class AlarmResource {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
-        final Optional<String> deviceIdOptional = deviceDAO.getDeviceIdFromAccountId(token.accountId);
-        if(!deviceIdOptional.isPresent()){
+        final List<DeviceAccountPair> deviceAccountMap = this.deviceDAO.getDeviceAccountMapFromAccountId(token.accountId);
+        if(deviceAccountMap.size() == 0){
             LOGGER.error("User tries to set alarm without connected to a Morpheus.", token.accountId);
             throw new WebApplicationException(Response.Status.FORBIDDEN);
         }
 
-        try {
-            final AlarmInfo alarmInfo = new AlarmInfo(deviceIdOptional.get(), token.accountId,
-                    Optional.of(alarms),
-                    Optional.<RingTime>absent(),
-                    Optional.<DateTimeZone>absent());
-            this.mergedAlarmInfoDynamoDB.setInfo(alarmInfo);
-            this.alarmDAODynamoDB.setAlarms(token.accountId, alarms);
-        }catch (AmazonServiceException awsException){
-            LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
+        for(final DeviceAccountPair deviceAccountPair:deviceAccountMap){
+            try {
+                final AlarmInfo alarmInfo = new AlarmInfo(deviceAccountPair.externalDeviceId, token.accountId,
+                        alarms,
+                        Optional.<RingTime>absent(),
+                        Optional.<DateTimeZone>absent());
+                this.mergedAlarmInfoDynamoDB.setInfo(alarmInfo);
+                this.alarmDAODynamoDB.setAlarms(token.accountId, alarms);
+            }catch (AmazonServiceException awsException){
+                LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);
+                throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
+            }
         }
+
 
     }
 }
