@@ -143,4 +143,20 @@ public class SuripuAppConfiguration extends Configuration {
         return this.alarmInfoDynamoDBConfiguration;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty("sleep_score_db")
+    private DynamoDBConfiguration sleepScoreDBConfiguration;
+    public DynamoDBConfiguration getSleepScoreDBConfiguration(){
+        return this.sleepScoreDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("sleep_score_version")
+    private String sleepScoreVersion;
+    public String getSleepScoreVersion() {
+        return this.sleepScoreVersion;
+    }
+
 }

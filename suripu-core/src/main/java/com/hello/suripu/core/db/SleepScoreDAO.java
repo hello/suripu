@@ -4,11 +4,12 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.binders.BindSleepScore;
 import com.hello.suripu.core.db.mappers.SleepScoreMapper;
+import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.SleepLabel;
 import com.hello.suripu.core.models.SleepScore;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
@@ -18,19 +19,23 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class SleepScoreDAO  {
+public abstract class SleepScoreDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepScoreDAO.class);
     private static final Pattern PG_UNIQ_PATTERN = Pattern.compile("ERROR: duplicate key value violates unique constraint \"(\\w+)\"");
 
     private static float SCORE_MIN = 10.0f;
     private static float SCORE_RANGE = 80.0f; // max score is 90
+
+    private static String SCORE_TYPE = "sleep";
 
     @GetGeneratedKeys
     @SqlUpdate("INSERT INTO sleep_score " +
@@ -45,8 +50,8 @@ public abstract class SleepScoreDAO  {
             "WHERE account_id = :account_id AND " +
             "date_bucket_utc >= :sleep_utc AND date_bucket_utc < :awake_utc")
     public abstract ImmutableList<SleepScore> getByAccountBetweenDateBucket(@Bind("account_id") Long account_id,
-                                                 @Bind("sleep_utc") DateTime sleepUTC,
-                                                 @Bind("awake_utc") DateTime awakeUTC);
+                                                                            @Bind("sleep_utc") DateTime sleepUTC,
+                                                                            @Bind("awake_utc") DateTime awakeUTC);
 
     @SqlUpdate("UPDATE sleep_score SET " +
             "bucket_score = bucket_score + :bucket_score, sleep_duration = sleep_duration + :sleep_duration, " +
@@ -111,24 +116,24 @@ public abstract class SleepScoreDAO  {
     }
 
     @Timed
-    public int getSleepScoreForNight(final Long accountID, final DateTime nightDate, final int offsetMillis, final int dateBucketPeriod, final SleepLabelDAO sleepLabelDAO) {
+    public int getSleepScoreForNight(final Long accountID, final DateTime nightDate, final Integer userOffsetMillis, final int dateBucketPeriod, final SleepLabelDAO sleepLabelDAO) {
 
         // get sleep and wakeup time from sleep_labels or use default
-        final DateTimeZone userLocalTimeZone = DateTimeZone.forOffsetMillis(offsetMillis);
-        final DateTime userLocalDateTime = new DateTime(nightDate.getYear(),
-                nightDate.getMonthOfYear(),
-                nightDate.getDayOfMonth(), 0, 0,
-                userLocalTimeZone).withTimeAtStartOfDay();
-        final DateTime roundedUserLocalTimeInUTC = new DateTime(userLocalDateTime.getMillis(), DateTimeZone.UTC);
-        LOGGER.debug("Score for night of : {}, {}, {}", nightDate, userLocalDateTime, roundedUserLocalTimeInUTC);
+        LOGGER.debug("Score for night of : {}", nightDate);
 
-        final Optional<SleepLabel> sleepLabelOptional = sleepLabelDAO.getByAccountAndDate(accountID, roundedUserLocalTimeInUTC, offsetMillis);
+        final DateTime startDate = nightDate.withTimeAtStartOfDay().minusHours(5);
+        final DateTime endDate = nightDate.withTimeAtStartOfDay().plusDays(1);
+        final Optional<SleepLabel> sleepLabelOptional = sleepLabelDAO.getByAccountAndDate(accountID, startDate, endDate);
         DateTime sleepUTC, wakeUTC;
         if (sleepLabelOptional.isPresent()) {
             sleepUTC = sleepLabelOptional.get().sleepTimeUTC;
             wakeUTC = sleepLabelOptional.get().wakeUpTimeUTC;
         } else {
-            sleepUTC = nightDate.withHourOfDay(22); // default starts at 10pm
+            if (userOffsetMillis == null) {
+                LOGGER.warn("No sleep label and no offset for this night {} for account_id = {}", nightDate, accountID);
+                return 0;
+            }
+            sleepUTC = nightDate.withHourOfDay(22).minusMillis(userOffsetMillis); // default starts at 10pm
             wakeUTC = sleepUTC.plusHours(12); // next morning 10am
         }
         LOGGER.debug("User {} sleeps at {}, wakes at {}", accountID, sleepUTC, wakeUTC);
@@ -152,12 +157,137 @@ public abstract class SleepScoreDAO  {
 
         // TODO: continue to work on actual scoring
         float totalScore = 0.0f;
-        for (final SleepScore score: scores) {
+        for (final SleepScore score : scores) {
             totalScore += score.bucketScore;
         }
-        final float score =  100.0f - (totalScore / (float) scores.size());
+        final float score = 100.0f - (totalScore / (float) scores.size());
         LOGGER.debug("TOTAL score: {}, {}", String.valueOf(totalScore), score);
+        LOGGER.debug("Night {} Start: {}, end {}", nightDate, scores.get(0).dateBucketUTC, scores.get(scores.size()-1).dateBucketUTC);
 
         return Math.round((score / 100.0f) * this.SCORE_RANGE + this.SCORE_MIN);
     }
+
+    @Timed
+    public List<AggregateScore> getSleepScores(final Long accountID,
+                                               final List<DateTime> requiredDates,
+                                               final int dateBucketPeriod,
+                                               final TrackerMotionDAO trackerMotionDAO,
+                                               final SleepLabelDAO sleepLabelDAO,
+                                               final String version) {
+
+        Collections.sort(requiredDates);
+        // get timezone offsets
+        final Map<DateTime, Integer> userOffsetMillis = trackerMotionDAO.getOffsetMillisForDates(accountID, requiredDates);
+
+        final List<AggregateScore> scores = new ArrayList<>();
+
+        for (final DateTime targetDate : requiredDates) {
+            //TODO: looping bad, threads?
+            Integer timezoneOffset = null;
+            if (userOffsetMillis.containsKey(targetDate)) {
+                timezoneOffset = userOffsetMillis.get(targetDate);
+            }
+
+            Integer score = this.getSleepScoreForNight(accountID, targetDate.withTimeAtStartOfDay(), timezoneOffset, dateBucketPeriod, sleepLabelDAO);
+
+            final String dateString = DateTimeUtil.dateToYmdString(targetDate);
+            final AggregateScore aggregateScore = new AggregateScore(accountID, score, dateString, this.SCORE_TYPE, version);
+
+            scores.add(aggregateScore);
+        }
+
+        return scores;
+    }
+
+    public List<AggregateScore> getSleepScoreForNights(final Long accountID,
+                                               final List<DateTime> requiredDates,
+                                               final int dateBucketPeriod,
+                                               final TrackerMotionDAO trackerMotionDAO,
+                                               final SleepLabelDAO sleepLabelDAO,
+                                               final String version) {
+
+        Collections.sort(requiredDates);
+
+        // get timezone offsets for those dates from tracker-motion
+        final Map<DateTime, Integer> userOffsets = trackerMotionDAO.getOffsetMillisForDates(accountID, requiredDates);
+
+        // get sleep labels for sleep & wakeup times
+        final DateTime startDate = requiredDates.get(0);
+        final DateTime endDate = requiredDates.get(requiredDates.size() - 1);
+
+        ImmutableList<SleepLabel> sleepLabels = sleepLabelDAO.getByAccountAndDates(accountID, startDate, endDate);
+        final Map<DateTime, SleepLabel> sleepWakeTimes = new HashMap<>();
+        for (final SleepLabel label : sleepLabels) {
+            sleepWakeTimes.put(label.dateUTC.withTimeAtStartOfDay(), label);
+        }
+
+        // get scores
+        final List<SleepScore> scores = this.getByAccountBetweenDateBucket(accountID, startDate.minusDays(1), endDate.plusDays(2));
+
+        int scoresIndex = 0;
+        final int totalNumScores = scores.size();
+        final List<AggregateScore> finalScores = new ArrayList<>();
+
+        for (final DateTime date : requiredDates) {
+            DateTime sleepUTC, wakeUTC;
+            if (sleepWakeTimes.containsKey(date)) {
+                sleepUTC = sleepWakeTimes.get(date).sleepTimeUTC;
+                wakeUTC = sleepWakeTimes.get(date).wakeUpTimeUTC;
+            } else {
+
+                if (!userOffsets.containsKey(date)) {
+                    // no score if we don't have offsets or sleep-wake times
+                    LOGGER.warn("No offset for account {} on night {}", accountID, date);
+                    finalScores.add(new AggregateScore(accountID,
+                            0,
+                            DateTimeUtil.dateToYmdString(date),
+                            this.SCORE_TYPE, version));
+                    continue;
+                }
+                sleepUTC = date.withHourOfDay(22).minusMillis(userOffsets.get(date));
+                wakeUTC = sleepUTC.plusHours(12);
+            }
+
+            // sleep = 1:08am, query starts at 1:00am
+            // wake = 7:55am, query ends at 8:00am
+            final int sleepMinute = (sleepUTC.getMinuteOfHour() / dateBucketPeriod) * dateBucketPeriod;
+            final int wakeMinutes = ((wakeUTC.getMinuteOfHour() / dateBucketPeriod) + 1) * dateBucketPeriod;
+
+            sleepUTC = sleepUTC.withMinuteOfHour(sleepMinute);
+            wakeUTC = wakeUTC.withMinuteOfHour(0).plusMinutes(wakeMinutes);
+            LOGGER.debug("SleepUTC: {}, WakeUTC: {}", sleepUTC, wakeUTC);
+
+            float totalScore = 0.0f;
+            float scoreSize = 0.0f;
+
+            for (int i = scoresIndex; i < totalNumScores; i++) {
+                final SleepScore score = scores.get(i);
+                if (score.dateBucketUTC.isBefore(sleepUTC)) {
+                    // skipping over scores that are not in sleep-wake range
+                    continue;
+                }
+
+                if (scoreSize < 1.0f) {
+                    LOGGER.debug("Day {} start_bucket: {}", date, score.dateBucketUTC);
+                }
+
+                if (score.dateBucketUTC.isAfter(wakeUTC)) {
+                    scoresIndex = i;
+                    break;
+                }
+                totalScore += score.bucketScore;
+                scoreSize++;
+            }
+            LOGGER.debug("Day {} end_bucket: {}", date, scores.get(scoresIndex-1).dateBucketUTC);
+            final float finalScore = (100.0f - (totalScore/scoreSize)) / 100.0f;
+            finalScores.add(new AggregateScore(accountID,
+                    Math.round((finalScore * this.SCORE_RANGE) + this.SCORE_MIN),
+                    DateTimeUtil.dateToYmdString(date),
+                    this.SCORE_TYPE, version));
+
+        }
+
+        return finalScores;
+    }
+
 }
