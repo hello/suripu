@@ -191,7 +191,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new EventResource(eventDAODynamoDB));
         environment.addResource(new DeviceResources(deviceDAO, accountDAO));
 
-        environment.addResource(new TimelineResource(trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, configuration.getScoreThreshold(), deviceDataDAO));
+        environment.addResource(new TimelineResource(trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, configuration.getScoreThreshold()));
 
         environment.addResource(new TimeZoneResource(timeZoneHistoryDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO));
         environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO));
@@ -199,7 +199,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new MobilePushRegistrationResource(subscriptionDAO));
 
         environment.addResource(new QuestionsResource(accountDAO));
-
 
         LOGGER.debug("{}", DateTime.now(DateTimeZone.UTC).getMillis());
 
