@@ -176,6 +176,7 @@ public class AggregateSleepScoreDAODynamoDB {
         } while (lastEvaluatedKey != null && loopCount < MAX_CALL_COUNT);
 
 
+        Collections.sort(scoreResults);
         return ImmutableList.copyOf(scoreResults);
 
     }

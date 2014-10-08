@@ -2,11 +2,13 @@ package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.hello.suripu.core.util.DateTimeUtil;
+import org.joda.time.DateTime;
 
 /**
  * Created by kingshy on 10/1/14.
  */
-public class AggregateScore {
+public class AggregateScore implements Comparable<AggregateScore> {
     @JsonProperty("account_id")
     public final Long accountId;
 
@@ -29,6 +31,11 @@ public class AggregateScore {
         this.date = date;
         this.scoreType = scoreType;
         this.version = version;
+    }
+
+    public int getDateTimestamp() {
+        final DateTime date = DateTimeUtil.ymdStringToDateTime(this.date);
+        return (int) (date.getMillis()/1000.0f);
     }
 
     @Override
@@ -58,4 +65,12 @@ public class AggregateScore {
     }
 
 
+    @Override
+    public int compareTo(AggregateScore o) {
+        final AggregateScore compareObject = (AggregateScore) o;
+        final int compareTimestamp = compareObject.getDateTimestamp();
+        final int objectTimestamp = this.getDateTimestamp();
+        return objectTimestamp - compareTimestamp;  // ascending
+
+    }
 }
