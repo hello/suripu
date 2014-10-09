@@ -229,6 +229,13 @@ public abstract class SleepScoreDAO {
         final List<AggregateScore> finalScores = new ArrayList<>();
 
         for (final DateTime date : requiredDates) {
+
+            if (scores.size() == 0) {
+                // return scores = 0 if we don't have anything
+                finalScores.add(new AggregateScore(accountID, 0, DateTimeUtil.dateToYmdString(date), this.SCORE_TYPE, version));
+                continue;
+            }
+
             DateTime sleepUTC, wakeUTC;
             if (sleepWakeTimes.containsKey(date)) {
                 sleepUTC = sleepWakeTimes.get(date).sleepTimeUTC;
@@ -238,10 +245,7 @@ public abstract class SleepScoreDAO {
                 if (!userOffsets.containsKey(date)) {
                     // no score if we don't have offsets or sleep-wake times
                     LOGGER.warn("No offset for account {} on night {}", accountID, date);
-                    finalScores.add(new AggregateScore(accountID,
-                            0,
-                            DateTimeUtil.dateToYmdString(date),
-                            this.SCORE_TYPE, version));
+                    finalScores.add(new AggregateScore(accountID, 0, DateTimeUtil.dateToYmdString(date), this.SCORE_TYPE, version));
                     continue;
                 }
                 sleepUTC = date.withHourOfDay(22).minusMillis(userOffsets.get(date));

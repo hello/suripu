@@ -1,6 +1,7 @@
 package com.hello.suripu.core.util;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 
 /**
@@ -16,7 +17,8 @@ public class DateTimeUtil {
     }
 
     public static DateTime ymdStringToDateTime(final String dateString) {
-        return DateTime.parse(dateString, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT));
+        return DateTime.parse(dateString, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                .withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
 
     }
 }

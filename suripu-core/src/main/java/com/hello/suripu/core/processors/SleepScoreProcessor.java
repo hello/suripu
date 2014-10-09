@@ -64,23 +64,25 @@ public class SleepScoreProcessor {
         }
 
         // get all data from DB, filter in app
-        LOGGER.debug("No scores in Dynamo, recompute!");
-        final List<AggregateScore> scores = sleepScoreDAO.getSleepScoreForNights(accountId, requiredDates, dateBucketPeriod, trackerMotionDAO, sleepLabelDAO, version);
+        if (requiredDates.size() > 0) {
+            LOGGER.debug("Recompute {} scores out of {}", requiredDates.size(), days);
+            final List<AggregateScore> scores = sleepScoreDAO.getSleepScoreForNights(accountId, requiredDates, dateBucketPeriod, trackerMotionDAO, sleepLabelDAO, version);
 
-        final List<AggregateScore> saveScores = new ArrayList<>();
-        final String targetDateString = DateTimeUtil.dateToYmdString(targetDate);
+            final List<AggregateScore> saveScores = new ArrayList<>();
+            final String targetDateString = DateTimeUtil.dateToYmdString(targetDate);
 
-        for (final AggregateScore score : scores) {
-            if (!score.date.equals(targetDateString)) {
-                saveScores.add(score);
+            for (final AggregateScore score : scores) {
+                if (!score.date.equals(targetDateString)) {
+                    saveScores.add(score);
+                }
+                finalScores.add(score);
+                LOGGER.debug("Computed score: {}", score);
             }
-            finalScores.add(score);
-            LOGGER.debug("Computed score: {}", score);
-        }
 
-        if (saveScores.size() > 0) {
-            LOGGER.debug("write recomputed score to DB");
-            aggregateSleepScoreDAODynamoDB.writeBatchScores(saveScores);
+            if (saveScores.size() > 0) {
+                LOGGER.debug("write recomputed score to DB");
+                aggregateSleepScoreDAODynamoDB.writeBatchScores(saveScores);
+            }
         }
 
         Collections.sort(finalScores);
