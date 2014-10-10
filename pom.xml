@@ -25,6 +25,7 @@
         <module>suripu-factory</module>
         <module>suripu-algorithm</module>
         <module>suripu-workers</module>
+        <module>suripu-admin</module>
     </modules>
 
     <scm>
