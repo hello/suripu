@@ -1,6 +1,7 @@
 package com.hello.suripu.core.models;
 
 import com.google.common.io.LittleEndianDataInputStream;
+import com.google.common.primitives.UnsignedInts;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -67,10 +68,7 @@ public class TrackerMotionUtilTest {
         final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(expectedBytes));
         long expectedLong = 0;
         try {
-            expectedLong = littleEndianDataInputStream.readInt();
-            if(expectedLong < 0){
-                expectedLong += 0xFFFFFFFF;
-            }
+            expectedLong = UnsignedInts.toLong(littleEndianDataInputStream.readInt());
             littleEndianDataInputStream.close();
         } catch (IOException e) {
             e.printStackTrace();

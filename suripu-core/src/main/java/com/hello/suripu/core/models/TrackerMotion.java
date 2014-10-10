@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.io.LittleEndianDataInputStream;
+import com.google.common.primitives.UnsignedInts;
 import com.hello.suripu.api.input.InputProtos;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -214,10 +215,8 @@ public class TrackerMotion {
             long motionAmplitude = -1;
 
             try {
-                motionAmplitude = littleEndianDataInputStream.readInt();
-                if (motionAmplitude < 0) {
-                    motionAmplitude += 0xFFFFFFFF;  // Java everything is signed.
-                }
+                motionAmplitude = UnsignedInts.toLong(littleEndianDataInputStream.readInt());
+
             }catch (IOException ioe){
                 exception = ioe;
             }
