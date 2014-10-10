@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.io.LittleEndianDataInputStream;
+import com.hello.suripu.api.input.InputProtos;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
@@ -87,6 +90,82 @@ public class TrackerMotion {
                 .add("value", value)
                 .add("offset", offsetMillis)
                 .toString();
+    }
+
+    public static class Builder{
+
+        private long id = 0L;
+        private long accountId;
+        private Long trackerId;
+        private long timestamp;
+        private int valueInMilliMS2 = -1;
+        private int offsetMillis;
+
+        public Builder(){
+
+        }
+
+
+        public Builder withAccountId(final long accountId){
+            this.accountId = accountId;
+            return this;
+        }
+
+        public Builder withTrackerId(final Long internalPillId){
+            this.trackerId = internalPillId;
+            return this;
+        }
+
+        public Builder withTimestampMillis(final long timestamp){
+            this.timestamp = timestamp;
+            return this;
+        }
+
+        public Builder withValue(final int valueInMilliMS2){
+            this.valueInMilliMS2 = valueInMilliMS2;
+            return this;
+        }
+
+        public Builder withOffsetMillis(final int offsetMillis){
+            this.offsetMillis = offsetMillis;
+            return this;
+        }
+
+        /*
+        * Take data from Morpheus and transform to core TrackerMotion data structure.
+         */
+        public Builder withPillKinesisData(final byte[] key, final InputProtos.PillDataKinesis data){
+
+            final Long accountID = data.hasAccountIdLong() ? data.getAccountIdLong() : Long.parseLong(data.getAccountId());
+            final Long pillID = data.hasPillIdLong() ? data.getPillIdLong() : Long.parseLong(data.getPillId());
+            final DateTime sampleDT = new DateTime(data.getTimestamp(), DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
+            long amplitudeMilliG = -1;
+            if(data.hasValue()){
+                amplitudeMilliG = data.getValue();
+            }
+
+            if(data.hasEncryptedData()){
+                final byte[] encryptedData = data.getEncryptedData().toByteArray();
+
+                final long raw = Utils.encryptedToRaw(key, encryptedData);
+                amplitudeMilliG = Utils.rawToMilliMS2(raw);
+            }
+
+            this.withAccountId(accountID);
+            this.withTrackerId(pillID);
+            this.withTimestampMillis(sampleDT.getMillis());
+            this.withValue((int)amplitudeMilliG);
+            this.withOffsetMillis(data.getOffsetMillis());
+
+            return this;
+        }
+
+        public TrackerMotion build(){
+            return new TrackerMotion(this.id, this.accountId, this.trackerId, this.timestamp, this.valueInMilliMS2, this.offsetMillis);
+        }
+
+
+
     }
 
 
