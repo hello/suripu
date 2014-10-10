@@ -40,6 +40,8 @@ public class ScoresResource {
     private final int dateBucketPeriod;
     private final String sleepScoreVersion;
 
+    private static int MAX_DAYS = 5;
+
     public ScoresResource(final TrackerMotionDAO trackerMotionDAO,
                           final SleepLabelDAO sleepLabelDAO,
                           final SleepScoreDAO sleepScoreDAO,
@@ -68,6 +70,11 @@ public class ScoresResource {
                 .withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
 
         LOGGER.debug("Target Date: {}", targetDate);
+
+        if (days > this.MAX_DAYS) {
+            LOGGER.warn("Score max days reached: Account {}, date {}, days {}", accessToken.accountId, targetDate, days);
+            days = this.MAX_DAYS;
+        }
 
         final List<AggregateScore> scores = SleepScoreProcessor.getSleepScores(accessToken.accountId, targetDate, days,
                 this.trackerMotionDAO,
