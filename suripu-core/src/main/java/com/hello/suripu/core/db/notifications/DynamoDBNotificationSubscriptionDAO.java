@@ -49,7 +49,7 @@ public class DynamoDBNotificationSubscriptionDAO implements NotificationSubscrip
     }
 
     @Override
-    public Optional<MobilePushRegistration> getSubscription(Long accountId, String deviceToken) {
+    public Optional<MobilePushRegistration> getSubscription(final Long accountId, final String deviceToken) {
 
         final QueryResult result = query(accountId, deviceToken);
 
@@ -62,14 +62,14 @@ public class DynamoDBNotificationSubscriptionDAO implements NotificationSubscrip
     }
 
     @Override
-    public List<MobilePushRegistration> getSubscriptions(Long accountId) {
+    public List<MobilePushRegistration> getSubscriptions(final Long accountId) {
         final QueryResult result = query(accountId);
         final List<MobilePushRegistration> registrations = fromDynamoDBItems(result.getItems());
         return ImmutableList.copyOf(registrations);
     }
 
     @Override
-    public void subscribe(Long accountId, MobilePushRegistration mobilePushRegistration) {
+    public void subscribe(final Long accountId, final MobilePushRegistration mobilePushRegistration) {
 
         final MobilePushRegistration updated = createSNSEndpoint(accountId, mobilePushRegistration);
         LOGGER.debug("Account {} is subscribed to {}", updated.accountId, updated.endpoint.get());
@@ -120,7 +120,7 @@ public class DynamoDBNotificationSubscriptionDAO implements NotificationSubscrip
      * @param items
      * @return
      */
-    private List<MobilePushRegistration> fromDynamoDBItems(List<Map<String, AttributeValue>> items) {
+    private List<MobilePushRegistration> fromDynamoDBItems(final List<Map<String, AttributeValue>> items) {
         final List<MobilePushRegistration> registrations = new ArrayList<>();
 
         for (Map<String, AttributeValue> item : items) {
