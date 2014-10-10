@@ -181,9 +181,16 @@ message PillData {
 message PillDataKinesis {
     optional string pill_id = 1;
     optional string account_id = 2;
+
     optional int64 timestamp = 3;
     optional int64 value = 4;   // data in milli-g
     optional int32 offsetMillis = 5;
+    optional bytes encryptedData = 6;
+    optional int32 batteryLevel = 7;
+    optional int32 firmwareVersion = 8;
+    optional int64 pillIdLong = 9;
+    optional int64 accountIdLong = 10;
+    optional int32 upTime = 11;
 }
 
 message PillBlobHeader {
@@ -223,4 +230,16 @@ message periodic_data {
     optional int32 light_variability=8;
     optional int32 light_tonality=9;
     optional int32 firmware_version=10;
+
+    message pill_data {
+        // Be careful when copy paste, the index is not right :)
+        optional string deviceId = 3;
+        optional int32 batteryLevel = 9;
+        optional int32 uptime = 10;
+        optional int32 motionData = 11;
+
+        optional bytes motionDataEncrypted = 2;
+        optional int32 firmwareVersion = 1;
+    }
+    repeated pill_data pills=11;
 }
