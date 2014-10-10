@@ -7,6 +7,9 @@ import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.collect.Ordering;
+import com.hello.suripu.core.oauth.AccessToken;
+import com.hello.suripu.core.oauth.OAuthScope;
+import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.service.models.FirmwareUpdate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,11 +42,11 @@ public class DownloadResource {
     @Path("/{type}/manifest")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<FirmwareUpdate> getManifest(@PathParam("type") String type) {
+    public List<FirmwareUpdate> getManifest(@Scope(OAuthScope.SENSORS_BASIC) AccessToken accessToken, @PathParam("type") String type) {
 
         final ListObjectsRequest listObjectsRequest = new ListObjectsRequest();
         listObjectsRequest.withBucketName(bucketName);
-        listObjectsRequest.withPrefix(type);
+        listObjectsRequest.withPrefix("latest");
 
         final ObjectListing objectListing = amazonS3Client.listObjects(listObjectsRequest);
 
