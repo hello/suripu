@@ -97,7 +97,7 @@ public abstract class TrackerMotionDAO {
             "MIN(ts) AS ts, " +
             "offset_millis, " +
             "MIN(local_utc_ts) AS ts_bucket from tracker_motion_master " +
-            "WHERE account_id = :account_id and local_utc_ts = :start_date and local_utc_ts <= :end_date " +
+            "WHERE account_id = :account_id and local_utc_ts >= :start_date and local_utc_ts <= :end_date " +
             "GROUP BY offset_millis")
     public abstract ImmutableList<TrackerMotion> getTrackerOffsetMillis(
             @Bind("account_id") long accountId,
