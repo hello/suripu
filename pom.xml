@@ -23,9 +23,9 @@
         <module>suripu-service</module>
         <module>suripu-app</module>
         <module>suripu-factory</module>
-        <module>suripu-sync</module>
         <module>suripu-algorithm</module>
         <module>suripu-workers</module>
+        <module>suripu-admin</module>
     </modules>
 
     <scm>
