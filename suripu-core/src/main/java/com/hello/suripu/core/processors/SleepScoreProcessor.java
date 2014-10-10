@@ -9,6 +9,7 @@ import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,14 +53,16 @@ public class SleepScoreProcessor {
             requiredDates.add(targetDate.minusDays(i));
         }
 
+        DateTime lastNight = new DateTime(DateTime.now(), DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
         if (dynamoScores.size() > 0) {
             LOGGER.debug("Some scores in DynamoDB {}", dynamoScores.size());
             for (final AggregateScore score : dynamoScores) {
                 final DateTime date = DateTimeUtil.ymdStringToDateTime(score.date);
-                if (requiredDates.contains(date)) {
+                if (!date.isEqual(lastNight) && requiredDates.contains(date)) {
                     requiredDates.remove(date);
+                    finalScores.add(score);
                 }
-                finalScores.add(score);
+
             }
         }
 
@@ -69,10 +72,10 @@ public class SleepScoreProcessor {
             final List<AggregateScore> scores = sleepScoreDAO.getSleepScoreForNights(accountId, requiredDates, dateBucketPeriod, trackerMotionDAO, sleepLabelDAO, version);
 
             final List<AggregateScore> saveScores = new ArrayList<>();
-            final String targetDateString = DateTimeUtil.dateToYmdString(targetDate);
+            final String lastNightDateString = DateTimeUtil.dateToYmdString(lastNight);
 
             for (final AggregateScore score : scores) {
-                if (!score.date.equals(targetDateString)) {
+                if (!score.date.equals(lastNightDateString)) {
                     saveScores.add(score);
                 }
                 finalScores.add(score);

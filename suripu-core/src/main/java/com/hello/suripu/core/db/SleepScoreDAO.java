@@ -213,7 +213,7 @@ public abstract class SleepScoreDAO {
 
         // get sleep labels for sleep & wakeup times
         final DateTime startDate = requiredDates.get(0);
-        final DateTime endDate = requiredDates.get(requiredDates.size() - 1);
+        final DateTime endDate = requiredDates.get(requiredDates.size() - 1).plusDays(2);
 
         ImmutableList<SleepLabel> sleepLabels = sleepLabelDAO.getByAccountAndDates(accountID, startDate, endDate);
         final Map<DateTime, SleepLabel> sleepWakeTimes = new HashMap<>();
@@ -282,13 +282,17 @@ public abstract class SleepScoreDAO {
                 totalScore += score.bucketScore;
                 scoreSize++;
             }
-            LOGGER.debug("Day {} end_bucket: {}", date, scores.get(scoresIndex-1).dateBucketUTC);
-            final float finalScore = (100.0f - (totalScore/scoreSize)) / 100.0f;
-            finalScores.add(new AggregateScore(accountID,
-                    Math.round((finalScore * this.SCORE_RANGE) + this.SCORE_MIN),
+
+            int finalScore = 0;
+            if (scoreSize > 0.0f) {
+                LOGGER.debug("Day {} end_bucket: {}", date, scores.get(scoresIndex - 1).dateBucketUTC);
+                final float tmpScore = (100.0f - (totalScore / scoreSize)) / 100.0f;
+                finalScore = Math.round((tmpScore * this.SCORE_RANGE) + this.SCORE_MIN);
+            }
+
+            finalScores.add(new AggregateScore(accountID, finalScore,
                     DateTimeUtil.dateToYmdString(date),
                     this.SCORE_TYPE, version));
-
         }
 
         return finalScores;
