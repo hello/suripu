@@ -9,6 +9,7 @@ import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,35 +53,39 @@ public class SleepScoreProcessor {
             requiredDates.add(targetDate.minusDays(i));
         }
 
+        final DateTime lastNight = new DateTime(DateTime.now(), DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
         if (dynamoScores.size() > 0) {
             LOGGER.debug("Some scores in DynamoDB {}", dynamoScores.size());
             for (final AggregateScore score : dynamoScores) {
                 final DateTime date = DateTimeUtil.ymdStringToDateTime(score.date);
-                if (requiredDates.contains(date)) {
+                if (!date.isEqual(lastNight) && requiredDates.contains(date)) {
                     requiredDates.remove(date);
+                    finalScores.add(score);
                 }
-                finalScores.add(score);
+
             }
         }
 
         // get all data from DB, filter in app
-        LOGGER.debug("No scores in Dynamo, recompute!");
-        final List<AggregateScore> scores = sleepScoreDAO.getSleepScoreForNights(accountId, requiredDates, dateBucketPeriod, trackerMotionDAO, sleepLabelDAO, version);
+        if (requiredDates.size() > 0) {
+            LOGGER.debug("Recompute {} scores out of {}", requiredDates.size(), days);
+            final List<AggregateScore> scores = sleepScoreDAO.getSleepScoreForNights(accountId, requiredDates, dateBucketPeriod, trackerMotionDAO, sleepLabelDAO, version);
 
-        final List<AggregateScore> saveScores = new ArrayList<>();
-        final String targetDateString = DateTimeUtil.dateToYmdString(targetDate);
+            final List<AggregateScore> saveScores = new ArrayList<>();
+            final String lastNightDateString = DateTimeUtil.dateToYmdString(lastNight);
 
-        for (final AggregateScore score : scores) {
-            if (!score.date.equals(targetDateString)) {
-                saveScores.add(score);
+            for (final AggregateScore score : scores) {
+                if (!score.date.equals(lastNightDateString)) {
+                    saveScores.add(score);
+                }
+                finalScores.add(score);
+                LOGGER.debug("Computed score: {}", score);
             }
-            finalScores.add(score);
-            LOGGER.debug("Computed score: {}", score);
-        }
 
-        if (saveScores.size() > 0) {
-            LOGGER.debug("write recomputed score to DB");
-            aggregateSleepScoreDAODynamoDB.writeBatchScores(saveScores);
+            if (saveScores.size() > 0) {
+                LOGGER.debug("write recomputed score to DB");
+                aggregateSleepScoreDAODynamoDB.writeBatchScores(saveScores);
+            }
         }
 
         Collections.sort(finalScores);
