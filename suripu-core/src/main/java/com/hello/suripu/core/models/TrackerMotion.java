@@ -5,17 +5,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.io.LittleEndianDataInputStream;
 
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 
@@ -104,9 +98,7 @@ public class TrackerMotion {
 
 
         public static byte[] counterModeDecrypt(final byte[] key, final byte[] nonce, final byte[] encrypted)  // make it explicit that decryption can fail.
-                throws NoSuchPaddingException, NoSuchAlgorithmException,
-                InvalidKeyException, BadPaddingException,
-                IllegalBlockSizeException, InvalidAlgorithmParameterException {
+                throws IllegalArgumentException {
             final SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
 
             final byte[] iv = new byte[16];
@@ -114,10 +106,15 @@ public class TrackerMotion {
                 iv[i] = nonce[i];
             }
             final IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
-            final Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
-            cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
-            final byte[] decValue = cipher.doFinal(encrypted);
-            return decValue;
+            final Cipher cipher;
+            try {
+                cipher = Cipher.getInstance("AES/CTR/NoPadding");
+                cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
+                final byte[] decValue = cipher.doFinal(encrypted);
+                return decValue;
+            } catch (Exception e) {
+                throw new IllegalArgumentException(e);
+            }
         }
 
         public static long rawToMilliMS2(final Long rawMotionAmplitude){
@@ -125,10 +122,7 @@ public class TrackerMotion {
             return (long)(trackerValueInMS2 * 1000);
         }
 
-        public static long encryptedToRaw(final byte[] key, final byte[] encryptedMotionData)
-                throws NoSuchPaddingException, InvalidAlgorithmParameterException,
-                NoSuchAlgorithmException, IllegalBlockSizeException,
-                BadPaddingException, InvalidKeyException, IOException {
+        public static long encryptedToRaw(final byte[] key, final byte[] encryptedMotionData) throws IllegalArgumentException {
 
             final byte[] nonce = Arrays.copyOfRange(encryptedMotionData, 0, 8);
 
@@ -137,13 +131,28 @@ public class TrackerMotion {
 
             final byte[] decryptedRawMotion = counterModeDecrypt(key, nonce, encryptedRawMotion);
             final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion));
+            Exception exception = null;
+            long motionAmplitude = -1;
 
-            long motionAmplitude = littleEndianDataInputStream.readInt();
-            if(motionAmplitude < 0){
-                motionAmplitude += 0xFFFFFFFF;  // Java everything is signed.
+            try {
+                motionAmplitude = littleEndianDataInputStream.readInt();
+                if (motionAmplitude < 0) {
+                    motionAmplitude += 0xFFFFFFFF;  // Java everything is signed.
+                }
+            }catch (IOException ioe){
+                exception = ioe;
             }
 
-            littleEndianDataInputStream.close();
+            try {
+                littleEndianDataInputStream.close();
+            }catch (IOException ioe){
+                exception = ioe;
+            }
+
+            if(exception != null){
+                throw new IllegalArgumentException(exception);
+            }
+
             return motionAmplitude;
 
         }

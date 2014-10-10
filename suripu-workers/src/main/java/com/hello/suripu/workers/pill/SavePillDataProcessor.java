@@ -15,13 +15,6 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,20 +57,8 @@ public class SavePillDataProcessor implements IRecordProcessor {
                     try {
                         final long raw = TrackerMotion.Utils.encryptedToRaw(fakeKey, encryptedData);
                         amplitudeMilliG = TrackerMotion.Utils.rawToMilliMS2(raw);
-                    } catch (NoSuchPaddingException e) {
-                        LOGGER.error("Failed to decrypted pill data for pill id {}, NoSuchPaddingException", pillID);
-                    } catch (InvalidAlgorithmParameterException e) {
-                        LOGGER.error("Failed to decrypted pill data for pill id {}, InvalidAlgorithmParameterException", pillID);
-                    } catch (NoSuchAlgorithmException e) {
-                        LOGGER.error("Failed to decrypted pill data for pill id {}, NoSuchAlgorithmException", pillID);
-                    } catch (IllegalBlockSizeException e) {
-                        LOGGER.error("Failed to decrypted pill data for pill id {}, IllegalBlockSizeException", pillID);
-                    } catch (BadPaddingException e) {
-                        LOGGER.error("Failed to decrypted pill data for pill id {}, BadPaddingException", pillID);
-                    } catch (InvalidKeyException e) {
-                        LOGGER.error("Failed to decrypted pill data for pill id {}, InvalidKeyException", pillID);
-                    } catch (IOException e) {
-                        LOGGER.error("Failed to decrypted pill data for pill id {}, IOException", pillID);
+                    } catch (IllegalArgumentException e) {
+                        LOGGER.error("Failed to decrypted pill data for pill id {}, error: {}", pillID, e.getMessage());
                     }
                 }
 

@@ -3,14 +3,8 @@ package com.hello.suripu.core.models;
 import com.google.common.io.LittleEndianDataInputStream;
 import org.junit.Test;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -54,17 +48,7 @@ public class TrackerMotionUtilTest {
             final byte[] actual = TrackerMotion.Utils.counterModeDecrypt(new byte[16], nonce, encrypted);
             assertThat(actual, is(expected));
 
-        } catch (NoSuchPaddingException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
-        } catch (BadPaddingException e) {
-            e.printStackTrace();
-        } catch (IllegalBlockSizeException e) {
-            e.printStackTrace();
-        } catch (InvalidAlgorithmParameterException e) {
+        } catch (IllegalArgumentException e) {
             e.printStackTrace();
         }
     }
@@ -98,19 +82,7 @@ public class TrackerMotionUtilTest {
             actual = TrackerMotion.Utils.encryptedToRaw(new byte[16], encrypted);
 
 
-        } catch (NoSuchPaddingException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
-        } catch (BadPaddingException e) {
-            e.printStackTrace();
-        } catch (IllegalBlockSizeException e) {
-            e.printStackTrace();
-        } catch (InvalidAlgorithmParameterException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (IllegalArgumentException e) {
             e.printStackTrace();
         }
 
