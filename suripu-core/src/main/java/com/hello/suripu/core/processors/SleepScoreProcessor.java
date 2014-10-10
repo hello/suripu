@@ -53,7 +53,7 @@ public class SleepScoreProcessor {
             requiredDates.add(targetDate.minusDays(i));
         }
 
-        DateTime lastNight = new DateTime(DateTime.now(), DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
+        final DateTime lastNight = new DateTime(DateTime.now(), DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
         if (dynamoScores.size() > 0) {
             LOGGER.debug("Some scores in DynamoDB {}", dynamoScores.size());
             for (final AggregateScore score : dynamoScores) {
