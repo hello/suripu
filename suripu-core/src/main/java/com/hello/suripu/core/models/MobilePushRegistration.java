@@ -68,7 +68,8 @@ public class MobilePushRegistration {
      * @return
      */
     public static MobilePushRegistration withEndpointForAccount(final MobilePushRegistration m, final String endpoint, final Long accountId) {
-        return new MobilePushRegistration(accountId, m.os, m.version, m.appVersion, m.deviceToken, m.oauthToken.get(), endpoint);
+        final String oAuthToken = (m.oauthToken.isPresent()) ? m.oauthToken.get() : null;
+        return new MobilePushRegistration(accountId, m.os, m.version, m.appVersion, m.deviceToken, oAuthToken, endpoint);
     }
 
     /**
