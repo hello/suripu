@@ -15,6 +15,13 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,18 +50,55 @@ public class SavePillDataProcessor implements IRecordProcessor {
             try {
                 final InputProtos.PillDataKinesis data = InputProtos.PillDataKinesis.parseFrom(record.getData().array());
 
-                final Long accountID = Long.parseLong(data.getAccountId());
-                final Long pillID = Long.parseLong(data.getPillId());
+                final Long accountID = data.hasAccountIdLong() ? data.getAccountIdLong() : Long.parseLong(data.getAccountId());
+                final Long pillID = data.hasPillIdLong() ? data.getPillIdLong() : Long.parseLong(data.getPillId());
                 final DateTime sampleDT = new DateTime(data.getTimestamp(), DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
-                final TrackerMotion trackerMotion = new TrackerMotion(
-                        0L,
-                        accountID,
-                        pillID,
-                        sampleDT.getMillis(),
-                        (int) data.getValue(),
-                        data.getOffsetMillis()
-                );
-                trackerData.add(trackerMotion);
+                long amplitudeMilliG = -1;
+                if(data.hasValue()){
+                    amplitudeMilliG = data.getValue();
+                }
+
+                if(data.hasEncryptedData()){
+                    final byte[] fakeKey = new byte[16];
+                    final byte[] encryptedData = data.getEncryptedData().toByteArray();
+                    try {
+                        final long raw = TrackerMotion.Utils.encryptedToRaw(fakeKey, encryptedData);
+                        amplitudeMilliG = TrackerMotion.Utils.rawToMilliMS2(raw);
+                    } catch (NoSuchPaddingException e) {
+                        LOGGER.error("Failed to decrypted pill data for pill id {}, NoSuchPaddingException", pillID);
+                    } catch (InvalidAlgorithmParameterException e) {
+                        LOGGER.error("Failed to decrypted pill data for pill id {}, InvalidAlgorithmParameterException", pillID);
+                    } catch (NoSuchAlgorithmException e) {
+                        LOGGER.error("Failed to decrypted pill data for pill id {}, NoSuchAlgorithmException", pillID);
+                    } catch (IllegalBlockSizeException e) {
+                        LOGGER.error("Failed to decrypted pill data for pill id {}, IllegalBlockSizeException", pillID);
+                    } catch (BadPaddingException e) {
+                        LOGGER.error("Failed to decrypted pill data for pill id {}, BadPaddingException", pillID);
+                    } catch (InvalidKeyException e) {
+                        LOGGER.error("Failed to decrypted pill data for pill id {}, InvalidKeyException", pillID);
+                    } catch (IOException e) {
+                        LOGGER.error("Failed to decrypted pill data for pill id {}, IOException", pillID);
+                    }
+                }
+
+                if(amplitudeMilliG != -1) {
+                    final TrackerMotion trackerMotion = new TrackerMotion(
+                            0L,
+                            accountID,
+                            pillID,
+                            sampleDT.getMillis(),
+                            (int) data.getValue(),
+                            data.getOffsetMillis()
+                    );
+                    trackerData.add(trackerMotion);
+                }else{
+                    //TODO: Deal with heartbeat
+                    final int batteryLevel = data.getBatteryLevel();
+                    final int upTime = data.getUpTime();
+                    final int firmwareVersion = data.getFirmwareVersion();
+
+                    // TODO: Save the heartbeat
+                }
             } catch (InvalidProtocolBufferException e) {
                 LOGGER.error("Failed to decode protobuf: {}", e.getMessage());
             }

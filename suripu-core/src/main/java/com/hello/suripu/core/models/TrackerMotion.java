@@ -3,7 +3,20 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.google.common.io.LittleEndianDataInputStream;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 
 /**
@@ -80,5 +93,59 @@ public class TrackerMotion {
                 .add("value", value)
                 .add("offset", offsetMillis)
                 .toString();
+    }
+
+
+    public static class Utils {
+        public static final double ACC_RANGE_IN_G = 4.0;
+        public static final double GRAVITY_IN_MS2 = 9.81;
+        public static final double ACC_RESOLUTION_32BIT = 65536.0;
+        public static final double COUNTS_IN_G_SQUARE = Math.pow((ACC_RANGE_IN_G  * GRAVITY_IN_MS2)/ ACC_RESOLUTION_32BIT, 2);
+
+
+        public static byte[] counterModeDecrypt(final byte[] key, final byte[] nonce, final byte[] encrypted)  // make it explicit that decryption can fail.
+                throws NoSuchPaddingException, NoSuchAlgorithmException,
+                InvalidKeyException, BadPaddingException,
+                IllegalBlockSizeException, InvalidAlgorithmParameterException {
+            final SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
+
+            final byte[] iv = new byte[16];
+            for(int i = 0; i < nonce.length; i++){
+                iv[i] = nonce[i];
+            }
+            final IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+            final Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
+            cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
+            final byte[] decValue = cipher.doFinal(encrypted);
+            return decValue;
+        }
+
+        public static long rawToMilliMS2(final Long rawMotionAmplitude){
+            final double trackerValueInMS2 = Math.sqrt(rawMotionAmplitude.doubleValue() * COUNTS_IN_G_SQUARE) - GRAVITY_IN_MS2;
+            return (long)(trackerValueInMS2 * 1000);
+        }
+
+        public static long encryptedToRaw(final byte[] key, final byte[] encryptedMotionData)
+                throws NoSuchPaddingException, InvalidAlgorithmParameterException,
+                NoSuchAlgorithmException, IllegalBlockSizeException,
+                BadPaddingException, InvalidKeyException, IOException {
+
+            final byte[] nonce = Arrays.copyOfRange(encryptedMotionData, 0, 8);
+
+            //final byte[] crc = Arrays.copyOfRange(encryptedMotionData, encryptedMotionData.length - 1 - 2, encryptedMotionData.length);  // Not used yet
+            final byte[] encryptedRawMotion = Arrays.copyOfRange(encryptedMotionData, 8, encryptedMotionData.length);
+
+            final byte[] decryptedRawMotion = counterModeDecrypt(key, nonce, encryptedRawMotion);
+            final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion));
+
+            long motionAmplitude = littleEndianDataInputStream.readInt();
+            if(motionAmplitude < 0){
+                motionAmplitude += 0xFFFFFFFF;  // Java everything is signed.
+            }
+
+            littleEndianDataInputStream.close();
+            return motionAmplitude;
+
+        }
     }
 }
