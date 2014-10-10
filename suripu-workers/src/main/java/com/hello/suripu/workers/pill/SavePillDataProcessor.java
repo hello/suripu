@@ -10,8 +10,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.TrackerMotion;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,21 +40,24 @@ public class SavePillDataProcessor implements IRecordProcessor {
         for (final Record record : records) {
             try {
                 final InputProtos.PillDataKinesis data = InputProtos.PillDataKinesis.parseFrom(record.getData().array());
+                final byte[] decryptionKey = new byte[16]; // Fake key
+                //TODO: Get the actual decryption key.
+                final TrackerMotion trackerMotion = new TrackerMotion.Builder().withPillKinesisData(decryptionKey, data).build();
 
-                final Long accountID = Long.parseLong(data.getAccountId());
-                final Long pillID = Long.parseLong(data.getPillId());
-                final DateTime sampleDT = new DateTime(data.getTimestamp(), DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
-                final TrackerMotion trackerMotion = new TrackerMotion(
-                        0L,
-                        accountID,
-                        pillID,
-                        sampleDT.getMillis(),
-                        (int) data.getValue(),
-                        data.getOffsetMillis()
-                );
                 trackerData.add(trackerMotion);
+
+                if(data.hasBatteryLevel()){
+                    //TODO: Deal with heartbeat
+                    final int batteryLevel = data.getBatteryLevel();
+                    final int upTime = data.getUpTime();
+                    final int firmwareVersion = data.getFirmwareVersion();
+
+                    // TODO: Save the heartbeat
+                }
             } catch (InvalidProtocolBufferException e) {
                 LOGGER.error("Failed to decode protobuf: {}", e.getMessage());
+            } catch (IllegalArgumentException e) {
+                LOGGER.error("Failed to decrypted pill data {}, error: {}", record.getData().array(), e.getMessage());
             }
         }
 

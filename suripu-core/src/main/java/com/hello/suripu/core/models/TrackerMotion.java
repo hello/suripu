@@ -3,7 +3,18 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.google.common.io.LittleEndianDataInputStream;
+import com.google.common.primitives.UnsignedInts;
+import com.hello.suripu.api.input.InputProtos;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.Arrays;
 
 
 /**
@@ -80,5 +91,150 @@ public class TrackerMotion {
                 .add("value", value)
                 .add("offset", offsetMillis)
                 .toString();
+    }
+
+    public static class Builder{
+
+        private long id = 0L;
+        private long accountId;
+        private Long trackerId;
+        private long timestamp;
+        private int valueInMilliMS2 = -1;
+        private int offsetMillis;
+
+        public Builder(){
+
+        }
+
+
+        public Builder withAccountId(final long accountId){
+            this.accountId = accountId;
+            return this;
+        }
+
+        public Builder withTrackerId(final Long internalPillId){
+            this.trackerId = internalPillId;
+            return this;
+        }
+
+        public Builder withTimestampMillis(final long timestamp){
+            this.timestamp = timestamp;
+            return this;
+        }
+
+        public Builder withValue(final int valueInMilliMS2){
+            this.valueInMilliMS2 = valueInMilliMS2;
+            return this;
+        }
+
+        public Builder withOffsetMillis(final int offsetMillis){
+            this.offsetMillis = offsetMillis;
+            return this;
+        }
+
+        /*
+        * Take data from Morpheus and transform to core TrackerMotion data structure.
+         */
+        public Builder withPillKinesisData(final byte[] key, final InputProtos.PillDataKinesis data){
+
+            final Long accountID = data.hasAccountIdLong() ? data.getAccountIdLong() : Long.parseLong(data.getAccountId());
+            final Long pillID = data.hasPillIdLong() ? data.getPillIdLong() : Long.parseLong(data.getPillId());
+            final DateTime sampleDT = new DateTime(data.getTimestamp(), DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
+            long amplitudeMilliG = -1;
+            if(data.hasValue()){
+                amplitudeMilliG = data.getValue();
+            }
+
+            if(data.hasEncryptedData()){
+                final byte[] encryptedData = data.getEncryptedData().toByteArray();
+
+                final long raw = Utils.encryptedToRaw(key, encryptedData);
+                amplitudeMilliG = Utils.rawToMilliMS2(raw);
+            }
+
+            this.withAccountId(accountID);
+            this.withTrackerId(pillID);
+            this.withTimestampMillis(sampleDT.getMillis());
+            this.withValue((int)amplitudeMilliG);
+            this.withOffsetMillis(data.getOffsetMillis());
+
+            return this;
+        }
+
+        public TrackerMotion build(){
+            return new TrackerMotion(this.id, this.accountId, this.trackerId, this.timestamp, this.valueInMilliMS2, this.offsetMillis);
+        }
+
+
+
+    }
+
+
+    public static class Utils {
+        public static final double ACC_RANGE_IN_G = 4.0;
+        public static final double GRAVITY_IN_MS2 = 9.81;
+        public static final double ACC_RESOLUTION_32BIT = 65536.0;
+        public static final double COUNTS_IN_G_SQUARE = Math.pow((ACC_RANGE_IN_G  * GRAVITY_IN_MS2)/ ACC_RESOLUTION_32BIT, 2);
+
+
+        public static byte[] counterModeDecrypt(final byte[] key, final byte[] nonce, final byte[] encrypted)  // make it explicit that decryption can fail.
+                throws IllegalArgumentException {
+            final SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
+
+            final byte[] iv = new byte[16];
+            for(int i = 0; i < nonce.length; i++){
+                iv[i] = nonce[i];
+            }
+            final IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+            final Cipher cipher;
+            try {
+                cipher = Cipher.getInstance("AES/CTR/NoPadding");
+                cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
+                final byte[] decValue = cipher.doFinal(encrypted);
+                return decValue;
+            } catch (Exception e) {
+                throw new IllegalArgumentException(e);
+            }
+        }
+
+        public static long rawToMilliMS2(final Long rawMotionAmplitude){
+            final double trackerValueInMS2 = Math.sqrt(rawMotionAmplitude.doubleValue() * COUNTS_IN_G_SQUARE) - GRAVITY_IN_MS2;
+            return (long)(trackerValueInMS2 * 1000);
+        }
+
+        public static long encryptedToRaw(final byte[] key, final byte[] encryptedMotionData) throws IllegalArgumentException {
+
+            final byte[] nonce = Arrays.copyOfRange(encryptedMotionData, 0, 8);
+
+            //final byte[] crc = Arrays.copyOfRange(encryptedMotionData, encryptedMotionData.length - 1 - 2, encryptedMotionData.length);  // Not used yet
+            final byte[] encryptedRawMotion = Arrays.copyOfRange(encryptedMotionData, 8, encryptedMotionData.length);
+
+            final byte[] decryptedRawMotion = counterModeDecrypt(key, nonce, encryptedRawMotion);
+            final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion));
+            Exception exception = null;
+            long motionAmplitude = -1;
+
+            try {
+                motionAmplitude = UnsignedInts.toLong(littleEndianDataInputStream.readInt());
+
+            }catch (IOException ioe){
+                exception = ioe;
+            }finally {
+                try {
+                    littleEndianDataInputStream.close();
+                }catch (IOException ioe){
+                    exception = ioe;
+                }
+            }
+
+
+
+            if(exception != null){
+                throw new IllegalArgumentException(exception);
+            }
+
+            return motionAmplitude;
+
+        }
     }
 }
