@@ -219,13 +219,15 @@ public class TrackerMotion {
 
             }catch (IOException ioe){
                 exception = ioe;
+            }finally {
+                try {
+                    littleEndianDataInputStream.close();
+                }catch (IOException ioe){
+                    exception = ioe;
+                }
             }
 
-            try {
-                littleEndianDataInputStream.close();
-            }catch (IOException ioe){
-                exception = ioe;
-            }
+
 
             if(exception != null){
                 throw new IllegalArgumentException(exception);
