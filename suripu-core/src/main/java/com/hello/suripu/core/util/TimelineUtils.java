@@ -172,9 +172,17 @@ public class TimelineUtils {
 
         final List<SleepSegment> buffer = new ArrayList<>();
 
+        int processedSize = 0;
         for(final SleepSegment segment : segments) {
+            processedSize++;
             if(segment.sleepDepth != previousSleepDepth) {
-                final SleepSegment seg = (buffer.isEmpty()) ? segment : TimelineUtils.merge(buffer, threshold);
+                SleepSegment seg = (buffer.isEmpty()) ? segment : TimelineUtils.merge(buffer, threshold);
+
+                if (seg.eventType != null && seg.eventType.equals(Event.Type.SUNRISE.toString())) {
+                    // inherit the sleep depth of previous segment for SUNRISE event
+                    int depth = mergedSegments.get(mergedSegments.size() - 1).sleepDepth;
+                    seg = SleepSegment.withSleepDepth(seg, depth);
+                }
                 mergedSegments.add(seg);
                 buffer.clear();
             }
@@ -184,7 +192,11 @@ public class TimelineUtils {
         }
 
         if(!buffer.isEmpty()) {
-            mergedSegments.add(TimelineUtils.merge(buffer, threshold));
+            SleepSegment seg = TimelineUtils.merge(buffer, threshold);
+            if (seg.eventType != null && seg.eventType.equals(Event.Type.SUNRISE.toString())) {
+                seg = SleepSegment.withSleepDepth(seg, 0);
+            }
+            mergedSegments.add(seg);
         }
         LOGGER.debug("Original size = {}", segments.size());
         LOGGER.debug("Merged size = {}", mergedSegments.size());

@@ -103,7 +103,7 @@ public class TimelineResource {
             final String sunsetMessage = String.format("sunset at %s", sunset.get().toString(DateTimeFormat.forPattern("HH:mma")));
 
             final SleepSegment sunriseSegment = new SleepSegment(1L, sunrise.get().getMillis(), 0, 60, -1, Event.Type.SUNRISE.toString(), sunriseMessage, new ArrayList<SensorReading>());
-            final SleepSegment sunsetSegment = new SleepSegment(1L, sunset.get().getMillis(), 0, 60, -1, Event.Type.SUNSET.toString(), sunsetMessage, new ArrayList<SensorReading>());
+            final SleepSegment sunsetSegment = new SleepSegment(1L, sunset.get().getMillis(), 0, 60, 0, Event.Type.SUNSET.toString(), sunsetMessage, new ArrayList<SensorReading>());
 
             final List<SleepSegment> newSegments = TimelineUtils.insertSegments(sunriseSegment, sunsetSegment, normalized);
             LOGGER.debug(sunriseMessage);
