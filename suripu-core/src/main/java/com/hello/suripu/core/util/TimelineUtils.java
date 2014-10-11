@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -27,6 +28,7 @@ public class TimelineUtils {
      * Merge a List<Segment> to a single segment
      * The minimum duration is 60 seconds
      * @param segments
+     * @param threshold defines the min. duration of a segment
      * @return
      */
     @Timed
@@ -44,10 +46,10 @@ public class TimelineUtils {
         final String message = segments.get(0).message;
         final List<SensorReading> sensors = segments.get(0).sensors;
 
-        Long durationInMillis = segments.get(segments.size() -1).timestamp - segments.get(0).timestamp;
+        Long durationInMillis = segments.get(segments.size() -1).timestamp - segments.get(0).timestamp +  segments.get(segments.size() -1).durationInSeconds * 1000;
 
 
-        if(segments.size() == 1 || durationInMillis < threshold * 60000) {
+        if (durationInMillis < threshold * 60000) {
             durationInMillis = threshold * 60000L;
         }
         return new SleepSegment(id, timestamp, offsetMillis, Math.round(durationInMillis / 1000), sleepDepth, eventType, message, sensors);
@@ -85,10 +87,26 @@ public class TimelineUtils {
         int i = 0;
         final Long trackerId = trackerMotions.get(0).trackerId;
 
+        Long lastTimestamp = trackerMotions.get(0).timestamp;
         for(final TrackerMotion trackerMotion : trackerMotions) {
             if (!trackerMotion.trackerId.equals(trackerId)) {
                 LOGGER.warn("User has multiple pills: {} and {}", trackerId, trackerMotion.trackerId);
                 break; // if user has multiple pill, only use data from the latest tracker_id
+            }
+
+            if (trackerMotion.timestamp != lastTimestamp) {
+                // pad with segments with no movement
+                final int durationInSeconds = (int) (trackerMotion.timestamp - lastTimestamp) / 1000;
+                final int segmentDuration = 60 * groupBy;
+                final int numSegments = durationInSeconds / (60 * groupBy);
+                for (int j = 0; j < numSegments; j++) {
+                    final SleepSegment sleepSegment = new SleepSegment(trackerMotion.id,
+                            lastTimestamp + (j * segmentDuration * 1000), // millis
+                            trackerMotion.offsetMillis,
+                            segmentDuration, // seconds
+                            100, null, "", Collections.<SensorReading>emptyList());
+                    sleepSegments.add(sleepSegment);
+                }
             }
 
             int sleepDepth = normalizeSleepDepth(trackerMotion.value, maxSVM);
@@ -96,9 +114,9 @@ public class TimelineUtils {
             String eventType = (sleepDepth <= threshold) ? Event.Type.MOTION.toString() : null; // TODO: put these in a config file or DB
 
             if(i == 0) {
-                eventType = "SLEEP";
+                eventType = Event.Type.SLEEP.toString();
             } else if (i == trackerMotions.size() -1) {
-                eventType = "WAKE_UP";
+                eventType = Event.Type.WAKE_UP.toString();
             }
 
             String eventMessage = "";
@@ -130,6 +148,7 @@ public class TimelineUtils {
                     readings);
             sleepSegments.add(sleepSegment);
             i++;
+            lastTimestamp = trackerMotion.timestamp + 60L * groupBy * 1000L;
         }
         LOGGER.debug("Generated {} segments from {} tracker motion samples", sleepSegments.size(), trackerMotions.size());
         return sleepSegments;
@@ -155,7 +174,13 @@ public class TimelineUtils {
 
         for(final SleepSegment segment : segments) {
             if(segment.sleepDepth != previousSleepDepth) {
-                final SleepSegment seg = (buffer.isEmpty()) ? segment : TimelineUtils.merge(buffer, threshold);
+                SleepSegment seg = (buffer.isEmpty()) ? segment : TimelineUtils.merge(buffer, threshold);
+
+                if (seg.eventType != null && seg.eventType.equals(Event.Type.SUNRISE.toString())) {
+                    // inherit the sleep depth of previous segment for SUNRISE event
+                    int depth = mergedSegments.get(mergedSegments.size() - 1).sleepDepth;
+                    seg = SleepSegment.withSleepDepth(seg, depth);
+                }
                 mergedSegments.add(seg);
                 buffer.clear();
             }
@@ -165,7 +190,11 @@ public class TimelineUtils {
         }
 
         if(!buffer.isEmpty()) {
-            mergedSegments.add(TimelineUtils.merge(buffer, threshold));
+            SleepSegment seg = TimelineUtils.merge(buffer, threshold);
+            if (seg.eventType != null && seg.eventType.equals(Event.Type.SUNRISE.toString())) {
+                seg = SleepSegment.withSleepDepth(seg, 0);
+            }
+            mergedSegments.add(seg);
         }
         LOGGER.debug("Original size = {}", segments.size());
         LOGGER.debug("Merged size = {}", mergedSegments.size());
@@ -211,11 +240,11 @@ public class TimelineUtils {
      */
     public static List<SleepSegment> insertSegments(final SleepSegment sunrise, final SleepSegment sunset, final List<SleepSegment> original) {
 
+        // add higher-priority segments first
         final Set<SleepSegment> sleepSegments = new TreeSet<>();
         sleepSegments.add(sunrise);
         sleepSegments.add(sunset);
         sleepSegments.addAll(original);
-
 
         final List<SleepSegment> temp = new ArrayList<>();
 
