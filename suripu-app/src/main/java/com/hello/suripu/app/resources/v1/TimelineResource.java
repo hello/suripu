@@ -78,7 +78,7 @@ public class TimelineResource {
 
         // TODO: compute this threshold dynamically
 
-        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accessToken.accountId, targetDate, endDate, groupBy);
+        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenLocalUTC(accessToken.accountId, targetDate, endDate);
         LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
 
         if(trackerMotions.isEmpty()) {
