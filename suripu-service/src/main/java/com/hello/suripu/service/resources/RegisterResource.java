@@ -51,67 +51,72 @@ public class RegisterResource {
         this.debug = debug;
     }
 
-    public byte[] pair(final byte[] encryptedRequest, final PairAction action)
-    {
-        MorpheusBle.MorpheusCommand.Builder builder = MorpheusBle.MorpheusCommand.newBuilder()
+    private byte[] pair(final byte[] encryptedRequest, final PairAction action) {
+
+        final MorpheusBle.MorpheusCommand.Builder builder = MorpheusBle.MorpheusCommand.newBuilder()
                 .setVersion(PROTOBUF_VERSION);
         // TODO: Fetch key from Datastore
         final byte[] keyBytes = "1234567891234567".getBytes();
-        String deviceId = "";
-        String token = "";
-        long accountId = 0;
 
+        final SignedMessage signedMessage = SignedMessage.parse(encryptedRequest);
+        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytes);
+
+        if(error.isPresent()) {
+            LOGGER.error(error.get().message);
+            builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
+            builder.setError(MorpheusBle.ErrorType.INTERNAL_DATA_ERROR);
+            return builder.build().toByteArray();
+        }
+
+        MorpheusBle.MorpheusCommand morpheusCommand;
         try {
-            final SignedMessage signedMessage = SignedMessage.parse(encryptedRequest);
-            final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytes);
-
-            if(error.isPresent()) {
-                LOGGER.error(error.get().message);
-                builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
-                builder.setError(MorpheusBle.ErrorType.INTERNAL_DATA_ERROR);
-            }else {
-
-                final MorpheusBle.MorpheusCommand morpheusCommand = MorpheusBle.MorpheusCommand.parseFrom(signedMessage.body);
-                if (morpheusCommand.getType() != MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE) {
-                    builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
-                    builder.setError(MorpheusBle.ErrorType.INTERNAL_DATA_ERROR);
-                } else {
-                    deviceId = morpheusCommand.getDeviceId();
-                    token = morpheusCommand.getAccountId();
-
-                    final Optional<AccessToken> accessTokenOptional = this.tokenStore.getClientDetailsByToken(
-                            new ClientCredentials(new OAuthScope[]{OAuthScope.AUTH}, token),
-                            DateTime.now());
-                    if(accessTokenOptional.isPresent()){
-                        accountId = accessTokenOptional.get().accountId;
-
-                        switch (action){
-                            case PAIR_MORPHEUS:
-                                this.deviceDAO.registerSense(accountId, deviceId);
-                                builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE);
-                                break;
-                            case PAIR_PILL:
-                                this.deviceDAO.registerTracker(accountId, deviceId);
-                                builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_PILL);
-                                break;
-                        }
-
-                        builder.setAccountId(token);
-                        builder.setDeviceId(deviceId);
-
-                    }else{
-                        builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
-                        builder.setError(MorpheusBle.ErrorType.INTERNAL_OPERATION_FAILED);
-                    }
-
-                }
-            }
+            morpheusCommand = MorpheusBle.MorpheusCommand.parseFrom(signedMessage.body);
         } catch (IOException exception) {
             final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
             LOGGER.error(errorMessage);
 
             builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
             builder.setError(MorpheusBle.ErrorType.INTERNAL_OPERATION_FAILED);
+            return builder.build().toByteArray();
+        }
+
+
+        if (morpheusCommand.getType() != MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE) {
+            builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
+            builder.setError(MorpheusBle.ErrorType.INTERNAL_DATA_ERROR);
+            return builder.build().toByteArray();
+        }
+
+        final String deviceId = morpheusCommand.getDeviceId();
+        final String token = morpheusCommand.getAccountId();
+
+        final Optional<AccessToken> accessTokenOptional = this.tokenStore.getClientDetailsByToken(
+                new ClientCredentials(new OAuthScope[]{OAuthScope.AUTH}, token),
+                DateTime.now());
+
+        if(!accessTokenOptional.isPresent()) {
+            builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
+            builder.setError(MorpheusBle.ErrorType.INTERNAL_OPERATION_FAILED);
+            return builder.build().toByteArray();
+        }
+
+        final Long accountId = accessTokenOptional.get().accountId;
+
+        try {
+            switch (action){
+                case PAIR_MORPHEUS:
+                    this.deviceDAO.registerSense(accountId, deviceId);
+                    builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE);
+                    break;
+                case PAIR_PILL:
+                    this.deviceDAO.registerTracker(accountId, deviceId);
+                    builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_PILL);
+                    break;
+            }
+
+            builder.setAccountId(token);
+            builder.setDeviceId(deviceId);
+
         } catch (UnableToExecuteStatementException sqlExp){
             final Matcher matcher = PG_UNIQ_PATTERN.matcher(sqlExp.getMessage());
             if (!matcher.find()) {
