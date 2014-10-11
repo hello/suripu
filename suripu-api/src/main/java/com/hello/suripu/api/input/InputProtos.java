@@ -15738,6 +15738,66 @@ public final class InputProtos {
      * <code>optional int32 offsetMillis = 5;</code>
      */
     int getOffsetMillis();
+
+    // optional bytes encryptedData = 6;
+    /**
+     * <code>optional bytes encryptedData = 6;</code>
+     */
+    boolean hasEncryptedData();
+    /**
+     * <code>optional bytes encryptedData = 6;</code>
+     */
+    com.google.protobuf.ByteString getEncryptedData();
+
+    // optional int32 batteryLevel = 7;
+    /**
+     * <code>optional int32 batteryLevel = 7;</code>
+     */
+    boolean hasBatteryLevel();
+    /**
+     * <code>optional int32 batteryLevel = 7;</code>
+     */
+    int getBatteryLevel();
+
+    // optional int32 firmwareVersion = 8;
+    /**
+     * <code>optional int32 firmwareVersion = 8;</code>
+     */
+    boolean hasFirmwareVersion();
+    /**
+     * <code>optional int32 firmwareVersion = 8;</code>
+     */
+    int getFirmwareVersion();
+
+    // optional int64 pillIdLong = 9;
+    /**
+     * <code>optional int64 pillIdLong = 9;</code>
+     */
+    boolean hasPillIdLong();
+    /**
+     * <code>optional int64 pillIdLong = 9;</code>
+     */
+    long getPillIdLong();
+
+    // optional int64 accountIdLong = 10;
+    /**
+     * <code>optional int64 accountIdLong = 10;</code>
+     */
+    boolean hasAccountIdLong();
+    /**
+     * <code>optional int64 accountIdLong = 10;</code>
+     */
+    long getAccountIdLong();
+
+    // optional int32 upTime = 11;
+    /**
+     * <code>optional int32 upTime = 11;</code>
+     */
+    boolean hasUpTime();
+    /**
+     * <code>optional int32 upTime = 11;</code>
+     */
+    int getUpTime();
   }
   /**
    * Protobuf type {@code hello.PillDataKinesis}
@@ -15817,6 +15877,36 @@ public final class InputProtos {
             case 40: {
               bitField0_ |= 0x00000010;
               offsetMillis_ = input.readInt32();
+              break;
+            }
+            case 50: {
+              bitField0_ |= 0x00000020;
+              encryptedData_ = input.readBytes();
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000040;
+              batteryLevel_ = input.readInt32();
+              break;
+            }
+            case 64: {
+              bitField0_ |= 0x00000080;
+              firmwareVersion_ = input.readInt32();
+              break;
+            }
+            case 72: {
+              bitField0_ |= 0x00000100;
+              pillIdLong_ = input.readInt64();
+              break;
+            }
+            case 80: {
+              bitField0_ |= 0x00000200;
+              accountIdLong_ = input.readInt64();
+              break;
+            }
+            case 88: {
+              bitField0_ |= 0x00000400;
+              upTime_ = input.readInt32();
               break;
             }
           }
@@ -16001,12 +16091,114 @@ public final class InputProtos {
       return offsetMillis_;
     }
 
+    // optional bytes encryptedData = 6;
+    public static final int ENCRYPTEDDATA_FIELD_NUMBER = 6;
+    private com.google.protobuf.ByteString encryptedData_;
+    /**
+     * <code>optional bytes encryptedData = 6;</code>
+     */
+    public boolean hasEncryptedData() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional bytes encryptedData = 6;</code>
+     */
+    public com.google.protobuf.ByteString getEncryptedData() {
+      return encryptedData_;
+    }
+
+    // optional int32 batteryLevel = 7;
+    public static final int BATTERYLEVEL_FIELD_NUMBER = 7;
+    private int batteryLevel_;
+    /**
+     * <code>optional int32 batteryLevel = 7;</code>
+     */
+    public boolean hasBatteryLevel() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional int32 batteryLevel = 7;</code>
+     */
+    public int getBatteryLevel() {
+      return batteryLevel_;
+    }
+
+    // optional int32 firmwareVersion = 8;
+    public static final int FIRMWAREVERSION_FIELD_NUMBER = 8;
+    private int firmwareVersion_;
+    /**
+     * <code>optional int32 firmwareVersion = 8;</code>
+     */
+    public boolean hasFirmwareVersion() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    /**
+     * <code>optional int32 firmwareVersion = 8;</code>
+     */
+    public int getFirmwareVersion() {
+      return firmwareVersion_;
+    }
+
+    // optional int64 pillIdLong = 9;
+    public static final int PILLIDLONG_FIELD_NUMBER = 9;
+    private long pillIdLong_;
+    /**
+     * <code>optional int64 pillIdLong = 9;</code>
+     */
+    public boolean hasPillIdLong() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional int64 pillIdLong = 9;</code>
+     */
+    public long getPillIdLong() {
+      return pillIdLong_;
+    }
+
+    // optional int64 accountIdLong = 10;
+    public static final int ACCOUNTIDLONG_FIELD_NUMBER = 10;
+    private long accountIdLong_;
+    /**
+     * <code>optional int64 accountIdLong = 10;</code>
+     */
+    public boolean hasAccountIdLong() {
+      return ((bitField0_ & 0x00000200) == 0x00000200);
+    }
+    /**
+     * <code>optional int64 accountIdLong = 10;</code>
+     */
+    public long getAccountIdLong() {
+      return accountIdLong_;
+    }
+
+    // optional int32 upTime = 11;
+    public static final int UPTIME_FIELD_NUMBER = 11;
+    private int upTime_;
+    /**
+     * <code>optional int32 upTime = 11;</code>
+     */
+    public boolean hasUpTime() {
+      return ((bitField0_ & 0x00000400) == 0x00000400);
+    }
+    /**
+     * <code>optional int32 upTime = 11;</code>
+     */
+    public int getUpTime() {
+      return upTime_;
+    }
+
     private void initFields() {
       pillId_ = "";
       accountId_ = "";
       timestamp_ = 0L;
       value_ = 0L;
       offsetMillis_ = 0;
+      encryptedData_ = com.google.protobuf.ByteString.EMPTY;
+      batteryLevel_ = 0;
+      firmwareVersion_ = 0;
+      pillIdLong_ = 0L;
+      accountIdLong_ = 0L;
+      upTime_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -16034,6 +16226,24 @@ public final class InputProtos {
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeInt32(5, offsetMillis_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeBytes(6, encryptedData_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeInt32(7, batteryLevel_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeInt32(8, firmwareVersion_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeInt64(9, pillIdLong_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        output.writeInt64(10, accountIdLong_);
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        output.writeInt32(11, upTime_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -16063,6 +16273,30 @@ public final class InputProtos {
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(5, offsetMillis_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(6, encryptedData_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(7, batteryLevel_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(8, firmwareVersion_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(9, pillIdLong_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(10, accountIdLong_);
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(11, upTime_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -16194,6 +16428,18 @@ public final class InputProtos {
         bitField0_ = (bitField0_ & ~0x00000008);
         offsetMillis_ = 0;
         bitField0_ = (bitField0_ & ~0x00000010);
+        encryptedData_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000020);
+        batteryLevel_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000040);
+        firmwareVersion_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000080);
+        pillIdLong_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000100);
+        accountIdLong_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000200);
+        upTime_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000400);
         return this;
       }
 
@@ -16242,6 +16488,30 @@ public final class InputProtos {
           to_bitField0_ |= 0x00000010;
         }
         result.offsetMillis_ = offsetMillis_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.encryptedData_ = encryptedData_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.batteryLevel_ = batteryLevel_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.firmwareVersion_ = firmwareVersion_;
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        result.pillIdLong_ = pillIdLong_;
+        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+          to_bitField0_ |= 0x00000200;
+        }
+        result.accountIdLong_ = accountIdLong_;
+        if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
+          to_bitField0_ |= 0x00000400;
+        }
+        result.upTime_ = upTime_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -16276,6 +16546,24 @@ public final class InputProtos {
         }
         if (other.hasOffsetMillis()) {
           setOffsetMillis(other.getOffsetMillis());
+        }
+        if (other.hasEncryptedData()) {
+          setEncryptedData(other.getEncryptedData());
+        }
+        if (other.hasBatteryLevel()) {
+          setBatteryLevel(other.getBatteryLevel());
+        }
+        if (other.hasFirmwareVersion()) {
+          setFirmwareVersion(other.getFirmwareVersion());
+        }
+        if (other.hasPillIdLong()) {
+          setPillIdLong(other.getPillIdLong());
+        }
+        if (other.hasAccountIdLong()) {
+          setAccountIdLong(other.getAccountIdLong());
+        }
+        if (other.hasUpTime()) {
+          setUpTime(other.getUpTime());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -16563,6 +16851,207 @@ public final class InputProtos {
       public Builder clearOffsetMillis() {
         bitField0_ = (bitField0_ & ~0x00000010);
         offsetMillis_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional bytes encryptedData = 6;
+      private com.google.protobuf.ByteString encryptedData_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes encryptedData = 6;</code>
+       */
+      public boolean hasEncryptedData() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional bytes encryptedData = 6;</code>
+       */
+      public com.google.protobuf.ByteString getEncryptedData() {
+        return encryptedData_;
+      }
+      /**
+       * <code>optional bytes encryptedData = 6;</code>
+       */
+      public Builder setEncryptedData(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        encryptedData_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes encryptedData = 6;</code>
+       */
+      public Builder clearEncryptedData() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        encryptedData_ = getDefaultInstance().getEncryptedData();
+        onChanged();
+        return this;
+      }
+
+      // optional int32 batteryLevel = 7;
+      private int batteryLevel_ ;
+      /**
+       * <code>optional int32 batteryLevel = 7;</code>
+       */
+      public boolean hasBatteryLevel() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional int32 batteryLevel = 7;</code>
+       */
+      public int getBatteryLevel() {
+        return batteryLevel_;
+      }
+      /**
+       * <code>optional int32 batteryLevel = 7;</code>
+       */
+      public Builder setBatteryLevel(int value) {
+        bitField0_ |= 0x00000040;
+        batteryLevel_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 batteryLevel = 7;</code>
+       */
+      public Builder clearBatteryLevel() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        batteryLevel_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 firmwareVersion = 8;
+      private int firmwareVersion_ ;
+      /**
+       * <code>optional int32 firmwareVersion = 8;</code>
+       */
+      public boolean hasFirmwareVersion() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional int32 firmwareVersion = 8;</code>
+       */
+      public int getFirmwareVersion() {
+        return firmwareVersion_;
+      }
+      /**
+       * <code>optional int32 firmwareVersion = 8;</code>
+       */
+      public Builder setFirmwareVersion(int value) {
+        bitField0_ |= 0x00000080;
+        firmwareVersion_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 firmwareVersion = 8;</code>
+       */
+      public Builder clearFirmwareVersion() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        firmwareVersion_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int64 pillIdLong = 9;
+      private long pillIdLong_ ;
+      /**
+       * <code>optional int64 pillIdLong = 9;</code>
+       */
+      public boolean hasPillIdLong() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional int64 pillIdLong = 9;</code>
+       */
+      public long getPillIdLong() {
+        return pillIdLong_;
+      }
+      /**
+       * <code>optional int64 pillIdLong = 9;</code>
+       */
+      public Builder setPillIdLong(long value) {
+        bitField0_ |= 0x00000100;
+        pillIdLong_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 pillIdLong = 9;</code>
+       */
+      public Builder clearPillIdLong() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        pillIdLong_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional int64 accountIdLong = 10;
+      private long accountIdLong_ ;
+      /**
+       * <code>optional int64 accountIdLong = 10;</code>
+       */
+      public boolean hasAccountIdLong() {
+        return ((bitField0_ & 0x00000200) == 0x00000200);
+      }
+      /**
+       * <code>optional int64 accountIdLong = 10;</code>
+       */
+      public long getAccountIdLong() {
+        return accountIdLong_;
+      }
+      /**
+       * <code>optional int64 accountIdLong = 10;</code>
+       */
+      public Builder setAccountIdLong(long value) {
+        bitField0_ |= 0x00000200;
+        accountIdLong_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 accountIdLong = 10;</code>
+       */
+      public Builder clearAccountIdLong() {
+        bitField0_ = (bitField0_ & ~0x00000200);
+        accountIdLong_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 upTime = 11;
+      private int upTime_ ;
+      /**
+       * <code>optional int32 upTime = 11;</code>
+       */
+      public boolean hasUpTime() {
+        return ((bitField0_ & 0x00000400) == 0x00000400);
+      }
+      /**
+       * <code>optional int32 upTime = 11;</code>
+       */
+      public int getUpTime() {
+        return upTime_;
+      }
+      /**
+       * <code>optional int32 upTime = 11;</code>
+       */
+      public Builder setUpTime(int value) {
+        bitField0_ |= 0x00000400;
+        upTime_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 upTime = 11;</code>
+       */
+      public Builder clearUpTime() {
+        bitField0_ = (bitField0_ & ~0x00000400);
+        upTime_ = 0;
         onChanged();
         return this;
       }
@@ -19851,6 +20340,31 @@ public final class InputProtos {
      * <code>optional int32 firmware_version = 10;</code>
      */
     int getFirmwareVersion();
+
+    // repeated .hello.periodic_data.pill_data pills = 11;
+    /**
+     * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+     */
+    java.util.List<com.hello.suripu.api.input.InputProtos.periodic_data.pill_data> 
+        getPillsList();
+    /**
+     * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+     */
+    com.hello.suripu.api.input.InputProtos.periodic_data.pill_data getPills(int index);
+    /**
+     * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+     */
+    int getPillsCount();
+    /**
+     * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+     */
+    java.util.List<? extends com.hello.suripu.api.input.InputProtos.periodic_data.pill_dataOrBuilder> 
+        getPillsOrBuilderList();
+    /**
+     * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+     */
+    com.hello.suripu.api.input.InputProtos.periodic_data.pill_dataOrBuilder getPillsOrBuilder(
+        int index);
   }
   /**
    * Protobuf type {@code hello.periodic_data}
@@ -19953,6 +20467,14 @@ public final class InputProtos {
               firmwareVersion_ = input.readInt32();
               break;
             }
+            case 90: {
+              if (!((mutable_bitField0_ & 0x00000400) == 0x00000400)) {
+                pills_ = new java.util.ArrayList<com.hello.suripu.api.input.InputProtos.periodic_data.pill_data>();
+                mutable_bitField0_ |= 0x00000400;
+              }
+              pills_.add(input.readMessage(com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.PARSER, extensionRegistry));
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -19961,6 +20483,9 @@ public final class InputProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000400) == 0x00000400)) {
+          pills_ = java.util.Collections.unmodifiableList(pills_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -19990,6 +20515,933 @@ public final class InputProtos {
     @java.lang.Override
     public com.google.protobuf.Parser<periodic_data> getParserForType() {
       return PARSER;
+    }
+
+    public interface pill_dataOrBuilder
+        extends com.google.protobuf.MessageOrBuilder {
+
+      // optional string deviceId = 3;
+      /**
+       * <code>optional string deviceId = 3;</code>
+       *
+       * <pre>
+       * Be careful when copy paste, the index is not right :)
+       * </pre>
+       */
+      boolean hasDeviceId();
+      /**
+       * <code>optional string deviceId = 3;</code>
+       *
+       * <pre>
+       * Be careful when copy paste, the index is not right :)
+       * </pre>
+       */
+      java.lang.String getDeviceId();
+      /**
+       * <code>optional string deviceId = 3;</code>
+       *
+       * <pre>
+       * Be careful when copy paste, the index is not right :)
+       * </pre>
+       */
+      com.google.protobuf.ByteString
+          getDeviceIdBytes();
+
+      // optional int32 batteryLevel = 9;
+      /**
+       * <code>optional int32 batteryLevel = 9;</code>
+       */
+      boolean hasBatteryLevel();
+      /**
+       * <code>optional int32 batteryLevel = 9;</code>
+       */
+      int getBatteryLevel();
+
+      // optional int32 uptime = 10;
+      /**
+       * <code>optional int32 uptime = 10;</code>
+       */
+      boolean hasUptime();
+      /**
+       * <code>optional int32 uptime = 10;</code>
+       */
+      int getUptime();
+
+      // optional int32 motionData = 11;
+      /**
+       * <code>optional int32 motionData = 11;</code>
+       */
+      boolean hasMotionData();
+      /**
+       * <code>optional int32 motionData = 11;</code>
+       */
+      int getMotionData();
+
+      // optional bytes motionDataEncrypted = 2;
+      /**
+       * <code>optional bytes motionDataEncrypted = 2;</code>
+       */
+      boolean hasMotionDataEncrypted();
+      /**
+       * <code>optional bytes motionDataEncrypted = 2;</code>
+       */
+      com.google.protobuf.ByteString getMotionDataEncrypted();
+
+      // optional int32 firmwareVersion = 1;
+      /**
+       * <code>optional int32 firmwareVersion = 1;</code>
+       */
+      boolean hasFirmwareVersion();
+      /**
+       * <code>optional int32 firmwareVersion = 1;</code>
+       */
+      int getFirmwareVersion();
+    }
+    /**
+     * Protobuf type {@code hello.periodic_data.pill_data}
+     */
+    public static final class pill_data extends
+        com.google.protobuf.GeneratedMessage
+        implements pill_dataOrBuilder {
+      // Use pill_data.newBuilder() to construct.
+      private pill_data(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+        super(builder);
+        this.unknownFields = builder.getUnknownFields();
+      }
+      private pill_data(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+      private static final pill_data defaultInstance;
+      public static pill_data getDefaultInstance() {
+        return defaultInstance;
+      }
+
+      public pill_data getDefaultInstanceForType() {
+        return defaultInstance;
+      }
+
+      private final com.google.protobuf.UnknownFieldSet unknownFields;
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+          getUnknownFields() {
+        return this.unknownFields;
+      }
+      private pill_data(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        initFields();
+        int mutable_bitField0_ = 0;
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              default: {
+                if (!parseUnknownField(input, unknownFields,
+                                       extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+              case 8: {
+                bitField0_ |= 0x00000020;
+                firmwareVersion_ = input.readInt32();
+                break;
+              }
+              case 18: {
+                bitField0_ |= 0x00000010;
+                motionDataEncrypted_ = input.readBytes();
+                break;
+              }
+              case 26: {
+                bitField0_ |= 0x00000001;
+                deviceId_ = input.readBytes();
+                break;
+              }
+              case 72: {
+                bitField0_ |= 0x00000002;
+                batteryLevel_ = input.readInt32();
+                break;
+              }
+              case 80: {
+                bitField0_ |= 0x00000004;
+                uptime_ = input.readInt32();
+                break;
+              }
+              case 88: {
+                bitField0_ |= 0x00000008;
+                motionData_ = input.readInt32();
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e.getMessage()).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_periodic_data_pill_data_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_periodic_data_pill_data_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.class, com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.Builder.class);
+      }
+
+      public static com.google.protobuf.Parser<pill_data> PARSER =
+          new com.google.protobuf.AbstractParser<pill_data>() {
+        public pill_data parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new pill_data(input, extensionRegistry);
+        }
+      };
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<pill_data> getParserForType() {
+        return PARSER;
+      }
+
+      private int bitField0_;
+      // optional string deviceId = 3;
+      public static final int DEVICEID_FIELD_NUMBER = 3;
+      private java.lang.Object deviceId_;
+      /**
+       * <code>optional string deviceId = 3;</code>
+       *
+       * <pre>
+       * Be careful when copy paste, the index is not right :)
+       * </pre>
+       */
+      public boolean hasDeviceId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string deviceId = 3;</code>
+       *
+       * <pre>
+       * Be careful when copy paste, the index is not right :)
+       * </pre>
+       */
+      public java.lang.String getDeviceId() {
+        java.lang.Object ref = deviceId_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            deviceId_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       * <code>optional string deviceId = 3;</code>
+       *
+       * <pre>
+       * Be careful when copy paste, the index is not right :)
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getDeviceIdBytes() {
+        java.lang.Object ref = deviceId_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          deviceId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
+      // optional int32 batteryLevel = 9;
+      public static final int BATTERYLEVEL_FIELD_NUMBER = 9;
+      private int batteryLevel_;
+      /**
+       * <code>optional int32 batteryLevel = 9;</code>
+       */
+      public boolean hasBatteryLevel() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional int32 batteryLevel = 9;</code>
+       */
+      public int getBatteryLevel() {
+        return batteryLevel_;
+      }
+
+      // optional int32 uptime = 10;
+      public static final int UPTIME_FIELD_NUMBER = 10;
+      private int uptime_;
+      /**
+       * <code>optional int32 uptime = 10;</code>
+       */
+      public boolean hasUptime() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional int32 uptime = 10;</code>
+       */
+      public int getUptime() {
+        return uptime_;
+      }
+
+      // optional int32 motionData = 11;
+      public static final int MOTIONDATA_FIELD_NUMBER = 11;
+      private int motionData_;
+      /**
+       * <code>optional int32 motionData = 11;</code>
+       */
+      public boolean hasMotionData() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional int32 motionData = 11;</code>
+       */
+      public int getMotionData() {
+        return motionData_;
+      }
+
+      // optional bytes motionDataEncrypted = 2;
+      public static final int MOTIONDATAENCRYPTED_FIELD_NUMBER = 2;
+      private com.google.protobuf.ByteString motionDataEncrypted_;
+      /**
+       * <code>optional bytes motionDataEncrypted = 2;</code>
+       */
+      public boolean hasMotionDataEncrypted() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional bytes motionDataEncrypted = 2;</code>
+       */
+      public com.google.protobuf.ByteString getMotionDataEncrypted() {
+        return motionDataEncrypted_;
+      }
+
+      // optional int32 firmwareVersion = 1;
+      public static final int FIRMWAREVERSION_FIELD_NUMBER = 1;
+      private int firmwareVersion_;
+      /**
+       * <code>optional int32 firmwareVersion = 1;</code>
+       */
+      public boolean hasFirmwareVersion() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional int32 firmwareVersion = 1;</code>
+       */
+      public int getFirmwareVersion() {
+        return firmwareVersion_;
+      }
+
+      private void initFields() {
+        deviceId_ = "";
+        batteryLevel_ = 0;
+        uptime_ = 0;
+        motionData_ = 0;
+        motionDataEncrypted_ = com.google.protobuf.ByteString.EMPTY;
+        firmwareVersion_ = 0;
+      }
+      private byte memoizedIsInitialized = -1;
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized != -1) return isInitialized == 1;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        getSerializedSize();
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          output.writeInt32(1, firmwareVersion_);
+        }
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          output.writeBytes(2, motionDataEncrypted_);
+        }
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          output.writeBytes(3, getDeviceIdBytes());
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          output.writeInt32(9, batteryLevel_);
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          output.writeInt32(10, uptime_);
+        }
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          output.writeInt32(11, motionData_);
+        }
+        getUnknownFields().writeTo(output);
+      }
+
+      private int memoizedSerializedSize = -1;
+      public int getSerializedSize() {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(1, firmwareVersion_);
+        }
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(2, motionDataEncrypted_);
+        }
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(3, getDeviceIdBytes());
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(9, batteryLevel_);
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(10, uptime_);
+        }
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(11, motionData_);
+        }
+        size += getUnknownFields().getSerializedSize();
+        memoizedSerializedSize = size;
+        return size;
+      }
+
+      private static final long serialVersionUID = 0L;
+      @java.lang.Override
+      protected java.lang.Object writeReplace()
+          throws java.io.ObjectStreamException {
+        return super.writeReplace();
+      }
+
+      public static com.hello.suripu.api.input.InputProtos.periodic_data.pill_data parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.hello.suripu.api.input.InputProtos.periodic_data.pill_data parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.periodic_data.pill_data parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.hello.suripu.api.input.InputProtos.periodic_data.pill_data parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.periodic_data.pill_data parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static com.hello.suripu.api.input.InputProtos.periodic_data.pill_data parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.periodic_data.pill_data parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input);
+      }
+      public static com.hello.suripu.api.input.InputProtos.periodic_data.pill_data parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.periodic_data.pill_data parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static com.hello.suripu.api.input.InputProtos.periodic_data.pill_data parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+
+      public static Builder newBuilder() { return Builder.create(); }
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder(com.hello.suripu.api.input.InputProtos.periodic_data.pill_data prototype) {
+        return newBuilder().mergeFrom(prototype);
+      }
+      public Builder toBuilder() { return newBuilder(this); }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code hello.periodic_data.pill_data}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessage.Builder<Builder>
+         implements com.hello.suripu.api.input.InputProtos.periodic_data.pill_dataOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return com.hello.suripu.api.input.InputProtos.internal_static_hello_periodic_data_pill_data_descriptor;
+        }
+
+        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return com.hello.suripu.api.input.InputProtos.internal_static_hello_periodic_data_pill_data_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.class, com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.Builder.class);
+        }
+
+        // Construct using com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          }
+        }
+        private static Builder create() {
+          return new Builder();
+        }
+
+        public Builder clear() {
+          super.clear();
+          deviceId_ = "";
+          bitField0_ = (bitField0_ & ~0x00000001);
+          batteryLevel_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000002);
+          uptime_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000004);
+          motionData_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000008);
+          motionDataEncrypted_ = com.google.protobuf.ByteString.EMPTY;
+          bitField0_ = (bitField0_ & ~0x00000010);
+          firmwareVersion_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000020);
+          return this;
+        }
+
+        public Builder clone() {
+          return create().mergeFrom(buildPartial());
+        }
+
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return com.hello.suripu.api.input.InputProtos.internal_static_hello_periodic_data_pill_data_descriptor;
+        }
+
+        public com.hello.suripu.api.input.InputProtos.periodic_data.pill_data getDefaultInstanceForType() {
+          return com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.getDefaultInstance();
+        }
+
+        public com.hello.suripu.api.input.InputProtos.periodic_data.pill_data build() {
+          com.hello.suripu.api.input.InputProtos.periodic_data.pill_data result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        public com.hello.suripu.api.input.InputProtos.periodic_data.pill_data buildPartial() {
+          com.hello.suripu.api.input.InputProtos.periodic_data.pill_data result = new com.hello.suripu.api.input.InputProtos.periodic_data.pill_data(this);
+          int from_bitField0_ = bitField0_;
+          int to_bitField0_ = 0;
+          if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+            to_bitField0_ |= 0x00000001;
+          }
+          result.deviceId_ = deviceId_;
+          if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+            to_bitField0_ |= 0x00000002;
+          }
+          result.batteryLevel_ = batteryLevel_;
+          if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+            to_bitField0_ |= 0x00000004;
+          }
+          result.uptime_ = uptime_;
+          if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+            to_bitField0_ |= 0x00000008;
+          }
+          result.motionData_ = motionData_;
+          if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+            to_bitField0_ |= 0x00000010;
+          }
+          result.motionDataEncrypted_ = motionDataEncrypted_;
+          if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+            to_bitField0_ |= 0x00000020;
+          }
+          result.firmwareVersion_ = firmwareVersion_;
+          result.bitField0_ = to_bitField0_;
+          onBuilt();
+          return result;
+        }
+
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof com.hello.suripu.api.input.InputProtos.periodic_data.pill_data) {
+            return mergeFrom((com.hello.suripu.api.input.InputProtos.periodic_data.pill_data)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(com.hello.suripu.api.input.InputProtos.periodic_data.pill_data other) {
+          if (other == com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.getDefaultInstance()) return this;
+          if (other.hasDeviceId()) {
+            bitField0_ |= 0x00000001;
+            deviceId_ = other.deviceId_;
+            onChanged();
+          }
+          if (other.hasBatteryLevel()) {
+            setBatteryLevel(other.getBatteryLevel());
+          }
+          if (other.hasUptime()) {
+            setUptime(other.getUptime());
+          }
+          if (other.hasMotionData()) {
+            setMotionData(other.getMotionData());
+          }
+          if (other.hasMotionDataEncrypted()) {
+            setMotionDataEncrypted(other.getMotionDataEncrypted());
+          }
+          if (other.hasFirmwareVersion()) {
+            setFirmwareVersion(other.getFirmwareVersion());
+          }
+          this.mergeUnknownFields(other.getUnknownFields());
+          return this;
+        }
+
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          com.hello.suripu.api.input.InputProtos.periodic_data.pill_data parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (com.hello.suripu.api.input.InputProtos.periodic_data.pill_data) e.getUnfinishedMessage();
+            throw e;
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+        private int bitField0_;
+
+        // optional string deviceId = 3;
+        private java.lang.Object deviceId_ = "";
+        /**
+         * <code>optional string deviceId = 3;</code>
+         *
+         * <pre>
+         * Be careful when copy paste, the index is not right :)
+         * </pre>
+         */
+        public boolean hasDeviceId() {
+          return ((bitField0_ & 0x00000001) == 0x00000001);
+        }
+        /**
+         * <code>optional string deviceId = 3;</code>
+         *
+         * <pre>
+         * Be careful when copy paste, the index is not right :)
+         * </pre>
+         */
+        public java.lang.String getDeviceId() {
+          java.lang.Object ref = deviceId_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
+                .toStringUtf8();
+            deviceId_ = s;
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         * <code>optional string deviceId = 3;</code>
+         *
+         * <pre>
+         * Be careful when copy paste, the index is not right :)
+         * </pre>
+         */
+        public com.google.protobuf.ByteString
+            getDeviceIdBytes() {
+          java.lang.Object ref = deviceId_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
+            deviceId_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         * <code>optional string deviceId = 3;</code>
+         *
+         * <pre>
+         * Be careful when copy paste, the index is not right :)
+         * </pre>
+         */
+        public Builder setDeviceId(
+            java.lang.String value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+          deviceId_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string deviceId = 3;</code>
+         *
+         * <pre>
+         * Be careful when copy paste, the index is not right :)
+         * </pre>
+         */
+        public Builder clearDeviceId() {
+          bitField0_ = (bitField0_ & ~0x00000001);
+          deviceId_ = getDefaultInstance().getDeviceId();
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string deviceId = 3;</code>
+         *
+         * <pre>
+         * Be careful when copy paste, the index is not right :)
+         * </pre>
+         */
+        public Builder setDeviceIdBytes(
+            com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+          deviceId_ = value;
+          onChanged();
+          return this;
+        }
+
+        // optional int32 batteryLevel = 9;
+        private int batteryLevel_ ;
+        /**
+         * <code>optional int32 batteryLevel = 9;</code>
+         */
+        public boolean hasBatteryLevel() {
+          return ((bitField0_ & 0x00000002) == 0x00000002);
+        }
+        /**
+         * <code>optional int32 batteryLevel = 9;</code>
+         */
+        public int getBatteryLevel() {
+          return batteryLevel_;
+        }
+        /**
+         * <code>optional int32 batteryLevel = 9;</code>
+         */
+        public Builder setBatteryLevel(int value) {
+          bitField0_ |= 0x00000002;
+          batteryLevel_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int32 batteryLevel = 9;</code>
+         */
+        public Builder clearBatteryLevel() {
+          bitField0_ = (bitField0_ & ~0x00000002);
+          batteryLevel_ = 0;
+          onChanged();
+          return this;
+        }
+
+        // optional int32 uptime = 10;
+        private int uptime_ ;
+        /**
+         * <code>optional int32 uptime = 10;</code>
+         */
+        public boolean hasUptime() {
+          return ((bitField0_ & 0x00000004) == 0x00000004);
+        }
+        /**
+         * <code>optional int32 uptime = 10;</code>
+         */
+        public int getUptime() {
+          return uptime_;
+        }
+        /**
+         * <code>optional int32 uptime = 10;</code>
+         */
+        public Builder setUptime(int value) {
+          bitField0_ |= 0x00000004;
+          uptime_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int32 uptime = 10;</code>
+         */
+        public Builder clearUptime() {
+          bitField0_ = (bitField0_ & ~0x00000004);
+          uptime_ = 0;
+          onChanged();
+          return this;
+        }
+
+        // optional int32 motionData = 11;
+        private int motionData_ ;
+        /**
+         * <code>optional int32 motionData = 11;</code>
+         */
+        public boolean hasMotionData() {
+          return ((bitField0_ & 0x00000008) == 0x00000008);
+        }
+        /**
+         * <code>optional int32 motionData = 11;</code>
+         */
+        public int getMotionData() {
+          return motionData_;
+        }
+        /**
+         * <code>optional int32 motionData = 11;</code>
+         */
+        public Builder setMotionData(int value) {
+          bitField0_ |= 0x00000008;
+          motionData_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int32 motionData = 11;</code>
+         */
+        public Builder clearMotionData() {
+          bitField0_ = (bitField0_ & ~0x00000008);
+          motionData_ = 0;
+          onChanged();
+          return this;
+        }
+
+        // optional bytes motionDataEncrypted = 2;
+        private com.google.protobuf.ByteString motionDataEncrypted_ = com.google.protobuf.ByteString.EMPTY;
+        /**
+         * <code>optional bytes motionDataEncrypted = 2;</code>
+         */
+        public boolean hasMotionDataEncrypted() {
+          return ((bitField0_ & 0x00000010) == 0x00000010);
+        }
+        /**
+         * <code>optional bytes motionDataEncrypted = 2;</code>
+         */
+        public com.google.protobuf.ByteString getMotionDataEncrypted() {
+          return motionDataEncrypted_;
+        }
+        /**
+         * <code>optional bytes motionDataEncrypted = 2;</code>
+         */
+        public Builder setMotionDataEncrypted(com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+          motionDataEncrypted_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional bytes motionDataEncrypted = 2;</code>
+         */
+        public Builder clearMotionDataEncrypted() {
+          bitField0_ = (bitField0_ & ~0x00000010);
+          motionDataEncrypted_ = getDefaultInstance().getMotionDataEncrypted();
+          onChanged();
+          return this;
+        }
+
+        // optional int32 firmwareVersion = 1;
+        private int firmwareVersion_ ;
+        /**
+         * <code>optional int32 firmwareVersion = 1;</code>
+         */
+        public boolean hasFirmwareVersion() {
+          return ((bitField0_ & 0x00000020) == 0x00000020);
+        }
+        /**
+         * <code>optional int32 firmwareVersion = 1;</code>
+         */
+        public int getFirmwareVersion() {
+          return firmwareVersion_;
+        }
+        /**
+         * <code>optional int32 firmwareVersion = 1;</code>
+         */
+        public Builder setFirmwareVersion(int value) {
+          bitField0_ |= 0x00000020;
+          firmwareVersion_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int32 firmwareVersion = 1;</code>
+         */
+        public Builder clearFirmwareVersion() {
+          bitField0_ = (bitField0_ & ~0x00000020);
+          firmwareVersion_ = 0;
+          onChanged();
+          return this;
+        }
+
+        // @@protoc_insertion_point(builder_scope:hello.periodic_data.pill_data)
+      }
+
+      static {
+        defaultInstance = new pill_data(true);
+        defaultInstance.initFields();
+      }
+
+      // @@protoc_insertion_point(class_scope:hello.periodic_data.pill_data)
     }
 
     private int bitField0_;
@@ -20180,6 +21632,42 @@ public final class InputProtos {
       return firmwareVersion_;
     }
 
+    // repeated .hello.periodic_data.pill_data pills = 11;
+    public static final int PILLS_FIELD_NUMBER = 11;
+    private java.util.List<com.hello.suripu.api.input.InputProtos.periodic_data.pill_data> pills_;
+    /**
+     * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+     */
+    public java.util.List<com.hello.suripu.api.input.InputProtos.periodic_data.pill_data> getPillsList() {
+      return pills_;
+    }
+    /**
+     * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+     */
+    public java.util.List<? extends com.hello.suripu.api.input.InputProtos.periodic_data.pill_dataOrBuilder> 
+        getPillsOrBuilderList() {
+      return pills_;
+    }
+    /**
+     * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+     */
+    public int getPillsCount() {
+      return pills_.size();
+    }
+    /**
+     * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+     */
+    public com.hello.suripu.api.input.InputProtos.periodic_data.pill_data getPills(int index) {
+      return pills_.get(index);
+    }
+    /**
+     * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+     */
+    public com.hello.suripu.api.input.InputProtos.periodic_data.pill_dataOrBuilder getPillsOrBuilder(
+        int index) {
+      return pills_.get(index);
+    }
+
     private void initFields() {
       unixTime_ = 0;
       light_ = 0;
@@ -20191,6 +21679,7 @@ public final class InputProtos {
       lightVariability_ = 0;
       lightTonality_ = 0;
       firmwareVersion_ = 0;
+      pills_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -20233,6 +21722,9 @@ public final class InputProtos {
       }
       if (((bitField0_ & 0x00000200) == 0x00000200)) {
         output.writeInt32(10, firmwareVersion_);
+      }
+      for (int i = 0; i < pills_.size(); i++) {
+        output.writeMessage(11, pills_.get(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -20282,6 +21774,10 @@ public final class InputProtos {
       if (((bitField0_ & 0x00000200) == 0x00000200)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(10, firmwareVersion_);
+      }
+      for (int i = 0; i < pills_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(11, pills_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -20391,6 +21887,7 @@ public final class InputProtos {
       }
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getPillsFieldBuilder();
         }
       }
       private static Builder create() {
@@ -20419,6 +21916,12 @@ public final class InputProtos {
         bitField0_ = (bitField0_ & ~0x00000100);
         firmwareVersion_ = 0;
         bitField0_ = (bitField0_ & ~0x00000200);
+        if (pillsBuilder_ == null) {
+          pills_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000400);
+        } else {
+          pillsBuilder_.clear();
+        }
         return this;
       }
 
@@ -20487,6 +21990,15 @@ public final class InputProtos {
           to_bitField0_ |= 0x00000200;
         }
         result.firmwareVersion_ = firmwareVersion_;
+        if (pillsBuilder_ == null) {
+          if (((bitField0_ & 0x00000400) == 0x00000400)) {
+            pills_ = java.util.Collections.unmodifiableList(pills_);
+            bitField0_ = (bitField0_ & ~0x00000400);
+          }
+          result.pills_ = pills_;
+        } else {
+          result.pills_ = pillsBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -20534,6 +22046,32 @@ public final class InputProtos {
         }
         if (other.hasFirmwareVersion()) {
           setFirmwareVersion(other.getFirmwareVersion());
+        }
+        if (pillsBuilder_ == null) {
+          if (!other.pills_.isEmpty()) {
+            if (pills_.isEmpty()) {
+              pills_ = other.pills_;
+              bitField0_ = (bitField0_ & ~0x00000400);
+            } else {
+              ensurePillsIsMutable();
+              pills_.addAll(other.pills_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.pills_.isEmpty()) {
+            if (pillsBuilder_.isEmpty()) {
+              pillsBuilder_.dispose();
+              pillsBuilder_ = null;
+              pills_ = other.pills_;
+              bitField0_ = (bitField0_ & ~0x00000400);
+              pillsBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getPillsFieldBuilder() : null;
+            } else {
+              pillsBuilder_.addAllMessages(other.pills_);
+            }
+          }
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -20936,6 +22474,246 @@ public final class InputProtos {
         return this;
       }
 
+      // repeated .hello.periodic_data.pill_data pills = 11;
+      private java.util.List<com.hello.suripu.api.input.InputProtos.periodic_data.pill_data> pills_ =
+        java.util.Collections.emptyList();
+      private void ensurePillsIsMutable() {
+        if (!((bitField0_ & 0x00000400) == 0x00000400)) {
+          pills_ = new java.util.ArrayList<com.hello.suripu.api.input.InputProtos.periodic_data.pill_data>(pills_);
+          bitField0_ |= 0x00000400;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.input.InputProtos.periodic_data.pill_data, com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.Builder, com.hello.suripu.api.input.InputProtos.periodic_data.pill_dataOrBuilder> pillsBuilder_;
+
+      /**
+       * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+       */
+      public java.util.List<com.hello.suripu.api.input.InputProtos.periodic_data.pill_data> getPillsList() {
+        if (pillsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(pills_);
+        } else {
+          return pillsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+       */
+      public int getPillsCount() {
+        if (pillsBuilder_ == null) {
+          return pills_.size();
+        } else {
+          return pillsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.periodic_data.pill_data getPills(int index) {
+        if (pillsBuilder_ == null) {
+          return pills_.get(index);
+        } else {
+          return pillsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+       */
+      public Builder setPills(
+          int index, com.hello.suripu.api.input.InputProtos.periodic_data.pill_data value) {
+        if (pillsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePillsIsMutable();
+          pills_.set(index, value);
+          onChanged();
+        } else {
+          pillsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+       */
+      public Builder setPills(
+          int index, com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.Builder builderForValue) {
+        if (pillsBuilder_ == null) {
+          ensurePillsIsMutable();
+          pills_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          pillsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+       */
+      public Builder addPills(com.hello.suripu.api.input.InputProtos.periodic_data.pill_data value) {
+        if (pillsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePillsIsMutable();
+          pills_.add(value);
+          onChanged();
+        } else {
+          pillsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+       */
+      public Builder addPills(
+          int index, com.hello.suripu.api.input.InputProtos.periodic_data.pill_data value) {
+        if (pillsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePillsIsMutable();
+          pills_.add(index, value);
+          onChanged();
+        } else {
+          pillsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+       */
+      public Builder addPills(
+          com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.Builder builderForValue) {
+        if (pillsBuilder_ == null) {
+          ensurePillsIsMutable();
+          pills_.add(builderForValue.build());
+          onChanged();
+        } else {
+          pillsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+       */
+      public Builder addPills(
+          int index, com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.Builder builderForValue) {
+        if (pillsBuilder_ == null) {
+          ensurePillsIsMutable();
+          pills_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          pillsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+       */
+      public Builder addAllPills(
+          java.lang.Iterable<? extends com.hello.suripu.api.input.InputProtos.periodic_data.pill_data> values) {
+        if (pillsBuilder_ == null) {
+          ensurePillsIsMutable();
+          super.addAll(values, pills_);
+          onChanged();
+        } else {
+          pillsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+       */
+      public Builder clearPills() {
+        if (pillsBuilder_ == null) {
+          pills_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000400);
+          onChanged();
+        } else {
+          pillsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+       */
+      public Builder removePills(int index) {
+        if (pillsBuilder_ == null) {
+          ensurePillsIsMutable();
+          pills_.remove(index);
+          onChanged();
+        } else {
+          pillsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.Builder getPillsBuilder(
+          int index) {
+        return getPillsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.periodic_data.pill_dataOrBuilder getPillsOrBuilder(
+          int index) {
+        if (pillsBuilder_ == null) {
+          return pills_.get(index);  } else {
+          return pillsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+       */
+      public java.util.List<? extends com.hello.suripu.api.input.InputProtos.periodic_data.pill_dataOrBuilder> 
+           getPillsOrBuilderList() {
+        if (pillsBuilder_ != null) {
+          return pillsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(pills_);
+        }
+      }
+      /**
+       * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.Builder addPillsBuilder() {
+        return getPillsFieldBuilder().addBuilder(
+            com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.Builder addPillsBuilder(
+          int index) {
+        return getPillsFieldBuilder().addBuilder(
+            index, com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
+       */
+      public java.util.List<com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.Builder> 
+           getPillsBuilderList() {
+        return getPillsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.input.InputProtos.periodic_data.pill_data, com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.Builder, com.hello.suripu.api.input.InputProtos.periodic_data.pill_dataOrBuilder> 
+          getPillsFieldBuilder() {
+        if (pillsBuilder_ == null) {
+          pillsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              com.hello.suripu.api.input.InputProtos.periodic_data.pill_data, com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.Builder, com.hello.suripu.api.input.InputProtos.periodic_data.pill_dataOrBuilder>(
+                  pills_,
+                  ((bitField0_ & 0x00000400) == 0x00000400),
+                  getParentForChildren(),
+                  isClean());
+          pills_ = null;
+        }
+        return pillsBuilder_;
+      }
+
       // @@protoc_insertion_point(builder_scope:hello.periodic_data)
     }
 
@@ -21072,6 +22850,11 @@ public final class InputProtos {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_periodic_data_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_hello_periodic_data_pill_data_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_hello_periodic_data_pill_data_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -21149,26 +22932,34 @@ public final class InputProtos {
       "ction\022\r\n\005color\030\001 \001(\005\022\022\n\nstart_time\030\002 \001(\005" +
       "\022\020\n\010end_time\030\003 \001(\005\"=\n\010PillData\022\017\n\007pill_i" +
       "d\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(\t\022\014\n\004data\030\003 \001(" +
-      "\014\"n\n\017PillDataKinesis\022\017\n\007pill_id\030\001 \001(\t\022\022\n" +
-      "\naccount_id\030\002 \001(\t\022\021\n\ttimestamp\030\003 \001(\003\022\r\n\005",
-      "value\030\004 \001(\003\022\024\n\014offsetMillis\030\005 \001(\005\"\324\001\n\016Pi" +
-      "llBlobHeader\022\035\n\025first_sequence_number\030\001 " +
-      "\001(\t\022\034\n\024last_sequence_number\030\002 \001(\t\022\031\n\021fir" +
-      "st_sample_date\030\003 \001(\t\022\030\n\020last_sample_date" +
-      "\030\004 \001(\t\022%\n\035compressed_bitmap_account_ids\030" +
-      "\005 \001(\014\022\026\n\016data_file_name\030\006 \001(\t\022\021\n\tnum_ite" +
-      "ms\030\007 \001(\005\"*\n\010PillBlob\022\036\n\005items\030\001 \003(\0132\017.he" +
-      "llo.PillData\"\214\001\n\nEventBatch\022+\n\006events\030\001 " +
-      "\003(\0132\033.hello.EventBatch.EventItem\032Q\n\tEven" +
-      "tItem\022\027\n\017start_timestamp\030\001 \001(\003\022\025\n\rend_ti",
-      "mestamp\030\002 \001(\003\022\024\n\014offsetMillis\030\003 \001(\005\"\316\001\n\r" +
-      "periodic_data\022\021\n\tunix_time\030\001 \001(\005\022\r\n\005ligh" +
-      "t\030\002 \001(\005\022\023\n\013temperature\030\003 \001(\005\022\020\n\010humidity" +
-      "\030\004 \001(\005\022\014\n\004dust\030\005 \001(\005\022\014\n\004name\030\006 \001(\t\022\013\n\003ma" +
-      "c\030\007 \001(\014\022\031\n\021light_variability\030\010 \001(\005\022\026\n\016li" +
-      "ght_tonality\030\t \001(\005\022\030\n\020firmware_version\030\n" +
-      " \001(\005B)\n\032com.hello.suripu.api.inputB\013Inpu" +
-      "tProtos"
+      "\014\"\357\001\n\017PillDataKinesis\022\017\n\007pill_id\030\001 \001(\t\022\022" +
+      "\n\naccount_id\030\002 \001(\t\022\021\n\ttimestamp\030\003 \001(\003\022\r\n",
+      "\005value\030\004 \001(\003\022\024\n\014offsetMillis\030\005 \001(\005\022\025\n\ren" +
+      "cryptedData\030\006 \001(\014\022\024\n\014batteryLevel\030\007 \001(\005\022" +
+      "\027\n\017firmwareVersion\030\010 \001(\005\022\022\n\npillIdLong\030\t" +
+      " \001(\003\022\025\n\raccountIdLong\030\n \001(\003\022\016\n\006upTime\030\013 " +
+      "\001(\005\"\324\001\n\016PillBlobHeader\022\035\n\025first_sequence" +
+      "_number\030\001 \001(\t\022\034\n\024last_sequence_number\030\002 " +
+      "\001(\t\022\031\n\021first_sample_date\030\003 \001(\t\022\030\n\020last_s" +
+      "ample_date\030\004 \001(\t\022%\n\035compressed_bitmap_ac" +
+      "count_ids\030\005 \001(\014\022\026\n\016data_file_name\030\006 \001(\t\022" +
+      "\021\n\tnum_items\030\007 \001(\005\"*\n\010PillBlob\022\036\n\005items\030",
+      "\001 \003(\0132\017.hello.PillData\"\214\001\n\nEventBatch\022+\n" +
+      "\006events\030\001 \003(\0132\033.hello.EventBatch.EventIt" +
+      "em\032Q\n\tEventItem\022\027\n\017start_timestamp\030\001 \001(\003" +
+      "\022\025\n\rend_timestamp\030\002 \001(\003\022\024\n\014offsetMillis\030" +
+      "\003 \001(\005\"\215\003\n\rperiodic_data\022\021\n\tunix_time\030\001 \001" +
+      "(\005\022\r\n\005light\030\002 \001(\005\022\023\n\013temperature\030\003 \001(\005\022\020" +
+      "\n\010humidity\030\004 \001(\005\022\014\n\004dust\030\005 \001(\005\022\014\n\004name\030\006" +
+      " \001(\t\022\013\n\003mac\030\007 \001(\014\022\031\n\021light_variability\030\010" +
+      " \001(\005\022\026\n\016light_tonality\030\t \001(\005\022\030\n\020firmware" +
+      "_version\030\n \001(\005\022-\n\005pills\030\013 \003(\0132\036.hello.pe",
+      "riodic_data.pill_data\032\215\001\n\tpill_data\022\020\n\010d" +
+      "eviceId\030\003 \001(\t\022\024\n\014batteryLevel\030\t \001(\005\022\016\n\006u" +
+      "ptime\030\n \001(\005\022\022\n\nmotionData\030\013 \001(\005\022\033\n\023motio" +
+      "nDataEncrypted\030\002 \001(\014\022\027\n\017firmwareVersion\030" +
+      "\001 \001(\005B)\n\032com.hello.suripu.api.inputB\013Inp" +
+      "utProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -21294,7 +23085,7 @@ public final class InputProtos {
           internal_static_hello_PillDataKinesis_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_PillDataKinesis_descriptor,
-              new java.lang.String[] { "PillId", "AccountId", "Timestamp", "Value", "OffsetMillis", });
+              new java.lang.String[] { "PillId", "AccountId", "Timestamp", "Value", "OffsetMillis", "EncryptedData", "BatteryLevel", "FirmwareVersion", "PillIdLong", "AccountIdLong", "UpTime", });
           internal_static_hello_PillBlobHeader_descriptor =
             getDescriptor().getMessageTypes().get(10);
           internal_static_hello_PillBlobHeader_fieldAccessorTable = new
@@ -21324,7 +23115,13 @@ public final class InputProtos {
           internal_static_hello_periodic_data_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_periodic_data_descriptor,
-              new java.lang.String[] { "UnixTime", "Light", "Temperature", "Humidity", "Dust", "Name", "Mac", "LightVariability", "LightTonality", "FirmwareVersion", });
+              new java.lang.String[] { "UnixTime", "Light", "Temperature", "Humidity", "Dust", "Name", "Mac", "LightVariability", "LightTonality", "FirmwareVersion", "Pills", });
+          internal_static_hello_periodic_data_pill_data_descriptor =
+            internal_static_hello_periodic_data_descriptor.getNestedTypes().get(0);
+          internal_static_hello_periodic_data_pill_data_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_periodic_data_pill_data_descriptor,
+              new java.lang.String[] { "DeviceId", "BatteryLevel", "Uptime", "MotionData", "MotionDataEncrypted", "FirmwareVersion", });
           return null;
         }
       };

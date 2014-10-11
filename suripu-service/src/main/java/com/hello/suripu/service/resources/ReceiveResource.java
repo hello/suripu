@@ -24,6 +24,7 @@ import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.TempTrackerData;
+import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -76,8 +77,7 @@ public class ReceiveResource {
     private final Boolean debug;
 
     // for transforming pill-data counts into acceleration
-    private static final double COUNTS_IN_G = Math.pow((4.0  * 9.81)/ 65536.0, 2);
-    private static final double GRAVITY = 9.81;
+
 
     private final LoadingCache<String, Optional<byte[]>> cache;
 
@@ -150,12 +150,12 @@ public class ReceiveResource {
             // add to kinesis - 1 sample per min
             if (tempTrackerData.value > 0) {
                 final String pillID = trackerId.toString();
-                final double trackerValueInG = Math.sqrt(tempTrackerData.value.doubleValue() * this.COUNTS_IN_G) - this.GRAVITY;
+
                 final InputProtos.PillDataKinesis pillKinesisData = InputProtos.PillDataKinesis.newBuilder()
-                        .setAccountId(accessToken.accountId.toString())
-                        .setPillId(pillID)
+                        .setAccountIdLong(accessToken.accountId)
+                        .setPillIdLong(trackerId)
                         .setTimestamp(tempTrackerData.timestamp)
-                        .setValue((long) (trackerValueInG * 1000)) // in milli-g
+                        .setValue(TrackerMotion.Utils.rawToMilliMS2((long) tempTrackerData.value)) // in milli-g
                         .setOffsetMillis(this.OFFSET_MILLIS)
                         .build();
 
@@ -245,6 +245,62 @@ public class ReceiveResource {
         // This is the default timezone.
         DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
 
+        // ********************* Pill Data Storage ****************************
+        if(data.getPillsCount() > 0){
+            final List<InputProtos.periodic_data.pill_data> pillList = data.getPillsList();
+            for(final InputProtos.periodic_data.pill_data pill:pillList){
+
+                final String pillId = pill.getDeviceId();
+                final Optional<DeviceAccountPair> internalPillPairingMap = this.deviceDAO.getInternalPillId(pillId);
+                if(!internalPillPairingMap.isPresent()){
+                    LOGGER.warn("Cannot find internal pill id for pill {}", pillId);
+                    continue;
+                }
+
+                final InputProtos.PillDataKinesis.Builder pillKinesisDataBuilder = InputProtos.PillDataKinesis.newBuilder();
+
+                pillKinesisDataBuilder.setAccountIdLong(internalPillPairingMap.get().accountId)
+                        .setPillIdLong(internalPillPairingMap.get().internalDeviceId)
+                        .setTimestamp(roundedDateTime.getMillis())
+                        .setOffsetMillis(userTimeZone.getOffset(roundedDateTime));
+
+
+
+                if(pill.hasBatteryLevel()){
+                    pillKinesisDataBuilder.setBatteryLevel(pill.getBatteryLevel());
+                }
+
+                if(pill.hasFirmwareVersion()){
+                    pillKinesisDataBuilder.setFirmwareVersion(pill.getFirmwareVersion());
+                }
+
+                if(pill.hasUptime()){
+                    pillKinesisDataBuilder.setUpTime(pill.getUptime());
+                }
+
+                if(pill.hasMotionDataEncrypted()){
+                    pillKinesisDataBuilder.setEncryptedData(pill.getMotionDataEncrypted());
+                }
+
+                if(pill.hasMotionData()){
+                    long amplitude = pill.getMotionData();
+                    if(amplitude < 0){
+                        // Java is signed
+                        amplitude += 0xFFFFFFFF;
+                    }
+                    pillKinesisDataBuilder.setValue(TrackerMotion.Utils.rawToMilliMS2(amplitude));
+                }
+
+                final byte[] pillDataBytes = pillKinesisDataBuilder.build().toByteArray();
+                final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.PILL_DATA);
+                final String sequenceNumber = dataLogger.put(internalPillPairingMap.get().internalDeviceId.toString(),  // WTF?
+                        pillDataBytes);
+                LOGGER.debug("Pill Data added to Kinesis with sequenceNumber = {}", sequenceNumber);
+
+            }
+        }
+
+        // ********************* Morpheus Data and Alarm processing **************************
         // Here comes to a discussion: Shall we loop over the device_id:account_id relation based on the
         // DynamoDB "cache" or PostgresSQL accout_device_map table?
         // Looping over DynamoDB can save a hit to the PostgresSQL every minute for every Morpheus,
@@ -316,6 +372,7 @@ public class ReceiveResource {
 
                 LOGGER.warn("Duplicate device sensor value for account_id = {}, time: {}", pair.accountId, roundedDateTime);
             }
+
 
             final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.MORPHEUS_DATA);
             final byte[] morpheusDataInBytes = data.toByteArray();

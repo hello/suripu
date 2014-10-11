@@ -5,7 +5,7 @@
     <groupId>com.hello.suripu</groupId>
     <artifactId>suripu-parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.1.71-SNAPSHOT</version>
+    <version>0.1.73-SNAPSHOT</version>
 
     <properties>
         <dropwizard.version>0.6.2</dropwizard.version>
@@ -23,9 +23,9 @@
         <module>suripu-service</module>
         <module>suripu-app</module>
         <module>suripu-factory</module>
-        <module>suripu-sync</module>
         <module>suripu-algorithm</module>
         <module>suripu-workers</module>
+        <module>suripu-admin</module>
     </modules>
 
     <scm>
