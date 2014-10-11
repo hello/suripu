@@ -172,9 +172,7 @@ public class TimelineUtils {
 
         final List<SleepSegment> buffer = new ArrayList<>();
 
-        int processedSize = 0;
         for(final SleepSegment segment : segments) {
-            processedSize++;
             if(segment.sleepDepth != previousSleepDepth) {
                 SleepSegment seg = (buffer.isEmpty()) ? segment : TimelineUtils.merge(buffer, threshold);
 
