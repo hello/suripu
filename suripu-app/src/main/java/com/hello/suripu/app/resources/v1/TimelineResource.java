@@ -71,9 +71,11 @@ public class TimelineResource {
 
         final List<Event> events = new ArrayList<>();
 
-        int groupBy = 5; // group by 5 minutes
+        final int groupBy = 1; // group by 5 minutes
 
-        int threshold = 10; // events with scores < threshold will be considered motion events
+        final int threshold = 10; // events with scores < threshold will be considered motion events
+        final int mergeThreshold = 1; // min segment size is 1 minute
+
         // TODO: compute this threshold dynamically
 
         final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenGrouped(accessToken.accountId, targetDate, endDate, groupBy);
@@ -100,8 +102,8 @@ public class TimelineResource {
             final String sunriseMessage = String.format("sunrise at %s", sunrise.get().toString(DateTimeFormat.forPattern("HH:mma")));
             final String sunsetMessage = String.format("sunset at %s", sunset.get().toString(DateTimeFormat.forPattern("HH:mma")));
 
-            final SleepSegment sunriseSegment = new SleepSegment(1L,sunrise.get().getMillis(),0,60,0,"SUNRISE", sunriseMessage, new ArrayList<SensorReading>());
-            final SleepSegment sunsetSegment = new SleepSegment(1L,sunset.get().getMillis(),0,60,0,"SUNSET", sunsetMessage, new ArrayList<SensorReading>());
+            final SleepSegment sunriseSegment = new SleepSegment(1L, sunrise.get().getMillis(), 0, 60, -1, Event.Type.SUNRISE.toString(), sunriseMessage, new ArrayList<SensorReading>());
+            final SleepSegment sunsetSegment = new SleepSegment(1L, sunset.get().getMillis(), 0, 60, -1, Event.Type.SUNSET.toString(), sunsetMessage, new ArrayList<SensorReading>());
 
             final List<SleepSegment> newSegments = TimelineUtils.insertSegments(sunriseSegment, sunsetSegment, normalized);
             LOGGER.debug(sunriseMessage);
@@ -112,7 +114,7 @@ public class TimelineResource {
 
         LOGGER.debug("Size of decorated = {}", decorated.size());
 
-        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(decorated, threshold);
+        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(decorated, mergeThreshold);
         final SleepStats sleepStats = TimelineUtils.computeStats(mergedSegments);
         final List<SleepSegment> reversed = Lists.reverse(mergedSegments);
 
