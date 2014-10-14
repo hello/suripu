@@ -797,11 +797,2487 @@ public final class LoggingProtos {
     // @@protoc_insertion_point(class_scope:hello.LogMessage)
   }
 
+  public interface HttpRequestOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional string path = 1;
+    /**
+     * <code>optional string path = 1;</code>
+     */
+    boolean hasPath();
+    /**
+     * <code>optional string path = 1;</code>
+     */
+    java.lang.String getPath();
+    /**
+     * <code>optional string path = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getPathBytes();
+
+    // optional string access_token = 2;
+    /**
+     * <code>optional string access_token = 2;</code>
+     */
+    boolean hasAccessToken();
+    /**
+     * <code>optional string access_token = 2;</code>
+     */
+    java.lang.String getAccessToken();
+    /**
+     * <code>optional string access_token = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getAccessTokenBytes();
+
+    // optional int64 account_id = 3;
+    /**
+     * <code>optional int64 account_id = 3;</code>
+     */
+    boolean hasAccountId();
+    /**
+     * <code>optional int64 account_id = 3;</code>
+     */
+    long getAccountId();
+
+    // optional int64 application_id = 4;
+    /**
+     * <code>optional int64 application_id = 4;</code>
+     */
+    boolean hasApplicationId();
+    /**
+     * <code>optional int64 application_id = 4;</code>
+     */
+    long getApplicationId();
+
+    // optional int64 timestamp_utc = 5;
+    /**
+     * <code>optional int64 timestamp_utc = 5;</code>
+     */
+    boolean hasTimestampUtc();
+    /**
+     * <code>optional int64 timestamp_utc = 5;</code>
+     */
+    long getTimestampUtc();
+
+    // repeated string required_scopes = 6;
+    /**
+     * <code>repeated string required_scopes = 6;</code>
+     */
+    java.util.List<java.lang.String>
+    getRequiredScopesList();
+    /**
+     * <code>repeated string required_scopes = 6;</code>
+     */
+    int getRequiredScopesCount();
+    /**
+     * <code>repeated string required_scopes = 6;</code>
+     */
+    java.lang.String getRequiredScopes(int index);
+    /**
+     * <code>repeated string required_scopes = 6;</code>
+     */
+    com.google.protobuf.ByteString
+        getRequiredScopesBytes(int index);
+
+    // repeated string provided_scopes = 7;
+    /**
+     * <code>repeated string provided_scopes = 7;</code>
+     */
+    java.util.List<java.lang.String>
+    getProvidedScopesList();
+    /**
+     * <code>repeated string provided_scopes = 7;</code>
+     */
+    int getProvidedScopesCount();
+    /**
+     * <code>repeated string provided_scopes = 7;</code>
+     */
+    java.lang.String getProvidedScopes(int index);
+    /**
+     * <code>repeated string provided_scopes = 7;</code>
+     */
+    com.google.protobuf.ByteString
+        getProvidedScopesBytes(int index);
+
+    // optional int64 access_token_created_at = 8;
+    /**
+     * <code>optional int64 access_token_created_at = 8;</code>
+     */
+    boolean hasAccessTokenCreatedAt();
+    /**
+     * <code>optional int64 access_token_created_at = 8;</code>
+     */
+    long getAccessTokenCreatedAt();
+
+    // optional string user_agent = 9;
+    /**
+     * <code>optional string user_agent = 9;</code>
+     */
+    boolean hasUserAgent();
+    /**
+     * <code>optional string user_agent = 9;</code>
+     */
+    java.lang.String getUserAgent();
+    /**
+     * <code>optional string user_agent = 9;</code>
+     */
+    com.google.protobuf.ByteString
+        getUserAgentBytes();
+
+    // repeated .hello.HttpRequest.Header headers = 10;
+    /**
+     * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+     */
+    java.util.List<com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header> 
+        getHeadersList();
+    /**
+     * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+     */
+    com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header getHeaders(int index);
+    /**
+     * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+     */
+    int getHeadersCount();
+    /**
+     * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+     */
+    java.util.List<? extends com.hello.suripu.api.logging.LoggingProtos.HttpRequest.HeaderOrBuilder> 
+        getHeadersOrBuilderList();
+    /**
+     * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+     */
+    com.hello.suripu.api.logging.LoggingProtos.HttpRequest.HeaderOrBuilder getHeadersOrBuilder(
+        int index);
+  }
+  /**
+   * Protobuf type {@code hello.HttpRequest}
+   */
+  public static final class HttpRequest extends
+      com.google.protobuf.GeneratedMessage
+      implements HttpRequestOrBuilder {
+    // Use HttpRequest.newBuilder() to construct.
+    private HttpRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private HttpRequest(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final HttpRequest defaultInstance;
+    public static HttpRequest getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public HttpRequest getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private HttpRequest(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              path_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              accessToken_ = input.readBytes();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              accountId_ = input.readInt64();
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000008;
+              applicationId_ = input.readInt64();
+              break;
+            }
+            case 40: {
+              bitField0_ |= 0x00000010;
+              timestampUtc_ = input.readInt64();
+              break;
+            }
+            case 50: {
+              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+                requiredScopes_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000020;
+              }
+              requiredScopes_.add(input.readBytes());
+              break;
+            }
+            case 58: {
+              if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+                providedScopes_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000040;
+              }
+              providedScopes_.add(input.readBytes());
+              break;
+            }
+            case 64: {
+              bitField0_ |= 0x00000020;
+              accessTokenCreatedAt_ = input.readInt64();
+              break;
+            }
+            case 74: {
+              bitField0_ |= 0x00000040;
+              userAgent_ = input.readBytes();
+              break;
+            }
+            case 82: {
+              if (!((mutable_bitField0_ & 0x00000200) == 0x00000200)) {
+                headers_ = new java.util.ArrayList<com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header>();
+                mutable_bitField0_ |= 0x00000200;
+              }
+              headers_.add(input.readMessage(com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.PARSER, extensionRegistry));
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+          requiredScopes_ = new com.google.protobuf.UnmodifiableLazyStringList(requiredScopes_);
+        }
+        if (((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+          providedScopes_ = new com.google.protobuf.UnmodifiableLazyStringList(providedScopes_);
+        }
+        if (((mutable_bitField0_ & 0x00000200) == 0x00000200)) {
+          headers_ = java.util.Collections.unmodifiableList(headers_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.suripu.api.logging.LoggingProtos.internal_static_hello_HttpRequest_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.suripu.api.logging.LoggingProtos.internal_static_hello_HttpRequest_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.suripu.api.logging.LoggingProtos.HttpRequest.class, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<HttpRequest> PARSER =
+        new com.google.protobuf.AbstractParser<HttpRequest>() {
+      public HttpRequest parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new HttpRequest(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<HttpRequest> getParserForType() {
+      return PARSER;
+    }
+
+    public interface HeaderOrBuilder
+        extends com.google.protobuf.MessageOrBuilder {
+
+      // optional string name = 1;
+      /**
+       * <code>optional string name = 1;</code>
+       */
+      boolean hasName();
+      /**
+       * <code>optional string name = 1;</code>
+       */
+      java.lang.String getName();
+      /**
+       * <code>optional string name = 1;</code>
+       */
+      com.google.protobuf.ByteString
+          getNameBytes();
+
+      // optional string value = 2;
+      /**
+       * <code>optional string value = 2;</code>
+       */
+      boolean hasValue();
+      /**
+       * <code>optional string value = 2;</code>
+       */
+      java.lang.String getValue();
+      /**
+       * <code>optional string value = 2;</code>
+       */
+      com.google.protobuf.ByteString
+          getValueBytes();
+    }
+    /**
+     * Protobuf type {@code hello.HttpRequest.Header}
+     */
+    public static final class Header extends
+        com.google.protobuf.GeneratedMessage
+        implements HeaderOrBuilder {
+      // Use Header.newBuilder() to construct.
+      private Header(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+        super(builder);
+        this.unknownFields = builder.getUnknownFields();
+      }
+      private Header(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+      private static final Header defaultInstance;
+      public static Header getDefaultInstance() {
+        return defaultInstance;
+      }
+
+      public Header getDefaultInstanceForType() {
+        return defaultInstance;
+      }
+
+      private final com.google.protobuf.UnknownFieldSet unknownFields;
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+          getUnknownFields() {
+        return this.unknownFields;
+      }
+      private Header(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        initFields();
+        int mutable_bitField0_ = 0;
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              default: {
+                if (!parseUnknownField(input, unknownFields,
+                                       extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+              case 10: {
+                bitField0_ |= 0x00000001;
+                name_ = input.readBytes();
+                break;
+              }
+              case 18: {
+                bitField0_ |= 0x00000002;
+                value_ = input.readBytes();
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e.getMessage()).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.logging.LoggingProtos.internal_static_hello_HttpRequest_Header_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.logging.LoggingProtos.internal_static_hello_HttpRequest_Header_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.class, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder.class);
+      }
+
+      public static com.google.protobuf.Parser<Header> PARSER =
+          new com.google.protobuf.AbstractParser<Header>() {
+        public Header parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new Header(input, extensionRegistry);
+        }
+      };
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<Header> getParserForType() {
+        return PARSER;
+      }
+
+      private int bitField0_;
+      // optional string name = 1;
+      public static final int NAME_FIELD_NUMBER = 1;
+      private java.lang.Object name_;
+      /**
+       * <code>optional string name = 1;</code>
+       */
+      public boolean hasName() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string name = 1;</code>
+       */
+      public java.lang.String getName() {
+        java.lang.Object ref = name_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            name_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       * <code>optional string name = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getNameBytes() {
+        java.lang.Object ref = name_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          name_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
+      // optional string value = 2;
+      public static final int VALUE_FIELD_NUMBER = 2;
+      private java.lang.Object value_;
+      /**
+       * <code>optional string value = 2;</code>
+       */
+      public boolean hasValue() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string value = 2;</code>
+       */
+      public java.lang.String getValue() {
+        java.lang.Object ref = value_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            value_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       * <code>optional string value = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getValueBytes() {
+        java.lang.Object ref = value_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          value_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
+      private void initFields() {
+        name_ = "";
+        value_ = "";
+      }
+      private byte memoizedIsInitialized = -1;
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized != -1) return isInitialized == 1;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        getSerializedSize();
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          output.writeBytes(1, getNameBytes());
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          output.writeBytes(2, getValueBytes());
+        }
+        getUnknownFields().writeTo(output);
+      }
+
+      private int memoizedSerializedSize = -1;
+      public int getSerializedSize() {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(1, getNameBytes());
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(2, getValueBytes());
+        }
+        size += getUnknownFields().getSerializedSize();
+        memoizedSerializedSize = size;
+        return size;
+      }
+
+      private static final long serialVersionUID = 0L;
+      @java.lang.Override
+      protected java.lang.Object writeReplace()
+          throws java.io.ObjectStreamException {
+        return super.writeReplace();
+      }
+
+      public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+      public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input);
+      }
+      public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      }
+      public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+
+      public static Builder newBuilder() { return Builder.create(); }
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder(com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header prototype) {
+        return newBuilder().mergeFrom(prototype);
+      }
+      public Builder toBuilder() { return newBuilder(this); }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code hello.HttpRequest.Header}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessage.Builder<Builder>
+         implements com.hello.suripu.api.logging.LoggingProtos.HttpRequest.HeaderOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return com.hello.suripu.api.logging.LoggingProtos.internal_static_hello_HttpRequest_Header_descriptor;
+        }
+
+        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return com.hello.suripu.api.logging.LoggingProtos.internal_static_hello_HttpRequest_Header_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.class, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder.class);
+        }
+
+        // Construct using com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          }
+        }
+        private static Builder create() {
+          return new Builder();
+        }
+
+        public Builder clear() {
+          super.clear();
+          name_ = "";
+          bitField0_ = (bitField0_ & ~0x00000001);
+          value_ = "";
+          bitField0_ = (bitField0_ & ~0x00000002);
+          return this;
+        }
+
+        public Builder clone() {
+          return create().mergeFrom(buildPartial());
+        }
+
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return com.hello.suripu.api.logging.LoggingProtos.internal_static_hello_HttpRequest_Header_descriptor;
+        }
+
+        public com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header getDefaultInstanceForType() {
+          return com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.getDefaultInstance();
+        }
+
+        public com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header build() {
+          com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        public com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header buildPartial() {
+          com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header result = new com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header(this);
+          int from_bitField0_ = bitField0_;
+          int to_bitField0_ = 0;
+          if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+            to_bitField0_ |= 0x00000001;
+          }
+          result.name_ = name_;
+          if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+            to_bitField0_ |= 0x00000002;
+          }
+          result.value_ = value_;
+          result.bitField0_ = to_bitField0_;
+          onBuilt();
+          return result;
+        }
+
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header) {
+            return mergeFrom((com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header other) {
+          if (other == com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.getDefaultInstance()) return this;
+          if (other.hasName()) {
+            bitField0_ |= 0x00000001;
+            name_ = other.name_;
+            onChanged();
+          }
+          if (other.hasValue()) {
+            bitField0_ |= 0x00000002;
+            value_ = other.value_;
+            onChanged();
+          }
+          this.mergeUnknownFields(other.getUnknownFields());
+          return this;
+        }
+
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header) e.getUnfinishedMessage();
+            throw e;
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+        private int bitField0_;
+
+        // optional string name = 1;
+        private java.lang.Object name_ = "";
+        /**
+         * <code>optional string name = 1;</code>
+         */
+        public boolean hasName() {
+          return ((bitField0_ & 0x00000001) == 0x00000001);
+        }
+        /**
+         * <code>optional string name = 1;</code>
+         */
+        public java.lang.String getName() {
+          java.lang.Object ref = name_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
+                .toStringUtf8();
+            name_ = s;
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         * <code>optional string name = 1;</code>
+         */
+        public com.google.protobuf.ByteString
+            getNameBytes() {
+          java.lang.Object ref = name_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
+            name_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         * <code>optional string name = 1;</code>
+         */
+        public Builder setName(
+            java.lang.String value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+          name_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string name = 1;</code>
+         */
+        public Builder clearName() {
+          bitField0_ = (bitField0_ & ~0x00000001);
+          name_ = getDefaultInstance().getName();
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string name = 1;</code>
+         */
+        public Builder setNameBytes(
+            com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+          name_ = value;
+          onChanged();
+          return this;
+        }
+
+        // optional string value = 2;
+        private java.lang.Object value_ = "";
+        /**
+         * <code>optional string value = 2;</code>
+         */
+        public boolean hasValue() {
+          return ((bitField0_ & 0x00000002) == 0x00000002);
+        }
+        /**
+         * <code>optional string value = 2;</code>
+         */
+        public java.lang.String getValue() {
+          java.lang.Object ref = value_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
+                .toStringUtf8();
+            value_ = s;
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         * <code>optional string value = 2;</code>
+         */
+        public com.google.protobuf.ByteString
+            getValueBytes() {
+          java.lang.Object ref = value_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
+            value_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         * <code>optional string value = 2;</code>
+         */
+        public Builder setValue(
+            java.lang.String value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+          value_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string value = 2;</code>
+         */
+        public Builder clearValue() {
+          bitField0_ = (bitField0_ & ~0x00000002);
+          value_ = getDefaultInstance().getValue();
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string value = 2;</code>
+         */
+        public Builder setValueBytes(
+            com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+          value_ = value;
+          onChanged();
+          return this;
+        }
+
+        // @@protoc_insertion_point(builder_scope:hello.HttpRequest.Header)
+      }
+
+      static {
+        defaultInstance = new Header(true);
+        defaultInstance.initFields();
+      }
+
+      // @@protoc_insertion_point(class_scope:hello.HttpRequest.Header)
+    }
+
+    private int bitField0_;
+    // optional string path = 1;
+    public static final int PATH_FIELD_NUMBER = 1;
+    private java.lang.Object path_;
+    /**
+     * <code>optional string path = 1;</code>
+     */
+    public boolean hasPath() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string path = 1;</code>
+     */
+    public java.lang.String getPath() {
+      java.lang.Object ref = path_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          path_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string path = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getPathBytes() {
+      java.lang.Object ref = path_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        path_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string access_token = 2;
+    public static final int ACCESS_TOKEN_FIELD_NUMBER = 2;
+    private java.lang.Object accessToken_;
+    /**
+     * <code>optional string access_token = 2;</code>
+     */
+    public boolean hasAccessToken() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string access_token = 2;</code>
+     */
+    public java.lang.String getAccessToken() {
+      java.lang.Object ref = accessToken_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          accessToken_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string access_token = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getAccessTokenBytes() {
+      java.lang.Object ref = accessToken_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        accessToken_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional int64 account_id = 3;
+    public static final int ACCOUNT_ID_FIELD_NUMBER = 3;
+    private long accountId_;
+    /**
+     * <code>optional int64 account_id = 3;</code>
+     */
+    public boolean hasAccountId() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional int64 account_id = 3;</code>
+     */
+    public long getAccountId() {
+      return accountId_;
+    }
+
+    // optional int64 application_id = 4;
+    public static final int APPLICATION_ID_FIELD_NUMBER = 4;
+    private long applicationId_;
+    /**
+     * <code>optional int64 application_id = 4;</code>
+     */
+    public boolean hasApplicationId() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional int64 application_id = 4;</code>
+     */
+    public long getApplicationId() {
+      return applicationId_;
+    }
+
+    // optional int64 timestamp_utc = 5;
+    public static final int TIMESTAMP_UTC_FIELD_NUMBER = 5;
+    private long timestampUtc_;
+    /**
+     * <code>optional int64 timestamp_utc = 5;</code>
+     */
+    public boolean hasTimestampUtc() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional int64 timestamp_utc = 5;</code>
+     */
+    public long getTimestampUtc() {
+      return timestampUtc_;
+    }
+
+    // repeated string required_scopes = 6;
+    public static final int REQUIRED_SCOPES_FIELD_NUMBER = 6;
+    private com.google.protobuf.LazyStringList requiredScopes_;
+    /**
+     * <code>repeated string required_scopes = 6;</code>
+     */
+    public java.util.List<java.lang.String>
+        getRequiredScopesList() {
+      return requiredScopes_;
+    }
+    /**
+     * <code>repeated string required_scopes = 6;</code>
+     */
+    public int getRequiredScopesCount() {
+      return requiredScopes_.size();
+    }
+    /**
+     * <code>repeated string required_scopes = 6;</code>
+     */
+    public java.lang.String getRequiredScopes(int index) {
+      return requiredScopes_.get(index);
+    }
+    /**
+     * <code>repeated string required_scopes = 6;</code>
+     */
+    public com.google.protobuf.ByteString
+        getRequiredScopesBytes(int index) {
+      return requiredScopes_.getByteString(index);
+    }
+
+    // repeated string provided_scopes = 7;
+    public static final int PROVIDED_SCOPES_FIELD_NUMBER = 7;
+    private com.google.protobuf.LazyStringList providedScopes_;
+    /**
+     * <code>repeated string provided_scopes = 7;</code>
+     */
+    public java.util.List<java.lang.String>
+        getProvidedScopesList() {
+      return providedScopes_;
+    }
+    /**
+     * <code>repeated string provided_scopes = 7;</code>
+     */
+    public int getProvidedScopesCount() {
+      return providedScopes_.size();
+    }
+    /**
+     * <code>repeated string provided_scopes = 7;</code>
+     */
+    public java.lang.String getProvidedScopes(int index) {
+      return providedScopes_.get(index);
+    }
+    /**
+     * <code>repeated string provided_scopes = 7;</code>
+     */
+    public com.google.protobuf.ByteString
+        getProvidedScopesBytes(int index) {
+      return providedScopes_.getByteString(index);
+    }
+
+    // optional int64 access_token_created_at = 8;
+    public static final int ACCESS_TOKEN_CREATED_AT_FIELD_NUMBER = 8;
+    private long accessTokenCreatedAt_;
+    /**
+     * <code>optional int64 access_token_created_at = 8;</code>
+     */
+    public boolean hasAccessTokenCreatedAt() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional int64 access_token_created_at = 8;</code>
+     */
+    public long getAccessTokenCreatedAt() {
+      return accessTokenCreatedAt_;
+    }
+
+    // optional string user_agent = 9;
+    public static final int USER_AGENT_FIELD_NUMBER = 9;
+    private java.lang.Object userAgent_;
+    /**
+     * <code>optional string user_agent = 9;</code>
+     */
+    public boolean hasUserAgent() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional string user_agent = 9;</code>
+     */
+    public java.lang.String getUserAgent() {
+      java.lang.Object ref = userAgent_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          userAgent_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string user_agent = 9;</code>
+     */
+    public com.google.protobuf.ByteString
+        getUserAgentBytes() {
+      java.lang.Object ref = userAgent_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        userAgent_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // repeated .hello.HttpRequest.Header headers = 10;
+    public static final int HEADERS_FIELD_NUMBER = 10;
+    private java.util.List<com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header> headers_;
+    /**
+     * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+     */
+    public java.util.List<com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header> getHeadersList() {
+      return headers_;
+    }
+    /**
+     * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+     */
+    public java.util.List<? extends com.hello.suripu.api.logging.LoggingProtos.HttpRequest.HeaderOrBuilder> 
+        getHeadersOrBuilderList() {
+      return headers_;
+    }
+    /**
+     * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+     */
+    public int getHeadersCount() {
+      return headers_.size();
+    }
+    /**
+     * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+     */
+    public com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header getHeaders(int index) {
+      return headers_.get(index);
+    }
+    /**
+     * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+     */
+    public com.hello.suripu.api.logging.LoggingProtos.HttpRequest.HeaderOrBuilder getHeadersOrBuilder(
+        int index) {
+      return headers_.get(index);
+    }
+
+    private void initFields() {
+      path_ = "";
+      accessToken_ = "";
+      accountId_ = 0L;
+      applicationId_ = 0L;
+      timestampUtc_ = 0L;
+      requiredScopes_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      providedScopes_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      accessTokenCreatedAt_ = 0L;
+      userAgent_ = "";
+      headers_ = java.util.Collections.emptyList();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getPathBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, getAccessTokenBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeInt64(3, accountId_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeInt64(4, applicationId_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeInt64(5, timestampUtc_);
+      }
+      for (int i = 0; i < requiredScopes_.size(); i++) {
+        output.writeBytes(6, requiredScopes_.getByteString(i));
+      }
+      for (int i = 0; i < providedScopes_.size(); i++) {
+        output.writeBytes(7, providedScopes_.getByteString(i));
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeInt64(8, accessTokenCreatedAt_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeBytes(9, getUserAgentBytes());
+      }
+      for (int i = 0; i < headers_.size(); i++) {
+        output.writeMessage(10, headers_.get(i));
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getPathBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getAccessTokenBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(3, accountId_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(4, applicationId_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(5, timestampUtc_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < requiredScopes_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(requiredScopes_.getByteString(i));
+        }
+        size += dataSize;
+        size += 1 * getRequiredScopesList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < providedScopes_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(providedScopes_.getByteString(i));
+        }
+        size += dataSize;
+        size += 1 * getProvidedScopesList().size();
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(8, accessTokenCreatedAt_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(9, getUserAgentBytes());
+      }
+      for (int i = 0; i < headers_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(10, headers_.get(i));
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.suripu.api.logging.LoggingProtos.HttpRequest prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code hello.HttpRequest}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.logging.LoggingProtos.HttpRequestOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.logging.LoggingProtos.internal_static_hello_HttpRequest_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.logging.LoggingProtos.internal_static_hello_HttpRequest_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.logging.LoggingProtos.HttpRequest.class, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Builder.class);
+      }
+
+      // Construct using com.hello.suripu.api.logging.LoggingProtos.HttpRequest.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getHeadersFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        path_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        accessToken_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        accountId_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        applicationId_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        timestampUtc_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        requiredScopes_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000020);
+        providedScopes_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000040);
+        accessTokenCreatedAt_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000080);
+        userAgent_ = "";
+        bitField0_ = (bitField0_ & ~0x00000100);
+        if (headersBuilder_ == null) {
+          headers_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000200);
+        } else {
+          headersBuilder_.clear();
+        }
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.suripu.api.logging.LoggingProtos.internal_static_hello_HttpRequest_descriptor;
+      }
+
+      public com.hello.suripu.api.logging.LoggingProtos.HttpRequest getDefaultInstanceForType() {
+        return com.hello.suripu.api.logging.LoggingProtos.HttpRequest.getDefaultInstance();
+      }
+
+      public com.hello.suripu.api.logging.LoggingProtos.HttpRequest build() {
+        com.hello.suripu.api.logging.LoggingProtos.HttpRequest result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.suripu.api.logging.LoggingProtos.HttpRequest buildPartial() {
+        com.hello.suripu.api.logging.LoggingProtos.HttpRequest result = new com.hello.suripu.api.logging.LoggingProtos.HttpRequest(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.path_ = path_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.accessToken_ = accessToken_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.accountId_ = accountId_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.applicationId_ = applicationId_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.timestampUtc_ = timestampUtc_;
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          requiredScopes_ = new com.google.protobuf.UnmodifiableLazyStringList(
+              requiredScopes_);
+          bitField0_ = (bitField0_ & ~0x00000020);
+        }
+        result.requiredScopes_ = requiredScopes_;
+        if (((bitField0_ & 0x00000040) == 0x00000040)) {
+          providedScopes_ = new com.google.protobuf.UnmodifiableLazyStringList(
+              providedScopes_);
+          bitField0_ = (bitField0_ & ~0x00000040);
+        }
+        result.providedScopes_ = providedScopes_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.accessTokenCreatedAt_ = accessTokenCreatedAt_;
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.userAgent_ = userAgent_;
+        if (headersBuilder_ == null) {
+          if (((bitField0_ & 0x00000200) == 0x00000200)) {
+            headers_ = java.util.Collections.unmodifiableList(headers_);
+            bitField0_ = (bitField0_ & ~0x00000200);
+          }
+          result.headers_ = headers_;
+        } else {
+          result.headers_ = headersBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.suripu.api.logging.LoggingProtos.HttpRequest) {
+          return mergeFrom((com.hello.suripu.api.logging.LoggingProtos.HttpRequest)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.suripu.api.logging.LoggingProtos.HttpRequest other) {
+        if (other == com.hello.suripu.api.logging.LoggingProtos.HttpRequest.getDefaultInstance()) return this;
+        if (other.hasPath()) {
+          bitField0_ |= 0x00000001;
+          path_ = other.path_;
+          onChanged();
+        }
+        if (other.hasAccessToken()) {
+          bitField0_ |= 0x00000002;
+          accessToken_ = other.accessToken_;
+          onChanged();
+        }
+        if (other.hasAccountId()) {
+          setAccountId(other.getAccountId());
+        }
+        if (other.hasApplicationId()) {
+          setApplicationId(other.getApplicationId());
+        }
+        if (other.hasTimestampUtc()) {
+          setTimestampUtc(other.getTimestampUtc());
+        }
+        if (!other.requiredScopes_.isEmpty()) {
+          if (requiredScopes_.isEmpty()) {
+            requiredScopes_ = other.requiredScopes_;
+            bitField0_ = (bitField0_ & ~0x00000020);
+          } else {
+            ensureRequiredScopesIsMutable();
+            requiredScopes_.addAll(other.requiredScopes_);
+          }
+          onChanged();
+        }
+        if (!other.providedScopes_.isEmpty()) {
+          if (providedScopes_.isEmpty()) {
+            providedScopes_ = other.providedScopes_;
+            bitField0_ = (bitField0_ & ~0x00000040);
+          } else {
+            ensureProvidedScopesIsMutable();
+            providedScopes_.addAll(other.providedScopes_);
+          }
+          onChanged();
+        }
+        if (other.hasAccessTokenCreatedAt()) {
+          setAccessTokenCreatedAt(other.getAccessTokenCreatedAt());
+        }
+        if (other.hasUserAgent()) {
+          bitField0_ |= 0x00000100;
+          userAgent_ = other.userAgent_;
+          onChanged();
+        }
+        if (headersBuilder_ == null) {
+          if (!other.headers_.isEmpty()) {
+            if (headers_.isEmpty()) {
+              headers_ = other.headers_;
+              bitField0_ = (bitField0_ & ~0x00000200);
+            } else {
+              ensureHeadersIsMutable();
+              headers_.addAll(other.headers_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.headers_.isEmpty()) {
+            if (headersBuilder_.isEmpty()) {
+              headersBuilder_.dispose();
+              headersBuilder_ = null;
+              headers_ = other.headers_;
+              bitField0_ = (bitField0_ & ~0x00000200);
+              headersBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getHeadersFieldBuilder() : null;
+            } else {
+              headersBuilder_.addAllMessages(other.headers_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.suripu.api.logging.LoggingProtos.HttpRequest parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.suripu.api.logging.LoggingProtos.HttpRequest) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional string path = 1;
+      private java.lang.Object path_ = "";
+      /**
+       * <code>optional string path = 1;</code>
+       */
+      public boolean hasPath() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string path = 1;</code>
+       */
+      public java.lang.String getPath() {
+        java.lang.Object ref = path_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          path_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string path = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getPathBytes() {
+        java.lang.Object ref = path_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          path_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string path = 1;</code>
+       */
+      public Builder setPath(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        path_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string path = 1;</code>
+       */
+      public Builder clearPath() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        path_ = getDefaultInstance().getPath();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string path = 1;</code>
+       */
+      public Builder setPathBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        path_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string access_token = 2;
+      private java.lang.Object accessToken_ = "";
+      /**
+       * <code>optional string access_token = 2;</code>
+       */
+      public boolean hasAccessToken() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string access_token = 2;</code>
+       */
+      public java.lang.String getAccessToken() {
+        java.lang.Object ref = accessToken_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          accessToken_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string access_token = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getAccessTokenBytes() {
+        java.lang.Object ref = accessToken_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          accessToken_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string access_token = 2;</code>
+       */
+      public Builder setAccessToken(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        accessToken_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string access_token = 2;</code>
+       */
+      public Builder clearAccessToken() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        accessToken_ = getDefaultInstance().getAccessToken();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string access_token = 2;</code>
+       */
+      public Builder setAccessTokenBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        accessToken_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional int64 account_id = 3;
+      private long accountId_ ;
+      /**
+       * <code>optional int64 account_id = 3;</code>
+       */
+      public boolean hasAccountId() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional int64 account_id = 3;</code>
+       */
+      public long getAccountId() {
+        return accountId_;
+      }
+      /**
+       * <code>optional int64 account_id = 3;</code>
+       */
+      public Builder setAccountId(long value) {
+        bitField0_ |= 0x00000004;
+        accountId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 account_id = 3;</code>
+       */
+      public Builder clearAccountId() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        accountId_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional int64 application_id = 4;
+      private long applicationId_ ;
+      /**
+       * <code>optional int64 application_id = 4;</code>
+       */
+      public boolean hasApplicationId() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional int64 application_id = 4;</code>
+       */
+      public long getApplicationId() {
+        return applicationId_;
+      }
+      /**
+       * <code>optional int64 application_id = 4;</code>
+       */
+      public Builder setApplicationId(long value) {
+        bitField0_ |= 0x00000008;
+        applicationId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 application_id = 4;</code>
+       */
+      public Builder clearApplicationId() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        applicationId_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional int64 timestamp_utc = 5;
+      private long timestampUtc_ ;
+      /**
+       * <code>optional int64 timestamp_utc = 5;</code>
+       */
+      public boolean hasTimestampUtc() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional int64 timestamp_utc = 5;</code>
+       */
+      public long getTimestampUtc() {
+        return timestampUtc_;
+      }
+      /**
+       * <code>optional int64 timestamp_utc = 5;</code>
+       */
+      public Builder setTimestampUtc(long value) {
+        bitField0_ |= 0x00000010;
+        timestampUtc_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 timestamp_utc = 5;</code>
+       */
+      public Builder clearTimestampUtc() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        timestampUtc_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // repeated string required_scopes = 6;
+      private com.google.protobuf.LazyStringList requiredScopes_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureRequiredScopesIsMutable() {
+        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
+          requiredScopes_ = new com.google.protobuf.LazyStringArrayList(requiredScopes_);
+          bitField0_ |= 0x00000020;
+         }
+      }
+      /**
+       * <code>repeated string required_scopes = 6;</code>
+       */
+      public java.util.List<java.lang.String>
+          getRequiredScopesList() {
+        return java.util.Collections.unmodifiableList(requiredScopes_);
+      }
+      /**
+       * <code>repeated string required_scopes = 6;</code>
+       */
+      public int getRequiredScopesCount() {
+        return requiredScopes_.size();
+      }
+      /**
+       * <code>repeated string required_scopes = 6;</code>
+       */
+      public java.lang.String getRequiredScopes(int index) {
+        return requiredScopes_.get(index);
+      }
+      /**
+       * <code>repeated string required_scopes = 6;</code>
+       */
+      public com.google.protobuf.ByteString
+          getRequiredScopesBytes(int index) {
+        return requiredScopes_.getByteString(index);
+      }
+      /**
+       * <code>repeated string required_scopes = 6;</code>
+       */
+      public Builder setRequiredScopes(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureRequiredScopesIsMutable();
+        requiredScopes_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string required_scopes = 6;</code>
+       */
+      public Builder addRequiredScopes(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureRequiredScopesIsMutable();
+        requiredScopes_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string required_scopes = 6;</code>
+       */
+      public Builder addAllRequiredScopes(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureRequiredScopesIsMutable();
+        super.addAll(values, requiredScopes_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string required_scopes = 6;</code>
+       */
+      public Builder clearRequiredScopes() {
+        requiredScopes_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000020);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string required_scopes = 6;</code>
+       */
+      public Builder addRequiredScopesBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureRequiredScopesIsMutable();
+        requiredScopes_.add(value);
+        onChanged();
+        return this;
+      }
+
+      // repeated string provided_scopes = 7;
+      private com.google.protobuf.LazyStringList providedScopes_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureProvidedScopesIsMutable() {
+        if (!((bitField0_ & 0x00000040) == 0x00000040)) {
+          providedScopes_ = new com.google.protobuf.LazyStringArrayList(providedScopes_);
+          bitField0_ |= 0x00000040;
+         }
+      }
+      /**
+       * <code>repeated string provided_scopes = 7;</code>
+       */
+      public java.util.List<java.lang.String>
+          getProvidedScopesList() {
+        return java.util.Collections.unmodifiableList(providedScopes_);
+      }
+      /**
+       * <code>repeated string provided_scopes = 7;</code>
+       */
+      public int getProvidedScopesCount() {
+        return providedScopes_.size();
+      }
+      /**
+       * <code>repeated string provided_scopes = 7;</code>
+       */
+      public java.lang.String getProvidedScopes(int index) {
+        return providedScopes_.get(index);
+      }
+      /**
+       * <code>repeated string provided_scopes = 7;</code>
+       */
+      public com.google.protobuf.ByteString
+          getProvidedScopesBytes(int index) {
+        return providedScopes_.getByteString(index);
+      }
+      /**
+       * <code>repeated string provided_scopes = 7;</code>
+       */
+      public Builder setProvidedScopes(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureProvidedScopesIsMutable();
+        providedScopes_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string provided_scopes = 7;</code>
+       */
+      public Builder addProvidedScopes(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureProvidedScopesIsMutable();
+        providedScopes_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string provided_scopes = 7;</code>
+       */
+      public Builder addAllProvidedScopes(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureProvidedScopesIsMutable();
+        super.addAll(values, providedScopes_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string provided_scopes = 7;</code>
+       */
+      public Builder clearProvidedScopes() {
+        providedScopes_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000040);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string provided_scopes = 7;</code>
+       */
+      public Builder addProvidedScopesBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureProvidedScopesIsMutable();
+        providedScopes_.add(value);
+        onChanged();
+        return this;
+      }
+
+      // optional int64 access_token_created_at = 8;
+      private long accessTokenCreatedAt_ ;
+      /**
+       * <code>optional int64 access_token_created_at = 8;</code>
+       */
+      public boolean hasAccessTokenCreatedAt() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional int64 access_token_created_at = 8;</code>
+       */
+      public long getAccessTokenCreatedAt() {
+        return accessTokenCreatedAt_;
+      }
+      /**
+       * <code>optional int64 access_token_created_at = 8;</code>
+       */
+      public Builder setAccessTokenCreatedAt(long value) {
+        bitField0_ |= 0x00000080;
+        accessTokenCreatedAt_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 access_token_created_at = 8;</code>
+       */
+      public Builder clearAccessTokenCreatedAt() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        accessTokenCreatedAt_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional string user_agent = 9;
+      private java.lang.Object userAgent_ = "";
+      /**
+       * <code>optional string user_agent = 9;</code>
+       */
+      public boolean hasUserAgent() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional string user_agent = 9;</code>
+       */
+      public java.lang.String getUserAgent() {
+        java.lang.Object ref = userAgent_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          userAgent_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string user_agent = 9;</code>
+       */
+      public com.google.protobuf.ByteString
+          getUserAgentBytes() {
+        java.lang.Object ref = userAgent_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          userAgent_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string user_agent = 9;</code>
+       */
+      public Builder setUserAgent(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000100;
+        userAgent_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string user_agent = 9;</code>
+       */
+      public Builder clearUserAgent() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        userAgent_ = getDefaultInstance().getUserAgent();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string user_agent = 9;</code>
+       */
+      public Builder setUserAgentBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000100;
+        userAgent_ = value;
+        onChanged();
+        return this;
+      }
+
+      // repeated .hello.HttpRequest.Header headers = 10;
+      private java.util.List<com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header> headers_ =
+        java.util.Collections.emptyList();
+      private void ensureHeadersIsMutable() {
+        if (!((bitField0_ & 0x00000200) == 0x00000200)) {
+          headers_ = new java.util.ArrayList<com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header>(headers_);
+          bitField0_ |= 0x00000200;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.HeaderOrBuilder> headersBuilder_;
+
+      /**
+       * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+       */
+      public java.util.List<com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header> getHeadersList() {
+        if (headersBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(headers_);
+        } else {
+          return headersBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+       */
+      public int getHeadersCount() {
+        if (headersBuilder_ == null) {
+          return headers_.size();
+        } else {
+          return headersBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+       */
+      public com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header getHeaders(int index) {
+        if (headersBuilder_ == null) {
+          return headers_.get(index);
+        } else {
+          return headersBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+       */
+      public Builder setHeaders(
+          int index, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header value) {
+        if (headersBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureHeadersIsMutable();
+          headers_.set(index, value);
+          onChanged();
+        } else {
+          headersBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+       */
+      public Builder setHeaders(
+          int index, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder builderForValue) {
+        if (headersBuilder_ == null) {
+          ensureHeadersIsMutable();
+          headers_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          headersBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+       */
+      public Builder addHeaders(com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header value) {
+        if (headersBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureHeadersIsMutable();
+          headers_.add(value);
+          onChanged();
+        } else {
+          headersBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+       */
+      public Builder addHeaders(
+          int index, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header value) {
+        if (headersBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureHeadersIsMutable();
+          headers_.add(index, value);
+          onChanged();
+        } else {
+          headersBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+       */
+      public Builder addHeaders(
+          com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder builderForValue) {
+        if (headersBuilder_ == null) {
+          ensureHeadersIsMutable();
+          headers_.add(builderForValue.build());
+          onChanged();
+        } else {
+          headersBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+       */
+      public Builder addHeaders(
+          int index, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder builderForValue) {
+        if (headersBuilder_ == null) {
+          ensureHeadersIsMutable();
+          headers_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          headersBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+       */
+      public Builder addAllHeaders(
+          java.lang.Iterable<? extends com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header> values) {
+        if (headersBuilder_ == null) {
+          ensureHeadersIsMutable();
+          super.addAll(values, headers_);
+          onChanged();
+        } else {
+          headersBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+       */
+      public Builder clearHeaders() {
+        if (headersBuilder_ == null) {
+          headers_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000200);
+          onChanged();
+        } else {
+          headersBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+       */
+      public Builder removeHeaders(int index) {
+        if (headersBuilder_ == null) {
+          ensureHeadersIsMutable();
+          headers_.remove(index);
+          onChanged();
+        } else {
+          headersBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+       */
+      public com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder getHeadersBuilder(
+          int index) {
+        return getHeadersFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+       */
+      public com.hello.suripu.api.logging.LoggingProtos.HttpRequest.HeaderOrBuilder getHeadersOrBuilder(
+          int index) {
+        if (headersBuilder_ == null) {
+          return headers_.get(index);  } else {
+          return headersBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+       */
+      public java.util.List<? extends com.hello.suripu.api.logging.LoggingProtos.HttpRequest.HeaderOrBuilder> 
+           getHeadersOrBuilderList() {
+        if (headersBuilder_ != null) {
+          return headersBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(headers_);
+        }
+      }
+      /**
+       * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+       */
+      public com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder addHeadersBuilder() {
+        return getHeadersFieldBuilder().addBuilder(
+            com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+       */
+      public com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder addHeadersBuilder(
+          int index) {
+        return getHeadersFieldBuilder().addBuilder(
+            index, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.HttpRequest.Header headers = 10;</code>
+       */
+      public java.util.List<com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder> 
+           getHeadersBuilderList() {
+        return getHeadersFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.HeaderOrBuilder> 
+          getHeadersFieldBuilder() {
+        if (headersBuilder_ == null) {
+          headersBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.HeaderOrBuilder>(
+                  headers_,
+                  ((bitField0_ & 0x00000200) == 0x00000200),
+                  getParentForChildren(),
+                  isClean());
+          headers_ = null;
+        }
+        return headersBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:hello.HttpRequest)
+    }
+
+    static {
+      defaultInstance = new HttpRequest(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:hello.HttpRequest)
+  }
+
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_LogMessage_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_LogMessage_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_hello_HttpRequest_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_hello_HttpRequest_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_hello_HttpRequest_Header_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_hello_HttpRequest_Header_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -814,8 +3290,16 @@ public final class LoggingProtos {
       "\n2suripu-api/src/main/resources/protos/L" +
       "ogging.proto\022\005hello\"T\n\nLogMessage\022\016\n\006ori" +
       "gin\030\001 \001(\t\022\017\n\007message\030\002 \001(\t\022\n\n\002ts\030\003 \001(\003\022\031" +
-      "\n\nproduction\030\004 \001(\010:\005falseB-\n\034com.hello.s" +
-      "uripu.api.loggingB\rLoggingProtos"
+      "\n\nproduction\030\004 \001(\010:\005false\"\256\002\n\013HttpReques" +
+      "t\022\014\n\004path\030\001 \001(\t\022\024\n\014access_token\030\002 \001(\t\022\022\n" +
+      "\naccount_id\030\003 \001(\003\022\026\n\016application_id\030\004 \001(" +
+      "\003\022\025\n\rtimestamp_utc\030\005 \001(\003\022\027\n\017required_sco" +
+      "pes\030\006 \003(\t\022\027\n\017provided_scopes\030\007 \003(\t\022\037\n\027ac" +
+      "cess_token_created_at\030\010 \001(\003\022\022\n\nuser_agen" +
+      "t\030\t \001(\t\022*\n\007headers\030\n \003(\0132\031.hello.HttpReq",
+      "uest.Header\032%\n\006Header\022\014\n\004name\030\001 \001(\t\022\r\n\005v" +
+      "alue\030\002 \001(\tB-\n\034com.hello.suripu.api.loggi" +
+      "ngB\rLoggingProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -828,6 +3312,18 @@ public final class LoggingProtos {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_LogMessage_descriptor,
               new java.lang.String[] { "Origin", "Message", "Ts", "Production", });
+          internal_static_hello_HttpRequest_descriptor =
+            getDescriptor().getMessageTypes().get(1);
+          internal_static_hello_HttpRequest_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_HttpRequest_descriptor,
+              new java.lang.String[] { "Path", "AccessToken", "AccountId", "ApplicationId", "TimestampUtc", "RequiredScopes", "ProvidedScopes", "AccessTokenCreatedAt", "UserAgent", "Headers", });
+          internal_static_hello_HttpRequest_Header_descriptor =
+            internal_static_hello_HttpRequest_descriptor.getNestedTypes().get(0);
+          internal_static_hello_HttpRequest_Header_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_HttpRequest_Header_descriptor,
+              new java.lang.String[] { "Name", "Value", });
           return null;
         }
       };
