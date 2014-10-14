@@ -1,3 +1,7 @@
+# 0.1.77
+
+* add random insights to the timeline
+
 # 0.1.76
 
 * fix pill scorer data format 

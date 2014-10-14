@@ -1,8 +1,11 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
+import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SensorReading;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
@@ -15,7 +18,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -300,9 +305,9 @@ public class TimelineUtils {
         }
 
 
-        Integer soundSleepDurationInMinutes = Math.round(new Float(soundSleepDuration)/60);
-        Integer lightSleepDurationInMinutes = Math.round(new Float(lightSleepDuration)/60);
-        Integer sleepDurationInMinutes = Math.round(new Float(sleepDuration) / 60);
+        final Integer soundSleepDurationInMinutes = Math.round(new Float(soundSleepDuration)/60);
+        final Integer lightSleepDurationInMinutes = Math.round(new Float(lightSleepDuration)/60);
+        final Integer sleepDurationInMinutes = Math.round(new Float(sleepDuration) / 60);
 
         final SleepStats sleepStats = new SleepStats(soundSleepDurationInMinutes,lightSleepDurationInMinutes,sleepDurationInMinutes,numberOfMotionEvents);
         LOGGER.debug("Sleepstats = {}", sleepStats);
@@ -320,5 +325,32 @@ public class TimelineUtils {
         final Integer percentageOfSoundSleep = Math.round(new Float(sleepStats.soundSleepDurationInMinutes) /sleepStats.sleepDurationInMinutes * 100);
         return String.format("You slept for a total of **%d minutes**, soundly for %d minutes (%d%%) and moved %d times",
                 sleepStats.sleepDurationInMinutes, sleepStats.soundSleepDurationInMinutes, percentageOfSoundSleep, sleepStats.numberOfMotionEvents);
+    }
+
+    public static List<Insight> generateRandomInsights(int seed) {
+        final Random r = new Random(seed);
+        final List<Insight> insights = new ArrayList<>();
+
+        insights.add(new Insight(Sensor.TEMPERATURE, CurrentRoomState.State.Condition.ALERT, "This reminds me of the time I was locked in the freezer at Dairy Queen."));
+        insights.add(new Insight(Sensor.SOUND, CurrentRoomState.State.Condition.IDEAL, "The sound levels were perfect for sleep."));
+        insights.add(new Insight(Sensor.HUMIDITY, CurrentRoomState.State.Condition.WARNING, "Humidity was a little too high for ideal sleep conditions"));
+        insights.add(new Insight(Sensor.PARTICULATES, CurrentRoomState.State.Condition.IDEAL, "The air quality was ideal"));
+        insights.add(new Insight(Sensor.LIGHT, CurrentRoomState.State.Condition.WARNING, "It was a little bright for sleep"));
+
+        final Set<Sensor> sensors = new HashSet<>();
+        final List<Insight> generatedInsights = new ArrayList<>();
+
+        final int n = r.nextInt(insights.size());
+        LOGGER.trace("n = {}", n);
+        for(int i =0; i < n; i++) {
+            final int pick = r.nextInt(insights.size());
+            final Insight temp = insights.get(pick);
+            if(!sensors.contains(temp.sensor)) {
+                generatedInsights.add(temp);
+                sensors.add(temp.sensor);
+            }
+        }
+
+        return generatedInsights;
     }
 }
