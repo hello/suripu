@@ -1,3 +1,7 @@
+# 0.1.78
+
+* make sensor name lowercase
+
 # 0.1.77
 
 * add random insights to the timeline
