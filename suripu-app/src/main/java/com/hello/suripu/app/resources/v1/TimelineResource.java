@@ -6,6 +6,7 @@ import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.SensorReading;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
@@ -83,7 +84,7 @@ public class TimelineResource {
 
         if(trackerMotions.isEmpty()) {
             LOGGER.debug("No data for account_id = {} and day = {}", accessToken.accountId, targetDate);
-            final Timeline timeline = new Timeline(0, "You haven't been sleeping!", date, new ArrayList<SleepSegment>());
+            final Timeline timeline = new Timeline(0, "You haven't been sleeping!", date, new ArrayList<SleepSegment>(), new ArrayList<Insight>());
             final List<Timeline> timelines = new ArrayList<>();
             timelines.add(timeline);
             return timelines;
@@ -124,7 +125,10 @@ public class TimelineResource {
         final String timeLineMessage = TimelineUtils.generateMessage(sleepStats);
 
         LOGGER.debug("Score for account_id = {} is {}", accessToken.accountId, sleepScore);
-        final Timeline timeline = new Timeline(sleepScore, timeLineMessage, date, reversed);
+
+
+        final List<Insight> insights = TimelineUtils.generateRandomInsights(targetDate.getDayOfMonth());
+        final Timeline timeline = new Timeline(sleepScore, timeLineMessage, date, reversed, insights);
         final List<Timeline> timelines = new ArrayList<>();
         timelines.add(timeline);
 
