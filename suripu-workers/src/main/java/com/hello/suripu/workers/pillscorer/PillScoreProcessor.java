@@ -12,6 +12,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.models.PillSample;
+import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.processors.PillProcessor;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -46,11 +47,15 @@ public class PillScoreProcessor implements IRecordProcessor {
             try {
                 final InputProtos.PillDataKinesis data = InputProtos.PillDataKinesis.parseFrom(record.getData().array());
 
-                final Long accountID = Long.parseLong(data.getAccountId());
-                final String pillID = data.getPillId();
-                final DateTime sampleDT = new DateTime(data.getTimestamp(), DateTimeZone.UTC).withSecondOfMinute(0);
+                final byte[] decryptionKey = new byte[16]; // Fake key
+                //TODO: Get the actual decryption key.
+                final TrackerMotion trackerMotion = new TrackerMotion.Builder().withPillKinesisData(decryptionKey, data).build();
 
-                final PillSample sample = new PillSample(pillID, sampleDT, data.getValue(), data.getOffsetMillis());
+                final Long accountID = trackerMotion.accountId;
+                final String pillID = trackerMotion.trackerId.toString();
+                final DateTime sampleDT = new DateTime(trackerMotion.timestamp, DateTimeZone.UTC).withSecondOfMinute(0);
+
+                final PillSample sample = new PillSample(pillID, sampleDT, trackerMotion.value, trackerMotion.offsetMillis);
                 samples.put(accountID, sample);
 
             } catch (InvalidProtocolBufferException e) {

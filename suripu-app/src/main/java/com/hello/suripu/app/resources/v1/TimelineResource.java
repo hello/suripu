@@ -71,7 +71,7 @@ public class TimelineResource {
 
         final List<Event> events = new ArrayList<>();
 
-        final int groupBy = 1; // group by 5 minutes
+        final int groupBy = 5; // group by 5 minutes
 
         final int threshold = 10; // events with scores < threshold will be considered motion events
         final int mergeThreshold = 1; // min segment size is 1 minute
