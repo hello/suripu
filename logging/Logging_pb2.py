@@ -13,7 +13,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='Logging.proto',
   package='hello',
-  serialized_pb='\n\rLogging.proto\x12\x05hello\"T\n\nLogMessage\x12\x0e\n\x06origin\x18\x01 \x01(\t\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\n\n\x02ts\x18\x03 \x01(\x03\x12\x19\n\nproduction\x18\x04 \x01(\x08:\x05\x66\x61lseB-\n\x1c\x63om.hello.suripu.api.loggingB\rLoggingProtos')
+  serialized_pb='\n\rLogging.proto\x12\x05hello\"T\n\nLogMessage\x12\x0e\n\x06origin\x18\x01 \x01(\t\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\n\n\x02ts\x18\x03 \x01(\x03\x12\x19\n\nproduction\x18\x04 \x01(\x08:\x05\x66\x61lse\"\xae\x02\n\x0bHttpRequest\x12\x0c\n\x04path\x18\x01 \x01(\t\x12\x14\n\x0c\x61\x63\x63\x65ss_token\x18\x02 \x01(\t\x12\x12\n\naccount_id\x18\x03 \x01(\x03\x12\x16\n\x0e\x61pplication_id\x18\x04 \x01(\x03\x12\x15\n\rtimestamp_utc\x18\x05 \x01(\x03\x12\x17\n\x0frequired_scopes\x18\x06 \x03(\t\x12\x17\n\x0fprovided_scopes\x18\x07 \x03(\t\x12\x1f\n\x17\x61\x63\x63\x65ss_token_created_at\x18\x08 \x01(\x03\x12\x12\n\nuser_agent\x18\t \x01(\t\x12*\n\x07headers\x18\n \x03(\x0b\x32\x19.hello.HttpRequest.Header\x1a%\n\x06Header\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\tB-\n\x1c\x63om.hello.suripu.api.loggingB\rLoggingProtos')
 
 
 
@@ -66,13 +66,153 @@ _LOGMESSAGE = _descriptor.Descriptor(
   serialized_end=108,
 )
 
+
+_HTTPREQUEST_HEADER = _descriptor.Descriptor(
+  name='Header',
+  full_name='hello.HttpRequest.Header',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='name', full_name='hello.HttpRequest.Header.name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='hello.HttpRequest.Header.value', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  extension_ranges=[],
+  serialized_start=376,
+  serialized_end=413,
+)
+
+_HTTPREQUEST = _descriptor.Descriptor(
+  name='HttpRequest',
+  full_name='hello.HttpRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='path', full_name='hello.HttpRequest.path', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='access_token', full_name='hello.HttpRequest.access_token', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='account_id', full_name='hello.HttpRequest.account_id', index=2,
+      number=3, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='application_id', full_name='hello.HttpRequest.application_id', index=3,
+      number=4, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='timestamp_utc', full_name='hello.HttpRequest.timestamp_utc', index=4,
+      number=5, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='required_scopes', full_name='hello.HttpRequest.required_scopes', index=5,
+      number=6, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='provided_scopes', full_name='hello.HttpRequest.provided_scopes', index=6,
+      number=7, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='access_token_created_at', full_name='hello.HttpRequest.access_token_created_at', index=7,
+      number=8, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='user_agent', full_name='hello.HttpRequest.user_agent', index=8,
+      number=9, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='headers', full_name='hello.HttpRequest.headers', index=9,
+      number=10, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[_HTTPREQUEST_HEADER, ],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  extension_ranges=[],
+  serialized_start=111,
+  serialized_end=413,
+)
+
+_HTTPREQUEST_HEADER.containing_type = _HTTPREQUEST;
+_HTTPREQUEST.fields_by_name['headers'].message_type = _HTTPREQUEST_HEADER
 DESCRIPTOR.message_types_by_name['LogMessage'] = _LOGMESSAGE
+DESCRIPTOR.message_types_by_name['HttpRequest'] = _HTTPREQUEST
 
 class LogMessage(_message.Message):
   __metaclass__ = _reflection.GeneratedProtocolMessageType
   DESCRIPTOR = _LOGMESSAGE
 
   # @@protoc_insertion_point(class_scope:hello.LogMessage)
+
+class HttpRequest(_message.Message):
+  __metaclass__ = _reflection.GeneratedProtocolMessageType
+
+  class Header(_message.Message):
+    __metaclass__ = _reflection.GeneratedProtocolMessageType
+    DESCRIPTOR = _HTTPREQUEST_HEADER
+
+    # @@protoc_insertion_point(class_scope:hello.HttpRequest.Header)
+  DESCRIPTOR = _HTTPREQUEST
+
+  # @@protoc_insertion_point(class_scope:hello.HttpRequest)
 
 
 DESCRIPTOR.has_options = True
