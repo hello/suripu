@@ -99,8 +99,8 @@ public class TimelineResource {
         final Optional<DateTime> sunset = sunData.sunset(targetDate.withHourOfDay(0).toString(DateTimeFormat.forPattern("yyyy-MM-dd")));
         final Optional<DateTime> sunrise = sunData.sunrise(targetDate.plusDays(1).toString(DateTimeFormat.forPattern("yyyy-MM-dd"))); // day + 1
         if(sunrise.isPresent() && sunset.isPresent()) {
-            final String sunriseMessage = String.format("sunrise at %s", sunrise.get().toString(DateTimeFormat.forPattern("HH:mma")));
-            final String sunsetMessage = String.format("sunset at %s", sunset.get().toString(DateTimeFormat.forPattern("HH:mma")));
+            final String sunriseMessage = String.format("The sun rose at %s", sunrise.get().toString(DateTimeFormat.forPattern("HH:mma")));
+            final String sunsetMessage = String.format("The sun set at %s", sunset.get().toString(DateTimeFormat.forPattern("HH:mma")));
 
             final SleepSegment sunriseSegment = new SleepSegment(1L, sunrise.get().getMillis(), 0, 60, -1, Event.Type.SUNRISE.toString(), sunriseMessage, new ArrayList<SensorReading>());
             final SleepSegment sunsetSegment = new SleepSegment(1L, sunset.get().getMillis(), 0, 60, 0, Event.Type.SUNSET.toString(), sunsetMessage, new ArrayList<SensorReading>());
