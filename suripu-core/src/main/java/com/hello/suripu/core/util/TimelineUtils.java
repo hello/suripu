@@ -9,6 +9,7 @@ import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,7 +123,7 @@ public class TimelineUtils {
             String eventMessage = "";
 
             if(eventType != null && eventType.equals(Event.Type.MOTION.toString())) {
-                eventMessage = String.format("We detected something at %s", new DateTime(trackerMotion.timestamp).toString());
+                eventMessage = String.format("We detected some movement at %s", new DateTime(trackerMotion.timestamp).toString(DateTimeFormat.forPattern("HH:mma")));
             }
 
             // TODO: make this work
@@ -317,7 +318,7 @@ public class TimelineUtils {
      */
     public static String generateMessage(final SleepStats sleepStats) {
         final Integer percentageOfSoundSleep = Math.round(new Float(sleepStats.soundSleepDurationInMinutes) /sleepStats.sleepDurationInMinutes * 100);
-        return String.format("You slept for a total of **%d mins**, soundly for %d minutes (%d %%) & moved %d times",
+        return String.format("You slept for a total of **%d minutes**, soundly for %d minutes (%d%%) and moved %d times",
                 sleepStats.sleepDurationInMinutes, sleepStats.soundSleepDurationInMinutes, percentageOfSoundSleep, sleepStats.numberOfMotionEvents);
     }
 }
