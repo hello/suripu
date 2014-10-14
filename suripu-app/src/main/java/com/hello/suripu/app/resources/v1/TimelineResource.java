@@ -2,6 +2,7 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
@@ -14,6 +15,7 @@ import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.processors.PartnerMotion;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.SunData;
 import com.hello.suripu.core.util.TimelineUtils;
@@ -38,16 +40,19 @@ public class TimelineResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineResource.class);
 
     private final TrackerMotionDAO trackerMotionDAO;
+    private final DeviceDAO deviceDAO;
     private final SleepScoreDAO sleepScoreDAO;
     private final SleepLabelDAO sleepLabelDAO;
     private final int dateBucketPeriod;
     private final SunData sunData;
     public TimelineResource(final TrackerMotionDAO trackerMotionDAO,
+                            final DeviceDAO deviceDAO,
                             final SleepLabelDAO sleepLabelDAO,
                             final SleepScoreDAO sleepScoreDAO,
                             final int dateBucketPeriod,
                             final SunData sunData) {
         this.trackerMotionDAO = trackerMotionDAO;
+        this.deviceDAO = deviceDAO;
         this.sleepLabelDAO = sleepLabelDAO;
         this.sleepScoreDAO = sleepScoreDAO;
         this.dateBucketPeriod = dateBucketPeriod;
@@ -71,8 +76,7 @@ public class TimelineResource {
 
         final List<Event> events = new ArrayList<>();
 
-        final int groupBy = 5; // group by 5 minutes
-
+        final int groupBy = 1;
         final int threshold = 10; // events with scores < threshold will be considered motion events
         final int mergeThreshold = 1; // min segment size is 1 minute
 
@@ -92,9 +96,14 @@ public class TimelineResource {
 
 
         final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, groupBy);
-        final List<SleepSegment> normalized = TimelineUtils.categorizeSleepDepth(segments);
+        List<SleepSegment> normalized = TimelineUtils.categorizeSleepDepth(segments);
 
-        final List<SleepSegment> decorated = normalized;
+
+        // if any minute of trackerMotion data could be due to partner movement
+        final List<SleepSegment> partnerSegments = PartnerMotion.getPartnerData(accessToken.accountId, trackerMotions, deviceDAO, trackerMotionDAO, threshold);
+        if (partnerSegments.size() > 0) {
+            normalized = TimelineUtils.insertSegments(partnerSegments, normalized);
+        }
 
         final Optional<DateTime> sunset = sunData.sunset(targetDate.withHourOfDay(0).toString(DateTimeFormat.forPattern("yyyy-MM-dd")));
         final Optional<DateTime> sunrise = sunData.sunrise(targetDate.plusDays(1).toString(DateTimeFormat.forPattern("yyyy-MM-dd"))); // day + 1
@@ -105,16 +114,14 @@ public class TimelineResource {
             final SleepSegment sunriseSegment = new SleepSegment(1L, sunrise.get().getMillis(), 0, 60, -1, Event.Type.SUNRISE.toString(), sunriseMessage, new ArrayList<SensorReading>());
             final SleepSegment sunsetSegment = new SleepSegment(1L, sunset.get().getMillis(), 0, 60, 0, Event.Type.SUNSET.toString(), sunsetMessage, new ArrayList<SensorReading>());
 
-            final List<SleepSegment> newSegments = TimelineUtils.insertSegments(sunriseSegment, sunsetSegment, normalized);
+            normalized = TimelineUtils.insertSegments(sunriseSegment, sunsetSegment, normalized);
             LOGGER.debug(sunriseMessage);
             LOGGER.debug(sunsetMessage);
-            decorated.clear();
-            decorated.addAll(newSegments);
         }
 
-        LOGGER.debug("Size of decorated = {}", decorated.size());
+        LOGGER.debug("Size of decorated = {}", normalized.size());
 
-        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(decorated, mergeThreshold);
+        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(normalized, mergeThreshold);
         final SleepStats sleepStats = TimelineUtils.computeStats(mergedSegments);
         final List<SleepSegment> reversed = Lists.reverse(mergedSegments);
 

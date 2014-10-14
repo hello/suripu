@@ -51,6 +51,14 @@ public interface DeviceDAO {
     @SqlQuery("SELECT * FROM account_device_map WHERE account_id = :account_id ORDER BY id DESC;")
     ImmutableList<DeviceAccountPair> getDeviceAccountMapFromAccountId(@Bind("account_id") final Long accountId);
 
+    @SingleValueResult(Long.class)
+    @SqlQuery("SELECT account_id FROM account_device_map WHERE " +
+            "account_id != :account_id AND device_name = " +
+            "(SELECT device_name FROM account_device_map WHERE " +
+            "account_id = :account_id ORDER BY id DESC LIMIT 1) " +
+            "ORDER BY id DESC LIMIT 1")
+    Optional<Long> getPartnerAccountId(@Bind("account_id") final Long accountId);
+
     // account to pill (aka tracker) map
 
     @RegisterMapper(DeviceAccountPairMapper.class)

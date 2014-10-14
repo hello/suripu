@@ -96,10 +96,10 @@ public class TimelineUtils {
             }
 
             if (trackerMotion.timestamp != lastTimestamp) {
-                // pad with segments with no movement
+                // pad with 1-min segments with no movement
                 final int durationInSeconds = (int) (trackerMotion.timestamp - lastTimestamp) / 1000;
-                final int segmentDuration = 60 * groupBy;
-                final int numSegments = durationInSeconds / (60 * groupBy);
+                final int segmentDuration = 60;
+                final int numSegments = durationInSeconds / 60;
                 for (int j = 0; j < numSegments; j++) {
                     final SleepSegment sleepSegment = new SleepSegment(trackerMotion.id,
                             lastTimestamp + (j * segmentDuration * 1000), // millis
@@ -142,16 +142,17 @@ public class TimelineUtils {
                     trackerMotion.id,
                     trackerMotion.timestamp,
                     trackerMotion.offsetMillis,
-                    60 * groupBy, // in seconds
+                    60, // in 1 minute segment
                     sleepDepth,
                     eventType,
                     eventMessage,
                     readings);
             sleepSegments.add(sleepSegment);
             i++;
-            lastTimestamp = trackerMotion.timestamp + 60L * groupBy * 1000L;
+            lastTimestamp = trackerMotion.timestamp + 60000L;
         }
         LOGGER.debug("Generated {} segments from {} tracker motion samples", sleepSegments.size(), trackerMotions.size());
+
         return sleepSegments;
     }
 
@@ -256,6 +257,27 @@ public class TimelineUtils {
         return temp;
     }
 
+    /**
+     * Insert a list of extra segments (partner, disturbances etc) into original sleep-segment
+     * @param extraSegments
+     * @param original
+     * @return
+     */
+    public static List<SleepSegment> insertSegments(final List<SleepSegment> extraSegments, final List<SleepSegment> original) {
+
+        // add higher-priority segments first
+        final Set<SleepSegment> sleepSegments = new TreeSet<>();
+        sleepSegments.addAll(extraSegments);
+        sleepSegments.addAll(original);
+
+        final List<SleepSegment> temp = new ArrayList<>();
+
+        for(SleepSegment segment : sleepSegments) {
+            temp.add(segment);
+        }
+
+        return temp;
+    }
 
     /**
      * Normalize sleep depth based on max value seen.
