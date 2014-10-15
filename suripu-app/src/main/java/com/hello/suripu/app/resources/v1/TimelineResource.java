@@ -93,33 +93,42 @@ public class TimelineResource {
             return timelines;
         }
 
-
-
-        final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, groupBy);
+        // create sleep-motion segments
+        final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, groupBy, true);
         List<SleepSegment> normalized = TimelineUtils.categorizeSleepDepth(segments);
 
 
-        // if any minute of trackerMotion data could be due to partner movement
-        final List<SleepSegment> partnerSegments = PartnerMotion.getPartnerData(accessToken.accountId, trackerMotions, deviceDAO, trackerMotionDAO, threshold);
-        if (partnerSegments.size() > 0) {
-            normalized = TimelineUtils.insertSegments(partnerSegments, normalized);
-        }
+        // add partner movement data, use un-normalized data segments for comparison
+        final DateTime startTime = new DateTime(trackerMotions.get(0).timestamp, DateTimeZone.UTC);
+        final DateTime endTime = new DateTime(trackerMotions.get(trackerMotions.size() - 1).timestamp, DateTimeZone.UTC);
+        final List<SleepSegment> extraSegments = PartnerMotion.getPartnerData(accessToken.accountId, segments, startTime, endTime, deviceDAO, trackerMotionDAO, threshold);
 
+        // add sunrise & sunset data
         final Optional<DateTime> sunset = sunData.sunset(targetDate.withHourOfDay(0).toString(DateTimeFormat.forPattern("yyyy-MM-dd")));
         final Optional<DateTime> sunrise = sunData.sunrise(targetDate.plusDays(1).toString(DateTimeFormat.forPattern("yyyy-MM-dd"))); // day + 1
         if(sunrise.isPresent() && sunset.isPresent()) {
-            final String sunriseMessage = String.format("The sun rose at %s", sunrise.get().toString(DateTimeFormat.forPattern("HH:mma")));
-            final String sunsetMessage = String.format("The sun set at %s", sunset.get().toString(DateTimeFormat.forPattern("HH:mma")));
+            final String sunriseMessage = Event.getMessage(Event.Type.SUNRISE, sunrise.get());
+            final String sunsetMessage = Event.getMessage(Event.Type.SUNSET, sunset.get());
 
             final SleepSegment sunriseSegment = new SleepSegment(1L, sunrise.get().getMillis(), 0, 60, -1, Event.Type.SUNRISE.toString(), sunriseMessage, new ArrayList<SensorReading>());
             final SleepSegment sunsetSegment = new SleepSegment(1L, sunset.get().getMillis(), 0, 60, 0, Event.Type.SUNSET.toString(), sunsetMessage, new ArrayList<SensorReading>());
 
-            normalized = TimelineUtils.insertSegments(sunriseSegment, sunsetSegment, normalized);
+            extraSegments.add(sunriseSegment);
+            extraSegments.add(sunsetSegment);
+
             LOGGER.debug(sunriseMessage);
             LOGGER.debug(sunsetMessage);
         }
 
-        LOGGER.debug("Size of decorated = {}", normalized.size());
+        // TODO: add sound, light, temperature event segments
+
+
+        // combine all segments
+        if (extraSegments.size() > 0) {
+            normalized = TimelineUtils.insertSegmentsWithPriority(extraSegments, normalized);
+        }
+
+        LOGGER.debug("Size of normalized = {}", normalized.size());
 
         final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(normalized, mergeThreshold);
         final SleepStats sleepStats = TimelineUtils.computeStats(mergedSegments);

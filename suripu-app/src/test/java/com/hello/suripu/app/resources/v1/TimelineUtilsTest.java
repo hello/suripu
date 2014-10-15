@@ -61,7 +61,7 @@ public class TimelineUtilsTest {
         trackerMotions.add(new TrackerMotion(8L,99L,123L, now.plusMinutes(2).getMillis(), 0, 0));
         trackerMotions.add(new TrackerMotion(9L,99L,123L, now.plusMinutes(2).getMillis(), 100, 0));
 
-        List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, 5, 10);
+        List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, 5, 10, true);
         assertThat(segments.size(), is(trackerMotions.size()));
 
         final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(segments, 5);
@@ -80,7 +80,7 @@ public class TimelineUtilsTest {
         trackerMotions.add(new TrackerMotion(8L,99L,123L, now.plusMinutes(2).getMillis(), 0, 0));
         trackerMotions.add(new TrackerMotion(9L,99L,123L, now.plusMinutes(2).getMillis(), 100, 0));
 
-        List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, 5, 10);
+        List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, 5, 10, true);
         final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(segments, 5);
         assertThat(mergedSegments.size(), is(3));
     }
@@ -96,14 +96,14 @@ public class TimelineUtilsTest {
         trackerMotions.add(new TrackerMotion(8L,99L,123L, now.plusMinutes(2).getMillis(), 0, 0));
         trackerMotions.add(new TrackerMotion(9L,99L,123L, now.plusMinutes(3).getMillis(), 100, 0));
 
-        final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, 5, 10);
+        final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, 5, 10, true);
         assertThat(segments.size(), is(trackerMotions.size()));
     }
 
     @Test
     public void testEmptyTrackerMotionData() {
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
-        final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, 5, 10);
+        final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, 5, 10, true);
         assertThat(segments.size(), is(0));
     }
 
@@ -159,13 +159,15 @@ public class TimelineUtilsTest {
         final URL url = Resources.getResource("trackermotion.json");
         final String content = Resources.toString(url, Charsets.UTF_8);
         final List<TrackerMotion> trackerMotions = objectMapper.readValue(content, new TypeReference<List<TrackerMotion>>() {});
-        final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, 10, 5);
+        final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, 10, 5, true);
 
-        assertThat(segments.size(), is(trackerMotions.size()));
+        final long timeDiffInMins = (trackerMotions.get(trackerMotions.size() - 1).timestamp - trackerMotions.get(0).timestamp) / 60000L + 1L;
+
+        assertThat(segments.size(), is((int)timeDiffInMins));
 
         final List<SleepSegment> categorized = TimelineUtils.categorizeSleepDepth(segments);
         final List<SleepSegment> merged = TimelineUtils.mergeConsecutiveSleepSegments(categorized, 5);
-        assertThat(merged.size(), is(13));
+        assertThat(merged.size(), is(19));
         System.out.println("-----");
         for(SleepSegment segment : merged) {
             System.out.println(segment.toString());
