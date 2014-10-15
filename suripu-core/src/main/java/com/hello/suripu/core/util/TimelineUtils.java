@@ -229,6 +229,7 @@ public class TimelineUtils {
         for(final SleepSegment segment : sleepSegments) {
             Integer sleepDepth = segment.sleepDepth;
 
+            // TODO: tune these
             if( segment.sleepDepth <=10) {
                 sleepDepth = 10;
             } else if(segment.sleepDepth > 10 && segment.sleepDepth <= 40) {

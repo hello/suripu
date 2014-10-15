@@ -52,6 +52,7 @@ public class PartnerMotion {
                 );
             }
         }
-        return TimelineUtils.categorizeSleepDepth(affectedSegments);  // normalized
+        //return TimelineUtils.categorizeSleepDepth(affectedSegments);  // normalized
+        return affectedSegments;
     }
 }
