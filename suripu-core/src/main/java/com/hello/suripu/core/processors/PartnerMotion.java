@@ -7,6 +7,7 @@ import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,7 +48,7 @@ public class PartnerMotion {
                                 60,
                                 segment.sleepDepth,
                                 Event.Type.PARTNER_MOTION.toString(),
-                                Event.getMessage(Event.Type.PARTNER_MOTION, new DateTime(segment.timestamp)),
+                                Event.getMessage(Event.Type.PARTNER_MOTION, new DateTime(segment.timestamp, DateTimeZone.UTC).plusMillis(segment.offsetMillis)),
                                 new ArrayList<SensorReading>())
                 );
             }

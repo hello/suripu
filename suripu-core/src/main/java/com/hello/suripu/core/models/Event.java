@@ -13,7 +13,9 @@ import java.util.Set;
  */
 public class Event {
     public enum Type { // in order of display priority
-        NONE(-1),
+        NONE(-1) {
+            public String toString() {return "";}
+        },
         MOTION(0),
         SLEEP_MOTION(1),
         PARTNER_MOTION(2),
@@ -101,7 +103,10 @@ public class Event {
         Integer winnerScore = -100;
 
         for (final String eventType : eventTypes) {
-            final Integer eventScore = Type.valueOf(eventType).getValue();
+            Integer eventScore = -1;
+            if (!eventType.isEmpty()) {
+                eventScore = Type.valueOf(eventType).getValue();
+            }
             if (eventScore > winnerScore) {
                 winner = eventType;
                 winnerScore = eventScore;
