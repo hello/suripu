@@ -98,11 +98,20 @@ public class TimelineResource {
         final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, groupBy, true);
         List<SleepSegment> normalized = TimelineUtils.categorizeSleepDepth(segments);
 
+        final List<SleepSegment> extraSegments = new ArrayList<>();
 
-        // add partner movement data, use un-normalized data segments for comparison
-        final DateTime startTime = new DateTime(trackerMotions.get(0).timestamp, DateTimeZone.UTC);
-        final DateTime endTime = new DateTime(trackerMotions.get(trackerMotions.size() - 1).timestamp, DateTimeZone.UTC);
-        final List<SleepSegment> extraSegments = PartnerMotion.getPartnerData(accessToken.accountId, segments, startTime, endTime, deviceDAO, trackerMotionDAO, threshold);
+        // add partner movement data, check if there's a partner
+        final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accessToken.accountId);
+        if (optionalPartnerAccountId.isPresent()) {
+            // get tracker motions for partner, query time is in UTC, not local_utc
+            final DateTime startTime = new DateTime(segments.get(0).timestamp, DateTimeZone.UTC);
+            final DateTime endTime = new DateTime(segments.get(segments.size() - 1).timestamp, DateTimeZone.UTC);
+            final List<TrackerMotion> partnerMotions = this.trackerMotionDAO.getBetween(optionalPartnerAccountId.get(), startTime, endTime);
+            if (partnerMotions.size() > 0) {
+                // use un-normalized data segments for comparison
+                extraSegments.addAll(PartnerMotion.getPartnerData(segments, partnerMotions, threshold));
+            }
+        }
 
         // add sunrise & sunset data
         final Optional<DateTime> sunset = sunData.sunset(targetDate.withHourOfDay(0).toString(DateTimeFormat.forPattern("yyyy-MM-dd")));

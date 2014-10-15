@@ -1,8 +1,5 @@
 package com.hello.suripu.core.processors;
 
-import com.google.common.base.Optional;
-import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SensorReading;
 import com.hello.suripu.core.models.SleepSegment;
@@ -12,7 +9,6 @@ import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,23 +22,7 @@ public class PartnerMotion {
     final private static int ACCOUNT_DEPTH_THRESHOLD = 90; // small movement
 
     @Timed
-    public static List<SleepSegment> getPartnerData(final long accountID, final List<SleepSegment> originalSegments, final DateTime startTime, final DateTime endTime, final DeviceDAO deviceDAO, final TrackerMotionDAO trackerMotionDAO, int threshold) {
-
-        // check if accountID has a partner pill pill paired with the same sense
-        final Optional<Long> optionalPartnerAccountId = deviceDAO.getPartnerAccountId(accountID);
-        if (!optionalPartnerAccountId.isPresent()) {
-            return Collections.emptyList();
-        }
-
-        final Long partnerAccountId = optionalPartnerAccountId.get();
-
-        // get tracker motions for partner
-        // note that start and end time is in UTC, not local_utc
-        final List<TrackerMotion> partnerMotions = trackerMotionDAO.getBetween(partnerAccountId, startTime, endTime);
-
-        if (partnerMotions.size() == 0) {
-            return Collections.emptyList();
-        }
+    public static List<SleepSegment> getPartnerData(final List<SleepSegment> originalSegments, final List<TrackerMotion> partnerMotions, int threshold) {
 
         final int groupBy = 1;
         final boolean createMotionless = false;
