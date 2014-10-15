@@ -52,6 +52,17 @@ public class RegisterResource {
         this.debug = debug;
     }
 
+    private boolean checkCommandType(final MorpheusBle.MorpheusCommand morpheusCommand, final PairAction action){
+        switch (action){
+            case PAIR_PILL:
+                return morpheusCommand.getType() == MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_PILL;
+            case PAIR_MORPHEUS:
+                return morpheusCommand.getType() == MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE;
+            default:
+                return false;
+        }
+    }
+
 
     private byte[] pair(final byte[] encryptedRequest, final byte[] keyBytes, final PairAction action) {
 
@@ -82,10 +93,8 @@ public class RegisterResource {
             return builder.build().toByteArray();
         }
 
-        boolean wrongType = action == PairAction.PAIR_PILL ? morpheusCommand.getType() != MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_PILL :
-                morpheusCommand.getType() != MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE;
-
-        if(wrongType){
+        
+        if(!checkCommandType(morpheusCommand, action)){
             builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
             builder.setError(MorpheusBle.ErrorType.INTERNAL_DATA_ERROR);
             LOGGER.error("Wrong request command type {}", morpheusCommand.getType());
@@ -119,7 +128,7 @@ public class RegisterResource {
                     builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE);
                     break;
                 case PAIR_PILL:
-                    
+
                     this.deviceDAO.registerTracker(accountId, deviceId);
                     builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_PILL);
                     break;
