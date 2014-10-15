@@ -3,6 +3,7 @@ package com.hello.suripu.app.configuration;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hello.suripu.core.configuration.DynamoDBConfiguration;
 import com.hello.suripu.core.configuration.GraphiteConfiguration;
+import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.configuration.PushNotificationsConfiguration;
 import com.yammer.dropwizard.config.Configuration;
@@ -101,12 +102,21 @@ public class SuripuAppConfiguration extends Configuration {
         return allowedQueryRange;
     }
 
-
+    @Valid
+    @NotNull
     @JsonProperty("kinesis_logger")
     private KinesisLoggerConfiguration kinesisLoggerConfiguration;
 
     public KinesisLoggerConfiguration getKinesisLoggerConfiguration() {
         return kinesisLoggerConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("kinesis")
+    private KinesisConfiguration kinesisConfiguration;
+    public KinesisConfiguration getKinesisConfiguration() {
+        return kinesisConfiguration;
     }
 
     @Valid
@@ -158,5 +168,4 @@ public class SuripuAppConfiguration extends Configuration {
     public String getSleepScoreVersion() {
         return this.sleepScoreVersion;
     }
-
 }

@@ -22,13 +22,13 @@ public class KinesisLogger implements DataLogger {
     }
 
     @Override
-    public void putAsync(final String deviceId, final byte[] payload) {
+    public void putAsync(final String partitionKey, final byte[] payload) {
 
         final ByteBuffer data = ByteBuffer.wrap(payload);
         final PutRecordRequest putRecordRequest = new PutRecordRequest();
         putRecordRequest.setData(data);
         putRecordRequest.setStreamName(streamName);
-        putRecordRequest.setPartitionKey(deviceId);
+        putRecordRequest.setPartitionKey(partitionKey);
 
         kinesisClient.putRecordAsync(putRecordRequest, new AsyncHandler<PutRecordRequest, PutRecordResult>() {
             @Override
@@ -46,12 +46,12 @@ public class KinesisLogger implements DataLogger {
     }
 
     @Override
-    public String put(final String deviceId, final byte[] payload) {
+    public String put(final String partitionKey, final byte[] payload) {
         final ByteBuffer data = ByteBuffer.wrap(payload);
         final PutRecordRequest putRecordRequest = new PutRecordRequest();
         putRecordRequest.setData(data);
         putRecordRequest.setStreamName(streamName);
-        putRecordRequest.setPartitionKey(deviceId);
+        putRecordRequest.setPartitionKey(partitionKey);
 
         final PutRecordResult  recordResult = kinesisClient.putRecord(putRecordRequest);
         if(recordResult.getSequenceNumber() == null || recordResult.getShardId() == null) {

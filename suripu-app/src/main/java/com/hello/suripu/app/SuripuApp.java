@@ -3,6 +3,7 @@ package com.hello.suripu.app;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
 import com.amazonaws.services.sns.AmazonSNSClient;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -32,6 +33,7 @@ import com.hello.suripu.app.resources.v1.TimeZoneResource;
 import com.hello.suripu.app.resources.v1.TimelineResource;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
+import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
@@ -51,8 +53,9 @@ import com.hello.suripu.core.db.notifications.DynamoDBNotificationSubscriptionDA
 import com.hello.suripu.core.db.notifications.NotificationSubscriptionsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
+import com.hello.suripu.core.logging.DataLogger;
+import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
-import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthAuthenticator;
 import com.hello.suripu.core.oauth.OAuthProvider;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
@@ -139,16 +142,32 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
         final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
-        final AmazonSNSClient snsClient = new AmazonSNSClient(awsCredentialsProvider);
-
         dynamoDBClient.setEndpoint(configuration.getEventDBConfiguration().getEndpoint());
+
+        final AmazonSNSClient snsClient = new AmazonSNSClient(awsCredentialsProvider);
+        final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider);
+
         final String eventTableName = configuration.getEventDBConfiguration().getTableName();
 
         final EventDAODynamoDB eventDAODynamoDB = new EventDAODynamoDB(dynamoDBClient, eventTableName);
-        final AlarmDAODynamoDB alarmDAODynamoDB = new AlarmDAODynamoDB(dynamoDBClient, configuration.getAlarmDBConfiguration().getTableName());
-        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(dynamoDBClient, configuration.getTimeZoneHistoryDBConfiguration().getTableName());
-        final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB = new MergedAlarmInfoDynamoDB(dynamoDBClient, configuration.getAlarmInfoDynamoDBConfiguration().getTableName());
-        final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB = new AggregateSleepScoreDAODynamoDB(dynamoDBClient, configuration.getSleepScoreDBConfiguration().getTableName(), configuration.getSleepScoreVersion());
+        final AlarmDAODynamoDB alarmDAODynamoDB = new AlarmDAODynamoDB(
+                dynamoDBClient, configuration.getAlarmDBConfiguration().getTableName()
+        );
+
+        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(
+                dynamoDBClient, configuration.getTimeZoneHistoryDBConfiguration().getTableName()
+        );
+
+        final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB = new MergedAlarmInfoDynamoDB(
+                dynamoDBClient, configuration.getAlarmInfoDynamoDBConfiguration().getTableName()
+        );
+
+        final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB = new AggregateSleepScoreDAODynamoDB(
+                dynamoDBClient,
+                configuration.getSleepScoreDBConfiguration().getTableName(),
+                configuration.getSleepScoreVersion()
+        );
+
         final ImmutableMap<String, String> arns = ImmutableMap.copyOf(configuration.getPushNotificationsConfiguration().getArns());
         final NotificationSubscriptionsDAO subscriptionDAO = new DynamoDBNotificationSubscriptionDAO(
                 dynamoDBClient,
@@ -156,6 +175,10 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 snsClient,
                 arns
         );
+
+        final ImmutableMap<QueueName, String> streams = ImmutableMap.copyOf(configuration.getKinesisConfiguration().getStreams());
+        final KinesisLoggerFactory kinesisLoggerFactory = new KinesisLoggerFactory(kinesisClient, streams);
+        final DataLogger activityLogger = kinesisLoggerFactory.get(QueueName.ACTIVITY_STREAM);
 
         if(configuration.getMetricsEnabled()) {
             final String graphiteHostName = configuration.getGraphite().getHost();
@@ -185,7 +208,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         DropwizardServiceUtil.deregisterDWSingletons(jrConfig);
         environment.addProvider(new CustomJSONExceptionMapper(configuration.getDebug()));
 
-        environment.addProvider(new OAuthProvider<AccessToken>(new OAuthAuthenticator(accessTokenStore), "protected-resources"));
+        environment.addProvider(new OAuthProvider(new OAuthAuthenticator(accessTokenStore), "protected-resources", activityLogger));
 
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, subscriptionDAO));
         environment.addResource(new AccountResource(accountDAO));

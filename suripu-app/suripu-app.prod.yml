@@ -148,3 +148,11 @@ sleep_score_db:
     region: us-east-1
     table_name: sleep_score
 sleep_score_version: v_0_1
+
+kinesis:
+  endpoint : https://kinesis.us-east-1.amazonaws.com
+  streams :
+    pill_data : test-pill-suripu
+    morpheus_data : test-stream-suripu
+    audio_features : audio_features
+    activity_stream : activity_stream

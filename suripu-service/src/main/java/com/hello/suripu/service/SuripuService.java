@@ -44,6 +44,7 @@ import com.hello.suripu.service.configuration.SuripuConfiguration;
 import com.hello.suripu.service.resources.AudioResource;
 import com.hello.suripu.service.resources.DownloadResource;
 import com.hello.suripu.service.resources.ReceiveResource;
+import com.hello.suripu.service.resources.RegisterResource;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
@@ -119,7 +120,10 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider);
         kinesisClient.setEndpoint(configuration.getKinesisConfiguration().getEndpoint());
 
-        final KinesisLoggerFactory kinesisLoggerFactory = new KinesisLoggerFactory(kinesisClient, configuration.getKinesisConfiguration().getStreams());
+        final KinesisLoggerFactory kinesisLoggerFactory = new KinesisLoggerFactory(
+                kinesisClient,
+                configuration.getKinesisConfiguration().getStreams()
+        );
 
         dynamoDBClient.setEndpoint(configuration.getDynamoDBConfiguration().getEndpoint());
         // TODO; set region here?
@@ -154,12 +158,14 @@ public class SuripuService extends Service<SuripuConfiguration> {
             LOGGER.warn("Metrics not enabled.");
         }
 
-        environment.addProvider(new OAuthProvider<AccessToken>(new OAuthAuthenticator(tokenStore), "protected-resources"));
+        final DataLogger activityLogger = kinesisLoggerFactory.get(QueueName.ACTIVITY_STREAM);
+        environment.addProvider(new OAuthProvider(new OAuthAuthenticator(tokenStore), "protected-resources", activityLogger));
         environment.addResource(new ReceiveResource(deviceDataDAO, deviceDAO,
                 publicKeyStore,
                 kinesisLoggerFactory,
                 mergedAlarmInfoDynamoDB,
                 configuration.getDebug()));
+        environment.addResource(new RegisterResource(deviceDAO, tokenStore, configuration.getDebug()));
 
 
         environment.addResource(new PingResource());
