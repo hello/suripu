@@ -14,6 +14,7 @@ import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,7 +135,7 @@ public class TimelineUtils {
             String eventMessage = "";
 
             if(eventType.equals(Event.Type.MOTION.toString())) {
-                eventMessage = Event.getMessage(Event.Type.MOTION, new DateTime(trackerMotion.timestamp));
+                eventMessage = Event.getMessage(Event.Type.MOTION, new DateTime(trackerMotion.timestamp, DateTimeZone.UTC).plusMillis(trackerMotion.offsetMillis));
             }
 
             // TODO: make this work
@@ -147,7 +148,6 @@ public class TimelineUtils {
             if(deviceData.isPresent()) {
                 readings.addAll(SensorReading.fromDeviceData(deviceData.get()));
             }
-
 
             final SleepSegment sleepSegment = new SleepSegment(
                     trackerMotion.id,
