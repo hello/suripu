@@ -32,7 +32,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class TimelineUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineUtils.class);
-
+    private static final long ONE_MIN_IN_MILLIS = 60000L;
     /**
      * Merge a List<Segment> to a single segment
      * The minimum duration is 60 seconds
@@ -58,8 +58,8 @@ public class TimelineUtils {
         Long durationInMillis = segments.get(segments.size() -1).timestamp - segments.get(0).timestamp +  segments.get(segments.size() -1).durationInSeconds * 1000;
 
 
-        if (durationInMillis < threshold * 60000) {
-            durationInMillis = threshold * 60000L;
+        if (durationInMillis < threshold * ONE_MIN_IN_MILLIS) {
+            durationInMillis = threshold * ONE_MIN_IN_MILLIS;
         }
         return new SleepSegment(id, timestamp, offsetMillis, Math.round(durationInMillis / 1000), sleepDepth, eventType, message, sensors);
     }
@@ -69,7 +69,7 @@ public class TimelineUtils {
      * Generate Sleep Segments from the TrackerMotion data
      * @param trackerMotions
      * @param threshold
-     * @param groupBy
+     * @param createMotionlessSegment
      * @return
      */
     @Timed
@@ -113,7 +113,7 @@ public class TimelineUtils {
                             lastTimestamp + (j * segmentDuration * 1000), // millis
                             trackerMotion.offsetMillis,
                             segmentDuration, // seconds
-                            100,
+                            100, // depth 100 => motionless
                             Event.Type.NONE.toString(),
                             "",
                             Collections.<SensorReading>emptyList());
@@ -160,7 +160,7 @@ public class TimelineUtils {
                     readings);
             sleepSegments.add(sleepSegment);
             i++;
-            lastTimestamp = trackerMotion.timestamp + 60000L;
+            lastTimestamp = trackerMotion.timestamp + ONE_MIN_IN_MILLIS;
         }
         LOGGER.debug("Generated {} segments from {} tracker motion samples", sleepSegments.size(), trackerMotions.size());
 
