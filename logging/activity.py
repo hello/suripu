@@ -24,15 +24,15 @@ while tries < 10:
 # Get ready to process some data from the stream
 
 print "Get shard iterator"
-response = kinesis.get_shard_iterator(stream_name, shard_id, 'LATEST')
+response = kinesis.get_shard_iterator(stream_name, shard_id, 'TRIM_HORIZON')
 shard_iterator = response['ShardIterator']
 print shard_iterator
 
 # Wait for the data to show up
 tries = 0
-while tries < 100:
+while True:
   tries += 1
-  response = kinesis.get_records(shard_iterator, b64_decode=False)
+  response = kinesis.get_records(shard_iterator, limit=5000, b64_decode=False)
   shard_iterator = response['NextShardIterator']
   for record in response['Records']:    
     req = Logging_pb2.HttpRequest()
@@ -44,6 +44,6 @@ while tries < 100:
     except Exception, e:
       print e
   else:
-    print "no record, sleeping for 5s..."
-    time.sleep(5)
+    print "no record, sleeping for 1s..."
+    time.sleep(1)
 
