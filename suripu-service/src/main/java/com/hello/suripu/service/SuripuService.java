@@ -44,6 +44,7 @@ import com.hello.suripu.service.configuration.SuripuConfiguration;
 import com.hello.suripu.service.resources.AudioResource;
 import com.hello.suripu.service.resources.DownloadResource;
 import com.hello.suripu.service.resources.ReceiveResource;
+import com.hello.suripu.service.resources.RegisterResource;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
@@ -164,6 +165,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 kinesisLoggerFactory,
                 mergedAlarmInfoDynamoDB,
                 configuration.getDebug()));
+        environment.addResource(new RegisterResource(deviceDAO, tokenStore, configuration.getDebug()));
 
 
         environment.addResource(new PingResource());

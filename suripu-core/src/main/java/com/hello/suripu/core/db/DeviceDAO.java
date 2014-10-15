@@ -18,8 +18,8 @@ public interface DeviceDAO {
     // TODO: I think we make the device_name and device_id wrong, now the device_name is actually device_id - Pang
 
     @SingleValueResult(Long.class)
-    @SqlQuery("SELECT id FROM account_device_map WHERE account_id = :account_id AND device_name = :device_name LIMIT 1;")
-    Optional<Long> getDeviceForAccountId(@Bind("account_id") Long accountId, @Bind("device_name") String deviceName);
+    @SqlQuery("SELECT id FROM account_device_map WHERE account_id = :account_id AND device_id = :device_name LIMIT 1;")
+    Optional<Long> getDeviceForAccountId(@Bind("account_id") Long accountId, @Bind("device_id") final String deviceName);
 
     // account to morpheus device map
     @RegisterMapper(DeviceAccountPairMapper.class)
@@ -28,8 +28,8 @@ public interface DeviceDAO {
 
 
     @GetGeneratedKeys
-    @SqlUpdate("INSERT INTO account_device_map (account_id, device_name, device_id) VALUES(:account_id, :device_name, :device_id)")
-    Long registerSense(@Bind("account_id") Long accountId, @Bind("device_name") String deviceName, @Bind("device_id") String deviceId);
+    @SqlUpdate("INSERT INTO account_device_map (account_id, device_name, device_id) VALUES(:account_id, :device_id, :device_id)")
+    Long registerSense(@Bind("account_id") final Long accountId, @Bind("device_id") final String deviceId);
 
     // Returns the latest sense connected to this account, in the case of multiple senses
     @SingleValueResult(Long.class)
@@ -48,7 +48,7 @@ public interface DeviceDAO {
 
 
     @RegisterMapper(DeviceAccountPairMapper.class)
-    @SqlQuery("SELECT * FROM account_device_map WHERE account_id = :account_id ORDER BY id DESC;")
+    @SqlQuery("SELECT * FROM account_device_map WHERE account_id = :account_id AND active = TRUE ORDER BY id DESC;")
     ImmutableList<DeviceAccountPair> getDeviceAccountMapFromAccountId(@Bind("account_id") final Long accountId);
 
     // account to pill (aka tracker) map
@@ -69,7 +69,7 @@ public interface DeviceDAO {
 
     @RegisterMapper(DeviceAccountPairMapper.class)
     @SingleValueResult(DeviceAccountPairMapper.class)
-    @SqlQuery("SELECT * FROM account_tracker_map WHERE device_id = :pill_id ORDER BY id DESC LIMIT 1;")
+    @SqlQuery("SELECT * FROM account_tracker_map WHERE device_id = :pill_id AND active = TRUE ORDER BY id DESC LIMIT 1;")
     Optional<DeviceAccountPair> getInternalPillId(@Bind("pill_id") final String pillId);
 
     @GetGeneratedKeys
