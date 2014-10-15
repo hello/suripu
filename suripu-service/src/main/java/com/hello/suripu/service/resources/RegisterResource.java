@@ -105,6 +105,8 @@ public class RegisterResource {
 
         final String deviceId = morpheusCommand.getDeviceId();
         final String token = morpheusCommand.getAccountId();
+        LOGGER.debug("deviceId = {}", deviceId);
+        LOGGER.debug("token = {}", token);
 
         final Optional<AccessToken> accessTokenOptional = this.tokenStore.getClientDetailsByToken(
                 new ClientCredentials(new OAuthScope[]{OAuthScope.AUTH}, token),
@@ -118,6 +120,7 @@ public class RegisterResource {
         }
 
         final Long accountId = accessTokenOptional.get().accountId;
+        LOGGER.debug("accountId = {}", accountId);
 
         try {
             switch (action){
