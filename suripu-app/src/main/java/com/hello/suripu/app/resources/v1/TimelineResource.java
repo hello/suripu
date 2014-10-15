@@ -2,6 +2,7 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
@@ -15,6 +16,7 @@ import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.processors.PartnerMotion;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.SunData;
 import com.hello.suripu.core.util.TimelineUtils;
@@ -39,16 +41,19 @@ public class TimelineResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineResource.class);
 
     private final TrackerMotionDAO trackerMotionDAO;
+    private final DeviceDAO deviceDAO;
     private final SleepScoreDAO sleepScoreDAO;
     private final SleepLabelDAO sleepLabelDAO;
     private final int dateBucketPeriod;
     private final SunData sunData;
     public TimelineResource(final TrackerMotionDAO trackerMotionDAO,
+                            final DeviceDAO deviceDAO,
                             final SleepLabelDAO sleepLabelDAO,
                             final SleepScoreDAO sleepScoreDAO,
                             final int dateBucketPeriod,
                             final SunData sunData) {
         this.trackerMotionDAO = trackerMotionDAO;
+        this.deviceDAO = deviceDAO;
         this.sleepLabelDAO = sleepLabelDAO;
         this.sleepScoreDAO = sleepScoreDAO;
         this.dateBucketPeriod = dateBucketPeriod;
@@ -70,10 +75,6 @@ public class TimelineResource {
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
 
-        final List<Event> events = new ArrayList<>();
-
-        final int groupBy = 5; // group by 5 minutes
-
         final int threshold = 10; // events with scores < threshold will be considered motion events
         final int mergeThreshold = 1; // min segment size is 1 minute
 
@@ -90,32 +91,53 @@ public class TimelineResource {
             return timelines;
         }
 
+        // create sleep-motion segments
+        final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, true);
+        List<SleepSegment> normalized = TimelineUtils.categorizeSleepDepth(segments);
 
+        final List<SleepSegment> extraSegments = new ArrayList<>();
 
-        final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, groupBy);
-        final List<SleepSegment> normalized = TimelineUtils.categorizeSleepDepth(segments);
+        // add partner movement data, check if there's a partner
+        final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accessToken.accountId);
+        if (optionalPartnerAccountId.isPresent()) {
+            // get tracker motions for partner, query time is in UTC, not local_utc
+            final DateTime startTime = new DateTime(segments.get(0).timestamp, DateTimeZone.UTC);
+            final DateTime endTime = new DateTime(segments.get(segments.size() - 1).timestamp, DateTimeZone.UTC);
+            final List<TrackerMotion> partnerMotions = this.trackerMotionDAO.getBetween(optionalPartnerAccountId.get(), startTime, endTime);
+            if (partnerMotions.size() > 0) {
+                // use un-normalized data segments for comparison
+                extraSegments.addAll(PartnerMotion.getPartnerData(segments, partnerMotions, threshold));
+            }
+        }
 
-        final List<SleepSegment> decorated = normalized;
-
+        // add sunrise & sunset data
         final Optional<DateTime> sunset = sunData.sunset(targetDate.withHourOfDay(0).toString(DateTimeFormat.forPattern("yyyy-MM-dd")));
         final Optional<DateTime> sunrise = sunData.sunrise(targetDate.plusDays(1).toString(DateTimeFormat.forPattern("yyyy-MM-dd"))); // day + 1
         if(sunrise.isPresent() && sunset.isPresent()) {
-            final String sunriseMessage = String.format("The sun rose at %s", sunrise.get().toString(DateTimeFormat.forPattern("HH:mma")));
-            final String sunsetMessage = String.format("The sun set at %s", sunset.get().toString(DateTimeFormat.forPattern("HH:mma")));
+            final String sunriseMessage = Event.getMessage(Event.Type.SUNRISE, sunrise.get());
+            final String sunsetMessage = Event.getMessage(Event.Type.SUNSET, sunset.get());
 
             final SleepSegment sunriseSegment = new SleepSegment(1L, sunrise.get().getMillis(), 0, 60, -1, Event.Type.SUNRISE.toString(), sunriseMessage, new ArrayList<SensorReading>());
             final SleepSegment sunsetSegment = new SleepSegment(1L, sunset.get().getMillis(), 0, 60, 0, Event.Type.SUNSET.toString(), sunsetMessage, new ArrayList<SensorReading>());
 
-            final List<SleepSegment> newSegments = TimelineUtils.insertSegments(sunriseSegment, sunsetSegment, normalized);
+            extraSegments.add(sunriseSegment);
+            extraSegments.add(sunsetSegment);
+
             LOGGER.debug(sunriseMessage);
             LOGGER.debug(sunsetMessage);
-            decorated.clear();
-            decorated.addAll(newSegments);
         }
 
-        LOGGER.debug("Size of decorated = {}", decorated.size());
+        // TODO: add sound, light, temperature event segments
 
-        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(decorated, mergeThreshold);
+
+        // combine all segments
+        if (extraSegments.size() > 0) {
+            normalized = TimelineUtils.insertSegmentsWithPriority(extraSegments, normalized);
+        }
+
+        LOGGER.debug("Size of normalized = {}", normalized.size());
+
+        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(normalized, mergeThreshold);
         final SleepStats sleepStats = TimelineUtils.computeStats(mergedSegments);
         final List<SleepSegment> reversed = Lists.reverse(mergedSegments);
 

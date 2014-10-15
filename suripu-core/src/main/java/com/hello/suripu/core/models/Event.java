@@ -3,23 +3,28 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+
+import java.util.Set;
 
 /**
  * Created by pangwu on 5/8/14.
  */
 public class Event {
-    public enum Type {
+    public enum Type { // in order of display priority
+        NONE(-1),
         MOTION(0),
-        NOISE(1),
-        SNORING(2),
-        SLEEP_TALK(3),
-        LIGHT(4),
-        SLEEP_MOTION(5),
-        PARTNER_MOTION(6),
-        SLEEP(7),
-        WAKE_UP(8),
-        SUNRISE(9),
-        SUNSET(10);
+        SLEEP_MOTION(1),
+        PARTNER_MOTION(2),
+        NOISE(3),
+        SNORING(4),
+        SLEEP_TALK(5),
+        LIGHT(6),
+        SUNSET(7),
+        SUNRISE(8),
+        SLEEP(9),
+        WAKE_UP(10);
 
         private int value;
 
@@ -33,30 +38,32 @@ public class Event {
 
         public static Type fromInteger(int value){
             switch (value){
+                case -1:
+                    return NONE;
                 case 0:
                     return MOTION;
                 case 1:
-                    return NOISE;
-                case 2:
-                    return SNORING;
-                case 3:
-                    return SLEEP_TALK;
-                case 4:
-                    return LIGHT;
-                case 5:
                     return SLEEP_MOTION;
-                case 6:
+                case 2:
                     return PARTNER_MOTION;
+                case 3:
+                    return NOISE;
+                case 4:
+                    return SNORING;
+                case 5:
+                    return SLEEP_TALK;
+                case 6:
+                    return LIGHT;
                 case 7:
-                    return SLEEP;
-                case 8:
-                    return WAKE_UP;
-                case 9:
-                    return SUNRISE;
-                case 10:
                     return SUNSET;
+                case 8:
+                    return SUNRISE;
+                case 9:
+                    return SLEEP;
+                case 10:
+                    return WAKE_UP;
                 default:
-                    return MOTION;
+                    return NONE;
             }
         }
     }
@@ -87,6 +94,57 @@ public class Event {
         this.startTimestamp = startTimestamp;
         this.endTimestamp = endTimestamp;
         this.timezoneOffset = timezoneOffset;
+    }
+
+    public static String getHighPriorityEvents(final Set<String> eventTypes) {
+        String winner = "";
+        Integer winnerScore = -100;
+
+        for (final String eventType : eventTypes) {
+            final Integer eventScore = Type.valueOf(eventType).getValue();
+            if (eventScore > winnerScore) {
+                winner = eventType;
+                winnerScore = eventScore;
+            }
+        }
+        return winner;
+    }
+
+    public static String getMessage(final Type eventType, final DateTime dateTime) {
+        // TODO: words words words
+        final String eventMessage;
+        switch (eventType) {
+            case MOTION:
+                eventMessage = "We detected lots of movement";
+                break;
+            case SLEEP_MOTION:
+                eventMessage = "Movement detected";
+                break;
+            case PARTNER_MOTION:
+                eventMessage = "Your partner kicked you";
+                break;
+            case NOISE:
+                eventMessage = "Unusual sound detected";
+                break;
+            case SNORING:
+                eventMessage = "Snoring detected";
+                break;
+            case SLEEP_TALK:
+                eventMessage = "Sleep talking detected";
+                break;
+            case LIGHT:
+                eventMessage = "Unusual brightness detected";
+                break;
+            case SUNSET:
+                eventMessage = "The sun set";
+                break;
+            case SUNRISE:
+                eventMessage = "The sun rose";
+                break;
+            default:
+                return "";
+        }
+        return String.format("%s at %s", eventMessage, dateTime.toString(DateTimeFormat.forPattern("HH:mma")));
     }
 
     @Override
