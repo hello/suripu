@@ -82,13 +82,17 @@ public class RegisterResource {
             return builder.build().toByteArray();
         }
 
+        boolean wrongType = action == PairAction.PAIR_PILL ? morpheusCommand.getType() != MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_PILL :
+                morpheusCommand.getType() != MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE;
 
-        if (morpheusCommand.getType() != MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE) {
+        if(wrongType){
             builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
             builder.setError(MorpheusBle.ErrorType.INTERNAL_DATA_ERROR);
             LOGGER.error("Wrong request command type {}", morpheusCommand.getType());
             return builder.build().toByteArray();
         }
+
+
 
         final String deviceId = morpheusCommand.getDeviceId();
         final String token = morpheusCommand.getAccountId();
@@ -109,10 +113,13 @@ public class RegisterResource {
         try {
             switch (action){
                 case PAIR_MORPHEUS:
+
+
                     this.deviceDAO.registerSense(accountId, deviceId);
                     builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE);
                     break;
                 case PAIR_PILL:
+                    
                     this.deviceDAO.registerTracker(accountId, deviceId);
                     builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_PILL);
                     break;
