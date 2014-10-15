@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -165,32 +164,6 @@ public class AccessToken {
                 .add("$access_token", serializeAccessToken())
                 .add("$refresh_token", serializeRefreshToken())
                 .toString();
-    }
-
-    /**
-     * Token format for client is {appId}.{uuidWithoutHyphens}
-     * @param dirtyToken
-     * @return
-     */
-    public static Optional<UUID> cleanUUID(final String dirtyToken) {
-        // TODO: make sure this is efficient enough
-        final int dotIndex = dirtyToken.indexOf('.');
-        if(dotIndex == -1) {
-            return Optional.absent();
-        }
-
-        final String uuidWithoutAppId = dirtyToken.substring(dotIndex + 1);
-        final String uuidWithHyphens =  uuidWithoutAppId.replaceFirst("([0-9a-fA-F]{8})([0-9a-fA-F]{4})([0-9a-fA-F]{4})([0-9a-fA-F]{4})([0-9a-fA-F]+)", "$1-$2-$3-$4-$5" );
-        return Optional.of(UUID.fromString(uuidWithHyphens));
-    }
-
-    public static Optional<Long> extractAppIdFromToken(final String dirtyToken) {
-        final int dotIndex = dirtyToken.indexOf('.');
-        if(dotIndex == -1) {
-            return Optional.absent();
-        }
-
-        return Optional.of(Long.parseLong(dirtyToken.substring(0, dotIndex)));
     }
 
     public Boolean hasScope(final OAuthScope scope) {
