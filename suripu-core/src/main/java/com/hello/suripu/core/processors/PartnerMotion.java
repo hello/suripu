@@ -17,7 +17,7 @@ import java.util.Map;
  * Created by kingshy on 10/13/14.
  */
 public class PartnerMotion {
-    // TODO: tune theses thresholds
+    // TODO: tune these thresholds
     final private static int PARTNER_DEPTH_THRESHOLD = 60; // large movement
     final private static int ACCOUNT_DEPTH_THRESHOLD = 90; // small movement
 
@@ -40,7 +40,7 @@ public class PartnerMotion {
                 continue;
             }
             final SleepSegment partnerSegment = partnerMotionMap.get(segment.timestamp);
-            if (partnerSegment.sleepDepth <= PARTNER_DEPTH_THRESHOLD) {
+            if (partnerSegment.sleepDepth <= PARTNER_DEPTH_THRESHOLD && partnerSegment.sleepDepth <= segment.sleepDepth) {
                 affectedSegments.add(new SleepSegment(
                                 segment.id,
                                 segment.timestamp,
