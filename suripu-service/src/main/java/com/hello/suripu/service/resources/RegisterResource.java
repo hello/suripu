@@ -21,6 +21,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,18 +52,18 @@ public class RegisterResource {
         this.debug = debug;
     }
 
-    private byte[] pair(final byte[] encryptedRequest, final PairAction action) {
+
+    private byte[] pair(final byte[] encryptedRequest, final byte[] keyBytes, final PairAction action) {
 
         final MorpheusBle.MorpheusCommand.Builder builder = MorpheusBle.MorpheusCommand.newBuilder()
                 .setVersion(PROTOBUF_VERSION);
-        // TODO: Fetch key from Datastore
-        final byte[] keyBytes = "1234567891234567".getBytes();
 
         final SignedMessage signedMessage = SignedMessage.parse(encryptedRequest);
         final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytes);
 
+
         if(error.isPresent()) {
-            LOGGER.error(error.get().message);
+            LOGGER.error("Fail to validate signature {}", error.get().message);
             builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
             builder.setError(MorpheusBle.ErrorType.INTERNAL_DATA_ERROR);
             return builder.build().toByteArray();
@@ -71,6 +72,7 @@ public class RegisterResource {
         MorpheusBle.MorpheusCommand morpheusCommand;
         try {
             morpheusCommand = MorpheusBle.MorpheusCommand.parseFrom(signedMessage.body);
+
         } catch (IOException exception) {
             final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
             LOGGER.error(errorMessage);
@@ -84,6 +86,7 @@ public class RegisterResource {
         if (morpheusCommand.getType() != MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE) {
             builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
             builder.setError(MorpheusBle.ErrorType.INTERNAL_DATA_ERROR);
+            LOGGER.error("Wrong request command type {}", morpheusCommand.getType());
             return builder.build().toByteArray();
         }
 
@@ -97,6 +100,7 @@ public class RegisterResource {
         if(!accessTokenOptional.isPresent()) {
             builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
             builder.setError(MorpheusBle.ErrorType.INTERNAL_OPERATION_FAILED);
+            LOGGER.error("Token not found {} for device Id {}", token, deviceId);
             return builder.build().toByteArray();
         }
 
@@ -120,17 +124,18 @@ public class RegisterResource {
         } catch (UnableToExecuteStatementException sqlExp){
             final Matcher matcher = PG_UNIQ_PATTERN.matcher(sqlExp.getMessage());
             if (!matcher.find()) {
-                LOGGER.error(sqlExp.getMessage());
+                LOGGER.error("SQL error {}", sqlExp.getMessage());
                 builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
                 builder.setError(MorpheusBle.ErrorType.INTERNAL_OPERATION_FAILED);
             }else {
-
+                //TODO: enforce the constrain
                 LOGGER.warn("Account {} tries to pair a paired device {} ",
                         accountId, deviceId);
                 builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
                 builder.setError(MorpheusBle.ErrorType.DEVICE_ALREADY_PAIRED);
             }
         }
+
 
         return builder.build().toByteArray();
     }
@@ -140,8 +145,16 @@ public class RegisterResource {
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Timed
-    public byte[] registerMorpheus(final byte[] body) {
-        return pair(body, PairAction.PAIR_MORPHEUS);
+    public Response registerMorpheus(final byte[] body) {
+        // TODO: get key from DB
+        final byte[] keyBytes = "1234567891234567".getBytes();
+        final Optional<byte[]> signedResponse = SignedMessage.sign(pair(body, keyBytes, PairAction.PAIR_MORPHEUS), keyBytes);
+        if(!signedResponse.isPresent()) {
+            LOGGER.error("Failed signing message");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new byte[0]).build();
+        }
+
+        return Response.ok().entity(signedResponse.get()).build();
 
     }
 
@@ -150,8 +163,15 @@ public class RegisterResource {
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Timed
-    public byte[] registerPill(final byte[] body) {
-        return pair(body, PairAction.PAIR_PILL);
+    public Response registerPill(final byte[] body) {
+        // TODO: get key from DB
+        final byte[] keyBytes = "1234567891234567".getBytes();
+        final Optional<byte[]> signedResponse = SignedMessage.sign(pair(body, keyBytes, PairAction.PAIR_PILL), keyBytes);
+        if(!signedResponse.isPresent()) {
+            LOGGER.error("Failed signing message");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new byte[0]).build();
+        }
 
+        return Response.ok().entity(signedResponse.get()).build();
     }
 }
