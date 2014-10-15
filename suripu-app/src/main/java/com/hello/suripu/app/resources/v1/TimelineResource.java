@@ -75,9 +75,6 @@ public class TimelineResource {
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
 
-        final List<Event> events = new ArrayList<>();
-
-        final int groupBy = 1;
         final int threshold = 10; // events with scores < threshold will be considered motion events
         final int mergeThreshold = 1; // min segment size is 1 minute
 
@@ -95,7 +92,7 @@ public class TimelineResource {
         }
 
         // create sleep-motion segments
-        final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, groupBy, true);
+        final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, true);
         List<SleepSegment> normalized = TimelineUtils.categorizeSleepDepth(segments);
 
         final List<SleepSegment> extraSegments = new ArrayList<>();

@@ -73,12 +73,12 @@ public class TimelineUtils {
      * @return
      */
     @Timed
-    public static List<SleepSegment> generateSleepSegments(final List<TrackerMotion> trackerMotions, final int threshold, final int groupBy, final boolean motionlessSegment) {
+    public static List<SleepSegment> generateSleepSegments(final List<TrackerMotion> trackerMotions, final int threshold, final boolean createMotionlessSegment) {
 
-        return generateSleepSegments(trackerMotions, threshold, groupBy, motionlessSegment, Optional.<DeviceData>absent());
+        return generateSleepSegments(trackerMotions, threshold, createMotionlessSegment, Optional.<DeviceData>absent());
     }
 
-    public static List<SleepSegment> generateSleepSegments(final List<TrackerMotion> trackerMotions, final int threshold, final int groupBy, final boolean createMotionlessSegment, final Optional<DeviceData> deviceData) {
+    public static List<SleepSegment> generateSleepSegments(final List<TrackerMotion> trackerMotions, final int threshold, final boolean createMotionlessSegment, final Optional<DeviceData> deviceData) {
         final List<SleepSegment> sleepSegments = new ArrayList<>();
 
 

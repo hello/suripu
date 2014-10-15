@@ -24,9 +24,8 @@ public class PartnerMotion {
     @Timed
     public static List<SleepSegment> getPartnerData(final List<SleepSegment> originalSegments, final List<TrackerMotion> partnerMotions, int threshold) {
 
-        final int groupBy = 1;
-        final boolean createMotionless = false;
-        final List<SleepSegment> partnerSegments = TimelineUtils.generateSleepSegments(partnerMotions, threshold, groupBy, createMotionless);
+        final boolean createMotionlessSegment = false;
+        final List<SleepSegment> partnerSegments = TimelineUtils.generateSleepSegments(partnerMotions, threshold, createMotionlessSegment);
 
         // convert list of TrackerMotion to hash map for easy lookup
         final Map<Long, SleepSegment> partnerMotionMap = new HashMap<>();
