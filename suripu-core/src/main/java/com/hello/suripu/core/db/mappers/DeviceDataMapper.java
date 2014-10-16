@@ -19,6 +19,8 @@ public class DeviceDataMapper implements ResultSetMapper<DeviceData>{
                 r.getInt("ambient_humidity"),
                 r.getInt("ambient_air_quality"),
                 r.getInt("ambient_light"),
+                r.getInt("ambient_light_variance"),
+                r.getInt("ambient_light_peakiness"),
                 new DateTime(r.getTimestamp("ts"), DateTimeZone.UTC),
                 //new DateTime(r.getTimestamp("local_utc_ts"), DateTimeZone.UTC),
                 r.getInt("offset_millis")

@@ -348,9 +348,11 @@ public class ReceiveResource {
                     .withAccountId(pair.accountId)
                     .withDeviceId(pair.internalDeviceId)
                     .withAmbientTemperature(data.getTemperature())
-                    .withAmbientAirQuality(data.getDust())
+                    .withAmbientAirQuality(data.getDust(), data.getFirmwareVersion())
                     .withAmbientHumidity(data.getHumidity())
                     .withAmbientLight(data.getLight())
+                    .withAmbientLightVariance(data.getLightVariability())
+                    .withAmbientLightPeakiness(data.getLightTonality())
                     .withOffsetMillis(userTimeZone.getOffset(roundedDateTime))
                     .withDateTimeUTC(roundedDateTime);
 
@@ -465,9 +467,11 @@ public class ReceiveResource {
                     .withAccountId(pair.accountId)
                     .withDeviceId(pair.internalDeviceId)
                     .withAmbientTemperature(data.getTemperature())
-                    .withAmbientAirQuality(data.getDust())
+                    .withAmbientAirQuality(data.getDust(), data.getFirmwareVersion())
                     .withAmbientHumidity(data.getHumidity())
                     .withAmbientLight(data.getLight())
+                    .withAmbientLightVariance(data.getLightVariability())
+                    .withAmbientLightPeakiness(data.getLightTonality())
                     .withOffsetMillis(-25200000) //TODO: GET THIS FROM MORPHEUS PAYLOAD
                     .withDateTimeUTC(roundedDateTime);
 
@@ -552,7 +556,7 @@ public class ReceiveResource {
                             .withAccountId(pair.accountId)
                             .withDeviceId(pair.internalDeviceId)
                             .withAmbientTemperature(temp)
-                            .withAmbientAirQuality(airQuality)
+                            .withAmbientAirQuality(airQuality, 0)
                             .withAmbientHumidity(humidity)
                             .withAmbientLight(light)
                             .withOffsetMillis(offsetMillis)
