@@ -20365,6 +20365,21 @@ public final class InputProtos {
      */
     com.hello.suripu.api.input.InputProtos.periodic_data.pill_dataOrBuilder getPillsOrBuilder(
         int index);
+
+    // optional string device_id = 12;
+    /**
+     * <code>optional string device_id = 12;</code>
+     */
+    boolean hasDeviceId();
+    /**
+     * <code>optional string device_id = 12;</code>
+     */
+    java.lang.String getDeviceId();
+    /**
+     * <code>optional string device_id = 12;</code>
+     */
+    com.google.protobuf.ByteString
+        getDeviceIdBytes();
   }
   /**
    * Protobuf type {@code hello.periodic_data}
@@ -20473,6 +20488,11 @@ public final class InputProtos {
                 mutable_bitField0_ |= 0x00000400;
               }
               pills_.add(input.readMessage(com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.PARSER, extensionRegistry));
+              break;
+            }
+            case 98: {
+              bitField0_ |= 0x00000400;
+              deviceId_ = input.readBytes();
               break;
             }
           }
@@ -21668,6 +21688,49 @@ public final class InputProtos {
       return pills_.get(index);
     }
 
+    // optional string device_id = 12;
+    public static final int DEVICE_ID_FIELD_NUMBER = 12;
+    private java.lang.Object deviceId_;
+    /**
+     * <code>optional string device_id = 12;</code>
+     */
+    public boolean hasDeviceId() {
+      return ((bitField0_ & 0x00000400) == 0x00000400);
+    }
+    /**
+     * <code>optional string device_id = 12;</code>
+     */
+    public java.lang.String getDeviceId() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          deviceId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string device_id = 12;</code>
+     */
+    public com.google.protobuf.ByteString
+        getDeviceIdBytes() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        deviceId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       unixTime_ = 0;
       light_ = 0;
@@ -21680,6 +21743,7 @@ public final class InputProtos {
       lightTonality_ = 0;
       firmwareVersion_ = 0;
       pills_ = java.util.Collections.emptyList();
+      deviceId_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -21725,6 +21789,9 @@ public final class InputProtos {
       }
       for (int i = 0; i < pills_.size(); i++) {
         output.writeMessage(11, pills_.get(i));
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        output.writeBytes(12, getDeviceIdBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -21778,6 +21845,10 @@ public final class InputProtos {
       for (int i = 0; i < pills_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(11, pills_.get(i));
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(12, getDeviceIdBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -21922,6 +21993,8 @@ public final class InputProtos {
         } else {
           pillsBuilder_.clear();
         }
+        deviceId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000800);
         return this;
       }
 
@@ -21999,6 +22072,10 @@ public final class InputProtos {
         } else {
           result.pills_ = pillsBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+          to_bitField0_ |= 0x00000400;
+        }
+        result.deviceId_ = deviceId_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -22072,6 +22149,11 @@ public final class InputProtos {
               pillsBuilder_.addAllMessages(other.pills_);
             }
           }
+        }
+        if (other.hasDeviceId()) {
+          bitField0_ |= 0x00000800;
+          deviceId_ = other.deviceId_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -22714,6 +22796,80 @@ public final class InputProtos {
         return pillsBuilder_;
       }
 
+      // optional string device_id = 12;
+      private java.lang.Object deviceId_ = "";
+      /**
+       * <code>optional string device_id = 12;</code>
+       */
+      public boolean hasDeviceId() {
+        return ((bitField0_ & 0x00000800) == 0x00000800);
+      }
+      /**
+       * <code>optional string device_id = 12;</code>
+       */
+      public java.lang.String getDeviceId() {
+        java.lang.Object ref = deviceId_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          deviceId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string device_id = 12;</code>
+       */
+      public com.google.protobuf.ByteString
+          getDeviceIdBytes() {
+        java.lang.Object ref = deviceId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          deviceId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string device_id = 12;</code>
+       */
+      public Builder setDeviceId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000800;
+        deviceId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string device_id = 12;</code>
+       */
+      public Builder clearDeviceId() {
+        bitField0_ = (bitField0_ & ~0x00000800);
+        deviceId_ = getDefaultInstance().getDeviceId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string device_id = 12;</code>
+       */
+      public Builder setDeviceIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000800;
+        deviceId_ = value;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:hello.periodic_data)
     }
 
@@ -22948,18 +23104,18 @@ public final class InputProtos {
       "\006events\030\001 \003(\0132\033.hello.EventBatch.EventIt" +
       "em\032Q\n\tEventItem\022\027\n\017start_timestamp\030\001 \001(\003" +
       "\022\025\n\rend_timestamp\030\002 \001(\003\022\024\n\014offsetMillis\030" +
-      "\003 \001(\005\"\215\003\n\rperiodic_data\022\021\n\tunix_time\030\001 \001" +
+      "\003 \001(\005\"\240\003\n\rperiodic_data\022\021\n\tunix_time\030\001 \001" +
       "(\005\022\r\n\005light\030\002 \001(\005\022\023\n\013temperature\030\003 \001(\005\022\020" +
       "\n\010humidity\030\004 \001(\005\022\014\n\004dust\030\005 \001(\005\022\014\n\004name\030\006" +
       " \001(\t\022\013\n\003mac\030\007 \001(\014\022\031\n\021light_variability\030\010" +
       " \001(\005\022\026\n\016light_tonality\030\t \001(\005\022\030\n\020firmware" +
       "_version\030\n \001(\005\022-\n\005pills\030\013 \003(\0132\036.hello.pe",
-      "riodic_data.pill_data\032\215\001\n\tpill_data\022\020\n\010d" +
-      "eviceId\030\003 \001(\t\022\024\n\014batteryLevel\030\t \001(\005\022\016\n\006u" +
-      "ptime\030\n \001(\005\022\022\n\nmotionData\030\013 \001(\005\022\033\n\023motio" +
-      "nDataEncrypted\030\002 \001(\014\022\027\n\017firmwareVersion\030" +
-      "\001 \001(\005B)\n\032com.hello.suripu.api.inputB\013Inp" +
-      "utProtos"
+      "riodic_data.pill_data\022\021\n\tdevice_id\030\014 \001(\t" +
+      "\032\215\001\n\tpill_data\022\020\n\010deviceId\030\003 \001(\t\022\024\n\014batt" +
+      "eryLevel\030\t \001(\005\022\016\n\006uptime\030\n \001(\005\022\022\n\nmotion" +
+      "Data\030\013 \001(\005\022\033\n\023motionDataEncrypted\030\002 \001(\014\022" +
+      "\027\n\017firmwareVersion\030\001 \001(\005B)\n\032com.hello.su" +
+      "ripu.api.inputB\013InputProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -23115,7 +23271,7 @@ public final class InputProtos {
           internal_static_hello_periodic_data_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_periodic_data_descriptor,
-              new java.lang.String[] { "UnixTime", "Light", "Temperature", "Humidity", "Dust", "Name", "Mac", "LightVariability", "LightTonality", "FirmwareVersion", "Pills", });
+              new java.lang.String[] { "UnixTime", "Light", "Temperature", "Humidity", "Dust", "Name", "Mac", "LightVariability", "LightTonality", "FirmwareVersion", "Pills", "DeviceId", });
           internal_static_hello_periodic_data_pill_data_descriptor =
             internal_static_hello_periodic_data_descriptor.getNestedTypes().get(0);
           internal_static_hello_periodic_data_pill_data_fieldAccessorTable = new

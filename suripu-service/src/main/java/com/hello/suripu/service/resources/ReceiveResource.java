@@ -29,6 +29,7 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.RingProcessor;
+import com.hello.suripu.core.util.DeviceIdUtil;
 import com.hello.suripu.service.SignedMessage;
 import com.yammer.metrics.annotation.Timed;
 import org.apache.commons.codec.binary.Hex;
@@ -214,8 +215,17 @@ public class ReceiveResource {
 
 
         // get MAC address of morpheus
-        final byte[] mac = Arrays.copyOf(data.getMac().toByteArray(), 6);
-        final String deviceName = new String(Hex.encodeHex(mac));
+        final Optional<String> deviceIdOptional = DeviceIdUtil.getMorpheusId(data);
+        if(!deviceIdOptional.isPresent()){
+            LOGGER.error("Cannot get morpheus id");
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity((debug) ? "Cannot get morpheus id" : "bad request")
+                    .type(MediaType.TEXT_PLAIN_TYPE).build()
+            );
+        }
+
+        
+        final String deviceName = deviceIdOptional.get();
         LOGGER.debug("Received valid protobuf {}", deviceName.toString());
         LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
 
