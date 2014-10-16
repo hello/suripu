@@ -224,7 +224,7 @@ public class ReceiveResource {
             );
         }
 
-        
+
         final String deviceName = deviceIdOptional.get();
         LOGGER.debug("Received valid protobuf {}", deviceName.toString());
         LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));

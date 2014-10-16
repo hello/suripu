@@ -28,7 +28,7 @@ public class DeviceIdUtil {
             // Just for backward compatibility
             // This is a VERY BAD idea, the firmware should own and black box the knowledge
             // of what is a deviceId and how to encoded it to searchable plain text.
-            // Or we will tightly couple the backend with server, which will bring endless trouble
+            // Or we will tightly couple the backend to firmware, which will bring endless trouble
             // if we want to use the same protobuf between different hardware.
             return macToStringId(morpheusData.getMac().toByteArray());
         }
