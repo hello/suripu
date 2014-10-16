@@ -30,7 +30,7 @@ public abstract class DeviceDataDAO {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAO.class);
 
     @SqlUpdate("INSERT INTO device_sensors_master (account_id, device_id, ts, local_utc_ts, offset_millis, " +
-            "ambient_temp, ambient_light, ambient_light_variance, ambient_light_peakiness " +
+            "ambient_temp, ambient_light, ambient_light_variance, ambient_light_peakiness, " +
             "ambient_humidity, ambient_air_quality) VALUES(:account_id, :device_id, :ts, :local_utc_ts, :offset_millis, " +
             ":ambient_temp, :ambient_light, :ambient_light_variance, :ambient_light_peakiness, :ambient_humidity, :ambient_air_quality)")
     public abstract void insert(@BindDeviceData final DeviceData deviceData);
