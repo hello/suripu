@@ -28,6 +28,8 @@ public @interface BindDeviceData {
                     q.bind("device_id", model.deviceId);
                     q.bind("ambient_temp", model.ambientTemperature);
                     q.bind("ambient_light", model.ambientLight);
+                    q.bind("ambient_light_variance", model.ambientLightVariance);
+                    q.bind("ambient_light_peakiness", model.ambientLightPeakiness);
                     q.bind("ambient_humidity", model.ambientHumidity);
                     q.bind("ambient_air_quality", model.ambientAirQuality);
 

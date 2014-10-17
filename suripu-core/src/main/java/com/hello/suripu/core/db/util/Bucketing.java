@@ -75,15 +75,15 @@ public class Bucketing {
 
             // TODO: refactor this
 
-            int sensorValue = 0;
+            float sensorValue = 0;
             if(sensorName.equals("humidity")) {
-                sensorValue = deviceData.ambientHumidity / 100;
+                sensorValue = DeviceData.dbIntToFloat(deviceData.ambientHumidity);
             } else if(sensorName.equals("temperature")) {
-                sensorValue = deviceData.ambientTemperature / 100;
+                sensorValue = DeviceData.dbIntToFloat(deviceData.ambientTemperature);
             } else if (sensorName.equals("particulates")) {
-                sensorValue = deviceData.ambientAirQuality;
+                sensorValue = DeviceData.dbIntToFloatDust(deviceData.ambientAirQuality);
             } else if (sensorName.equals("light")) {
-                sensorValue = deviceData.ambientLight;
+                sensorValue = (float) deviceData.ambientLight;
             } else {
                 LOGGER.warn("Sensor {} is not supported for account_id: {}. Returning early", sensorName);
                 return Optional.absent();

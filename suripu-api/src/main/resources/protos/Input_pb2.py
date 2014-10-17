@@ -13,7 +13,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='Input.proto',
   package='hello',
-  serialized_pb='\n\x0bInput.proto\x12\x05hello\"\x8f\x03\n\x11SensorSampleBatch\x12\x36\n\x07samples\x18\x01 \x03(\x0b\x32%.hello.SensorSampleBatch.SensorSample\x12\x11\n\tdevice_id\x18\x02 \x01(\t\x1a\xae\x02\n\x0cSensorSample\x12\x45\n\x0bsensor_type\x18\x01 \x01(\x0e\x32\x30.hello.SensorSampleBatch.SensorSample.SensorType\x12\x11\n\ttimestamp\x18\x02 \x01(\x05\x12\r\n\x05value\x18\x03 \x01(\x0c\"\xb4\x01\n\nSensorType\x12\x17\n\x13\x41MBIENT_TEMPERATURE\x10\x00\x12\x14\n\x10\x41MBIENT_HUMIDITY\x10\x01\x12\x11\n\rAMBIENT_LIGHT\x10\x02\x12\x14\n\x10\x41MBIENT_DECIBELS\x10\x03\x12\x17\n\x13\x41MBIENT_AIR_QUALITY\x10\x04\x12\x07\n\x03GPS\x10\x05\x12\x16\n\x12PHONE_ACCELERATION\x10\x06\x12\x14\n\x10PHONE_STEP_COUNT\x10\x07\"\xd5\x01\n\x11MotionSensorBatch\x12;\n\x0cmanufacturer\x18\x01 \x01(\x0e\x32%.hello.MotionSensorBatch.Manufacturer\x12\x36\n\x07samples\x18\x02 \x03(\x0b\x32%.hello.MotionSensorBatch.MotionSensor\x1a\x30\n\x0cMotionSensor\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\r\n\x05value\x18\x02 \x01(\x05\"\x19\n\x0cManufacturer\x12\t\n\x05HELLO\x10\x00\"\xad\x01\n\x10TrackerDataBatch\x12\x34\n\x07samples\x18\x01 \x03(\x0b\x32#.hello.TrackerDataBatch.TrackerData\x1a\x63\n\x0bTrackerData\x12\x12\n\ntracker_id\x18\x01 \x01(\t\x12\x11\n\ttimestamp\x18\x02 \x01(\x03\x12\x15\n\roffset_millis\x18\x03 \x01(\x05\x12\x16\n\x0esvm_no_gravity\x18\x04 \x01(\x05\"\x89\x04\n\x11SimpleSensorBatch\x12\x11\n\tdevice_id\x18\x01 \x01(\t\x12<\n\x07samples\x18\x02 \x03(\x0b\x32+.hello.SimpleSensorBatch.SimpleSensorSample\x1a\x61\n\x07GpsInfo\x12\x10\n\x08latitude\x18\x01 \x01(\x02\x12\x11\n\tlongitude\x18\x02 \x01(\x02\x12\x10\n\x08\x61\x63\x63uracy\x18\x03 \x01(\x02\x12\r\n\x05speed\x18\x04 \x01(\x02\x12\x10\n\x08provider\x18\x05 \x01(\t\x1a\xbf\x02\n\x12SimpleSensorSample\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\x1b\n\x13\x61mbient_temperature\x18\x02 \x01(\x02\x12\x18\n\x10\x61mbient_humidity\x18\x03 \x01(\x02\x12\x15\n\rambient_light\x18\x04 \x01(\x02\x12\x18\n\x10\x61mbient_decibels\x18\x05 \x01(\x02\x12\x1b\n\x13\x61mbient_air_quality\x18\x06 \x01(\x02\x12\x13\n\x0b\x64\x65vice_data\x18\x07 \x01(\x0c\x12\x1d\n\x15\x64\x65vice_data_signature\x18\x08 \x01(\x0c\x12\x17\n\x0fsound_amplitude\x18\t \x01(\x02\x12-\n\x03gps\x18\n \x01(\x0b\x32 .hello.SimpleSensorBatch.GpsInfo\x12\x15\n\roffset_millis\x18\x0b \x01(\x05\"z\n\x11\x41\x63tivationRequest\x12\x11\n\tdevice_id\x18\x01 \x01(\t\x12\x12\n\naccount_id\x18\x02 \x01(\t\x12\x11\n\ttimestamp\x18\x03 \x01(\x03\x12\x18\n\x10\x66irmware_version\x18\x04 \x01(\t\x12\x11\n\tsignature\x18\x05 \x01(\x0c\"%\n\x12\x41\x63tivationResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"`\n\x0bSyncRequest\x12\x11\n\tdevice_id\x18\x01 \x01(\t\x12\x18\n\x10\x66irmware_version\x18\x02 \x01(\t\x12\x11\n\tsignature\x18\x03 \x01(\x0c\x12\x11\n\tsomething\x18\x04 \x01(\t\"\xe1\x07\n\x0cSyncResponse\x12\x14\n\x0cupload_cycle\x18\x01 \x01(\x05\x12\x12\n\nsync_cycle\x18\x02 \x01(\x05\x12\x15\n\racc_scan_cyle\x18\x03 \x01(\x05\x12\x1d\n\x15\x61\x63\x63_sampling_interval\x18\x04 \x01(\x05\x12 \n\x18\x64\x65vice_sampling_interval\x18\x05 \x01(\x05\x12(\n\x05\x61larm\x18\x06 \x01(\x0b\x32\x19.hello.SyncResponse.Alarm\x12\x39\n\x0epairing_action\x18\x07 \x01(\x0b\x32!.hello.SyncResponse.PairingAction\x12\x33\n\x0bwhite_noise\x18\x08 \x01(\x0b\x32\x1e.hello.SyncResponse.WhiteNoise\x12\x35\n\x0c\x66lash_action\x18\t \x01(\x0b\x32\x1f.hello.SyncResponse.FlashAction\x1a\x45\n\x05\x41larm\x12\x12\n\nstart_time\x18\x01 \x01(\x05\x12\x10\n\x08\x65nd_time\x18\x02 \x01(\x05\x12\x16\n\x0bringtone_id\x18\x03 \x01(\x05:\x01\x31\x1a}\n\rPairingAction\x12\x0c\n\x04ssid\x18\x01 \x01(\t\x12:\n\x04type\x18\x02 \x01(\x0e\x32,.hello.SyncResponse.PairingAction.ActionType\"\"\n\nActionType\x12\x08\n\x04PAIR\x10\x00\x12\n\n\x06UNPAIR\x10\x01\x1a\x44\n\nWhiteNoise\x12\x12\n\nstart_time\x18\x01 \x01(\x05\x12\x10\n\x08\x65nd_time\x18\x02 \x01(\x05\x12\x10\n\x08sound_id\x18\x03 \x01(\x05\x1a\xf1\x02\n\x0b\x46lashAction\x12\x38\n\x05led_1\x18\x01 \x01(\x0b\x32).hello.SyncResponse.FlashAction.LEDAction\x12\x38\n\x05led_2\x18\x02 \x01(\x0b\x32).hello.SyncResponse.FlashAction.LEDAction\x12\x38\n\x05led_3\x18\x03 \x01(\x0b\x32).hello.SyncResponse.FlashAction.LEDAction\x12\x38\n\x05led_4\x18\x04 \x01(\x0b\x32).hello.SyncResponse.FlashAction.LEDAction\x12\x38\n\x05led_5\x18\x05 \x01(\x0b\x32).hello.SyncResponse.FlashAction.LEDAction\x1a@\n\tLEDAction\x12\r\n\x05\x63olor\x18\x01 \x01(\x05\x12\x12\n\nstart_time\x18\x02 \x01(\x05\x12\x10\n\x08\x65nd_time\x18\x03 \x01(\x05\"=\n\x08PillData\x12\x0f\n\x07pill_id\x18\x01 \x01(\t\x12\x12\n\naccount_id\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\x0c\"\xd4\x01\n\x0ePillBlobHeader\x12\x1d\n\x15\x66irst_sequence_number\x18\x01 \x01(\t\x12\x1c\n\x14last_sequence_number\x18\x02 \x01(\t\x12\x19\n\x11\x66irst_sample_date\x18\x03 \x01(\t\x12\x18\n\x10last_sample_date\x18\x04 \x01(\t\x12%\n\x1d\x63ompressed_bitmap_account_ids\x18\x05 \x01(\x0c\x12\x16\n\x0e\x64\x61ta_file_name\x18\x06 \x01(\t\x12\x11\n\tnum_items\x18\x07 \x01(\x05\"*\n\x08PillBlob\x12\x1e\n\x05items\x18\x01 \x03(\x0b\x32\x0f.hello.PillData\"\x8c\x01\n\nEventBatch\x12+\n\x06\x65vents\x18\x01 \x03(\x0b\x32\x1b.hello.EventBatch.EventItem\x1aQ\n\tEventItem\x12\x17\n\x0fstart_timestamp\x18\x01 \x01(\x03\x12\x15\n\rend_timestamp\x18\x02 \x01(\x03\x12\x14\n\x0coffsetMillis\x18\x03 \x01(\x05\"t\n\rperiodic_data\x12\x11\n\tunix_time\x18\x01 \x01(\x05\x12\r\n\x05light\x18\x02 \x01(\x05\x12\x13\n\x0btemperature\x18\x03 \x01(\x05\x12\x10\n\x08humidity\x18\x04 \x01(\x05\x12\x0c\n\x04\x64ust\x18\x05 \x01(\x05\x12\x0c\n\x04name\x18\x06 \x01(\tB+\n\x1a\x63om.hello.suripu.api.inputB\x0bInputProtosH\x01')
+  serialized_pb='\n\x0bInput.proto\x12\x05hello\"\x8f\x03\n\x11SensorSampleBatch\x12\x36\n\x07samples\x18\x01 \x03(\x0b\x32%.hello.SensorSampleBatch.SensorSample\x12\x11\n\tdevice_id\x18\x02 \x01(\t\x1a\xae\x02\n\x0cSensorSample\x12\x45\n\x0bsensor_type\x18\x01 \x01(\x0e\x32\x30.hello.SensorSampleBatch.SensorSample.SensorType\x12\x11\n\ttimestamp\x18\x02 \x01(\x05\x12\r\n\x05value\x18\x03 \x01(\x0c\"\xb4\x01\n\nSensorType\x12\x17\n\x13\x41MBIENT_TEMPERATURE\x10\x00\x12\x14\n\x10\x41MBIENT_HUMIDITY\x10\x01\x12\x11\n\rAMBIENT_LIGHT\x10\x02\x12\x14\n\x10\x41MBIENT_DECIBELS\x10\x03\x12\x17\n\x13\x41MBIENT_AIR_QUALITY\x10\x04\x12\x07\n\x03GPS\x10\x05\x12\x16\n\x12PHONE_ACCELERATION\x10\x06\x12\x14\n\x10PHONE_STEP_COUNT\x10\x07\"\xd5\x01\n\x11MotionSensorBatch\x12;\n\x0cmanufacturer\x18\x01 \x01(\x0e\x32%.hello.MotionSensorBatch.Manufacturer\x12\x36\n\x07samples\x18\x02 \x03(\x0b\x32%.hello.MotionSensorBatch.MotionSensor\x1a\x30\n\x0cMotionSensor\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\r\n\x05value\x18\x02 \x01(\x05\"\x19\n\x0cManufacturer\x12\t\n\x05HELLO\x10\x00\"\xad\x01\n\x10TrackerDataBatch\x12\x34\n\x07samples\x18\x01 \x03(\x0b\x32#.hello.TrackerDataBatch.TrackerData\x1a\x63\n\x0bTrackerData\x12\x12\n\ntracker_id\x18\x01 \x01(\t\x12\x11\n\ttimestamp\x18\x02 \x01(\x03\x12\x15\n\roffset_millis\x18\x03 \x01(\x05\x12\x16\n\x0esvm_no_gravity\x18\x04 \x01(\x05\"\x89\x04\n\x11SimpleSensorBatch\x12\x11\n\tdevice_id\x18\x01 \x01(\t\x12<\n\x07samples\x18\x02 \x03(\x0b\x32+.hello.SimpleSensorBatch.SimpleSensorSample\x1a\x61\n\x07GpsInfo\x12\x10\n\x08latitude\x18\x01 \x01(\x02\x12\x11\n\tlongitude\x18\x02 \x01(\x02\x12\x10\n\x08\x61\x63\x63uracy\x18\x03 \x01(\x02\x12\r\n\x05speed\x18\x04 \x01(\x02\x12\x10\n\x08provider\x18\x05 \x01(\t\x1a\xbf\x02\n\x12SimpleSensorSample\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\x1b\n\x13\x61mbient_temperature\x18\x02 \x01(\x02\x12\x18\n\x10\x61mbient_humidity\x18\x03 \x01(\x02\x12\x15\n\rambient_light\x18\x04 \x01(\x02\x12\x18\n\x10\x61mbient_decibels\x18\x05 \x01(\x02\x12\x1b\n\x13\x61mbient_air_quality\x18\x06 \x01(\x02\x12\x13\n\x0b\x64\x65vice_data\x18\x07 \x01(\x0c\x12\x1d\n\x15\x64\x65vice_data_signature\x18\x08 \x01(\x0c\x12\x17\n\x0fsound_amplitude\x18\t \x01(\x02\x12-\n\x03gps\x18\n \x01(\x0b\x32 .hello.SimpleSensorBatch.GpsInfo\x12\x15\n\roffset_millis\x18\x0b \x01(\x05\"z\n\x11\x41\x63tivationRequest\x12\x11\n\tdevice_id\x18\x01 \x01(\t\x12\x12\n\naccount_id\x18\x02 \x01(\t\x12\x11\n\ttimestamp\x18\x03 \x01(\x03\x12\x18\n\x10\x66irmware_version\x18\x04 \x01(\t\x12\x11\n\tsignature\x18\x05 \x01(\x0c\"%\n\x12\x41\x63tivationResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"`\n\x0bSyncRequest\x12\x11\n\tdevice_id\x18\x01 \x01(\t\x12\x18\n\x10\x66irmware_version\x18\x02 \x01(\t\x12\x11\n\tsignature\x18\x03 \x01(\x0c\x12\x11\n\tsomething\x18\x04 \x01(\t\"\xfb\x07\n\x0cSyncResponse\x12\x14\n\x0cupload_cycle\x18\x01 \x01(\x05\x12\x12\n\nsync_cycle\x18\x02 \x01(\x05\x12\x15\n\racc_scan_cyle\x18\x03 \x01(\x05\x12\x1d\n\x15\x61\x63\x63_sampling_interval\x18\x04 \x01(\x05\x12 \n\x18\x64\x65vice_sampling_interval\x18\x05 \x01(\x05\x12(\n\x05\x61larm\x18\x06 \x01(\x0b\x32\x19.hello.SyncResponse.Alarm\x12\x39\n\x0epairing_action\x18\x07 \x01(\x0b\x32!.hello.SyncResponse.PairingAction\x12\x33\n\x0bwhite_noise\x18\x08 \x01(\x0b\x32\x1e.hello.SyncResponse.WhiteNoise\x12\x35\n\x0c\x66lash_action\x18\t \x01(\x0b\x32\x1f.hello.SyncResponse.FlashAction\x1a_\n\x05\x41larm\x12\x12\n\nstart_time\x18\x01 \x01(\x05\x12\x10\n\x08\x65nd_time\x18\x02 \x01(\x05\x12\x16\n\x0bringtone_id\x18\x03 \x01(\x05:\x01\x31\x12\x18\n\x0cringtone_ids\x18\x04 \x03(\x03\x42\x02\x10\x01\x1a}\n\rPairingAction\x12\x0c\n\x04ssid\x18\x01 \x01(\t\x12:\n\x04type\x18\x02 \x01(\x0e\x32,.hello.SyncResponse.PairingAction.ActionType\"\"\n\nActionType\x12\x08\n\x04PAIR\x10\x00\x12\n\n\x06UNPAIR\x10\x01\x1a\x44\n\nWhiteNoise\x12\x12\n\nstart_time\x18\x01 \x01(\x05\x12\x10\n\x08\x65nd_time\x18\x02 \x01(\x05\x12\x10\n\x08sound_id\x18\x03 \x01(\x05\x1a\xf1\x02\n\x0b\x46lashAction\x12\x38\n\x05led_1\x18\x01 \x01(\x0b\x32).hello.SyncResponse.FlashAction.LEDAction\x12\x38\n\x05led_2\x18\x02 \x01(\x0b\x32).hello.SyncResponse.FlashAction.LEDAction\x12\x38\n\x05led_3\x18\x03 \x01(\x0b\x32).hello.SyncResponse.FlashAction.LEDAction\x12\x38\n\x05led_4\x18\x04 \x01(\x0b\x32).hello.SyncResponse.FlashAction.LEDAction\x12\x38\n\x05led_5\x18\x05 \x01(\x0b\x32).hello.SyncResponse.FlashAction.LEDAction\x1a@\n\tLEDAction\x12\r\n\x05\x63olor\x18\x01 \x01(\x05\x12\x12\n\nstart_time\x18\x02 \x01(\x05\x12\x10\n\x08\x65nd_time\x18\x03 \x01(\x05\"=\n\x08PillData\x12\x0f\n\x07pill_id\x18\x01 \x01(\t\x12\x12\n\naccount_id\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\x0c\"\xef\x01\n\x0fPillDataKinesis\x12\x0f\n\x07pill_id\x18\x01 \x01(\t\x12\x12\n\naccount_id\x18\x02 \x01(\t\x12\x11\n\ttimestamp\x18\x03 \x01(\x03\x12\r\n\x05value\x18\x04 \x01(\x03\x12\x14\n\x0coffsetMillis\x18\x05 \x01(\x05\x12\x15\n\rencryptedData\x18\x06 \x01(\x0c\x12\x14\n\x0c\x62\x61tteryLevel\x18\x07 \x01(\x05\x12\x17\n\x0f\x66irmwareVersion\x18\x08 \x01(\x05\x12\x12\n\npillIdLong\x18\t \x01(\x03\x12\x15\n\raccountIdLong\x18\n \x01(\x03\x12\x0e\n\x06upTime\x18\x0b \x01(\x05\"\xd4\x01\n\x0ePillBlobHeader\x12\x1d\n\x15\x66irst_sequence_number\x18\x01 \x01(\t\x12\x1c\n\x14last_sequence_number\x18\x02 \x01(\t\x12\x19\n\x11\x66irst_sample_date\x18\x03 \x01(\t\x12\x18\n\x10last_sample_date\x18\x04 \x01(\t\x12%\n\x1d\x63ompressed_bitmap_account_ids\x18\x05 \x01(\x0c\x12\x16\n\x0e\x64\x61ta_file_name\x18\x06 \x01(\t\x12\x11\n\tnum_items\x18\x07 \x01(\x05\"*\n\x08PillBlob\x12\x1e\n\x05items\x18\x01 \x03(\x0b\x32\x0f.hello.PillData\"\x8c\x01\n\nEventBatch\x12+\n\x06\x65vents\x18\x01 \x03(\x0b\x32\x1b.hello.EventBatch.EventItem\x1aQ\n\tEventItem\x12\x17\n\x0fstart_timestamp\x18\x01 \x01(\x03\x12\x15\n\rend_timestamp\x18\x02 \x01(\x03\x12\x14\n\x0coffsetMillis\x18\x03 \x01(\x05\"\x8d\x03\n\rperiodic_data\x12\x11\n\tunix_time\x18\x01 \x01(\x05\x12\r\n\x05light\x18\x02 \x01(\x05\x12\x13\n\x0btemperature\x18\x03 \x01(\x05\x12\x10\n\x08humidity\x18\x04 \x01(\x05\x12\x0c\n\x04\x64ust\x18\x05 \x01(\x05\x12\x0c\n\x04name\x18\x06 \x01(\t\x12\x0b\n\x03mac\x18\x07 \x01(\x0c\x12\x19\n\x11light_variability\x18\x08 \x01(\x05\x12\x16\n\x0elight_tonality\x18\t \x01(\x05\x12\x18\n\x10\x66irmware_version\x18\n \x01(\x05\x12-\n\x05pills\x18\x0b \x03(\x0b\x32\x1e.hello.periodic_data.pill_data\x1a\x8d\x01\n\tpill_data\x12\x10\n\x08\x64\x65viceId\x18\x03 \x01(\t\x12\x14\n\x0c\x62\x61tteryLevel\x18\t \x01(\x05\x12\x0e\n\x06uptime\x18\n \x01(\x05\x12\x12\n\nmotionData\x18\x0b \x01(\x05\x12\x1b\n\x13motionDataEncrypted\x18\x02 \x01(\x0c\x12\x17\n\x0f\x66irmwareVersion\x18\x01 \x01(\x05\x42)\n\x1a\x63om.hello.suripu.api.inputB\x0bInputProtos')
 
 
 
@@ -96,8 +96,8 @@ _SYNCRESPONSE_PAIRINGACTION_ACTIONTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=2119,
-  serialized_end=2153,
+  serialized_start=2145,
+  serialized_end=2179,
 )
 
 
@@ -672,6 +672,13 @@ _SYNCRESPONSE_ALARM = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='ringtone_ids', full_name='hello.SyncResponse.Alarm.ringtone_ids', index=3,
+      number=4, type=3, cpp_type=2, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\020\001')),
   ],
   extensions=[
   ],
@@ -682,7 +689,7 @@ _SYNCRESPONSE_ALARM = _descriptor.Descriptor(
   is_extendable=False,
   extension_ranges=[],
   serialized_start=1957,
-  serialized_end=2026,
+  serialized_end=2052,
 )
 
 _SYNCRESPONSE_PAIRINGACTION = _descriptor.Descriptor(
@@ -716,8 +723,8 @@ _SYNCRESPONSE_PAIRINGACTION = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2028,
-  serialized_end=2153,
+  serialized_start=2054,
+  serialized_end=2179,
 )
 
 _SYNCRESPONSE_WHITENOISE = _descriptor.Descriptor(
@@ -757,8 +764,8 @@ _SYNCRESPONSE_WHITENOISE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2155,
-  serialized_end=2223,
+  serialized_start=2181,
+  serialized_end=2249,
 )
 
 _SYNCRESPONSE_FLASHACTION_LEDACTION = _descriptor.Descriptor(
@@ -798,8 +805,8 @@ _SYNCRESPONSE_FLASHACTION_LEDACTION = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2531,
-  serialized_end=2595,
+  serialized_start=2557,
+  serialized_end=2621,
 )
 
 _SYNCRESPONSE_FLASHACTION = _descriptor.Descriptor(
@@ -853,8 +860,8 @@ _SYNCRESPONSE_FLASHACTION = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2226,
-  serialized_end=2595,
+  serialized_start=2252,
+  serialized_end=2621,
 )
 
 _SYNCRESPONSE = _descriptor.Descriptor(
@@ -937,7 +944,7 @@ _SYNCRESPONSE = _descriptor.Descriptor(
   is_extendable=False,
   extension_ranges=[],
   serialized_start=1602,
-  serialized_end=2595,
+  serialized_end=2621,
 )
 
 
@@ -978,8 +985,106 @@ _PILLDATA = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2597,
-  serialized_end=2658,
+  serialized_start=2623,
+  serialized_end=2684,
+)
+
+
+_PILLDATAKINESIS = _descriptor.Descriptor(
+  name='PillDataKinesis',
+  full_name='hello.PillDataKinesis',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='pill_id', full_name='hello.PillDataKinesis.pill_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='account_id', full_name='hello.PillDataKinesis.account_id', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='timestamp', full_name='hello.PillDataKinesis.timestamp', index=2,
+      number=3, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='hello.PillDataKinesis.value', index=3,
+      number=4, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='offsetMillis', full_name='hello.PillDataKinesis.offsetMillis', index=4,
+      number=5, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='encryptedData', full_name='hello.PillDataKinesis.encryptedData', index=5,
+      number=6, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value="",
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='batteryLevel', full_name='hello.PillDataKinesis.batteryLevel', index=6,
+      number=7, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='firmwareVersion', full_name='hello.PillDataKinesis.firmwareVersion', index=7,
+      number=8, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='pillIdLong', full_name='hello.PillDataKinesis.pillIdLong', index=8,
+      number=9, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='accountIdLong', full_name='hello.PillDataKinesis.accountIdLong', index=9,
+      number=10, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='upTime', full_name='hello.PillDataKinesis.upTime', index=10,
+      number=11, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  extension_ranges=[],
+  serialized_start=2687,
+  serialized_end=2926,
 )
 
 
@@ -1048,8 +1153,8 @@ _PILLBLOBHEADER = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2661,
-  serialized_end=2873,
+  serialized_start=2929,
+  serialized_end=3141,
 )
 
 
@@ -1076,8 +1181,8 @@ _PILLBLOB = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2875,
-  serialized_end=2917,
+  serialized_start=3143,
+  serialized_end=3185,
 )
 
 
@@ -1118,8 +1223,8 @@ _EVENTBATCH_EVENTITEM = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2979,
-  serialized_end=3060,
+  serialized_start=3247,
+  serialized_end=3328,
 )
 
 _EVENTBATCH = _descriptor.Descriptor(
@@ -1145,10 +1250,72 @@ _EVENTBATCH = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2920,
-  serialized_end=3060,
+  serialized_start=3188,
+  serialized_end=3328,
 )
 
+
+_PERIODIC_DATA_PILL_DATA = _descriptor.Descriptor(
+  name='pill_data',
+  full_name='hello.periodic_data.pill_data',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='deviceId', full_name='hello.periodic_data.pill_data.deviceId', index=0,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='batteryLevel', full_name='hello.periodic_data.pill_data.batteryLevel', index=1,
+      number=9, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='uptime', full_name='hello.periodic_data.pill_data.uptime', index=2,
+      number=10, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='motionData', full_name='hello.periodic_data.pill_data.motionData', index=3,
+      number=11, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='motionDataEncrypted', full_name='hello.periodic_data.pill_data.motionDataEncrypted', index=4,
+      number=2, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value="",
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='firmwareVersion', full_name='hello.periodic_data.pill_data.firmwareVersion', index=5,
+      number=1, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  extension_ranges=[],
+  serialized_start=3587,
+  serialized_end=3728,
+)
 
 _PERIODIC_DATA = _descriptor.Descriptor(
   name='periodic_data',
@@ -1199,17 +1366,52 @@ _PERIODIC_DATA = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='mac', full_name='hello.periodic_data.mac', index=6,
+      number=7, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value="",
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='light_variability', full_name='hello.periodic_data.light_variability', index=7,
+      number=8, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='light_tonality', full_name='hello.periodic_data.light_tonality', index=8,
+      number=9, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='firmware_version', full_name='hello.periodic_data.firmware_version', index=9,
+      number=10, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='pills', full_name='hello.periodic_data.pills', index=10,
+      number=11, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
-  nested_types=[],
+  nested_types=[_PERIODIC_DATA_PILL_DATA, ],
   enum_types=[
   ],
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=3062,
-  serialized_end=3178,
+  serialized_start=3331,
+  serialized_end=3728,
 )
 
 _SENSORSAMPLEBATCH_SENSORSAMPLE.fields_by_name['sensor_type'].enum_type = _SENSORSAMPLEBATCH_SENSORSAMPLE_SENSORTYPE
@@ -1245,6 +1447,8 @@ _SYNCRESPONSE.fields_by_name['flash_action'].message_type = _SYNCRESPONSE_FLASHA
 _PILLBLOB.fields_by_name['items'].message_type = _PILLDATA
 _EVENTBATCH_EVENTITEM.containing_type = _EVENTBATCH;
 _EVENTBATCH.fields_by_name['events'].message_type = _EVENTBATCH_EVENTITEM
+_PERIODIC_DATA_PILL_DATA.containing_type = _PERIODIC_DATA;
+_PERIODIC_DATA.fields_by_name['pills'].message_type = _PERIODIC_DATA_PILL_DATA
 DESCRIPTOR.message_types_by_name['SensorSampleBatch'] = _SENSORSAMPLEBATCH
 DESCRIPTOR.message_types_by_name['MotionSensorBatch'] = _MOTIONSENSORBATCH
 DESCRIPTOR.message_types_by_name['TrackerDataBatch'] = _TRACKERDATABATCH
@@ -1254,6 +1458,7 @@ DESCRIPTOR.message_types_by_name['ActivationResponse'] = _ACTIVATIONRESPONSE
 DESCRIPTOR.message_types_by_name['SyncRequest'] = _SYNCREQUEST
 DESCRIPTOR.message_types_by_name['SyncResponse'] = _SYNCRESPONSE
 DESCRIPTOR.message_types_by_name['PillData'] = _PILLDATA
+DESCRIPTOR.message_types_by_name['PillDataKinesis'] = _PILLDATAKINESIS
 DESCRIPTOR.message_types_by_name['PillBlobHeader'] = _PILLBLOBHEADER
 DESCRIPTOR.message_types_by_name['PillBlob'] = _PILLBLOB
 DESCRIPTOR.message_types_by_name['EventBatch'] = _EVENTBATCH
@@ -1373,6 +1578,12 @@ class PillData(_message.Message):
 
   # @@protoc_insertion_point(class_scope:hello.PillData)
 
+class PillDataKinesis(_message.Message):
+  __metaclass__ = _reflection.GeneratedProtocolMessageType
+  DESCRIPTOR = _PILLDATAKINESIS
+
+  # @@protoc_insertion_point(class_scope:hello.PillDataKinesis)
+
 class PillBlobHeader(_message.Message):
   __metaclass__ = _reflection.GeneratedProtocolMessageType
   DESCRIPTOR = _PILLBLOBHEADER
@@ -1399,11 +1610,19 @@ class EventBatch(_message.Message):
 
 class periodic_data(_message.Message):
   __metaclass__ = _reflection.GeneratedProtocolMessageType
+
+  class pill_data(_message.Message):
+    __metaclass__ = _reflection.GeneratedProtocolMessageType
+    DESCRIPTOR = _PERIODIC_DATA_PILL_DATA
+
+    # @@protoc_insertion_point(class_scope:hello.periodic_data.pill_data)
   DESCRIPTOR = _PERIODIC_DATA
 
   # @@protoc_insertion_point(class_scope:hello.periodic_data)
 
 
 DESCRIPTOR.has_options = True
-DESCRIPTOR._options = _descriptor._ParseOptions(descriptor_pb2.FileOptions(), '\n\032com.hello.suripu.api.inputB\013InputProtosH\001')
+DESCRIPTOR._options = _descriptor._ParseOptions(descriptor_pb2.FileOptions(), '\n\032com.hello.suripu.api.inputB\013InputProtos')
+_SYNCRESPONSE_ALARM.fields_by_name['ringtone_ids'].has_options = True
+_SYNCRESPONSE_ALARM.fields_by_name['ringtone_ids']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\020\001')
 # @@protoc_insertion_point(module_scope)
