@@ -15,7 +15,8 @@ public class CurrentRoomState {
         public enum Unit {
             CELCIUS("c"),
             PERCENT("%"),
-            PPM("ppm");
+            PPM("ppm"),
+            MICRO_G_M3("µg/m3");
 
             private final String value;
             private Unit(final String value) {
@@ -41,7 +42,7 @@ public class CurrentRoomState {
         }
 
         @JsonProperty("value")
-        public final Integer value;
+        public final Float value;
 
         @JsonProperty("message")
         public final String message;
@@ -55,7 +56,7 @@ public class CurrentRoomState {
         @JsonProperty("unit")
         public final Unit unit;
 
-        public State(final Integer value, final String message, final Condition condition, final DateTime lastUpdated, final Unit unit) {
+        public State(final Float value, final String message, final Condition condition, final DateTime lastUpdated, final Unit unit) {
             this.value = value;
             this.message = message;
             this.condition = condition;
@@ -88,9 +89,9 @@ public class CurrentRoomState {
     public static CurrentRoomState fromDeviceData(final DeviceData data, final DateTime referenceTime, final Integer thresholdInMinutes) {
 
         // BEWARE, MUTABLE STATE BELOW. SCAAAAAARY
-        Integer temp = Math.round(DeviceData.dbIntToFloat(data.ambientTemperature));
-        Integer humidity = Math.round(DeviceData.dbIntToFloat(data.ambientHumidity));
-        Integer particulates = Math.round(DeviceData.dbIntToFloat(data.ambientAirQuality));
+        Float temp = DeviceData.dbIntToFloat(data.ambientTemperature);
+        Float humidity = DeviceData.dbIntToFloat(data.ambientHumidity);
+        Float particulates = DeviceData.dbIntToFloatDust(data.ambientAirQuality);
         State temperatureState;
         State humidityState;
         State particulatesState;
@@ -110,9 +111,9 @@ public class CurrentRoomState {
         // Temp
         if(temp == null) {
            temperatureState = new State(temp, "Could not retrieve recent temperature reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.CELCIUS);
-        } else if (temp  < 15) {
+        } else if (temp  < 15.0) {
             temperatureState = new State(temp, "It’s pretty cold in here.", State.Condition.ALERT, data.dateTimeUTC, State.Unit.CELCIUS);
-        } else if (temp > 30) {
+        } else if (temp > 30.0) {
             temperatureState = new State(temp, "It’s pretty hot in here.", State.Condition.ALERT, data.dateTimeUTC, State.Unit.CELCIUS);
         } else { // temp >= 60 && temp <= 72
             temperatureState = new State(temp, "", State.Condition.IDEAL, data.dateTimeUTC, State.Unit.CELCIUS);
@@ -121,9 +122,9 @@ public class CurrentRoomState {
         // Humidity
         if(humidity == null) {
             humidityState = new State(humidity, "Could not retrieve recent humidity reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.PERCENT);
-        } else if (humidity  < 30) {
+        } else if (humidity  < 30.0) {
             humidityState = new State(humidity, "It’s pretty dry in here.", State.Condition.WARNING, data.dateTimeUTC, State.Unit.PERCENT);
-        } else if (humidity > 60) {
+        } else if (humidity > 60.0) {
             humidityState = new State(humidity, "It’s pretty humid in here.", State.Condition.WARNING, data.dateTimeUTC, State.Unit.PERCENT);
         } else { // humidity >= 30 && humidity<= 60
             humidityState = new State(humidity, "", State.Condition.IDEAL, data.dateTimeUTC, State.Unit.PERCENT);
@@ -132,11 +133,13 @@ public class CurrentRoomState {
 
         // Air Quality
         if(particulates == null) {
-            particulatesState = new State(humidity, "Could not retrieve recent particulates reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.PPM);
-        } else if (particulates > 35) {
-            particulatesState = new State(particulates, "Air Particulates EPA standard: Daily: 35 µg/m3, AQI = 99", State.Condition.WARNING, data.dateTimeUTC, State.Unit.PPM);
+            particulatesState = new State(humidity, "Could not retrieve recent particulates reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.MICRO_G_M3);
+        } else if (particulates > 0.025) { // 35.0 divide by 1440 minutes
+            particulatesState = new State(particulates, "Air particulates level is higher than usual, do not let this condition persists for more than 24 hours", State.Condition.WARNING, data.dateTimeUTC, State.Unit.MICRO_G_M3);
+        } else if (particulates > 35.0) {
+            particulatesState = new State(particulates, "Air Particulates EPA standard: Daily: 35 µg/m3, AQI = 99", State.Condition.ALERT, data.dateTimeUTC, State.Unit.MICRO_G_M3);
         } else{
-            particulatesState = new State(particulates, "", State.Condition.IDEAL, data.dateTimeUTC, State.Unit.PPM);
+            particulatesState = new State(particulates, "", State.Condition.IDEAL, data.dateTimeUTC, State.Unit.MICRO_G_M3);
         }
 
         final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState);

@@ -84,7 +84,8 @@ public class Alarm {
         }
 
         if(!isRepeated){
-            if(new DateTime(year, month, day, hourOfDay, minuteOfHour, DateTimeZone.UTC).getDayOfWeek() != dayOfWeek.toArray()[0]){
+            Integer dayOfWeekValue = dayOfWeek.toArray(new Integer[0])[0];
+            if(new DateTime(year, month, day, hourOfDay, minuteOfHour, DateTimeZone.UTC).getDayOfWeek() != dayOfWeekValue){
                 throw new IllegalArgumentException("Invalid day of week.");
             }
         }

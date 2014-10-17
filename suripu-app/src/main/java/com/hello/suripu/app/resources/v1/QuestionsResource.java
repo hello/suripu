@@ -18,7 +18,9 @@ import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
@@ -79,6 +81,16 @@ public class QuestionsResource {
     public void saveAnswer(@Scope(OAuthScope.QUESTIONS_WRITE) final AccessToken accessToken, @Valid final Choice choice) {
         LOGGER.debug("Saving answer for account id = {}", accessToken.accountId);
         LOGGER.debug("Choice was = {}", choice.id);
+    }
+
+    @Timed
+    @PUT
+    @Path("/{question_id}/skip")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void skipQuestion(@Scope(OAuthScope.QUESTIONS_WRITE) final AccessToken accessToken,
+                             @PathParam("question_id") final Long questionId) {
+        // TODO: obviously, we will need to actually mark a question as skipped when the questions are hooked up to the database
+        LOGGER.debug("Skipping question {} for account id = {}", questionId, accessToken.accountId);
     }
 
 }

@@ -153,7 +153,7 @@ public class TimelineUtilsTest {
         }
     }
 
-//    @Test
+
     public void testTrackerMotion() throws IOException {
         final ObjectMapper objectMapper = new ObjectMapper();
         final URL url = Resources.getResource("trackermotion.json");

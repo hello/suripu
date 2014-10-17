@@ -48,10 +48,12 @@ CREATE TABLE device_sensors_master (
     id BIGSERIAL PRIMARY KEY,
     account_id BIGINT,
     device_id BIGINT,
-    ambient_temp FLOAT,
-    ambient_light FLOAT,
-    ambient_humidity FLOAT,
-    ambient_air_quality FLOAT,
+    ambient_temp INTEGER,
+    ambient_light INTEGER,
+    ambient_light_variance INTEGER,
+    ambient_light_peakiness INTEGER,
+    ambient_humidity INTEGER,
+    ambient_air_quality INTEGER,
     ts TIMESTAMP,
     local_utc_ts TIMESTAMP,
     offset_millis INTEGER
@@ -66,6 +68,15 @@ GRANT ALL PRIVILEGES ON device_sensors_par_default TO ingress_user;
 CREATE UNIQUE INDEX uniq_device_ts_on_par_default on device_sensors_par_default(device_id, ts);
 CREATE UNIQUE INDEX uniq_device_id_account_id_ts_on_par_default on device_sensors_par_default(device_id, account_id, ts);
 
+-- add new columns for additional light values (10/16/2014)
+ALTER TABLE device_sensors_master ADD COLUMN ambient_light_variance INTEGER DEFAULT 0;
+ALTER TABLE device_sensors_master ADD COLUMN ambient_light_peakiness INTEGER DEFAULT 0;
+
+-- store int instead of float (10/16/2014)
+ALTER TABLE device_sensors_master ALTER COLUMN ambient_temp SET DATA TYPE INTEGER;
+ALTER TABLE device_sensors_master ALTER COLUMN ambient_light SET DATA TYPE INTEGER;
+ALTER TABLE device_sensors_master ALTER COLUMN ambient_humidity SET DATA TYPE INTEGER;
+ALTER TABLE device_sensors_master ALTER COLUMN ambient_air_quality SET DATA TYPE INTEGER;
 
 -- Trigger function for master insert
 CREATE OR REPLACE FUNCTION device_sensors_master_insert_function() RETURNS TRIGGER LANGUAGE plpgsql AS
