@@ -405,6 +405,8 @@ public class ReceiveResource {
         }
 
         long nextRingTimestamp = replyRingTime.actualRingTimeUTC;
+
+        LOGGER.debug("Next ring time: {}", new DateTime(nextRingTimestamp, userTimeZone));
         int ringDurationInMS = 30 * DateTimeConstants.MILLIS_PER_SECOND;  // TODO: make this flexible so we can adjust based on user preferences.
 
         final InputProtos.SyncResponse.Alarm.Builder alarmBuilder = InputProtos.SyncResponse.Alarm.newBuilder()
