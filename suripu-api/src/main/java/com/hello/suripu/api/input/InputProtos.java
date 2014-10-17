@@ -9810,6 +9810,16 @@ public final class InputProtos {
      * <code>optional .hello.SyncResponse.FlashAction flash_action = 9;</code>
      */
     com.hello.suripu.api.input.InputProtos.SyncResponse.FlashActionOrBuilder getFlashActionOrBuilder();
+
+    // optional bool reset_device = 10;
+    /**
+     * <code>optional bool reset_device = 10;</code>
+     */
+    boolean hasResetDevice();
+    /**
+     * <code>optional bool reset_device = 10;</code>
+     */
+    boolean getResetDevice();
   }
   /**
    * Protobuf type {@code hello.SyncResponse}
@@ -9937,6 +9947,11 @@ public final class InputProtos {
                 flashAction_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000100;
+              break;
+            }
+            case 80: {
+              bitField0_ |= 0x00000200;
+              resetDevice_ = input.readBool();
               break;
             }
           }
@@ -13906,6 +13921,22 @@ public final class InputProtos {
       return flashAction_;
     }
 
+    // optional bool reset_device = 10;
+    public static final int RESET_DEVICE_FIELD_NUMBER = 10;
+    private boolean resetDevice_;
+    /**
+     * <code>optional bool reset_device = 10;</code>
+     */
+    public boolean hasResetDevice() {
+      return ((bitField0_ & 0x00000200) == 0x00000200);
+    }
+    /**
+     * <code>optional bool reset_device = 10;</code>
+     */
+    public boolean getResetDevice() {
+      return resetDevice_;
+    }
+
     private void initFields() {
       uploadCycle_ = 0;
       syncCycle_ = 0;
@@ -13916,6 +13947,7 @@ public final class InputProtos {
       pairingAction_ = com.hello.suripu.api.input.InputProtos.SyncResponse.PairingAction.getDefaultInstance();
       whiteNoise_ = com.hello.suripu.api.input.InputProtos.SyncResponse.WhiteNoise.getDefaultInstance();
       flashAction_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.getDefaultInstance();
+      resetDevice_ = false;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -13955,6 +13987,9 @@ public final class InputProtos {
       }
       if (((bitField0_ & 0x00000100) == 0x00000100)) {
         output.writeMessage(9, flashAction_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        output.writeBool(10, resetDevice_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -14000,6 +14035,10 @@ public final class InputProtos {
       if (((bitField0_ & 0x00000100) == 0x00000100)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(9, flashAction_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(10, resetDevice_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -14155,6 +14194,8 @@ public final class InputProtos {
           flashActionBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000100);
+        resetDevice_ = false;
+        bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
 
@@ -14235,6 +14276,10 @@ public final class InputProtos {
         } else {
           result.flashAction_ = flashActionBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+          to_bitField0_ |= 0x00000200;
+        }
+        result.resetDevice_ = resetDevice_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -14277,6 +14322,9 @@ public final class InputProtos {
         }
         if (other.hasFlashAction()) {
           mergeFlashAction(other.getFlashAction());
+        }
+        if (other.hasResetDevice()) {
+          setResetDevice(other.getResetDevice());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -14936,6 +14984,39 @@ public final class InputProtos {
           flashAction_ = null;
         }
         return flashActionBuilder_;
+      }
+
+      // optional bool reset_device = 10;
+      private boolean resetDevice_ ;
+      /**
+       * <code>optional bool reset_device = 10;</code>
+       */
+      public boolean hasResetDevice() {
+        return ((bitField0_ & 0x00000200) == 0x00000200);
+      }
+      /**
+       * <code>optional bool reset_device = 10;</code>
+       */
+      public boolean getResetDevice() {
+        return resetDevice_;
+      }
+      /**
+       * <code>optional bool reset_device = 10;</code>
+       */
+      public Builder setResetDevice(boolean value) {
+        bitField0_ |= 0x00000200;
+        resetDevice_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool reset_device = 10;</code>
+       */
+      public Builder clearResetDevice() {
+        bitField0_ = (bitField0_ & ~0x00000200);
+        resetDevice_ = false;
+        onChanged();
+        return this;
       }
 
       // @@protoc_insertion_point(builder_scope:hello.SyncResponse)
@@ -23060,7 +23141,7 @@ public final class InputProtos {
       "\022\021\n\tsignature\030\005 \001(\014\"%\n\022ActivationRespons" +
       "e\022\017\n\007success\030\001 \001(\010\"`\n\013SyncRequest\022\021\n\tdev" +
       "ice_id\030\001 \001(\t\022\030\n\020firmware_version\030\002 \001(\t\022\021",
-      "\n\tsignature\030\003 \001(\014\022\021\n\tsomething\030\004 \001(\t\"\373\007\n" +
+      "\n\tsignature\030\003 \001(\014\022\021\n\tsomething\030\004 \001(\t\"\221\010\n" +
       "\014SyncResponse\022\024\n\014upload_cycle\030\001 \001(\005\022\022\n\ns" +
       "ync_cycle\030\002 \001(\005\022\025\n\racc_scan_cyle\030\003 \001(\005\022\035" +
       "\n\025acc_sampling_interval\030\004 \001(\005\022 \n\030device_" +
@@ -23069,53 +23150,54 @@ public final class InputProtos {
       "ion\030\007 \001(\0132!.hello.SyncResponse.PairingAc" +
       "tion\0223\n\013white_noise\030\010 \001(\0132\036.hello.SyncRe" +
       "sponse.WhiteNoise\0225\n\014flash_action\030\t \001(\0132" +
-      "\037.hello.SyncResponse.FlashAction\032_\n\005Alar",
-      "m\022\022\n\nstart_time\030\001 \001(\005\022\020\n\010end_time\030\002 \001(\005\022" +
-      "\026\n\013ringtone_id\030\003 \001(\005:\0011\022\030\n\014ringtone_ids\030" +
-      "\004 \003(\003B\002\020\001\032}\n\rPairingAction\022\014\n\004ssid\030\001 \001(\t" +
-      "\022:\n\004type\030\002 \001(\0162,.hello.SyncResponse.Pair" +
-      "ingAction.ActionType\"\"\n\nActionType\022\010\n\004PA" +
-      "IR\020\000\022\n\n\006UNPAIR\020\001\032D\n\nWhiteNoise\022\022\n\nstart_" +
-      "time\030\001 \001(\005\022\020\n\010end_time\030\002 \001(\005\022\020\n\010sound_id" +
-      "\030\003 \001(\005\032\361\002\n\013FlashAction\0228\n\005led_1\030\001 \001(\0132)." +
+      "\037.hello.SyncResponse.FlashAction\022\024\n\014rese",
+      "t_device\030\n \001(\010\032_\n\005Alarm\022\022\n\nstart_time\030\001 " +
+      "\001(\005\022\020\n\010end_time\030\002 \001(\005\022\026\n\013ringtone_id\030\003 \001" +
+      "(\005:\0011\022\030\n\014ringtone_ids\030\004 \003(\003B\002\020\001\032}\n\rPairi" +
+      "ngAction\022\014\n\004ssid\030\001 \001(\t\022:\n\004type\030\002 \001(\0162,.h" +
+      "ello.SyncResponse.PairingAction.ActionTy" +
+      "pe\"\"\n\nActionType\022\010\n\004PAIR\020\000\022\n\n\006UNPAIR\020\001\032D" +
+      "\n\nWhiteNoise\022\022\n\nstart_time\030\001 \001(\005\022\020\n\010end_" +
+      "time\030\002 \001(\005\022\020\n\010sound_id\030\003 \001(\005\032\361\002\n\013FlashAc" +
+      "tion\0228\n\005led_1\030\001 \001(\0132).hello.SyncResponse" +
+      ".FlashAction.LEDAction\0228\n\005led_2\030\002 \001(\0132).",
       "hello.SyncResponse.FlashAction.LEDAction" +
-      "\0228\n\005led_2\030\002 \001(\0132).hello.SyncResponse.Fla",
-      "shAction.LEDAction\0228\n\005led_3\030\003 \001(\0132).hell" +
+      "\0228\n\005led_3\030\003 \001(\0132).hello.SyncResponse.Fla" +
+      "shAction.LEDAction\0228\n\005led_4\030\004 \001(\0132).hell" +
       "o.SyncResponse.FlashAction.LEDAction\0228\n\005" +
-      "led_4\030\004 \001(\0132).hello.SyncResponse.FlashAc" +
-      "tion.LEDAction\0228\n\005led_5\030\005 \001(\0132).hello.Sy" +
-      "ncResponse.FlashAction.LEDAction\032@\n\tLEDA" +
-      "ction\022\r\n\005color\030\001 \001(\005\022\022\n\nstart_time\030\002 \001(\005" +
-      "\022\020\n\010end_time\030\003 \001(\005\"=\n\010PillData\022\017\n\007pill_i" +
-      "d\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(\t\022\014\n\004data\030\003 \001(" +
-      "\014\"\357\001\n\017PillDataKinesis\022\017\n\007pill_id\030\001 \001(\t\022\022" +
-      "\n\naccount_id\030\002 \001(\t\022\021\n\ttimestamp\030\003 \001(\003\022\r\n",
-      "\005value\030\004 \001(\003\022\024\n\014offsetMillis\030\005 \001(\005\022\025\n\ren" +
-      "cryptedData\030\006 \001(\014\022\024\n\014batteryLevel\030\007 \001(\005\022" +
-      "\027\n\017firmwareVersion\030\010 \001(\005\022\022\n\npillIdLong\030\t" +
-      " \001(\003\022\025\n\raccountIdLong\030\n \001(\003\022\016\n\006upTime\030\013 " +
-      "\001(\005\"\324\001\n\016PillBlobHeader\022\035\n\025first_sequence" +
-      "_number\030\001 \001(\t\022\034\n\024last_sequence_number\030\002 " +
-      "\001(\t\022\031\n\021first_sample_date\030\003 \001(\t\022\030\n\020last_s" +
-      "ample_date\030\004 \001(\t\022%\n\035compressed_bitmap_ac" +
-      "count_ids\030\005 \001(\014\022\026\n\016data_file_name\030\006 \001(\t\022" +
-      "\021\n\tnum_items\030\007 \001(\005\"*\n\010PillBlob\022\036\n\005items\030",
-      "\001 \003(\0132\017.hello.PillData\"\214\001\n\nEventBatch\022+\n" +
-      "\006events\030\001 \003(\0132\033.hello.EventBatch.EventIt" +
-      "em\032Q\n\tEventItem\022\027\n\017start_timestamp\030\001 \001(\003" +
-      "\022\025\n\rend_timestamp\030\002 \001(\003\022\024\n\014offsetMillis\030" +
-      "\003 \001(\005\"\240\003\n\rperiodic_data\022\021\n\tunix_time\030\001 \001" +
-      "(\005\022\r\n\005light\030\002 \001(\005\022\023\n\013temperature\030\003 \001(\005\022\020" +
-      "\n\010humidity\030\004 \001(\005\022\014\n\004dust\030\005 \001(\005\022\014\n\004name\030\006" +
-      " \001(\t\022\013\n\003mac\030\007 \001(\014\022\031\n\021light_variability\030\010" +
-      " \001(\005\022\026\n\016light_tonality\030\t \001(\005\022\030\n\020firmware" +
-      "_version\030\n \001(\005\022-\n\005pills\030\013 \003(\0132\036.hello.pe",
-      "riodic_data.pill_data\022\021\n\tdevice_id\030\014 \001(\t" +
-      "\032\215\001\n\tpill_data\022\020\n\010deviceId\030\003 \001(\t\022\024\n\014batt" +
-      "eryLevel\030\t \001(\005\022\016\n\006uptime\030\n \001(\005\022\022\n\nmotion" +
-      "Data\030\013 \001(\005\022\033\n\023motionDataEncrypted\030\002 \001(\014\022" +
-      "\027\n\017firmwareVersion\030\001 \001(\005B)\n\032com.hello.su" +
-      "ripu.api.inputB\013InputProtos"
+      "led_5\030\005 \001(\0132).hello.SyncResponse.FlashAc" +
+      "tion.LEDAction\032@\n\tLEDAction\022\r\n\005color\030\001 \001" +
+      "(\005\022\022\n\nstart_time\030\002 \001(\005\022\020\n\010end_time\030\003 \001(\005" +
+      "\"=\n\010PillData\022\017\n\007pill_id\030\001 \001(\t\022\022\n\naccount" +
+      "_id\030\002 \001(\t\022\014\n\004data\030\003 \001(\014\"\357\001\n\017PillDataKine" +
+      "sis\022\017\n\007pill_id\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(\t",
+      "\022\021\n\ttimestamp\030\003 \001(\003\022\r\n\005value\030\004 \001(\003\022\024\n\014of" +
+      "fsetMillis\030\005 \001(\005\022\025\n\rencryptedData\030\006 \001(\014\022" +
+      "\024\n\014batteryLevel\030\007 \001(\005\022\027\n\017firmwareVersion" +
+      "\030\010 \001(\005\022\022\n\npillIdLong\030\t \001(\003\022\025\n\raccountIdL" +
+      "ong\030\n \001(\003\022\016\n\006upTime\030\013 \001(\005\"\324\001\n\016PillBlobHe" +
+      "ader\022\035\n\025first_sequence_number\030\001 \001(\t\022\034\n\024l" +
+      "ast_sequence_number\030\002 \001(\t\022\031\n\021first_sampl" +
+      "e_date\030\003 \001(\t\022\030\n\020last_sample_date\030\004 \001(\t\022%" +
+      "\n\035compressed_bitmap_account_ids\030\005 \001(\014\022\026\n" +
+      "\016data_file_name\030\006 \001(\t\022\021\n\tnum_items\030\007 \001(\005",
+      "\"*\n\010PillBlob\022\036\n\005items\030\001 \003(\0132\017.hello.Pill" +
+      "Data\"\214\001\n\nEventBatch\022+\n\006events\030\001 \003(\0132\033.he" +
+      "llo.EventBatch.EventItem\032Q\n\tEventItem\022\027\n" +
+      "\017start_timestamp\030\001 \001(\003\022\025\n\rend_timestamp\030" +
+      "\002 \001(\003\022\024\n\014offsetMillis\030\003 \001(\005\"\240\003\n\rperiodic" +
+      "_data\022\021\n\tunix_time\030\001 \001(\005\022\r\n\005light\030\002 \001(\005\022" +
+      "\023\n\013temperature\030\003 \001(\005\022\020\n\010humidity\030\004 \001(\005\022\014" +
+      "\n\004dust\030\005 \001(\005\022\014\n\004name\030\006 \001(\t\022\013\n\003mac\030\007 \001(\014\022" +
+      "\031\n\021light_variability\030\010 \001(\005\022\026\n\016light_tona" +
+      "lity\030\t \001(\005\022\030\n\020firmware_version\030\n \001(\005\022-\n\005",
+      "pills\030\013 \003(\0132\036.hello.periodic_data.pill_d" +
+      "ata\022\021\n\tdevice_id\030\014 \001(\t\032\215\001\n\tpill_data\022\020\n\010" +
+      "deviceId\030\003 \001(\t\022\024\n\014batteryLevel\030\t \001(\005\022\016\n\006" +
+      "uptime\030\n \001(\005\022\022\n\nmotionData\030\013 \001(\005\022\033\n\023moti" +
+      "onDataEncrypted\030\002 \001(\014\022\027\n\017firmwareVersion" +
+      "\030\001 \001(\005B)\n\032com.hello.suripu.api.inputB\013In" +
+      "putProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -23199,7 +23281,7 @@ public final class InputProtos {
           internal_static_hello_SyncResponse_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_SyncResponse_descriptor,
-              new java.lang.String[] { "UploadCycle", "SyncCycle", "AccScanCyle", "AccSamplingInterval", "DeviceSamplingInterval", "Alarm", "PairingAction", "WhiteNoise", "FlashAction", });
+              new java.lang.String[] { "UploadCycle", "SyncCycle", "AccScanCyle", "AccSamplingInterval", "DeviceSamplingInterval", "Alarm", "PairingAction", "WhiteNoise", "FlashAction", "ResetDevice", });
           internal_static_hello_SyncResponse_Alarm_descriptor =
             internal_static_hello_SyncResponse_descriptor.getNestedTypes().get(0);
           internal_static_hello_SyncResponse_Alarm_fieldAccessorTable = new
