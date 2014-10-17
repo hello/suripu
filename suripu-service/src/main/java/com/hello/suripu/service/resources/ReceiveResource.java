@@ -370,7 +370,7 @@ public class ReceiveResource {
 
             try {
                 deviceDataDAO.insert(deviceData);
-                LOGGER.info("Data saved to DB: {}", data);
+                LOGGER.info("Data saved to DB: {}", TextFormat.shortDebugString(data));
             } catch (UnableToExecuteStatementException exception) {
                 final Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
                 if (!matcher.find()) {
@@ -444,7 +444,7 @@ public class ReceiveResource {
     @Timed
     public String morpheusProtobufReceive(final byte[] body) {
 
-
+        LOGGER.warn("---- DEPRECATED ----");
         InputProtos.periodic_data data = null;
 
         try {
@@ -504,7 +504,7 @@ public class ReceiveResource {
                 LOGGER.warn("Duplicate device sensor value for account_id = {}, time: {}", pair.accountId, roundedDateTime);
             }
         }
-
+        LOGGER.warn("---- END DEPRECATED ----");
         return "OK";
     }
 
