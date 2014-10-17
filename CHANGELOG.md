@@ -1,3 +1,9 @@
+# 0.1.86
+
+* add ambient light variance and peakiness
+* return floats for device data
+* convert morpheus dust raw value to dust density
+
 # 0.1.78
 
 * make sensor name lowercase
