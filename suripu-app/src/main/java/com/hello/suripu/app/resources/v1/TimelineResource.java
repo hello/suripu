@@ -97,11 +97,23 @@ public class TimelineResource {
 
         final List<SleepSegment> extraSegments = new ArrayList<>();
 
+        // detect sleep time
+        final Optional<SleepSegment> sleepTimeSegment = TimelineUtils.computeSleepTime(categorized, 7);
+        if(sleepTimeSegment.isPresent()) {
+            extraSegments.add(sleepTimeSegment.get());
+        }
+
+
         // add partner movement data, check if there's a partner
         final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accessToken.accountId);
         if (optionalPartnerAccountId.isPresent()) {
             // get tracker motions for partner, query time is in UTC, not local_utc
-            final DateTime startTime = new DateTime(segments.get(0).timestamp, DateTimeZone.UTC);
+            final DateTime startTime;
+            if (sleepTimeSegment.isPresent()) {
+                startTime = new DateTime(sleepTimeSegment.get().timestamp, DateTimeZone.UTC);
+            } else {
+                startTime = new DateTime(segments.get(0).timestamp, DateTimeZone.UTC);
+            }
             final DateTime endTime = new DateTime(segments.get(segments.size() - 1).timestamp, DateTimeZone.UTC);
             final List<TrackerMotion> partnerMotions = this.trackerMotionDAO.getBetween(optionalPartnerAccountId.get(), startTime, endTime);
             if (partnerMotions.size() > 0) {
@@ -121,11 +133,6 @@ public class TimelineResource {
             extraSegments.add(sunriseSegment);
 
             LOGGER.debug(sunriseMessage);
-        }
-
-        final Optional<SleepSegment> sleepTimeSegment = TimelineUtils.computeSleepTime(categorized, 7);
-        if(sleepTimeSegment.isPresent()) {
-            extraSegments.add(sleepTimeSegment.get());
         }
 
         // TODO: add sound, light, temperature event segments
