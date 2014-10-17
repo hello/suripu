@@ -242,4 +242,5 @@ message periodic_data {
         optional int32 firmwareVersion = 1;
     }
     repeated pill_data pills=11;
+    optional string device_id = 12;
 }
