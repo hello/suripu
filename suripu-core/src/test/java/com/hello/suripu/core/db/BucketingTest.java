@@ -66,7 +66,7 @@ public class BucketingTest {
         assertThat(populatedMap.isPresent(), is(true));
 
         assertThat(populatedMap.get().size(), is(1));
-        assertThat(populatedMap.get().get(startDate.getMillis()).value, is(2F)); // round(222/100)
+        assertThat(populatedMap.get().get(startDate.getMillis()).value, is(2.22F)); // round(222/100)
 
     }
 
