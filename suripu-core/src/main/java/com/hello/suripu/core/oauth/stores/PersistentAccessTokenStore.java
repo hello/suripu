@@ -13,6 +13,7 @@ import com.hello.suripu.core.oauth.ClientAuthenticationException;
 import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
 import com.hello.suripu.core.oauth.OAuthScope;
+import com.hello.suripu.core.oauth.AccessTokenUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -178,7 +179,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
     }
 
     private Optional<AccessToken> fromDB(final ClientCredentials credentials) {
-        final Optional<UUID> optionalTokenUUID = AccessToken.cleanUUID(credentials.tokenOrCode);
+        final Optional<UUID> optionalTokenUUID = AccessTokenUtils.cleanUUID(credentials.tokenOrCode);
         if(!optionalTokenUUID.isPresent()) {
             LOGGER.warn("Invalid format for token {}", credentials.tokenOrCode);
             return Optional.absent();
@@ -193,7 +194,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         }
 
         final AccessToken accessToken = accessTokenOptional.get();
-        final Optional<Long> optionalAppIdFromToken = AccessToken.extractAppIdFromToken(credentials.tokenOrCode);
+        final Optional<Long> optionalAppIdFromToken = AccessTokenUtils.extractAppIdFromToken(credentials.tokenOrCode);
         if(!optionalAppIdFromToken.isPresent()) {
             LOGGER.warn("Invalid appId format for token {}", credentials.tokenOrCode);
             return Optional.absent();

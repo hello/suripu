@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.collect.ComparisonChain;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import java.util.List;
 
@@ -60,6 +61,15 @@ public class SleepSegment implements Comparable {
     public static SleepSegment withSleepDepth(final SleepSegment segment, final Integer sleepDepth) {
         return new SleepSegment(segment.id, segment.timestamp, segment.offsetMillis, segment.durationInSeconds, sleepDepth,
                 segment.eventType, segment.message, segment.sensors);
+    }
+
+    public static SleepSegment withEventType(final SleepSegment segment, final Event.Type eventType) {
+        return new SleepSegment(
+                segment.id, segment.timestamp,
+                segment.offsetMillis, segment.durationInSeconds, segment.sleepDepth,
+                eventType.toString(),
+                Event.getMessage(eventType, new DateTime(segment.timestamp, DateTimeZone.UTC).plusMillis(segment.offsetMillis)),
+                segment.sensors);
     }
 
     @Override

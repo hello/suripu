@@ -46,6 +46,50 @@ public class DownloadResource {
 
         final ListObjectsRequest listObjectsRequest = new ListObjectsRequest();
         listObjectsRequest.withBucketName(bucketName);
+        listObjectsRequest.withPrefix("stable");
+
+        final ObjectListing objectListing = amazonS3Client.listObjects(listObjectsRequest);
+
+        final Map<String, String> metadata = new HashMap<>();
+        final List<String> files = new ArrayList<>();
+
+        for(final S3ObjectSummary summary: objectListing.getObjectSummaries()) {
+            if(summary.getKey().contains(".hex")) {
+                files.add(summary.getKey());
+                metadata.put(summary.getKey(), summary.getLastModified().toString());
+            }
+        }
+
+        final Date expiration = new java.util.Date();
+        long msec = expiration.getTime();
+        msec += 1000 * 60 * 60; // 1 hour.
+        expiration.setTime(msec);
+
+
+
+        final List<String> sorted = Ordering.natural().sortedCopy(files);
+        final List<FirmwareUpdate> updates = new ArrayList<>();
+        for(final String sortedKey : sorted) {
+            final GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, sortedKey);
+            generatePresignedUrlRequest.setMethod(HttpMethod.GET); // Default.
+            generatePresignedUrlRequest.setExpiration(expiration);
+
+            final URL s = amazonS3Client.generatePresignedUrl(generatePresignedUrlRequest);
+
+            updates.add(new FirmwareUpdate(sortedKey, s.toExternalForm(), metadata.get(sortedKey)));
+            LOGGER.debug("Generated url for key = {}", sortedKey);
+        }
+        return updates;
+    }
+
+
+    @Path("/latest/manifest")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<FirmwareUpdate> getManifestStable(@Scope(OAuthScope.SENSORS_BASIC) AccessToken accessToken) {
+
+        final ListObjectsRequest listObjectsRequest = new ListObjectsRequest();
+        listObjectsRequest.withBucketName(bucketName);
         listObjectsRequest.withPrefix("latest");
 
         final ObjectListing objectListing = amazonS3Client.listObjects(listObjectsRequest);

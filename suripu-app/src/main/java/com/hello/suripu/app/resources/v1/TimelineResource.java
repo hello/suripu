@@ -70,8 +70,8 @@ public class TimelineResource {
 
 
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
-                .withZone(DateTimeZone.UTC).withHourOfDay(22);
-        final DateTime endDate = targetDate.plusHours(12);
+                .withZone(DateTimeZone.UTC).withHourOfDay(20);
+        final DateTime endDate = targetDate.plusHours(14);
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
 
@@ -93,7 +93,7 @@ public class TimelineResource {
 
         // create sleep-motion segments
         final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, true);
-        List<SleepSegment> normalized = TimelineUtils.categorizeSleepDepth(segments);
+        List<SleepSegment> categorized = TimelineUtils.categorizeSleepDepth(segments);
 
         final List<SleepSegment> extraSegments = new ArrayList<>();
 
@@ -110,21 +110,22 @@ public class TimelineResource {
             }
         }
 
-        // add sunrise & sunset data
-        final Optional<DateTime> sunset = sunData.sunset(targetDate.withHourOfDay(0).toString(DateTimeFormat.forPattern("yyyy-MM-dd")));
+        // add sunrise data
+
         final Optional<DateTime> sunrise = sunData.sunrise(targetDate.plusDays(1).toString(DateTimeFormat.forPattern("yyyy-MM-dd"))); // day + 1
-        if(sunrise.isPresent() && sunset.isPresent()) {
+        if(sunrise.isPresent()) {
             final String sunriseMessage = Event.getMessage(Event.Type.SUNRISE, sunrise.get());
-            final String sunsetMessage = Event.getMessage(Event.Type.SUNSET, sunset.get());
 
             final SleepSegment sunriseSegment = new SleepSegment(1L, sunrise.get().getMillis(), 0, 60, -1, Event.Type.SUNRISE.toString(), sunriseMessage, new ArrayList<SensorReading>());
-            final SleepSegment sunsetSegment = new SleepSegment(1L, sunset.get().getMillis(), 0, 60, 0, Event.Type.SUNSET.toString(), sunsetMessage, new ArrayList<SensorReading>());
 
             extraSegments.add(sunriseSegment);
-            extraSegments.add(sunsetSegment);
 
             LOGGER.debug(sunriseMessage);
-            LOGGER.debug(sunsetMessage);
+        }
+
+        final Optional<SleepSegment> sleepTimeSegment = TimelineUtils.computeSleepTime(categorized, 7);
+        if(sleepTimeSegment.isPresent()) {
+            extraSegments.add(sleepTimeSegment.get());
         }
 
         // TODO: add sound, light, temperature event segments
@@ -132,12 +133,12 @@ public class TimelineResource {
 
         // combine all segments
         if (extraSegments.size() > 0) {
-            normalized = TimelineUtils.insertSegmentsWithPriority(extraSegments, normalized);
+            categorized = TimelineUtils.insertSegmentsWithPriority(extraSegments, categorized);
         }
 
-        LOGGER.debug("Size of normalized = {}", normalized.size());
+        LOGGER.debug("Size of normalized = {}", categorized.size());
 
-        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(normalized, mergeThreshold);
+        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(categorized, mergeThreshold);
         final SleepStats sleepStats = TimelineUtils.computeStats(mergedSegments);
         final List<SleepSegment> reversed = Lists.reverse(mergedSegments);
 

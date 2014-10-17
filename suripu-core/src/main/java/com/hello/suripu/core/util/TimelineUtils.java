@@ -126,12 +126,6 @@ public class TimelineUtils {
 
             String eventType = (sleepDepth <= threshold) ? Event.Type.MOTION.toString() : Event.Type.NONE.toString(); // TODO: put these in a config file or DB
 
-            if(i == 0) {
-                eventType = Event.Type.SLEEP.toString();
-            } else if (i == trackerMotions.size() -1) {
-                eventType = Event.Type.WAKE_UP.toString();
-            }
-
             String eventMessage = "";
 
             if(eventType.equals(Event.Type.MOTION.toString())) {
@@ -394,5 +388,39 @@ public class TimelineUtils {
         }
 
         return generatedInsights;
+    }
+
+    public static Optional<SleepSegment> computeSleepTime(final List<SleepSegment> sleepSegments, int thresholdInMinutes) {
+
+        if(sleepSegments.isEmpty()) {
+            return Optional.absent();
+        }
+
+        final List<DateTime> dateTimes = new ArrayList<>();
+        Map<Long, SleepSegment> map = new HashMap<>();
+
+        for(SleepSegment sleepSegment : sleepSegments) {
+            if(sleepSegment.sleepDepth < 100) {
+                dateTimes.add(new DateTime(sleepSegment.timestamp + sleepSegment.offsetMillis));
+                map.put(sleepSegment.timestamp + sleepSegment.offsetMillis, sleepSegment);
+            }
+        }
+
+        for(int i =0; i < dateTimes.size() -1; i++) {
+            DateTime current = dateTimes.get(i);
+            DateTime next = dateTimes.get(i + 1);
+            int diffInMinutes = next.getMinuteOfDay() - current.getMinuteOfDay();
+            if (diffInMinutes > thresholdInMinutes) {
+//                System.out.println("Diff in minutes = " + (next.getSecondOfDay() - current.getSecondOfDay()));
+                if(map.containsKey(current.getMillis())) {
+                    SleepSegment s = map.get(current.getMillis());
+                    return Optional.of(SleepSegment.withEventType(s, Event.Type.SLEEP));
+
+                }
+                break;
+            }
+        }
+
+        return Optional.absent();
     }
 }
