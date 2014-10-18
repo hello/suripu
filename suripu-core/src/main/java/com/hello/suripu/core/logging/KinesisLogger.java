@@ -38,8 +38,8 @@ public class KinesisLogger implements DataLogger {
 
             @Override
             public void onSuccess(final PutRecordRequest request, final PutRecordResult putRecordResult) {
-                LOGGER.debug("ShardId = {}", putRecordResult.getShardId());
-                LOGGER.debug("Sequence number = {}",putRecordResult.getSequenceNumber());
+                LOGGER.trace("ShardId = {}", putRecordResult.getShardId());
+                LOGGER.trace("Sequence number = {}",putRecordResult.getSequenceNumber());
             }
         });
 
@@ -57,7 +57,7 @@ public class KinesisLogger implements DataLogger {
         if(recordResult.getSequenceNumber() == null || recordResult.getShardId() == null) {
             throw new RuntimeException("Did not receive SequenceNumber or ShardId from Kinesis. Bad stream configuration? Currently using: " + streamName);
         }
-        LOGGER.debug("Successfully saved in Kinesis. Seq Number = {} and ShardId = {}",
+        LOGGER.trace("Successfully saved in Kinesis. Seq Number = {} and ShardId = {}",
                 recordResult.getSequenceNumber(),
                 recordResult.getShardId()
         );
@@ -74,7 +74,7 @@ public class KinesisLogger implements DataLogger {
         putRecordRequest.setSequenceNumberForOrdering(sequenceNumber);
 
         final PutRecordResult  recordResult = kinesisClient.putRecord(putRecordRequest);
-        LOGGER.debug("Successfully saved in Kinesis. Seq Number = {} and ShardId = {}",
+        LOGGER.trace("Successfully saved in Kinesis. Seq Number = {} and ShardId = {}",
                 recordResult.getSequenceNumber(),
                 recordResult.getShardId()
         );

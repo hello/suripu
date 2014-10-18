@@ -165,6 +165,7 @@ message SyncResponse {
     optional PairingAction pairing_action = 7;
     optional WhiteNoise white_noise = 8;
     optional FlashAction flash_action = 9;
+    optional bool reset_device = 10;
 
     // TODO: settings for snoring detection
     // TODO: settings for firmware update
@@ -242,4 +243,5 @@ message periodic_data {
         optional int32 firmwareVersion = 1;
     }
     repeated pill_data pills=11;
+    optional string device_id = 12;
 }

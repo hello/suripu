@@ -89,8 +89,8 @@ public class SignedMessage {
             md.update(body);
             final byte[] output = md.digest();
 
-            LOGGER.debug("HexDigest: {}", new String(Hex.encodeHex(output)));
-            LOGGER.debug("Output length: {}", output.length);
+            LOGGER.trace("HexDigest: {}", new String(Hex.encodeHex(output)));
+            LOGGER.trace("Output length: {}", output.length);
 
             final byte[] padded = new byte[32];
             for(int i = 0; i < output.length; i++) {
@@ -101,7 +101,7 @@ public class SignedMessage {
             sb.append("padded hex: " + paddedHex);
             sb.append("\n");
 
-            LOGGER.debug("padded: {}", paddedHex);
+            LOGGER.trace("padded: {}", paddedHex);
 
             final Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
             final SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
@@ -121,7 +121,7 @@ public class SignedMessage {
             sb.append("Decrypted sha: " + new String(Hex.encodeHex(decryptedBytes)));
             sb.append("\n");
 
-            LOGGER.debug("Sig: {}", sig);
+            LOGGER.trace("Sig: {}", sig);
             return Optional.absent();
 
         } catch (NoSuchAlgorithmException exception) {
@@ -164,7 +164,7 @@ public class SignedMessage {
         final Random r = new SecureRandom();
         final byte[] IV = new byte[IV_LENGTH];
         r.nextBytes(IV);
-        LOGGER.debug("random IV = {}", Hex.encodeHex(IV));
+        LOGGER.trace("random IV = {}", Hex.encodeHex(IV));
 
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
@@ -173,7 +173,7 @@ public class SignedMessage {
             final MessageDigest md = MessageDigest.getInstance("SHA1");
             md.update(body);
             final byte[] output = md.digest();
-            LOGGER.debug("Sha = {}", Hex.encodeHex(output));
+            LOGGER.trace("Sha = {}", Hex.encodeHex(output));
 
             final byte[] paddedSha = new byte[32];
             for(int i= 0; i < paddedSha.length; i++) {
@@ -191,7 +191,7 @@ public class SignedMessage {
 
             final byte[] sig = cipher.doFinal(paddedSha);
 
-            LOGGER.debug("Sig = {}", Hex.encodeHex(sig));
+            LOGGER.trace("Sig = {}", Hex.encodeHex(sig));
 
             byteArrayOutputStream.write(IV);
             byteArrayOutputStream.write(sig);
@@ -199,7 +199,7 @@ public class SignedMessage {
 
             final byte[] data = byteArrayOutputStream.toByteArray();
 
-            LOGGER.debug("Body = {}", Hex.encodeHex(data));
+            LOGGER.trace("Body = {}", Hex.encodeHex(data));
             return Optional.of(data);
 
         } catch (NoSuchAlgorithmException e) {

@@ -29,6 +29,7 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.RingProcessor;
+import com.hello.suripu.core.util.DeviceIdUtil;
 import com.hello.suripu.service.SignedMessage;
 import com.yammer.metrics.annotation.Timed;
 import org.apache.commons.codec.binary.Hex;
@@ -214,8 +215,17 @@ public class ReceiveResource {
 
 
         // get MAC address of morpheus
-        final byte[] mac = Arrays.copyOf(data.getMac().toByteArray(), 6);
-        final String deviceName = new String(Hex.encodeHex(mac));
+        final Optional<String> deviceIdOptional = DeviceIdUtil.getMorpheusId(data);
+        if(!deviceIdOptional.isPresent()){
+            LOGGER.error("Cannot get morpheus id");
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity((debug) ? "Cannot get morpheus id" : "bad request")
+                    .type(MediaType.TEXT_PLAIN_TYPE).build()
+            );
+        }
+
+
+        final String deviceName = deviceIdOptional.get();
         LOGGER.debug("Received valid protobuf {}", deviceName.toString());
         LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
 
@@ -360,7 +370,7 @@ public class ReceiveResource {
 
             try {
                 deviceDataDAO.insert(deviceData);
-                LOGGER.info("Data saved to DB: {}", data);
+                LOGGER.info("Data saved to DB: {}", TextFormat.shortDebugString(data));
             } catch (UnableToExecuteStatementException exception) {
                 final Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
                 if (!matcher.find()) {
@@ -397,6 +407,8 @@ public class ReceiveResource {
         }
 
         long nextRingTimestamp = replyRingTime.actualRingTimeUTC;
+
+        LOGGER.debug("Next ring time: {}", new DateTime(nextRingTimestamp, userTimeZone));
         int ringDurationInMS = 30 * DateTimeConstants.MILLIS_PER_SECOND;  // TODO: make this flexible so we can adjust based on user preferences.
 
         final InputProtos.SyncResponse.Alarm.Builder alarmBuilder = InputProtos.SyncResponse.Alarm.newBuilder()
@@ -434,7 +446,7 @@ public class ReceiveResource {
     @Timed
     public String morpheusProtobufReceive(final byte[] body) {
 
-
+        LOGGER.warn("---- DEPRECATED ----");
         InputProtos.periodic_data data = null;
 
         try {
@@ -494,7 +506,7 @@ public class ReceiveResource {
                 LOGGER.warn("Duplicate device sensor value for account_id = {}, time: {}", pair.accountId, roundedDateTime);
             }
         }
-
+        LOGGER.warn("---- END DEPRECATED ----");
         return "OK";
     }
 

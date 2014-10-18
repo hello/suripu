@@ -98,7 +98,6 @@ public class TimelineUtils {
 
         LOGGER.debug("Max SVM = {}", maxSVM);
 
-        int i = 0;
         final Long trackerId = trackerMotions.get(0).trackerId;
 
         Long lastTimestamp = trackerMotions.get(0).timestamp;
@@ -124,6 +123,8 @@ public class TimelineUtils {
                             Collections.<SensorReading>emptyList());
                     sleepSegments.add(sleepSegment);
                 }
+
+
             }
 
             int sleepDepth = normalizeSleepDepth(trackerMotion.value, maxSVM);
@@ -157,7 +158,6 @@ public class TimelineUtils {
                     eventMessage,
                     readings);
             sleepSegments.add(sleepSegment);
-            i++;
             lastTimestamp = trackerMotion.timestamp + ONE_MIN_IN_MILLIS;
         }
         LOGGER.debug("Generated {} segments from {} tracker motion samples", sleepSegments.size(), trackerMotions.size());
