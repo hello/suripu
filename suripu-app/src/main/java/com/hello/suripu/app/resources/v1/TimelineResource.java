@@ -75,10 +75,9 @@ public class TimelineResource {
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
 
+        // TODO: compute this threshold dynamically
         final int threshold = 10; // events with scores < threshold will be considered motion events
         final int mergeThreshold = 1; // min segment size is 1 minute
-
-        // TODO: compute this threshold dynamically
 
         final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenLocalUTC(accessToken.accountId, targetDate, endDate);
         LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
@@ -93,12 +92,14 @@ public class TimelineResource {
 
         // create sleep-motion segments
         final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, true);
-        List<SleepSegment> categorized = TimelineUtils.categorizeSleepDepth(segments);
+//        List<SleepSegment> categorized = TimelineUtils.categorizeSleepDepth(segments);
+        List<SleepSegment> categorized = segments;
 
         final List<SleepSegment> extraSegments = new ArrayList<>();
 
         // detect sleep time
-        final Optional<SleepSegment> sleepTimeSegment = TimelineUtils.computeSleepTime(categorized, 7);
+        final int sleepEventThreshold = 7; // minutes of no-movement to determine that user has fallen asleep
+        final Optional<SleepSegment> sleepTimeSegment = TimelineUtils.computeSleepTime(categorized, sleepEventThreshold);
         if(sleepTimeSegment.isPresent()) {
             extraSegments.add(sleepTimeSegment.get());
         }

@@ -22,7 +22,7 @@ import java.util.Map;
 public class PartnerMotion {
     private static final Logger LOGGER = LoggerFactory.getLogger(PartnerMotion.class);
 
-    // TODO: tune these thresholds
+    // TODO: tune these thresholds when we have real data
     final private static int PARTNER_DEPTH_THRESHOLD = 60; // large movement
     final private static int ACCOUNT_DEPTH_THRESHOLD = 90; // small movement
     final private static int CHECK_PRECEDING_MINS = 2; // make sure user has no movement in the previous 2 mins
