@@ -91,19 +91,17 @@ public class TimelineResource {
         }
 
         // create sleep-motion segments
-        final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, true);
-//        List<SleepSegment> categorized = TimelineUtils.categorizeSleepDepth(segments);
-        List<SleepSegment> categorized = segments;
+        List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, true);
+
 
         final List<SleepSegment> extraSegments = new ArrayList<>();
 
         // detect sleep time
         final int sleepEventThreshold = 7; // minutes of no-movement to determine that user has fallen asleep
-        final Optional<SleepSegment> sleepTimeSegment = TimelineUtils.computeSleepTime(categorized, sleepEventThreshold);
+        final Optional<SleepSegment> sleepTimeSegment = TimelineUtils.computeSleepTime(segments, sleepEventThreshold);
         if(sleepTimeSegment.isPresent()) {
             extraSegments.add(sleepTimeSegment.get());
         }
-
 
         // add partner movement data, check if there's a partner
         final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accessToken.accountId);
@@ -116,6 +114,7 @@ public class TimelineResource {
                 startTime = new DateTime(segments.get(0).timestamp, DateTimeZone.UTC);
             }
             final DateTime endTime = new DateTime(segments.get(segments.size() - 1).timestamp, DateTimeZone.UTC);
+
             final List<TrackerMotion> partnerMotions = this.trackerMotionDAO.getBetween(optionalPartnerAccountId.get(), startTime, endTime);
             if (partnerMotions.size() > 0) {
                 // use un-normalized data segments for comparison
@@ -124,7 +123,6 @@ public class TimelineResource {
         }
 
         // add sunrise data
-
         final Optional<DateTime> sunrise = sunData.sunrise(targetDate.plusDays(1).toString(DateTimeFormat.forPattern("yyyy-MM-dd"))); // day + 1
         if(sunrise.isPresent()) {
             final String sunriseMessage = Event.getMessage(Event.Type.SUNRISE, sunrise.get());
@@ -141,12 +139,13 @@ public class TimelineResource {
 
         // combine all segments
         if (extraSegments.size() > 0) {
-            categorized = TimelineUtils.insertSegmentsWithPriority(extraSegments, categorized);
+            segments = TimelineUtils.insertSegmentsWithPriority(extraSegments, segments);
         }
 
-        LOGGER.debug("Size of normalized = {}", categorized.size());
+        LOGGER.debug("Size of normalized = {}", segments.size());
 
-        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(categorized, mergeThreshold);
+        // merge similar segments (by motion & event-type), then categorize
+        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(segments, mergeThreshold);
         final SleepStats sleepStats = TimelineUtils.computeStats(mergedSegments);
         final List<SleepSegment> reversed = Lists.reverse(mergedSegments);
 
