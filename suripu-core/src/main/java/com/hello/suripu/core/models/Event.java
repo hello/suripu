@@ -146,6 +146,9 @@ public class Event {
             case SUNRISE:
                 eventMessage = "The sun rose";
                 break;
+            case SLEEP:
+                eventMessage = "You fell asleep";
+                break;
             default:
                 return "";
         }

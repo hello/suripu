@@ -50,7 +50,11 @@ public class TimelineUtils {
 
         final Long timestamp = segments.get(0).timestamp;
         final Long id = segments.get(0).id;
-        final Integer sleepDepth = segments.get(0).sleepDepth;
+        float total = 0f;
+        for (final SleepSegment segment : segments) {
+            total += (float) segment.sleepDepth;
+        }
+        final Integer sleepDepth = TimelineUtils.categorizeSleepDepth((int) (total / segments.size()));
         final Integer offsetMillis = segments.get(0).offsetMillis;
         final String eventType = segments.get(0).eventType;
         final String message = segments.get(0).message;
@@ -179,21 +183,38 @@ public class TimelineUtils {
         String previousEventType = segments.get(0).eventType;
 
         final List<SleepSegment> buffer = new ArrayList<>();
+        float trackAvgDepth = 0F;
 
         for(final SleepSegment segment : segments) {
-            if(segment.sleepDepth != previousSleepDepth || !previousEventType.equals(segment.eventType)) {
+            // if(segment.sleepDepth != previousSleepDepth || !previousEventType.equals(segment.eventType)) {
+            final float depthDiff = Math.abs((float) segment.sleepDepth - (trackAvgDepth / buffer.size()));
+            if (depthDiff > 0.25 *  (trackAvgDepth / buffer.size()) || !previousEventType.equals(segment.eventType)) {
                 SleepSegment seg = (buffer.isEmpty()) ? segment : TimelineUtils.merge(buffer, threshold);
 
-                if (seg.eventType.equals(Event.Type.SUNRISE.toString())) {
-                    // inherit the sleep depth of previous segment for SUNRISE event
-                    int depth = mergedSegments.get(mergedSegments.size() - 1).sleepDepth;
-                    seg = SleepSegment.withSleepDepth(seg, depth);
+                if (mergedSegments.size() > 0) {
+                    final SleepSegment prevSegment = mergedSegments.get(mergedSegments.size() - 1);
+                    if (seg.eventType.equals(Event.Type.SUNRISE.toString())) {
+                        // inherit the sleep depth of previous segment for SUNRISE event
+                        int depth = prevSegment.sleepDepth;
+                        seg = SleepSegment.withSleepDepth(seg, depth);
+                    } else if (seg.sleepDepth == prevSegment.sleepDepth && seg.eventType == prevSegment.eventType) {
+                        // add this merged segment with the previous one
+                        buffer.clear();
+                        buffer.add(prevSegment);
+                        buffer.add(seg);
+                        mergedSegments.remove(prevSegment);
+                        seg = TimelineUtils.merge(buffer, threshold);
+                    }
                 }
+
+
                 mergedSegments.add(seg);
                 buffer.clear();
+                trackAvgDepth = 0F;
             }
 
             buffer.add(segment);
+            trackAvgDepth += (float) segment.sleepDepth;
             previousSleepDepth = segment.sleepDepth;
             previousEventType = segment.eventType;
         }
@@ -221,24 +242,24 @@ public class TimelineUtils {
         final List<SleepSegment> normalizedSegments = new ArrayList<>();
 
         for(final SleepSegment segment : sleepSegments) {
-            Integer sleepDepth = segment.sleepDepth;
-
-            // TODO: tune these
-            if( segment.sleepDepth <=10) {
-                sleepDepth = 10;
-            } else if(segment.sleepDepth > 10 && segment.sleepDepth <= 40) {
-                sleepDepth = 40;
-            } else if(segment.sleepDepth > 40 && segment.sleepDepth <= 70) {
-                sleepDepth = 70;
-            } else if (segment.sleepDepth > 70 && segment.sleepDepth <= 100) {
-                sleepDepth = 100;
-            }
-            normalizedSegments.add(SleepSegment.withSleepDepth(segment, sleepDepth));
+            normalizedSegments.add(SleepSegment.withSleepDepth(segment, TimelineUtils.categorizeSleepDepth(segment.sleepDepth)));
         }
         LOGGER.debug("Categorized {} segments", normalizedSegments.size());
         return normalizedSegments;
     }
 
+    public static Integer categorizeSleepDepth(final Integer sleepDepth) {
+        // TODO: tune these
+        if (sleepDepth > 70 && sleepDepth <= 100) {
+            return 100;
+        } else if (sleepDepth > 40 && sleepDepth <= 70) {
+            return 70;
+        } else if (sleepDepth > 10 && sleepDepth <= 40) {
+            return 40;
+        } else {
+            return 10;
+        }
+    }
 
     /**
      * Inserts Sunrise and Sunset segments into the timeline
@@ -400,7 +421,7 @@ public class TimelineUtils {
         Map<Long, SleepSegment> map = new HashMap<>();
 
         for(SleepSegment sleepSegment : sleepSegments) {
-            if(sleepSegment.sleepDepth < 100) {
+            if(sleepSegment.sleepDepth < 70) {
                 dateTimes.add(new DateTime(sleepSegment.timestamp + sleepSegment.offsetMillis));
                 map.put(sleepSegment.timestamp + sleepSegment.offsetMillis, sleepSegment);
             }
