@@ -71,6 +71,7 @@ CREATE UNIQUE INDEX uniq_device_id_account_id_ts_on_par_default on device_sensor
 -- add new columns for additional light values (10/16/2014)
 ALTER TABLE device_sensors_master ADD COLUMN ambient_light_variance INTEGER DEFAULT 0;
 ALTER TABLE device_sensors_master ADD COLUMN ambient_light_peakiness INTEGER DEFAULT 0;
+ALTER TABLE device_sensors_master ADD COLUMN ambient_air_quality_raw INTEGER DEFAULT 0; -- save raw counts
 
 -- store int instead of float (10/16/2014)
 ALTER TABLE device_sensors_master ALTER COLUMN ambient_temp SET DATA TYPE INTEGER;
