@@ -168,37 +168,6 @@ public abstract class SleepScoreDAO {
     }
 
     @Timed
-    public List<AggregateScore> getSleepScores(final Long accountID,
-                                               final List<DateTime> requiredDates,
-                                               final int dateBucketPeriod,
-                                               final TrackerMotionDAO trackerMotionDAO,
-                                               final SleepLabelDAO sleepLabelDAO,
-                                               final String version) {
-
-        Collections.sort(requiredDates);
-        // get timezone offsets
-        final Map<DateTime, Integer> userOffsetMillis = trackerMotionDAO.getOffsetMillisForDates(accountID, requiredDates);
-
-        final List<AggregateScore> scores = new ArrayList<>();
-
-        for (final DateTime targetDate : requiredDates) {
-            //TODO: looping bad, threads?
-            Integer timezoneOffset = null;
-            if (userOffsetMillis.containsKey(targetDate)) {
-                timezoneOffset = userOffsetMillis.get(targetDate);
-            }
-
-            Integer score = this.getSleepScoreForNight(accountID, targetDate.withTimeAtStartOfDay(), timezoneOffset, dateBucketPeriod, sleepLabelDAO);
-
-            final String dateString = DateTimeUtil.dateToYmdString(targetDate);
-            final AggregateScore aggregateScore = new AggregateScore(accountID, score, dateString, this.SCORE_TYPE, version);
-
-            scores.add(aggregateScore);
-        }
-
-        return scores;
-    }
-
     public List<AggregateScore> getSleepScoreForNights(final Long accountID,
                                                final List<DateTime> requiredDates,
                                                final int dateBucketPeriod,
