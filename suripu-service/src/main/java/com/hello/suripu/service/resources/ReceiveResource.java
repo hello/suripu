@@ -212,6 +212,7 @@ public class ReceiveResource {
                     .type(MediaType.TEXT_PLAIN_TYPE).build()
             );
         }
+        LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
 
 
         // get MAC address of morpheus
@@ -225,7 +226,7 @@ public class ReceiveResource {
         }
 
 
-        final String deviceName = deviceIdOptional.get();
+        final String deviceName = deviceIdOptional.get().toUpperCase();
         LOGGER.debug("Received valid protobuf {}", deviceName.toString());
         LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
 
@@ -359,6 +360,7 @@ public class ReceiveResource {
                     .withDeviceId(pair.internalDeviceId)
                     .withAmbientTemperature(data.getTemperature())
                     .withAmbientAirQuality(data.getDust(), data.getFirmwareVersion())
+                    .withAmbientAirQualityRaw(data.getDust())
                     .withAmbientHumidity(data.getHumidity())
                     .withAmbientLight(data.getLight())
                     .withAmbientLightVariance(data.getLightVariability())
@@ -480,6 +482,7 @@ public class ReceiveResource {
                     .withDeviceId(pair.internalDeviceId)
                     .withAmbientTemperature(data.getTemperature())
                     .withAmbientAirQuality(data.getDust(), data.getFirmwareVersion())
+                    .withAmbientAirQualityRaw(data.getDust())
                     .withAmbientHumidity(data.getHumidity())
                     .withAmbientLight(data.getLight())
                     .withAmbientLightVariance(data.getLightVariability())
@@ -569,6 +572,7 @@ public class ReceiveResource {
                             .withDeviceId(pair.internalDeviceId)
                             .withAmbientTemperature(temp)
                             .withAmbientAirQuality(airQuality, 0)
+                            .withAmbientAirQualityRaw(airQuality)
                             .withAmbientHumidity(humidity)
                             .withAmbientLight(light)
                             .withOffsetMillis(offsetMillis)

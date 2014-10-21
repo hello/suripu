@@ -31,8 +31,10 @@ public abstract class DeviceDataDAO {
 
     @SqlUpdate("INSERT INTO device_sensors_master (account_id, device_id, ts, local_utc_ts, offset_millis, " +
             "ambient_temp, ambient_light, ambient_light_variance, ambient_light_peakiness, " +
-            "ambient_humidity, ambient_air_quality) VALUES(:account_id, :device_id, :ts, :local_utc_ts, :offset_millis, " +
-            ":ambient_temp, :ambient_light, :ambient_light_variance, :ambient_light_peakiness, :ambient_humidity, :ambient_air_quality)")
+            "ambient_humidity, ambient_air_quality, ambient_air_quality_raw) VALUES " +
+            "(:account_id, :device_id, :ts, :local_utc_ts, :offset_millis, " +
+            ":ambient_temp, :ambient_light, :ambient_light_variance, :ambient_light_peakiness, " +
+            ":ambient_humidity, :ambient_air_quality, :ambient_air_quality_raw)")
     public abstract void insert(@BindDeviceData final DeviceData deviceData);
 
     @RegisterMapper(DeviceDataMapper.class)
@@ -62,6 +64,7 @@ public abstract class DeviceDataDAO {
             "ROUND(AVG(ambient_light_peakiness)) as ambient_light_peakiness," +
             "ROUND(AVG(ambient_humidity)) as ambient_humidity," +
             "ROUND(AVG(ambient_air_quality)) as ambient_air_quality," +
+            "ROUND(AVG(ambient_air_quality_raw)) as ambient_air_quality_raw," +
             "ROUND(MIN(offset_millis)) as offset_millis," +
             "date_trunc('hour', ts) + (CAST(date_part('minute', ts) AS integer) / :slot_duration) * :slot_duration * interval '1 min' AS ts_bucket " +
             "FROM device_sensors_master " +
@@ -164,6 +167,7 @@ public abstract class DeviceDataDAO {
             "AVG(ambient_temp) as ambient_temp, " +
             "AVG(ambient_humidity) as ambient_humidity, " +
             "AVG(ambient_air_quality) as ambient_air_quality, " +
+            "AVG(ambient_air_quality_raw) as ambient_air_quality_raw, " +
             "AVG(ambient_light) as ambient_light," +
             "AVG(ambient_light_variance) as ambient_light_variance," +
             "AVG(ambient_light_peakiness) as ambient_light_peakiness," +

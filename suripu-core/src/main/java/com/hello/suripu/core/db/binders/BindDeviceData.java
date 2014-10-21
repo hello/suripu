@@ -32,6 +32,7 @@ public @interface BindDeviceData {
                     q.bind("ambient_light_peakiness", model.ambientLightPeakiness);
                     q.bind("ambient_humidity", model.ambientHumidity);
                     q.bind("ambient_air_quality", model.ambientAirQuality);
+                    q.bind("ambient_air_quality_raw", model.ambientAirQualityRaw);
 
                     q.bind("ts", model.dateTimeUTC);
                     q.bind("local_utc_ts", model.dateTimeUTC.plusMillis(model.offsetMillis));
