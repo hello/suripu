@@ -138,4 +138,20 @@ public class AccountResource {
 
         // TODO: update password
     }
+
+    @Timed
+    @GET
+    @Path("/q")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Account search(@Scope(OAuthScope.ADMINISTRATION_READ) AccessToken accessToken,
+                          @QueryParam("email") String email) {
+
+        final Optional<Account> accountOptional = accountDAO.getByEmail(email);
+        if(accountOptional.isPresent()) {
+            return accountOptional.get();
+        }
+
+        throw new WebApplicationException(Response.Status.NOT_FOUND);
+    }
+
 }
