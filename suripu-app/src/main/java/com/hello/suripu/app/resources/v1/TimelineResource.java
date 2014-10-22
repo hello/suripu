@@ -2,10 +2,12 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.SensorReading;
@@ -44,18 +46,21 @@ public class TimelineResource {
     private final DeviceDAO deviceDAO;
     private final SleepScoreDAO sleepScoreDAO;
     private final SleepLabelDAO sleepLabelDAO;
+    private final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB;
     private final int dateBucketPeriod;
     private final SunData sunData;
     public TimelineResource(final TrackerMotionDAO trackerMotionDAO,
                             final DeviceDAO deviceDAO,
                             final SleepLabelDAO sleepLabelDAO,
                             final SleepScoreDAO sleepScoreDAO,
+                            final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
                             final int dateBucketPeriod,
                             final SunData sunData) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
         this.sleepLabelDAO = sleepLabelDAO;
         this.sleepScoreDAO = sleepScoreDAO;
+        this.aggregateSleepScoreDAODynamoDB = aggregateSleepScoreDAODynamoDB;
         this.dateBucketPeriod = dateBucketPeriod;
         this.sunData = sunData;
     }
@@ -149,9 +154,29 @@ public class TimelineResource {
         final SleepStats sleepStats = TimelineUtils.computeStats(mergedSegments);
         final List<SleepSegment> reversed = Lists.reverse(mergedSegments);
 
+        // get scores - check dynamoDB first
         final int userOffsetMillis = trackerMotions.get(0).offsetMillis;
-        final Integer sleepScore = sleepScoreDAO.getSleepScoreForNight(accessToken.accountId, targetDate.withTimeAtStartOfDay(),
-                userOffsetMillis, this.dateBucketPeriod, sleepLabelDAO);
+        final String targetDateString = DateTimeUtil.dateToYmdString(targetDate);
+
+        final AggregateScore targetDateScore = this.aggregateSleepScoreDAODynamoDB.getSingleScore(accessToken.accountId, targetDateString);
+        Integer sleepScore = targetDateScore.score;
+
+        if (sleepScore == 0) {
+            // score may not have been computed yet, recompute
+            sleepScore = sleepScoreDAO.getSleepScoreForNight(accessToken.accountId, targetDate.withTimeAtStartOfDay(),
+                    userOffsetMillis, this.dateBucketPeriod, sleepLabelDAO);
+
+            final DateTime lastNight = new DateTime(DateTime.now(), DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
+            if (targetDate.isBefore(lastNight)) {
+                // write data to Dynamo if targetDate is old
+                this.aggregateSleepScoreDAODynamoDB.writeSingleScore(
+                        new AggregateScore(accessToken.accountId,
+                                sleepScore,
+                                DateTimeUtil.dateToYmdString(targetDate.withTimeAtStartOfDay()),
+                                targetDateScore.scoreType, targetDateScore.version));
+            }
+        }
+
         final String timeLineMessage = TimelineUtils.generateMessage(sleepStats);
 
         LOGGER.debug("Score for account_id = {} is {}", accessToken.accountId, sleepScore);

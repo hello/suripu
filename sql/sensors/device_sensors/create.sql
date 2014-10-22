@@ -54,6 +54,10 @@ CREATE TABLE device_sensors_master (
     ambient_light_peakiness INTEGER,
     ambient_humidity INTEGER,
     ambient_air_quality INTEGER,
+    ambient_air_quality_raw INTEGER, -- raw counts
+    ambient_dust_variance INTEGER, -- raw counts
+    ambient_dust_min INTEGER, -- raw counts
+    ambient_dust_max INTEGER, -- raw counts
     ts TIMESTAMP,
     local_utc_ts TIMESTAMP,
     offset_millis INTEGER
@@ -77,6 +81,13 @@ ALTER TABLE device_sensors_master ALTER COLUMN ambient_temp SET DATA TYPE INTEGE
 ALTER TABLE device_sensors_master ALTER COLUMN ambient_light SET DATA TYPE INTEGER;
 ALTER TABLE device_sensors_master ALTER COLUMN ambient_humidity SET DATA TYPE INTEGER;
 ALTER TABLE device_sensors_master ALTER COLUMN ambient_air_quality SET DATA TYPE INTEGER;
+
+-- additional dust stats (10/22/2014)
+ALTER TABLE device_sensors_master ADD COLUMN ambient_air_quality_raw INTEGER DEFAULT 0; -- save raw counts
+ALTER TABLE device_sensors_master ADD COLUMN ambient_dust_variance INTEGER DEFAULT 0;
+ALTER TABLE device_sensors_master ADD COLUMN ambient_dust_min INTEGER DEFAULT 0;
+ALTER TABLE device_sensors_master ADD COLUMN ambient_dust_max INTEGER DEFAULT 0;
+
 
 -- Trigger function for master insert
 CREATE OR REPLACE FUNCTION device_sensors_master_insert_function() RETURNS TRIGGER LANGUAGE plpgsql AS

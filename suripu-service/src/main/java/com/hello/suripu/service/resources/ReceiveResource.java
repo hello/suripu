@@ -212,6 +212,7 @@ public class ReceiveResource {
                     .type(MediaType.TEXT_PLAIN_TYPE).build()
             );
         }
+        LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
 
 
         // get MAC address of morpheus
@@ -359,6 +360,10 @@ public class ReceiveResource {
                     .withDeviceId(pair.internalDeviceId)
                     .withAmbientTemperature(data.getTemperature())
                     .withAmbientAirQuality(data.getDust(), data.getFirmwareVersion())
+                    .withAmbientAirQualityRaw(data.getDust())
+                    .withAmbientDustVariance(data.getDustVariability())
+                    .withAmbientDustMin(data.getDustMin())
+                    .withAmbientDustMax(data.getDustMax())
                     .withAmbientHumidity(data.getHumidity())
                     .withAmbientLight(data.getLight())
                     .withAmbientLightVariance(data.getLightVariability())
@@ -480,6 +485,10 @@ public class ReceiveResource {
                     .withDeviceId(pair.internalDeviceId)
                     .withAmbientTemperature(data.getTemperature())
                     .withAmbientAirQuality(data.getDust(), data.getFirmwareVersion())
+                    .withAmbientAirQualityRaw(data.getDust())
+                    .withAmbientDustVariance(0)
+                    .withAmbientDustMin(0)
+                    .withAmbientDustMax(0)
                     .withAmbientHumidity(data.getHumidity())
                     .withAmbientLight(data.getLight())
                     .withAmbientLightVariance(data.getLightVariability())
@@ -569,6 +578,10 @@ public class ReceiveResource {
                             .withDeviceId(pair.internalDeviceId)
                             .withAmbientTemperature(temp)
                             .withAmbientAirQuality(airQuality, 0)
+                            .withAmbientAirQualityRaw(airQuality)
+                            .withAmbientDustVariance(0)
+                            .withAmbientDustMin(0)
+                            .withAmbientDustMax(0)
                             .withAmbientHumidity(humidity)
                             .withAmbientLight(light)
                             .withOffsetMillis(offsetMillis)

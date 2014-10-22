@@ -222,7 +222,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new ScoresResource(trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), configuration.getSleepScoreVersion()));
 
         final SunData sunData = new SunData();
-        environment.addResource(new TimelineResource(trackerMotionDAO, deviceDAO, sleepLabelDAO, sleepScoreDAO, configuration.getScoreThreshold(), sunData));
+        environment.addResource(new TimelineResource(trackerMotionDAO, deviceDAO, sleepLabelDAO, sleepScoreDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), sunData));
 
         environment.addResource(new TimeZoneResource(timeZoneHistoryDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO));
         environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO));

@@ -20422,6 +20422,36 @@ public final class InputProtos {
      */
     int getFirmwareVersion();
 
+    // optional int32 dust_variability = 13;
+    /**
+     * <code>optional int32 dust_variability = 13;</code>
+     */
+    boolean hasDustVariability();
+    /**
+     * <code>optional int32 dust_variability = 13;</code>
+     */
+    int getDustVariability();
+
+    // optional int32 dust_max = 14;
+    /**
+     * <code>optional int32 dust_max = 14;</code>
+     */
+    boolean hasDustMax();
+    /**
+     * <code>optional int32 dust_max = 14;</code>
+     */
+    int getDustMax();
+
+    // optional int32 dust_min = 15;
+    /**
+     * <code>optional int32 dust_min = 15;</code>
+     */
+    boolean hasDustMin();
+    /**
+     * <code>optional int32 dust_min = 15;</code>
+     */
+    int getDustMin();
+
     // repeated .hello.periodic_data.pill_data pills = 11;
     /**
      * <code>repeated .hello.periodic_data.pill_data pills = 11;</code>
@@ -20564,16 +20594,31 @@ public final class InputProtos {
               break;
             }
             case 90: {
-              if (!((mutable_bitField0_ & 0x00000400) == 0x00000400)) {
+              if (!((mutable_bitField0_ & 0x00002000) == 0x00002000)) {
                 pills_ = new java.util.ArrayList<com.hello.suripu.api.input.InputProtos.periodic_data.pill_data>();
-                mutable_bitField0_ |= 0x00000400;
+                mutable_bitField0_ |= 0x00002000;
               }
               pills_.add(input.readMessage(com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.PARSER, extensionRegistry));
               break;
             }
             case 98: {
-              bitField0_ |= 0x00000400;
+              bitField0_ |= 0x00002000;
               deviceId_ = input.readBytes();
+              break;
+            }
+            case 104: {
+              bitField0_ |= 0x00000400;
+              dustVariability_ = input.readInt32();
+              break;
+            }
+            case 112: {
+              bitField0_ |= 0x00000800;
+              dustMax_ = input.readInt32();
+              break;
+            }
+            case 120: {
+              bitField0_ |= 0x00001000;
+              dustMin_ = input.readInt32();
               break;
             }
           }
@@ -20584,7 +20629,7 @@ public final class InputProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000400) == 0x00000400)) {
+        if (((mutable_bitField0_ & 0x00002000) == 0x00002000)) {
           pills_ = java.util.Collections.unmodifiableList(pills_);
         }
         this.unknownFields = unknownFields.build();
@@ -20621,62 +20666,23 @@ public final class InputProtos {
     public interface pill_dataOrBuilder
         extends com.google.protobuf.MessageOrBuilder {
 
-      // optional string deviceId = 3;
+      // optional int32 firmwareVersion = 1;
       /**
-       * <code>optional string deviceId = 3;</code>
+       * <code>optional int32 firmwareVersion = 1;</code>
        *
        * <pre>
        * Be careful when copy paste, the index is not right :)
        * </pre>
        */
-      boolean hasDeviceId();
+      boolean hasFirmwareVersion();
       /**
-       * <code>optional string deviceId = 3;</code>
+       * <code>optional int32 firmwareVersion = 1;</code>
        *
        * <pre>
        * Be careful when copy paste, the index is not right :)
        * </pre>
        */
-      java.lang.String getDeviceId();
-      /**
-       * <code>optional string deviceId = 3;</code>
-       *
-       * <pre>
-       * Be careful when copy paste, the index is not right :)
-       * </pre>
-       */
-      com.google.protobuf.ByteString
-          getDeviceIdBytes();
-
-      // optional int32 batteryLevel = 9;
-      /**
-       * <code>optional int32 batteryLevel = 9;</code>
-       */
-      boolean hasBatteryLevel();
-      /**
-       * <code>optional int32 batteryLevel = 9;</code>
-       */
-      int getBatteryLevel();
-
-      // optional int32 uptime = 10;
-      /**
-       * <code>optional int32 uptime = 10;</code>
-       */
-      boolean hasUptime();
-      /**
-       * <code>optional int32 uptime = 10;</code>
-       */
-      int getUptime();
-
-      // optional int32 motionData = 11;
-      /**
-       * <code>optional int32 motionData = 11;</code>
-       */
-      boolean hasMotionData();
-      /**
-       * <code>optional int32 motionData = 11;</code>
-       */
-      int getMotionData();
+      int getFirmwareVersion();
 
       // optional bytes motionDataEncrypted = 2;
       /**
@@ -20688,15 +20694,50 @@ public final class InputProtos {
        */
       com.google.protobuf.ByteString getMotionDataEncrypted();
 
-      // optional int32 firmwareVersion = 1;
+      // optional string deviceId = 3;
       /**
-       * <code>optional int32 firmwareVersion = 1;</code>
+       * <code>optional string deviceId = 3;</code>
        */
-      boolean hasFirmwareVersion();
+      boolean hasDeviceId();
       /**
-       * <code>optional int32 firmwareVersion = 1;</code>
+       * <code>optional string deviceId = 3;</code>
        */
-      int getFirmwareVersion();
+      java.lang.String getDeviceId();
+      /**
+       * <code>optional string deviceId = 3;</code>
+       */
+      com.google.protobuf.ByteString
+          getDeviceIdBytes();
+
+      // optional int32 batteryLevel = 4;
+      /**
+       * <code>optional int32 batteryLevel = 4;</code>
+       */
+      boolean hasBatteryLevel();
+      /**
+       * <code>optional int32 batteryLevel = 4;</code>
+       */
+      int getBatteryLevel();
+
+      // optional int32 uptime = 5;
+      /**
+       * <code>optional int32 uptime = 5;</code>
+       */
+      boolean hasUptime();
+      /**
+       * <code>optional int32 uptime = 5;</code>
+       */
+      int getUptime();
+
+      // optional int32 motionData = 6;
+      /**
+       * <code>optional int32 motionData = 6;</code>
+       */
+      boolean hasMotionData();
+      /**
+       * <code>optional int32 motionData = 6;</code>
+       */
+      int getMotionData();
     }
     /**
      * Protobuf type {@code hello.periodic_data.pill_data}
@@ -20750,32 +20791,32 @@ public final class InputProtos {
                 break;
               }
               case 8: {
-                bitField0_ |= 0x00000020;
+                bitField0_ |= 0x00000001;
                 firmwareVersion_ = input.readInt32();
                 break;
               }
               case 18: {
-                bitField0_ |= 0x00000010;
+                bitField0_ |= 0x00000002;
                 motionDataEncrypted_ = input.readBytes();
                 break;
               }
               case 26: {
-                bitField0_ |= 0x00000001;
+                bitField0_ |= 0x00000004;
                 deviceId_ = input.readBytes();
                 break;
               }
-              case 72: {
-                bitField0_ |= 0x00000002;
+              case 32: {
+                bitField0_ |= 0x00000008;
                 batteryLevel_ = input.readInt32();
                 break;
               }
-              case 80: {
-                bitField0_ |= 0x00000004;
+              case 40: {
+                bitField0_ |= 0x00000010;
                 uptime_ = input.readInt32();
                 break;
               }
-              case 88: {
-                bitField0_ |= 0x00000008;
+              case 48: {
+                bitField0_ |= 0x00000020;
                 motionData_ = input.readInt32();
                 break;
               }
@@ -20819,25 +20860,57 @@ public final class InputProtos {
       }
 
       private int bitField0_;
-      // optional string deviceId = 3;
-      public static final int DEVICEID_FIELD_NUMBER = 3;
-      private java.lang.Object deviceId_;
+      // optional int32 firmwareVersion = 1;
+      public static final int FIRMWAREVERSION_FIELD_NUMBER = 1;
+      private int firmwareVersion_;
       /**
-       * <code>optional string deviceId = 3;</code>
+       * <code>optional int32 firmwareVersion = 1;</code>
        *
        * <pre>
        * Be careful when copy paste, the index is not right :)
        * </pre>
        */
-      public boolean hasDeviceId() {
+      public boolean hasFirmwareVersion() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>optional string deviceId = 3;</code>
+       * <code>optional int32 firmwareVersion = 1;</code>
        *
        * <pre>
        * Be careful when copy paste, the index is not right :)
        * </pre>
+       */
+      public int getFirmwareVersion() {
+        return firmwareVersion_;
+      }
+
+      // optional bytes motionDataEncrypted = 2;
+      public static final int MOTIONDATAENCRYPTED_FIELD_NUMBER = 2;
+      private com.google.protobuf.ByteString motionDataEncrypted_;
+      /**
+       * <code>optional bytes motionDataEncrypted = 2;</code>
+       */
+      public boolean hasMotionDataEncrypted() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional bytes motionDataEncrypted = 2;</code>
+       */
+      public com.google.protobuf.ByteString getMotionDataEncrypted() {
+        return motionDataEncrypted_;
+      }
+
+      // optional string deviceId = 3;
+      public static final int DEVICEID_FIELD_NUMBER = 3;
+      private java.lang.Object deviceId_;
+      /**
+       * <code>optional string deviceId = 3;</code>
+       */
+      public boolean hasDeviceId() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional string deviceId = 3;</code>
        */
       public java.lang.String getDeviceId() {
         java.lang.Object ref = deviceId_;
@@ -20855,10 +20928,6 @@ public final class InputProtos {
       }
       /**
        * <code>optional string deviceId = 3;</code>
-       *
-       * <pre>
-       * Be careful when copy paste, the index is not right :)
-       * </pre>
        */
       public com.google.protobuf.ByteString
           getDeviceIdBytes() {
@@ -20874,93 +20943,61 @@ public final class InputProtos {
         }
       }
 
-      // optional int32 batteryLevel = 9;
-      public static final int BATTERYLEVEL_FIELD_NUMBER = 9;
+      // optional int32 batteryLevel = 4;
+      public static final int BATTERYLEVEL_FIELD_NUMBER = 4;
       private int batteryLevel_;
       /**
-       * <code>optional int32 batteryLevel = 9;</code>
+       * <code>optional int32 batteryLevel = 4;</code>
        */
       public boolean hasBatteryLevel() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
-       * <code>optional int32 batteryLevel = 9;</code>
+       * <code>optional int32 batteryLevel = 4;</code>
        */
       public int getBatteryLevel() {
         return batteryLevel_;
       }
 
-      // optional int32 uptime = 10;
-      public static final int UPTIME_FIELD_NUMBER = 10;
+      // optional int32 uptime = 5;
+      public static final int UPTIME_FIELD_NUMBER = 5;
       private int uptime_;
       /**
-       * <code>optional int32 uptime = 10;</code>
+       * <code>optional int32 uptime = 5;</code>
        */
       public boolean hasUptime() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       /**
-       * <code>optional int32 uptime = 10;</code>
+       * <code>optional int32 uptime = 5;</code>
        */
       public int getUptime() {
         return uptime_;
       }
 
-      // optional int32 motionData = 11;
-      public static final int MOTIONDATA_FIELD_NUMBER = 11;
+      // optional int32 motionData = 6;
+      public static final int MOTIONDATA_FIELD_NUMBER = 6;
       private int motionData_;
       /**
-       * <code>optional int32 motionData = 11;</code>
+       * <code>optional int32 motionData = 6;</code>
        */
       public boolean hasMotionData() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
-       * <code>optional int32 motionData = 11;</code>
+       * <code>optional int32 motionData = 6;</code>
        */
       public int getMotionData() {
         return motionData_;
       }
 
-      // optional bytes motionDataEncrypted = 2;
-      public static final int MOTIONDATAENCRYPTED_FIELD_NUMBER = 2;
-      private com.google.protobuf.ByteString motionDataEncrypted_;
-      /**
-       * <code>optional bytes motionDataEncrypted = 2;</code>
-       */
-      public boolean hasMotionDataEncrypted() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
-      }
-      /**
-       * <code>optional bytes motionDataEncrypted = 2;</code>
-       */
-      public com.google.protobuf.ByteString getMotionDataEncrypted() {
-        return motionDataEncrypted_;
-      }
-
-      // optional int32 firmwareVersion = 1;
-      public static final int FIRMWAREVERSION_FIELD_NUMBER = 1;
-      private int firmwareVersion_;
-      /**
-       * <code>optional int32 firmwareVersion = 1;</code>
-       */
-      public boolean hasFirmwareVersion() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
-      }
-      /**
-       * <code>optional int32 firmwareVersion = 1;</code>
-       */
-      public int getFirmwareVersion() {
-        return firmwareVersion_;
-      }
-
       private void initFields() {
+        firmwareVersion_ = 0;
+        motionDataEncrypted_ = com.google.protobuf.ByteString.EMPTY;
         deviceId_ = "";
         batteryLevel_ = 0;
         uptime_ = 0;
         motionData_ = 0;
-        motionDataEncrypted_ = com.google.protobuf.ByteString.EMPTY;
-        firmwareVersion_ = 0;
       }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
@@ -20974,23 +21011,23 @@ public final class InputProtos {
       public void writeTo(com.google.protobuf.CodedOutputStream output)
                           throws java.io.IOException {
         getSerializedSize();
-        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
           output.writeInt32(1, firmwareVersion_);
         }
-        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
           output.writeBytes(2, motionDataEncrypted_);
         }
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
           output.writeBytes(3, getDeviceIdBytes());
         }
-        if (((bitField0_ & 0x00000002) == 0x00000002)) {
-          output.writeInt32(9, batteryLevel_);
-        }
-        if (((bitField0_ & 0x00000004) == 0x00000004)) {
-          output.writeInt32(10, uptime_);
-        }
         if (((bitField0_ & 0x00000008) == 0x00000008)) {
-          output.writeInt32(11, motionData_);
+          output.writeInt32(4, batteryLevel_);
+        }
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          output.writeInt32(5, uptime_);
+        }
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          output.writeInt32(6, motionData_);
         }
         getUnknownFields().writeTo(output);
       }
@@ -21001,29 +21038,29 @@ public final class InputProtos {
         if (size != -1) return size;
 
         size = 0;
-        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
           size += com.google.protobuf.CodedOutputStream
             .computeInt32Size(1, firmwareVersion_);
         }
-        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
           size += com.google.protobuf.CodedOutputStream
             .computeBytesSize(2, motionDataEncrypted_);
         }
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
           size += com.google.protobuf.CodedOutputStream
             .computeBytesSize(3, getDeviceIdBytes());
         }
-        if (((bitField0_ & 0x00000002) == 0x00000002)) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeInt32Size(9, batteryLevel_);
-        }
-        if (((bitField0_ & 0x00000004) == 0x00000004)) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeInt32Size(10, uptime_);
-        }
         if (((bitField0_ & 0x00000008) == 0x00000008)) {
           size += com.google.protobuf.CodedOutputStream
-            .computeInt32Size(11, motionData_);
+            .computeInt32Size(4, batteryLevel_);
+        }
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(5, uptime_);
+        }
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(6, motionData_);
         }
         size += getUnknownFields().getSerializedSize();
         memoizedSerializedSize = size;
@@ -21141,17 +21178,17 @@ public final class InputProtos {
 
         public Builder clear() {
           super.clear();
-          deviceId_ = "";
-          bitField0_ = (bitField0_ & ~0x00000001);
-          batteryLevel_ = 0;
-          bitField0_ = (bitField0_ & ~0x00000002);
-          uptime_ = 0;
-          bitField0_ = (bitField0_ & ~0x00000004);
-          motionData_ = 0;
-          bitField0_ = (bitField0_ & ~0x00000008);
-          motionDataEncrypted_ = com.google.protobuf.ByteString.EMPTY;
-          bitField0_ = (bitField0_ & ~0x00000010);
           firmwareVersion_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000001);
+          motionDataEncrypted_ = com.google.protobuf.ByteString.EMPTY;
+          bitField0_ = (bitField0_ & ~0x00000002);
+          deviceId_ = "";
+          bitField0_ = (bitField0_ & ~0x00000004);
+          batteryLevel_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000008);
+          uptime_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000010);
+          motionData_ = 0;
           bitField0_ = (bitField0_ & ~0x00000020);
           return this;
         }
@@ -21184,27 +21221,27 @@ public final class InputProtos {
           if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
             to_bitField0_ |= 0x00000001;
           }
-          result.deviceId_ = deviceId_;
+          result.firmwareVersion_ = firmwareVersion_;
           if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
             to_bitField0_ |= 0x00000002;
           }
-          result.batteryLevel_ = batteryLevel_;
+          result.motionDataEncrypted_ = motionDataEncrypted_;
           if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
             to_bitField0_ |= 0x00000004;
           }
-          result.uptime_ = uptime_;
+          result.deviceId_ = deviceId_;
           if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
             to_bitField0_ |= 0x00000008;
           }
-          result.motionData_ = motionData_;
+          result.batteryLevel_ = batteryLevel_;
           if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
             to_bitField0_ |= 0x00000010;
           }
-          result.motionDataEncrypted_ = motionDataEncrypted_;
+          result.uptime_ = uptime_;
           if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
             to_bitField0_ |= 0x00000020;
           }
-          result.firmwareVersion_ = firmwareVersion_;
+          result.motionData_ = motionData_;
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -21221,8 +21258,14 @@ public final class InputProtos {
 
         public Builder mergeFrom(com.hello.suripu.api.input.InputProtos.periodic_data.pill_data other) {
           if (other == com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.getDefaultInstance()) return this;
+          if (other.hasFirmwareVersion()) {
+            setFirmwareVersion(other.getFirmwareVersion());
+          }
+          if (other.hasMotionDataEncrypted()) {
+            setMotionDataEncrypted(other.getMotionDataEncrypted());
+          }
           if (other.hasDeviceId()) {
-            bitField0_ |= 0x00000001;
+            bitField0_ |= 0x00000004;
             deviceId_ = other.deviceId_;
             onChanged();
           }
@@ -21234,12 +21277,6 @@ public final class InputProtos {
           }
           if (other.hasMotionData()) {
             setMotionData(other.getMotionData());
-          }
-          if (other.hasMotionDataEncrypted()) {
-            setMotionDataEncrypted(other.getMotionDataEncrypted());
-          }
-          if (other.hasFirmwareVersion()) {
-            setFirmwareVersion(other.getFirmwareVersion());
           }
           this.mergeUnknownFields(other.getUnknownFields());
           return this;
@@ -21268,24 +21305,101 @@ public final class InputProtos {
         }
         private int bitField0_;
 
-        // optional string deviceId = 3;
-        private java.lang.Object deviceId_ = "";
+        // optional int32 firmwareVersion = 1;
+        private int firmwareVersion_ ;
         /**
-         * <code>optional string deviceId = 3;</code>
+         * <code>optional int32 firmwareVersion = 1;</code>
          *
          * <pre>
          * Be careful when copy paste, the index is not right :)
          * </pre>
          */
-        public boolean hasDeviceId() {
+        public boolean hasFirmwareVersion() {
           return ((bitField0_ & 0x00000001) == 0x00000001);
         }
         /**
-         * <code>optional string deviceId = 3;</code>
+         * <code>optional int32 firmwareVersion = 1;</code>
          *
          * <pre>
          * Be careful when copy paste, the index is not right :)
          * </pre>
+         */
+        public int getFirmwareVersion() {
+          return firmwareVersion_;
+        }
+        /**
+         * <code>optional int32 firmwareVersion = 1;</code>
+         *
+         * <pre>
+         * Be careful when copy paste, the index is not right :)
+         * </pre>
+         */
+        public Builder setFirmwareVersion(int value) {
+          bitField0_ |= 0x00000001;
+          firmwareVersion_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int32 firmwareVersion = 1;</code>
+         *
+         * <pre>
+         * Be careful when copy paste, the index is not right :)
+         * </pre>
+         */
+        public Builder clearFirmwareVersion() {
+          bitField0_ = (bitField0_ & ~0x00000001);
+          firmwareVersion_ = 0;
+          onChanged();
+          return this;
+        }
+
+        // optional bytes motionDataEncrypted = 2;
+        private com.google.protobuf.ByteString motionDataEncrypted_ = com.google.protobuf.ByteString.EMPTY;
+        /**
+         * <code>optional bytes motionDataEncrypted = 2;</code>
+         */
+        public boolean hasMotionDataEncrypted() {
+          return ((bitField0_ & 0x00000002) == 0x00000002);
+        }
+        /**
+         * <code>optional bytes motionDataEncrypted = 2;</code>
+         */
+        public com.google.protobuf.ByteString getMotionDataEncrypted() {
+          return motionDataEncrypted_;
+        }
+        /**
+         * <code>optional bytes motionDataEncrypted = 2;</code>
+         */
+        public Builder setMotionDataEncrypted(com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+          motionDataEncrypted_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional bytes motionDataEncrypted = 2;</code>
+         */
+        public Builder clearMotionDataEncrypted() {
+          bitField0_ = (bitField0_ & ~0x00000002);
+          motionDataEncrypted_ = getDefaultInstance().getMotionDataEncrypted();
+          onChanged();
+          return this;
+        }
+
+        // optional string deviceId = 3;
+        private java.lang.Object deviceId_ = "";
+        /**
+         * <code>optional string deviceId = 3;</code>
+         */
+        public boolean hasDeviceId() {
+          return ((bitField0_ & 0x00000004) == 0x00000004);
+        }
+        /**
+         * <code>optional string deviceId = 3;</code>
          */
         public java.lang.String getDeviceId() {
           java.lang.Object ref = deviceId_;
@@ -21300,10 +21414,6 @@ public final class InputProtos {
         }
         /**
          * <code>optional string deviceId = 3;</code>
-         *
-         * <pre>
-         * Be careful when copy paste, the index is not right :)
-         * </pre>
          */
         public com.google.protobuf.ByteString
             getDeviceIdBytes() {
@@ -21320,216 +21430,135 @@ public final class InputProtos {
         }
         /**
          * <code>optional string deviceId = 3;</code>
-         *
-         * <pre>
-         * Be careful when copy paste, the index is not right :)
-         * </pre>
          */
         public Builder setDeviceId(
             java.lang.String value) {
           if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000001;
+  bitField0_ |= 0x00000004;
           deviceId_ = value;
           onChanged();
           return this;
         }
         /**
          * <code>optional string deviceId = 3;</code>
-         *
-         * <pre>
-         * Be careful when copy paste, the index is not right :)
-         * </pre>
          */
         public Builder clearDeviceId() {
-          bitField0_ = (bitField0_ & ~0x00000001);
+          bitField0_ = (bitField0_ & ~0x00000004);
           deviceId_ = getDefaultInstance().getDeviceId();
           onChanged();
           return this;
         }
         /**
          * <code>optional string deviceId = 3;</code>
-         *
-         * <pre>
-         * Be careful when copy paste, the index is not right :)
-         * </pre>
          */
         public Builder setDeviceIdBytes(
             com.google.protobuf.ByteString value) {
           if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000001;
+  bitField0_ |= 0x00000004;
           deviceId_ = value;
           onChanged();
           return this;
         }
 
-        // optional int32 batteryLevel = 9;
+        // optional int32 batteryLevel = 4;
         private int batteryLevel_ ;
         /**
-         * <code>optional int32 batteryLevel = 9;</code>
+         * <code>optional int32 batteryLevel = 4;</code>
          */
         public boolean hasBatteryLevel() {
-          return ((bitField0_ & 0x00000002) == 0x00000002);
+          return ((bitField0_ & 0x00000008) == 0x00000008);
         }
         /**
-         * <code>optional int32 batteryLevel = 9;</code>
+         * <code>optional int32 batteryLevel = 4;</code>
          */
         public int getBatteryLevel() {
           return batteryLevel_;
         }
         /**
-         * <code>optional int32 batteryLevel = 9;</code>
+         * <code>optional int32 batteryLevel = 4;</code>
          */
         public Builder setBatteryLevel(int value) {
-          bitField0_ |= 0x00000002;
+          bitField0_ |= 0x00000008;
           batteryLevel_ = value;
           onChanged();
           return this;
         }
         /**
-         * <code>optional int32 batteryLevel = 9;</code>
+         * <code>optional int32 batteryLevel = 4;</code>
          */
         public Builder clearBatteryLevel() {
-          bitField0_ = (bitField0_ & ~0x00000002);
+          bitField0_ = (bitField0_ & ~0x00000008);
           batteryLevel_ = 0;
           onChanged();
           return this;
         }
 
-        // optional int32 uptime = 10;
+        // optional int32 uptime = 5;
         private int uptime_ ;
         /**
-         * <code>optional int32 uptime = 10;</code>
+         * <code>optional int32 uptime = 5;</code>
          */
         public boolean hasUptime() {
-          return ((bitField0_ & 0x00000004) == 0x00000004);
+          return ((bitField0_ & 0x00000010) == 0x00000010);
         }
         /**
-         * <code>optional int32 uptime = 10;</code>
+         * <code>optional int32 uptime = 5;</code>
          */
         public int getUptime() {
           return uptime_;
         }
         /**
-         * <code>optional int32 uptime = 10;</code>
+         * <code>optional int32 uptime = 5;</code>
          */
         public Builder setUptime(int value) {
-          bitField0_ |= 0x00000004;
+          bitField0_ |= 0x00000010;
           uptime_ = value;
           onChanged();
           return this;
         }
         /**
-         * <code>optional int32 uptime = 10;</code>
+         * <code>optional int32 uptime = 5;</code>
          */
         public Builder clearUptime() {
-          bitField0_ = (bitField0_ & ~0x00000004);
+          bitField0_ = (bitField0_ & ~0x00000010);
           uptime_ = 0;
           onChanged();
           return this;
         }
 
-        // optional int32 motionData = 11;
+        // optional int32 motionData = 6;
         private int motionData_ ;
         /**
-         * <code>optional int32 motionData = 11;</code>
+         * <code>optional int32 motionData = 6;</code>
          */
         public boolean hasMotionData() {
-          return ((bitField0_ & 0x00000008) == 0x00000008);
+          return ((bitField0_ & 0x00000020) == 0x00000020);
         }
         /**
-         * <code>optional int32 motionData = 11;</code>
+         * <code>optional int32 motionData = 6;</code>
          */
         public int getMotionData() {
           return motionData_;
         }
         /**
-         * <code>optional int32 motionData = 11;</code>
+         * <code>optional int32 motionData = 6;</code>
          */
         public Builder setMotionData(int value) {
-          bitField0_ |= 0x00000008;
+          bitField0_ |= 0x00000020;
           motionData_ = value;
           onChanged();
           return this;
         }
         /**
-         * <code>optional int32 motionData = 11;</code>
+         * <code>optional int32 motionData = 6;</code>
          */
         public Builder clearMotionData() {
-          bitField0_ = (bitField0_ & ~0x00000008);
-          motionData_ = 0;
-          onChanged();
-          return this;
-        }
-
-        // optional bytes motionDataEncrypted = 2;
-        private com.google.protobuf.ByteString motionDataEncrypted_ = com.google.protobuf.ByteString.EMPTY;
-        /**
-         * <code>optional bytes motionDataEncrypted = 2;</code>
-         */
-        public boolean hasMotionDataEncrypted() {
-          return ((bitField0_ & 0x00000010) == 0x00000010);
-        }
-        /**
-         * <code>optional bytes motionDataEncrypted = 2;</code>
-         */
-        public com.google.protobuf.ByteString getMotionDataEncrypted() {
-          return motionDataEncrypted_;
-        }
-        /**
-         * <code>optional bytes motionDataEncrypted = 2;</code>
-         */
-        public Builder setMotionDataEncrypted(com.google.protobuf.ByteString value) {
-          if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000010;
-          motionDataEncrypted_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>optional bytes motionDataEncrypted = 2;</code>
-         */
-        public Builder clearMotionDataEncrypted() {
-          bitField0_ = (bitField0_ & ~0x00000010);
-          motionDataEncrypted_ = getDefaultInstance().getMotionDataEncrypted();
-          onChanged();
-          return this;
-        }
-
-        // optional int32 firmwareVersion = 1;
-        private int firmwareVersion_ ;
-        /**
-         * <code>optional int32 firmwareVersion = 1;</code>
-         */
-        public boolean hasFirmwareVersion() {
-          return ((bitField0_ & 0x00000020) == 0x00000020);
-        }
-        /**
-         * <code>optional int32 firmwareVersion = 1;</code>
-         */
-        public int getFirmwareVersion() {
-          return firmwareVersion_;
-        }
-        /**
-         * <code>optional int32 firmwareVersion = 1;</code>
-         */
-        public Builder setFirmwareVersion(int value) {
-          bitField0_ |= 0x00000020;
-          firmwareVersion_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>optional int32 firmwareVersion = 1;</code>
-         */
-        public Builder clearFirmwareVersion() {
           bitField0_ = (bitField0_ & ~0x00000020);
-          firmwareVersion_ = 0;
+          motionData_ = 0;
           onChanged();
           return this;
         }
@@ -21733,6 +21762,54 @@ public final class InputProtos {
       return firmwareVersion_;
     }
 
+    // optional int32 dust_variability = 13;
+    public static final int DUST_VARIABILITY_FIELD_NUMBER = 13;
+    private int dustVariability_;
+    /**
+     * <code>optional int32 dust_variability = 13;</code>
+     */
+    public boolean hasDustVariability() {
+      return ((bitField0_ & 0x00000400) == 0x00000400);
+    }
+    /**
+     * <code>optional int32 dust_variability = 13;</code>
+     */
+    public int getDustVariability() {
+      return dustVariability_;
+    }
+
+    // optional int32 dust_max = 14;
+    public static final int DUST_MAX_FIELD_NUMBER = 14;
+    private int dustMax_;
+    /**
+     * <code>optional int32 dust_max = 14;</code>
+     */
+    public boolean hasDustMax() {
+      return ((bitField0_ & 0x00000800) == 0x00000800);
+    }
+    /**
+     * <code>optional int32 dust_max = 14;</code>
+     */
+    public int getDustMax() {
+      return dustMax_;
+    }
+
+    // optional int32 dust_min = 15;
+    public static final int DUST_MIN_FIELD_NUMBER = 15;
+    private int dustMin_;
+    /**
+     * <code>optional int32 dust_min = 15;</code>
+     */
+    public boolean hasDustMin() {
+      return ((bitField0_ & 0x00001000) == 0x00001000);
+    }
+    /**
+     * <code>optional int32 dust_min = 15;</code>
+     */
+    public int getDustMin() {
+      return dustMin_;
+    }
+
     // repeated .hello.periodic_data.pill_data pills = 11;
     public static final int PILLS_FIELD_NUMBER = 11;
     private java.util.List<com.hello.suripu.api.input.InputProtos.periodic_data.pill_data> pills_;
@@ -21776,7 +21853,7 @@ public final class InputProtos {
      * <code>optional string device_id = 12;</code>
      */
     public boolean hasDeviceId() {
-      return ((bitField0_ & 0x00000400) == 0x00000400);
+      return ((bitField0_ & 0x00002000) == 0x00002000);
     }
     /**
      * <code>optional string device_id = 12;</code>
@@ -21823,6 +21900,9 @@ public final class InputProtos {
       lightVariability_ = 0;
       lightTonality_ = 0;
       firmwareVersion_ = 0;
+      dustVariability_ = 0;
+      dustMax_ = 0;
+      dustMin_ = 0;
       pills_ = java.util.Collections.emptyList();
       deviceId_ = "";
     }
@@ -21871,8 +21951,17 @@ public final class InputProtos {
       for (int i = 0; i < pills_.size(); i++) {
         output.writeMessage(11, pills_.get(i));
       }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
         output.writeBytes(12, getDeviceIdBytes());
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        output.writeInt32(13, dustVariability_);
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+        output.writeInt32(14, dustMax_);
+      }
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+        output.writeInt32(15, dustMin_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -21927,9 +22016,21 @@ public final class InputProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(11, pills_.get(i));
       }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(12, getDeviceIdBytes());
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(13, dustVariability_);
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(14, dustMax_);
+      }
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(15, dustMin_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -22068,14 +22169,20 @@ public final class InputProtos {
         bitField0_ = (bitField0_ & ~0x00000100);
         firmwareVersion_ = 0;
         bitField0_ = (bitField0_ & ~0x00000200);
+        dustVariability_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000400);
+        dustMax_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000800);
+        dustMin_ = 0;
+        bitField0_ = (bitField0_ & ~0x00001000);
         if (pillsBuilder_ == null) {
           pills_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000400);
+          bitField0_ = (bitField0_ & ~0x00002000);
         } else {
           pillsBuilder_.clear();
         }
         deviceId_ = "";
-        bitField0_ = (bitField0_ & ~0x00000800);
+        bitField0_ = (bitField0_ & ~0x00004000);
         return this;
       }
 
@@ -22144,17 +22251,29 @@ public final class InputProtos {
           to_bitField0_ |= 0x00000200;
         }
         result.firmwareVersion_ = firmwareVersion_;
+        if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
+          to_bitField0_ |= 0x00000400;
+        }
+        result.dustVariability_ = dustVariability_;
+        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+          to_bitField0_ |= 0x00000800;
+        }
+        result.dustMax_ = dustMax_;
+        if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+          to_bitField0_ |= 0x00001000;
+        }
+        result.dustMin_ = dustMin_;
         if (pillsBuilder_ == null) {
-          if (((bitField0_ & 0x00000400) == 0x00000400)) {
+          if (((bitField0_ & 0x00002000) == 0x00002000)) {
             pills_ = java.util.Collections.unmodifiableList(pills_);
-            bitField0_ = (bitField0_ & ~0x00000400);
+            bitField0_ = (bitField0_ & ~0x00002000);
           }
           result.pills_ = pills_;
         } else {
           result.pills_ = pillsBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
-          to_bitField0_ |= 0x00000400;
+        if (((from_bitField0_ & 0x00004000) == 0x00004000)) {
+          to_bitField0_ |= 0x00002000;
         }
         result.deviceId_ = deviceId_;
         result.bitField0_ = to_bitField0_;
@@ -22205,11 +22324,20 @@ public final class InputProtos {
         if (other.hasFirmwareVersion()) {
           setFirmwareVersion(other.getFirmwareVersion());
         }
+        if (other.hasDustVariability()) {
+          setDustVariability(other.getDustVariability());
+        }
+        if (other.hasDustMax()) {
+          setDustMax(other.getDustMax());
+        }
+        if (other.hasDustMin()) {
+          setDustMin(other.getDustMin());
+        }
         if (pillsBuilder_ == null) {
           if (!other.pills_.isEmpty()) {
             if (pills_.isEmpty()) {
               pills_ = other.pills_;
-              bitField0_ = (bitField0_ & ~0x00000400);
+              bitField0_ = (bitField0_ & ~0x00002000);
             } else {
               ensurePillsIsMutable();
               pills_.addAll(other.pills_);
@@ -22222,7 +22350,7 @@ public final class InputProtos {
               pillsBuilder_.dispose();
               pillsBuilder_ = null;
               pills_ = other.pills_;
-              bitField0_ = (bitField0_ & ~0x00000400);
+              bitField0_ = (bitField0_ & ~0x00002000);
               pillsBuilder_ = 
                 com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
                    getPillsFieldBuilder() : null;
@@ -22232,7 +22360,7 @@ public final class InputProtos {
           }
         }
         if (other.hasDeviceId()) {
-          bitField0_ |= 0x00000800;
+          bitField0_ |= 0x00004000;
           deviceId_ = other.deviceId_;
           onChanged();
         }
@@ -22637,13 +22765,112 @@ public final class InputProtos {
         return this;
       }
 
+      // optional int32 dust_variability = 13;
+      private int dustVariability_ ;
+      /**
+       * <code>optional int32 dust_variability = 13;</code>
+       */
+      public boolean hasDustVariability() {
+        return ((bitField0_ & 0x00000400) == 0x00000400);
+      }
+      /**
+       * <code>optional int32 dust_variability = 13;</code>
+       */
+      public int getDustVariability() {
+        return dustVariability_;
+      }
+      /**
+       * <code>optional int32 dust_variability = 13;</code>
+       */
+      public Builder setDustVariability(int value) {
+        bitField0_ |= 0x00000400;
+        dustVariability_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 dust_variability = 13;</code>
+       */
+      public Builder clearDustVariability() {
+        bitField0_ = (bitField0_ & ~0x00000400);
+        dustVariability_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 dust_max = 14;
+      private int dustMax_ ;
+      /**
+       * <code>optional int32 dust_max = 14;</code>
+       */
+      public boolean hasDustMax() {
+        return ((bitField0_ & 0x00000800) == 0x00000800);
+      }
+      /**
+       * <code>optional int32 dust_max = 14;</code>
+       */
+      public int getDustMax() {
+        return dustMax_;
+      }
+      /**
+       * <code>optional int32 dust_max = 14;</code>
+       */
+      public Builder setDustMax(int value) {
+        bitField0_ |= 0x00000800;
+        dustMax_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 dust_max = 14;</code>
+       */
+      public Builder clearDustMax() {
+        bitField0_ = (bitField0_ & ~0x00000800);
+        dustMax_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 dust_min = 15;
+      private int dustMin_ ;
+      /**
+       * <code>optional int32 dust_min = 15;</code>
+       */
+      public boolean hasDustMin() {
+        return ((bitField0_ & 0x00001000) == 0x00001000);
+      }
+      /**
+       * <code>optional int32 dust_min = 15;</code>
+       */
+      public int getDustMin() {
+        return dustMin_;
+      }
+      /**
+       * <code>optional int32 dust_min = 15;</code>
+       */
+      public Builder setDustMin(int value) {
+        bitField0_ |= 0x00001000;
+        dustMin_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 dust_min = 15;</code>
+       */
+      public Builder clearDustMin() {
+        bitField0_ = (bitField0_ & ~0x00001000);
+        dustMin_ = 0;
+        onChanged();
+        return this;
+      }
+
       // repeated .hello.periodic_data.pill_data pills = 11;
       private java.util.List<com.hello.suripu.api.input.InputProtos.periodic_data.pill_data> pills_ =
         java.util.Collections.emptyList();
       private void ensurePillsIsMutable() {
-        if (!((bitField0_ & 0x00000400) == 0x00000400)) {
+        if (!((bitField0_ & 0x00002000) == 0x00002000)) {
           pills_ = new java.util.ArrayList<com.hello.suripu.api.input.InputProtos.periodic_data.pill_data>(pills_);
-          bitField0_ |= 0x00000400;
+          bitField0_ |= 0x00002000;
          }
       }
 
@@ -22792,7 +23019,7 @@ public final class InputProtos {
       public Builder clearPills() {
         if (pillsBuilder_ == null) {
           pills_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000400);
+          bitField0_ = (bitField0_ & ~0x00002000);
           onChanged();
         } else {
           pillsBuilder_.clear();
@@ -22869,7 +23096,7 @@ public final class InputProtos {
           pillsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
               com.hello.suripu.api.input.InputProtos.periodic_data.pill_data, com.hello.suripu.api.input.InputProtos.periodic_data.pill_data.Builder, com.hello.suripu.api.input.InputProtos.periodic_data.pill_dataOrBuilder>(
                   pills_,
-                  ((bitField0_ & 0x00000400) == 0x00000400),
+                  ((bitField0_ & 0x00002000) == 0x00002000),
                   getParentForChildren(),
                   isClean());
           pills_ = null;
@@ -22883,7 +23110,7 @@ public final class InputProtos {
        * <code>optional string device_id = 12;</code>
        */
       public boolean hasDeviceId() {
-        return ((bitField0_ & 0x00000800) == 0x00000800);
+        return ((bitField0_ & 0x00004000) == 0x00004000);
       }
       /**
        * <code>optional string device_id = 12;</code>
@@ -22923,7 +23150,7 @@ public final class InputProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000800;
+  bitField0_ |= 0x00004000;
         deviceId_ = value;
         onChanged();
         return this;
@@ -22932,7 +23159,7 @@ public final class InputProtos {
        * <code>optional string device_id = 12;</code>
        */
       public Builder clearDeviceId() {
-        bitField0_ = (bitField0_ & ~0x00000800);
+        bitField0_ = (bitField0_ & ~0x00004000);
         deviceId_ = getDefaultInstance().getDeviceId();
         onChanged();
         return this;
@@ -22945,7 +23172,7 @@ public final class InputProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000800;
+  bitField0_ |= 0x00004000;
         deviceId_ = value;
         onChanged();
         return this;
@@ -23185,19 +23412,20 @@ public final class InputProtos {
       "Data\"\214\001\n\nEventBatch\022+\n\006events\030\001 \003(\0132\033.he" +
       "llo.EventBatch.EventItem\032Q\n\tEventItem\022\027\n" +
       "\017start_timestamp\030\001 \001(\003\022\025\n\rend_timestamp\030" +
-      "\002 \001(\003\022\024\n\014offsetMillis\030\003 \001(\005\"\240\003\n\rperiodic" +
+      "\002 \001(\003\022\024\n\014offsetMillis\030\003 \001(\005\"\336\003\n\rperiodic" +
       "_data\022\021\n\tunix_time\030\001 \001(\005\022\r\n\005light\030\002 \001(\005\022" +
       "\023\n\013temperature\030\003 \001(\005\022\020\n\010humidity\030\004 \001(\005\022\014" +
       "\n\004dust\030\005 \001(\005\022\014\n\004name\030\006 \001(\t\022\013\n\003mac\030\007 \001(\014\022" +
       "\031\n\021light_variability\030\010 \001(\005\022\026\n\016light_tona" +
-      "lity\030\t \001(\005\022\030\n\020firmware_version\030\n \001(\005\022-\n\005",
-      "pills\030\013 \003(\0132\036.hello.periodic_data.pill_d" +
-      "ata\022\021\n\tdevice_id\030\014 \001(\t\032\215\001\n\tpill_data\022\020\n\010" +
-      "deviceId\030\003 \001(\t\022\024\n\014batteryLevel\030\t \001(\005\022\016\n\006" +
-      "uptime\030\n \001(\005\022\022\n\nmotionData\030\013 \001(\005\022\033\n\023moti" +
-      "onDataEncrypted\030\002 \001(\014\022\027\n\017firmwareVersion" +
-      "\030\001 \001(\005B)\n\032com.hello.suripu.api.inputB\013In" +
-      "putProtos"
+      "lity\030\t \001(\005\022\030\n\020firmware_version\030\n \001(\005\022\030\n\020",
+      "dust_variability\030\r \001(\005\022\020\n\010dust_max\030\016 \001(\005" +
+      "\022\020\n\010dust_min\030\017 \001(\005\022-\n\005pills\030\013 \003(\0132\036.hell" +
+      "o.periodic_data.pill_data\022\021\n\tdevice_id\030\014" +
+      " \001(\t\032\215\001\n\tpill_data\022\027\n\017firmwareVersion\030\001 " +
+      "\001(\005\022\033\n\023motionDataEncrypted\030\002 \001(\014\022\020\n\010devi" +
+      "ceId\030\003 \001(\t\022\024\n\014batteryLevel\030\004 \001(\005\022\016\n\006upti" +
+      "me\030\005 \001(\005\022\022\n\nmotionData\030\006 \001(\005B)\n\032com.hell" +
+      "o.suripu.api.inputB\013InputProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -23353,13 +23581,13 @@ public final class InputProtos {
           internal_static_hello_periodic_data_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_periodic_data_descriptor,
-              new java.lang.String[] { "UnixTime", "Light", "Temperature", "Humidity", "Dust", "Name", "Mac", "LightVariability", "LightTonality", "FirmwareVersion", "Pills", "DeviceId", });
+              new java.lang.String[] { "UnixTime", "Light", "Temperature", "Humidity", "Dust", "Name", "Mac", "LightVariability", "LightTonality", "FirmwareVersion", "DustVariability", "DustMax", "DustMin", "Pills", "DeviceId", });
           internal_static_hello_periodic_data_pill_data_descriptor =
             internal_static_hello_periodic_data_descriptor.getNestedTypes().get(0);
           internal_static_hello_periodic_data_pill_data_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_periodic_data_pill_data_descriptor,
-              new java.lang.String[] { "DeviceId", "BatteryLevel", "Uptime", "MotionData", "MotionDataEncrypted", "FirmwareVersion", });
+              new java.lang.String[] { "FirmwareVersion", "MotionDataEncrypted", "DeviceId", "BatteryLevel", "Uptime", "MotionData", });
           return null;
         }
       };
