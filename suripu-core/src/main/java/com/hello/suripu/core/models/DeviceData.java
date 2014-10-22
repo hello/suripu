@@ -31,6 +31,15 @@ public class DeviceData {
     @JsonProperty("ambient_air_quality_raw")
     public final int ambientAirQualityRaw;
 
+    @JsonProperty("ambient_dust_variance")
+    public final int ambientDustVariance;
+
+    @JsonProperty("ambient_dust_min")
+    public final int ambientDustMin;
+
+    @JsonProperty("ambient_dust_max")
+    public final int ambientDustMax;
+
     @JsonProperty("ambient_light")
     public final int ambientLight;
 
@@ -53,6 +62,9 @@ public class DeviceData {
             final int ambientHumidity,
             final int ambientAirQuality,
             final int ambientAirQualityRaw,
+            final int ambientDustVariance,
+            final int ambientDustMin,
+            final int ambientDustMax,
             final int ambientLight,
             final int ambientLightVariance,
             final int ambientLightPeakiness,
@@ -64,6 +76,9 @@ public class DeviceData {
         this.ambientHumidity = ambientHumidity;
         this.ambientAirQuality = ambientAirQuality;
         this.ambientAirQualityRaw = ambientAirQualityRaw;
+        this.ambientDustVariance = ambientDustVariance;
+        this.ambientDustMin = ambientDustMin;
+        this.ambientDustMax = ambientDustMax;
         this.ambientLight = ambientLight;
         this.dateTimeUTC = dateTimeUTC;
         this.ambientLightVariance = ambientLightVariance;
@@ -110,6 +125,9 @@ public class DeviceData {
         private int ambientHumidity;
         private int ambientAirQuality;
         private int ambientAirQualityRaw;
+        private int ambientDustVariance;
+        private int ambientDustMin;
+        private int ambientDustMax;
         private int ambientLight;
         private int ambientLightVariance;
         private int ambientLightPeakiness;
@@ -146,6 +164,21 @@ public class DeviceData {
             return this;
         }
 
+        public Builder withAmbientDustVariance(final int ambientDustVariance) {
+            this.ambientDustVariance= ambientDustVariance;
+            return this;
+        }
+
+        public Builder withAmbientDustMin(final int ambientDustMin) {
+            this.ambientDustMin= ambientDustMin;
+            return this;
+        }
+
+        public Builder withAmbientDustMax(final int ambientDustMax) {
+            this.ambientDustMax = ambientDustMax;
+            return this;
+        }
+
         public Builder withAmbientLight(final int ambientLight){
             this.ambientLight = ambientLight;
             return this;
@@ -172,7 +205,9 @@ public class DeviceData {
         }
 
         public DeviceData build(){
-            return new DeviceData(this.accountId, this.deviceId, this.ambientTemperature, this.ambientHumidity, this.ambientAirQuality, this.ambientAirQualityRaw, this.ambientLight, this.ambientLightVariance, this.ambientLightPeakiness, this.dateTimeUTC, this.offsetMillis);
+            return new DeviceData(this.accountId, this.deviceId, this.ambientTemperature, this.ambientHumidity,
+                    this.ambientAirQuality, this.ambientAirQualityRaw, this.ambientDustVariance, this.ambientDustMin, this.ambientDustMax,
+                    this.ambientLight, this.ambientLightVariance, this.ambientLightPeakiness, this.dateTimeUTC, this.offsetMillis);
         }
 
 
@@ -190,6 +225,9 @@ public class DeviceData {
                 .add("ambient_light_peakiness", ambientLightPeakiness)
                 .add("ambient_air_quality", ambientAirQuality)
                 .add("ambient_air_quality_raw", ambientAirQualityRaw)
+                .add("ambient_dust_variance", ambientDustVariance)
+                .add("ambient_dust_min", ambientDustMin)
+                .add("ambient_dust_max", ambientDustMax)
                 .add("dateTimeUTC", dateTimeUTC)
                 .add("offset_millis", offsetMillis)
                 .toString();

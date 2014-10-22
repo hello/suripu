@@ -29,7 +29,7 @@ public class BucketingTest {
 
     private Map<Long, Sample> generateMap(final DateTime startDate) {
 
-        final DeviceData deviceData = new DeviceData(999L, 111L, 222,333,444,555, 666, 777, 888, startDate, 0);
+        final DeviceData deviceData = new DeviceData(999L, 111L, 222,333,444,555, 0, 0, 0, 666, 777, 888, startDate, 0);
         final List<DeviceData> deviceDataList = new ArrayList<>();
         deviceDataList.add(deviceData);
 
@@ -58,7 +58,7 @@ public class BucketingTest {
     public void testPopulateMap() {
         final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, startDate, slotDurationInMinutes);
 
-        final DeviceData deviceData = new DeviceData(999L, 111L, 222, 333, 444, 555, 666, 777, 888, startDate, 0);
+        final DeviceData deviceData = new DeviceData(999L, 111L, 222, 333, 444, 555, 0, 0, 0, 666, 777, 888, startDate, 0);
         final List<DeviceData> deviceDataList = new ArrayList<>();
         deviceDataList.add(deviceData);
 
