@@ -2,6 +2,8 @@ package com.hello.suripu.core.oauth;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import org.joda.time.DateTime;
@@ -28,7 +30,8 @@ public class AccessToken {
     @JsonIgnore
     public final DateTime createdAt;
 
-    @JsonIgnore
+    @JsonProperty("account_id")
+    @JsonSerialize(using = ToStringSerializer.class)
     public final Long accountId;
 
     @JsonIgnore
