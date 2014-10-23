@@ -26,6 +26,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
 import java.util.regex.Matcher;
 
 @Path("/v1/account")
@@ -105,7 +106,7 @@ public class AccountResource {
 //            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
 //        }
 
-        LOGGER.info("Last modified (modify) = {}", account.lastModified);
+        LOGGER.warn("Last modified (modify) = {}", account.lastModified);
 
         final Optional<Account> optionalAccount = accountDAO.update(account, accessToken.accountId);
 
@@ -145,7 +146,7 @@ public class AccountResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Account search(@Scope(OAuthScope.ADMINISTRATION_READ) AccessToken accessToken,
                           @QueryParam("email") String email) {
-
+        LOGGER.debug("Search for email = {}", email);
         final Optional<Account> accountOptional = accountDAO.getByEmail(email);
         if(accountOptional.isPresent()) {
             return accountOptional.get();
@@ -154,4 +155,14 @@ public class AccountResource {
         throw new WebApplicationException(Response.Status.NOT_FOUND);
     }
 
+
+    @Timed
+    @GET
+    @Path("/recent")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Account> recent(@Scope(OAuthScope.ADMINISTRATION_READ) AccessToken accessToken) {
+
+        final List<Account> accounts = accountDAO.getRecent();
+        return accounts;
+    }
 }
