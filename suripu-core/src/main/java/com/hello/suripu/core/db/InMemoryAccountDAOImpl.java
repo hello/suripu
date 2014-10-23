@@ -6,7 +6,9 @@ import com.hello.suripu.core.models.Registration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -29,6 +31,11 @@ public class InMemoryAccountDAOImpl implements AccountDAO{
     @Override
     public Optional<Account> getByEmail(String email) {
         return null;
+    }
+
+    @Override
+    public List<Account> getRecent() {
+        return Collections.emptyList();
     }
 
 

@@ -16,6 +16,8 @@ import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @RegisterMapper(AccountMapper.class)
@@ -30,6 +32,9 @@ public abstract class AccountDAOImpl implements AccountDAO {
     @SqlQuery("SELECT * FROM accounts WHERE email = :email LIMIT 1;")
     @SingleValueResult(Account.class)
     public abstract Optional<Account> getByEmail(@Bind("email") final String email);
+
+    @SqlQuery("SELECT * FROM accounts order by id desc LIMIT 20;")
+    public abstract List<Account> getRecent();
 
     @SqlUpdate("INSERT INTO accounts (name, email, password_hash, dob, height, weight, tz_offset, created, last_modified) VALUES(:name, :email, :password, :dob, :height, :weight, :tz_offset, :created, :last_modified)")
     @GetGeneratedKeys
