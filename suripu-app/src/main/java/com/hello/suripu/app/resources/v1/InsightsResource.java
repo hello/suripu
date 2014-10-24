@@ -36,7 +36,7 @@ public class InsightsResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<SleepInsight> getInsights(
-            @Scope(OAuthScope.QUESTIONS_READ) final AccessToken accessToken) {
+            @Scope(OAuthScope.SLEEP_TIMELINE) final AccessToken accessToken) {
 
         LOGGER.debug("Returning list of insights for account id = {}", accessToken.accountId);
         final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
