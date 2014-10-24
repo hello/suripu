@@ -23,7 +23,7 @@ public interface DeviceDAO {
 
     // account to morpheus device map
     @RegisterMapper(DeviceAccountPairMapper.class)
-    @SqlQuery("SELECT * FROM account_device_map WHERE account_id = :account_id;")
+    @SqlQuery("SELECT * FROM account_device_map WHERE account_id = :account_id AND active = true;")
     ImmutableList<DeviceAccountPair> getSensesForAccountId(@Bind("account_id") Long accountId);
 
 
@@ -62,7 +62,7 @@ public interface DeviceDAO {
     // account to pill (aka tracker) map
 
     @RegisterMapper(DeviceAccountPairMapper.class)
-    @SqlQuery("SELECT * FROM account_tracker_map WHERE account_id = :account_id;")
+    @SqlQuery("SELECT * FROM account_tracker_map WHERE account_id = :account_id AND active = true;")
     ImmutableList<DeviceAccountPair> getPillsForAccountId(@Bind("account_id") Long accountId);
 
     @SingleValueResult(Long.class)
