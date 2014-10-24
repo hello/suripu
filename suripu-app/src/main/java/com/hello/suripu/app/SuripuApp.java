@@ -23,6 +23,7 @@ import com.hello.suripu.app.resources.v1.ApplicationResource;
 import com.hello.suripu.app.resources.v1.DeviceResources;
 import com.hello.suripu.app.resources.v1.EventResource;
 import com.hello.suripu.app.resources.v1.HistoryResource;
+import com.hello.suripu.app.resources.v1.InsightsResource;
 import com.hello.suripu.app.resources.v1.MobilePushRegistrationResource;
 import com.hello.suripu.app.resources.v1.OAuthResource;
 import com.hello.suripu.app.resources.v1.QuestionsResource;
@@ -230,6 +231,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new MobilePushRegistrationResource(subscriptionDAO));
 
         environment.addResource(new QuestionsResource(accountDAO));
+        environment.addResource(new InsightsResource(accountDAO));
 
         LOGGER.debug("{}", DateTime.now(DateTimeZone.UTC).getMillis());
 
