@@ -145,4 +145,21 @@ public class CurrentRoomState {
         final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState);
         return roomState;
     }
+
+
+    /**
+     * To be used when data isn’t found for the currently logged in user
+     * Possibly happening during sign up if workers haven’t processed the first data upload yet
+     *
+     * @return
+     */
+    public static CurrentRoomState empty() {
+        final CurrentRoomState roomState = new CurrentRoomState(
+                new State(null, "Waiting for data.", State.Condition.UNKNOWN, DateTime.now(), State.Unit.CELCIUS),
+                new State(null, "Waiting for data.", State.Condition.UNKNOWN, DateTime.now(), State.Unit.PERCENT),
+                new State(null, "Waiting for data.", State.Condition.UNKNOWN, DateTime.now(), State.Unit.MICRO_G_M3)
+        );
+
+        return roomState;
+    }
 }
