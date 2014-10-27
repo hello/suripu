@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.binders.BindApplicationRegistration;
 import com.hello.suripu.core.db.mappers.ApplicationMapper;
+import com.hello.suripu.core.db.util.SqlArray;
 import com.hello.suripu.core.oauth.Application;
 import com.hello.suripu.core.oauth.ApplicationRegistration;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -43,4 +44,7 @@ public interface ApplicationsDAO {
 
     @SqlUpdate("INSERT INTO authorized_oauth_applications (app_id, account_id) VALUES(:app_id, :account_id);")
     void insertInstallation(@Bind("app_id") Long appId, @Bind("account_id") Long accountId);
+
+    @SqlUpdate("UPDATE oauth_applications SET scopes = :scopes WHERE id = :id")
+    void updateScopes(@Bind("scopes") SqlArray<Integer> scopes, @Bind("id") Long applicationId);
 }

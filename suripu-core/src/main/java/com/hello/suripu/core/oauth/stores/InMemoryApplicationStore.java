@@ -3,6 +3,7 @@ package com.hello.suripu.core.oauth.stores;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.oauth.Application;
 import com.hello.suripu.core.oauth.ApplicationRegistration;
+import com.hello.suripu.core.oauth.OAuthScope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +46,11 @@ public class InMemoryApplicationStore implements ApplicationStore<Application, A
     @Override
     public List<Application> getAll() {
         return new ArrayList<Application>();
+    }
+
+    @Override
+    public void updateScopes(Long applicationId, List<OAuthScope> scopes) {
+
     }
 
     @Override
