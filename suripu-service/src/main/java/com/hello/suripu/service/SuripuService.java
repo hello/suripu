@@ -172,11 +172,9 @@ public class SuripuService extends Service<SuripuConfiguration> {
         environment.addResource(new VersionResource());
 
         final DataLogger audioDataLogger = kinesisLoggerFactory.get(QueueName.AUDIO_FEATURES);
-        environment.addResource(new AudioResource(s3Client, bucketName, audioDataLogger, deviceDAO));
-//        environment.addResource(new DropboxResource());
+        environment.addResource(new AudioResource(s3Client, bucketName, audioDataLogger, configuration.getDebug()));
 
         environment.addResource(new DownloadResource(s3Client, "hello-firmware"));
-
 
         // Manage the lifecycle of our clients
         environment.manage(new DynamoDBClientManaged(dynamoDBClient));

@@ -7,7 +7,8 @@ option java_outer_classname = "MatrixProtos";
 message MatrixClientMessage {
   optional bytes mac = 1;
   optional int32 unix_time = 2;
-  optional Matrix matrix_payload  = 3;
+  optional  Matrix matrix_payload  = 3;
+  repeated  Matrix matrix_list = 4;
 }
 
 message Matrix {
@@ -26,5 +27,4 @@ message Matrix {
   required int64 time2 = 8;
   required string tags = 9;
   required string source = 10;
-
 }
