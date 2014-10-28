@@ -45,6 +45,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.EventDAODynamoDB;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
+import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.SoundDAO;
@@ -137,6 +138,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final SleepScoreDAO sleepScoreDAO = commonDB.onDemand(SleepScoreDAO.class);
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
+        final QuestionResponseDAO questionResponseDAO = commonDB.onDemand(QuestionResponseDAO.class);
+
 
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
         final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
@@ -230,7 +233,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addResource(new MobilePushRegistrationResource(subscriptionDAO));
 
-        environment.addResource(new QuestionsResource(accountDAO));
+        environment.addResource(new QuestionsResource(accountDAO, questionResponseDAO));
         environment.addResource(new InsightsResource(accountDAO));
 
         LOGGER.debug("{}", DateTime.now(DateTimeZone.UTC).getMillis());

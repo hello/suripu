@@ -7,19 +7,19 @@ import com.google.common.base.Optional;
 public class Choice {
 
     @JsonProperty("id")
-    final public Long id;
+    final public Integer id;
 
     @JsonProperty("text")
     final public String text;
 
     @JsonProperty("question_id")
-    final public Optional<Long> questionId;
+    final public Optional<Integer> questionId;
 
     @JsonCreator
     public Choice(
-            @JsonProperty("id") final Long id,
+            @JsonProperty("id") final Integer id,
             @JsonProperty("text") final String text,
-            @JsonProperty("question_id") final Long questionId) {
+            @JsonProperty("question_id") final Integer questionId) {
         this.id = id;
         this.text = text;
         this.questionId = Optional.fromNullable(questionId);
