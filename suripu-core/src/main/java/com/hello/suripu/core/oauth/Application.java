@@ -6,7 +6,7 @@ import org.joda.time.DateTime;
 
 public class Application {
 
-    @JsonIgnore
+    @JsonProperty("id")
     public final Long id;
 
     @JsonProperty("name")
