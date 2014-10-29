@@ -28,7 +28,7 @@ public interface DeviceDAO {
 
 
     @GetGeneratedKeys
-    @SqlUpdate("INSERT INTO account_device_map (account_id, device_name, device_id) VALUES(:account_id, :device_id, :device_id)")
+    @SqlUpdate("INSERT INTO account_device_map (account_id, device_name, device_id, active) VALUES(:account_id, :device_id, :device_id, true)")
     Long registerSense(@Bind("account_id") final Long accountId, @Bind("device_id") final String deviceId);
 
     // Returns the latest sense connected to this account, in the case of multiple senses
