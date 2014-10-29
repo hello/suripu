@@ -37,7 +37,10 @@ public class QuestionMapper implements ResultSetMapper<Question> {
             createdLocal = DateTime.now(DateTimeZone.UTC);
         }
 
+        Long accountQuestionId = 0L; // for account_questions table id field
+
         final Question question = new Question(question_id,
+                accountQuestionId,
                 r.getString("question_text"),
                 r.getString("lang"),
                 Question.Type.valueOf(r.getString("response_type").toUpperCase()),

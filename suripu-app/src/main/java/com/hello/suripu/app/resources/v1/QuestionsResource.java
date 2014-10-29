@@ -61,7 +61,6 @@ public class QuestionsResource {
         // TODO: get user timezone, remove this once we hook up the database
         final int timeZoneOffset = - 26200000;
         final DateTime today = DateTime.now(DateTimeZone.UTC).plusMillis(timeZoneOffset).withTimeAtStartOfDay();
-//        final DateTime today = DateTime.now(DateTimeZone.forTimeZone(TimeZone.getTimeZone("America/Los_Angeles"))).withTimeAtStartOfDay();
         LOGGER.debug("today = {}", today);
         if(date != null && !date.equals(today.toString("yyyy-MM-dd"))) {
             return Collections.EMPTY_LIST;

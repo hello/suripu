@@ -1,5 +1,6 @@
 package com.hello.suripu.core.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.joda.time.DateTime;
 
@@ -64,6 +65,9 @@ public class Question {
     @JsonProperty("id")
     final public Integer id;
 
+    @JsonProperty("account_question_id")
+    final public Long accountQuestionId;
+
     @JsonProperty("text")
     final public String text;
 
@@ -73,22 +77,30 @@ public class Question {
     @JsonProperty("ask_local_date")
     final DateTime askLocalDate;
 
+
+    @JsonIgnore
     final public Type type;
 
+    @JsonIgnore
     final public FREQUENCY frequency;
 
+    @JsonIgnore
     final public ASK_TIME askTime;
 
+    @JsonIgnore
     final int dependency;
 
+    @JsonIgnore
     final int parentId;
 
+    @JsonIgnore
     final String lang;
 
-    public Question(final Integer id, final String text, final String lang,
+    public Question(final Integer id, final Long accountQuestionId, final String text, final String lang,
                     final Type type, final FREQUENCY frequency, final ASK_TIME askTime, final int dependency, final int parentId,
                     final DateTime askLocalDate, final List<Choice> choiceList) {
         this.id = id;
+        this.accountQuestionId = accountQuestionId;
         this.text = text;
         this.lang = lang;
         this.type = type;
@@ -101,7 +113,13 @@ public class Question {
     }
 
     public static Question withAskLocalTime(final Question question, final DateTime askLocalTime) {
-        return new Question(question.id, question.text, question.lang,
+        return new Question(question.id, question.accountQuestionId, question.text, question.lang,
+                question.type, question.frequency, question.askTime,
+                question.dependency, question.parentId, askLocalTime, question.choiceList);
+    }
+
+    public static Question withAskTimeAccountQId(final Question question, final Long accountQuestionId, final DateTime askLocalTime) {
+        return new Question(question.id, accountQuestionId, question.text, question.lang,
                 question.type, question.frequency, question.askTime,
                 question.dependency, question.parentId, askLocalTime, question.choiceList);
     }

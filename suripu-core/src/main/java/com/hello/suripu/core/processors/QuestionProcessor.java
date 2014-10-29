@@ -4,6 +4,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
 import com.hello.suripu.core.db.QuestionResponseDAO;
+import com.hello.suripu.core.models.AccountQuestion;
 import com.hello.suripu.core.models.Question;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -46,58 +48,95 @@ public class QuestionProcessor {
     }
 
     public List<Question> getQuestions(final Long accountId, final DateTime today, final Integer numQuestions) {
-        final List<Question> questions = new ArrayList<>();
+
+        // check if user has skipped too many questions in the past.
+        final boolean pauseQuestion = this.checkPauseQuestions(accountId, today);
+        if (pauseQuestion) {
+            return Collections.emptyList();
+        }
 
         // check if we have already generated a list of questions
-        final DateTime expiration = today.plusDays(1);
-        final List<Integer> questionIds = this.questionResponseDAO.getAccountQuestions(accountId, expiration);
-
-        final Set<Integer> seenIds = new HashSet<>();
-        if (questionIds.size() > 0) {
-            for (final Integer qid : questionIds) {
-                if (!seenIds.contains(qid)) {
-                    questions.add(this.questionIdMap.get(qid));
-                    seenIds.add(qid);
-                }
-            }
+        final Map<Integer, Question> preGeneratedQuestions = this.getPreGeneratedQuestions(accountId, today);
+        if (preGeneratedQuestions.size() >= numQuestions) {
+            return new ArrayList<>(preGeneratedQuestions.values());
         }
 
-        if (questions.size() >= numQuestions) {
-            return questions;
+        // get additional questions if needed
+        final Integer getMoreNum = numQuestions - preGeneratedQuestions.size();
+        List<Question> questions = this.getAdditionalQuestions(accountId, today, getMoreNum, preGeneratedQuestions.keySet());
+        if (!preGeneratedQuestions.isEmpty()) {
+            questions.addAll(new ArrayList<>(preGeneratedQuestions.values()));
         }
+
+        return questions;
+    }
+
+    private List<Question> getAdditionalQuestions(final Long accountId, final DateTime today, final Integer numQuestions, final Set<Integer> seenIds) {
+        // TODO: logic to choose question
 
         Random rnd = new Random();
 
-        // TODO: logic to choose question
-        // for now, get a one-time question
-        final List<Question> q = this.availableQuestions.get(Question.FREQUENCY.ONE_TIME.toString());
-        final int numQ = q.size();
+        // for now, get a random, one-time question
+        final Set<Integer> addedIds = new HashSet<>();
+        addedIds.addAll(seenIds);
+
+        final List<Question> questionsPool = this.availableQuestions.get(Question.FREQUENCY.ONE_TIME.toString());
+        final int poolSize = questionsPool.size();
+
         int loop = 0;
+        final DateTime expiration = today.plusDays(1);
+        final List<Question> questions = new ArrayList<>();
 
         while (questions.size() < numQuestions) {
-            final int qid = rnd.nextInt(numQ);
-            final Question question = q.get(qid);
+            final int qid = rnd.nextInt(poolSize); // next random question
+            final Question question = questionsPool.get(qid);
 
-            if (!seenIds.contains(question.id)) {
+            if (!addedIds.contains(question.id)) {
                 try {
                     // insert into DB for later retrieval
-                    this.questionResponseDAO.insertAccountQuestion(accountId, question.id, today, expiration);
-                    questions.add(Question.withAskLocalTime(question, today));
+                    // TODO: make this batch Insert
+                    final Long accountQId = this.questionResponseDAO.insertAccountQuestion(accountId, question.id, today, expiration);
+                    questions.add(Question.withAskTimeAccountQId(question, accountQId, today));
                 } catch (UnableToExecuteStatementException exception) {
                     Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
                     if (matcher.find()) {
                         LOGGER.debug("Question already exist");
                     }
                 }
+                addedIds.add(question.id);
             }
 
             loop++;
-            if (loop >= numQ) {
+            if (loop >= poolSize) {
                 break;
+            }
+        }
+        return questions;
+    }
+
+    private Map<Integer, Question> getPreGeneratedQuestions(final Long accountId, final DateTime today) {
+        final DateTime expiration = today.plusDays(1);
+        final ImmutableList<AccountQuestion> questionIds = this.questionResponseDAO.getAccountQuestions(accountId, expiration);
+        if (questionIds.size() == 0) {
+            return Collections.emptyMap();
+        }
+
+        Map<Integer, Question> questions = new HashMap<>();
+
+        for (final AccountQuestion question : questionIds) {
+            final Integer qid = question.questionId;
+            if (!questions.containsKey(qid)) {
+                final Long accountQId = question.id;
+                questions.put(qid, Question.withAskTimeAccountQId(this.questionIdMap.get(qid), accountQId, today));
             }
         }
 
         return questions;
+    }
+
+    private boolean checkPauseQuestions(Long accountId, DateTime today) {
+        // TODO
+        return false;
     }
 
 }
