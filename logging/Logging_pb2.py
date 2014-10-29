@@ -13,7 +13,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='Logging.proto',
   package='hello',
-  serialized_pb='\n\rLogging.proto\x12\x05hello\"T\n\nLogMessage\x12\x0e\n\x06origin\x18\x01 \x01(\t\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\n\n\x02ts\x18\x03 \x01(\x03\x12\x19\n\nproduction\x18\x04 \x01(\x08:\x05\x66\x61lse\"\xae\x02\n\x0bHttpRequest\x12\x0c\n\x04path\x18\x01 \x01(\t\x12\x14\n\x0c\x61\x63\x63\x65ss_token\x18\x02 \x01(\t\x12\x12\n\naccount_id\x18\x03 \x01(\x03\x12\x16\n\x0e\x61pplication_id\x18\x04 \x01(\x03\x12\x15\n\rtimestamp_utc\x18\x05 \x01(\x03\x12\x17\n\x0frequired_scopes\x18\x06 \x03(\t\x12\x17\n\x0fprovided_scopes\x18\x07 \x03(\t\x12\x1f\n\x17\x61\x63\x63\x65ss_token_created_at\x18\x08 \x01(\x03\x12\x12\n\nuser_agent\x18\t \x01(\t\x12*\n\x07headers\x18\n \x03(\x0b\x32\x19.hello.HttpRequest.Header\x1a%\n\x06Header\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\tB-\n\x1c\x63om.hello.suripu.api.loggingB\rLoggingProtos')
+  serialized_pb='\n\rLogging.proto\x12\x05hello\"T\n\nLogMessage\x12\x0e\n\x06origin\x18\x01 \x01(\t\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\n\n\x02ts\x18\x03 \x01(\x03\x12\x19\n\nproduction\x18\x04 \x01(\x08:\x05\x66\x61lse\"\xae\x02\n\x0bHttpRequest\x12\x0c\n\x04path\x18\x01 \x01(\t\x12\x14\n\x0c\x61\x63\x63\x65ss_token\x18\x02 \x01(\t\x12\x12\n\naccount_id\x18\x03 \x01(\x03\x12\x16\n\x0e\x61pplication_id\x18\x04 \x01(\x03\x12\x15\n\rtimestamp_utc\x18\x05 \x01(\x03\x12\x17\n\x0frequired_scopes\x18\x06 \x03(\t\x12\x17\n\x0fprovided_scopes\x18\x07 \x03(\t\x12\x1f\n\x17\x61\x63\x63\x65ss_token_created_at\x18\x08 \x01(\x03\x12\x12\n\nuser_agent\x18\t \x01(\t\x12*\n\x07headers\x18\n \x03(\x0b\x32\x19.hello.HttpRequest.Header\x1a%\n\x06Header\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"\\\n\x0cRegistration\x12\x11\n\tdevice_id\x18\x01 \x01(\t\x12\x11\n\ttimestamp\x18\x02 \x01(\x03\x12\x12\n\naccount_id\x18\x03 \x01(\x03\x12\x12\n\nip_address\x18\x04 \x01(\tB-\n\x1c\x63om.hello.suripu.api.loggingB\rLoggingProtos')
 
 
 
@@ -191,10 +191,60 @@ _HTTPREQUEST = _descriptor.Descriptor(
   serialized_end=413,
 )
 
+
+_REGISTRATION = _descriptor.Descriptor(
+  name='Registration',
+  full_name='hello.Registration',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='device_id', full_name='hello.Registration.device_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='timestamp', full_name='hello.Registration.timestamp', index=1,
+      number=2, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='account_id', full_name='hello.Registration.account_id', index=2,
+      number=3, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='ip_address', full_name='hello.Registration.ip_address', index=3,
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  extension_ranges=[],
+  serialized_start=415,
+  serialized_end=507,
+)
+
 _HTTPREQUEST_HEADER.containing_type = _HTTPREQUEST;
 _HTTPREQUEST.fields_by_name['headers'].message_type = _HTTPREQUEST_HEADER
 DESCRIPTOR.message_types_by_name['LogMessage'] = _LOGMESSAGE
 DESCRIPTOR.message_types_by_name['HttpRequest'] = _HTTPREQUEST
+DESCRIPTOR.message_types_by_name['Registration'] = _REGISTRATION
 
 class LogMessage(_message.Message):
   __metaclass__ = _reflection.GeneratedProtocolMessageType
@@ -213,6 +263,12 @@ class HttpRequest(_message.Message):
   DESCRIPTOR = _HTTPREQUEST
 
   # @@protoc_insertion_point(class_scope:hello.HttpRequest)
+
+class Registration(_message.Message):
+  __metaclass__ = _reflection.GeneratedProtocolMessageType
+  DESCRIPTOR = _REGISTRATION
+
+  # @@protoc_insertion_point(class_scope:hello.Registration)
 
 
 DESCRIPTOR.has_options = True
