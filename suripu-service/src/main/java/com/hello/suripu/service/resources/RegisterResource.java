@@ -20,10 +20,12 @@ import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -43,6 +45,9 @@ public class RegisterResource {
     private final KinesisLoggerFactory kinesisLoggerFactory;
 
     private final Boolean debug;
+
+    @Context
+    HttpServletRequest request;
 
     private static enum PairAction{
         PAIR_MORPHEUS,
@@ -163,12 +168,14 @@ public class RegisterResource {
             }
         }
 
-
+        final String ip = request.getHeader("X-Forwarded-For");
         LoggingProtos.Registration registration = LoggingProtos.Registration.newBuilder()
                 .setAccountId(accountId)
                 .setDeviceId(deviceId)
                 .setTimestamp(DateTime.now().getMillis())
+                .setIpAddress(ip)
                 .build();
+
 
         final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.REGISTRATIONS);
         final String sequenceNumber = dataLogger.put(accountId.toString(), registration.toByteArray());

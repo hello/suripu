@@ -34,4 +34,5 @@ message Registration {
     optional string device_id = 1;
     optional int64 timestamp = 2;
     optional int64 account_id = 3;
+    optional string ip_address = 4;
 }

@@ -3300,6 +3300,21 @@ public final class LoggingProtos {
      * <code>optional int64 account_id = 3;</code>
      */
     long getAccountId();
+
+    // optional string ip_address = 4;
+    /**
+     * <code>optional string ip_address = 4;</code>
+     */
+    boolean hasIpAddress();
+    /**
+     * <code>optional string ip_address = 4;</code>
+     */
+    java.lang.String getIpAddress();
+    /**
+     * <code>optional string ip_address = 4;</code>
+     */
+    com.google.protobuf.ByteString
+        getIpAddressBytes();
   }
   /**
    * Protobuf type {@code hello.Registration}
@@ -3365,6 +3380,11 @@ public final class LoggingProtos {
             case 24: {
               bitField0_ |= 0x00000004;
               accountId_ = input.readInt64();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              ipAddress_ = input.readBytes();
               break;
             }
           }
@@ -3482,10 +3502,54 @@ public final class LoggingProtos {
       return accountId_;
     }
 
+    // optional string ip_address = 4;
+    public static final int IP_ADDRESS_FIELD_NUMBER = 4;
+    private java.lang.Object ipAddress_;
+    /**
+     * <code>optional string ip_address = 4;</code>
+     */
+    public boolean hasIpAddress() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional string ip_address = 4;</code>
+     */
+    public java.lang.String getIpAddress() {
+      java.lang.Object ref = ipAddress_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          ipAddress_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string ip_address = 4;</code>
+     */
+    public com.google.protobuf.ByteString
+        getIpAddressBytes() {
+      java.lang.Object ref = ipAddress_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        ipAddress_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       deviceId_ = "";
       timestamp_ = 0L;
       accountId_ = 0L;
+      ipAddress_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -3508,6 +3572,9 @@ public final class LoggingProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeInt64(3, accountId_);
       }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(4, getIpAddressBytes());
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -3528,6 +3595,10 @@ public final class LoggingProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(3, accountId_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, getIpAddressBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -3651,6 +3722,8 @@ public final class LoggingProtos {
         bitField0_ = (bitField0_ & ~0x00000002);
         accountId_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000004);
+        ipAddress_ = "";
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -3691,6 +3764,10 @@ public final class LoggingProtos {
           to_bitField0_ |= 0x00000004;
         }
         result.accountId_ = accountId_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.ipAddress_ = ipAddress_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -3717,6 +3794,11 @@ public final class LoggingProtos {
         }
         if (other.hasAccountId()) {
           setAccountId(other.getAccountId());
+        }
+        if (other.hasIpAddress()) {
+          bitField0_ |= 0x00000008;
+          ipAddress_ = other.ipAddress_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -3885,6 +3967,80 @@ public final class LoggingProtos {
         return this;
       }
 
+      // optional string ip_address = 4;
+      private java.lang.Object ipAddress_ = "";
+      /**
+       * <code>optional string ip_address = 4;</code>
+       */
+      public boolean hasIpAddress() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional string ip_address = 4;</code>
+       */
+      public java.lang.String getIpAddress() {
+        java.lang.Object ref = ipAddress_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          ipAddress_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string ip_address = 4;</code>
+       */
+      public com.google.protobuf.ByteString
+          getIpAddressBytes() {
+        java.lang.Object ref = ipAddress_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          ipAddress_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string ip_address = 4;</code>
+       */
+      public Builder setIpAddress(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        ipAddress_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string ip_address = 4;</code>
+       */
+      public Builder clearIpAddress() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        ipAddress_ = getDefaultInstance().getIpAddress();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string ip_address = 4;</code>
+       */
+      public Builder setIpAddressBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        ipAddress_ = value;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:hello.Registration)
     }
 
@@ -3936,10 +4092,10 @@ public final class LoggingProtos {
       "cess_token_created_at\030\010 \001(\003\022\022\n\nuser_agen" +
       "t\030\t \001(\t\022*\n\007headers\030\n \003(\0132\031.hello.HttpReq",
       "uest.Header\032%\n\006Header\022\014\n\004name\030\001 \001(\t\022\r\n\005v" +
-      "alue\030\002 \001(\t\"H\n\014Registration\022\021\n\tdevice_id\030" +
+      "alue\030\002 \001(\t\"\\\n\014Registration\022\021\n\tdevice_id\030" +
       "\001 \001(\t\022\021\n\ttimestamp\030\002 \001(\003\022\022\n\naccount_id\030\003" +
-      " \001(\003B-\n\034com.hello.suripu.api.loggingB\rLo" +
-      "ggingProtos"
+      " \001(\003\022\022\n\nip_address\030\004 \001(\tB-\n\034com.hello.su" +
+      "ripu.api.loggingB\rLoggingProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -3969,7 +4125,7 @@ public final class LoggingProtos {
           internal_static_hello_Registration_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_Registration_descriptor,
-              new java.lang.String[] { "DeviceId", "Timestamp", "AccountId", });
+              new java.lang.String[] { "DeviceId", "Timestamp", "AccountId", "IpAddress", });
           return null;
         }
       };
