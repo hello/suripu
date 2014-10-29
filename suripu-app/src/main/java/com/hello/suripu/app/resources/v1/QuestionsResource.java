@@ -76,7 +76,9 @@ public class QuestionsResource {
     @Timed
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public void saveAnswer(@Scope(OAuthScope.QUESTIONS_WRITE) final AccessToken accessToken, @Valid final Choice choice) {
+    public void saveAnswer(@Scope(OAuthScope.QUESTIONS_READ) final AccessToken accessToken,
+                           @QueryParam("account_question_id") final Long accountQuestionId,
+                           @Valid final Choice choice) {
         LOGGER.debug("Saving answer for account id = {}", accessToken.accountId);
         LOGGER.debug("Choice was = {}", choice.id);
 
@@ -86,17 +88,18 @@ public class QuestionsResource {
             questionId = questionIdOptional.get();
         }
 
-        this.questionResponseDAO.insertResponse(accessToken.accountId, questionId, choice.id);
+        this.questionResponseDAO.insertResponse(accessToken.accountId, questionId, accountQuestionId, choice.id);
     }
 
     @Timed
     @PUT
     @Path("/{question_id}/skip")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void skipQuestion(@Scope(OAuthScope.QUESTIONS_WRITE) final AccessToken accessToken,
-                             @PathParam("question_id") final Integer questionId) {
+    public void skipQuestion(@Scope(OAuthScope.QUESTIONS_READ) final AccessToken accessToken,
+                             @PathParam("question_id") final Integer questionId,
+                             @QueryParam("account_question_id") final Long accountQuestionId) {
         LOGGER.debug("Skipping question {} for account id = {}", questionId, accessToken.accountId);
-        this.questionResponseDAO.insertSkippedQuestion(accessToken.accountId, questionId);
+        this.questionResponseDAO.insertSkippedQuestion(accessToken.accountId, questionId, accountQuestionId);
     }
 
 }

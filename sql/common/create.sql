@@ -236,6 +236,7 @@ CREATE TABLE responses (
     id BIGSERIAL PRIMARY KEY,
     account_id BIGINT,
     question_id INTEGER,
+    account_question_id BIGINT default 0,
     response text default '',
     skip BOOLEAN default FALSE,
     created TIMESTAMP default current_timestamp
@@ -243,6 +244,18 @@ CREATE TABLE responses (
 
 GRANT ALL PRIVILEGES ON responses TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE responses_id_seq TO ingress_user;
+
+
+-- set the next time to ask a user question after some skips
+CREATE TABLE account_question_ask_time (
+    id BIGSERIAL PRIMARY KEY,
+    account_id BIGINT,
+    next_ask_time_local_utc TIMESTAMP, -- Date to start asking question again
+    created TIMESTAMP default current_timestamp
+);
+
+GRANT ALL PRIVILEGES ON account_question_ask_time TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE account_question_ask_time_id_seq TO ingress_user;
 
 
 --

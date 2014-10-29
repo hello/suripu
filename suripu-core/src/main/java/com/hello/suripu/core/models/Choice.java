@@ -24,4 +24,5 @@ public class Choice {
         this.text = text;
         this.questionId = Optional.fromNullable(questionId);
     }
+
 }

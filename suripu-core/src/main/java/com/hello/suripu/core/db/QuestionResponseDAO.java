@@ -22,17 +22,19 @@ public interface QuestionResponseDAO {
     ImmutableList<Question> getAllQuestions();
 
     @GetGeneratedKeys
-    @SqlUpdate("INSERT INTO responses (account_id, question_id, response_id) VALUES " +
-            "(:account_id, :question_id, :response_id)")
+    @SqlUpdate("INSERT INTO responses (account_id, question_id, account_question_id, response_id) VALUES " +
+            "(:account_id, :question_id, :account_question_id, :response_id)")
     Long insertResponse(@Bind("account_id") long accountId,
-            @Bind("question_id") Integer questionId,
-            @Bind("response_id") Integer responseId);
+                        @Bind("question_id") Integer questionId,
+                        @Bind("account_question_id") Long accountQuestionId,
+                        @Bind("response_id") Integer responseId);
 
     @GetGeneratedKeys
-    @SqlUpdate("INSERT INTO responses (account_id, question_id, skip) VALUES " +
-            "(:account_id, :question_id, TRUE)")
+    @SqlUpdate("INSERT INTO responses (account_id, question_id, account_question_id, skip) VALUES " +
+            "(:account_id, :question_id, :account_question_id, TRUE)")
     Long insertSkippedQuestion(@Bind("account_id") long accountId,
-                               @Bind("question_id") Integer questionId);
+                               @Bind("question_id") Integer questionId,
+                               @Bind("account_question_id") Long accountQuestionId);
 
     @GetGeneratedKeys
     @SqlUpdate("INSERT INTO account_questions " +
@@ -48,6 +50,6 @@ public interface QuestionResponseDAO {
             "account_id = :account_id AND expires_local_utc_ts >= :expiration " +
             "ORDER BY id DESC")
     ImmutableList<AccountQuestion> getAccountQuestions(@Bind("account_id") long accountId,
-                                                @Bind("expiration") DateTime expiration);
+                                                       @Bind("expiration") DateTime expiration);
 
 }
