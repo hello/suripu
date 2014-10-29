@@ -9,7 +9,6 @@ import com.google.protobuf.TextFormat;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.core.configuration.QueueName;
-import com.hello.suripu.core.crypto.CryptoHelper;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
@@ -67,7 +66,6 @@ public class ReceiveResource {
     private final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
 
     private final KinesisLoggerFactory kinesisLoggerFactory;
-    private final CryptoHelper cryptoHelper;
     private final Boolean debug;
 
     @Context
@@ -86,7 +84,6 @@ public class ReceiveResource {
         this.deviceDAO = deviceDAO;
 
         this.publicKeyStore = publicKeyStore;
-        cryptoHelper = new CryptoHelper();
         this.kinesisLoggerFactory = kinesisLoggerFactory;
 
         this.mergedAlarmInfoDynamoDB = mergedAlarmInfoDynamoDB;
@@ -357,16 +354,14 @@ public class ReceiveResource {
 
                 LOGGER.warn("Duplicate device sensor value for account_id = {}, time: {}", pair.accountId, roundedDateTime);
             }
-
-
-            final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.MORPHEUS_DATA);
-            final byte[] morpheusDataInBytes = data.toByteArray();
-            final String shardingKey = deviceName;
-
-            final String sequenceNumber = dataLogger.put(shardingKey, morpheusDataInBytes);
-
         }
 
+        final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.MORPHEUS_DATA);
+        final byte[] morpheusDataInBytes = data.toByteArray();
+        final String shardingKey = deviceName;
+
+        final String sequenceNumber = dataLogger.put(shardingKey, morpheusDataInBytes);
+        LOGGER.trace("Morpheus data saved to Kinesis with sequence number = {}", sequenceNumber);
 
         final InputProtos.SyncResponse.Builder responseBuilder = InputProtos.SyncResponse.newBuilder();
         final RingTime nextRegularRingTime = RingProcessor.getNextRegularRingTime(alarmInfoList,
@@ -394,6 +389,16 @@ public class ReceiveResource {
 
         responseBuilder.setAlarm(alarmBuilder.build());
 
+
+        if(data.getDeviceId().equals("D05FB81BE1E0")) {
+            LOGGER.info("HAS FIRMWARE UPDATE");
+            final InputProtos.SyncResponse.FirmwareUpdate firmwareUpdate = InputProtos.SyncResponse.FirmwareUpdate.newBuilder()
+                    .setFirmwareVersion(11)
+                    .addFileUrls("")
+                    .build();
+
+            responseBuilder.setFirmwareUpdate(firmwareUpdate);
+        }
 
         final InputProtos.SyncResponse syncResponse = responseBuilder.build();
 
