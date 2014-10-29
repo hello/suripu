@@ -3,7 +3,11 @@ package com.hello.suripu.service.resources;
 import com.google.common.base.Optional;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.ble.MorpheusBle;
+import com.hello.suripu.api.logging.LoggingProtos;
+import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.logging.DataLogger;
+import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
@@ -36,6 +40,7 @@ public class RegisterResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(RegisterResource.class);
     private final DeviceDAO deviceDAO;
     final OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore;
+    private final KinesisLoggerFactory kinesisLoggerFactory;
 
     private final Boolean debug;
 
@@ -46,10 +51,12 @@ public class RegisterResource {
 
     public RegisterResource(final DeviceDAO deviceDAO,
                             final OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore,
+                            final KinesisLoggerFactory kinesisLoggerFactory,
                             final Boolean debug){
         this.deviceDAO = deviceDAO;
         this.tokenStore = tokenStore;
         this.debug = debug;
+        this.kinesisLoggerFactory = kinesisLoggerFactory;
     }
 
     private boolean checkCommandType(final MorpheusBle.MorpheusCommand morpheusCommand, final PairAction action){
@@ -147,6 +154,7 @@ public class RegisterResource {
                 builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
                 builder.setError(MorpheusBle.ErrorType.INTERNAL_OPERATION_FAILED);
             }else {
+                LOGGER.error(sqlExp.getMessage());
                 //TODO: enforce the constrain
                 LOGGER.warn("Account {} tries to pair a paired device {} ",
                         accountId, deviceId);
@@ -155,6 +163,15 @@ public class RegisterResource {
             }
         }
 
+
+        LoggingProtos.Registration registration = LoggingProtos.Registration.newBuilder()
+                .setAccountId(accountId)
+                .setDeviceId(deviceId)
+                .setTimestamp(DateTime.now().getMillis())
+                .build();
+
+        final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.REGISTRATIONS);
+        final String sequenceNumber = dataLogger.put(accountId.toString(), registration.toByteArray());
 
         return builder.build().toByteArray();
     }
@@ -172,7 +189,6 @@ public class RegisterResource {
             LOGGER.error("Failed signing message");
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new byte[0]).build();
         }
-
         return Response.ok().entity(signedResponse.get()).build();
 
     }

@@ -165,7 +165,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 kinesisLoggerFactory,
                 mergedAlarmInfoDynamoDB,
                 configuration.getDebug()));
-        environment.addResource(new RegisterResource(deviceDAO, tokenStore, configuration.getDebug()));
+        environment.addResource(new RegisterResource(deviceDAO, tokenStore, kinesisLoggerFactory, configuration.getDebug()));
 
 
         environment.addResource(new PingResource());

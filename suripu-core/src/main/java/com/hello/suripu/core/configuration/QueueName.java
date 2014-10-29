@@ -7,7 +7,8 @@ public enum QueueName {
     PILL_DATA ("pill_data"),
     MORPHEUS_DATA ("morpheus_data"),
     AUDIO_FEATURES("audio_features"),
-    ACTIVITY_STREAM("activity_stream");
+    ACTIVITY_STREAM("activity_stream"),
+    REGISTRATIONS("registrations");
 
     private String value;
 

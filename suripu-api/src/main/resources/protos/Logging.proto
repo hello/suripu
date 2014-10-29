@@ -28,3 +28,10 @@ message HttpRequest {
     optional string user_agent = 9;
     repeated Header headers = 10;
 }
+
+
+message Registration {
+    optional string device_id = 1;
+    optional int64 timestamp = 2;
+    optional int64 account_id = 3;
+}
