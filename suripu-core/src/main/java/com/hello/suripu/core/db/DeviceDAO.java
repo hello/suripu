@@ -76,12 +76,12 @@ public interface DeviceDAO {
     public abstract ImmutableList<DeviceAccountPair> getTrackerIds(@Bind("account_id") Long accountId);
 
     @RegisterMapper(DeviceAccountPairMapper.class)
-    @SingleValueResult(DeviceAccountPairMapper.class)
+    @SingleValueResult(DeviceAccountPair.class)
     @SqlQuery("SELECT * FROM account_tracker_map WHERE device_id = :pill_id AND active = TRUE ORDER BY id DESC LIMIT 1;")
     Optional<DeviceAccountPair> getInternalPillId(@Bind("pill_id") final String pillId);
 
     @GetGeneratedKeys
-    @SqlUpdate("INSERT INTO account_tracker_map (account_id, device_id) VALUES(:account_id, :tracker_id)")
+    @SqlUpdate("INSERT INTO account_tracker_map (account_id, device_id, active) VALUES(:account_id, :tracker_id, true)")
     Long registerTracker(@Bind("account_id") Long accountId, @Bind("tracker_id") String trackerId);
 
     @SqlUpdate("DELETE FROM account_tracker_map WHERE id = :id")
