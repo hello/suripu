@@ -133,7 +133,8 @@ public class AlarmResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<AlarmSound> getAlarmSounds(@Scope(OAuthScope.ALARM_READ) final AccessToken accessToken) {
         final ArrayList<AlarmSound> alarmSounds = new ArrayList<>();
-        final AlarmSound sound = new AlarmSound(1, "Digital 2");
+        final AlarmSound sound = new AlarmSound(1, "Digital 3");
+        alarmSounds.add(sound);
         return alarmSounds;
     }
 }
