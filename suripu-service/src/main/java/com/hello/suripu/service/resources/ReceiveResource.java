@@ -383,9 +383,10 @@ public class ReceiveResource {
                 .setStartTime((int) (nextRingTimestamp / DateTimeConstants.MILLIS_PER_SECOND))
                 .setEndTime((int) ((nextRingTimestamp + ringDurationInMS) / DateTimeConstants.MILLIS_PER_SECOND));
 
-        for(int i = 0; i < replyRingTime.soundIds.length; i++){
-            alarmBuilder.setRingtoneIds(i, replyRingTime.soundIds[i]);
-        }
+        // TODO: Fix the IndexOutOfBoundException
+//        for(int i = 0; i < replyRingTime.soundIds.length; i++){
+//            alarmBuilder.setRingtoneIds(i, replyRingTime.soundIds[i]);
+//        }
 
         responseBuilder.setAlarm(alarmBuilder.build());
 
