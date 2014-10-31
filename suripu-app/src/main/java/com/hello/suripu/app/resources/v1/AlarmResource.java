@@ -73,6 +73,7 @@ public class AlarmResource {
 
                 // At account creation, the merged table doesn't have any alarm info, so let's create an empty one
                 mergedAlarmInfoDynamoDB.setInfo(AlarmInfo.createEmpty(deviceAccountMap.get(0).externalDeviceId, token.accountId));
+                LOGGER.warn("Saved empty alarm info for device {} and account {}.", deviceAccountMap.get(0).externalDeviceId, token.accountId);
 //                throw new WebApplicationException(Response.Status.BAD_REQUEST);
                 return Collections.emptyList();
             }
