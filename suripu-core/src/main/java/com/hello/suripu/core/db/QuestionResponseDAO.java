@@ -54,6 +54,7 @@ public interface QuestionResponseDAO {
     ImmutableList<AccountQuestion> getAccountQuestions(@Bind("account_id") long accountId,
                                                        @Bind("expiration") DateTime expiration);
 
+    // TODO need to optimize and create index
     @RegisterMapper(ResponseMapper.class)
     @SqlQuery("SELECT responses.account_id AS account_id, " +
             "responses.question_id AS question_id, " +
@@ -62,9 +63,14 @@ public interface QuestionResponseDAO {
             "responses.created AS created, " +
             "responses.account_question_id AS account_question_id, " +
             "account_questions.created_local_utc_ts AS ask_time " +
-            "FROM responses, account_questions "+
-            "WHERE responses.account_id = :account_id AND responses.account_question_id = account_questions.id " +
-            "ORDER by account_questions.id DESC LIMIT :limit")
-    ImmutableList<Response> getLastQuestionsResponded(@Bind("account_id") long accountId,
+            "FROM responses INNER JOIN account_questions ON " +
+            "responses.account_question_id = account_questions.id " +
+            "WHERE responses.account_id = :account_id AND " +
+            "responses.account_question_id IN " +
+                "(SELECT id FROM account_questions WHERE " +
+                "account_id=:account_id ORDER BY id DESC LIMIT :limit) AND " +
+            "responses.skip = TRUE" +
+            "ORDER by responses.id DESC")
+    ImmutableList<Response> getSkippedQuestions(@Bind("account_id") long accountId,
                                                       @Bind("limit") int limit);
 }

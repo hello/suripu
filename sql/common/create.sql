@@ -212,6 +212,7 @@ CREATE TABLE account_questions(
 );
 
 CREATE UNIQUE INDEX uniq_account_question_created_ts ON account_questions(account_id, question_id, created_local_utc_ts);
+CREATE INDEX account_id ON account_questions(account_id);
 
 GRANT ALL PRIVILEGES ON account_questions TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE account_questions_id_seq TO ingress_user;
