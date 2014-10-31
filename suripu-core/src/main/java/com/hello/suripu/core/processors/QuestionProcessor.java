@@ -71,6 +71,15 @@ public class QuestionProcessor {
         return questions;
     }
 
+    public void skipQuestion(final Long accountId, final Integer questionId, final Long accountQuestionId) {
+
+        // add skips to table
+        this.questionResponseDAO.insertSkippedQuestion(accountId, questionId, accountQuestionId);
+
+        // check if user has skipped too many time
+        // get last 5 questions, and check for consecutive skips
+
+    }
     private List<Question> getAdditionalQuestions(final Long accountId, final DateTime today, final Integer numQuestions, final Set<Integer> seenIds) {
         // TODO: logic to choose question
 

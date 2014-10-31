@@ -99,7 +99,7 @@ public class QuestionsResource {
                              @PathParam("question_id") final Integer questionId,
                              @QueryParam("account_question_id") final Long accountQuestionId) {
         LOGGER.debug("Skipping question {} for account id = {}", questionId, accessToken.accountId);
-        this.questionResponseDAO.insertSkippedQuestion(accessToken.accountId, questionId, accountQuestionId);
+        this.questionProcessor.skipQuestion(accessToken.accountId, questionId, accountQuestionId);
     }
 
 }

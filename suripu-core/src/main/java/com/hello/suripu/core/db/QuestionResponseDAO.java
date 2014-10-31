@@ -3,8 +3,10 @@ package com.hello.suripu.core.db;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.mappers.AccountQuestionMapper;
 import com.hello.suripu.core.db.mappers.QuestionMapper;
+import com.hello.suripu.core.db.mappers.ResponseMapper;
 import com.hello.suripu.core.models.AccountQuestion;
 import com.hello.suripu.core.models.Question;
+import com.hello.suripu.core.models.Response;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
@@ -52,4 +54,17 @@ public interface QuestionResponseDAO {
     ImmutableList<AccountQuestion> getAccountQuestions(@Bind("account_id") long accountId,
                                                        @Bind("expiration") DateTime expiration);
 
+    @RegisterMapper(ResponseMapper.class)
+    @SqlQuery("SELECT responses.account_id AS account_id, " +
+            "responses.question_id AS question_id, " +
+            "responses.response AS response, " +
+            "responses.skip AS skip, " +
+            "responses.created AS created, " +
+            "responses.account_question_id AS account_question_id, " +
+            "account_questions.created_local_utc_ts AS ask_time " +
+            "FROM responses, account_questions "+
+            "WHERE responses.account_id = :account_id AND responses.account_question_id = account_questions.id " +
+            "ORDER by account_questions.id DESC LIMIT :limit")
+    ImmutableList<Response> getLastQuestionsResponded(@Bind("account_id") long accountId,
+                                                      @Bind("limit") int limit);
 }
