@@ -91,7 +91,8 @@ public class CurrentRoomState {
         // BEWARE, MUTABLE STATE BELOW. SCAAAAAARY
         Float temp = DeviceData.dbIntToFloat(data.ambientTemperature);
         Float humidity = DeviceData.dbIntToFloat(data.ambientHumidity);
-        Float particulates = DeviceData.dbIntToFloatDust(data.ambientDustMax);
+        final int dustDensity = DeviceData.convertDustAnalogToMicroGM3(data.ambientDustMax, 0); // max values are raw counts
+        Float particulates = DeviceData.dbIntToFloatDust(dustDensity);
         State temperatureState;
         State humidityState;
         State particulatesState;
