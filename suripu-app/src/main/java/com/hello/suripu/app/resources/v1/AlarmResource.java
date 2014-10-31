@@ -30,6 +30,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -68,11 +69,12 @@ public class AlarmResource {
             final Optional<AlarmInfo> alarmInfoOptional = this.mergedAlarmInfoDynamoDB.getInfo(deviceAccountMap.get(0).externalDeviceId, token.accountId);
             LOGGER.debug("Fetched alarm info optional");
             if(!alarmInfoOptional.isPresent()){
-                LOGGER.error("Merge alarm info table doesn't have record for device {}, account {}.", deviceAccountMap.get(0).externalDeviceId, token.accountId);
+                LOGGER.warn("Merge alarm info table doesn't have record for device {}, account {}.", deviceAccountMap.get(0).externalDeviceId, token.accountId);
 
                 // At account creation, the merged table doesn't have any alarm info, so let's create an empty one
                 mergedAlarmInfoDynamoDB.setInfo(AlarmInfo.createEmpty(deviceAccountMap.get(0).externalDeviceId, token.accountId));
-                throw new WebApplicationException(Response.Status.BAD_REQUEST);
+//                throw new WebApplicationException(Response.Status.BAD_REQUEST);
+                return Collections.emptyList();
             }
             final AlarmInfo alarmInfo = alarmInfoOptional.get();
             return alarmInfo.alarmList;
