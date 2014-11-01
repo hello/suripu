@@ -87,8 +87,8 @@ public abstract class DeviceDataDAO {
 
     @RegisterMapper(DeviceDataMapper.class)
     @SingleValueResult(DeviceData.class)
-    @SqlQuery("SELECT * FROM device_sensors_master WHERE account_id = :account_id ORDER BY ts DESC LIMIT 1;")
-    public abstract Optional<DeviceData> getMostRecent(@Bind("account_id") final Long accountId);
+    @SqlQuery("SELECT * FROM device_sensors_master WHERE account_id = :account_id AND device_id = :device_id ORDER BY ts DESC LIMIT 1;")
+    public abstract Optional<DeviceData> getMostRecent(@Bind("account_id") final Long accountId, @Bind("device_id") Long deviceId);
 
 
     /**
