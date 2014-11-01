@@ -45,7 +45,13 @@ public class RoomConditionsResource {
     @Produces(MediaType.APPLICATION_JSON)
     public CurrentRoomState current(@Scope({OAuthScope.SENSORS_BASIC}) final AccessToken token) {
 
-        final Optional<DeviceData> data = deviceDataDAO.getMostRecent(token.accountId);
+        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(token.accountId);
+        if(!deviceId.isPresent()) {
+            LOGGER.warn("Did not find any device_id for account_id = {}", token.accountId);
+            return CurrentRoomState.empty();
+        }
+
+        final Optional<DeviceData> data = deviceDataDAO.getMostRecent(token.accountId, deviceId.get());
         if(!data.isPresent()) {
             return CurrentRoomState.empty();
         }
@@ -72,7 +78,7 @@ public class RoomConditionsResource {
         final int queryDurationInHours = 24;
 
         // get latest device_id connected to this account
-        final Optional<Long> deviceId = deviceDAO.getByAccountId(accessToken.accountId);
+        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
         if(!deviceId.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
@@ -118,7 +124,7 @@ public class RoomConditionsResource {
         final int  queryDurationInHours = 24;
 
         // get latest device_id connected to this account
-        final Optional<Long> deviceId = deviceDAO.getByAccountId(accountId);
+        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
         if(!deviceId.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
@@ -159,7 +165,7 @@ public class RoomConditionsResource {
         final int  queryDurationInHours = 24 * 7; // 7 days
 
         // get latest device_id connected to this account
-        final Optional<Long> deviceId = deviceDAO.getByAccountId(accessToken.accountId);
+        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
         if(!deviceId.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
