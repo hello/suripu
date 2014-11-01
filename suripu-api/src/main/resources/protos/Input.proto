@@ -254,3 +254,10 @@ message periodic_data {
     repeated pill_data pills=11;
     optional string device_id = 12;
 }
+
+
+message SenseLog {
+    optional int32 unix_time = 1;
+    optional string device_id = 2;
+    optional string text = 3;
+}
