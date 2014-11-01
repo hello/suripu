@@ -130,4 +130,11 @@ public class SuripuConfiguration extends Configuration {
     public DynamoDBConfiguration getAlarmInfoDynamoDBConfiguration(){
         return this.alarmInfoDynamoDBConfiguration;
     }
+
+    @Valid
+    @JsonProperty("sense_logs")
+    private IndexLogConfiguration indexLogConfiguration;
+    public IndexLogConfiguration getIndexLogConfiguration() {
+        return this.indexLogConfiguration;
+    }
 }
