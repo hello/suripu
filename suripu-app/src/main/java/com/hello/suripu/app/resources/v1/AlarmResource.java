@@ -7,6 +7,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmInfo;
+import com.hello.suripu.core.models.AlarmSound;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -28,6 +29,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -66,8 +69,13 @@ public class AlarmResource {
             final Optional<AlarmInfo> alarmInfoOptional = this.mergedAlarmInfoDynamoDB.getInfo(deviceAccountMap.get(0).externalDeviceId, token.accountId);
             LOGGER.debug("Fetched alarm info optional");
             if(!alarmInfoOptional.isPresent()){
-                LOGGER.error("Merge alarm info table doesn't have record for device {}, account {}.", deviceAccountMap.get(0).externalDeviceId, token.accountId);
-                throw new WebApplicationException(Response.Status.BAD_REQUEST);
+                LOGGER.warn("Merge alarm info table doesn't have record for device {}, account {}.", deviceAccountMap.get(0).externalDeviceId, token.accountId);
+
+                // At account creation, the merged table doesn't have any alarm info, so let's create an empty one
+                mergedAlarmInfoDynamoDB.setInfo(AlarmInfo.createEmpty(deviceAccountMap.get(0).externalDeviceId, token.accountId));
+                LOGGER.warn("Saved empty alarm info for device {} and account {}.", deviceAccountMap.get(0).externalDeviceId, token.accountId);
+//                throw new WebApplicationException(Response.Status.BAD_REQUEST);
+                return Collections.emptyList();
             }
             final AlarmInfo alarmInfo = alarmInfoOptional.get();
             return alarmInfo.alarmList;
@@ -117,7 +125,17 @@ public class AlarmResource {
                 throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
             }
         }
+    }
 
 
+    @Timed
+    @GET
+    @Path("/sounds")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<AlarmSound> getAlarmSounds(@Scope(OAuthScope.ALARM_READ) final AccessToken accessToken) {
+        final ArrayList<AlarmSound> alarmSounds = new ArrayList<>();
+        final AlarmSound sound = new AlarmSound(1, "Digital 3");
+        alarmSounds.add(sound);
+        return alarmSounds;
     }
 }

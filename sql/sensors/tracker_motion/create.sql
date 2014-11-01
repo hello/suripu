@@ -16,7 +16,7 @@ CREATE UNIQUE INDEX uniq_account_tracker on account_tracker_map(account_id, devi
 GRANT ALL PRIVILEGES ON account_tracker_map TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE account_tracker_map_id_seq TO ingress_user;
 
-ALTER TABLE account_tracker_map ADD COLUMN active BOOLEAN DEFAULT FALSE;
+ALTER TABLE account_tracker_map ADD COLUMN active BOOLEAN DEFAULT TRUE;
 ALTER TABLE account_tracker_map ADD COLUMN last_updated TIMESTAMP default current_timestamp;
 
 --

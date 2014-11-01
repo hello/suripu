@@ -156,3 +156,4 @@ kinesis:
     morpheus_data : test-stream-suripu
     audio_features : audio_features
     activity_stream : activity_stream
+    registrations: registrations

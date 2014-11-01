@@ -2,12 +2,11 @@ package com.hello.suripu.service.resources;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.common.base.Optional;
 import com.hello.suripu.api.audio.MatrixProtos;
-import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.logging.DataLogger;
-import com.hello.suripu.core.models.DeviceAccountPair;
-import org.apache.commons.codec.binary.Hex;
+import com.hello.suripu.core.util.DeviceIdUtil;
+import com.hello.suripu.service.SignedMessage;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,10 +17,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.List;
 
 @Path("/audio")
 public class AudioResource {
@@ -31,38 +30,53 @@ public class AudioResource {
     private final AmazonS3Client s3Client;
     private final String audioBucketName;
     private final DataLogger dataLogger;
-    private final DeviceDAO deviceDAO;
+    private final boolean debug;
 
-    public AudioResource(final AmazonS3Client s3Client, final String audioBucketName, final DataLogger dataLogger, final DeviceDAO deviceDAO) {
+    public AudioResource(final AmazonS3Client s3Client, final String audioBucketName, final DataLogger dataLogger, final boolean debug) {
         this.s3Client = s3Client;
         this.audioBucketName = audioBucketName;
         this.dataLogger = dataLogger;
-        this.deviceDAO = deviceDAO;
+        this.debug = debug;
     }
 
     @POST
     @Path("/features")
     public void getAudioFeatures(@Context HttpServletRequest request, byte[] body) {
+
+        final SignedMessage signedMessage = SignedMessage.parse(body);
+        MatrixProtos.MatrixClientMessage message;
+
         try {
+            message = MatrixProtos.MatrixClientMessage.parseFrom(signedMessage.body);
+        } catch (IOException exception) {
+            final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
+            LOGGER.error(errorMessage);
 
-            final MatrixProtos.MatrixClientMessage message = MatrixProtos.MatrixClientMessage.parseFrom(body);
-
-            LOGGER.debug("Received features from mac = {} at {}", Hex.encodeHex(message.getMac().toByteArray()), message.getUnixTime());
-            LOGGER.debug("Source = {}", message.getMatrixPayload().getSource());
-            LOGGER.debug("iData = {}", message.getMatrixPayload().getIdataList());
-
-            final String deviceName = new String(Hex.encodeHex(message.getMac().toByteArray()));
-            final List<DeviceAccountPair> pairs = deviceDAO.getAccountIdsForDeviceId(deviceName);
-
-            LOGGER.debug("Found {} pairs for device name = {}", pairs.size(), deviceName);
-
-            for(final DeviceAccountPair pair : pairs) {
-                dataLogger.put(pair.internalDeviceId.toString(), body);
-            }
-        } catch (InvalidProtocolBufferException e) {
-            LOGGER.error("Failed parsing protobuf: {}", e.getMessage());
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("invalid protobuf").build());
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity((debug) ? errorMessage : "bad request")
+                    .type(MediaType.TEXT_PLAIN_TYPE).build()
+            );
         }
+
+        final Optional<String> mac = DeviceIdUtil.macToStringId(message.getMac().toByteArray());
+        if(!mac.isPresent()) {
+            LOGGER.warn("No mac address");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        // TODO: Fetch key from Datastore
+        final byte[] keyBytes = "1234567891234567".getBytes();
+        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytes);
+
+        if(error.isPresent()) {
+            LOGGER.error(error.get().message);
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+                    .entity((debug) ? error.get().message : "bad request")
+                    .type(MediaType.TEXT_PLAIN_TYPE).build()
+            );
+        }
+
+        dataLogger.put(mac.get(), signedMessage.body);
     }
 
 

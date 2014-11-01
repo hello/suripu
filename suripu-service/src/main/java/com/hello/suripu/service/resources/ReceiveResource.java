@@ -5,14 +5,10 @@ import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.io.LittleEndianDataInputStream;
-import com.google.protobuf.ByteString;
 import com.google.protobuf.TextFormat;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
-import com.hello.suripu.api.input.InputProtos.SimpleSensorBatch;
 import com.hello.suripu.core.configuration.QueueName;
-import com.hello.suripu.core.crypto.CryptoHelper;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
@@ -32,7 +28,6 @@ import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.core.util.DeviceIdUtil;
 import com.hello.suripu.service.SignedMessage;
 import com.yammer.metrics.annotation.Timed;
-import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -40,20 +35,17 @@ import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,11 +66,10 @@ public class ReceiveResource {
     private final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
 
     private final KinesisLoggerFactory kinesisLoggerFactory;
-    private final CryptoHelper cryptoHelper;
     private final Boolean debug;
 
-    // for transforming pill-data counts into acceleration
-
+    @Context
+    HttpServletRequest request;
 
     private final LoadingCache<String, Optional<byte[]>> cache;
 
@@ -93,7 +84,6 @@ public class ReceiveResource {
         this.deviceDAO = deviceDAO;
 
         this.publicKeyStore = publicKeyStore;
-        cryptoHelper = new CryptoHelper();
         this.kinesisLoggerFactory = kinesisLoggerFactory;
 
         this.mergedAlarmInfoDynamoDB = mergedAlarmInfoDynamoDB;
@@ -168,30 +158,6 @@ public class ReceiveResource {
         }
     }
 
-    @PUT
-    @Path("pill/{pill_id}")
-    @Timed
-    public Response savePillData(
-            @Scope({OAuthScope.SENSORS_BASIC}) AccessToken accessToken,
-            @PathParam("pill_id") String pillID,
-            byte[] data) {
-        // TODO
-        final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.PILL_DATA);
-
-        final InputProtos.PillData pillData = InputProtos.PillData.newBuilder()
-                    .setData(ByteString.copyFrom(data))
-                    .setPillId(pillID)
-                    .setAccountId(accessToken.accountId.toString())
-                    .build();
-
-        final byte[] pillDataBytes = pillData.toByteArray();
-        final String shardingKey = pillID;
-
-        final String sequenceNumber = dataLogger.put(shardingKey, pillDataBytes);
-        LOGGER.debug("Data persisted to Kinesis with sequenceNumber = {}", sequenceNumber);
-        return Response.ok().build();
-    }
-
     @POST
     @Path("/morpheus/pb2")
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
@@ -224,7 +190,6 @@ public class ReceiveResource {
                     .type(MediaType.TEXT_PLAIN_TYPE).build()
             );
         }
-
 
         final String deviceName = deviceIdOptional.get();
         LOGGER.debug("Received valid protobuf {}", deviceName.toString());
@@ -389,16 +354,14 @@ public class ReceiveResource {
 
                 LOGGER.warn("Duplicate device sensor value for account_id = {}, time: {}", pair.accountId, roundedDateTime);
             }
-
-
-            final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.MORPHEUS_DATA);
-            final byte[] morpheusDataInBytes = data.toByteArray();
-            final String shardingKey = deviceName;
-
-            final String sequenceNumber = dataLogger.put(shardingKey, morpheusDataInBytes);
-
         }
 
+        final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.MORPHEUS_DATA);
+        final byte[] morpheusDataInBytes = data.toByteArray();
+        final String shardingKey = deviceName;
+
+        final String sequenceNumber = dataLogger.put(shardingKey, morpheusDataInBytes);
+        LOGGER.trace("Morpheus data saved to Kinesis with sequence number = {}", sequenceNumber);
 
         final InputProtos.SyncResponse.Builder responseBuilder = InputProtos.SyncResponse.newBuilder();
         final RingTime nextRegularRingTime = RingProcessor.getNextRegularRingTime(alarmInfoList,
@@ -420,12 +383,23 @@ public class ReceiveResource {
                 .setStartTime((int) (nextRingTimestamp / DateTimeConstants.MILLIS_PER_SECOND))
                 .setEndTime((int) ((nextRingTimestamp + ringDurationInMS) / DateTimeConstants.MILLIS_PER_SECOND));
 
-        for(int i = 0; i < replyRingTime.soundIds.length; i++){
-            alarmBuilder.setRingtoneIds(i, replyRingTime.soundIds[i]);
-        }
+        // TODO: Fix the IndexOutOfBoundException
+//        for(int i = 0; i < replyRingTime.soundIds.length; i++){
+//            alarmBuilder.setRingtoneIds(i, replyRingTime.soundIds[i]);
+//        }
 
         responseBuilder.setAlarm(alarmBuilder.build());
 
+
+        if(data.getDeviceId().equals("D05FB81BE1E0")) {
+            LOGGER.info("HAS FIRMWARE UPDATE");
+            final InputProtos.SyncResponse.FirmwareUpdate firmwareUpdate = InputProtos.SyncResponse.FirmwareUpdate.newBuilder()
+                    .setFirmwareVersion(11)
+                    .addFileUrls("")
+                    .build();
+
+            responseBuilder.setFirmwareUpdate(firmwareUpdate);
+        }
 
         final InputProtos.SyncResponse syncResponse = responseBuilder.build();
 
@@ -441,198 +415,5 @@ public class ReceiveResource {
         }
 
         return signedResponse.get();
-    }
-
-
-
-    @POST
-    @Path("/morpheus/pb")
-    @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
-    @Timed
-    public String morpheusProtobufReceive(final byte[] body) {
-
-        LOGGER.warn("---- DEPRECATED ----");
-        InputProtos.periodic_data data = null;
-
-        try {
-            data = InputProtos.periodic_data.parseFrom(body);
-        } catch (IOException exception) {
-            final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
-            LOGGER.error(errorMessage);
-
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity((debug) ? errorMessage : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
-        }
-
-
-        // get MAC address of morpheus
-        final byte[] mac = Arrays.copyOf(data.getMac().toByteArray(), 6);
-        final String deviceName = new String(Hex.encodeHex(mac));
-        LOGGER.debug("Received valid protobuf {}", deviceName.toString());
-        LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
-
-
-        final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceName.toString());
-        LOGGER.debug("Found {} pairs", deviceAccountPairs.size());
-        long timestampMillis = data.getUnixTime() * 1000L;
-        final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
-
-        for (final DeviceAccountPair pair : deviceAccountPairs) {
-            final DeviceData.Builder builder = new DeviceData.Builder()
-                    .withAccountId(pair.accountId)
-                    .withDeviceId(pair.internalDeviceId)
-                    .withAmbientTemperature(data.getTemperature())
-                    .withAmbientAirQuality(data.getDust(), data.getFirmwareVersion())
-                    .withAmbientAirQualityRaw(data.getDust())
-                    .withAmbientDustVariance(0)
-                    .withAmbientDustMin(0)
-                    .withAmbientDustMax(0)
-                    .withAmbientHumidity(data.getHumidity())
-                    .withAmbientLight(data.getLight())
-                    .withAmbientLightVariance(data.getLightVariability())
-                    .withAmbientLightPeakiness(data.getLightTonality())
-                    .withOffsetMillis(-25200000) //TODO: GET THIS FROM MORPHEUS PAYLOAD
-                    .withDateTimeUTC(roundedDateTime);
-
-            final DeviceData deviceData = builder.build();
-
-            try {
-                deviceDataDAO.insert(deviceData);
-                LOGGER.info("Data saved to DB: {}", TextFormat.shortDebugString(data));
-            } catch (UnableToExecuteStatementException exception) {
-                final Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
-                if (!matcher.find()) {
-                    LOGGER.error(exception.getMessage());
-                    throw new WebApplicationException(
-                            Response.status(Response.Status.BAD_REQUEST)
-                                    .entity(exception.getMessage())
-                                    .type(MediaType.TEXT_PLAIN_TYPE)
-                                    .build());
-                }
-
-                LOGGER.warn("Duplicate device sensor value for account_id = {}, time: {}", pair.accountId, roundedDateTime);
-            }
-        }
-        LOGGER.warn("---- END DEPRECATED ----");
-        return "OK";
-    }
-
-
-    @POST
-    @Timed
-    @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
-    public Response receiveSimpleData(
-            @Valid InputProtos.SimpleSensorBatch batch,
-            @Scope({OAuthScope.SENSORS_BASIC}) AccessToken accessToken) {
-
-        // the accessToken is only used for upload permission at the moment
-        // it will soon be removed and rely on device_id and signature from Morpheus
-        // TODO: make transition from access token to signature based happen.
-
-        final String deviceName = batch.getDeviceId(); // protobuf deviceId is really device_name in table
-        final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceName);
-
-        if(deviceAccountPairs.isEmpty()) {
-            LOGGER.warn("No account found for device_id: {}", batch.getDeviceId());
-            LOGGER.warn("{} needs to be registered", batch.getDeviceId());
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Bad Request").build());
-        }
-
-        // TODO: maybe refactor the protobuf to have a more sensible structure?
-        for(final InputProtos.SimpleSensorBatch.SimpleSensorSample sample : batch.getSamplesList()) {
-
-            final int offsetMillis = sample.getOffsetMillis();
-
-            if(sample.hasDeviceData()) {
-                byte[] deviceData = sample.getDeviceData().toByteArray();
-
-                final InputStream inputStream = new ByteArrayInputStream(deviceData);
-                final LittleEndianDataInputStream dataInputStream = new LittleEndianDataInputStream(inputStream);
-
-                int temp, light, humidity, airQuality;
-                DateTime roundedDateTime;
-
-                try {
-                    roundedDateTime = new DateTime(dataInputStream.readLong(), DateTimeZone.UTC).withSecondOfMinute(0);
-
-                    temp = dataInputStream.readInt();
-                    light = dataInputStream.readInt();
-                    humidity = dataInputStream.readInt();
-                    airQuality = dataInputStream.readInt();
-                }catch(IOException e){
-                    LOGGER.error(e.getMessage());
-                    throw new WebApplicationException(Response.serverError().entity("Failed parsing device data").build());
-                }finally{
-                    try {
-                        dataInputStream.close();
-                    } catch (IOException ioException) {
-                        LOGGER.warn("Could not close LittleEndianInputStream. Investigate.");
-                    }
-                }
-
-                for (final DeviceAccountPair pair : deviceAccountPairs) {
-                    final DeviceData.Builder builder = new DeviceData.Builder()
-                            .withAccountId(pair.accountId)
-                            .withDeviceId(pair.internalDeviceId)
-                            .withAmbientTemperature(temp)
-                            .withAmbientAirQuality(airQuality, 0)
-                            .withAmbientAirQualityRaw(airQuality)
-                            .withAmbientDustVariance(0)
-                            .withAmbientDustMin(0)
-                            .withAmbientDustMax(0)
-                            .withAmbientHumidity(humidity)
-                            .withAmbientLight(light)
-                            .withOffsetMillis(offsetMillis)
-                            .withDateTimeUTC(roundedDateTime);
-
-                    final DeviceData data = builder.build();
-
-                    try {
-                        deviceDataDAO.insert(data);
-                    } catch (UnableToExecuteStatementException exception) {
-                        final Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
-                        if (!matcher.find()) {
-                            LOGGER.error(exception.getMessage());
-                            return Response.serverError().build();
-                        }
-
-                        LOGGER.warn("Duplicate device sensor value for account_id = {}, time: ",
-                                accessToken.accountId, roundedDateTime);
-
-                    }
-
-                }
-
-
-            }
-
-            saveSoundSample(sample, deviceAccountPairs);
-        }
-
-
-        return Response.ok().build();
-    }
-
-    private void saveSoundSample(final SimpleSensorBatch.SimpleSensorSample sample, final List<DeviceAccountPair> deviceAccountPairs) {
-        if(sample.hasSoundAmplitude()) {
-            final Long sampleTimestamp = sample.getTimestamp();
-            final DateTime dateTimeSample = new DateTime(sampleTimestamp, DateTimeZone.UTC);
-            final Integer offsetMillis = sample.getOffsetMillis();
-
-            for(final DeviceAccountPair pair : deviceAccountPairs) {
-                try {
-                    deviceDataDAO.insertSound(pair.internalDeviceId, sample.getSoundAmplitude(), dateTimeSample, offsetMillis);
-                } catch (UnableToExecuteStatementException exception) {
-                    Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
-                    if (!matcher.find()) {
-                        LOGGER.error(exception.getMessage());
-                        return;
-                    }
-                    LOGGER.warn("Duplicate sound entry for {} with ts = {} and account_id = {}", pair.internalDeviceId, dateTimeSample, pair.accountId);
-                }
-            }
-        }
     }
 }

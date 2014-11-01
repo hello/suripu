@@ -47,7 +47,7 @@ public class RoomConditionsResource {
 
         final Optional<DeviceData> data = deviceDataDAO.getMostRecent(token.accountId);
         if(!data.isPresent()) {
-            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+            return CurrentRoomState.empty();
         }
 
         final DeviceData deviceData = data.get();

@@ -111,9 +111,6 @@ message SyncRequest {
 }
 
 
-
-
-
 message SyncResponse {
 
     message Alarm {
@@ -138,6 +135,12 @@ message SyncResponse {
         optional int32 start_time = 1;
         optional int32 end_time = 2;
         optional int32 sound_id = 3;
+    }
+
+    message FirmwareUpdate {
+        optional int32  firmware_version = 1;
+        repeated string file_urls = 2;
+        optional int32 expires_at = 3;
     }
 
     message FlashAction {
@@ -167,8 +170,9 @@ message SyncResponse {
     optional FlashAction flash_action = 9;
     optional bool reset_device = 10;
 
+    optional FirmwareUpdate firmware_update = 11;
+
     // TODO: settings for snoring detection
-    // TODO: settings for firmware update
 }
 
 // TODO:

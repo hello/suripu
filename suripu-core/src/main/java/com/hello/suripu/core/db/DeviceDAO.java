@@ -28,7 +28,7 @@ public interface DeviceDAO {
 
 
     @GetGeneratedKeys
-    @SqlUpdate("INSERT INTO account_device_map (account_id, device_name, device_id) VALUES(:account_id, :device_id, :device_id)")
+    @SqlUpdate("INSERT INTO account_device_map (account_id, device_name, device_id, active) VALUES(:account_id, :device_id, :device_id, true)")
     Long registerSense(@Bind("account_id") final Long accountId, @Bind("device_id") final String deviceId);
 
     // Returns the latest sense connected to this account, in the case of multiple senses
@@ -76,12 +76,12 @@ public interface DeviceDAO {
     public abstract ImmutableList<DeviceAccountPair> getTrackerIds(@Bind("account_id") Long accountId);
 
     @RegisterMapper(DeviceAccountPairMapper.class)
-    @SingleValueResult(DeviceAccountPairMapper.class)
+    @SingleValueResult(DeviceAccountPair.class)
     @SqlQuery("SELECT * FROM account_tracker_map WHERE device_id = :pill_id AND active = TRUE ORDER BY id DESC LIMIT 1;")
     Optional<DeviceAccountPair> getInternalPillId(@Bind("pill_id") final String pillId);
 
     @GetGeneratedKeys
-    @SqlUpdate("INSERT INTO account_tracker_map (account_id, device_id) VALUES(:account_id, :tracker_id)")
+    @SqlUpdate("INSERT INTO account_tracker_map (account_id, device_id, active) VALUES(:account_id, :tracker_id, true)")
     Long registerTracker(@Bind("account_id") Long accountId, @Bind("tracker_id") String trackerId);
 
     @SqlUpdate("DELETE FROM account_tracker_map WHERE id = :id")

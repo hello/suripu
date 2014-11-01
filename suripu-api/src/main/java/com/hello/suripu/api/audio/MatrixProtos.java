@@ -44,6 +44,31 @@ public final class MatrixProtos {
      * <code>optional .hello.Matrix matrix_payload = 3;</code>
      */
     com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder getMatrixPayloadOrBuilder();
+
+    // repeated .hello.Matrix matrix_list = 4;
+    /**
+     * <code>repeated .hello.Matrix matrix_list = 4;</code>
+     */
+    java.util.List<com.hello.suripu.api.audio.MatrixProtos.Matrix> 
+        getMatrixListList();
+    /**
+     * <code>repeated .hello.Matrix matrix_list = 4;</code>
+     */
+    com.hello.suripu.api.audio.MatrixProtos.Matrix getMatrixList(int index);
+    /**
+     * <code>repeated .hello.Matrix matrix_list = 4;</code>
+     */
+    int getMatrixListCount();
+    /**
+     * <code>repeated .hello.Matrix matrix_list = 4;</code>
+     */
+    java.util.List<? extends com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder> 
+        getMatrixListOrBuilderList();
+    /**
+     * <code>repeated .hello.Matrix matrix_list = 4;</code>
+     */
+    com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder getMatrixListOrBuilder(
+        int index);
   }
   /**
    * Protobuf type {@code hello.MatrixClientMessage}
@@ -119,6 +144,14 @@ public final class MatrixProtos {
               bitField0_ |= 0x00000004;
               break;
             }
+            case 34: {
+              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+                matrixList_ = new java.util.ArrayList<com.hello.suripu.api.audio.MatrixProtos.Matrix>();
+                mutable_bitField0_ |= 0x00000008;
+              }
+              matrixList_.add(input.readMessage(com.hello.suripu.api.audio.MatrixProtos.Matrix.PARSER, extensionRegistry));
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -127,6 +160,9 @@ public final class MatrixProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+          matrixList_ = java.util.Collections.unmodifiableList(matrixList_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -213,10 +249,47 @@ public final class MatrixProtos {
       return matrixPayload_;
     }
 
+    // repeated .hello.Matrix matrix_list = 4;
+    public static final int MATRIX_LIST_FIELD_NUMBER = 4;
+    private java.util.List<com.hello.suripu.api.audio.MatrixProtos.Matrix> matrixList_;
+    /**
+     * <code>repeated .hello.Matrix matrix_list = 4;</code>
+     */
+    public java.util.List<com.hello.suripu.api.audio.MatrixProtos.Matrix> getMatrixListList() {
+      return matrixList_;
+    }
+    /**
+     * <code>repeated .hello.Matrix matrix_list = 4;</code>
+     */
+    public java.util.List<? extends com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder> 
+        getMatrixListOrBuilderList() {
+      return matrixList_;
+    }
+    /**
+     * <code>repeated .hello.Matrix matrix_list = 4;</code>
+     */
+    public int getMatrixListCount() {
+      return matrixList_.size();
+    }
+    /**
+     * <code>repeated .hello.Matrix matrix_list = 4;</code>
+     */
+    public com.hello.suripu.api.audio.MatrixProtos.Matrix getMatrixList(int index) {
+      return matrixList_.get(index);
+    }
+    /**
+     * <code>repeated .hello.Matrix matrix_list = 4;</code>
+     */
+    public com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder getMatrixListOrBuilder(
+        int index) {
+      return matrixList_.get(index);
+    }
+
     private void initFields() {
       mac_ = com.google.protobuf.ByteString.EMPTY;
       unixTime_ = 0;
       matrixPayload_ = com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance();
+      matrixList_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -225,6 +298,12 @@ public final class MatrixProtos {
 
       if (hasMatrixPayload()) {
         if (!getMatrixPayload().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      for (int i = 0; i < getMatrixListCount(); i++) {
+        if (!getMatrixList(i).isInitialized()) {
           memoizedIsInitialized = 0;
           return false;
         }
@@ -244,6 +323,9 @@ public final class MatrixProtos {
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeMessage(3, matrixPayload_);
+      }
+      for (int i = 0; i < matrixList_.size(); i++) {
+        output.writeMessage(4, matrixList_.get(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -265,6 +347,10 @@ public final class MatrixProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, matrixPayload_);
+      }
+      for (int i = 0; i < matrixList_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, matrixList_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -375,6 +461,7 @@ public final class MatrixProtos {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getMatrixPayloadFieldBuilder();
+          getMatrixListFieldBuilder();
         }
       }
       private static Builder create() {
@@ -393,6 +480,12 @@ public final class MatrixProtos {
           matrixPayloadBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000004);
+        if (matrixListBuilder_ == null) {
+          matrixList_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000008);
+        } else {
+          matrixListBuilder_.clear();
+        }
         return this;
       }
 
@@ -437,6 +530,15 @@ public final class MatrixProtos {
         } else {
           result.matrixPayload_ = matrixPayloadBuilder_.build();
         }
+        if (matrixListBuilder_ == null) {
+          if (((bitField0_ & 0x00000008) == 0x00000008)) {
+            matrixList_ = java.util.Collections.unmodifiableList(matrixList_);
+            bitField0_ = (bitField0_ & ~0x00000008);
+          }
+          result.matrixList_ = matrixList_;
+        } else {
+          result.matrixList_ = matrixListBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -462,6 +564,32 @@ public final class MatrixProtos {
         if (other.hasMatrixPayload()) {
           mergeMatrixPayload(other.getMatrixPayload());
         }
+        if (matrixListBuilder_ == null) {
+          if (!other.matrixList_.isEmpty()) {
+            if (matrixList_.isEmpty()) {
+              matrixList_ = other.matrixList_;
+              bitField0_ = (bitField0_ & ~0x00000008);
+            } else {
+              ensureMatrixListIsMutable();
+              matrixList_.addAll(other.matrixList_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.matrixList_.isEmpty()) {
+            if (matrixListBuilder_.isEmpty()) {
+              matrixListBuilder_.dispose();
+              matrixListBuilder_ = null;
+              matrixList_ = other.matrixList_;
+              bitField0_ = (bitField0_ & ~0x00000008);
+              matrixListBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getMatrixListFieldBuilder() : null;
+            } else {
+              matrixListBuilder_.addAllMessages(other.matrixList_);
+            }
+          }
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -469,6 +597,12 @@ public final class MatrixProtos {
       public final boolean isInitialized() {
         if (hasMatrixPayload()) {
           if (!getMatrixPayload().isInitialized()) {
+            
+            return false;
+          }
+        }
+        for (int i = 0; i < getMatrixListCount(); i++) {
+          if (!getMatrixList(i).isInitialized()) {
             
             return false;
           }
@@ -679,6 +813,246 @@ public final class MatrixProtos {
           matrixPayload_ = null;
         }
         return matrixPayloadBuilder_;
+      }
+
+      // repeated .hello.Matrix matrix_list = 4;
+      private java.util.List<com.hello.suripu.api.audio.MatrixProtos.Matrix> matrixList_ =
+        java.util.Collections.emptyList();
+      private void ensureMatrixListIsMutable() {
+        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+          matrixList_ = new java.util.ArrayList<com.hello.suripu.api.audio.MatrixProtos.Matrix>(matrixList_);
+          bitField0_ |= 0x00000008;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.audio.MatrixProtos.Matrix, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder, com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder> matrixListBuilder_;
+
+      /**
+       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       */
+      public java.util.List<com.hello.suripu.api.audio.MatrixProtos.Matrix> getMatrixListList() {
+        if (matrixListBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(matrixList_);
+        } else {
+          return matrixListBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       */
+      public int getMatrixListCount() {
+        if (matrixListBuilder_ == null) {
+          return matrixList_.size();
+        } else {
+          return matrixListBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       */
+      public com.hello.suripu.api.audio.MatrixProtos.Matrix getMatrixList(int index) {
+        if (matrixListBuilder_ == null) {
+          return matrixList_.get(index);
+        } else {
+          return matrixListBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       */
+      public Builder setMatrixList(
+          int index, com.hello.suripu.api.audio.MatrixProtos.Matrix value) {
+        if (matrixListBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureMatrixListIsMutable();
+          matrixList_.set(index, value);
+          onChanged();
+        } else {
+          matrixListBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       */
+      public Builder setMatrixList(
+          int index, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder builderForValue) {
+        if (matrixListBuilder_ == null) {
+          ensureMatrixListIsMutable();
+          matrixList_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          matrixListBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       */
+      public Builder addMatrixList(com.hello.suripu.api.audio.MatrixProtos.Matrix value) {
+        if (matrixListBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureMatrixListIsMutable();
+          matrixList_.add(value);
+          onChanged();
+        } else {
+          matrixListBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       */
+      public Builder addMatrixList(
+          int index, com.hello.suripu.api.audio.MatrixProtos.Matrix value) {
+        if (matrixListBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureMatrixListIsMutable();
+          matrixList_.add(index, value);
+          onChanged();
+        } else {
+          matrixListBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       */
+      public Builder addMatrixList(
+          com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder builderForValue) {
+        if (matrixListBuilder_ == null) {
+          ensureMatrixListIsMutable();
+          matrixList_.add(builderForValue.build());
+          onChanged();
+        } else {
+          matrixListBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       */
+      public Builder addMatrixList(
+          int index, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder builderForValue) {
+        if (matrixListBuilder_ == null) {
+          ensureMatrixListIsMutable();
+          matrixList_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          matrixListBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       */
+      public Builder addAllMatrixList(
+          java.lang.Iterable<? extends com.hello.suripu.api.audio.MatrixProtos.Matrix> values) {
+        if (matrixListBuilder_ == null) {
+          ensureMatrixListIsMutable();
+          super.addAll(values, matrixList_);
+          onChanged();
+        } else {
+          matrixListBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       */
+      public Builder clearMatrixList() {
+        if (matrixListBuilder_ == null) {
+          matrixList_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000008);
+          onChanged();
+        } else {
+          matrixListBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       */
+      public Builder removeMatrixList(int index) {
+        if (matrixListBuilder_ == null) {
+          ensureMatrixListIsMutable();
+          matrixList_.remove(index);
+          onChanged();
+        } else {
+          matrixListBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       */
+      public com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder getMatrixListBuilder(
+          int index) {
+        return getMatrixListFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       */
+      public com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder getMatrixListOrBuilder(
+          int index) {
+        if (matrixListBuilder_ == null) {
+          return matrixList_.get(index);  } else {
+          return matrixListBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       */
+      public java.util.List<? extends com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder> 
+           getMatrixListOrBuilderList() {
+        if (matrixListBuilder_ != null) {
+          return matrixListBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(matrixList_);
+        }
+      }
+      /**
+       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       */
+      public com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder addMatrixListBuilder() {
+        return getMatrixListFieldBuilder().addBuilder(
+            com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       */
+      public com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder addMatrixListBuilder(
+          int index) {
+        return getMatrixListFieldBuilder().addBuilder(
+            index, com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       */
+      public java.util.List<com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder> 
+           getMatrixListBuilderList() {
+        return getMatrixListFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.audio.MatrixProtos.Matrix, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder, com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder> 
+          getMatrixListFieldBuilder() {
+        if (matrixListBuilder_ == null) {
+          matrixListBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              com.hello.suripu.api.audio.MatrixProtos.Matrix, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder, com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder>(
+                  matrixList_,
+                  ((bitField0_ & 0x00000008) == 0x00000008),
+                  getParentForChildren(),
+                  isClean());
+          matrixList_ = null;
+        }
+        return matrixListBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:hello.MatrixClientMessage)
@@ -2366,16 +2740,17 @@ public final class MatrixProtos {
   static {
     java.lang.String[] descriptorData = {
       "\n1suripu-api/src/main/resources/protos/m" +
-      "atrix.proto\022\005hello\"\\\n\023MatrixClientMessag" +
-      "e\022\013\n\003mac\030\001 \001(\014\022\021\n\tunix_time\030\002 \001(\005\022%\n\016mat" +
-      "rix_payload\030\003 \001(\0132\r.hello.Matrix\"\324\001\n\006Mat" +
-      "rix\022\n\n\002id\030\001 \002(\t\022\014\n\004rows\030\002 \002(\005\022\014\n\004cols\030\003 " +
-      "\002(\005\022(\n\010datatype\030\004 \002(\0162\026.hello.Matrix.Dat" +
-      "aType\022\r\n\005idata\030\005 \003(\021\022\r\n\005fdata\030\006 \003(\002\022\r\n\005t" +
-      "ime1\030\007 \002(\003\022\r\n\005time2\030\010 \002(\003\022\014\n\004tags\030\t \002(\t\022" +
-      "\016\n\006source\030\n \002(\t\"\036\n\010DataType\022\t\n\005FLOAT\020\000\022\007" +
-      "\n\003INT\020\001B*\n\032com.hello.suripu.api.audioB\014M",
-      "atrixProtos"
+      "atrix.proto\022\005hello\"\200\001\n\023MatrixClientMessa" +
+      "ge\022\013\n\003mac\030\001 \001(\014\022\021\n\tunix_time\030\002 \001(\005\022%\n\016ma" +
+      "trix_payload\030\003 \001(\0132\r.hello.Matrix\022\"\n\013mat" +
+      "rix_list\030\004 \003(\0132\r.hello.Matrix\"\324\001\n\006Matrix" +
+      "\022\n\n\002id\030\001 \002(\t\022\014\n\004rows\030\002 \002(\005\022\014\n\004cols\030\003 \002(\005" +
+      "\022(\n\010datatype\030\004 \002(\0162\026.hello.Matrix.DataTy" +
+      "pe\022\r\n\005idata\030\005 \003(\021\022\r\n\005fdata\030\006 \003(\002\022\r\n\005time" +
+      "1\030\007 \002(\003\022\r\n\005time2\030\010 \002(\003\022\014\n\004tags\030\t \002(\t\022\016\n\006" +
+      "source\030\n \002(\t\"\036\n\010DataType\022\t\n\005FLOAT\020\000\022\007\n\003I",
+      "NT\020\001B*\n\032com.hello.suripu.api.audioB\014Matr" +
+      "ixProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -2387,7 +2762,7 @@ public final class MatrixProtos {
           internal_static_hello_MatrixClientMessage_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_MatrixClientMessage_descriptor,
-              new java.lang.String[] { "Mac", "UnixTime", "MatrixPayload", });
+              new java.lang.String[] { "Mac", "UnixTime", "MatrixPayload", "MatrixList", });
           internal_static_hello_Matrix_descriptor =
             getDescriptor().getMessageTypes().get(1);
           internal_static_hello_Matrix_fieldAccessorTable = new

@@ -81,7 +81,7 @@ public class Bucketing {
             } else if(sensorName.equals("temperature")) {
                 sensorValue = DeviceData.dbIntToFloat(deviceData.ambientTemperature);
             } else if (sensorName.equals("particulates")) {
-                sensorValue = DeviceData.dbIntToFloatDust(deviceData.ambientAirQuality);
+                sensorValue = DeviceData.dbIntToFloatDust(deviceData.ambientDustMax);
             } else if (sensorName.equals("light")) {
                 sensorValue = (float) deviceData.ambientLight;
             } else {
