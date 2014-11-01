@@ -82,7 +82,12 @@ public class DeviceResources {
 
         // TODO: device state will always be normal for now until more information is provided by the device
         for (final DeviceAccountPair sense : senses) {
-            devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.NORMAL, "alpha-1", DateTime.now()));
+            final Optional<DeviceStatus> senseStatusOptional = deviceDAO.senseStatus(sense.internalDeviceId);
+            if(senseStatusOptional.isPresent()) {
+                devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.NORMAL, "alpha-1", senseStatusOptional.get().lastSeen));
+            } else {
+                devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.NORMAL, "alpha-1", new DateTime(1970,1,1, 0,0,0)));
+            }
         }
 
         for (final DeviceAccountPair pill : pills) {
