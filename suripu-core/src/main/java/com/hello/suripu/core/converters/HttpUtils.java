@@ -4,6 +4,7 @@ package com.hello.suripu.core.converters;
 import com.google.common.base.Joiner;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.sun.jersey.api.core.HttpRequestContext;
+import org.joda.time.DateTime;
 
 import javax.ws.rs.core.MultivaluedMap;
 import java.util.List;
@@ -26,6 +27,8 @@ public class HttpUtils {
                     .build();
             builder.addHeaders(header);
         }
+
+        builder.setTimestampUtc(DateTime.now().getMillis());
 
         return builder;
     }
