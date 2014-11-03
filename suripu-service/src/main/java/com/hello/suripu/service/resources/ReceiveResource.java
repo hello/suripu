@@ -390,6 +390,7 @@ public class ReceiveResource {
 
         responseBuilder.setAlarm(alarmBuilder.build());
 
+        responseBuilder.setRoomConditions(InputProtos.SyncResponse.RoomConditions.IDEAL);
 
         if(data.getDeviceId().equals("D05FB81BE1E0")) {
             LOGGER.info("HAS FIRMWARE UPDATE");
