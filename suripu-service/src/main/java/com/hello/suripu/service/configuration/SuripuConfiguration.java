@@ -137,4 +137,10 @@ public class SuripuConfiguration extends Configuration {
     public IndexLogConfiguration getIndexLogConfiguration() {
         return this.indexLogConfiguration;
     }
+
+    @JsonProperty("room_conditions")
+    private Integer roomConditions;
+    public Integer getRoomConditions() {
+        return roomConditions;
+    }
 }

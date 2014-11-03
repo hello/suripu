@@ -67,6 +67,7 @@ public class ReceiveResource {
 
     private final KinesisLoggerFactory kinesisLoggerFactory;
     private final Boolean debug;
+    private final Integer roomConditions;
 
     @Context
     HttpServletRequest request;
@@ -79,7 +80,8 @@ public class ReceiveResource {
                            final KinesisLoggerFactory kinesisLoggerFactory,
 
                            final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
-                           final Boolean debug) {
+                           final Boolean debug,
+                           final Integer roomConditions) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
 
@@ -87,6 +89,7 @@ public class ReceiveResource {
         this.kinesisLoggerFactory = kinesisLoggerFactory;
 
         this.mergedAlarmInfoDynamoDB = mergedAlarmInfoDynamoDB;
+        this.roomConditions = roomConditions;
 
         this.debug = debug;
 
@@ -390,7 +393,7 @@ public class ReceiveResource {
 
         responseBuilder.setAlarm(alarmBuilder.build());
 
-        responseBuilder.setRoomConditions(InputProtos.SyncResponse.RoomConditions.IDEAL);
+        responseBuilder.setRoomConditions(InputProtos.SyncResponse.RoomConditions.valueOf(this.roomConditions));
 
         if(data.getDeviceId().equals("D05FB81BE1E0")) {
             LOGGER.info("HAS FIRMWARE UPDATE");
