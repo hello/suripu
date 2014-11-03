@@ -67,7 +67,7 @@ public abstract class DeviceDataDAO {
             "ROUND(AVG(ambient_air_quality_raw)) as ambient_air_quality_raw," +
             "ROUND(AVG(ambient_dust_variance)) as ambient_dust_variance," +
             "ROUND(AVG(ambient_dust_min)) as ambient_dust_min," +
-            "ROUND(AVG(ambient_dust_max)) as ambient_dust_max," +
+            "ROUND(MAX(ambient_dust_max)) as ambient_dust_max," +
             "ROUND(MIN(offset_millis)) as offset_millis," +
             "date_trunc('hour', ts) + (CAST(date_part('minute', ts) AS integer) / :slot_duration) * :slot_duration * interval '1 min' AS ts_bucket " +
             "FROM device_sensors_master " +
@@ -87,8 +87,8 @@ public abstract class DeviceDataDAO {
 
     @RegisterMapper(DeviceDataMapper.class)
     @SingleValueResult(DeviceData.class)
-    @SqlQuery("SELECT * FROM device_sensors_master WHERE account_id = :account_id ORDER BY ts DESC LIMIT 1;")
-    public abstract Optional<DeviceData> getMostRecent(@Bind("account_id") final Long accountId);
+    @SqlQuery("SELECT * FROM device_sensors_master WHERE account_id = :account_id AND device_id = :device_id ORDER BY ts DESC LIMIT 1;")
+    public abstract Optional<DeviceData> getMostRecent(@Bind("account_id") final Long accountId, @Bind("device_id") Long deviceId);
 
 
     /**

@@ -31,10 +31,10 @@ public interface DeviceDAO {
     @SqlUpdate("INSERT INTO account_device_map (account_id, device_name, device_id, active) VALUES(:account_id, :device_id, :device_id, true)")
     Long registerSense(@Bind("account_id") final Long accountId, @Bind("device_id") final String deviceId);
 
-    // Returns the latest sense connected to this account, in the case of multiple senses
+    // Returns the latest active Sense connected to this account, in the case of multiple senses
     @SingleValueResult(Long.class)
-    @SqlQuery("SELECT id FROM account_device_map WHERE account_id = :account_id ORDER BY id DESC LIMIT 1;")
-    Optional<Long> getByAccountId(@Bind("account_id") Long accountId);
+    @SqlQuery("SELECT id FROM account_device_map WHERE account_id = :account_id AND active = TRUE ORDER BY id DESC LIMIT 1;")
+    Optional<Long> getMostRecentSenseByAccountId(@Bind("account_id") Long accountId);
 
     @RegisterMapper(DeviceAccountPairMapper.class)
     @SqlQuery("SELECT * FROM account_device_map WHERE device_name = :device_name;")
@@ -93,8 +93,15 @@ public interface DeviceDAO {
     @SqlUpdate("UPDATE account_device_map SET active = FALSE, last_updated = NOW() WHERE device_id = :device_id and active = TRUE;")
     Integer unregisterSense(@Bind("device_id") final String id);
 
+    //    @SqlQuery("SELECT * FROM pill_status WHERE pill_id = :pill_id;")
     @RegisterMapper(DeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
-    @SqlQuery("SELECT * FROM pill_status WHERE pill_id = :pill_id;")
+    @SqlQuery("SELECT id, tracker_id AS pill_id, '1' AS firmware_version, 100 AS battery_level, ts AS last_seen from tracker_motion_master WHERE tracker_id = :pill_id ORDER BY id DESC LIMIT 1;")
     Optional<DeviceStatus> pillStatus(@Bind("pill_id") final Long pillId);
+
+    //    @SqlQuery("SELECT * FROM pill_status WHERE pill_id = :pill_id;")
+    @RegisterMapper(DeviceStatusMapper.class)
+    @SingleValueResult(DeviceStatus.class)
+    @SqlQuery("SELECT id, device_id AS pill_id, '1' AS firmware_version, 100 AS battery_level, ts AS last_seen from device_sensors_master WHERE device_id = :sense_id ORDER BY id DESC LIMIT 1;")
+    Optional<DeviceStatus> senseStatus(@Bind("sense_id") final Long senseId);
 }

@@ -127,3 +127,9 @@ alarm_info_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: alarm_info
+
+sense_logs:
+    private_url : http://:G3KvEnaw2bDdQc@d7q83.api.searchify.com
+    index_name : sense-logs
+
+room_conditions: 1

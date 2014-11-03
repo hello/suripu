@@ -9834,6 +9834,16 @@ public final class InputProtos {
      * <code>optional .hello.SyncResponse.FirmwareUpdate firmware_update = 11;</code>
      */
     com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdateOrBuilder getFirmwareUpdateOrBuilder();
+
+    // optional .hello.SyncResponse.RoomConditions room_conditions = 12;
+    /**
+     * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
+     */
+    boolean hasRoomConditions();
+    /**
+     * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
+     */
+    com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions getRoomConditions();
   }
   /**
    * Protobuf type {@code hello.SyncResponse}
@@ -9981,6 +9991,17 @@ public final class InputProtos {
               bitField0_ |= 0x00000400;
               break;
             }
+            case 96: {
+              int rawValue = input.readEnum();
+              com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions value = com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(12, rawValue);
+              } else {
+                bitField0_ |= 0x00000800;
+                roomConditions_ = value;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -10018,6 +10039,97 @@ public final class InputProtos {
     @java.lang.Override
     public com.google.protobuf.Parser<SyncResponse> getParserForType() {
       return PARSER;
+    }
+
+    /**
+     * Protobuf enum {@code hello.SyncResponse.RoomConditions}
+     */
+    public enum RoomConditions
+        implements com.google.protobuf.ProtocolMessageEnum {
+      /**
+       * <code>IDEAL = 1;</code>
+       */
+      IDEAL(0, 1),
+      /**
+       * <code>WARNING = 2;</code>
+       */
+      WARNING(1, 2),
+      /**
+       * <code>ALERT = 3;</code>
+       */
+      ALERT(2, 3),
+      ;
+
+      /**
+       * <code>IDEAL = 1;</code>
+       */
+      public static final int IDEAL_VALUE = 1;
+      /**
+       * <code>WARNING = 2;</code>
+       */
+      public static final int WARNING_VALUE = 2;
+      /**
+       * <code>ALERT = 3;</code>
+       */
+      public static final int ALERT_VALUE = 3;
+
+
+      public final int getNumber() { return value; }
+
+      public static RoomConditions valueOf(int value) {
+        switch (value) {
+          case 1: return IDEAL;
+          case 2: return WARNING;
+          case 3: return ALERT;
+          default: return null;
+        }
+      }
+
+      public static com.google.protobuf.Internal.EnumLiteMap<RoomConditions>
+          internalGetValueMap() {
+        return internalValueMap;
+      }
+      private static com.google.protobuf.Internal.EnumLiteMap<RoomConditions>
+          internalValueMap =
+            new com.google.protobuf.Internal.EnumLiteMap<RoomConditions>() {
+              public RoomConditions findValueByNumber(int number) {
+                return RoomConditions.valueOf(number);
+              }
+            };
+
+      public final com.google.protobuf.Descriptors.EnumValueDescriptor
+          getValueDescriptor() {
+        return getDescriptor().getValues().get(index);
+      }
+      public final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptorForType() {
+        return getDescriptor();
+      }
+      public static final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptor() {
+        return com.hello.suripu.api.input.InputProtos.SyncResponse.getDescriptor().getEnumTypes().get(0);
+      }
+
+      private static final RoomConditions[] VALUES = values();
+
+      public static RoomConditions valueOf(
+          com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+        if (desc.getType() != getDescriptor()) {
+          throw new java.lang.IllegalArgumentException(
+            "EnumValueDescriptor is not for this type.");
+        }
+        return VALUES[desc.getIndex()];
+      }
+
+      private final int index;
+      private final int value;
+
+      private RoomConditions(int index, int value) {
+        this.index = index;
+        this.value = value;
+      }
+
+      // @@protoc_insertion_point(enum_scope:hello.SyncResponse.RoomConditions)
     }
 
     public interface AlarmOrBuilder
@@ -14648,6 +14760,22 @@ public final class InputProtos {
       return firmwareUpdate_;
     }
 
+    // optional .hello.SyncResponse.RoomConditions room_conditions = 12;
+    public static final int ROOM_CONDITIONS_FIELD_NUMBER = 12;
+    private com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions roomConditions_;
+    /**
+     * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
+     */
+    public boolean hasRoomConditions() {
+      return ((bitField0_ & 0x00000800) == 0x00000800);
+    }
+    /**
+     * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
+     */
+    public com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions getRoomConditions() {
+      return roomConditions_;
+    }
+
     private void initFields() {
       uploadCycle_ = 0;
       syncCycle_ = 0;
@@ -14660,6 +14788,7 @@ public final class InputProtos {
       flashAction_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.getDefaultInstance();
       resetDevice_ = false;
       firmwareUpdate_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.getDefaultInstance();
+      roomConditions_ = com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions.IDEAL;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -14705,6 +14834,9 @@ public final class InputProtos {
       }
       if (((bitField0_ & 0x00000400) == 0x00000400)) {
         output.writeMessage(11, firmwareUpdate_);
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+        output.writeEnum(12, roomConditions_.getNumber());
       }
       getUnknownFields().writeTo(output);
     }
@@ -14758,6 +14890,10 @@ public final class InputProtos {
       if (((bitField0_ & 0x00000400) == 0x00000400)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(11, firmwareUpdate_);
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(12, roomConditions_.getNumber());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -14922,6 +15058,8 @@ public final class InputProtos {
           firmwareUpdateBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000400);
+        roomConditions_ = com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions.IDEAL;
+        bitField0_ = (bitField0_ & ~0x00000800);
         return this;
       }
 
@@ -15014,6 +15152,10 @@ public final class InputProtos {
         } else {
           result.firmwareUpdate_ = firmwareUpdateBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+          to_bitField0_ |= 0x00000800;
+        }
+        result.roomConditions_ = roomConditions_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -15062,6 +15204,9 @@ public final class InputProtos {
         }
         if (other.hasFirmwareUpdate()) {
           mergeFirmwareUpdate(other.getFirmwareUpdate());
+        }
+        if (other.hasRoomConditions()) {
+          setRoomConditions(other.getRoomConditions());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -15871,6 +16016,42 @@ public final class InputProtos {
           firmwareUpdate_ = null;
         }
         return firmwareUpdateBuilder_;
+      }
+
+      // optional .hello.SyncResponse.RoomConditions room_conditions = 12;
+      private com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions roomConditions_ = com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions.IDEAL;
+      /**
+       * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
+       */
+      public boolean hasRoomConditions() {
+        return ((bitField0_ & 0x00000800) == 0x00000800);
+      }
+      /**
+       * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions getRoomConditions() {
+        return roomConditions_;
+      }
+      /**
+       * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
+       */
+      public Builder setRoomConditions(com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000800;
+        roomConditions_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
+       */
+      public Builder clearRoomConditions() {
+        bitField0_ = (bitField0_ & ~0x00000800);
+        roomConditions_ = com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions.IDEAL;
+        onChanged();
+        return this;
       }
 
       // @@protoc_insertion_point(builder_scope:hello.SyncResponse)
@@ -24043,6 +24224,714 @@ public final class InputProtos {
     // @@protoc_insertion_point(class_scope:hello.periodic_data)
   }
 
+  public interface SenseLogOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional int32 unix_time = 1;
+    /**
+     * <code>optional int32 unix_time = 1;</code>
+     */
+    boolean hasUnixTime();
+    /**
+     * <code>optional int32 unix_time = 1;</code>
+     */
+    int getUnixTime();
+
+    // optional string device_id = 2;
+    /**
+     * <code>optional string device_id = 2;</code>
+     */
+    boolean hasDeviceId();
+    /**
+     * <code>optional string device_id = 2;</code>
+     */
+    java.lang.String getDeviceId();
+    /**
+     * <code>optional string device_id = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getDeviceIdBytes();
+
+    // optional string text = 3;
+    /**
+     * <code>optional string text = 3;</code>
+     */
+    boolean hasText();
+    /**
+     * <code>optional string text = 3;</code>
+     */
+    java.lang.String getText();
+    /**
+     * <code>optional string text = 3;</code>
+     */
+    com.google.protobuf.ByteString
+        getTextBytes();
+  }
+  /**
+   * Protobuf type {@code hello.SenseLog}
+   */
+  public static final class SenseLog extends
+      com.google.protobuf.GeneratedMessage
+      implements SenseLogOrBuilder {
+    // Use SenseLog.newBuilder() to construct.
+    private SenseLog(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private SenseLog(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final SenseLog defaultInstance;
+    public static SenseLog getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public SenseLog getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private SenseLog(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              unixTime_ = input.readInt32();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              deviceId_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              text_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.suripu.api.input.InputProtos.internal_static_hello_SenseLog_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.suripu.api.input.InputProtos.internal_static_hello_SenseLog_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.suripu.api.input.InputProtos.SenseLog.class, com.hello.suripu.api.input.InputProtos.SenseLog.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<SenseLog> PARSER =
+        new com.google.protobuf.AbstractParser<SenseLog>() {
+      public SenseLog parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new SenseLog(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<SenseLog> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional int32 unix_time = 1;
+    public static final int UNIX_TIME_FIELD_NUMBER = 1;
+    private int unixTime_;
+    /**
+     * <code>optional int32 unix_time = 1;</code>
+     */
+    public boolean hasUnixTime() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional int32 unix_time = 1;</code>
+     */
+    public int getUnixTime() {
+      return unixTime_;
+    }
+
+    // optional string device_id = 2;
+    public static final int DEVICE_ID_FIELD_NUMBER = 2;
+    private java.lang.Object deviceId_;
+    /**
+     * <code>optional string device_id = 2;</code>
+     */
+    public boolean hasDeviceId() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string device_id = 2;</code>
+     */
+    public java.lang.String getDeviceId() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          deviceId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string device_id = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getDeviceIdBytes() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        deviceId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string text = 3;
+    public static final int TEXT_FIELD_NUMBER = 3;
+    private java.lang.Object text_;
+    /**
+     * <code>optional string text = 3;</code>
+     */
+    public boolean hasText() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional string text = 3;</code>
+     */
+    public java.lang.String getText() {
+      java.lang.Object ref = text_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          text_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string text = 3;</code>
+     */
+    public com.google.protobuf.ByteString
+        getTextBytes() {
+      java.lang.Object ref = text_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        text_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private void initFields() {
+      unixTime_ = 0;
+      deviceId_ = "";
+      text_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeInt32(1, unixTime_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, getDeviceIdBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, getTextBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(1, unixTime_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getDeviceIdBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, getTextBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.suripu.api.input.InputProtos.SenseLog parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.input.InputProtos.SenseLog parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.SenseLog parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.input.InputProtos.SenseLog parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.SenseLog parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.input.InputProtos.SenseLog parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.SenseLog parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.suripu.api.input.InputProtos.SenseLog parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.InputProtos.SenseLog parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.input.InputProtos.SenseLog parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.suripu.api.input.InputProtos.SenseLog prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code hello.SenseLog}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.input.InputProtos.SenseLogOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_SenseLog_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_SenseLog_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.input.InputProtos.SenseLog.class, com.hello.suripu.api.input.InputProtos.SenseLog.Builder.class);
+      }
+
+      // Construct using com.hello.suripu.api.input.InputProtos.SenseLog.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        unixTime_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        deviceId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        text_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_SenseLog_descriptor;
+      }
+
+      public com.hello.suripu.api.input.InputProtos.SenseLog getDefaultInstanceForType() {
+        return com.hello.suripu.api.input.InputProtos.SenseLog.getDefaultInstance();
+      }
+
+      public com.hello.suripu.api.input.InputProtos.SenseLog build() {
+        com.hello.suripu.api.input.InputProtos.SenseLog result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.suripu.api.input.InputProtos.SenseLog buildPartial() {
+        com.hello.suripu.api.input.InputProtos.SenseLog result = new com.hello.suripu.api.input.InputProtos.SenseLog(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.unixTime_ = unixTime_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.deviceId_ = deviceId_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.text_ = text_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.suripu.api.input.InputProtos.SenseLog) {
+          return mergeFrom((com.hello.suripu.api.input.InputProtos.SenseLog)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.suripu.api.input.InputProtos.SenseLog other) {
+        if (other == com.hello.suripu.api.input.InputProtos.SenseLog.getDefaultInstance()) return this;
+        if (other.hasUnixTime()) {
+          setUnixTime(other.getUnixTime());
+        }
+        if (other.hasDeviceId()) {
+          bitField0_ |= 0x00000002;
+          deviceId_ = other.deviceId_;
+          onChanged();
+        }
+        if (other.hasText()) {
+          bitField0_ |= 0x00000004;
+          text_ = other.text_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.suripu.api.input.InputProtos.SenseLog parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.suripu.api.input.InputProtos.SenseLog) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional int32 unix_time = 1;
+      private int unixTime_ ;
+      /**
+       * <code>optional int32 unix_time = 1;</code>
+       */
+      public boolean hasUnixTime() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional int32 unix_time = 1;</code>
+       */
+      public int getUnixTime() {
+        return unixTime_;
+      }
+      /**
+       * <code>optional int32 unix_time = 1;</code>
+       */
+      public Builder setUnixTime(int value) {
+        bitField0_ |= 0x00000001;
+        unixTime_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 unix_time = 1;</code>
+       */
+      public Builder clearUnixTime() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        unixTime_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional string device_id = 2;
+      private java.lang.Object deviceId_ = "";
+      /**
+       * <code>optional string device_id = 2;</code>
+       */
+      public boolean hasDeviceId() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string device_id = 2;</code>
+       */
+      public java.lang.String getDeviceId() {
+        java.lang.Object ref = deviceId_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          deviceId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string device_id = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getDeviceIdBytes() {
+        java.lang.Object ref = deviceId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          deviceId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string device_id = 2;</code>
+       */
+      public Builder setDeviceId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        deviceId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string device_id = 2;</code>
+       */
+      public Builder clearDeviceId() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        deviceId_ = getDefaultInstance().getDeviceId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string device_id = 2;</code>
+       */
+      public Builder setDeviceIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        deviceId_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string text = 3;
+      private java.lang.Object text_ = "";
+      /**
+       * <code>optional string text = 3;</code>
+       */
+      public boolean hasText() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional string text = 3;</code>
+       */
+      public java.lang.String getText() {
+        java.lang.Object ref = text_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          text_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string text = 3;</code>
+       */
+      public com.google.protobuf.ByteString
+          getTextBytes() {
+        java.lang.Object ref = text_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          text_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string text = 3;</code>
+       */
+      public Builder setText(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        text_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string text = 3;</code>
+       */
+      public Builder clearText() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        text_ = getDefaultInstance().getText();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string text = 3;</code>
+       */
+      public Builder setTextBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        text_ = value;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:hello.SenseLog)
+    }
+
+    static {
+      defaultInstance = new SenseLog(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:hello.SenseLog)
+  }
+
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_SensorSampleBatch_descriptor;
   private static
@@ -24178,6 +25067,11 @@ public final class InputProtos {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_periodic_data_pill_data_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_hello_SenseLog_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_hello_SenseLog_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -24227,7 +25121,7 @@ public final class InputProtos {
       "\022\021\n\tsignature\030\005 \001(\014\"%\n\022ActivationRespons" +
       "e\022\017\n\007success\030\001 \001(\010\"`\n\013SyncRequest\022\021\n\tdev" +
       "ice_id\030\001 \001(\t\022\030\n\020firmware_version\030\002 \001(\t\022\021",
-      "\n\tsignature\030\003 \001(\014\022\021\n\tsomething\030\004 \001(\t\"\241\t\n" +
+      "\n\tsignature\030\003 \001(\014\022\021\n\tsomething\030\004 \001(\t\"\223\n\n" +
       "\014SyncResponse\022\024\n\014upload_cycle\030\001 \001(\005\022\022\n\ns" +
       "ync_cycle\030\002 \001(\005\022\025\n\racc_scan_cyle\030\003 \001(\005\022\035" +
       "\n\025acc_sampling_interval\030\004 \001(\005\022 \n\030device_" +
@@ -24238,57 +25132,61 @@ public final class InputProtos {
       "sponse.WhiteNoise\0225\n\014flash_action\030\t \001(\0132" +
       "\037.hello.SyncResponse.FlashAction\022\024\n\014rese",
       "t_device\030\n \001(\010\022;\n\017firmware_update\030\013 \001(\0132" +
-      "\".hello.SyncResponse.FirmwareUpdate\032_\n\005A" +
-      "larm\022\022\n\nstart_time\030\001 \001(\005\022\020\n\010end_time\030\002 \001" +
-      "(\005\022\026\n\013ringtone_id\030\003 \001(\005:\0011\022\030\n\014ringtone_i" +
-      "ds\030\004 \003(\003B\002\020\001\032}\n\rPairingAction\022\014\n\004ssid\030\001 " +
-      "\001(\t\022:\n\004type\030\002 \001(\0162,.hello.SyncResponse.P" +
-      "airingAction.ActionType\"\"\n\nActionType\022\010\n" +
-      "\004PAIR\020\000\022\n\n\006UNPAIR\020\001\032D\n\nWhiteNoise\022\022\n\nsta" +
-      "rt_time\030\001 \001(\005\022\020\n\010end_time\030\002 \001(\005\022\020\n\010sound" +
-      "_id\030\003 \001(\005\032Q\n\016FirmwareUpdate\022\030\n\020firmware_",
-      "version\030\001 \001(\005\022\021\n\tfile_urls\030\002 \003(\t\022\022\n\nexpi" +
-      "res_at\030\003 \001(\005\032\361\002\n\013FlashAction\0228\n\005led_1\030\001 " +
-      "\001(\0132).hello.SyncResponse.FlashAction.LED" +
-      "Action\0228\n\005led_2\030\002 \001(\0132).hello.SyncRespon" +
-      "se.FlashAction.LEDAction\0228\n\005led_3\030\003 \001(\0132" +
-      ").hello.SyncResponse.FlashAction.LEDActi" +
-      "on\0228\n\005led_4\030\004 \001(\0132).hello.SyncResponse.F" +
-      "lashAction.LEDAction\0228\n\005led_5\030\005 \001(\0132).he" +
-      "llo.SyncResponse.FlashAction.LEDAction\032@" +
-      "\n\tLEDAction\022\r\n\005color\030\001 \001(\005\022\022\n\nstart_time",
-      "\030\002 \001(\005\022\020\n\010end_time\030\003 \001(\005\"=\n\010PillData\022\017\n\007" +
-      "pill_id\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(\t\022\014\n\004dat" +
-      "a\030\003 \001(\014\"\357\001\n\017PillDataKinesis\022\017\n\007pill_id\030\001" +
-      " \001(\t\022\022\n\naccount_id\030\002 \001(\t\022\021\n\ttimestamp\030\003 " +
-      "\001(\003\022\r\n\005value\030\004 \001(\003\022\024\n\014offsetMillis\030\005 \001(\005" +
-      "\022\025\n\rencryptedData\030\006 \001(\014\022\024\n\014batteryLevel\030" +
-      "\007 \001(\005\022\027\n\017firmwareVersion\030\010 \001(\005\022\022\n\npillId" +
-      "Long\030\t \001(\003\022\025\n\raccountIdLong\030\n \001(\003\022\016\n\006upT" +
-      "ime\030\013 \001(\005\"\324\001\n\016PillBlobHeader\022\035\n\025first_se" +
-      "quence_number\030\001 \001(\t\022\034\n\024last_sequence_num",
-      "ber\030\002 \001(\t\022\031\n\021first_sample_date\030\003 \001(\t\022\030\n\020" +
-      "last_sample_date\030\004 \001(\t\022%\n\035compressed_bit" +
-      "map_account_ids\030\005 \001(\014\022\026\n\016data_file_name\030" +
-      "\006 \001(\t\022\021\n\tnum_items\030\007 \001(\005\"*\n\010PillBlob\022\036\n\005" +
-      "items\030\001 \003(\0132\017.hello.PillData\"\214\001\n\nEventBa" +
-      "tch\022+\n\006events\030\001 \003(\0132\033.hello.EventBatch.E" +
-      "ventItem\032Q\n\tEventItem\022\027\n\017start_timestamp" +
-      "\030\001 \001(\003\022\025\n\rend_timestamp\030\002 \001(\003\022\024\n\014offsetM" +
-      "illis\030\003 \001(\005\"\336\003\n\rperiodic_data\022\021\n\tunix_ti" +
-      "me\030\001 \001(\005\022\r\n\005light\030\002 \001(\005\022\023\n\013temperature\030\003",
-      " \001(\005\022\020\n\010humidity\030\004 \001(\005\022\014\n\004dust\030\005 \001(\005\022\014\n\004" +
-      "name\030\006 \001(\t\022\013\n\003mac\030\007 \001(\014\022\031\n\021light_variabi" +
-      "lity\030\010 \001(\005\022\026\n\016light_tonality\030\t \001(\005\022\030\n\020fi" +
-      "rmware_version\030\n \001(\005\022\030\n\020dust_variability" +
-      "\030\r \001(\005\022\020\n\010dust_max\030\016 \001(\005\022\020\n\010dust_min\030\017 \001" +
-      "(\005\022-\n\005pills\030\013 \003(\0132\036.hello.periodic_data." +
-      "pill_data\022\021\n\tdevice_id\030\014 \001(\t\032\215\001\n\tpill_da" +
-      "ta\022\027\n\017firmwareVersion\030\001 \001(\005\022\033\n\023motionDat" +
-      "aEncrypted\030\002 \001(\014\022\020\n\010deviceId\030\003 \001(\t\022\024\n\014ba" +
-      "tteryLevel\030\004 \001(\005\022\016\n\006uptime\030\005 \001(\005\022\022\n\nmoti",
-      "onData\030\006 \001(\005B)\n\032com.hello.suripu.api.inp" +
-      "utB\013InputProtos"
+      "\".hello.SyncResponse.FirmwareUpdate\022;\n\017r" +
+      "oom_conditions\030\014 \001(\0162\".hello.SyncRespons" +
+      "e.RoomConditions\032_\n\005Alarm\022\022\n\nstart_time\030" +
+      "\001 \001(\005\022\020\n\010end_time\030\002 \001(\005\022\026\n\013ringtone_id\030\003" +
+      " \001(\005:\0011\022\030\n\014ringtone_ids\030\004 \003(\003B\002\020\001\032}\n\rPai" +
+      "ringAction\022\014\n\004ssid\030\001 \001(\t\022:\n\004type\030\002 \001(\0162," +
+      ".hello.SyncResponse.PairingAction.Action" +
+      "Type\"\"\n\nActionType\022\010\n\004PAIR\020\000\022\n\n\006UNPAIR\020\001" +
+      "\032D\n\nWhiteNoise\022\022\n\nstart_time\030\001 \001(\005\022\020\n\010en",
+      "d_time\030\002 \001(\005\022\020\n\010sound_id\030\003 \001(\005\032Q\n\016Firmwa" +
+      "reUpdate\022\030\n\020firmware_version\030\001 \001(\005\022\021\n\tfi" +
+      "le_urls\030\002 \003(\t\022\022\n\nexpires_at\030\003 \001(\005\032\361\002\n\013Fl" +
+      "ashAction\0228\n\005led_1\030\001 \001(\0132).hello.SyncRes" +
+      "ponse.FlashAction.LEDAction\0228\n\005led_2\030\002 \001" +
+      "(\0132).hello.SyncResponse.FlashAction.LEDA" +
+      "ction\0228\n\005led_3\030\003 \001(\0132).hello.SyncRespons" +
+      "e.FlashAction.LEDAction\0228\n\005led_4\030\004 \001(\0132)" +
+      ".hello.SyncResponse.FlashAction.LEDActio" +
+      "n\0228\n\005led_5\030\005 \001(\0132).hello.SyncResponse.Fl",
+      "ashAction.LEDAction\032@\n\tLEDAction\022\r\n\005colo" +
+      "r\030\001 \001(\005\022\022\n\nstart_time\030\002 \001(\005\022\020\n\010end_time\030" +
+      "\003 \001(\005\"3\n\016RoomConditions\022\t\n\005IDEAL\020\001\022\013\n\007WA" +
+      "RNING\020\002\022\t\n\005ALERT\020\003\"=\n\010PillData\022\017\n\007pill_i" +
+      "d\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(\t\022\014\n\004data\030\003 \001(" +
+      "\014\"\357\001\n\017PillDataKinesis\022\017\n\007pill_id\030\001 \001(\t\022\022" +
+      "\n\naccount_id\030\002 \001(\t\022\021\n\ttimestamp\030\003 \001(\003\022\r\n" +
+      "\005value\030\004 \001(\003\022\024\n\014offsetMillis\030\005 \001(\005\022\025\n\ren" +
+      "cryptedData\030\006 \001(\014\022\024\n\014batteryLevel\030\007 \001(\005\022" +
+      "\027\n\017firmwareVersion\030\010 \001(\005\022\022\n\npillIdLong\030\t",
+      " \001(\003\022\025\n\raccountIdLong\030\n \001(\003\022\016\n\006upTime\030\013 " +
+      "\001(\005\"\324\001\n\016PillBlobHeader\022\035\n\025first_sequence" +
+      "_number\030\001 \001(\t\022\034\n\024last_sequence_number\030\002 " +
+      "\001(\t\022\031\n\021first_sample_date\030\003 \001(\t\022\030\n\020last_s" +
+      "ample_date\030\004 \001(\t\022%\n\035compressed_bitmap_ac" +
+      "count_ids\030\005 \001(\014\022\026\n\016data_file_name\030\006 \001(\t\022" +
+      "\021\n\tnum_items\030\007 \001(\005\"*\n\010PillBlob\022\036\n\005items\030" +
+      "\001 \003(\0132\017.hello.PillData\"\214\001\n\nEventBatch\022+\n" +
+      "\006events\030\001 \003(\0132\033.hello.EventBatch.EventIt" +
+      "em\032Q\n\tEventItem\022\027\n\017start_timestamp\030\001 \001(\003",
+      "\022\025\n\rend_timestamp\030\002 \001(\003\022\024\n\014offsetMillis\030" +
+      "\003 \001(\005\"\336\003\n\rperiodic_data\022\021\n\tunix_time\030\001 \001" +
+      "(\005\022\r\n\005light\030\002 \001(\005\022\023\n\013temperature\030\003 \001(\005\022\020" +
+      "\n\010humidity\030\004 \001(\005\022\014\n\004dust\030\005 \001(\005\022\014\n\004name\030\006" +
+      " \001(\t\022\013\n\003mac\030\007 \001(\014\022\031\n\021light_variability\030\010" +
+      " \001(\005\022\026\n\016light_tonality\030\t \001(\005\022\030\n\020firmware" +
+      "_version\030\n \001(\005\022\030\n\020dust_variability\030\r \001(\005" +
+      "\022\020\n\010dust_max\030\016 \001(\005\022\020\n\010dust_min\030\017 \001(\005\022-\n\005" +
+      "pills\030\013 \003(\0132\036.hello.periodic_data.pill_d" +
+      "ata\022\021\n\tdevice_id\030\014 \001(\t\032\215\001\n\tpill_data\022\027\n\017",
+      "firmwareVersion\030\001 \001(\005\022\033\n\023motionDataEncry" +
+      "pted\030\002 \001(\014\022\020\n\010deviceId\030\003 \001(\t\022\024\n\014batteryL" +
+      "evel\030\004 \001(\005\022\016\n\006uptime\030\005 \001(\005\022\022\n\nmotionData" +
+      "\030\006 \001(\005\">\n\010SenseLog\022\021\n\tunix_time\030\001 \001(\005\022\021\n" +
+      "\tdevice_id\030\002 \001(\t\022\014\n\004text\030\003 \001(\tB)\n\032com.he" +
+      "llo.suripu.api.inputB\013InputProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -24372,7 +25270,7 @@ public final class InputProtos {
           internal_static_hello_SyncResponse_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_SyncResponse_descriptor,
-              new java.lang.String[] { "UploadCycle", "SyncCycle", "AccScanCyle", "AccSamplingInterval", "DeviceSamplingInterval", "Alarm", "PairingAction", "WhiteNoise", "FlashAction", "ResetDevice", "FirmwareUpdate", });
+              new java.lang.String[] { "UploadCycle", "SyncCycle", "AccScanCyle", "AccSamplingInterval", "DeviceSamplingInterval", "Alarm", "PairingAction", "WhiteNoise", "FlashAction", "ResetDevice", "FirmwareUpdate", "RoomConditions", });
           internal_static_hello_SyncResponse_Alarm_descriptor =
             internal_static_hello_SyncResponse_descriptor.getNestedTypes().get(0);
           internal_static_hello_SyncResponse_Alarm_fieldAccessorTable = new
@@ -24457,6 +25355,12 @@ public final class InputProtos {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_periodic_data_pill_data_descriptor,
               new java.lang.String[] { "FirmwareVersion", "MotionDataEncrypted", "DeviceId", "BatteryLevel", "Uptime", "MotionData", });
+          internal_static_hello_SenseLog_descriptor =
+            getDescriptor().getMessageTypes().get(14);
+          internal_static_hello_SenseLog_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_SenseLog_descriptor,
+              new java.lang.String[] { "UnixTime", "DeviceId", "Text", });
           return null;
         }
       };

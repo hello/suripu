@@ -43,6 +43,7 @@ import com.hello.suripu.service.cli.CreateKeyStoreDynamoDBTable;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
 import com.hello.suripu.service.resources.AudioResource;
 import com.hello.suripu.service.resources.DownloadResource;
+import com.hello.suripu.service.resources.LogsResource;
 import com.hello.suripu.service.resources.ReceiveResource;
 import com.hello.suripu.service.resources.RegisterResource;
 import com.yammer.dropwizard.Service;
@@ -164,9 +165,13 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 publicKeyStore,
                 kinesisLoggerFactory,
                 mergedAlarmInfoDynamoDB,
-                configuration.getDebug()));
+                configuration.getDebug(),
+                configuration.getRoomConditions()));
         environment.addResource(new RegisterResource(deviceDAO, tokenStore, kinesisLoggerFactory, configuration.getDebug()));
-
+        environment.addResource(new LogsResource(
+                configuration.getIndexLogConfiguration().getPrivateUrl(),
+                configuration.getIndexLogConfiguration().getIndexName())
+        );
 
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());

@@ -225,6 +225,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
 
     private Boolean hasExpired(final AccessToken accessToken, DateTime now) {
         long diffInSeconds= (now.getMillis() - accessToken.createdAt.getMillis()) / 1000;
+        LOGGER.debug("Token = {} for account_id = {}", accessToken.serializeAccessToken(), accessToken.accountId);
         LOGGER.debug("Token created at = {}", accessToken.createdAt);
         LOGGER.debug("DiffInSeconds = {}", diffInSeconds);
         if(diffInSeconds > expirationTimeInSeconds) {
