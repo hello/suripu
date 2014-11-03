@@ -9834,6 +9834,16 @@ public final class InputProtos {
      * <code>optional .hello.SyncResponse.FirmwareUpdate firmware_update = 11;</code>
      */
     com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdateOrBuilder getFirmwareUpdateOrBuilder();
+
+    // optional .hello.SyncResponse.RoomConditions room_conditions = 12;
+    /**
+     * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
+     */
+    boolean hasRoomConditions();
+    /**
+     * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
+     */
+    com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions getRoomConditions();
   }
   /**
    * Protobuf type {@code hello.SyncResponse}
@@ -9981,6 +9991,17 @@ public final class InputProtos {
               bitField0_ |= 0x00000400;
               break;
             }
+            case 96: {
+              int rawValue = input.readEnum();
+              com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions value = com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(12, rawValue);
+              } else {
+                bitField0_ |= 0x00000800;
+                roomConditions_ = value;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -10018,6 +10039,97 @@ public final class InputProtos {
     @java.lang.Override
     public com.google.protobuf.Parser<SyncResponse> getParserForType() {
       return PARSER;
+    }
+
+    /**
+     * Protobuf enum {@code hello.SyncResponse.RoomConditions}
+     */
+    public enum RoomConditions
+        implements com.google.protobuf.ProtocolMessageEnum {
+      /**
+       * <code>IDEAL = 1;</code>
+       */
+      IDEAL(0, 1),
+      /**
+       * <code>WARNING = 2;</code>
+       */
+      WARNING(1, 2),
+      /**
+       * <code>ALERT = 3;</code>
+       */
+      ALERT(2, 3),
+      ;
+
+      /**
+       * <code>IDEAL = 1;</code>
+       */
+      public static final int IDEAL_VALUE = 1;
+      /**
+       * <code>WARNING = 2;</code>
+       */
+      public static final int WARNING_VALUE = 2;
+      /**
+       * <code>ALERT = 3;</code>
+       */
+      public static final int ALERT_VALUE = 3;
+
+
+      public final int getNumber() { return value; }
+
+      public static RoomConditions valueOf(int value) {
+        switch (value) {
+          case 1: return IDEAL;
+          case 2: return WARNING;
+          case 3: return ALERT;
+          default: return null;
+        }
+      }
+
+      public static com.google.protobuf.Internal.EnumLiteMap<RoomConditions>
+          internalGetValueMap() {
+        return internalValueMap;
+      }
+      private static com.google.protobuf.Internal.EnumLiteMap<RoomConditions>
+          internalValueMap =
+            new com.google.protobuf.Internal.EnumLiteMap<RoomConditions>() {
+              public RoomConditions findValueByNumber(int number) {
+                return RoomConditions.valueOf(number);
+              }
+            };
+
+      public final com.google.protobuf.Descriptors.EnumValueDescriptor
+          getValueDescriptor() {
+        return getDescriptor().getValues().get(index);
+      }
+      public final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptorForType() {
+        return getDescriptor();
+      }
+      public static final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptor() {
+        return com.hello.suripu.api.input.InputProtos.SyncResponse.getDescriptor().getEnumTypes().get(0);
+      }
+
+      private static final RoomConditions[] VALUES = values();
+
+      public static RoomConditions valueOf(
+          com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+        if (desc.getType() != getDescriptor()) {
+          throw new java.lang.IllegalArgumentException(
+            "EnumValueDescriptor is not for this type.");
+        }
+        return VALUES[desc.getIndex()];
+      }
+
+      private final int index;
+      private final int value;
+
+      private RoomConditions(int index, int value) {
+        this.index = index;
+        this.value = value;
+      }
+
+      // @@protoc_insertion_point(enum_scope:hello.SyncResponse.RoomConditions)
     }
 
     public interface AlarmOrBuilder
@@ -14648,6 +14760,22 @@ public final class InputProtos {
       return firmwareUpdate_;
     }
 
+    // optional .hello.SyncResponse.RoomConditions room_conditions = 12;
+    public static final int ROOM_CONDITIONS_FIELD_NUMBER = 12;
+    private com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions roomConditions_;
+    /**
+     * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
+     */
+    public boolean hasRoomConditions() {
+      return ((bitField0_ & 0x00000800) == 0x00000800);
+    }
+    /**
+     * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
+     */
+    public com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions getRoomConditions() {
+      return roomConditions_;
+    }
+
     private void initFields() {
       uploadCycle_ = 0;
       syncCycle_ = 0;
@@ -14660,6 +14788,7 @@ public final class InputProtos {
       flashAction_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.getDefaultInstance();
       resetDevice_ = false;
       firmwareUpdate_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.getDefaultInstance();
+      roomConditions_ = com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions.IDEAL;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -14705,6 +14834,9 @@ public final class InputProtos {
       }
       if (((bitField0_ & 0x00000400) == 0x00000400)) {
         output.writeMessage(11, firmwareUpdate_);
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+        output.writeEnum(12, roomConditions_.getNumber());
       }
       getUnknownFields().writeTo(output);
     }
@@ -14758,6 +14890,10 @@ public final class InputProtos {
       if (((bitField0_ & 0x00000400) == 0x00000400)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(11, firmwareUpdate_);
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(12, roomConditions_.getNumber());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -14922,6 +15058,8 @@ public final class InputProtos {
           firmwareUpdateBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000400);
+        roomConditions_ = com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions.IDEAL;
+        bitField0_ = (bitField0_ & ~0x00000800);
         return this;
       }
 
@@ -15014,6 +15152,10 @@ public final class InputProtos {
         } else {
           result.firmwareUpdate_ = firmwareUpdateBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+          to_bitField0_ |= 0x00000800;
+        }
+        result.roomConditions_ = roomConditions_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -15062,6 +15204,9 @@ public final class InputProtos {
         }
         if (other.hasFirmwareUpdate()) {
           mergeFirmwareUpdate(other.getFirmwareUpdate());
+        }
+        if (other.hasRoomConditions()) {
+          setRoomConditions(other.getRoomConditions());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -15871,6 +16016,42 @@ public final class InputProtos {
           firmwareUpdate_ = null;
         }
         return firmwareUpdateBuilder_;
+      }
+
+      // optional .hello.SyncResponse.RoomConditions room_conditions = 12;
+      private com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions roomConditions_ = com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions.IDEAL;
+      /**
+       * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
+       */
+      public boolean hasRoomConditions() {
+        return ((bitField0_ & 0x00000800) == 0x00000800);
+      }
+      /**
+       * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions getRoomConditions() {
+        return roomConditions_;
+      }
+      /**
+       * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
+       */
+      public Builder setRoomConditions(com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000800;
+        roomConditions_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
+       */
+      public Builder clearRoomConditions() {
+        bitField0_ = (bitField0_ & ~0x00000800);
+        roomConditions_ = com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions.IDEAL;
+        onChanged();
+        return this;
       }
 
       // @@protoc_insertion_point(builder_scope:hello.SyncResponse)
@@ -24940,7 +25121,7 @@ public final class InputProtos {
       "\022\021\n\tsignature\030\005 \001(\014\"%\n\022ActivationRespons" +
       "e\022\017\n\007success\030\001 \001(\010\"`\n\013SyncRequest\022\021\n\tdev" +
       "ice_id\030\001 \001(\t\022\030\n\020firmware_version\030\002 \001(\t\022\021",
-      "\n\tsignature\030\003 \001(\014\022\021\n\tsomething\030\004 \001(\t\"\241\t\n" +
+      "\n\tsignature\030\003 \001(\014\022\021\n\tsomething\030\004 \001(\t\"\223\n\n" +
       "\014SyncResponse\022\024\n\014upload_cycle\030\001 \001(\005\022\022\n\ns" +
       "ync_cycle\030\002 \001(\005\022\025\n\racc_scan_cyle\030\003 \001(\005\022\035" +
       "\n\025acc_sampling_interval\030\004 \001(\005\022 \n\030device_" +
@@ -24951,58 +25132,61 @@ public final class InputProtos {
       "sponse.WhiteNoise\0225\n\014flash_action\030\t \001(\0132" +
       "\037.hello.SyncResponse.FlashAction\022\024\n\014rese",
       "t_device\030\n \001(\010\022;\n\017firmware_update\030\013 \001(\0132" +
-      "\".hello.SyncResponse.FirmwareUpdate\032_\n\005A" +
-      "larm\022\022\n\nstart_time\030\001 \001(\005\022\020\n\010end_time\030\002 \001" +
-      "(\005\022\026\n\013ringtone_id\030\003 \001(\005:\0011\022\030\n\014ringtone_i" +
-      "ds\030\004 \003(\003B\002\020\001\032}\n\rPairingAction\022\014\n\004ssid\030\001 " +
-      "\001(\t\022:\n\004type\030\002 \001(\0162,.hello.SyncResponse.P" +
-      "airingAction.ActionType\"\"\n\nActionType\022\010\n" +
-      "\004PAIR\020\000\022\n\n\006UNPAIR\020\001\032D\n\nWhiteNoise\022\022\n\nsta" +
-      "rt_time\030\001 \001(\005\022\020\n\010end_time\030\002 \001(\005\022\020\n\010sound" +
-      "_id\030\003 \001(\005\032Q\n\016FirmwareUpdate\022\030\n\020firmware_",
-      "version\030\001 \001(\005\022\021\n\tfile_urls\030\002 \003(\t\022\022\n\nexpi" +
-      "res_at\030\003 \001(\005\032\361\002\n\013FlashAction\0228\n\005led_1\030\001 " +
-      "\001(\0132).hello.SyncResponse.FlashAction.LED" +
-      "Action\0228\n\005led_2\030\002 \001(\0132).hello.SyncRespon" +
-      "se.FlashAction.LEDAction\0228\n\005led_3\030\003 \001(\0132" +
-      ").hello.SyncResponse.FlashAction.LEDActi" +
-      "on\0228\n\005led_4\030\004 \001(\0132).hello.SyncResponse.F" +
-      "lashAction.LEDAction\0228\n\005led_5\030\005 \001(\0132).he" +
-      "llo.SyncResponse.FlashAction.LEDAction\032@" +
-      "\n\tLEDAction\022\r\n\005color\030\001 \001(\005\022\022\n\nstart_time",
-      "\030\002 \001(\005\022\020\n\010end_time\030\003 \001(\005\"=\n\010PillData\022\017\n\007" +
-      "pill_id\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(\t\022\014\n\004dat" +
-      "a\030\003 \001(\014\"\357\001\n\017PillDataKinesis\022\017\n\007pill_id\030\001" +
-      " \001(\t\022\022\n\naccount_id\030\002 \001(\t\022\021\n\ttimestamp\030\003 " +
-      "\001(\003\022\r\n\005value\030\004 \001(\003\022\024\n\014offsetMillis\030\005 \001(\005" +
-      "\022\025\n\rencryptedData\030\006 \001(\014\022\024\n\014batteryLevel\030" +
-      "\007 \001(\005\022\027\n\017firmwareVersion\030\010 \001(\005\022\022\n\npillId" +
-      "Long\030\t \001(\003\022\025\n\raccountIdLong\030\n \001(\003\022\016\n\006upT" +
-      "ime\030\013 \001(\005\"\324\001\n\016PillBlobHeader\022\035\n\025first_se" +
-      "quence_number\030\001 \001(\t\022\034\n\024last_sequence_num",
-      "ber\030\002 \001(\t\022\031\n\021first_sample_date\030\003 \001(\t\022\030\n\020" +
-      "last_sample_date\030\004 \001(\t\022%\n\035compressed_bit" +
-      "map_account_ids\030\005 \001(\014\022\026\n\016data_file_name\030" +
-      "\006 \001(\t\022\021\n\tnum_items\030\007 \001(\005\"*\n\010PillBlob\022\036\n\005" +
-      "items\030\001 \003(\0132\017.hello.PillData\"\214\001\n\nEventBa" +
-      "tch\022+\n\006events\030\001 \003(\0132\033.hello.EventBatch.E" +
-      "ventItem\032Q\n\tEventItem\022\027\n\017start_timestamp" +
-      "\030\001 \001(\003\022\025\n\rend_timestamp\030\002 \001(\003\022\024\n\014offsetM" +
-      "illis\030\003 \001(\005\"\336\003\n\rperiodic_data\022\021\n\tunix_ti" +
-      "me\030\001 \001(\005\022\r\n\005light\030\002 \001(\005\022\023\n\013temperature\030\003",
-      " \001(\005\022\020\n\010humidity\030\004 \001(\005\022\014\n\004dust\030\005 \001(\005\022\014\n\004" +
-      "name\030\006 \001(\t\022\013\n\003mac\030\007 \001(\014\022\031\n\021light_variabi" +
-      "lity\030\010 \001(\005\022\026\n\016light_tonality\030\t \001(\005\022\030\n\020fi" +
-      "rmware_version\030\n \001(\005\022\030\n\020dust_variability" +
-      "\030\r \001(\005\022\020\n\010dust_max\030\016 \001(\005\022\020\n\010dust_min\030\017 \001" +
-      "(\005\022-\n\005pills\030\013 \003(\0132\036.hello.periodic_data." +
-      "pill_data\022\021\n\tdevice_id\030\014 \001(\t\032\215\001\n\tpill_da" +
-      "ta\022\027\n\017firmwareVersion\030\001 \001(\005\022\033\n\023motionDat" +
-      "aEncrypted\030\002 \001(\014\022\020\n\010deviceId\030\003 \001(\t\022\024\n\014ba" +
-      "tteryLevel\030\004 \001(\005\022\016\n\006uptime\030\005 \001(\005\022\022\n\nmoti",
-      "onData\030\006 \001(\005\">\n\010SenseLog\022\021\n\tunix_time\030\001 " +
-      "\001(\005\022\021\n\tdevice_id\030\002 \001(\t\022\014\n\004text\030\003 \001(\tB)\n\032" +
-      "com.hello.suripu.api.inputB\013InputProtos"
+      "\".hello.SyncResponse.FirmwareUpdate\022;\n\017r" +
+      "oom_conditions\030\014 \001(\0162\".hello.SyncRespons" +
+      "e.RoomConditions\032_\n\005Alarm\022\022\n\nstart_time\030" +
+      "\001 \001(\005\022\020\n\010end_time\030\002 \001(\005\022\026\n\013ringtone_id\030\003" +
+      " \001(\005:\0011\022\030\n\014ringtone_ids\030\004 \003(\003B\002\020\001\032}\n\rPai" +
+      "ringAction\022\014\n\004ssid\030\001 \001(\t\022:\n\004type\030\002 \001(\0162," +
+      ".hello.SyncResponse.PairingAction.Action" +
+      "Type\"\"\n\nActionType\022\010\n\004PAIR\020\000\022\n\n\006UNPAIR\020\001" +
+      "\032D\n\nWhiteNoise\022\022\n\nstart_time\030\001 \001(\005\022\020\n\010en",
+      "d_time\030\002 \001(\005\022\020\n\010sound_id\030\003 \001(\005\032Q\n\016Firmwa" +
+      "reUpdate\022\030\n\020firmware_version\030\001 \001(\005\022\021\n\tfi" +
+      "le_urls\030\002 \003(\t\022\022\n\nexpires_at\030\003 \001(\005\032\361\002\n\013Fl" +
+      "ashAction\0228\n\005led_1\030\001 \001(\0132).hello.SyncRes" +
+      "ponse.FlashAction.LEDAction\0228\n\005led_2\030\002 \001" +
+      "(\0132).hello.SyncResponse.FlashAction.LEDA" +
+      "ction\0228\n\005led_3\030\003 \001(\0132).hello.SyncRespons" +
+      "e.FlashAction.LEDAction\0228\n\005led_4\030\004 \001(\0132)" +
+      ".hello.SyncResponse.FlashAction.LEDActio" +
+      "n\0228\n\005led_5\030\005 \001(\0132).hello.SyncResponse.Fl",
+      "ashAction.LEDAction\032@\n\tLEDAction\022\r\n\005colo" +
+      "r\030\001 \001(\005\022\022\n\nstart_time\030\002 \001(\005\022\020\n\010end_time\030" +
+      "\003 \001(\005\"3\n\016RoomConditions\022\t\n\005IDEAL\020\001\022\013\n\007WA" +
+      "RNING\020\002\022\t\n\005ALERT\020\003\"=\n\010PillData\022\017\n\007pill_i" +
+      "d\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(\t\022\014\n\004data\030\003 \001(" +
+      "\014\"\357\001\n\017PillDataKinesis\022\017\n\007pill_id\030\001 \001(\t\022\022" +
+      "\n\naccount_id\030\002 \001(\t\022\021\n\ttimestamp\030\003 \001(\003\022\r\n" +
+      "\005value\030\004 \001(\003\022\024\n\014offsetMillis\030\005 \001(\005\022\025\n\ren" +
+      "cryptedData\030\006 \001(\014\022\024\n\014batteryLevel\030\007 \001(\005\022" +
+      "\027\n\017firmwareVersion\030\010 \001(\005\022\022\n\npillIdLong\030\t",
+      " \001(\003\022\025\n\raccountIdLong\030\n \001(\003\022\016\n\006upTime\030\013 " +
+      "\001(\005\"\324\001\n\016PillBlobHeader\022\035\n\025first_sequence" +
+      "_number\030\001 \001(\t\022\034\n\024last_sequence_number\030\002 " +
+      "\001(\t\022\031\n\021first_sample_date\030\003 \001(\t\022\030\n\020last_s" +
+      "ample_date\030\004 \001(\t\022%\n\035compressed_bitmap_ac" +
+      "count_ids\030\005 \001(\014\022\026\n\016data_file_name\030\006 \001(\t\022" +
+      "\021\n\tnum_items\030\007 \001(\005\"*\n\010PillBlob\022\036\n\005items\030" +
+      "\001 \003(\0132\017.hello.PillData\"\214\001\n\nEventBatch\022+\n" +
+      "\006events\030\001 \003(\0132\033.hello.EventBatch.EventIt" +
+      "em\032Q\n\tEventItem\022\027\n\017start_timestamp\030\001 \001(\003",
+      "\022\025\n\rend_timestamp\030\002 \001(\003\022\024\n\014offsetMillis\030" +
+      "\003 \001(\005\"\336\003\n\rperiodic_data\022\021\n\tunix_time\030\001 \001" +
+      "(\005\022\r\n\005light\030\002 \001(\005\022\023\n\013temperature\030\003 \001(\005\022\020" +
+      "\n\010humidity\030\004 \001(\005\022\014\n\004dust\030\005 \001(\005\022\014\n\004name\030\006" +
+      " \001(\t\022\013\n\003mac\030\007 \001(\014\022\031\n\021light_variability\030\010" +
+      " \001(\005\022\026\n\016light_tonality\030\t \001(\005\022\030\n\020firmware" +
+      "_version\030\n \001(\005\022\030\n\020dust_variability\030\r \001(\005" +
+      "\022\020\n\010dust_max\030\016 \001(\005\022\020\n\010dust_min\030\017 \001(\005\022-\n\005" +
+      "pills\030\013 \003(\0132\036.hello.periodic_data.pill_d" +
+      "ata\022\021\n\tdevice_id\030\014 \001(\t\032\215\001\n\tpill_data\022\027\n\017",
+      "firmwareVersion\030\001 \001(\005\022\033\n\023motionDataEncry" +
+      "pted\030\002 \001(\014\022\020\n\010deviceId\030\003 \001(\t\022\024\n\014batteryL" +
+      "evel\030\004 \001(\005\022\016\n\006uptime\030\005 \001(\005\022\022\n\nmotionData" +
+      "\030\006 \001(\005\">\n\010SenseLog\022\021\n\tunix_time\030\001 \001(\005\022\021\n" +
+      "\tdevice_id\030\002 \001(\t\022\014\n\004text\030\003 \001(\tB)\n\032com.he" +
+      "llo.suripu.api.inputB\013InputProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -25086,7 +25270,7 @@ public final class InputProtos {
           internal_static_hello_SyncResponse_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_SyncResponse_descriptor,
-              new java.lang.String[] { "UploadCycle", "SyncCycle", "AccScanCyle", "AccSamplingInterval", "DeviceSamplingInterval", "Alarm", "PairingAction", "WhiteNoise", "FlashAction", "ResetDevice", "FirmwareUpdate", });
+              new java.lang.String[] { "UploadCycle", "SyncCycle", "AccScanCyle", "AccSamplingInterval", "DeviceSamplingInterval", "Alarm", "PairingAction", "WhiteNoise", "FlashAction", "ResetDevice", "FirmwareUpdate", "RoomConditions", });
           internal_static_hello_SyncResponse_Alarm_descriptor =
             internal_static_hello_SyncResponse_descriptor.getNestedTypes().get(0);
           internal_static_hello_SyncResponse_Alarm_fieldAccessorTable = new
