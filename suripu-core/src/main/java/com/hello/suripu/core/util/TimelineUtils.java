@@ -260,28 +260,32 @@ public class TimelineUtils {
         if(sleepSegments.isEmpty()) {
             throw new RuntimeException("Can not merge empty list");
         }
+
         int minSleepDepth = sleepSegments.get(0).sleepDepth;
         String message = sleepSegments.get(0).message;
-        Event.Type eventType = sleepSegments.get(0).eventType;
-        for(SleepSegment sleepSegment : sleepSegments) {
+
+        final Set<Event.Type> eventTypes = new HashSet<>();
+
+        for(final SleepSegment sleepSegment : sleepSegments) {
+            eventTypes.add(sleepSegment.eventType);
             if(sleepSegment.sleepDepth < minSleepDepth) {
                 minSleepDepth = sleepSegment.sleepDepth;
                 message  = Event.getMessage(sleepSegment.eventType);
-                eventType = sleepSegment.eventType;
             }
         }
 
+
+        final Event.Type finalEventType = Event.getHighPriorityEvents(eventTypes);
         final SleepSegment sleepSegment = new SleepSegment(
                 sleepSegments.get(0).id,
                 sleepSegments.get(0).timestamp,
                 sleepSegments.get(0).offsetMillis,
                 sleepSegments.size() * 60, minSleepDepth,
-                eventType,
+                finalEventType,
                 message,
                 new ArrayList<SensorReading>()
         );
         return sleepSegment;
-//        return SleepSegment.withSleepDepthAndDuration(sleepSegments.get(0), minSleepDepth, sleepSegments.size() * 60);
     }
 
     /**
