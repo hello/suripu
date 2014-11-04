@@ -132,7 +132,7 @@ public class TimelineResource {
         if(sunrise.isPresent()) {
             final String sunriseMessage = Event.getMessage(Event.Type.SUNRISE, sunrise.get());
 
-            final SleepSegment sunriseSegment = new SleepSegment(1L, sunrise.get().getMillis(), 0, 60, -1, Event.Type.SUNRISE.toString(), sunriseMessage, new ArrayList<SensorReading>());
+            final SleepSegment sunriseSegment = new SleepSegment(1L, sunrise.get().getMillis(), 0, 60, -1, Event.Type.SUNRISE, sunriseMessage, new ArrayList<SensorReading>());
 
             extraSegments.add(sunriseSegment);
 
@@ -150,7 +150,8 @@ public class TimelineResource {
         LOGGER.debug("Size of normalized = {}", segments.size());
 
         // merge similar segments (by motion & event-type), then categorize
-        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(segments, mergeThreshold);
+//        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(segments, mergeThreshold);
+        final List<SleepSegment> mergedSegments = TimelineUtils.mergeByTimeBucket(segments, 15);
         final SleepStats sleepStats = TimelineUtils.computeStats(mergedSegments);
         final List<SleepSegment> reversed = Lists.reverse(mergedSegments);
 
