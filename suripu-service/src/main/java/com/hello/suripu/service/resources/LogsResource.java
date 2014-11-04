@@ -3,7 +3,6 @@ package com.hello.suripu.service.resources;
 import com.flaptor.indextank.apiclient.IndexDoesNotExistException;
 import com.flaptor.indextank.apiclient.IndexTankClient;
 import com.google.common.base.Optional;
-import com.google.protobuf.TextFormat;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.service.SignedMessage;
@@ -52,7 +51,7 @@ public class LogsResource {
                     .type(MediaType.TEXT_PLAIN_TYPE).build()
             );
         }
-        LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(log));
+        LOGGER.debug("Received protobuf message {}", log);
 
 
         // get MAC address of morpheus
