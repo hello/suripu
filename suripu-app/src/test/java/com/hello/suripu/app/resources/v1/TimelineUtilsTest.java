@@ -140,7 +140,7 @@ public class TimelineUtilsTest {
 
         final List<SleepSegment> normalized = TimelineUtils.categorizeSleepDepth(sleepSegments);
         for(final SleepSegment segment : normalized) {
-            assertThat(segment.sleepDepth, is(100));
+            assertThat(segment.sleepDepth, is(TimelineUtils.HIGH_SLEEP_DEPTH));
         }
     }
 

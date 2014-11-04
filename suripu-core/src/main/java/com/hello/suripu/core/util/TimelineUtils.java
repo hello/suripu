@@ -34,6 +34,14 @@ public class TimelineUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineUtils.class);
     private static final long ONE_MIN_IN_MILLIS = 60000L;
+
+    public static final Integer HIGHEST_SLEEP_DEPTH = 100;
+    public static final Integer HIGH_SLEEP_DEPTH = 80;
+    public static final Integer MEDIUM_SLEEP_DEPTH = 60;
+    public static final Integer LOW_SLEEP_DEPTH = 30;
+    public static final Integer LOWEST_SLEEP_DEPTH = 10;
+
+
     /**
      * Merge a List<Segment> to a single segment
      * The minimum duration is 60 seconds
@@ -233,12 +241,18 @@ public class TimelineUtils {
     }
 
 
-
-    public static List<SleepSegment> mergeByTimeBucket(final List<SleepSegment> segments, int threshold) {
+    /**
+     * Creates time buckets of $windowSize seconds
+     * @param segments
+     * @param windowSize
+     * @return
+     */
+    public static List<SleepSegment> mergeByTimeBucket(final List<SleepSegment> segments, int windowSize) {
         final List<SleepSegment> sleepSegments = new ArrayList<>();
         final List<SleepSegment> temp = new ArrayList<>();
+
         for(int i = 0; i < segments.size(); i++) {
-            if(i > 0 && i % threshold == 0) {
+            if(i > 0 && i % windowSize == 0) {
                 final SleepSegment merged = merge(temp);
                 sleepSegments.add(merged);
                 temp.clear();
@@ -251,12 +265,19 @@ public class TimelineUtils {
             final SleepSegment remainder = merge(temp);
             sleepSegments.add(remainder);
         }
+
         LOGGER.debug("Merged by bucket size = {}", sleepSegments.size());
         return sleepSegments;
     }
 
 
-    public static SleepSegment merge(List<SleepSegment> sleepSegments) {
+    /**
+     * Merges all events into a single event with the most important event type
+     * and the timestamp of the first event.
+     * @param sleepSegments
+     * @return
+     */
+    public static SleepSegment merge(final List<SleepSegment> sleepSegments) {
         if(sleepSegments.isEmpty()) {
             throw new RuntimeException("Can not merge empty list");
         }
@@ -304,19 +325,25 @@ public class TimelineUtils {
         return normalizedSegments;
     }
 
+
+    /**
+     * Harmonizes sleep depth into n buckets
+     * @param sleepDepth
+     * @return
+     */
     public static Integer categorizeSleepDepth(final Integer sleepDepth) {
         // TODO: tune these
         if (sleepDepth > 90 && sleepDepth <= 100) {
-            return 100;
+            return HIGHEST_SLEEP_DEPTH;
         } else if(sleepDepth > 70 && sleepDepth <= 90) {
-            return 80;
+            return HIGH_SLEEP_DEPTH;
         } else if (sleepDepth > 40 && sleepDepth <= 70) {
-            return 60;
+            return MEDIUM_SLEEP_DEPTH;
         } else if (sleepDepth > 10 && sleepDepth <= 40) {
-            return 30;
-        } else {
-            return 10;
+            return LOW_SLEEP_DEPTH;
         }
+
+        return LOWEST_SLEEP_DEPTH;
     }
 
     /**
@@ -469,6 +496,13 @@ public class TimelineUtils {
         return generatedInsights;
     }
 
+
+    /**
+     * Naive implementation of computing sleep time based on motion data only
+     * @param sleepSegments
+     * @param thresholdInMinutes
+     * @return
+     */
     public static Optional<SleepSegment> computeSleepTime(final List<SleepSegment> sleepSegments, int thresholdInMinutes) {
 
         if(sleepSegments.isEmpty()) {
@@ -478,7 +512,7 @@ public class TimelineUtils {
         final List<DateTime> dateTimes = new ArrayList<>();
         final Map<Long, SleepSegment> map = new HashMap<>();
 
-        for(SleepSegment sleepSegment : sleepSegments) {
+        for(final SleepSegment sleepSegment : sleepSegments) {
             if(sleepSegment.sleepDepth < 70) {
                 dateTimes.add(new DateTime(sleepSegment.timestamp + sleepSegment.offsetMillis));
                 map.put(sleepSegment.timestamp + sleepSegment.offsetMillis, sleepSegment);
@@ -486,13 +520,12 @@ public class TimelineUtils {
         }
 
         for(int i =0; i < dateTimes.size() -1; i++) {
-            DateTime current = dateTimes.get(i);
-            DateTime next = dateTimes.get(i + 1);
-            int diffInMinutes = next.getMinuteOfDay() - current.getMinuteOfDay();
+            final DateTime current = dateTimes.get(i);
+            final DateTime next = dateTimes.get(i + 1);
+            final int diffInMinutes = next.getMinuteOfDay() - current.getMinuteOfDay();
             if (diffInMinutes > thresholdInMinutes) {
-//                System.out.println("Diff in minutes = " + (next.getSecondOfDay() - current.getSecondOfDay()));
                 if(map.containsKey(current.getMillis())) {
-                    SleepSegment s = map.get(current.getMillis());
+                    final SleepSegment s = map.get(current.getMillis());
                     return Optional.of(SleepSegment.withEventType(s, Event.Type.SLEEP));
 
                 }
