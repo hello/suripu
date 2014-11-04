@@ -118,8 +118,8 @@ message SyncResponse {
         optional int32 end_time = 2;
         optional int32 ringtone_id = 3 [default = 1];
         //repeated int64 ringtone_ids = 4 [packed = true];
-        optional int32 ring_offset_from_now = 4;  // This is a more fault tolerance design
-        optional int32 ring_duration = 5;
+        optional int32 ring_offset_from_now_in_second = 4;  // This is a more fault tolerance design
+        optional int32 ring_duration_in_second = 5;
     }
 
     message PairingAction {

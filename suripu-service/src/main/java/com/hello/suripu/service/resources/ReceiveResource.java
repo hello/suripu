@@ -390,8 +390,8 @@ public class ReceiveResource {
         final InputProtos.SyncResponse.Alarm.Builder alarmBuilder = InputProtos.SyncResponse.Alarm.newBuilder()
                 .setStartTime((int) (nextRingTimestamp / DateTimeConstants.MILLIS_PER_SECOND))
                 .setEndTime((int) ((nextRingTimestamp + ringDurationInMS) / DateTimeConstants.MILLIS_PER_SECOND))
-                .setRingDuration(30)
-                .setRingOffsetFromNow(ringOffsetFromNowInSecond);
+                .setRingDurationInSecond(30)
+                .setRingOffsetFromNowInSecond(ringOffsetFromNowInSecond);
 
         // TODO: Fix the IndexOutOfBoundException
 //        for(int i = 0; i < replyRingTime.soundIds.length; i++){
