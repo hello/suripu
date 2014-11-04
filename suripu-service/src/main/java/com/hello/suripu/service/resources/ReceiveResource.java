@@ -381,10 +381,17 @@ public class ReceiveResource {
 
         LOGGER.debug("Next ring time: {}", new DateTime(nextRingTimestamp, userTimeZone));
         int ringDurationInMS = 30 * DateTimeConstants.MILLIS_PER_SECOND;  // TODO: make this flexible so we can adjust based on user preferences.
+        int ringOffsetFromNowInSecond = -1;
+
+        if(nextRingTimestamp != 0) {
+            ringOffsetFromNowInSecond = (int) ((nextRingTimestamp - DateTime.now().getMillis()) / DateTimeConstants.MILLIS_PER_SECOND);
+        }
 
         final InputProtos.SyncResponse.Alarm.Builder alarmBuilder = InputProtos.SyncResponse.Alarm.newBuilder()
                 .setStartTime((int) (nextRingTimestamp / DateTimeConstants.MILLIS_PER_SECOND))
-                .setEndTime((int) ((nextRingTimestamp + ringDurationInMS) / DateTimeConstants.MILLIS_PER_SECOND));
+                .setEndTime((int) ((nextRingTimestamp + ringDurationInMS) / DateTimeConstants.MILLIS_PER_SECOND))
+                .setRingDuration(30)
+                .setRingOffsetFromNow(ringOffsetFromNowInSecond);
 
         // TODO: Fix the IndexOutOfBoundException
 //        for(int i = 0; i < replyRingTime.soundIds.length; i++){
