@@ -10135,23 +10135,23 @@ public final class InputProtos {
     public interface AlarmOrBuilder
         extends com.google.protobuf.MessageOrBuilder {
 
-      // optional int32 start_time = 1;
+      // optional uint32 start_time = 1;
       /**
-       * <code>optional int32 start_time = 1;</code>
+       * <code>optional uint32 start_time = 1;</code>
        */
       boolean hasStartTime();
       /**
-       * <code>optional int32 start_time = 1;</code>
+       * <code>optional uint32 start_time = 1;</code>
        */
       int getStartTime();
 
-      // optional int32 end_time = 2;
+      // optional uint32 end_time = 2;
       /**
-       * <code>optional int32 end_time = 2;</code>
+       * <code>optional uint32 end_time = 2;</code>
        */
       boolean hasEndTime();
       /**
-       * <code>optional int32 end_time = 2;</code>
+       * <code>optional uint32 end_time = 2;</code>
        */
       int getEndTime();
 
@@ -10246,12 +10246,12 @@ public final class InputProtos {
               }
               case 8: {
                 bitField0_ |= 0x00000001;
-                startTime_ = input.readInt32();
+                startTime_ = input.readUInt32();
                 break;
               }
               case 16: {
                 bitField0_ |= 0x00000002;
-                endTime_ = input.readInt32();
+                endTime_ = input.readUInt32();
                 break;
               }
               case 24: {
@@ -10309,33 +10309,33 @@ public final class InputProtos {
       }
 
       private int bitField0_;
-      // optional int32 start_time = 1;
+      // optional uint32 start_time = 1;
       public static final int START_TIME_FIELD_NUMBER = 1;
       private int startTime_;
       /**
-       * <code>optional int32 start_time = 1;</code>
+       * <code>optional uint32 start_time = 1;</code>
        */
       public boolean hasStartTime() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>optional int32 start_time = 1;</code>
+       * <code>optional uint32 start_time = 1;</code>
        */
       public int getStartTime() {
         return startTime_;
       }
 
-      // optional int32 end_time = 2;
+      // optional uint32 end_time = 2;
       public static final int END_TIME_FIELD_NUMBER = 2;
       private int endTime_;
       /**
-       * <code>optional int32 end_time = 2;</code>
+       * <code>optional uint32 end_time = 2;</code>
        */
       public boolean hasEndTime() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>optional int32 end_time = 2;</code>
+       * <code>optional uint32 end_time = 2;</code>
        */
       public int getEndTime() {
         return endTime_;
@@ -10417,10 +10417,10 @@ public final class InputProtos {
                           throws java.io.IOException {
         getSerializedSize();
         if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          output.writeInt32(1, startTime_);
+          output.writeUInt32(1, startTime_);
         }
         if (((bitField0_ & 0x00000002) == 0x00000002)) {
-          output.writeInt32(2, endTime_);
+          output.writeUInt32(2, endTime_);
         }
         if (((bitField0_ & 0x00000004) == 0x00000004)) {
           output.writeInt32(3, ringtoneId_);
@@ -10442,11 +10442,11 @@ public final class InputProtos {
         size = 0;
         if (((bitField0_ & 0x00000001) == 0x00000001)) {
           size += com.google.protobuf.CodedOutputStream
-            .computeInt32Size(1, startTime_);
+            .computeUInt32Size(1, startTime_);
         }
         if (((bitField0_ & 0x00000002) == 0x00000002)) {
           size += com.google.protobuf.CodedOutputStream
-            .computeInt32Size(2, endTime_);
+            .computeUInt32Size(2, endTime_);
         }
         if (((bitField0_ & 0x00000004) == 0x00000004)) {
           size += com.google.protobuf.CodedOutputStream
@@ -10692,22 +10692,22 @@ public final class InputProtos {
         }
         private int bitField0_;
 
-        // optional int32 start_time = 1;
+        // optional uint32 start_time = 1;
         private int startTime_ ;
         /**
-         * <code>optional int32 start_time = 1;</code>
+         * <code>optional uint32 start_time = 1;</code>
          */
         public boolean hasStartTime() {
           return ((bitField0_ & 0x00000001) == 0x00000001);
         }
         /**
-         * <code>optional int32 start_time = 1;</code>
+         * <code>optional uint32 start_time = 1;</code>
          */
         public int getStartTime() {
           return startTime_;
         }
         /**
-         * <code>optional int32 start_time = 1;</code>
+         * <code>optional uint32 start_time = 1;</code>
          */
         public Builder setStartTime(int value) {
           bitField0_ |= 0x00000001;
@@ -10716,7 +10716,7 @@ public final class InputProtos {
           return this;
         }
         /**
-         * <code>optional int32 start_time = 1;</code>
+         * <code>optional uint32 start_time = 1;</code>
          */
         public Builder clearStartTime() {
           bitField0_ = (bitField0_ & ~0x00000001);
@@ -10725,22 +10725,22 @@ public final class InputProtos {
           return this;
         }
 
-        // optional int32 end_time = 2;
+        // optional uint32 end_time = 2;
         private int endTime_ ;
         /**
-         * <code>optional int32 end_time = 2;</code>
+         * <code>optional uint32 end_time = 2;</code>
          */
         public boolean hasEndTime() {
           return ((bitField0_ & 0x00000002) == 0x00000002);
         }
         /**
-         * <code>optional int32 end_time = 2;</code>
+         * <code>optional uint32 end_time = 2;</code>
          */
         public int getEndTime() {
           return endTime_;
         }
         /**
-         * <code>optional int32 end_time = 2;</code>
+         * <code>optional uint32 end_time = 2;</code>
          */
         public Builder setEndTime(int value) {
           bitField0_ |= 0x00000002;
@@ -10749,7 +10749,7 @@ public final class InputProtos {
           return this;
         }
         /**
-         * <code>optional int32 end_time = 2;</code>
+         * <code>optional uint32 end_time = 2;</code>
          */
         public Builder clearEndTime() {
           bitField0_ = (bitField0_ & ~0x00000002);
@@ -25162,7 +25162,7 @@ public final class InputProtos {
       "\".hello.SyncResponse.FirmwareUpdate\022;\n\017r" +
       "oom_conditions\030\014 \001(\0162\".hello.SyncRespons" +
       "e.RoomConditions\032\216\001\n\005Alarm\022\022\n\nstart_time" +
-      "\030\001 \001(\005\022\020\n\010end_time\030\002 \001(\005\022\026\n\013ringtone_id\030" +
+      "\030\001 \001(\r\022\020\n\010end_time\030\002 \001(\r\022\026\n\013ringtone_id\030" +
       "\003 \001(\005:\0011\022&\n\036ring_offset_from_now_in_seco" +
       "nd\030\004 \001(\005\022\037\n\027ring_duration_in_second\030\005 \001(" +
       "\005\032}\n\rPairingAction\022\014\n\004ssid\030\001 \001(\t\022:\n\004type" +
