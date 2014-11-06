@@ -527,7 +527,7 @@ public class ReceiveResource {
             }
         }
 
-        MorpheusBle.MorpheusCommand responseCommand = MorpheusBle.MorpheusCommand.newBuilder()
+        final MorpheusBle.MorpheusCommand responseCommand = MorpheusBle.MorpheusCommand.newBuilder()
                 .setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PILL_DATA)
                 .setVersion(0)
                 .build();
