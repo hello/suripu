@@ -13,7 +13,7 @@ import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.models.PillSample;
 import com.hello.suripu.core.models.TrackerMotion;
-import com.hello.suripu.core.processors.PillProcessor;
+import com.hello.suripu.core.processors.PillScoreBatchByRecordsProcessor;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -25,11 +25,11 @@ public class PillScoreProcessor implements IRecordProcessor {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(PillScoreProcessor.class);
 
-    private final PillProcessor pillProcessor;
+    private final PillScoreBatchByRecordsProcessor pillProcessor;
     private int decodeErrors = 0;
 
     public PillScoreProcessor(final SleepScoreDAO sleepScoreDAO, final int dateMinuteBucket, final int checkpointThreshold) {
-        this.pillProcessor = new PillProcessor(sleepScoreDAO, dateMinuteBucket, checkpointThreshold);
+        this.pillProcessor = new PillScoreBatchByRecordsProcessor(sleepScoreDAO, dateMinuteBucket, checkpointThreshold);
     }
 
     @Override
@@ -68,6 +68,8 @@ public class PillScoreProcessor implements IRecordProcessor {
             final boolean okayToCheckpoint = this.pillProcessor.processPillRecords(samples);
 
             if (okayToCheckpoint) {
+                LOGGER.debug("going to checkpoint {}", this.pillProcessor.getNumPillRecordsProcessed());
+
                 try {
                     iRecordProcessorCheckpointer.checkpoint();
                 } catch (InvalidStateException e) {
