@@ -65,6 +65,18 @@ public final class MorpheusBle {
      * <code>INTERNAL_OPERATION_FAILED = 6;</code>
      */
     INTERNAL_OPERATION_FAILED(6, 6),
+    /**
+     * <code>NO_ENDPOINT_IN_RANGE = 7;</code>
+     */
+    NO_ENDPOINT_IN_RANGE(7, 7),
+    /**
+     * <code>WLAN_CONNECTION_ERROR = 8;</code>
+     */
+    WLAN_CONNECTION_ERROR(8, 8),
+    /**
+     * <code>FAIL_TO_OBTAIN_IP = 9;</code>
+     */
+    FAIL_TO_OBTAIN_IP(9, 9),
     ;
 
     /**
@@ -119,6 +131,18 @@ public final class MorpheusBle {
      * <code>INTERNAL_OPERATION_FAILED = 6;</code>
      */
     public static final int INTERNAL_OPERATION_FAILED_VALUE = 6;
+    /**
+     * <code>NO_ENDPOINT_IN_RANGE = 7;</code>
+     */
+    public static final int NO_ENDPOINT_IN_RANGE_VALUE = 7;
+    /**
+     * <code>WLAN_CONNECTION_ERROR = 8;</code>
+     */
+    public static final int WLAN_CONNECTION_ERROR_VALUE = 8;
+    /**
+     * <code>FAIL_TO_OBTAIN_IP = 9;</code>
+     */
+    public static final int FAIL_TO_OBTAIN_IP_VALUE = 9;
 
 
     public final int getNumber() { return value; }
@@ -132,6 +156,9 @@ public final class MorpheusBle {
         case 4: return DEVICE_DATABASE_FULL;
         case 5: return DEVICE_NO_MEMORY;
         case 6: return INTERNAL_OPERATION_FAILED;
+        case 7: return NO_ENDPOINT_IN_RANGE;
+        case 8: return WLAN_CONNECTION_ERROR;
+        case 9: return FAIL_TO_OBTAIN_IP;
         default: return null;
       }
     }
@@ -181,6 +208,865 @@ public final class MorpheusBle {
     }
 
     // @@protoc_insertion_point(enum_scope:hello.ErrorType)
+  }
+
+  public interface wifi_endpointOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // required string ssid = 1;
+    /**
+     * <code>required string ssid = 1;</code>
+     */
+    boolean hasSsid();
+    /**
+     * <code>required string ssid = 1;</code>
+     */
+    java.lang.String getSsid();
+    /**
+     * <code>required string ssid = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getSsidBytes();
+
+    // optional bytes bssid = 2;
+    /**
+     * <code>optional bytes bssid = 2;</code>
+     */
+    boolean hasBssid();
+    /**
+     * <code>optional bytes bssid = 2;</code>
+     */
+    com.google.protobuf.ByteString getBssid();
+
+    // required int32 rssi = 4;
+    /**
+     * <code>required int32 rssi = 4;</code>
+     */
+    boolean hasRssi();
+    /**
+     * <code>required int32 rssi = 4;</code>
+     */
+    int getRssi();
+
+    // required .hello.wifi_endpoint.sec_type security_type = 5;
+    /**
+     * <code>required .hello.wifi_endpoint.sec_type security_type = 5;</code>
+     */
+    boolean hasSecurityType();
+    /**
+     * <code>required .hello.wifi_endpoint.sec_type security_type = 5;</code>
+     */
+    com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type getSecurityType();
+  }
+  /**
+   * Protobuf type {@code hello.wifi_endpoint}
+   */
+  public static final class wifi_endpoint extends
+      com.google.protobuf.GeneratedMessage
+      implements wifi_endpointOrBuilder {
+    // Use wifi_endpoint.newBuilder() to construct.
+    private wifi_endpoint(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private wifi_endpoint(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final wifi_endpoint defaultInstance;
+    public static wifi_endpoint getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public wifi_endpoint getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private wifi_endpoint(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              ssid_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              bssid_ = input.readBytes();
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000004;
+              rssi_ = input.readInt32();
+              break;
+            }
+            case 40: {
+              int rawValue = input.readEnum();
+              com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type value = com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(5, rawValue);
+              } else {
+                bitField0_ |= 0x00000008;
+                securityType_ = value;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.suripu.api.ble.MorpheusBle.internal_static_hello_wifi_endpoint_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.suripu.api.ble.MorpheusBle.internal_static_hello_wifi_endpoint_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.class, com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<wifi_endpoint> PARSER =
+        new com.google.protobuf.AbstractParser<wifi_endpoint>() {
+      public wifi_endpoint parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new wifi_endpoint(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<wifi_endpoint> getParserForType() {
+      return PARSER;
+    }
+
+    /**
+     * Protobuf enum {@code hello.wifi_endpoint.sec_type}
+     *
+     * <pre>
+     *
+     *_u8 ssid[MAXIMAL_SSID_LENGTH];
+     *_u8 ssid_len;
+     *_u8 sec_type;
+     *_u8 bssid[SL_BSSID_LENGTH];
+     *_i8 rssi;
+     * </pre>
+     */
+    public enum sec_type
+        implements com.google.protobuf.ProtocolMessageEnum {
+      /**
+       * <code>SL_SCAN_SEC_TYPE_OPEN = 0;</code>
+       */
+      SL_SCAN_SEC_TYPE_OPEN(0, 0),
+      /**
+       * <code>SL_SCAN_SEC_TYPE_WEP = 1;</code>
+       */
+      SL_SCAN_SEC_TYPE_WEP(1, 1),
+      /**
+       * <code>SL_SCAN_SEC_TYPE_WPA = 2;</code>
+       */
+      SL_SCAN_SEC_TYPE_WPA(2, 2),
+      /**
+       * <code>SL_SCAN_SEC_TYPE_WPA2 = 3;</code>
+       */
+      SL_SCAN_SEC_TYPE_WPA2(3, 3),
+      ;
+
+      /**
+       * <code>SL_SCAN_SEC_TYPE_OPEN = 0;</code>
+       */
+      public static final int SL_SCAN_SEC_TYPE_OPEN_VALUE = 0;
+      /**
+       * <code>SL_SCAN_SEC_TYPE_WEP = 1;</code>
+       */
+      public static final int SL_SCAN_SEC_TYPE_WEP_VALUE = 1;
+      /**
+       * <code>SL_SCAN_SEC_TYPE_WPA = 2;</code>
+       */
+      public static final int SL_SCAN_SEC_TYPE_WPA_VALUE = 2;
+      /**
+       * <code>SL_SCAN_SEC_TYPE_WPA2 = 3;</code>
+       */
+      public static final int SL_SCAN_SEC_TYPE_WPA2_VALUE = 3;
+
+
+      public final int getNumber() { return value; }
+
+      public static sec_type valueOf(int value) {
+        switch (value) {
+          case 0: return SL_SCAN_SEC_TYPE_OPEN;
+          case 1: return SL_SCAN_SEC_TYPE_WEP;
+          case 2: return SL_SCAN_SEC_TYPE_WPA;
+          case 3: return SL_SCAN_SEC_TYPE_WPA2;
+          default: return null;
+        }
+      }
+
+      public static com.google.protobuf.Internal.EnumLiteMap<sec_type>
+          internalGetValueMap() {
+        return internalValueMap;
+      }
+      private static com.google.protobuf.Internal.EnumLiteMap<sec_type>
+          internalValueMap =
+            new com.google.protobuf.Internal.EnumLiteMap<sec_type>() {
+              public sec_type findValueByNumber(int number) {
+                return sec_type.valueOf(number);
+              }
+            };
+
+      public final com.google.protobuf.Descriptors.EnumValueDescriptor
+          getValueDescriptor() {
+        return getDescriptor().getValues().get(index);
+      }
+      public final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptorForType() {
+        return getDescriptor();
+      }
+      public static final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptor() {
+        return com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.getDescriptor().getEnumTypes().get(0);
+      }
+
+      private static final sec_type[] VALUES = values();
+
+      public static sec_type valueOf(
+          com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+        if (desc.getType() != getDescriptor()) {
+          throw new java.lang.IllegalArgumentException(
+            "EnumValueDescriptor is not for this type.");
+        }
+        return VALUES[desc.getIndex()];
+      }
+
+      private final int index;
+      private final int value;
+
+      private sec_type(int index, int value) {
+        this.index = index;
+        this.value = value;
+      }
+
+      // @@protoc_insertion_point(enum_scope:hello.wifi_endpoint.sec_type)
+    }
+
+    private int bitField0_;
+    // required string ssid = 1;
+    public static final int SSID_FIELD_NUMBER = 1;
+    private java.lang.Object ssid_;
+    /**
+     * <code>required string ssid = 1;</code>
+     */
+    public boolean hasSsid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required string ssid = 1;</code>
+     */
+    public java.lang.String getSsid() {
+      java.lang.Object ref = ssid_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          ssid_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string ssid = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getSsidBytes() {
+      java.lang.Object ref = ssid_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        ssid_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional bytes bssid = 2;
+    public static final int BSSID_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString bssid_;
+    /**
+     * <code>optional bytes bssid = 2;</code>
+     */
+    public boolean hasBssid() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional bytes bssid = 2;</code>
+     */
+    public com.google.protobuf.ByteString getBssid() {
+      return bssid_;
+    }
+
+    // required int32 rssi = 4;
+    public static final int RSSI_FIELD_NUMBER = 4;
+    private int rssi_;
+    /**
+     * <code>required int32 rssi = 4;</code>
+     */
+    public boolean hasRssi() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>required int32 rssi = 4;</code>
+     */
+    public int getRssi() {
+      return rssi_;
+    }
+
+    // required .hello.wifi_endpoint.sec_type security_type = 5;
+    public static final int SECURITY_TYPE_FIELD_NUMBER = 5;
+    private com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type securityType_;
+    /**
+     * <code>required .hello.wifi_endpoint.sec_type security_type = 5;</code>
+     */
+    public boolean hasSecurityType() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>required .hello.wifi_endpoint.sec_type security_type = 5;</code>
+     */
+    public com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type getSecurityType() {
+      return securityType_;
+    }
+
+    private void initFields() {
+      ssid_ = "";
+      bssid_ = com.google.protobuf.ByteString.EMPTY;
+      rssi_ = 0;
+      securityType_ = com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      if (!hasSsid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasRssi()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSecurityType()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getSsidBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, bssid_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeInt32(4, rssi_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeEnum(5, securityType_.getNumber());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getSsidBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, bssid_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(4, rssi_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(5, securityType_.getNumber());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code hello.wifi_endpoint}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.ble.MorpheusBle.wifi_endpointOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.ble.MorpheusBle.internal_static_hello_wifi_endpoint_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.ble.MorpheusBle.internal_static_hello_wifi_endpoint_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.class, com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.Builder.class);
+      }
+
+      // Construct using com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        ssid_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        bssid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        rssi_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        securityType_ = com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.suripu.api.ble.MorpheusBle.internal_static_hello_wifi_endpoint_descriptor;
+      }
+
+      public com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint getDefaultInstanceForType() {
+        return com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.getDefaultInstance();
+      }
+
+      public com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint build() {
+        com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint buildPartial() {
+        com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint result = new com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.ssid_ = ssid_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.bssid_ = bssid_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.rssi_ = rssi_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.securityType_ = securityType_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint) {
+          return mergeFrom((com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint other) {
+        if (other == com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.getDefaultInstance()) return this;
+        if (other.hasSsid()) {
+          bitField0_ |= 0x00000001;
+          ssid_ = other.ssid_;
+          onChanged();
+        }
+        if (other.hasBssid()) {
+          setBssid(other.getBssid());
+        }
+        if (other.hasRssi()) {
+          setRssi(other.getRssi());
+        }
+        if (other.hasSecurityType()) {
+          setSecurityType(other.getSecurityType());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasSsid()) {
+          
+          return false;
+        }
+        if (!hasRssi()) {
+          
+          return false;
+        }
+        if (!hasSecurityType()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // required string ssid = 1;
+      private java.lang.Object ssid_ = "";
+      /**
+       * <code>required string ssid = 1;</code>
+       */
+      public boolean hasSsid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required string ssid = 1;</code>
+       */
+      public java.lang.String getSsid() {
+        java.lang.Object ref = ssid_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          ssid_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string ssid = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getSsidBytes() {
+        java.lang.Object ref = ssid_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          ssid_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string ssid = 1;</code>
+       */
+      public Builder setSsid(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        ssid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string ssid = 1;</code>
+       */
+      public Builder clearSsid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        ssid_ = getDefaultInstance().getSsid();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string ssid = 1;</code>
+       */
+      public Builder setSsidBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        ssid_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional bytes bssid = 2;
+      private com.google.protobuf.ByteString bssid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes bssid = 2;</code>
+       */
+      public boolean hasBssid() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional bytes bssid = 2;</code>
+       */
+      public com.google.protobuf.ByteString getBssid() {
+        return bssid_;
+      }
+      /**
+       * <code>optional bytes bssid = 2;</code>
+       */
+      public Builder setBssid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        bssid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes bssid = 2;</code>
+       */
+      public Builder clearBssid() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        bssid_ = getDefaultInstance().getBssid();
+        onChanged();
+        return this;
+      }
+
+      // required int32 rssi = 4;
+      private int rssi_ ;
+      /**
+       * <code>required int32 rssi = 4;</code>
+       */
+      public boolean hasRssi() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>required int32 rssi = 4;</code>
+       */
+      public int getRssi() {
+        return rssi_;
+      }
+      /**
+       * <code>required int32 rssi = 4;</code>
+       */
+      public Builder setRssi(int value) {
+        bitField0_ |= 0x00000004;
+        rssi_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required int32 rssi = 4;</code>
+       */
+      public Builder clearRssi() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        rssi_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // required .hello.wifi_endpoint.sec_type security_type = 5;
+      private com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type securityType_ = com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
+      /**
+       * <code>required .hello.wifi_endpoint.sec_type security_type = 5;</code>
+       */
+      public boolean hasSecurityType() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>required .hello.wifi_endpoint.sec_type security_type = 5;</code>
+       */
+      public com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type getSecurityType() {
+        return securityType_;
+      }
+      /**
+       * <code>required .hello.wifi_endpoint.sec_type security_type = 5;</code>
+       */
+      public Builder setSecurityType(com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000008;
+        securityType_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required .hello.wifi_endpoint.sec_type security_type = 5;</code>
+       */
+      public Builder clearSecurityType() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        securityType_ = com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:hello.wifi_endpoint)
+    }
+
+    static {
+      defaultInstance = new wifi_endpoint(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:hello.wifi_endpoint)
   }
 
   public interface MorpheusCommandOrBuilder
@@ -360,6 +1246,55 @@ public final class MorpheusBle {
      * <code>optional int32 firmwareVersion = 13;</code>
      */
     int getFirmwareVersion();
+
+    // repeated .hello.wifi_endpoint wifi_scan_result = 14;
+    /**
+     * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+     */
+    java.util.List<com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint> 
+        getWifiScanResultList();
+    /**
+     * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+     */
+    com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint getWifiScanResult(int index);
+    /**
+     * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+     */
+    int getWifiScanResultCount();
+    /**
+     * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+     */
+    java.util.List<? extends com.hello.suripu.api.ble.MorpheusBle.wifi_endpointOrBuilder> 
+        getWifiScanResultOrBuilderList();
+    /**
+     * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+     */
+    com.hello.suripu.api.ble.MorpheusBle.wifi_endpointOrBuilder getWifiScanResultOrBuilder(
+        int index);
+
+    // optional .hello.wifi_endpoint.sec_type security_type = 15;
+    /**
+     * <code>optional .hello.wifi_endpoint.sec_type security_type = 15;</code>
+     */
+    boolean hasSecurityType();
+    /**
+     * <code>optional .hello.wifi_endpoint.sec_type security_type = 15;</code>
+     */
+    com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type getSecurityType();
+
+    // optional .hello.MorpheusCommand.PillData pillData = 16;
+    /**
+     * <code>optional .hello.MorpheusCommand.PillData pillData = 16;</code>
+     */
+    boolean hasPillData();
+    /**
+     * <code>optional .hello.MorpheusCommand.PillData pillData = 16;</code>
+     */
+    com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData getPillData();
+    /**
+     * <code>optional .hello.MorpheusCommand.PillData pillData = 16;</code>
+     */
+    com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillDataOrBuilder getPillDataOrBuilder();
   }
   /**
    * Protobuf type {@code hello.MorpheusCommand}
@@ -489,6 +1424,38 @@ public final class MorpheusBle {
               firmwareVersion_ = input.readInt32();
               break;
             }
+            case 114: {
+              if (!((mutable_bitField0_ & 0x00002000) == 0x00002000)) {
+                wifiScanResult_ = new java.util.ArrayList<com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint>();
+                mutable_bitField0_ |= 0x00002000;
+              }
+              wifiScanResult_.add(input.readMessage(com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.PARSER, extensionRegistry));
+              break;
+            }
+            case 120: {
+              int rawValue = input.readEnum();
+              com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type value = com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(15, rawValue);
+              } else {
+                bitField0_ |= 0x00002000;
+                securityType_ = value;
+              }
+              break;
+            }
+            case 130: {
+              com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.Builder subBuilder = null;
+              if (((bitField0_ & 0x00004000) == 0x00004000)) {
+                subBuilder = pillData_.toBuilder();
+              }
+              pillData_ = input.readMessage(com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(pillData_);
+                pillData_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00004000;
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -497,6 +1464,9 @@ public final class MorpheusBle {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00002000) == 0x00002000)) {
+          wifiScanResult_ = java.util.Collections.unmodifiableList(wifiScanResult_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -617,6 +1587,10 @@ public final class MorpheusBle {
        * <code>MORPHEUS_COMMAND_PILL_DFU_BEGIN = 19;</code>
        */
       MORPHEUS_COMMAND_PILL_DFU_BEGIN(19, 19),
+      /**
+       * <code>MORPHEUS_COMMAND_FACTORY_RESET = 20;</code>
+       */
+      MORPHEUS_COMMAND_FACTORY_RESET(20, 20),
       ;
 
       /**
@@ -703,6 +1677,10 @@ public final class MorpheusBle {
        * <code>MORPHEUS_COMMAND_PILL_DFU_BEGIN = 19;</code>
        */
       public static final int MORPHEUS_COMMAND_PILL_DFU_BEGIN_VALUE = 19;
+      /**
+       * <code>MORPHEUS_COMMAND_FACTORY_RESET = 20;</code>
+       */
+      public static final int MORPHEUS_COMMAND_FACTORY_RESET_VALUE = 20;
 
 
       public final int getNumber() { return value; }
@@ -729,6 +1707,7 @@ public final class MorpheusBle {
           case 17: return MORPHEUS_COMMAND_PILL_DATA;
           case 18: return MORPHEUS_COMMAND_PILL_HEARTBEAT;
           case 19: return MORPHEUS_COMMAND_PILL_DFU_BEGIN;
+          case 20: return MORPHEUS_COMMAND_FACTORY_RESET;
           default: return null;
         }
       }
@@ -778,6 +1757,901 @@ public final class MorpheusBle {
       }
 
       // @@protoc_insertion_point(enum_scope:hello.MorpheusCommand.CommandType)
+    }
+
+    public interface PillDataOrBuilder
+        extends com.google.protobuf.MessageOrBuilder {
+
+      // required string deviceId = 1;
+      /**
+       * <code>required string deviceId = 1;</code>
+       */
+      boolean hasDeviceId();
+      /**
+       * <code>required string deviceId = 1;</code>
+       */
+      java.lang.String getDeviceId();
+      /**
+       * <code>required string deviceId = 1;</code>
+       */
+      com.google.protobuf.ByteString
+          getDeviceIdBytes();
+
+      // optional int32 batteryLevel = 2;
+      /**
+       * <code>optional int32 batteryLevel = 2;</code>
+       */
+      boolean hasBatteryLevel();
+      /**
+       * <code>optional int32 batteryLevel = 2;</code>
+       */
+      int getBatteryLevel();
+
+      // optional int32 uptime = 3;
+      /**
+       * <code>optional int32 uptime = 3;</code>
+       */
+      boolean hasUptime();
+      /**
+       * <code>optional int32 uptime = 3;</code>
+       */
+      int getUptime();
+
+      // optional bytes motionDataEntrypted = 4;
+      /**
+       * <code>optional bytes motionDataEntrypted = 4;</code>
+       */
+      boolean hasMotionDataEntrypted();
+      /**
+       * <code>optional bytes motionDataEntrypted = 4;</code>
+       */
+      com.google.protobuf.ByteString getMotionDataEntrypted();
+
+      // optional int32 firmwareVersion = 5;
+      /**
+       * <code>optional int32 firmwareVersion = 5;</code>
+       */
+      boolean hasFirmwareVersion();
+      /**
+       * <code>optional int32 firmwareVersion = 5;</code>
+       */
+      int getFirmwareVersion();
+
+      // required uint64 timestamp = 6;
+      /**
+       * <code>required uint64 timestamp = 6;</code>
+       */
+      boolean hasTimestamp();
+      /**
+       * <code>required uint64 timestamp = 6;</code>
+       */
+      long getTimestamp();
+    }
+    /**
+     * Protobuf type {@code hello.MorpheusCommand.PillData}
+     */
+    public static final class PillData extends
+        com.google.protobuf.GeneratedMessage
+        implements PillDataOrBuilder {
+      // Use PillData.newBuilder() to construct.
+      private PillData(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+        super(builder);
+        this.unknownFields = builder.getUnknownFields();
+      }
+      private PillData(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+      private static final PillData defaultInstance;
+      public static PillData getDefaultInstance() {
+        return defaultInstance;
+      }
+
+      public PillData getDefaultInstanceForType() {
+        return defaultInstance;
+      }
+
+      private final com.google.protobuf.UnknownFieldSet unknownFields;
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+          getUnknownFields() {
+        return this.unknownFields;
+      }
+      private PillData(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        initFields();
+        int mutable_bitField0_ = 0;
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              default: {
+                if (!parseUnknownField(input, unknownFields,
+                                       extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+              case 10: {
+                bitField0_ |= 0x00000001;
+                deviceId_ = input.readBytes();
+                break;
+              }
+              case 16: {
+                bitField0_ |= 0x00000002;
+                batteryLevel_ = input.readInt32();
+                break;
+              }
+              case 24: {
+                bitField0_ |= 0x00000004;
+                uptime_ = input.readInt32();
+                break;
+              }
+              case 34: {
+                bitField0_ |= 0x00000008;
+                motionDataEntrypted_ = input.readBytes();
+                break;
+              }
+              case 40: {
+                bitField0_ |= 0x00000010;
+                firmwareVersion_ = input.readInt32();
+                break;
+              }
+              case 48: {
+                bitField0_ |= 0x00000020;
+                timestamp_ = input.readUInt64();
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e.getMessage()).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.ble.MorpheusBle.internal_static_hello_MorpheusCommand_PillData_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.ble.MorpheusBle.internal_static_hello_MorpheusCommand_PillData_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.class, com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.Builder.class);
+      }
+
+      public static com.google.protobuf.Parser<PillData> PARSER =
+          new com.google.protobuf.AbstractParser<PillData>() {
+        public PillData parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new PillData(input, extensionRegistry);
+        }
+      };
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<PillData> getParserForType() {
+        return PARSER;
+      }
+
+      private int bitField0_;
+      // required string deviceId = 1;
+      public static final int DEVICEID_FIELD_NUMBER = 1;
+      private java.lang.Object deviceId_;
+      /**
+       * <code>required string deviceId = 1;</code>
+       */
+      public boolean hasDeviceId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required string deviceId = 1;</code>
+       */
+      public java.lang.String getDeviceId() {
+        java.lang.Object ref = deviceId_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            deviceId_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       * <code>required string deviceId = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getDeviceIdBytes() {
+        java.lang.Object ref = deviceId_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          deviceId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
+      // optional int32 batteryLevel = 2;
+      public static final int BATTERYLEVEL_FIELD_NUMBER = 2;
+      private int batteryLevel_;
+      /**
+       * <code>optional int32 batteryLevel = 2;</code>
+       */
+      public boolean hasBatteryLevel() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional int32 batteryLevel = 2;</code>
+       */
+      public int getBatteryLevel() {
+        return batteryLevel_;
+      }
+
+      // optional int32 uptime = 3;
+      public static final int UPTIME_FIELD_NUMBER = 3;
+      private int uptime_;
+      /**
+       * <code>optional int32 uptime = 3;</code>
+       */
+      public boolean hasUptime() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional int32 uptime = 3;</code>
+       */
+      public int getUptime() {
+        return uptime_;
+      }
+
+      // optional bytes motionDataEntrypted = 4;
+      public static final int MOTIONDATAENTRYPTED_FIELD_NUMBER = 4;
+      private com.google.protobuf.ByteString motionDataEntrypted_;
+      /**
+       * <code>optional bytes motionDataEntrypted = 4;</code>
+       */
+      public boolean hasMotionDataEntrypted() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional bytes motionDataEntrypted = 4;</code>
+       */
+      public com.google.protobuf.ByteString getMotionDataEntrypted() {
+        return motionDataEntrypted_;
+      }
+
+      // optional int32 firmwareVersion = 5;
+      public static final int FIRMWAREVERSION_FIELD_NUMBER = 5;
+      private int firmwareVersion_;
+      /**
+       * <code>optional int32 firmwareVersion = 5;</code>
+       */
+      public boolean hasFirmwareVersion() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional int32 firmwareVersion = 5;</code>
+       */
+      public int getFirmwareVersion() {
+        return firmwareVersion_;
+      }
+
+      // required uint64 timestamp = 6;
+      public static final int TIMESTAMP_FIELD_NUMBER = 6;
+      private long timestamp_;
+      /**
+       * <code>required uint64 timestamp = 6;</code>
+       */
+      public boolean hasTimestamp() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>required uint64 timestamp = 6;</code>
+       */
+      public long getTimestamp() {
+        return timestamp_;
+      }
+
+      private void initFields() {
+        deviceId_ = "";
+        batteryLevel_ = 0;
+        uptime_ = 0;
+        motionDataEntrypted_ = com.google.protobuf.ByteString.EMPTY;
+        firmwareVersion_ = 0;
+        timestamp_ = 0L;
+      }
+      private byte memoizedIsInitialized = -1;
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized != -1) return isInitialized == 1;
+
+        if (!hasDeviceId()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+        if (!hasTimestamp()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        getSerializedSize();
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          output.writeBytes(1, getDeviceIdBytes());
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          output.writeInt32(2, batteryLevel_);
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          output.writeInt32(3, uptime_);
+        }
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          output.writeBytes(4, motionDataEntrypted_);
+        }
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          output.writeInt32(5, firmwareVersion_);
+        }
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          output.writeUInt64(6, timestamp_);
+        }
+        getUnknownFields().writeTo(output);
+      }
+
+      private int memoizedSerializedSize = -1;
+      public int getSerializedSize() {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(1, getDeviceIdBytes());
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(2, batteryLevel_);
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(3, uptime_);
+        }
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(4, motionDataEntrypted_);
+        }
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(5, firmwareVersion_);
+        }
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeUInt64Size(6, timestamp_);
+        }
+        size += getUnknownFields().getSerializedSize();
+        memoizedSerializedSize = size;
+        return size;
+      }
+
+      private static final long serialVersionUID = 0L;
+      @java.lang.Override
+      protected java.lang.Object writeReplace()
+          throws java.io.ObjectStreamException {
+        return super.writeReplace();
+      }
+
+      public static com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+      public static com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input);
+      }
+      public static com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      }
+      public static com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+
+      public static Builder newBuilder() { return Builder.create(); }
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder(com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData prototype) {
+        return newBuilder().mergeFrom(prototype);
+      }
+      public Builder toBuilder() { return newBuilder(this); }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code hello.MorpheusCommand.PillData}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessage.Builder<Builder>
+         implements com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillDataOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return com.hello.suripu.api.ble.MorpheusBle.internal_static_hello_MorpheusCommand_PillData_descriptor;
+        }
+
+        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return com.hello.suripu.api.ble.MorpheusBle.internal_static_hello_MorpheusCommand_PillData_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.class, com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.Builder.class);
+        }
+
+        // Construct using com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          }
+        }
+        private static Builder create() {
+          return new Builder();
+        }
+
+        public Builder clear() {
+          super.clear();
+          deviceId_ = "";
+          bitField0_ = (bitField0_ & ~0x00000001);
+          batteryLevel_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000002);
+          uptime_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000004);
+          motionDataEntrypted_ = com.google.protobuf.ByteString.EMPTY;
+          bitField0_ = (bitField0_ & ~0x00000008);
+          firmwareVersion_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000010);
+          timestamp_ = 0L;
+          bitField0_ = (bitField0_ & ~0x00000020);
+          return this;
+        }
+
+        public Builder clone() {
+          return create().mergeFrom(buildPartial());
+        }
+
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return com.hello.suripu.api.ble.MorpheusBle.internal_static_hello_MorpheusCommand_PillData_descriptor;
+        }
+
+        public com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData getDefaultInstanceForType() {
+          return com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.getDefaultInstance();
+        }
+
+        public com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData build() {
+          com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        public com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData buildPartial() {
+          com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData result = new com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData(this);
+          int from_bitField0_ = bitField0_;
+          int to_bitField0_ = 0;
+          if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+            to_bitField0_ |= 0x00000001;
+          }
+          result.deviceId_ = deviceId_;
+          if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+            to_bitField0_ |= 0x00000002;
+          }
+          result.batteryLevel_ = batteryLevel_;
+          if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+            to_bitField0_ |= 0x00000004;
+          }
+          result.uptime_ = uptime_;
+          if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+            to_bitField0_ |= 0x00000008;
+          }
+          result.motionDataEntrypted_ = motionDataEntrypted_;
+          if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+            to_bitField0_ |= 0x00000010;
+          }
+          result.firmwareVersion_ = firmwareVersion_;
+          if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+            to_bitField0_ |= 0x00000020;
+          }
+          result.timestamp_ = timestamp_;
+          result.bitField0_ = to_bitField0_;
+          onBuilt();
+          return result;
+        }
+
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData) {
+            return mergeFrom((com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData other) {
+          if (other == com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.getDefaultInstance()) return this;
+          if (other.hasDeviceId()) {
+            bitField0_ |= 0x00000001;
+            deviceId_ = other.deviceId_;
+            onChanged();
+          }
+          if (other.hasBatteryLevel()) {
+            setBatteryLevel(other.getBatteryLevel());
+          }
+          if (other.hasUptime()) {
+            setUptime(other.getUptime());
+          }
+          if (other.hasMotionDataEntrypted()) {
+            setMotionDataEntrypted(other.getMotionDataEntrypted());
+          }
+          if (other.hasFirmwareVersion()) {
+            setFirmwareVersion(other.getFirmwareVersion());
+          }
+          if (other.hasTimestamp()) {
+            setTimestamp(other.getTimestamp());
+          }
+          this.mergeUnknownFields(other.getUnknownFields());
+          return this;
+        }
+
+        public final boolean isInitialized() {
+          if (!hasDeviceId()) {
+            
+            return false;
+          }
+          if (!hasTimestamp()) {
+            
+            return false;
+          }
+          return true;
+        }
+
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData) e.getUnfinishedMessage();
+            throw e;
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+        private int bitField0_;
+
+        // required string deviceId = 1;
+        private java.lang.Object deviceId_ = "";
+        /**
+         * <code>required string deviceId = 1;</code>
+         */
+        public boolean hasDeviceId() {
+          return ((bitField0_ & 0x00000001) == 0x00000001);
+        }
+        /**
+         * <code>required string deviceId = 1;</code>
+         */
+        public java.lang.String getDeviceId() {
+          java.lang.Object ref = deviceId_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
+                .toStringUtf8();
+            deviceId_ = s;
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         * <code>required string deviceId = 1;</code>
+         */
+        public com.google.protobuf.ByteString
+            getDeviceIdBytes() {
+          java.lang.Object ref = deviceId_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
+            deviceId_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         * <code>required string deviceId = 1;</code>
+         */
+        public Builder setDeviceId(
+            java.lang.String value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+          deviceId_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>required string deviceId = 1;</code>
+         */
+        public Builder clearDeviceId() {
+          bitField0_ = (bitField0_ & ~0x00000001);
+          deviceId_ = getDefaultInstance().getDeviceId();
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>required string deviceId = 1;</code>
+         */
+        public Builder setDeviceIdBytes(
+            com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+          deviceId_ = value;
+          onChanged();
+          return this;
+        }
+
+        // optional int32 batteryLevel = 2;
+        private int batteryLevel_ ;
+        /**
+         * <code>optional int32 batteryLevel = 2;</code>
+         */
+        public boolean hasBatteryLevel() {
+          return ((bitField0_ & 0x00000002) == 0x00000002);
+        }
+        /**
+         * <code>optional int32 batteryLevel = 2;</code>
+         */
+        public int getBatteryLevel() {
+          return batteryLevel_;
+        }
+        /**
+         * <code>optional int32 batteryLevel = 2;</code>
+         */
+        public Builder setBatteryLevel(int value) {
+          bitField0_ |= 0x00000002;
+          batteryLevel_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int32 batteryLevel = 2;</code>
+         */
+        public Builder clearBatteryLevel() {
+          bitField0_ = (bitField0_ & ~0x00000002);
+          batteryLevel_ = 0;
+          onChanged();
+          return this;
+        }
+
+        // optional int32 uptime = 3;
+        private int uptime_ ;
+        /**
+         * <code>optional int32 uptime = 3;</code>
+         */
+        public boolean hasUptime() {
+          return ((bitField0_ & 0x00000004) == 0x00000004);
+        }
+        /**
+         * <code>optional int32 uptime = 3;</code>
+         */
+        public int getUptime() {
+          return uptime_;
+        }
+        /**
+         * <code>optional int32 uptime = 3;</code>
+         */
+        public Builder setUptime(int value) {
+          bitField0_ |= 0x00000004;
+          uptime_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int32 uptime = 3;</code>
+         */
+        public Builder clearUptime() {
+          bitField0_ = (bitField0_ & ~0x00000004);
+          uptime_ = 0;
+          onChanged();
+          return this;
+        }
+
+        // optional bytes motionDataEntrypted = 4;
+        private com.google.protobuf.ByteString motionDataEntrypted_ = com.google.protobuf.ByteString.EMPTY;
+        /**
+         * <code>optional bytes motionDataEntrypted = 4;</code>
+         */
+        public boolean hasMotionDataEntrypted() {
+          return ((bitField0_ & 0x00000008) == 0x00000008);
+        }
+        /**
+         * <code>optional bytes motionDataEntrypted = 4;</code>
+         */
+        public com.google.protobuf.ByteString getMotionDataEntrypted() {
+          return motionDataEntrypted_;
+        }
+        /**
+         * <code>optional bytes motionDataEntrypted = 4;</code>
+         */
+        public Builder setMotionDataEntrypted(com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+          motionDataEntrypted_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional bytes motionDataEntrypted = 4;</code>
+         */
+        public Builder clearMotionDataEntrypted() {
+          bitField0_ = (bitField0_ & ~0x00000008);
+          motionDataEntrypted_ = getDefaultInstance().getMotionDataEntrypted();
+          onChanged();
+          return this;
+        }
+
+        // optional int32 firmwareVersion = 5;
+        private int firmwareVersion_ ;
+        /**
+         * <code>optional int32 firmwareVersion = 5;</code>
+         */
+        public boolean hasFirmwareVersion() {
+          return ((bitField0_ & 0x00000010) == 0x00000010);
+        }
+        /**
+         * <code>optional int32 firmwareVersion = 5;</code>
+         */
+        public int getFirmwareVersion() {
+          return firmwareVersion_;
+        }
+        /**
+         * <code>optional int32 firmwareVersion = 5;</code>
+         */
+        public Builder setFirmwareVersion(int value) {
+          bitField0_ |= 0x00000010;
+          firmwareVersion_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int32 firmwareVersion = 5;</code>
+         */
+        public Builder clearFirmwareVersion() {
+          bitField0_ = (bitField0_ & ~0x00000010);
+          firmwareVersion_ = 0;
+          onChanged();
+          return this;
+        }
+
+        // required uint64 timestamp = 6;
+        private long timestamp_ ;
+        /**
+         * <code>required uint64 timestamp = 6;</code>
+         */
+        public boolean hasTimestamp() {
+          return ((bitField0_ & 0x00000020) == 0x00000020);
+        }
+        /**
+         * <code>required uint64 timestamp = 6;</code>
+         */
+        public long getTimestamp() {
+          return timestamp_;
+        }
+        /**
+         * <code>required uint64 timestamp = 6;</code>
+         */
+        public Builder setTimestamp(long value) {
+          bitField0_ |= 0x00000020;
+          timestamp_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>required uint64 timestamp = 6;</code>
+         */
+        public Builder clearTimestamp() {
+          bitField0_ = (bitField0_ & ~0x00000020);
+          timestamp_ = 0L;
+          onChanged();
+          return this;
+        }
+
+        // @@protoc_insertion_point(builder_scope:hello.MorpheusCommand.PillData)
+      }
+
+      static {
+        defaultInstance = new PillData(true);
+        defaultInstance.initFields();
+      }
+
+      // @@protoc_insertion_point(class_scope:hello.MorpheusCommand.PillData)
     }
 
     private int bitField0_;
@@ -1144,6 +3018,80 @@ public final class MorpheusBle {
       return firmwareVersion_;
     }
 
+    // repeated .hello.wifi_endpoint wifi_scan_result = 14;
+    public static final int WIFI_SCAN_RESULT_FIELD_NUMBER = 14;
+    private java.util.List<com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint> wifiScanResult_;
+    /**
+     * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+     */
+    public java.util.List<com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint> getWifiScanResultList() {
+      return wifiScanResult_;
+    }
+    /**
+     * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+     */
+    public java.util.List<? extends com.hello.suripu.api.ble.MorpheusBle.wifi_endpointOrBuilder> 
+        getWifiScanResultOrBuilderList() {
+      return wifiScanResult_;
+    }
+    /**
+     * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+     */
+    public int getWifiScanResultCount() {
+      return wifiScanResult_.size();
+    }
+    /**
+     * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+     */
+    public com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint getWifiScanResult(int index) {
+      return wifiScanResult_.get(index);
+    }
+    /**
+     * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+     */
+    public com.hello.suripu.api.ble.MorpheusBle.wifi_endpointOrBuilder getWifiScanResultOrBuilder(
+        int index) {
+      return wifiScanResult_.get(index);
+    }
+
+    // optional .hello.wifi_endpoint.sec_type security_type = 15;
+    public static final int SECURITY_TYPE_FIELD_NUMBER = 15;
+    private com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type securityType_;
+    /**
+     * <code>optional .hello.wifi_endpoint.sec_type security_type = 15;</code>
+     */
+    public boolean hasSecurityType() {
+      return ((bitField0_ & 0x00002000) == 0x00002000);
+    }
+    /**
+     * <code>optional .hello.wifi_endpoint.sec_type security_type = 15;</code>
+     */
+    public com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type getSecurityType() {
+      return securityType_;
+    }
+
+    // optional .hello.MorpheusCommand.PillData pillData = 16;
+    public static final int PILLDATA_FIELD_NUMBER = 16;
+    private com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData pillData_;
+    /**
+     * <code>optional .hello.MorpheusCommand.PillData pillData = 16;</code>
+     */
+    public boolean hasPillData() {
+      return ((bitField0_ & 0x00004000) == 0x00004000);
+    }
+    /**
+     * <code>optional .hello.MorpheusCommand.PillData pillData = 16;</code>
+     */
+    public com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData getPillData() {
+      return pillData_;
+    }
+    /**
+     * <code>optional .hello.MorpheusCommand.PillData pillData = 16;</code>
+     */
+    public com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillDataOrBuilder getPillDataOrBuilder() {
+      return pillData_;
+    }
+
     private void initFields() {
       version_ = 0;
       type_ = com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_SET_TIME;
@@ -1158,6 +3106,9 @@ public final class MorpheusBle {
       motionData_ = 0;
       motionDataEntrypted_ = com.google.protobuf.ByteString.EMPTY;
       firmwareVersion_ = 0;
+      wifiScanResult_ = java.util.Collections.emptyList();
+      securityType_ = com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
+      pillData_ = com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1171,6 +3122,18 @@ public final class MorpheusBle {
       if (!hasType()) {
         memoizedIsInitialized = 0;
         return false;
+      }
+      for (int i = 0; i < getWifiScanResultCount(); i++) {
+        if (!getWifiScanResult(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasPillData()) {
+        if (!getPillData().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
       }
       memoizedIsInitialized = 1;
       return true;
@@ -1217,6 +3180,15 @@ public final class MorpheusBle {
       }
       if (((bitField0_ & 0x00001000) == 0x00001000)) {
         output.writeInt32(13, firmwareVersion_);
+      }
+      for (int i = 0; i < wifiScanResult_.size(); i++) {
+        output.writeMessage(14, wifiScanResult_.get(i));
+      }
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+        output.writeEnum(15, securityType_.getNumber());
+      }
+      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+        output.writeMessage(16, pillData_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -1278,6 +3250,18 @@ public final class MorpheusBle {
       if (((bitField0_ & 0x00001000) == 0x00001000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(13, firmwareVersion_);
+      }
+      for (int i = 0; i < wifiScanResult_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(14, wifiScanResult_.get(i));
+      }
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(15, securityType_.getNumber());
+      }
+      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(16, pillData_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1387,6 +3371,8 @@ public final class MorpheusBle {
       }
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getWifiScanResultFieldBuilder();
+          getPillDataFieldBuilder();
         }
       }
       private static Builder create() {
@@ -1421,6 +3407,20 @@ public final class MorpheusBle {
         bitField0_ = (bitField0_ & ~0x00000800);
         firmwareVersion_ = 0;
         bitField0_ = (bitField0_ & ~0x00001000);
+        if (wifiScanResultBuilder_ == null) {
+          wifiScanResult_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00002000);
+        } else {
+          wifiScanResultBuilder_.clear();
+        }
+        securityType_ = com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
+        bitField0_ = (bitField0_ & ~0x00004000);
+        if (pillDataBuilder_ == null) {
+          pillData_ = com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.getDefaultInstance();
+        } else {
+          pillDataBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00008000);
         return this;
       }
 
@@ -1501,6 +3501,27 @@ public final class MorpheusBle {
           to_bitField0_ |= 0x00001000;
         }
         result.firmwareVersion_ = firmwareVersion_;
+        if (wifiScanResultBuilder_ == null) {
+          if (((bitField0_ & 0x00002000) == 0x00002000)) {
+            wifiScanResult_ = java.util.Collections.unmodifiableList(wifiScanResult_);
+            bitField0_ = (bitField0_ & ~0x00002000);
+          }
+          result.wifiScanResult_ = wifiScanResult_;
+        } else {
+          result.wifiScanResult_ = wifiScanResultBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00004000) == 0x00004000)) {
+          to_bitField0_ |= 0x00002000;
+        }
+        result.securityType_ = securityType_;
+        if (((from_bitField0_ & 0x00008000) == 0x00008000)) {
+          to_bitField0_ |= 0x00004000;
+        }
+        if (pillDataBuilder_ == null) {
+          result.pillData_ = pillData_;
+        } else {
+          result.pillData_ = pillDataBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1566,6 +3587,38 @@ public final class MorpheusBle {
         if (other.hasFirmwareVersion()) {
           setFirmwareVersion(other.getFirmwareVersion());
         }
+        if (wifiScanResultBuilder_ == null) {
+          if (!other.wifiScanResult_.isEmpty()) {
+            if (wifiScanResult_.isEmpty()) {
+              wifiScanResult_ = other.wifiScanResult_;
+              bitField0_ = (bitField0_ & ~0x00002000);
+            } else {
+              ensureWifiScanResultIsMutable();
+              wifiScanResult_.addAll(other.wifiScanResult_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.wifiScanResult_.isEmpty()) {
+            if (wifiScanResultBuilder_.isEmpty()) {
+              wifiScanResultBuilder_.dispose();
+              wifiScanResultBuilder_ = null;
+              wifiScanResult_ = other.wifiScanResult_;
+              bitField0_ = (bitField0_ & ~0x00002000);
+              wifiScanResultBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getWifiScanResultFieldBuilder() : null;
+            } else {
+              wifiScanResultBuilder_.addAllMessages(other.wifiScanResult_);
+            }
+          }
+        }
+        if (other.hasSecurityType()) {
+          setSecurityType(other.getSecurityType());
+        }
+        if (other.hasPillData()) {
+          mergePillData(other.getPillData());
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -1578,6 +3631,18 @@ public final class MorpheusBle {
         if (!hasType()) {
           
           return false;
+        }
+        for (int i = 0; i < getWifiScanResultCount(); i++) {
+          if (!getWifiScanResult(i).isInitialized()) {
+            
+            return false;
+          }
+        }
+        if (hasPillData()) {
+          if (!getPillData().isInitialized()) {
+            
+            return false;
+          }
         }
         return true;
       }
@@ -2284,6 +4349,399 @@ public final class MorpheusBle {
         return this;
       }
 
+      // repeated .hello.wifi_endpoint wifi_scan_result = 14;
+      private java.util.List<com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint> wifiScanResult_ =
+        java.util.Collections.emptyList();
+      private void ensureWifiScanResultIsMutable() {
+        if (!((bitField0_ & 0x00002000) == 0x00002000)) {
+          wifiScanResult_ = new java.util.ArrayList<com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint>(wifiScanResult_);
+          bitField0_ |= 0x00002000;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint, com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.Builder, com.hello.suripu.api.ble.MorpheusBle.wifi_endpointOrBuilder> wifiScanResultBuilder_;
+
+      /**
+       * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+       */
+      public java.util.List<com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint> getWifiScanResultList() {
+        if (wifiScanResultBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(wifiScanResult_);
+        } else {
+          return wifiScanResultBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+       */
+      public int getWifiScanResultCount() {
+        if (wifiScanResultBuilder_ == null) {
+          return wifiScanResult_.size();
+        } else {
+          return wifiScanResultBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+       */
+      public com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint getWifiScanResult(int index) {
+        if (wifiScanResultBuilder_ == null) {
+          return wifiScanResult_.get(index);
+        } else {
+          return wifiScanResultBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+       */
+      public Builder setWifiScanResult(
+          int index, com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint value) {
+        if (wifiScanResultBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureWifiScanResultIsMutable();
+          wifiScanResult_.set(index, value);
+          onChanged();
+        } else {
+          wifiScanResultBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+       */
+      public Builder setWifiScanResult(
+          int index, com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.Builder builderForValue) {
+        if (wifiScanResultBuilder_ == null) {
+          ensureWifiScanResultIsMutable();
+          wifiScanResult_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          wifiScanResultBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+       */
+      public Builder addWifiScanResult(com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint value) {
+        if (wifiScanResultBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureWifiScanResultIsMutable();
+          wifiScanResult_.add(value);
+          onChanged();
+        } else {
+          wifiScanResultBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+       */
+      public Builder addWifiScanResult(
+          int index, com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint value) {
+        if (wifiScanResultBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureWifiScanResultIsMutable();
+          wifiScanResult_.add(index, value);
+          onChanged();
+        } else {
+          wifiScanResultBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+       */
+      public Builder addWifiScanResult(
+          com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.Builder builderForValue) {
+        if (wifiScanResultBuilder_ == null) {
+          ensureWifiScanResultIsMutable();
+          wifiScanResult_.add(builderForValue.build());
+          onChanged();
+        } else {
+          wifiScanResultBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+       */
+      public Builder addWifiScanResult(
+          int index, com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.Builder builderForValue) {
+        if (wifiScanResultBuilder_ == null) {
+          ensureWifiScanResultIsMutable();
+          wifiScanResult_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          wifiScanResultBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+       */
+      public Builder addAllWifiScanResult(
+          java.lang.Iterable<? extends com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint> values) {
+        if (wifiScanResultBuilder_ == null) {
+          ensureWifiScanResultIsMutable();
+          super.addAll(values, wifiScanResult_);
+          onChanged();
+        } else {
+          wifiScanResultBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+       */
+      public Builder clearWifiScanResult() {
+        if (wifiScanResultBuilder_ == null) {
+          wifiScanResult_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00002000);
+          onChanged();
+        } else {
+          wifiScanResultBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+       */
+      public Builder removeWifiScanResult(int index) {
+        if (wifiScanResultBuilder_ == null) {
+          ensureWifiScanResultIsMutable();
+          wifiScanResult_.remove(index);
+          onChanged();
+        } else {
+          wifiScanResultBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+       */
+      public com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.Builder getWifiScanResultBuilder(
+          int index) {
+        return getWifiScanResultFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+       */
+      public com.hello.suripu.api.ble.MorpheusBle.wifi_endpointOrBuilder getWifiScanResultOrBuilder(
+          int index) {
+        if (wifiScanResultBuilder_ == null) {
+          return wifiScanResult_.get(index);  } else {
+          return wifiScanResultBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+       */
+      public java.util.List<? extends com.hello.suripu.api.ble.MorpheusBle.wifi_endpointOrBuilder> 
+           getWifiScanResultOrBuilderList() {
+        if (wifiScanResultBuilder_ != null) {
+          return wifiScanResultBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(wifiScanResult_);
+        }
+      }
+      /**
+       * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+       */
+      public com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.Builder addWifiScanResultBuilder() {
+        return getWifiScanResultFieldBuilder().addBuilder(
+            com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+       */
+      public com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.Builder addWifiScanResultBuilder(
+          int index) {
+        return getWifiScanResultFieldBuilder().addBuilder(
+            index, com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.wifi_endpoint wifi_scan_result = 14;</code>
+       */
+      public java.util.List<com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.Builder> 
+           getWifiScanResultBuilderList() {
+        return getWifiScanResultFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint, com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.Builder, com.hello.suripu.api.ble.MorpheusBle.wifi_endpointOrBuilder> 
+          getWifiScanResultFieldBuilder() {
+        if (wifiScanResultBuilder_ == null) {
+          wifiScanResultBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint, com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.Builder, com.hello.suripu.api.ble.MorpheusBle.wifi_endpointOrBuilder>(
+                  wifiScanResult_,
+                  ((bitField0_ & 0x00002000) == 0x00002000),
+                  getParentForChildren(),
+                  isClean());
+          wifiScanResult_ = null;
+        }
+        return wifiScanResultBuilder_;
+      }
+
+      // optional .hello.wifi_endpoint.sec_type security_type = 15;
+      private com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type securityType_ = com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
+      /**
+       * <code>optional .hello.wifi_endpoint.sec_type security_type = 15;</code>
+       */
+      public boolean hasSecurityType() {
+        return ((bitField0_ & 0x00004000) == 0x00004000);
+      }
+      /**
+       * <code>optional .hello.wifi_endpoint.sec_type security_type = 15;</code>
+       */
+      public com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type getSecurityType() {
+        return securityType_;
+      }
+      /**
+       * <code>optional .hello.wifi_endpoint.sec_type security_type = 15;</code>
+       */
+      public Builder setSecurityType(com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00004000;
+        securityType_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .hello.wifi_endpoint.sec_type security_type = 15;</code>
+       */
+      public Builder clearSecurityType() {
+        bitField0_ = (bitField0_ & ~0x00004000);
+        securityType_ = com.hello.suripu.api.ble.MorpheusBle.wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
+        onChanged();
+        return this;
+      }
+
+      // optional .hello.MorpheusCommand.PillData pillData = 16;
+      private com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData pillData_ = com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData, com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.Builder, com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillDataOrBuilder> pillDataBuilder_;
+      /**
+       * <code>optional .hello.MorpheusCommand.PillData pillData = 16;</code>
+       */
+      public boolean hasPillData() {
+        return ((bitField0_ & 0x00008000) == 0x00008000);
+      }
+      /**
+       * <code>optional .hello.MorpheusCommand.PillData pillData = 16;</code>
+       */
+      public com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData getPillData() {
+        if (pillDataBuilder_ == null) {
+          return pillData_;
+        } else {
+          return pillDataBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .hello.MorpheusCommand.PillData pillData = 16;</code>
+       */
+      public Builder setPillData(com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData value) {
+        if (pillDataBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          pillData_ = value;
+          onChanged();
+        } else {
+          pillDataBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00008000;
+        return this;
+      }
+      /**
+       * <code>optional .hello.MorpheusCommand.PillData pillData = 16;</code>
+       */
+      public Builder setPillData(
+          com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.Builder builderForValue) {
+        if (pillDataBuilder_ == null) {
+          pillData_ = builderForValue.build();
+          onChanged();
+        } else {
+          pillDataBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00008000;
+        return this;
+      }
+      /**
+       * <code>optional .hello.MorpheusCommand.PillData pillData = 16;</code>
+       */
+      public Builder mergePillData(com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData value) {
+        if (pillDataBuilder_ == null) {
+          if (((bitField0_ & 0x00008000) == 0x00008000) &&
+              pillData_ != com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.getDefaultInstance()) {
+            pillData_ =
+              com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.newBuilder(pillData_).mergeFrom(value).buildPartial();
+          } else {
+            pillData_ = value;
+          }
+          onChanged();
+        } else {
+          pillDataBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00008000;
+        return this;
+      }
+      /**
+       * <code>optional .hello.MorpheusCommand.PillData pillData = 16;</code>
+       */
+      public Builder clearPillData() {
+        if (pillDataBuilder_ == null) {
+          pillData_ = com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.getDefaultInstance();
+          onChanged();
+        } else {
+          pillDataBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00008000);
+        return this;
+      }
+      /**
+       * <code>optional .hello.MorpheusCommand.PillData pillData = 16;</code>
+       */
+      public com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.Builder getPillDataBuilder() {
+        bitField0_ |= 0x00008000;
+        onChanged();
+        return getPillDataFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .hello.MorpheusCommand.PillData pillData = 16;</code>
+       */
+      public com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillDataOrBuilder getPillDataOrBuilder() {
+        if (pillDataBuilder_ != null) {
+          return pillDataBuilder_.getMessageOrBuilder();
+        } else {
+          return pillData_;
+        }
+      }
+      /**
+       * <code>optional .hello.MorpheusCommand.PillData pillData = 16;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData, com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.Builder, com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillDataOrBuilder> 
+          getPillDataFieldBuilder() {
+        if (pillDataBuilder_ == null) {
+          pillDataBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData, com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.Builder, com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillDataOrBuilder>(
+                  pillData_,
+                  getParentForChildren(),
+                  isClean());
+          pillData_ = null;
+        }
+        return pillDataBuilder_;
+      }
+
       // @@protoc_insertion_point(builder_scope:hello.MorpheusCommand)
     }
 
@@ -2295,11 +4753,879 @@ public final class MorpheusBle {
     // @@protoc_insertion_point(class_scope:hello.MorpheusCommand)
   }
 
+  public interface BatchedPillDataOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // repeated .hello.MorpheusCommand.PillData pills = 1;
+    /**
+     * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+     */
+    java.util.List<com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData> 
+        getPillsList();
+    /**
+     * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+     */
+    com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData getPills(int index);
+    /**
+     * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+     */
+    int getPillsCount();
+    /**
+     * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+     */
+    java.util.List<? extends com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillDataOrBuilder> 
+        getPillsOrBuilderList();
+    /**
+     * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+     */
+    com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillDataOrBuilder getPillsOrBuilder(
+        int index);
+
+    // required string deviceId = 2;
+    /**
+     * <code>required string deviceId = 2;</code>
+     */
+    boolean hasDeviceId();
+    /**
+     * <code>required string deviceId = 2;</code>
+     */
+    java.lang.String getDeviceId();
+    /**
+     * <code>required string deviceId = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getDeviceIdBytes();
+  }
+  /**
+   * Protobuf type {@code hello.BatchedPillData}
+   */
+  public static final class BatchedPillData extends
+      com.google.protobuf.GeneratedMessage
+      implements BatchedPillDataOrBuilder {
+    // Use BatchedPillData.newBuilder() to construct.
+    private BatchedPillData(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private BatchedPillData(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final BatchedPillData defaultInstance;
+    public static BatchedPillData getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public BatchedPillData getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private BatchedPillData(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                pills_ = new java.util.ArrayList<com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              pills_.add(input.readMessage(com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.PARSER, extensionRegistry));
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000001;
+              deviceId_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          pills_ = java.util.Collections.unmodifiableList(pills_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.suripu.api.ble.MorpheusBle.internal_static_hello_BatchedPillData_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.suripu.api.ble.MorpheusBle.internal_static_hello_BatchedPillData_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.suripu.api.ble.MorpheusBle.BatchedPillData.class, com.hello.suripu.api.ble.MorpheusBle.BatchedPillData.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<BatchedPillData> PARSER =
+        new com.google.protobuf.AbstractParser<BatchedPillData>() {
+      public BatchedPillData parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new BatchedPillData(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<BatchedPillData> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // repeated .hello.MorpheusCommand.PillData pills = 1;
+    public static final int PILLS_FIELD_NUMBER = 1;
+    private java.util.List<com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData> pills_;
+    /**
+     * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+     */
+    public java.util.List<com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData> getPillsList() {
+      return pills_;
+    }
+    /**
+     * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+     */
+    public java.util.List<? extends com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillDataOrBuilder> 
+        getPillsOrBuilderList() {
+      return pills_;
+    }
+    /**
+     * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+     */
+    public int getPillsCount() {
+      return pills_.size();
+    }
+    /**
+     * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+     */
+    public com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData getPills(int index) {
+      return pills_.get(index);
+    }
+    /**
+     * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+     */
+    public com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillDataOrBuilder getPillsOrBuilder(
+        int index) {
+      return pills_.get(index);
+    }
+
+    // required string deviceId = 2;
+    public static final int DEVICEID_FIELD_NUMBER = 2;
+    private java.lang.Object deviceId_;
+    /**
+     * <code>required string deviceId = 2;</code>
+     */
+    public boolean hasDeviceId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required string deviceId = 2;</code>
+     */
+    public java.lang.String getDeviceId() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          deviceId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string deviceId = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getDeviceIdBytes() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        deviceId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private void initFields() {
+      pills_ = java.util.Collections.emptyList();
+      deviceId_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      if (!hasDeviceId()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      for (int i = 0; i < getPillsCount(); i++) {
+        if (!getPills(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      for (int i = 0; i < pills_.size(); i++) {
+        output.writeMessage(1, pills_.get(i));
+      }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(2, getDeviceIdBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (int i = 0; i < pills_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, pills_.get(i));
+      }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getDeviceIdBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.suripu.api.ble.MorpheusBle.BatchedPillData parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.ble.MorpheusBle.BatchedPillData parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.ble.MorpheusBle.BatchedPillData parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.ble.MorpheusBle.BatchedPillData parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.ble.MorpheusBle.BatchedPillData parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.ble.MorpheusBle.BatchedPillData parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.ble.MorpheusBle.BatchedPillData parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.suripu.api.ble.MorpheusBle.BatchedPillData parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.ble.MorpheusBle.BatchedPillData parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.ble.MorpheusBle.BatchedPillData parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.suripu.api.ble.MorpheusBle.BatchedPillData prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code hello.BatchedPillData}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.ble.MorpheusBle.BatchedPillDataOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.ble.MorpheusBle.internal_static_hello_BatchedPillData_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.ble.MorpheusBle.internal_static_hello_BatchedPillData_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.ble.MorpheusBle.BatchedPillData.class, com.hello.suripu.api.ble.MorpheusBle.BatchedPillData.Builder.class);
+      }
+
+      // Construct using com.hello.suripu.api.ble.MorpheusBle.BatchedPillData.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getPillsFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        if (pillsBuilder_ == null) {
+          pills_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          pillsBuilder_.clear();
+        }
+        deviceId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.suripu.api.ble.MorpheusBle.internal_static_hello_BatchedPillData_descriptor;
+      }
+
+      public com.hello.suripu.api.ble.MorpheusBle.BatchedPillData getDefaultInstanceForType() {
+        return com.hello.suripu.api.ble.MorpheusBle.BatchedPillData.getDefaultInstance();
+      }
+
+      public com.hello.suripu.api.ble.MorpheusBle.BatchedPillData build() {
+        com.hello.suripu.api.ble.MorpheusBle.BatchedPillData result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.suripu.api.ble.MorpheusBle.BatchedPillData buildPartial() {
+        com.hello.suripu.api.ble.MorpheusBle.BatchedPillData result = new com.hello.suripu.api.ble.MorpheusBle.BatchedPillData(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (pillsBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+            pills_ = java.util.Collections.unmodifiableList(pills_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.pills_ = pills_;
+        } else {
+          result.pills_ = pillsBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.deviceId_ = deviceId_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.suripu.api.ble.MorpheusBle.BatchedPillData) {
+          return mergeFrom((com.hello.suripu.api.ble.MorpheusBle.BatchedPillData)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.suripu.api.ble.MorpheusBle.BatchedPillData other) {
+        if (other == com.hello.suripu.api.ble.MorpheusBle.BatchedPillData.getDefaultInstance()) return this;
+        if (pillsBuilder_ == null) {
+          if (!other.pills_.isEmpty()) {
+            if (pills_.isEmpty()) {
+              pills_ = other.pills_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensurePillsIsMutable();
+              pills_.addAll(other.pills_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.pills_.isEmpty()) {
+            if (pillsBuilder_.isEmpty()) {
+              pillsBuilder_.dispose();
+              pillsBuilder_ = null;
+              pills_ = other.pills_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              pillsBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getPillsFieldBuilder() : null;
+            } else {
+              pillsBuilder_.addAllMessages(other.pills_);
+            }
+          }
+        }
+        if (other.hasDeviceId()) {
+          bitField0_ |= 0x00000002;
+          deviceId_ = other.deviceId_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasDeviceId()) {
+          
+          return false;
+        }
+        for (int i = 0; i < getPillsCount(); i++) {
+          if (!getPills(i).isInitialized()) {
+            
+            return false;
+          }
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.suripu.api.ble.MorpheusBle.BatchedPillData parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.suripu.api.ble.MorpheusBle.BatchedPillData) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // repeated .hello.MorpheusCommand.PillData pills = 1;
+      private java.util.List<com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData> pills_ =
+        java.util.Collections.emptyList();
+      private void ensurePillsIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          pills_ = new java.util.ArrayList<com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData>(pills_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData, com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.Builder, com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillDataOrBuilder> pillsBuilder_;
+
+      /**
+       * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+       */
+      public java.util.List<com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData> getPillsList() {
+        if (pillsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(pills_);
+        } else {
+          return pillsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+       */
+      public int getPillsCount() {
+        if (pillsBuilder_ == null) {
+          return pills_.size();
+        } else {
+          return pillsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+       */
+      public com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData getPills(int index) {
+        if (pillsBuilder_ == null) {
+          return pills_.get(index);
+        } else {
+          return pillsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+       */
+      public Builder setPills(
+          int index, com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData value) {
+        if (pillsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePillsIsMutable();
+          pills_.set(index, value);
+          onChanged();
+        } else {
+          pillsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+       */
+      public Builder setPills(
+          int index, com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.Builder builderForValue) {
+        if (pillsBuilder_ == null) {
+          ensurePillsIsMutable();
+          pills_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          pillsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+       */
+      public Builder addPills(com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData value) {
+        if (pillsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePillsIsMutable();
+          pills_.add(value);
+          onChanged();
+        } else {
+          pillsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+       */
+      public Builder addPills(
+          int index, com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData value) {
+        if (pillsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePillsIsMutable();
+          pills_.add(index, value);
+          onChanged();
+        } else {
+          pillsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+       */
+      public Builder addPills(
+          com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.Builder builderForValue) {
+        if (pillsBuilder_ == null) {
+          ensurePillsIsMutable();
+          pills_.add(builderForValue.build());
+          onChanged();
+        } else {
+          pillsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+       */
+      public Builder addPills(
+          int index, com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.Builder builderForValue) {
+        if (pillsBuilder_ == null) {
+          ensurePillsIsMutable();
+          pills_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          pillsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+       */
+      public Builder addAllPills(
+          java.lang.Iterable<? extends com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData> values) {
+        if (pillsBuilder_ == null) {
+          ensurePillsIsMutable();
+          super.addAll(values, pills_);
+          onChanged();
+        } else {
+          pillsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+       */
+      public Builder clearPills() {
+        if (pillsBuilder_ == null) {
+          pills_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          pillsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+       */
+      public Builder removePills(int index) {
+        if (pillsBuilder_ == null) {
+          ensurePillsIsMutable();
+          pills_.remove(index);
+          onChanged();
+        } else {
+          pillsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+       */
+      public com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.Builder getPillsBuilder(
+          int index) {
+        return getPillsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+       */
+      public com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillDataOrBuilder getPillsOrBuilder(
+          int index) {
+        if (pillsBuilder_ == null) {
+          return pills_.get(index);  } else {
+          return pillsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+       */
+      public java.util.List<? extends com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillDataOrBuilder> 
+           getPillsOrBuilderList() {
+        if (pillsBuilder_ != null) {
+          return pillsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(pills_);
+        }
+      }
+      /**
+       * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+       */
+      public com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.Builder addPillsBuilder() {
+        return getPillsFieldBuilder().addBuilder(
+            com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+       */
+      public com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.Builder addPillsBuilder(
+          int index) {
+        return getPillsFieldBuilder().addBuilder(
+            index, com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.MorpheusCommand.PillData pills = 1;</code>
+       */
+      public java.util.List<com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.Builder> 
+           getPillsBuilderList() {
+        return getPillsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData, com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.Builder, com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillDataOrBuilder> 
+          getPillsFieldBuilder() {
+        if (pillsBuilder_ == null) {
+          pillsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData, com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillData.Builder, com.hello.suripu.api.ble.MorpheusBle.MorpheusCommand.PillDataOrBuilder>(
+                  pills_,
+                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  getParentForChildren(),
+                  isClean());
+          pills_ = null;
+        }
+        return pillsBuilder_;
+      }
+
+      // required string deviceId = 2;
+      private java.lang.Object deviceId_ = "";
+      /**
+       * <code>required string deviceId = 2;</code>
+       */
+      public boolean hasDeviceId() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required string deviceId = 2;</code>
+       */
+      public java.lang.String getDeviceId() {
+        java.lang.Object ref = deviceId_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          deviceId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string deviceId = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getDeviceIdBytes() {
+        java.lang.Object ref = deviceId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          deviceId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string deviceId = 2;</code>
+       */
+      public Builder setDeviceId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        deviceId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string deviceId = 2;</code>
+       */
+      public Builder clearDeviceId() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        deviceId_ = getDefaultInstance().getDeviceId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string deviceId = 2;</code>
+       */
+      public Builder setDeviceIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        deviceId_ = value;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:hello.BatchedPillData)
+    }
+
+    static {
+      defaultInstance = new BatchedPillData(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:hello.BatchedPillData)
+  }
+
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_hello_wifi_endpoint_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_hello_wifi_endpoint_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_MorpheusCommand_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_MorpheusCommand_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_hello_MorpheusCommand_PillData_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_hello_MorpheusCommand_PillData_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_hello_BatchedPillData_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_hello_BatchedPillData_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -2310,51 +5636,87 @@ public final class MorpheusBle {
   static {
     java.lang.String[] descriptorData = {
       "\n7suripu-api/src/main/resources/protos/m" +
-      "orpheus_ble.proto\022\005hello\"\246\010\n\017MorpheusCom" +
-      "mand\022\017\n\007version\030\001 \002(\005\0220\n\004type\030\002 \002(\0162\".he" +
-      "llo.MorpheusCommand.CommandType\022\020\n\010devic" +
-      "eId\030\003 \001(\t\022\021\n\taccountId\030\004 \001(\t\022\037\n\005error\030\005 " +
-      "\001(\0162\020.hello.ErrorType\022\020\n\010wifiName\030\006 \001(\t\022" +
-      "\020\n\010wifiSSID\030\007 \001(\t\022\024\n\014wifiPassword\030\010 \001(\t\022" +
-      "\024\n\014batteryLevel\030\t \001(\005\022\016\n\006uptime\030\n \001(\005\022\022\n" +
-      "\nmotionData\030\013 \001(\005\022\033\n\023motionDataEntrypted" +
-      "\030\014 \001(\014\022\027\n\017firmwareVersion\030\r \001(\005\"\337\005\n\013Comm",
-      "andType\022\035\n\031MORPHEUS_COMMAND_SET_TIME\020\000\022\035" +
-      "\n\031MORPHEUS_COMMAND_GET_TIME\020\001\022&\n\"MORPHEU" +
-      "S_COMMAND_SET_WIFI_ENDPOINT\020\002\022&\n\"MORPHEU" +
-      "S_COMMAND_GET_WIFI_ENDPOINT\020\003\022\037\n\033MORPHEU" +
-      "S_COMMAND_SET_ALARMS\020\004\022\037\n\033MORPHEUS_COMMA" +
-      "ND_GET_ALARMS\020\005\022+\n\'MORPHEUS_COMMAND_SWIT" +
-      "CH_TO_PAIRING_MODE\020\006\022*\n&MORPHEUS_COMMAND" +
-      "_SWITCH_TO_NORMAL_MODE\020\007\022#\n\037MORPHEUS_COM" +
-      "MAND_START_WIFISCAN\020\010\022\"\n\036MORPHEUS_COMMAN" +
-      "D_STOP_WIFISCAN\020\t\022\"\n\036MORPHEUS_COMMAND_GE",
-      "T_DEVICE_ID\020\n\022(\n$MORPHEUS_COMMAND_EREASE" +
-      "_PAIRED_PHONE\020\013\022\036\n\032MORPHEUS_COMMAND_PAIR" +
-      "_PILL\020\014\022\032\n\026MORPHEUS_COMMAND_ERROR\020\r\022\037\n\033M" +
-      "ORPHEUS_COMMAND_PAIR_SENSE\020\016\022 \n\034MORPHEUS" +
-      "_COMMAND_UNPAIR_PILL\020\017\022\'\n#MORPHEUS_COMMA" +
-      "ND_MORPHEUS_DFU_BEGIN\020\020\022\036\n\032MORPHEUS_COMM" +
-      "AND_PILL_DATA\020\021\022#\n\037MORPHEUS_COMMAND_PILL" +
-      "_HEARTBEAT\020\022\022#\n\037MORPHEUS_COMMAND_PILL_DF" +
-      "U_BEGIN\020\023*\257\001\n\tErrorType\022\014\n\010TIME_OUT\020\000\022\021\n" +
-      "\rNETWORK_ERROR\020\001\022\031\n\025DEVICE_ALREADY_PAIRE",
-      "D\020\002\022\027\n\023INTERNAL_DATA_ERROR\020\003\022\030\n\024DEVICE_D" +
-      "ATABASE_FULL\020\004\022\024\n\020DEVICE_NO_MEMORY\020\005\022\035\n\031" +
-      "INTERNAL_OPERATION_FAILED\020\006B\032\n\030com.hello" +
-      ".suripu.api.ble"
+      "orpheus_ble.proto\022\005hello\"\346\001\n\rwifi_endpoi" +
+      "nt\022\014\n\004ssid\030\001 \002(\t\022\r\n\005bssid\030\002 \001(\014\022\014\n\004rssi\030" +
+      "\004 \002(\005\0224\n\rsecurity_type\030\005 \002(\0162\035.hello.wif" +
+      "i_endpoint.sec_type\"t\n\010sec_type\022\031\n\025SL_SC" +
+      "AN_SEC_TYPE_OPEN\020\000\022\030\n\024SL_SCAN_SEC_TYPE_W" +
+      "EP\020\001\022\030\n\024SL_SCAN_SEC_TYPE_WPA\020\002\022\031\n\025SL_SCA" +
+      "N_SEC_TYPE_WPA2\020\003\"\361\n\n\017MorpheusCommand\022\017\n" +
+      "\007version\030\001 \002(\005\0220\n\004type\030\002 \002(\0162\".hello.Mor" +
+      "pheusCommand.CommandType\022\020\n\010deviceId\030\003 \001",
+      "(\t\022\021\n\taccountId\030\004 \001(\t\022\037\n\005error\030\005 \001(\0162\020.h" +
+      "ello.ErrorType\022\020\n\010wifiName\030\006 \001(\t\022\020\n\010wifi" +
+      "SSID\030\007 \001(\t\022\024\n\014wifiPassword\030\010 \001(\t\022\024\n\014batt" +
+      "eryLevel\030\t \001(\005\022\016\n\006uptime\030\n \001(\005\022\022\n\nmotion" +
+      "Data\030\013 \001(\005\022\033\n\023motionDataEntrypted\030\014 \001(\014\022" +
+      "\027\n\017firmwareVersion\030\r \001(\005\022.\n\020wifi_scan_re" +
+      "sult\030\016 \003(\0132\024.hello.wifi_endpoint\0224\n\rsecu" +
+      "rity_type\030\017 \001(\0162\035.hello.wifi_endpoint.se" +
+      "c_type\0221\n\010pillData\030\020 \001(\0132\037.hello.Morpheu" +
+      "sCommand.PillData\032\213\001\n\010PillData\022\020\n\010device",
+      "Id\030\001 \002(\t\022\024\n\014batteryLevel\030\002 \001(\005\022\016\n\006uptime" +
+      "\030\003 \001(\005\022\033\n\023motionDataEntrypted\030\004 \001(\014\022\027\n\017f" +
+      "irmwareVersion\030\005 \001(\005\022\021\n\ttimestamp\030\006 \002(\004\"" +
+      "\203\006\n\013CommandType\022\035\n\031MORPHEUS_COMMAND_SET_" +
+      "TIME\020\000\022\035\n\031MORPHEUS_COMMAND_GET_TIME\020\001\022&\n" +
+      "\"MORPHEUS_COMMAND_SET_WIFI_ENDPOINT\020\002\022&\n" +
+      "\"MORPHEUS_COMMAND_GET_WIFI_ENDPOINT\020\003\022\037\n" +
+      "\033MORPHEUS_COMMAND_SET_ALARMS\020\004\022\037\n\033MORPHE" +
+      "US_COMMAND_GET_ALARMS\020\005\022+\n\'MORPHEUS_COMM" +
+      "AND_SWITCH_TO_PAIRING_MODE\020\006\022*\n&MORPHEUS",
+      "_COMMAND_SWITCH_TO_NORMAL_MODE\020\007\022#\n\037MORP" +
+      "HEUS_COMMAND_START_WIFISCAN\020\010\022\"\n\036MORPHEU" +
+      "S_COMMAND_STOP_WIFISCAN\020\t\022\"\n\036MORPHEUS_CO" +
+      "MMAND_GET_DEVICE_ID\020\n\022(\n$MORPHEUS_COMMAN" +
+      "D_EREASE_PAIRED_PHONE\020\013\022\036\n\032MORPHEUS_COMM" +
+      "AND_PAIR_PILL\020\014\022\032\n\026MORPHEUS_COMMAND_ERRO" +
+      "R\020\r\022\037\n\033MORPHEUS_COMMAND_PAIR_SENSE\020\016\022 \n\034" +
+      "MORPHEUS_COMMAND_UNPAIR_PILL\020\017\022\'\n#MORPHE" +
+      "US_COMMAND_MORPHEUS_DFU_BEGIN\020\020\022\036\n\032MORPH" +
+      "EUS_COMMAND_PILL_DATA\020\021\022#\n\037MORPHEUS_COMM",
+      "AND_PILL_HEARTBEAT\020\022\022#\n\037MORPHEUS_COMMAND" +
+      "_PILL_DFU_BEGIN\020\023\022\"\n\036MORPHEUS_COMMAND_FA" +
+      "CTORY_RESET\020\024\"S\n\017BatchedPillData\022.\n\005pill" +
+      "s\030\001 \003(\0132\037.hello.MorpheusCommand.PillData" +
+      "\022\020\n\010deviceId\030\002 \002(\t*\373\001\n\tErrorType\022\014\n\010TIME" +
+      "_OUT\020\000\022\021\n\rNETWORK_ERROR\020\001\022\031\n\025DEVICE_ALRE" +
+      "ADY_PAIRED\020\002\022\027\n\023INTERNAL_DATA_ERROR\020\003\022\030\n" +
+      "\024DEVICE_DATABASE_FULL\020\004\022\024\n\020DEVICE_NO_MEM" +
+      "ORY\020\005\022\035\n\031INTERNAL_OPERATION_FAILED\020\006\022\030\n\024" +
+      "NO_ENDPOINT_IN_RANGE\020\007\022\031\n\025WLAN_CONNECTIO",
+      "N_ERROR\020\010\022\025\n\021FAIL_TO_OBTAIN_IP\020\tB\032\n\030com." +
+      "hello.suripu.api.ble"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
         public com.google.protobuf.ExtensionRegistry assignDescriptors(
             com.google.protobuf.Descriptors.FileDescriptor root) {
           descriptor = root;
-          internal_static_hello_MorpheusCommand_descriptor =
+          internal_static_hello_wifi_endpoint_descriptor =
             getDescriptor().getMessageTypes().get(0);
+          internal_static_hello_wifi_endpoint_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_wifi_endpoint_descriptor,
+              new java.lang.String[] { "Ssid", "Bssid", "Rssi", "SecurityType", });
+          internal_static_hello_MorpheusCommand_descriptor =
+            getDescriptor().getMessageTypes().get(1);
           internal_static_hello_MorpheusCommand_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_MorpheusCommand_descriptor,
-              new java.lang.String[] { "Version", "Type", "DeviceId", "AccountId", "Error", "WifiName", "WifiSSID", "WifiPassword", "BatteryLevel", "Uptime", "MotionData", "MotionDataEntrypted", "FirmwareVersion", });
+              new java.lang.String[] { "Version", "Type", "DeviceId", "AccountId", "Error", "WifiName", "WifiSSID", "WifiPassword", "BatteryLevel", "Uptime", "MotionData", "MotionDataEntrypted", "FirmwareVersion", "WifiScanResult", "SecurityType", "PillData", });
+          internal_static_hello_MorpheusCommand_PillData_descriptor =
+            internal_static_hello_MorpheusCommand_descriptor.getNestedTypes().get(0);
+          internal_static_hello_MorpheusCommand_PillData_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_MorpheusCommand_PillData_descriptor,
+              new java.lang.String[] { "DeviceId", "BatteryLevel", "Uptime", "MotionDataEntrypted", "FirmwareVersion", "Timestamp", });
+          internal_static_hello_BatchedPillData_descriptor =
+            getDescriptor().getMessageTypes().get(2);
+          internal_static_hello_BatchedPillData_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_BatchedPillData_descriptor,
+              new java.lang.String[] { "Pills", "DeviceId", });
           return null;
         }
       };

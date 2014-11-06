@@ -7,6 +7,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.protobuf.TextFormat;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
+import com.hello.suripu.api.ble.MorpheusBle;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -417,6 +418,121 @@ public class ReceiveResource {
         LOGGER.debug("Len pb = {}", syncResponse.toByteArray().length);
 
         final Optional<byte[]> signedResponse = SignedMessage.sign(syncResponse.toByteArray(), keyBytes);
+        if(!signedResponse.isPresent()) {
+            LOGGER.error("Failed signing message");
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity((debug) ? "Failed signing message" : "server error")
+                    .type(MediaType.TEXT_PLAIN_TYPE).build()
+            );
+        }
+
+        return signedResponse.get();
+    }
+
+
+
+    @POST
+    @Path("/pill/pb2")
+    @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Timed
+    public byte[] onPillBatchProtobufReceived(final byte[] body) {
+        final SignedMessage signedMessage = SignedMessage.parse(body);
+        MorpheusBle.BatchedPillData batchPilldata = null;
+
+        try {
+            batchPilldata = MorpheusBle.BatchedPillData.parseFrom(signedMessage.body);
+        } catch (IOException exception) {
+            final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
+            LOGGER.error(errorMessage);
+
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity((debug) ? errorMessage : "bad request")
+                    .type(MediaType.TEXT_PLAIN_TYPE).build()
+            );
+        }
+        LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(batchPilldata));
+
+
+        // TODO: Fetch key from Datastore
+        final byte[] keyBytes = "1234567891234567".getBytes();
+        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytes);
+
+        if(error.isPresent()) {
+            LOGGER.error(error.get().message);
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+                    .entity((debug) ? error.get().message : "bad request")
+                    .type(MediaType.TEXT_PLAIN_TYPE).build()
+            );
+        }
+
+        // This is the default timezone.
+        DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
+        final String senseId  = batchPilldata.getDeviceId();
+        final List<AlarmInfo> alarmInfoList = this.mergedAlarmInfoDynamoDB.getInfo(senseId);
+        for(final AlarmInfo info:alarmInfoList){
+            if(info.timeZone.isPresent()){
+                userTimeZone = info.timeZone.get();
+            }
+        }
+
+        // ********************* Pill Data Storage ****************************
+        if(batchPilldata.getPillsCount() > 0){
+            for(final MorpheusBle.MorpheusCommand.PillData pill:batchPilldata.getPillsList()){
+
+                final String pillId = pill.getDeviceId();
+                final Optional<DeviceAccountPair> internalPillPairingMap = this.deviceDAO.getInternalPillId(pillId);
+
+                if(!internalPillPairingMap.isPresent()){
+                    LOGGER.warn("Cannot find internal pill id for pill {}", pillId);
+                    continue;
+                }
+
+                final InputProtos.PillDataKinesis.Builder pillKinesisDataBuilder = InputProtos.PillDataKinesis.newBuilder();
+
+                final long timestampMillis = pill.getTimestamp() * 1000L;
+                final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC)
+                        .withSecondOfMinute(0);
+
+                pillKinesisDataBuilder.setAccountIdLong(internalPillPairingMap.get().accountId)
+                        .setPillIdLong(internalPillPairingMap.get().internalDeviceId)
+                        .setTimestamp(roundedDateTime.getMillis())
+                        .setOffsetMillis(userTimeZone.getOffset(roundedDateTime));
+
+
+
+                if(pill.hasBatteryLevel()){
+                    pillKinesisDataBuilder.setBatteryLevel(pill.getBatteryLevel());
+                }
+
+                if(pill.hasFirmwareVersion()){
+                    pillKinesisDataBuilder.setFirmwareVersion(pill.getFirmwareVersion());
+                }
+
+                if(pill.hasUptime()){
+                    pillKinesisDataBuilder.setUpTime(pill.getUptime());
+                }
+
+                if(pill.hasMotionDataEntrypted()){
+                    pillKinesisDataBuilder.setEncryptedData(pill.getMotionDataEntrypted());
+                }
+
+
+                final byte[] pillDataBytes = pillKinesisDataBuilder.build().toByteArray();
+                final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.PILL_DATA);
+                final String sequenceNumber = dataLogger.put(internalPillPairingMap.get().internalDeviceId.toString(),  // WTF?
+                        pillDataBytes);
+                LOGGER.debug("Pill Data added to Kinesis with sequenceNumber = {}", sequenceNumber);
+
+            }
+        }
+
+        MorpheusBle.MorpheusCommand responseCommand = MorpheusBle.MorpheusCommand.newBuilder()
+                .setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PILL_DATA)
+                .setVersion(0)
+                .build();
+
+        final Optional<byte[]> signedResponse = SignedMessage.sign(responseCommand.toByteArray(), keyBytes);
         if(!signedResponse.isPresent()) {
             LOGGER.error("Failed signing message");
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)

@@ -3,49 +3,100 @@ package hello;
 option java_package = "com.hello.suripu.api.ble";
 
 enum ErrorType {
-	TIME_OUT = 0;              // Internal time out, no implemented yet.
-	NETWORK_ERROR = 1;         // Network not available or unreachable network.
-	DEVICE_ALREADY_PAIRED = 2; // User tries to paired a paired device to another account.
-	INTERNAL_DATA_ERROR = 3;   // Data packets corruption during BLE or SPI transfer
-	DEVICE_DATABASE_FULL = 4;  // No more space for device pairing.
-	DEVICE_NO_MEMORY = 5;  // Device run out of heap
-	INTERNAL_OPERATION_FAILED = 6;
+    TIME_OUT = 0;              // Internal time out, no implemented yet.
+    NETWORK_ERROR = 1;         // Network not available or unreachable network.
+    DEVICE_ALREADY_PAIRED = 2; // User tries to paired a paired device to another account.
+    INTERNAL_DATA_ERROR = 3;   // Data packets corruption during BLE or SPI transfer
+    DEVICE_DATABASE_FULL = 4;  // No more space for device pairing.
+    DEVICE_NO_MEMORY = 5;      // Device run out of heap
+    INTERNAL_OPERATION_FAILED = 6;
+    NO_ENDPOINT_IN_RANGE = 7;
+    WLAN_CONNECTION_ERROR = 8;
+    FAIL_TO_OBTAIN_IP = 9;
+}
+
+message wifi_endpoint {
+    /*
+    _u8 ssid[MAXIMAL_SSID_LENGTH];
+    _u8 ssid_len;
+    _u8 sec_type;
+    _u8 bssid[SL_BSSID_LENGTH];
+    _i8 rssi;
+    */
+    enum sec_type {
+        /*
+        #define SL_SCAN_SEC_TYPE_OPEN                                                                           (0)
+        #define SL_SCAN_SEC_TYPE_WEP                                                                            (1)
+        #define SL_SCAN_SEC_TYPE_WPA                                                                            (2)
+        #define SL_SCAN_SEC_TYPE_WPA2                                                                           (3)
+        */
+
+        SL_SCAN_SEC_TYPE_OPEN = 0;
+        SL_SCAN_SEC_TYPE_WEP = 1;
+        SL_SCAN_SEC_TYPE_WPA = 2;
+        SL_SCAN_SEC_TYPE_WPA2 = 3;
+
+    }
+    required string ssid = 1;
+    optional bytes bssid = 2;
+    required int32 rssi = 4;
+    required sec_type security_type = 5;
 }
 
 message MorpheusCommand {
-	enum CommandType {
-	    MORPHEUS_COMMAND_SET_TIME = 0;
-	    MORPHEUS_COMMAND_GET_TIME = 1;
-	    MORPHEUS_COMMAND_SET_WIFI_ENDPOINT = 2;
-	    MORPHEUS_COMMAND_GET_WIFI_ENDPOINT = 3;
-	    MORPHEUS_COMMAND_SET_ALARMS = 4;
-	    MORPHEUS_COMMAND_GET_ALARMS = 5;
-	    MORPHEUS_COMMAND_SWITCH_TO_PAIRING_MODE = 6;
-	    MORPHEUS_COMMAND_SWITCH_TO_NORMAL_MODE = 7;
-	    MORPHEUS_COMMAND_START_WIFISCAN = 8;
-	    MORPHEUS_COMMAND_STOP_WIFISCAN = 9;
-	    MORPHEUS_COMMAND_GET_DEVICE_ID = 10;
-	    MORPHEUS_COMMAND_EREASE_PAIRED_PHONE = 11;
-	    MORPHEUS_COMMAND_PAIR_PILL = 12;
-	    MORPHEUS_COMMAND_ERROR = 13;  // if you receive this, that means something goes wrong.
-	    MORPHEUS_COMMAND_PAIR_SENSE = 14;
-	    MORPHEUS_COMMAND_UNPAIR_PILL = 15;
-	    MORPHEUS_COMMAND_MORPHEUS_DFU_BEGIN = 16;
-	    MORPHEUS_COMMAND_PILL_DATA = 17;
-	    MORPHEUS_COMMAND_PILL_HEARTBEAT = 18;
-	    MORPHEUS_COMMAND_PILL_DFU_BEGIN = 19;
-	}
-	required int32 version = 1;
-	required CommandType type = 2;
-	optional string deviceId = 3;
-	optional string accountId = 4;  // Used by MORPHEUS_COMMAND_PAIRE_PILL
-	optional ErrorType error = 5;  // MORPHEUS_COMMAND_ERROR
-	optional string wifiName = 6;
-	optional string wifiSSID = 7;
-	optional string wifiPassword = 8;
-	optional int32 batteryLevel = 9;
-	optional int32 uptime = 10;
-	optional int32 motionData = 11;
-	optional bytes motionDataEntrypted = 12;
-	optional int32 firmwareVersion = 13;
+    enum CommandType {
+        MORPHEUS_COMMAND_SET_TIME = 0;
+        MORPHEUS_COMMAND_GET_TIME = 1;
+        MORPHEUS_COMMAND_SET_WIFI_ENDPOINT = 2;
+        MORPHEUS_COMMAND_GET_WIFI_ENDPOINT = 3;
+        MORPHEUS_COMMAND_SET_ALARMS = 4;
+        MORPHEUS_COMMAND_GET_ALARMS = 5;
+        MORPHEUS_COMMAND_SWITCH_TO_PAIRING_MODE = 6;
+        MORPHEUS_COMMAND_SWITCH_TO_NORMAL_MODE = 7;
+        MORPHEUS_COMMAND_START_WIFISCAN = 8;
+        MORPHEUS_COMMAND_STOP_WIFISCAN = 9;
+        MORPHEUS_COMMAND_GET_DEVICE_ID = 10;
+        MORPHEUS_COMMAND_EREASE_PAIRED_PHONE = 11;
+        MORPHEUS_COMMAND_PAIR_PILL = 12;
+        MORPHEUS_COMMAND_ERROR = 13;  // if you receive this, that means something goes wrong.
+        MORPHEUS_COMMAND_PAIR_SENSE = 14;
+        MORPHEUS_COMMAND_UNPAIR_PILL = 15;
+        MORPHEUS_COMMAND_MORPHEUS_DFU_BEGIN = 16;
+        MORPHEUS_COMMAND_PILL_DATA = 17;
+        MORPHEUS_COMMAND_PILL_HEARTBEAT = 18;
+        MORPHEUS_COMMAND_PILL_DFU_BEGIN = 19;
+        MORPHEUS_COMMAND_FACTORY_RESET = 20;
+    }
+    required int32 version = 1;
+    required CommandType type = 2;
+    optional string deviceId = 3;
+    optional string accountId = 4;  // Used by MORPHEUS_COMMAND_PAIRE_PILL
+    optional ErrorType error = 5;  // MORPHEUS_COMMAND_ERROR
+    optional string wifiName = 6;
+    optional string wifiSSID = 7;
+    optional string wifiPassword = 8;
+    optional int32 batteryLevel = 9;
+    optional int32 uptime = 10;
+    optional int32 motionData = 11;
+    optional bytes motionDataEntrypted = 12;
+    optional int32 firmwareVersion = 13;
+    repeated wifi_endpoint wifi_scan_result = 14;
+    optional wifi_endpoint.sec_type security_type = 15;
+
+    message PillData {
+
+        required string deviceId = 1;
+        optional int32 batteryLevel = 2;
+        optional int32 uptime = 3;
+        optional bytes motionDataEntrypted = 4;
+        optional int32 firmwareVersion = 5;
+        required uint64 timestamp = 6;
+    }
+
+    optional PillData pillData = 16;
+}
+
+message BatchedPillData {
+    repeated MorpheusCommand.PillData pills=1;
+    required string deviceId = 2;
 }
