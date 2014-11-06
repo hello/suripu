@@ -432,7 +432,7 @@ public class ReceiveResource {
 
 
     @POST
-    @Path("/pill/pb2")
+    @Path("/pill")
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Timed
