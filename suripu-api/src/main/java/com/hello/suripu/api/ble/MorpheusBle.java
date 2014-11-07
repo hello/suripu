@@ -2007,7 +2007,7 @@ public final class MorpheusBle {
      * <code>optional string accountId = 4;</code>
      *
      * <pre>
-     * Used by MORPHEUS_COMMAND_PAIRE_PILL
+     * Used by MORPHEUS_COMMAND_PAIR_PILL
      * </pre>
      */
     boolean hasAccountId();
@@ -2015,7 +2015,7 @@ public final class MorpheusBle {
      * <code>optional string accountId = 4;</code>
      *
      * <pre>
-     * Used by MORPHEUS_COMMAND_PAIRE_PILL
+     * Used by MORPHEUS_COMMAND_PAIR_PILL
      * </pre>
      */
     java.lang.String getAccountId();
@@ -2023,7 +2023,7 @@ public final class MorpheusBle {
      * <code>optional string accountId = 4;</code>
      *
      * <pre>
-     * Used by MORPHEUS_COMMAND_PAIRE_PILL
+     * Used by MORPHEUS_COMMAND_PAIR_PILL
      * </pre>
      */
     com.google.protobuf.ByteString
@@ -2443,9 +2443,9 @@ public final class MorpheusBle {
        */
       MORPHEUS_COMMAND_GET_DEVICE_ID(10, 10),
       /**
-       * <code>MORPHEUS_COMMAND_EREASE_PAIRED_PHONE = 11;</code>
+       * <code>MORPHEUS_COMMAND_ERASE_PAIRED_PHONE = 11;</code>
        */
-      MORPHEUS_COMMAND_EREASE_PAIRED_PHONE(11, 11),
+      MORPHEUS_COMMAND_ERASE_PAIRED_PHONE(11, 11),
       /**
        * <code>MORPHEUS_COMMAND_PAIR_PILL = 12;</code>
        */
@@ -2533,9 +2533,9 @@ public final class MorpheusBle {
        */
       public static final int MORPHEUS_COMMAND_GET_DEVICE_ID_VALUE = 10;
       /**
-       * <code>MORPHEUS_COMMAND_EREASE_PAIRED_PHONE = 11;</code>
+       * <code>MORPHEUS_COMMAND_ERASE_PAIRED_PHONE = 11;</code>
        */
-      public static final int MORPHEUS_COMMAND_EREASE_PAIRED_PHONE_VALUE = 11;
+      public static final int MORPHEUS_COMMAND_ERASE_PAIRED_PHONE_VALUE = 11;
       /**
        * <code>MORPHEUS_COMMAND_PAIR_PILL = 12;</code>
        */
@@ -2593,7 +2593,7 @@ public final class MorpheusBle {
           case 8: return MORPHEUS_COMMAND_START_WIFISCAN;
           case 9: return MORPHEUS_COMMAND_STOP_WIFISCAN;
           case 10: return MORPHEUS_COMMAND_GET_DEVICE_ID;
-          case 11: return MORPHEUS_COMMAND_EREASE_PAIRED_PHONE;
+          case 11: return MORPHEUS_COMMAND_ERASE_PAIRED_PHONE;
           case 12: return MORPHEUS_COMMAND_PAIR_PILL;
           case 13: return MORPHEUS_COMMAND_ERROR;
           case 14: return MORPHEUS_COMMAND_PAIR_SENSE;
@@ -2737,7 +2737,7 @@ public final class MorpheusBle {
      * <code>optional string accountId = 4;</code>
      *
      * <pre>
-     * Used by MORPHEUS_COMMAND_PAIRE_PILL
+     * Used by MORPHEUS_COMMAND_PAIR_PILL
      * </pre>
      */
     public boolean hasAccountId() {
@@ -2747,7 +2747,7 @@ public final class MorpheusBle {
      * <code>optional string accountId = 4;</code>
      *
      * <pre>
-     * Used by MORPHEUS_COMMAND_PAIRE_PILL
+     * Used by MORPHEUS_COMMAND_PAIR_PILL
      * </pre>
      */
     public java.lang.String getAccountId() {
@@ -2768,7 +2768,7 @@ public final class MorpheusBle {
      * <code>optional string accountId = 4;</code>
      *
      * <pre>
-     * Used by MORPHEUS_COMMAND_PAIRE_PILL
+     * Used by MORPHEUS_COMMAND_PAIR_PILL
      * </pre>
      */
     public com.google.protobuf.ByteString
@@ -3815,7 +3815,7 @@ public final class MorpheusBle {
        * <code>optional string accountId = 4;</code>
        *
        * <pre>
-       * Used by MORPHEUS_COMMAND_PAIRE_PILL
+       * Used by MORPHEUS_COMMAND_PAIR_PILL
        * </pre>
        */
       public boolean hasAccountId() {
@@ -3825,7 +3825,7 @@ public final class MorpheusBle {
        * <code>optional string accountId = 4;</code>
        *
        * <pre>
-       * Used by MORPHEUS_COMMAND_PAIRE_PILL
+       * Used by MORPHEUS_COMMAND_PAIR_PILL
        * </pre>
        */
       public java.lang.String getAccountId() {
@@ -3843,7 +3843,7 @@ public final class MorpheusBle {
        * <code>optional string accountId = 4;</code>
        *
        * <pre>
-       * Used by MORPHEUS_COMMAND_PAIRE_PILL
+       * Used by MORPHEUS_COMMAND_PAIR_PILL
        * </pre>
        */
       public com.google.protobuf.ByteString
@@ -3863,7 +3863,7 @@ public final class MorpheusBle {
        * <code>optional string accountId = 4;</code>
        *
        * <pre>
-       * Used by MORPHEUS_COMMAND_PAIRE_PILL
+       * Used by MORPHEUS_COMMAND_PAIR_PILL
        * </pre>
        */
       public Builder setAccountId(
@@ -3880,7 +3880,7 @@ public final class MorpheusBle {
        * <code>optional string accountId = 4;</code>
        *
        * <pre>
-       * Used by MORPHEUS_COMMAND_PAIRE_PILL
+       * Used by MORPHEUS_COMMAND_PAIR_PILL
        * </pre>
        */
       public Builder clearAccountId() {
@@ -3893,7 +3893,7 @@ public final class MorpheusBle {
        * <code>optional string accountId = 4;</code>
        *
        * <pre>
-       * Used by MORPHEUS_COMMAND_PAIRE_PILL
+       * Used by MORPHEUS_COMMAND_PAIR_PILL
        * </pre>
        */
       public Builder setAccountIdBytes(
@@ -5646,7 +5646,7 @@ public final class MorpheusBle {
       "e_id\030\001 \002(\t\022\025\n\rbattery_level\030\002 \001(\005\022\016\n\006upt" +
       "ime\030\003 \001(\005\022\035\n\025motion_data_entrypted\030\004 \001(\014",
       "\022\030\n\020firmware_version\030\005 \001(\005\022\021\n\ttimestamp\030" +
-      "\006 \002(\004\"\325\t\n\017MorpheusCommand\022\017\n\007version\030\001 \002" +
+      "\006 \002(\004\"\324\t\n\017MorpheusCommand\022\017\n\007version\030\001 \002" +
       "(\005\0220\n\004type\030\002 \002(\0162\".hello.MorpheusCommand" +
       ".CommandType\022\020\n\010deviceId\030\003 \001(\t\022\021\n\taccoun" +
       "tId\030\004 \001(\t\022\037\n\005error\030\005 \001(\0162\020.hello.ErrorTy" +
@@ -5657,7 +5657,7 @@ public final class MorpheusBle {
       "ersion\030\r \001(\005\022.\n\020wifi_scan_result\030\016 \003(\0132\024",
       ".hello.wifi_endpoint\0224\n\rsecurity_type\030\017 " +
       "\001(\0162\035.hello.wifi_endpoint.sec_type\022#\n\tpi" +
-      "ll_data\030\020 \001(\0132\020.hello.pill_data\"\203\006\n\013Comm" +
+      "ll_data\030\020 \001(\0132\020.hello.pill_data\"\202\006\n\013Comm" +
       "andType\022\035\n\031MORPHEUS_COMMAND_SET_TIME\020\000\022\035" +
       "\n\031MORPHEUS_COMMAND_GET_TIME\020\001\022&\n\"MORPHEU" +
       "S_COMMAND_SET_WIFI_ENDPOINT\020\002\022&\n\"MORPHEU" +
@@ -5668,24 +5668,24 @@ public final class MorpheusBle {
       "_SWITCH_TO_NORMAL_MODE\020\007\022#\n\037MORPHEUS_COM" +
       "MAND_START_WIFISCAN\020\010\022\"\n\036MORPHEUS_COMMAN" +
       "D_STOP_WIFISCAN\020\t\022\"\n\036MORPHEUS_COMMAND_GE" +
-      "T_DEVICE_ID\020\n\022(\n$MORPHEUS_COMMAND_EREASE" +
-      "_PAIRED_PHONE\020\013\022\036\n\032MORPHEUS_COMMAND_PAIR" +
-      "_PILL\020\014\022\032\n\026MORPHEUS_COMMAND_ERROR\020\r\022\037\n\033M" +
-      "ORPHEUS_COMMAND_PAIR_SENSE\020\016\022 \n\034MORPHEUS" +
-      "_COMMAND_UNPAIR_PILL\020\017\022\'\n#MORPHEUS_COMMA" +
-      "ND_MORPHEUS_DFU_BEGIN\020\020\022\036\n\032MORPHEUS_COMM" +
-      "AND_PILL_DATA\020\021\022#\n\037MORPHEUS_COMMAND_PILL",
-      "_HEARTBEAT\020\022\022#\n\037MORPHEUS_COMMAND_PILL_DF" +
-      "U_BEGIN\020\023\022\"\n\036MORPHEUS_COMMAND_FACTORY_RE" +
-      "SET\020\024\"G\n\021batched_pill_data\022\037\n\005pills\030\001 \003(" +
-      "\0132\020.hello.pill_data\022\021\n\tdevice_id\030\002 \002(\t*\373" +
-      "\001\n\tErrorType\022\014\n\010TIME_OUT\020\000\022\021\n\rNETWORK_ER" +
-      "ROR\020\001\022\031\n\025DEVICE_ALREADY_PAIRED\020\002\022\027\n\023INTE" +
-      "RNAL_DATA_ERROR\020\003\022\030\n\024DEVICE_DATABASE_FUL" +
-      "L\020\004\022\024\n\020DEVICE_NO_MEMORY\020\005\022\035\n\031INTERNAL_OP" +
-      "ERATION_FAILED\020\006\022\030\n\024NO_ENDPOINT_IN_RANGE" +
-      "\020\007\022\031\n\025WLAN_CONNECTION_ERROR\020\010\022\025\n\021FAIL_TO",
-      "_OBTAIN_IP\020\tB\032\n\030com.hello.suripu.api.ble"
+      "T_DEVICE_ID\020\n\022\'\n#MORPHEUS_COMMAND_ERASE_" +
+      "PAIRED_PHONE\020\013\022\036\n\032MORPHEUS_COMMAND_PAIR_" +
+      "PILL\020\014\022\032\n\026MORPHEUS_COMMAND_ERROR\020\r\022\037\n\033MO" +
+      "RPHEUS_COMMAND_PAIR_SENSE\020\016\022 \n\034MORPHEUS_" +
+      "COMMAND_UNPAIR_PILL\020\017\022\'\n#MORPHEUS_COMMAN" +
+      "D_MORPHEUS_DFU_BEGIN\020\020\022\036\n\032MORPHEUS_COMMA" +
+      "ND_PILL_DATA\020\021\022#\n\037MORPHEUS_COMMAND_PILL_",
+      "HEARTBEAT\020\022\022#\n\037MORPHEUS_COMMAND_PILL_DFU" +
+      "_BEGIN\020\023\022\"\n\036MORPHEUS_COMMAND_FACTORY_RES" +
+      "ET\020\024\"G\n\021batched_pill_data\022\037\n\005pills\030\001 \003(\013" +
+      "2\020.hello.pill_data\022\021\n\tdevice_id\030\002 \002(\t*\373\001" +
+      "\n\tErrorType\022\014\n\010TIME_OUT\020\000\022\021\n\rNETWORK_ERR" +
+      "OR\020\001\022\031\n\025DEVICE_ALREADY_PAIRED\020\002\022\027\n\023INTER" +
+      "NAL_DATA_ERROR\020\003\022\030\n\024DEVICE_DATABASE_FULL" +
+      "\020\004\022\024\n\020DEVICE_NO_MEMORY\020\005\022\035\n\031INTERNAL_OPE" +
+      "RATION_FAILED\020\006\022\030\n\024NO_ENDPOINT_IN_RANGE\020" +
+      "\007\022\031\n\025WLAN_CONNECTION_ERROR\020\010\022\025\n\021FAIL_TO_",
+      "OBTAIN_IP\020\tB\032\n\030com.hello.suripu.api.ble"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
