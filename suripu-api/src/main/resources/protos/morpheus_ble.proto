@@ -43,6 +43,15 @@ message wifi_endpoint {
     required sec_type security_type = 5;
 }
 
+message pill_data {
+    required string device_id = 1;
+    optional int32 battery_level = 2;
+    optional int32 uptime = 3;
+    optional bytes motion_data_entrypted = 4;
+    optional int32 firmware_version = 5;
+    required uint64 timestamp = 6;
+}
+
 message MorpheusCommand {
     enum CommandType {
         MORPHEUS_COMMAND_SET_TIME = 0;
@@ -56,7 +65,7 @@ message MorpheusCommand {
         MORPHEUS_COMMAND_START_WIFISCAN = 8;
         MORPHEUS_COMMAND_STOP_WIFISCAN = 9;
         MORPHEUS_COMMAND_GET_DEVICE_ID = 10;
-        MORPHEUS_COMMAND_ERASE_PAIRED_PHONE = 11;
+        MORPHEUS_COMMAND_EREASE_PAIRED_PHONE = 11;
         MORPHEUS_COMMAND_PAIR_PILL = 12;
         MORPHEUS_COMMAND_ERROR = 13;  // if you receive this, that means something goes wrong.
         MORPHEUS_COMMAND_PAIR_SENSE = 14;
@@ -68,9 +77,8 @@ message MorpheusCommand {
         MORPHEUS_COMMAND_FACTORY_RESET = 20;
     }
     required int32 version = 1;
-    required CommandType type = 2;
-    optional string deviceId = 3;
-    optional string accountId = 4;  // Used by MORPHEUS_COMMAND_PAIR_PILL
+    required CommandType type = 2;optional string deviceId = 3;
+    optional string accountId = 4;  // Used by MORPHEUS_COMMAND_PAIRE_PILL
     optional ErrorType error = 5;  // MORPHEUS_COMMAND_ERROR
     optional string wifiName = 6;
     optional string wifiSSID = 7;
@@ -83,20 +91,10 @@ message MorpheusCommand {
     repeated wifi_endpoint wifi_scan_result = 14;
     optional wifi_endpoint.sec_type security_type = 15;
 
-    message PillData {
-
-        required string deviceId = 1;
-        optional int32 batteryLevel = 2;
-        optional int32 uptime = 3;
-        optional bytes motionDataEntrypted = 4;
-        optional int32 firmwareVersion = 5;
-        required uint64 timestamp = 6;
-    }
-
-    optional PillData pillData = 16;
+    optional pill_data pill_data = 16;
 }
 
-message BatchedPillData {
-    repeated MorpheusCommand.PillData pills=1;
-    required string deviceId = 2;
+message batched_pill_data {
+    repeated pill_data pills = 1;
+    required string device_id = 2;
 }
