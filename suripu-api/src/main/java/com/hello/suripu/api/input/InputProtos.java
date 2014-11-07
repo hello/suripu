@@ -10135,23 +10135,23 @@ public final class InputProtos {
     public interface AlarmOrBuilder
         extends com.google.protobuf.MessageOrBuilder {
 
-      // optional int32 start_time = 1;
+      // optional uint32 start_time = 1;
       /**
-       * <code>optional int32 start_time = 1;</code>
+       * <code>optional uint32 start_time = 1;</code>
        */
       boolean hasStartTime();
       /**
-       * <code>optional int32 start_time = 1;</code>
+       * <code>optional uint32 start_time = 1;</code>
        */
       int getStartTime();
 
-      // optional int32 end_time = 2;
+      // optional uint32 end_time = 2;
       /**
-       * <code>optional int32 end_time = 2;</code>
+       * <code>optional uint32 end_time = 2;</code>
        */
       boolean hasEndTime();
       /**
-       * <code>optional int32 end_time = 2;</code>
+       * <code>optional uint32 end_time = 2;</code>
        */
       int getEndTime();
 
@@ -10165,19 +10165,33 @@ public final class InputProtos {
        */
       int getRingtoneId();
 
-      // repeated int64 ringtone_ids = 4 [packed = true];
+      // optional int32 ring_offset_from_now_in_second = 4;
       /**
-       * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+       * <code>optional int32 ring_offset_from_now_in_second = 4;</code>
+       *
+       * <pre>
+       *repeated int64 ringtone_ids = 4 [packed = true];
+       * </pre>
        */
-      java.util.List<java.lang.Long> getRingtoneIdsList();
+      boolean hasRingOffsetFromNowInSecond();
       /**
-       * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+       * <code>optional int32 ring_offset_from_now_in_second = 4;</code>
+       *
+       * <pre>
+       *repeated int64 ringtone_ids = 4 [packed = true];
+       * </pre>
        */
-      int getRingtoneIdsCount();
+      int getRingOffsetFromNowInSecond();
+
+      // optional int32 ring_duration_in_second = 5;
       /**
-       * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+       * <code>optional int32 ring_duration_in_second = 5;</code>
        */
-      long getRingtoneIds(int index);
+      boolean hasRingDurationInSecond();
+      /**
+       * <code>optional int32 ring_duration_in_second = 5;</code>
+       */
+      int getRingDurationInSecond();
     }
     /**
      * Protobuf type {@code hello.SyncResponse.Alarm}
@@ -10232,12 +10246,12 @@ public final class InputProtos {
               }
               case 8: {
                 bitField0_ |= 0x00000001;
-                startTime_ = input.readInt32();
+                startTime_ = input.readUInt32();
                 break;
               }
               case 16: {
                 bitField0_ |= 0x00000002;
-                endTime_ = input.readInt32();
+                endTime_ = input.readUInt32();
                 break;
               }
               case 24: {
@@ -10246,24 +10260,13 @@ public final class InputProtos {
                 break;
               }
               case 32: {
-                if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
-                  ringtoneIds_ = new java.util.ArrayList<java.lang.Long>();
-                  mutable_bitField0_ |= 0x00000008;
-                }
-                ringtoneIds_.add(input.readInt64());
+                bitField0_ |= 0x00000008;
+                ringOffsetFromNowInSecond_ = input.readInt32();
                 break;
               }
-              case 34: {
-                int length = input.readRawVarint32();
-                int limit = input.pushLimit(length);
-                if (!((mutable_bitField0_ & 0x00000008) == 0x00000008) && input.getBytesUntilLimit() > 0) {
-                  ringtoneIds_ = new java.util.ArrayList<java.lang.Long>();
-                  mutable_bitField0_ |= 0x00000008;
-                }
-                while (input.getBytesUntilLimit() > 0) {
-                  ringtoneIds_.add(input.readInt64());
-                }
-                input.popLimit(limit);
+              case 40: {
+                bitField0_ |= 0x00000010;
+                ringDurationInSecond_ = input.readInt32();
                 break;
               }
             }
@@ -10274,9 +10277,6 @@ public final class InputProtos {
           throw new com.google.protobuf.InvalidProtocolBufferException(
               e.getMessage()).setUnfinishedMessage(this);
         } finally {
-          if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
-            ringtoneIds_ = java.util.Collections.unmodifiableList(ringtoneIds_);
-          }
           this.unknownFields = unknownFields.build();
           makeExtensionsImmutable();
         }
@@ -10309,33 +10309,33 @@ public final class InputProtos {
       }
 
       private int bitField0_;
-      // optional int32 start_time = 1;
+      // optional uint32 start_time = 1;
       public static final int START_TIME_FIELD_NUMBER = 1;
       private int startTime_;
       /**
-       * <code>optional int32 start_time = 1;</code>
+       * <code>optional uint32 start_time = 1;</code>
        */
       public boolean hasStartTime() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>optional int32 start_time = 1;</code>
+       * <code>optional uint32 start_time = 1;</code>
        */
       public int getStartTime() {
         return startTime_;
       }
 
-      // optional int32 end_time = 2;
+      // optional uint32 end_time = 2;
       public static final int END_TIME_FIELD_NUMBER = 2;
       private int endTime_;
       /**
-       * <code>optional int32 end_time = 2;</code>
+       * <code>optional uint32 end_time = 2;</code>
        */
       public boolean hasEndTime() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>optional int32 end_time = 2;</code>
+       * <code>optional uint32 end_time = 2;</code>
        */
       public int getEndTime() {
         return endTime_;
@@ -10357,35 +10357,52 @@ public final class InputProtos {
         return ringtoneId_;
       }
 
-      // repeated int64 ringtone_ids = 4 [packed = true];
-      public static final int RINGTONE_IDS_FIELD_NUMBER = 4;
-      private java.util.List<java.lang.Long> ringtoneIds_;
+      // optional int32 ring_offset_from_now_in_second = 4;
+      public static final int RING_OFFSET_FROM_NOW_IN_SECOND_FIELD_NUMBER = 4;
+      private int ringOffsetFromNowInSecond_;
       /**
-       * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+       * <code>optional int32 ring_offset_from_now_in_second = 4;</code>
+       *
+       * <pre>
+       *repeated int64 ringtone_ids = 4 [packed = true];
+       * </pre>
        */
-      public java.util.List<java.lang.Long>
-          getRingtoneIdsList() {
-        return ringtoneIds_;
+      public boolean hasRingOffsetFromNowInSecond() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
-       * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+       * <code>optional int32 ring_offset_from_now_in_second = 4;</code>
+       *
+       * <pre>
+       *repeated int64 ringtone_ids = 4 [packed = true];
+       * </pre>
        */
-      public int getRingtoneIdsCount() {
-        return ringtoneIds_.size();
+      public int getRingOffsetFromNowInSecond() {
+        return ringOffsetFromNowInSecond_;
+      }
+
+      // optional int32 ring_duration_in_second = 5;
+      public static final int RING_DURATION_IN_SECOND_FIELD_NUMBER = 5;
+      private int ringDurationInSecond_;
+      /**
+       * <code>optional int32 ring_duration_in_second = 5;</code>
+       */
+      public boolean hasRingDurationInSecond() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       /**
-       * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+       * <code>optional int32 ring_duration_in_second = 5;</code>
        */
-      public long getRingtoneIds(int index) {
-        return ringtoneIds_.get(index);
+      public int getRingDurationInSecond() {
+        return ringDurationInSecond_;
       }
-      private int ringtoneIdsMemoizedSerializedSize = -1;
 
       private void initFields() {
         startTime_ = 0;
         endTime_ = 0;
         ringtoneId_ = 1;
-        ringtoneIds_ = java.util.Collections.emptyList();
+        ringOffsetFromNowInSecond_ = 0;
+        ringDurationInSecond_ = 0;
       }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
@@ -10400,20 +10417,19 @@ public final class InputProtos {
                           throws java.io.IOException {
         getSerializedSize();
         if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          output.writeInt32(1, startTime_);
+          output.writeUInt32(1, startTime_);
         }
         if (((bitField0_ & 0x00000002) == 0x00000002)) {
-          output.writeInt32(2, endTime_);
+          output.writeUInt32(2, endTime_);
         }
         if (((bitField0_ & 0x00000004) == 0x00000004)) {
           output.writeInt32(3, ringtoneId_);
         }
-        if (getRingtoneIdsList().size() > 0) {
-          output.writeRawVarint32(34);
-          output.writeRawVarint32(ringtoneIdsMemoizedSerializedSize);
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          output.writeInt32(4, ringOffsetFromNowInSecond_);
         }
-        for (int i = 0; i < ringtoneIds_.size(); i++) {
-          output.writeInt64NoTag(ringtoneIds_.get(i));
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          output.writeInt32(5, ringDurationInSecond_);
         }
         getUnknownFields().writeTo(output);
       }
@@ -10426,29 +10442,23 @@ public final class InputProtos {
         size = 0;
         if (((bitField0_ & 0x00000001) == 0x00000001)) {
           size += com.google.protobuf.CodedOutputStream
-            .computeInt32Size(1, startTime_);
+            .computeUInt32Size(1, startTime_);
         }
         if (((bitField0_ & 0x00000002) == 0x00000002)) {
           size += com.google.protobuf.CodedOutputStream
-            .computeInt32Size(2, endTime_);
+            .computeUInt32Size(2, endTime_);
         }
         if (((bitField0_ & 0x00000004) == 0x00000004)) {
           size += com.google.protobuf.CodedOutputStream
             .computeInt32Size(3, ringtoneId_);
         }
-        {
-          int dataSize = 0;
-          for (int i = 0; i < ringtoneIds_.size(); i++) {
-            dataSize += com.google.protobuf.CodedOutputStream
-              .computeInt64SizeNoTag(ringtoneIds_.get(i));
-          }
-          size += dataSize;
-          if (!getRingtoneIdsList().isEmpty()) {
-            size += 1;
-            size += com.google.protobuf.CodedOutputStream
-                .computeInt32SizeNoTag(dataSize);
-          }
-          ringtoneIdsMemoizedSerializedSize = dataSize;
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(4, ringOffsetFromNowInSecond_);
+        }
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(5, ringDurationInSecond_);
         }
         size += getUnknownFields().getSerializedSize();
         memoizedSerializedSize = size;
@@ -10572,8 +10582,10 @@ public final class InputProtos {
           bitField0_ = (bitField0_ & ~0x00000002);
           ringtoneId_ = 1;
           bitField0_ = (bitField0_ & ~0x00000004);
-          ringtoneIds_ = java.util.Collections.emptyList();
+          ringOffsetFromNowInSecond_ = 0;
           bitField0_ = (bitField0_ & ~0x00000008);
+          ringDurationInSecond_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000010);
           return this;
         }
 
@@ -10614,11 +10626,14 @@ public final class InputProtos {
             to_bitField0_ |= 0x00000004;
           }
           result.ringtoneId_ = ringtoneId_;
-          if (((bitField0_ & 0x00000008) == 0x00000008)) {
-            ringtoneIds_ = java.util.Collections.unmodifiableList(ringtoneIds_);
-            bitField0_ = (bitField0_ & ~0x00000008);
+          if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+            to_bitField0_ |= 0x00000008;
           }
-          result.ringtoneIds_ = ringtoneIds_;
+          result.ringOffsetFromNowInSecond_ = ringOffsetFromNowInSecond_;
+          if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+            to_bitField0_ |= 0x00000010;
+          }
+          result.ringDurationInSecond_ = ringDurationInSecond_;
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -10644,15 +10659,11 @@ public final class InputProtos {
           if (other.hasRingtoneId()) {
             setRingtoneId(other.getRingtoneId());
           }
-          if (!other.ringtoneIds_.isEmpty()) {
-            if (ringtoneIds_.isEmpty()) {
-              ringtoneIds_ = other.ringtoneIds_;
-              bitField0_ = (bitField0_ & ~0x00000008);
-            } else {
-              ensureRingtoneIdsIsMutable();
-              ringtoneIds_.addAll(other.ringtoneIds_);
-            }
-            onChanged();
+          if (other.hasRingOffsetFromNowInSecond()) {
+            setRingOffsetFromNowInSecond(other.getRingOffsetFromNowInSecond());
+          }
+          if (other.hasRingDurationInSecond()) {
+            setRingDurationInSecond(other.getRingDurationInSecond());
           }
           this.mergeUnknownFields(other.getUnknownFields());
           return this;
@@ -10681,22 +10692,22 @@ public final class InputProtos {
         }
         private int bitField0_;
 
-        // optional int32 start_time = 1;
+        // optional uint32 start_time = 1;
         private int startTime_ ;
         /**
-         * <code>optional int32 start_time = 1;</code>
+         * <code>optional uint32 start_time = 1;</code>
          */
         public boolean hasStartTime() {
           return ((bitField0_ & 0x00000001) == 0x00000001);
         }
         /**
-         * <code>optional int32 start_time = 1;</code>
+         * <code>optional uint32 start_time = 1;</code>
          */
         public int getStartTime() {
           return startTime_;
         }
         /**
-         * <code>optional int32 start_time = 1;</code>
+         * <code>optional uint32 start_time = 1;</code>
          */
         public Builder setStartTime(int value) {
           bitField0_ |= 0x00000001;
@@ -10705,7 +10716,7 @@ public final class InputProtos {
           return this;
         }
         /**
-         * <code>optional int32 start_time = 1;</code>
+         * <code>optional uint32 start_time = 1;</code>
          */
         public Builder clearStartTime() {
           bitField0_ = (bitField0_ & ~0x00000001);
@@ -10714,22 +10725,22 @@ public final class InputProtos {
           return this;
         }
 
-        // optional int32 end_time = 2;
+        // optional uint32 end_time = 2;
         private int endTime_ ;
         /**
-         * <code>optional int32 end_time = 2;</code>
+         * <code>optional uint32 end_time = 2;</code>
          */
         public boolean hasEndTime() {
           return ((bitField0_ & 0x00000002) == 0x00000002);
         }
         /**
-         * <code>optional int32 end_time = 2;</code>
+         * <code>optional uint32 end_time = 2;</code>
          */
         public int getEndTime() {
           return endTime_;
         }
         /**
-         * <code>optional int32 end_time = 2;</code>
+         * <code>optional uint32 end_time = 2;</code>
          */
         public Builder setEndTime(int value) {
           bitField0_ |= 0x00000002;
@@ -10738,7 +10749,7 @@ public final class InputProtos {
           return this;
         }
         /**
-         * <code>optional int32 end_time = 2;</code>
+         * <code>optional uint32 end_time = 2;</code>
          */
         public Builder clearEndTime() {
           bitField0_ = (bitField0_ & ~0x00000002);
@@ -10780,68 +10791,84 @@ public final class InputProtos {
           return this;
         }
 
-        // repeated int64 ringtone_ids = 4 [packed = true];
-        private java.util.List<java.lang.Long> ringtoneIds_ = java.util.Collections.emptyList();
-        private void ensureRingtoneIdsIsMutable() {
-          if (!((bitField0_ & 0x00000008) == 0x00000008)) {
-            ringtoneIds_ = new java.util.ArrayList<java.lang.Long>(ringtoneIds_);
-            bitField0_ |= 0x00000008;
-           }
+        // optional int32 ring_offset_from_now_in_second = 4;
+        private int ringOffsetFromNowInSecond_ ;
+        /**
+         * <code>optional int32 ring_offset_from_now_in_second = 4;</code>
+         *
+         * <pre>
+         *repeated int64 ringtone_ids = 4 [packed = true];
+         * </pre>
+         */
+        public boolean hasRingOffsetFromNowInSecond() {
+          return ((bitField0_ & 0x00000008) == 0x00000008);
         }
         /**
-         * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+         * <code>optional int32 ring_offset_from_now_in_second = 4;</code>
+         *
+         * <pre>
+         *repeated int64 ringtone_ids = 4 [packed = true];
+         * </pre>
          */
-        public java.util.List<java.lang.Long>
-            getRingtoneIdsList() {
-          return java.util.Collections.unmodifiableList(ringtoneIds_);
+        public int getRingOffsetFromNowInSecond() {
+          return ringOffsetFromNowInSecond_;
         }
         /**
-         * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+         * <code>optional int32 ring_offset_from_now_in_second = 4;</code>
+         *
+         * <pre>
+         *repeated int64 ringtone_ids = 4 [packed = true];
+         * </pre>
          */
-        public int getRingtoneIdsCount() {
-          return ringtoneIds_.size();
-        }
-        /**
-         * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
-         */
-        public long getRingtoneIds(int index) {
-          return ringtoneIds_.get(index);
-        }
-        /**
-         * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
-         */
-        public Builder setRingtoneIds(
-            int index, long value) {
-          ensureRingtoneIdsIsMutable();
-          ringtoneIds_.set(index, value);
+        public Builder setRingOffsetFromNowInSecond(int value) {
+          bitField0_ |= 0x00000008;
+          ringOffsetFromNowInSecond_ = value;
           onChanged();
           return this;
         }
         /**
-         * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
+         * <code>optional int32 ring_offset_from_now_in_second = 4;</code>
+         *
+         * <pre>
+         *repeated int64 ringtone_ids = 4 [packed = true];
+         * </pre>
          */
-        public Builder addRingtoneIds(long value) {
-          ensureRingtoneIdsIsMutable();
-          ringtoneIds_.add(value);
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
-         */
-        public Builder addAllRingtoneIds(
-            java.lang.Iterable<? extends java.lang.Long> values) {
-          ensureRingtoneIdsIsMutable();
-          super.addAll(values, ringtoneIds_);
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>repeated int64 ringtone_ids = 4 [packed = true];</code>
-         */
-        public Builder clearRingtoneIds() {
-          ringtoneIds_ = java.util.Collections.emptyList();
+        public Builder clearRingOffsetFromNowInSecond() {
           bitField0_ = (bitField0_ & ~0x00000008);
+          ringOffsetFromNowInSecond_ = 0;
+          onChanged();
+          return this;
+        }
+
+        // optional int32 ring_duration_in_second = 5;
+        private int ringDurationInSecond_ ;
+        /**
+         * <code>optional int32 ring_duration_in_second = 5;</code>
+         */
+        public boolean hasRingDurationInSecond() {
+          return ((bitField0_ & 0x00000010) == 0x00000010);
+        }
+        /**
+         * <code>optional int32 ring_duration_in_second = 5;</code>
+         */
+        public int getRingDurationInSecond() {
+          return ringDurationInSecond_;
+        }
+        /**
+         * <code>optional int32 ring_duration_in_second = 5;</code>
+         */
+        public Builder setRingDurationInSecond(int value) {
+          bitField0_ |= 0x00000010;
+          ringDurationInSecond_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int32 ring_duration_in_second = 5;</code>
+         */
+        public Builder clearRingDurationInSecond() {
+          bitField0_ = (bitField0_ & ~0x00000010);
+          ringDurationInSecond_ = 0;
           onChanged();
           return this;
         }
@@ -25121,7 +25148,7 @@ public final class InputProtos {
       "\022\021\n\tsignature\030\005 \001(\014\"%\n\022ActivationRespons" +
       "e\022\017\n\007success\030\001 \001(\010\"`\n\013SyncRequest\022\021\n\tdev" +
       "ice_id\030\001 \001(\t\022\030\n\020firmware_version\030\002 \001(\t\022\021",
-      "\n\tsignature\030\003 \001(\014\022\021\n\tsomething\030\004 \001(\t\"\223\n\n" +
+      "\n\tsignature\030\003 \001(\014\022\021\n\tsomething\030\004 \001(\t\"\303\n\n" +
       "\014SyncResponse\022\024\n\014upload_cycle\030\001 \001(\005\022\022\n\ns" +
       "ync_cycle\030\002 \001(\005\022\025\n\racc_scan_cyle\030\003 \001(\005\022\035" +
       "\n\025acc_sampling_interval\030\004 \001(\005\022 \n\030device_" +
@@ -25134,59 +25161,61 @@ public final class InputProtos {
       "t_device\030\n \001(\010\022;\n\017firmware_update\030\013 \001(\0132" +
       "\".hello.SyncResponse.FirmwareUpdate\022;\n\017r" +
       "oom_conditions\030\014 \001(\0162\".hello.SyncRespons" +
-      "e.RoomConditions\032_\n\005Alarm\022\022\n\nstart_time\030" +
-      "\001 \001(\005\022\020\n\010end_time\030\002 \001(\005\022\026\n\013ringtone_id\030\003" +
-      " \001(\005:\0011\022\030\n\014ringtone_ids\030\004 \003(\003B\002\020\001\032}\n\rPai" +
-      "ringAction\022\014\n\004ssid\030\001 \001(\t\022:\n\004type\030\002 \001(\0162," +
-      ".hello.SyncResponse.PairingAction.Action" +
-      "Type\"\"\n\nActionType\022\010\n\004PAIR\020\000\022\n\n\006UNPAIR\020\001" +
-      "\032D\n\nWhiteNoise\022\022\n\nstart_time\030\001 \001(\005\022\020\n\010en",
-      "d_time\030\002 \001(\005\022\020\n\010sound_id\030\003 \001(\005\032Q\n\016Firmwa" +
-      "reUpdate\022\030\n\020firmware_version\030\001 \001(\005\022\021\n\tfi" +
-      "le_urls\030\002 \003(\t\022\022\n\nexpires_at\030\003 \001(\005\032\361\002\n\013Fl" +
-      "ashAction\0228\n\005led_1\030\001 \001(\0132).hello.SyncRes" +
-      "ponse.FlashAction.LEDAction\0228\n\005led_2\030\002 \001" +
-      "(\0132).hello.SyncResponse.FlashAction.LEDA" +
-      "ction\0228\n\005led_3\030\003 \001(\0132).hello.SyncRespons" +
-      "e.FlashAction.LEDAction\0228\n\005led_4\030\004 \001(\0132)" +
-      ".hello.SyncResponse.FlashAction.LEDActio" +
-      "n\0228\n\005led_5\030\005 \001(\0132).hello.SyncResponse.Fl",
-      "ashAction.LEDAction\032@\n\tLEDAction\022\r\n\005colo" +
-      "r\030\001 \001(\005\022\022\n\nstart_time\030\002 \001(\005\022\020\n\010end_time\030" +
-      "\003 \001(\005\"3\n\016RoomConditions\022\t\n\005IDEAL\020\001\022\013\n\007WA" +
-      "RNING\020\002\022\t\n\005ALERT\020\003\"=\n\010PillData\022\017\n\007pill_i" +
-      "d\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(\t\022\014\n\004data\030\003 \001(" +
-      "\014\"\357\001\n\017PillDataKinesis\022\017\n\007pill_id\030\001 \001(\t\022\022" +
-      "\n\naccount_id\030\002 \001(\t\022\021\n\ttimestamp\030\003 \001(\003\022\r\n" +
-      "\005value\030\004 \001(\003\022\024\n\014offsetMillis\030\005 \001(\005\022\025\n\ren" +
-      "cryptedData\030\006 \001(\014\022\024\n\014batteryLevel\030\007 \001(\005\022" +
-      "\027\n\017firmwareVersion\030\010 \001(\005\022\022\n\npillIdLong\030\t",
-      " \001(\003\022\025\n\raccountIdLong\030\n \001(\003\022\016\n\006upTime\030\013 " +
-      "\001(\005\"\324\001\n\016PillBlobHeader\022\035\n\025first_sequence" +
-      "_number\030\001 \001(\t\022\034\n\024last_sequence_number\030\002 " +
-      "\001(\t\022\031\n\021first_sample_date\030\003 \001(\t\022\030\n\020last_s" +
-      "ample_date\030\004 \001(\t\022%\n\035compressed_bitmap_ac" +
-      "count_ids\030\005 \001(\014\022\026\n\016data_file_name\030\006 \001(\t\022" +
-      "\021\n\tnum_items\030\007 \001(\005\"*\n\010PillBlob\022\036\n\005items\030" +
-      "\001 \003(\0132\017.hello.PillData\"\214\001\n\nEventBatch\022+\n" +
-      "\006events\030\001 \003(\0132\033.hello.EventBatch.EventIt" +
-      "em\032Q\n\tEventItem\022\027\n\017start_timestamp\030\001 \001(\003",
-      "\022\025\n\rend_timestamp\030\002 \001(\003\022\024\n\014offsetMillis\030" +
-      "\003 \001(\005\"\336\003\n\rperiodic_data\022\021\n\tunix_time\030\001 \001" +
-      "(\005\022\r\n\005light\030\002 \001(\005\022\023\n\013temperature\030\003 \001(\005\022\020" +
-      "\n\010humidity\030\004 \001(\005\022\014\n\004dust\030\005 \001(\005\022\014\n\004name\030\006" +
-      " \001(\t\022\013\n\003mac\030\007 \001(\014\022\031\n\021light_variability\030\010" +
-      " \001(\005\022\026\n\016light_tonality\030\t \001(\005\022\030\n\020firmware" +
-      "_version\030\n \001(\005\022\030\n\020dust_variability\030\r \001(\005" +
-      "\022\020\n\010dust_max\030\016 \001(\005\022\020\n\010dust_min\030\017 \001(\005\022-\n\005" +
-      "pills\030\013 \003(\0132\036.hello.periodic_data.pill_d" +
-      "ata\022\021\n\tdevice_id\030\014 \001(\t\032\215\001\n\tpill_data\022\027\n\017",
-      "firmwareVersion\030\001 \001(\005\022\033\n\023motionDataEncry" +
-      "pted\030\002 \001(\014\022\020\n\010deviceId\030\003 \001(\t\022\024\n\014batteryL" +
-      "evel\030\004 \001(\005\022\016\n\006uptime\030\005 \001(\005\022\022\n\nmotionData" +
-      "\030\006 \001(\005\">\n\010SenseLog\022\021\n\tunix_time\030\001 \001(\005\022\021\n" +
-      "\tdevice_id\030\002 \001(\t\022\014\n\004text\030\003 \001(\tB)\n\032com.he" +
-      "llo.suripu.api.inputB\013InputProtos"
+      "e.RoomConditions\032\216\001\n\005Alarm\022\022\n\nstart_time" +
+      "\030\001 \001(\r\022\020\n\010end_time\030\002 \001(\r\022\026\n\013ringtone_id\030" +
+      "\003 \001(\005:\0011\022&\n\036ring_offset_from_now_in_seco" +
+      "nd\030\004 \001(\005\022\037\n\027ring_duration_in_second\030\005 \001(" +
+      "\005\032}\n\rPairingAction\022\014\n\004ssid\030\001 \001(\t\022:\n\004type" +
+      "\030\002 \001(\0162,.hello.SyncResponse.PairingActio" +
+      "n.ActionType\"\"\n\nActionType\022\010\n\004PAIR\020\000\022\n\n\006",
+      "UNPAIR\020\001\032D\n\nWhiteNoise\022\022\n\nstart_time\030\001 \001" +
+      "(\005\022\020\n\010end_time\030\002 \001(\005\022\020\n\010sound_id\030\003 \001(\005\032Q" +
+      "\n\016FirmwareUpdate\022\030\n\020firmware_version\030\001 \001" +
+      "(\005\022\021\n\tfile_urls\030\002 \003(\t\022\022\n\nexpires_at\030\003 \001(" +
+      "\005\032\361\002\n\013FlashAction\0228\n\005led_1\030\001 \001(\0132).hello" +
+      ".SyncResponse.FlashAction.LEDAction\0228\n\005l" +
+      "ed_2\030\002 \001(\0132).hello.SyncResponse.FlashAct" +
+      "ion.LEDAction\0228\n\005led_3\030\003 \001(\0132).hello.Syn" +
+      "cResponse.FlashAction.LEDAction\0228\n\005led_4" +
+      "\030\004 \001(\0132).hello.SyncResponse.FlashAction.",
+      "LEDAction\0228\n\005led_5\030\005 \001(\0132).hello.SyncRes" +
+      "ponse.FlashAction.LEDAction\032@\n\tLEDAction" +
+      "\022\r\n\005color\030\001 \001(\005\022\022\n\nstart_time\030\002 \001(\005\022\020\n\010e" +
+      "nd_time\030\003 \001(\005\"3\n\016RoomConditions\022\t\n\005IDEAL" +
+      "\020\001\022\013\n\007WARNING\020\002\022\t\n\005ALERT\020\003\"=\n\010PillData\022\017" +
+      "\n\007pill_id\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(\t\022\014\n\004d" +
+      "ata\030\003 \001(\014\"\357\001\n\017PillDataKinesis\022\017\n\007pill_id" +
+      "\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(\t\022\021\n\ttimestamp\030" +
+      "\003 \001(\003\022\r\n\005value\030\004 \001(\003\022\024\n\014offsetMillis\030\005 \001" +
+      "(\005\022\025\n\rencryptedData\030\006 \001(\014\022\024\n\014batteryLeve",
+      "l\030\007 \001(\005\022\027\n\017firmwareVersion\030\010 \001(\005\022\022\n\npill" +
+      "IdLong\030\t \001(\003\022\025\n\raccountIdLong\030\n \001(\003\022\016\n\006u" +
+      "pTime\030\013 \001(\005\"\324\001\n\016PillBlobHeader\022\035\n\025first_" +
+      "sequence_number\030\001 \001(\t\022\034\n\024last_sequence_n" +
+      "umber\030\002 \001(\t\022\031\n\021first_sample_date\030\003 \001(\t\022\030" +
+      "\n\020last_sample_date\030\004 \001(\t\022%\n\035compressed_b" +
+      "itmap_account_ids\030\005 \001(\014\022\026\n\016data_file_nam" +
+      "e\030\006 \001(\t\022\021\n\tnum_items\030\007 \001(\005\"*\n\010PillBlob\022\036" +
+      "\n\005items\030\001 \003(\0132\017.hello.PillData\"\214\001\n\nEvent" +
+      "Batch\022+\n\006events\030\001 \003(\0132\033.hello.EventBatch",
+      ".EventItem\032Q\n\tEventItem\022\027\n\017start_timesta" +
+      "mp\030\001 \001(\003\022\025\n\rend_timestamp\030\002 \001(\003\022\024\n\014offse" +
+      "tMillis\030\003 \001(\005\"\336\003\n\rperiodic_data\022\021\n\tunix_" +
+      "time\030\001 \001(\005\022\r\n\005light\030\002 \001(\005\022\023\n\013temperature" +
+      "\030\003 \001(\005\022\020\n\010humidity\030\004 \001(\005\022\014\n\004dust\030\005 \001(\005\022\014" +
+      "\n\004name\030\006 \001(\t\022\013\n\003mac\030\007 \001(\014\022\031\n\021light_varia" +
+      "bility\030\010 \001(\005\022\026\n\016light_tonality\030\t \001(\005\022\030\n\020" +
+      "firmware_version\030\n \001(\005\022\030\n\020dust_variabili" +
+      "ty\030\r \001(\005\022\020\n\010dust_max\030\016 \001(\005\022\020\n\010dust_min\030\017" +
+      " \001(\005\022-\n\005pills\030\013 \003(\0132\036.hello.periodic_dat",
+      "a.pill_data\022\021\n\tdevice_id\030\014 \001(\t\032\215\001\n\tpill_" +
+      "data\022\027\n\017firmwareVersion\030\001 \001(\005\022\033\n\023motionD" +
+      "ataEncrypted\030\002 \001(\014\022\020\n\010deviceId\030\003 \001(\t\022\024\n\014" +
+      "batteryLevel\030\004 \001(\005\022\016\n\006uptime\030\005 \001(\005\022\022\n\nmo" +
+      "tionData\030\006 \001(\005\">\n\010SenseLog\022\021\n\tunix_time\030" +
+      "\001 \001(\005\022\021\n\tdevice_id\030\002 \001(\t\022\014\n\004text\030\003 \001(\tB)" +
+      "\n\032com.hello.suripu.api.inputB\013InputProto" +
+      "s"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -25276,7 +25305,7 @@ public final class InputProtos {
           internal_static_hello_SyncResponse_Alarm_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_SyncResponse_Alarm_descriptor,
-              new java.lang.String[] { "StartTime", "EndTime", "RingtoneId", "RingtoneIds", });
+              new java.lang.String[] { "StartTime", "EndTime", "RingtoneId", "RingOffsetFromNowInSecond", "RingDurationInSecond", });
           internal_static_hello_SyncResponse_PairingAction_descriptor =
             internal_static_hello_SyncResponse_descriptor.getNestedTypes().get(1);
           internal_static_hello_SyncResponse_PairingAction_fieldAccessorTable = new

@@ -1,8 +1,10 @@
 package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Objects;
 import com.google.common.collect.ComparisonChain;
+import com.hello.suripu.core.util.EventTypeSerializer;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -23,7 +25,8 @@ public class SleepSegment implements Comparable {
     final public Integer sleepDepth;
 
     @JsonProperty("event_type")
-    final public String eventType;
+    @JsonSerialize(using = EventTypeSerializer.class)
+    final public Event.Type eventType;
 
     @JsonProperty("message")
     final public String message;
@@ -46,7 +49,7 @@ public class SleepSegment implements Comparable {
      * @param sensors
      */
     public SleepSegment(final Long id, final Long timestamp, final Integer offsetMillis, final Integer durationInSeconds,
-                        final Integer sleepDepth, final String eventType, final String message, final List<SensorReading> sensors) {
+                        final Integer sleepDepth, final Event.Type eventType, final String message, final List<SensorReading> sensors) {
         this.id = id;
         this.timestamp = timestamp;
         this.offsetMillis = offsetMillis;
@@ -63,11 +66,16 @@ public class SleepSegment implements Comparable {
                 segment.eventType, segment.message, segment.sensors);
     }
 
+    public static SleepSegment withSleepDepthAndDuration(final SleepSegment segment, final Integer sleepDepth, final Integer durationInSeconds) {
+        return new SleepSegment(segment.id, segment.timestamp, segment.offsetMillis, durationInSeconds, sleepDepth,
+                segment.eventType, segment.message, segment.sensors);
+    }
+
     public static SleepSegment withEventType(final SleepSegment segment, final Event.Type eventType) {
         return new SleepSegment(
                 segment.id, segment.timestamp,
                 segment.offsetMillis, segment.durationInSeconds, segment.sleepDepth,
-                eventType.toString(),
+                eventType,
                 Event.getMessage(eventType, new DateTime(segment.timestamp, DateTimeZone.UTC).plusMillis(segment.offsetMillis)),
                 segment.sensors);
     }

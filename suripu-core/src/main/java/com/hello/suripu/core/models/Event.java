@@ -98,14 +98,14 @@ public class Event {
         this.timezoneOffset = timezoneOffset;
     }
 
-    public static String getHighPriorityEvents(final Set<String> eventTypes) {
-        String winner = "";
+    public static Type getHighPriorityEvents(final Set<Type> eventTypes) {
+        Type winner = Type.NONE;
         Integer winnerScore = -100;
 
-        for (final String eventType : eventTypes) {
+        for (final Type eventType : eventTypes) {
             Integer eventScore = -1;
-            if (!eventType.isEmpty()) {
-                eventScore = Type.valueOf(eventType).getValue();
+            if (eventType != eventType.NONE) {
+                eventScore = eventType.getValue();
             }
             if (eventScore > winnerScore) {
                 winner = eventType;
@@ -154,6 +154,47 @@ public class Event {
         }
         return String.format("%s at %s", eventMessage, dateTime.toString(DateTimeFormat.forPattern("HH:mma")));
     }
+
+    public static String getMessage(final Type eventType) {
+        // TODO: words words words
+        final String eventMessage;
+        switch (eventType) {
+            case MOTION:
+                eventMessage = "We detected lots of movement";
+                break;
+            case SLEEP_MOTION:
+                eventMessage = "Movement detected";
+                break;
+            case PARTNER_MOTION:
+                eventMessage = "Your partner kicked you";
+                break;
+            case NOISE:
+                eventMessage = "Unusual sound detected";
+                break;
+            case SNORING:
+                eventMessage = "Snoring detected";
+                break;
+            case SLEEP_TALK:
+                eventMessage = "Sleep talking detected";
+                break;
+            case LIGHT:
+                eventMessage = "Unusual brightness detected";
+                break;
+            case SUNSET:
+                eventMessage = "The sun set";
+                break;
+            case SUNRISE:
+                eventMessage = "The sun rose";
+                break;
+            case SLEEP:
+                eventMessage = "You fell asleep";
+                break;
+            default:
+                return "";
+        }
+        return eventMessage;
+    }
+
 
     @Override
     public boolean equals(Object other){

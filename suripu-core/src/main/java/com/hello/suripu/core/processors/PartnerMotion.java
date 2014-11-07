@@ -73,7 +73,7 @@ public class PartnerMotion {
                                 originalSegment.offsetMillis,
                                 60,
                                 originalSegment.sleepDepth,
-                                Event.Type.PARTNER_MOTION.toString(),
+                                Event.Type.PARTNER_MOTION,
                                 Event.getMessage(Event.Type.PARTNER_MOTION, new DateTime(originalSegment.timestamp, DateTimeZone.UTC).plusMillis(originalSegment.offsetMillis)),
                                 new ArrayList<SensorReading>()));
             }

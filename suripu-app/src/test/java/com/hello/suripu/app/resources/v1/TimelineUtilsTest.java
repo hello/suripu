@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SensorReading;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -26,10 +27,10 @@ public class TimelineUtilsTest {
     public void testMerge() {
         final List<SleepSegment> sleepSegments = new ArrayList<>();
         final DateTime now = DateTime.now();
-        sleepSegments.add(new SleepSegment(1L, now.getMillis(), 0, 60, 100, "", "", new ArrayList<SensorReading>()));
-        sleepSegments.add(new SleepSegment(2L, now.plusMinutes(1).getMillis(), 0, 60, 100, "", "", new ArrayList<SensorReading>()));
-        sleepSegments.add(new SleepSegment(3L, now.plusMinutes(2).getMillis(), 0, 60, 100, "", "", new ArrayList<SensorReading>()));
-        sleepSegments.add(new SleepSegment(33L, now.plusMinutes(3).getMillis(), 0, 60, 100, "", "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(1L, now.getMillis(), 0, 60, 100, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(2L, now.plusMinutes(1).getMillis(), 0, 60, 100, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(3L, now.plusMinutes(2).getMillis(), 0, 60, 100, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(33L, now.plusMinutes(3).getMillis(), 0, 60, 100, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
 
         final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(sleepSegments, 5);
         assertThat(mergedSegments.size(), is(1));
@@ -40,10 +41,10 @@ public class TimelineUtilsTest {
     public void testNoMerge() {
         final List<SleepSegment> sleepSegments = new ArrayList<>();
         final DateTime now = DateTime.now();
-        sleepSegments.add(new SleepSegment(3L, now.getMillis(), 0, 60, 100, "", "", new ArrayList<SensorReading>()));
-        sleepSegments.add(new SleepSegment(4L, now.plusMinutes(1).getMillis(), 0, 60, 50, "", "", new ArrayList<SensorReading>()));
-        sleepSegments.add(new SleepSegment(5L, now.plusMinutes(2).getMillis(), 0, 60, 0, "", "", new ArrayList<SensorReading>()));
-        sleepSegments.add(new SleepSegment(55L, now.plusMinutes(3).getMillis(), 0, 60, 10, "", "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(3L, now.getMillis(), 0, 60, 100, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(4L, now.plusMinutes(1).getMillis(), 0, 60, 50, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(5L, now.plusMinutes(2).getMillis(), 0, 60, 0, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(55L, now.plusMinutes(3).getMillis(), 0, 60, 10, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
 
         final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(sleepSegments, 5);
         assertThat(mergedSegments.size(), is(sleepSegments.size()));
@@ -118,10 +119,10 @@ public class TimelineUtilsTest {
         final List<SleepSegment> sleepSegments = new ArrayList<>();
         final DateTime now = DateTime.now();
         final Long millis = now.getMillis();
-        sleepSegments.add(new SleepSegment(3L, millis, 0, 60, 100, "", "", new ArrayList<SensorReading>()));
-        sleepSegments.add(new SleepSegment(4L, millis, 0, 60, 50, "", "", new ArrayList<SensorReading>()));
-        sleepSegments.add(new SleepSegment(5L, millis, 0, 60, 0, "", "", new ArrayList<SensorReading>()));
-        sleepSegments.add(new SleepSegment(55L, millis, 0, 60, 10, "", "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(3L, millis, 0, 60, 100, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(4L, millis, 0, 60, 50, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(5L, millis, 0, 60, 0, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(55L, millis, 0, 60, 10, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
 
         final SleepSegment mergedSegment = TimelineUtils.merge(sleepSegments, 5);
         assertThat(mergedSegment.durationInSeconds, is(5 * 60));
@@ -133,13 +134,13 @@ public class TimelineUtilsTest {
         final DateTime now = DateTime.now();
         final Long millis = now.getMillis();
 
-        sleepSegments.add(new SleepSegment(3L, millis, 0, 60, 99, "", "", new ArrayList<SensorReading>()));
-        sleepSegments.add(new SleepSegment(4L, millis, 0, 60, 100, "", "", new ArrayList<SensorReading>()));
-        sleepSegments.add(new SleepSegment(5L, millis, 0, 60, 71, "", "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(3L, millis, 0, 60, 99, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(4L, millis, 0, 60, 100, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(5L, millis, 0, 60, 91, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
 
         final List<SleepSegment> normalized = TimelineUtils.categorizeSleepDepth(sleepSegments);
         for(final SleepSegment segment : normalized) {
-            assertThat(segment.sleepDepth, is(100));
+            assertThat(segment.sleepDepth, is(TimelineUtils.HIGHEST_SLEEP_DEPTH));
         }
     }
 
@@ -172,5 +173,33 @@ public class TimelineUtilsTest {
 //        for(SleepSegment segment : merged) {
 //            System.out.println(segment.toString());
 //        }
+    }
+
+    @Test
+    public void testMergeByTimeBucket() {
+        List<SleepSegment> sleepSegments = new ArrayList<>();
+        final DateTime now = DateTime.now();
+        final Long millis = now.getMillis();
+        sleepSegments.add(new SleepSegment(3L, millis, 0, 60, 99, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(4L, millis, 0, 60, 100, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(5L, millis, 0, 60, 71, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(6L, millis, 0, 60, 50, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
+
+        final List<SleepSegment> mergedSegments = TimelineUtils.mergeByTimeBucket(sleepSegments, 2);
+        assertThat(mergedSegments.size(), is(2));
+    }
+
+
+    @Test
+    public void simpleMerge() {
+        List<SleepSegment> sleepSegments = new ArrayList<>();
+        final DateTime now = DateTime.now();
+        final Long millis = now.getMillis();
+        sleepSegments.add(new SleepSegment(3L, millis, 0, 60, 99, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(4L, millis, 0, 60, 100, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
+        sleepSegments.add(new SleepSegment(5L, millis, 0, 60, 71, Event.Type.MOTION, "", new ArrayList<SensorReading>()));
+
+        SleepSegment mergedSegment = TimelineUtils.merge(sleepSegments);
+        assertThat(mergedSegment.sleepDepth, is(71));
     }
 }
