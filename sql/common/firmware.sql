@@ -15,3 +15,7 @@ CREATE TABLE firmware_updates (
     sd_card_filename VARCHAR (100),
     sd_card_path VARCHAR (100)
 );
+
+
+GRANT ALL PRIVILEGES ON firmware_updates TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE firmware_updates_id_seq TO ingress_user;
