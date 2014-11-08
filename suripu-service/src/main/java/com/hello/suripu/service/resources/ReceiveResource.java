@@ -14,6 +14,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.PublicKeyStore;
+import com.hello.suripu.core.firmware.FirmwareUpdateStore;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.models.AlarmInfo;
@@ -70,6 +71,8 @@ public class ReceiveResource {
     private final Boolean debug;
     private final Integer roomConditions;
 
+    private final FirmwareUpdateStore firmwareUpdateStore;
+
     @Context
     HttpServletRequest request;
 
@@ -82,7 +85,8 @@ public class ReceiveResource {
 
                            final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
                            final Boolean debug,
-                           final Integer roomConditions) {
+                           final Integer roomConditions,
+                           final FirmwareUpdateStore firmwareUpdateStore) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
 
@@ -100,7 +104,8 @@ public class ReceiveResource {
             }
         };
 
-         cache = CacheBuilder.newBuilder().build(loader);
+        cache = CacheBuilder.newBuilder().build(loader);
+        this.firmwareUpdateStore = firmwareUpdateStore;
     }
 
     @POST
@@ -403,14 +408,10 @@ public class ReceiveResource {
 
         responseBuilder.setRoomConditions(InputProtos.SyncResponse.RoomConditions.valueOf(this.roomConditions));
 
-        if(data.getDeviceId().equals("D05FB81BE1E0")) {
-            LOGGER.info("HAS FIRMWARE UPDATE");
-            final InputProtos.SyncResponse.FirmwareUpdate firmwareUpdate = InputProtos.SyncResponse.FirmwareUpdate.newBuilder()
-                    .setFirmwareVersion(11)
-                    .addFileUrls("")
-                    .build();
-
-            responseBuilder.setFirmwareUpdate(firmwareUpdate);
+        final List<InputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdateContent(data.getDeviceId(), data.getFirmwareVersion());
+        if(!fileDownloadList.isEmpty()) {
+            LOGGER.debug("Adding {} files to Files to Download list", fileDownloadList.size());
+            responseBuilder.addAllFiles(fileDownloadList);
         }
 
         final InputProtos.SyncResponse syncResponse = responseBuilder.build();

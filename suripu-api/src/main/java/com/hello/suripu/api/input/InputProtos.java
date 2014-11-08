@@ -9821,20 +9821,6 @@ public final class InputProtos {
      */
     boolean getResetDevice();
 
-    // optional .hello.SyncResponse.FirmwareUpdate firmware_update = 11;
-    /**
-     * <code>optional .hello.SyncResponse.FirmwareUpdate firmware_update = 11;</code>
-     */
-    boolean hasFirmwareUpdate();
-    /**
-     * <code>optional .hello.SyncResponse.FirmwareUpdate firmware_update = 11;</code>
-     */
-    com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate getFirmwareUpdate();
-    /**
-     * <code>optional .hello.SyncResponse.FirmwareUpdate firmware_update = 11;</code>
-     */
-    com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdateOrBuilder getFirmwareUpdateOrBuilder();
-
     // optional .hello.SyncResponse.RoomConditions room_conditions = 12;
     /**
      * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
@@ -9844,6 +9830,31 @@ public final class InputProtos {
      * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
      */
     com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions getRoomConditions();
+
+    // repeated .hello.SyncResponse.FileDownload files = 13;
+    /**
+     * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+     */
+    java.util.List<com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload> 
+        getFilesList();
+    /**
+     * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+     */
+    com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload getFiles(int index);
+    /**
+     * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+     */
+    int getFilesCount();
+    /**
+     * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+     */
+    java.util.List<? extends com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownloadOrBuilder> 
+        getFilesOrBuilderList();
+    /**
+     * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+     */
+    com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownloadOrBuilder getFilesOrBuilder(
+        int index);
   }
   /**
    * Protobuf type {@code hello.SyncResponse}
@@ -9978,28 +9989,23 @@ public final class InputProtos {
               resetDevice_ = input.readBool();
               break;
             }
-            case 90: {
-              com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000400) == 0x00000400)) {
-                subBuilder = firmwareUpdate_.toBuilder();
-              }
-              firmwareUpdate_ = input.readMessage(com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.PARSER, extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(firmwareUpdate_);
-                firmwareUpdate_ = subBuilder.buildPartial();
-              }
-              bitField0_ |= 0x00000400;
-              break;
-            }
             case 96: {
               int rawValue = input.readEnum();
               com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions value = com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions.valueOf(rawValue);
               if (value == null) {
                 unknownFields.mergeVarintField(12, rawValue);
               } else {
-                bitField0_ |= 0x00000800;
+                bitField0_ |= 0x00000400;
                 roomConditions_ = value;
               }
+              break;
+            }
+            case 106: {
+              if (!((mutable_bitField0_ & 0x00000800) == 0x00000800)) {
+                files_ = new java.util.ArrayList<com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload>();
+                mutable_bitField0_ |= 0x00000800;
+              }
+              files_.add(input.readMessage(com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload.PARSER, extensionRegistry));
               break;
             }
           }
@@ -10010,6 +10016,9 @@ public final class InputProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000800) == 0x00000800)) {
+          files_ = java.util.Collections.unmodifiableList(files_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -10132,26 +10141,1536 @@ public final class InputProtos {
       // @@protoc_insertion_point(enum_scope:hello.SyncResponse.RoomConditions)
     }
 
+    public interface FileDownloadOrBuilder
+        extends com.google.protobuf.MessageOrBuilder {
+
+      // optional string host = 1;
+      /**
+       * <code>optional string host = 1;</code>
+       */
+      boolean hasHost();
+      /**
+       * <code>optional string host = 1;</code>
+       */
+      java.lang.String getHost();
+      /**
+       * <code>optional string host = 1;</code>
+       */
+      com.google.protobuf.ByteString
+          getHostBytes();
+
+      // optional string url = 2;
+      /**
+       * <code>optional string url = 2;</code>
+       */
+      boolean hasUrl();
+      /**
+       * <code>optional string url = 2;</code>
+       */
+      java.lang.String getUrl();
+      /**
+       * <code>optional string url = 2;</code>
+       */
+      com.google.protobuf.ByteString
+          getUrlBytes();
+
+      // optional bool copy_to_serial_flash = 4;
+      /**
+       * <code>optional bool copy_to_serial_flash = 4;</code>
+       */
+      boolean hasCopyToSerialFlash();
+      /**
+       * <code>optional bool copy_to_serial_flash = 4;</code>
+       */
+      boolean getCopyToSerialFlash();
+
+      // optional bool reset_network_processor = 5;
+      /**
+       * <code>optional bool reset_network_processor = 5;</code>
+       */
+      boolean hasResetNetworkProcessor();
+      /**
+       * <code>optional bool reset_network_processor = 5;</code>
+       */
+      boolean getResetNetworkProcessor();
+
+      // optional bool reset_application_processor = 6;
+      /**
+       * <code>optional bool reset_application_processor = 6;</code>
+       */
+      boolean hasResetApplicationProcessor();
+      /**
+       * <code>optional bool reset_application_processor = 6;</code>
+       */
+      boolean getResetApplicationProcessor();
+
+      // optional string serial_flash_filename = 7;
+      /**
+       * <code>optional string serial_flash_filename = 7;</code>
+       */
+      boolean hasSerialFlashFilename();
+      /**
+       * <code>optional string serial_flash_filename = 7;</code>
+       */
+      java.lang.String getSerialFlashFilename();
+      /**
+       * <code>optional string serial_flash_filename = 7;</code>
+       */
+      com.google.protobuf.ByteString
+          getSerialFlashFilenameBytes();
+
+      // optional string serial_flash_path = 8;
+      /**
+       * <code>optional string serial_flash_path = 8;</code>
+       */
+      boolean hasSerialFlashPath();
+      /**
+       * <code>optional string serial_flash_path = 8;</code>
+       */
+      java.lang.String getSerialFlashPath();
+      /**
+       * <code>optional string serial_flash_path = 8;</code>
+       */
+      com.google.protobuf.ByteString
+          getSerialFlashPathBytes();
+
+      // optional string sd_card_filename = 3;
+      /**
+       * <code>optional string sd_card_filename = 3;</code>
+       */
+      boolean hasSdCardFilename();
+      /**
+       * <code>optional string sd_card_filename = 3;</code>
+       */
+      java.lang.String getSdCardFilename();
+      /**
+       * <code>optional string sd_card_filename = 3;</code>
+       */
+      com.google.protobuf.ByteString
+          getSdCardFilenameBytes();
+
+      // optional string sd_card_path = 9;
+      /**
+       * <code>optional string sd_card_path = 9;</code>
+       */
+      boolean hasSdCardPath();
+      /**
+       * <code>optional string sd_card_path = 9;</code>
+       */
+      java.lang.String getSdCardPath();
+      /**
+       * <code>optional string sd_card_path = 9;</code>
+       */
+      com.google.protobuf.ByteString
+          getSdCardPathBytes();
+    }
+    /**
+     * Protobuf type {@code hello.SyncResponse.FileDownload}
+     */
+    public static final class FileDownload extends
+        com.google.protobuf.GeneratedMessage
+        implements FileDownloadOrBuilder {
+      // Use FileDownload.newBuilder() to construct.
+      private FileDownload(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+        super(builder);
+        this.unknownFields = builder.getUnknownFields();
+      }
+      private FileDownload(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+      private static final FileDownload defaultInstance;
+      public static FileDownload getDefaultInstance() {
+        return defaultInstance;
+      }
+
+      public FileDownload getDefaultInstanceForType() {
+        return defaultInstance;
+      }
+
+      private final com.google.protobuf.UnknownFieldSet unknownFields;
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+          getUnknownFields() {
+        return this.unknownFields;
+      }
+      private FileDownload(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        initFields();
+        int mutable_bitField0_ = 0;
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              default: {
+                if (!parseUnknownField(input, unknownFields,
+                                       extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+              case 10: {
+                bitField0_ |= 0x00000001;
+                host_ = input.readBytes();
+                break;
+              }
+              case 18: {
+                bitField0_ |= 0x00000002;
+                url_ = input.readBytes();
+                break;
+              }
+              case 26: {
+                bitField0_ |= 0x00000080;
+                sdCardFilename_ = input.readBytes();
+                break;
+              }
+              case 32: {
+                bitField0_ |= 0x00000004;
+                copyToSerialFlash_ = input.readBool();
+                break;
+              }
+              case 40: {
+                bitField0_ |= 0x00000008;
+                resetNetworkProcessor_ = input.readBool();
+                break;
+              }
+              case 48: {
+                bitField0_ |= 0x00000010;
+                resetApplicationProcessor_ = input.readBool();
+                break;
+              }
+              case 58: {
+                bitField0_ |= 0x00000020;
+                serialFlashFilename_ = input.readBytes();
+                break;
+              }
+              case 66: {
+                bitField0_ |= 0x00000040;
+                serialFlashPath_ = input.readBytes();
+                break;
+              }
+              case 74: {
+                bitField0_ |= 0x00000100;
+                sdCardPath_ = input.readBytes();
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e.getMessage()).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_SyncResponse_FileDownload_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.input.InputProtos.internal_static_hello_SyncResponse_FileDownload_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload.class, com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload.Builder.class);
+      }
+
+      public static com.google.protobuf.Parser<FileDownload> PARSER =
+          new com.google.protobuf.AbstractParser<FileDownload>() {
+        public FileDownload parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new FileDownload(input, extensionRegistry);
+        }
+      };
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<FileDownload> getParserForType() {
+        return PARSER;
+      }
+
+      private int bitField0_;
+      // optional string host = 1;
+      public static final int HOST_FIELD_NUMBER = 1;
+      private java.lang.Object host_;
+      /**
+       * <code>optional string host = 1;</code>
+       */
+      public boolean hasHost() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string host = 1;</code>
+       */
+      public java.lang.String getHost() {
+        java.lang.Object ref = host_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            host_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       * <code>optional string host = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getHostBytes() {
+        java.lang.Object ref = host_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          host_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
+      // optional string url = 2;
+      public static final int URL_FIELD_NUMBER = 2;
+      private java.lang.Object url_;
+      /**
+       * <code>optional string url = 2;</code>
+       */
+      public boolean hasUrl() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string url = 2;</code>
+       */
+      public java.lang.String getUrl() {
+        java.lang.Object ref = url_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            url_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       * <code>optional string url = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getUrlBytes() {
+        java.lang.Object ref = url_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          url_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
+      // optional bool copy_to_serial_flash = 4;
+      public static final int COPY_TO_SERIAL_FLASH_FIELD_NUMBER = 4;
+      private boolean copyToSerialFlash_;
+      /**
+       * <code>optional bool copy_to_serial_flash = 4;</code>
+       */
+      public boolean hasCopyToSerialFlash() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional bool copy_to_serial_flash = 4;</code>
+       */
+      public boolean getCopyToSerialFlash() {
+        return copyToSerialFlash_;
+      }
+
+      // optional bool reset_network_processor = 5;
+      public static final int RESET_NETWORK_PROCESSOR_FIELD_NUMBER = 5;
+      private boolean resetNetworkProcessor_;
+      /**
+       * <code>optional bool reset_network_processor = 5;</code>
+       */
+      public boolean hasResetNetworkProcessor() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional bool reset_network_processor = 5;</code>
+       */
+      public boolean getResetNetworkProcessor() {
+        return resetNetworkProcessor_;
+      }
+
+      // optional bool reset_application_processor = 6;
+      public static final int RESET_APPLICATION_PROCESSOR_FIELD_NUMBER = 6;
+      private boolean resetApplicationProcessor_;
+      /**
+       * <code>optional bool reset_application_processor = 6;</code>
+       */
+      public boolean hasResetApplicationProcessor() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional bool reset_application_processor = 6;</code>
+       */
+      public boolean getResetApplicationProcessor() {
+        return resetApplicationProcessor_;
+      }
+
+      // optional string serial_flash_filename = 7;
+      public static final int SERIAL_FLASH_FILENAME_FIELD_NUMBER = 7;
+      private java.lang.Object serialFlashFilename_;
+      /**
+       * <code>optional string serial_flash_filename = 7;</code>
+       */
+      public boolean hasSerialFlashFilename() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional string serial_flash_filename = 7;</code>
+       */
+      public java.lang.String getSerialFlashFilename() {
+        java.lang.Object ref = serialFlashFilename_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            serialFlashFilename_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       * <code>optional string serial_flash_filename = 7;</code>
+       */
+      public com.google.protobuf.ByteString
+          getSerialFlashFilenameBytes() {
+        java.lang.Object ref = serialFlashFilename_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          serialFlashFilename_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
+      // optional string serial_flash_path = 8;
+      public static final int SERIAL_FLASH_PATH_FIELD_NUMBER = 8;
+      private java.lang.Object serialFlashPath_;
+      /**
+       * <code>optional string serial_flash_path = 8;</code>
+       */
+      public boolean hasSerialFlashPath() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional string serial_flash_path = 8;</code>
+       */
+      public java.lang.String getSerialFlashPath() {
+        java.lang.Object ref = serialFlashPath_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            serialFlashPath_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       * <code>optional string serial_flash_path = 8;</code>
+       */
+      public com.google.protobuf.ByteString
+          getSerialFlashPathBytes() {
+        java.lang.Object ref = serialFlashPath_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          serialFlashPath_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
+      // optional string sd_card_filename = 3;
+      public static final int SD_CARD_FILENAME_FIELD_NUMBER = 3;
+      private java.lang.Object sdCardFilename_;
+      /**
+       * <code>optional string sd_card_filename = 3;</code>
+       */
+      public boolean hasSdCardFilename() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional string sd_card_filename = 3;</code>
+       */
+      public java.lang.String getSdCardFilename() {
+        java.lang.Object ref = sdCardFilename_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            sdCardFilename_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       * <code>optional string sd_card_filename = 3;</code>
+       */
+      public com.google.protobuf.ByteString
+          getSdCardFilenameBytes() {
+        java.lang.Object ref = sdCardFilename_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          sdCardFilename_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
+      // optional string sd_card_path = 9;
+      public static final int SD_CARD_PATH_FIELD_NUMBER = 9;
+      private java.lang.Object sdCardPath_;
+      /**
+       * <code>optional string sd_card_path = 9;</code>
+       */
+      public boolean hasSdCardPath() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional string sd_card_path = 9;</code>
+       */
+      public java.lang.String getSdCardPath() {
+        java.lang.Object ref = sdCardPath_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            sdCardPath_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       * <code>optional string sd_card_path = 9;</code>
+       */
+      public com.google.protobuf.ByteString
+          getSdCardPathBytes() {
+        java.lang.Object ref = sdCardPath_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          sdCardPath_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
+      private void initFields() {
+        host_ = "";
+        url_ = "";
+        copyToSerialFlash_ = false;
+        resetNetworkProcessor_ = false;
+        resetApplicationProcessor_ = false;
+        serialFlashFilename_ = "";
+        serialFlashPath_ = "";
+        sdCardFilename_ = "";
+        sdCardPath_ = "";
+      }
+      private byte memoizedIsInitialized = -1;
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized != -1) return isInitialized == 1;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        getSerializedSize();
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          output.writeBytes(1, getHostBytes());
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          output.writeBytes(2, getUrlBytes());
+        }
+        if (((bitField0_ & 0x00000080) == 0x00000080)) {
+          output.writeBytes(3, getSdCardFilenameBytes());
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          output.writeBool(4, copyToSerialFlash_);
+        }
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          output.writeBool(5, resetNetworkProcessor_);
+        }
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          output.writeBool(6, resetApplicationProcessor_);
+        }
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          output.writeBytes(7, getSerialFlashFilenameBytes());
+        }
+        if (((bitField0_ & 0x00000040) == 0x00000040)) {
+          output.writeBytes(8, getSerialFlashPathBytes());
+        }
+        if (((bitField0_ & 0x00000100) == 0x00000100)) {
+          output.writeBytes(9, getSdCardPathBytes());
+        }
+        getUnknownFields().writeTo(output);
+      }
+
+      private int memoizedSerializedSize = -1;
+      public int getSerializedSize() {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(1, getHostBytes());
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(2, getUrlBytes());
+        }
+        if (((bitField0_ & 0x00000080) == 0x00000080)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(3, getSdCardFilenameBytes());
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBoolSize(4, copyToSerialFlash_);
+        }
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBoolSize(5, resetNetworkProcessor_);
+        }
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBoolSize(6, resetApplicationProcessor_);
+        }
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(7, getSerialFlashFilenameBytes());
+        }
+        if (((bitField0_ & 0x00000040) == 0x00000040)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(8, getSerialFlashPathBytes());
+        }
+        if (((bitField0_ & 0x00000100) == 0x00000100)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(9, getSdCardPathBytes());
+        }
+        size += getUnknownFields().getSerializedSize();
+        memoizedSerializedSize = size;
+        return size;
+      }
+
+      private static final long serialVersionUID = 0L;
+      @java.lang.Override
+      protected java.lang.Object writeReplace()
+          throws java.io.ObjectStreamException {
+        return super.writeReplace();
+      }
+
+      public static com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+
+      public static Builder newBuilder() { return Builder.create(); }
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder(com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload prototype) {
+        return newBuilder().mergeFrom(prototype);
+      }
+      public Builder toBuilder() { return newBuilder(this); }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code hello.SyncResponse.FileDownload}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessage.Builder<Builder>
+         implements com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownloadOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return com.hello.suripu.api.input.InputProtos.internal_static_hello_SyncResponse_FileDownload_descriptor;
+        }
+
+        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return com.hello.suripu.api.input.InputProtos.internal_static_hello_SyncResponse_FileDownload_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload.class, com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload.Builder.class);
+        }
+
+        // Construct using com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          }
+        }
+        private static Builder create() {
+          return new Builder();
+        }
+
+        public Builder clear() {
+          super.clear();
+          host_ = "";
+          bitField0_ = (bitField0_ & ~0x00000001);
+          url_ = "";
+          bitField0_ = (bitField0_ & ~0x00000002);
+          copyToSerialFlash_ = false;
+          bitField0_ = (bitField0_ & ~0x00000004);
+          resetNetworkProcessor_ = false;
+          bitField0_ = (bitField0_ & ~0x00000008);
+          resetApplicationProcessor_ = false;
+          bitField0_ = (bitField0_ & ~0x00000010);
+          serialFlashFilename_ = "";
+          bitField0_ = (bitField0_ & ~0x00000020);
+          serialFlashPath_ = "";
+          bitField0_ = (bitField0_ & ~0x00000040);
+          sdCardFilename_ = "";
+          bitField0_ = (bitField0_ & ~0x00000080);
+          sdCardPath_ = "";
+          bitField0_ = (bitField0_ & ~0x00000100);
+          return this;
+        }
+
+        public Builder clone() {
+          return create().mergeFrom(buildPartial());
+        }
+
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return com.hello.suripu.api.input.InputProtos.internal_static_hello_SyncResponse_FileDownload_descriptor;
+        }
+
+        public com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload getDefaultInstanceForType() {
+          return com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload.getDefaultInstance();
+        }
+
+        public com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload build() {
+          com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        public com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload buildPartial() {
+          com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload result = new com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload(this);
+          int from_bitField0_ = bitField0_;
+          int to_bitField0_ = 0;
+          if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+            to_bitField0_ |= 0x00000001;
+          }
+          result.host_ = host_;
+          if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+            to_bitField0_ |= 0x00000002;
+          }
+          result.url_ = url_;
+          if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+            to_bitField0_ |= 0x00000004;
+          }
+          result.copyToSerialFlash_ = copyToSerialFlash_;
+          if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+            to_bitField0_ |= 0x00000008;
+          }
+          result.resetNetworkProcessor_ = resetNetworkProcessor_;
+          if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+            to_bitField0_ |= 0x00000010;
+          }
+          result.resetApplicationProcessor_ = resetApplicationProcessor_;
+          if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+            to_bitField0_ |= 0x00000020;
+          }
+          result.serialFlashFilename_ = serialFlashFilename_;
+          if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+            to_bitField0_ |= 0x00000040;
+          }
+          result.serialFlashPath_ = serialFlashPath_;
+          if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+            to_bitField0_ |= 0x00000080;
+          }
+          result.sdCardFilename_ = sdCardFilename_;
+          if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+            to_bitField0_ |= 0x00000100;
+          }
+          result.sdCardPath_ = sdCardPath_;
+          result.bitField0_ = to_bitField0_;
+          onBuilt();
+          return result;
+        }
+
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload) {
+            return mergeFrom((com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload other) {
+          if (other == com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload.getDefaultInstance()) return this;
+          if (other.hasHost()) {
+            bitField0_ |= 0x00000001;
+            host_ = other.host_;
+            onChanged();
+          }
+          if (other.hasUrl()) {
+            bitField0_ |= 0x00000002;
+            url_ = other.url_;
+            onChanged();
+          }
+          if (other.hasCopyToSerialFlash()) {
+            setCopyToSerialFlash(other.getCopyToSerialFlash());
+          }
+          if (other.hasResetNetworkProcessor()) {
+            setResetNetworkProcessor(other.getResetNetworkProcessor());
+          }
+          if (other.hasResetApplicationProcessor()) {
+            setResetApplicationProcessor(other.getResetApplicationProcessor());
+          }
+          if (other.hasSerialFlashFilename()) {
+            bitField0_ |= 0x00000020;
+            serialFlashFilename_ = other.serialFlashFilename_;
+            onChanged();
+          }
+          if (other.hasSerialFlashPath()) {
+            bitField0_ |= 0x00000040;
+            serialFlashPath_ = other.serialFlashPath_;
+            onChanged();
+          }
+          if (other.hasSdCardFilename()) {
+            bitField0_ |= 0x00000080;
+            sdCardFilename_ = other.sdCardFilename_;
+            onChanged();
+          }
+          if (other.hasSdCardPath()) {
+            bitField0_ |= 0x00000100;
+            sdCardPath_ = other.sdCardPath_;
+            onChanged();
+          }
+          this.mergeUnknownFields(other.getUnknownFields());
+          return this;
+        }
+
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload) e.getUnfinishedMessage();
+            throw e;
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+        private int bitField0_;
+
+        // optional string host = 1;
+        private java.lang.Object host_ = "";
+        /**
+         * <code>optional string host = 1;</code>
+         */
+        public boolean hasHost() {
+          return ((bitField0_ & 0x00000001) == 0x00000001);
+        }
+        /**
+         * <code>optional string host = 1;</code>
+         */
+        public java.lang.String getHost() {
+          java.lang.Object ref = host_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
+                .toStringUtf8();
+            host_ = s;
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         * <code>optional string host = 1;</code>
+         */
+        public com.google.protobuf.ByteString
+            getHostBytes() {
+          java.lang.Object ref = host_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
+            host_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         * <code>optional string host = 1;</code>
+         */
+        public Builder setHost(
+            java.lang.String value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+          host_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string host = 1;</code>
+         */
+        public Builder clearHost() {
+          bitField0_ = (bitField0_ & ~0x00000001);
+          host_ = getDefaultInstance().getHost();
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string host = 1;</code>
+         */
+        public Builder setHostBytes(
+            com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+          host_ = value;
+          onChanged();
+          return this;
+        }
+
+        // optional string url = 2;
+        private java.lang.Object url_ = "";
+        /**
+         * <code>optional string url = 2;</code>
+         */
+        public boolean hasUrl() {
+          return ((bitField0_ & 0x00000002) == 0x00000002);
+        }
+        /**
+         * <code>optional string url = 2;</code>
+         */
+        public java.lang.String getUrl() {
+          java.lang.Object ref = url_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
+                .toStringUtf8();
+            url_ = s;
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         * <code>optional string url = 2;</code>
+         */
+        public com.google.protobuf.ByteString
+            getUrlBytes() {
+          java.lang.Object ref = url_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
+            url_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         * <code>optional string url = 2;</code>
+         */
+        public Builder setUrl(
+            java.lang.String value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+          url_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string url = 2;</code>
+         */
+        public Builder clearUrl() {
+          bitField0_ = (bitField0_ & ~0x00000002);
+          url_ = getDefaultInstance().getUrl();
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string url = 2;</code>
+         */
+        public Builder setUrlBytes(
+            com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+          url_ = value;
+          onChanged();
+          return this;
+        }
+
+        // optional bool copy_to_serial_flash = 4;
+        private boolean copyToSerialFlash_ ;
+        /**
+         * <code>optional bool copy_to_serial_flash = 4;</code>
+         */
+        public boolean hasCopyToSerialFlash() {
+          return ((bitField0_ & 0x00000004) == 0x00000004);
+        }
+        /**
+         * <code>optional bool copy_to_serial_flash = 4;</code>
+         */
+        public boolean getCopyToSerialFlash() {
+          return copyToSerialFlash_;
+        }
+        /**
+         * <code>optional bool copy_to_serial_flash = 4;</code>
+         */
+        public Builder setCopyToSerialFlash(boolean value) {
+          bitField0_ |= 0x00000004;
+          copyToSerialFlash_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional bool copy_to_serial_flash = 4;</code>
+         */
+        public Builder clearCopyToSerialFlash() {
+          bitField0_ = (bitField0_ & ~0x00000004);
+          copyToSerialFlash_ = false;
+          onChanged();
+          return this;
+        }
+
+        // optional bool reset_network_processor = 5;
+        private boolean resetNetworkProcessor_ ;
+        /**
+         * <code>optional bool reset_network_processor = 5;</code>
+         */
+        public boolean hasResetNetworkProcessor() {
+          return ((bitField0_ & 0x00000008) == 0x00000008);
+        }
+        /**
+         * <code>optional bool reset_network_processor = 5;</code>
+         */
+        public boolean getResetNetworkProcessor() {
+          return resetNetworkProcessor_;
+        }
+        /**
+         * <code>optional bool reset_network_processor = 5;</code>
+         */
+        public Builder setResetNetworkProcessor(boolean value) {
+          bitField0_ |= 0x00000008;
+          resetNetworkProcessor_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional bool reset_network_processor = 5;</code>
+         */
+        public Builder clearResetNetworkProcessor() {
+          bitField0_ = (bitField0_ & ~0x00000008);
+          resetNetworkProcessor_ = false;
+          onChanged();
+          return this;
+        }
+
+        // optional bool reset_application_processor = 6;
+        private boolean resetApplicationProcessor_ ;
+        /**
+         * <code>optional bool reset_application_processor = 6;</code>
+         */
+        public boolean hasResetApplicationProcessor() {
+          return ((bitField0_ & 0x00000010) == 0x00000010);
+        }
+        /**
+         * <code>optional bool reset_application_processor = 6;</code>
+         */
+        public boolean getResetApplicationProcessor() {
+          return resetApplicationProcessor_;
+        }
+        /**
+         * <code>optional bool reset_application_processor = 6;</code>
+         */
+        public Builder setResetApplicationProcessor(boolean value) {
+          bitField0_ |= 0x00000010;
+          resetApplicationProcessor_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional bool reset_application_processor = 6;</code>
+         */
+        public Builder clearResetApplicationProcessor() {
+          bitField0_ = (bitField0_ & ~0x00000010);
+          resetApplicationProcessor_ = false;
+          onChanged();
+          return this;
+        }
+
+        // optional string serial_flash_filename = 7;
+        private java.lang.Object serialFlashFilename_ = "";
+        /**
+         * <code>optional string serial_flash_filename = 7;</code>
+         */
+        public boolean hasSerialFlashFilename() {
+          return ((bitField0_ & 0x00000020) == 0x00000020);
+        }
+        /**
+         * <code>optional string serial_flash_filename = 7;</code>
+         */
+        public java.lang.String getSerialFlashFilename() {
+          java.lang.Object ref = serialFlashFilename_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
+                .toStringUtf8();
+            serialFlashFilename_ = s;
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         * <code>optional string serial_flash_filename = 7;</code>
+         */
+        public com.google.protobuf.ByteString
+            getSerialFlashFilenameBytes() {
+          java.lang.Object ref = serialFlashFilename_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
+            serialFlashFilename_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         * <code>optional string serial_flash_filename = 7;</code>
+         */
+        public Builder setSerialFlashFilename(
+            java.lang.String value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+          serialFlashFilename_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string serial_flash_filename = 7;</code>
+         */
+        public Builder clearSerialFlashFilename() {
+          bitField0_ = (bitField0_ & ~0x00000020);
+          serialFlashFilename_ = getDefaultInstance().getSerialFlashFilename();
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string serial_flash_filename = 7;</code>
+         */
+        public Builder setSerialFlashFilenameBytes(
+            com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+          serialFlashFilename_ = value;
+          onChanged();
+          return this;
+        }
+
+        // optional string serial_flash_path = 8;
+        private java.lang.Object serialFlashPath_ = "";
+        /**
+         * <code>optional string serial_flash_path = 8;</code>
+         */
+        public boolean hasSerialFlashPath() {
+          return ((bitField0_ & 0x00000040) == 0x00000040);
+        }
+        /**
+         * <code>optional string serial_flash_path = 8;</code>
+         */
+        public java.lang.String getSerialFlashPath() {
+          java.lang.Object ref = serialFlashPath_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
+                .toStringUtf8();
+            serialFlashPath_ = s;
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         * <code>optional string serial_flash_path = 8;</code>
+         */
+        public com.google.protobuf.ByteString
+            getSerialFlashPathBytes() {
+          java.lang.Object ref = serialFlashPath_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
+            serialFlashPath_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         * <code>optional string serial_flash_path = 8;</code>
+         */
+        public Builder setSerialFlashPath(
+            java.lang.String value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000040;
+          serialFlashPath_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string serial_flash_path = 8;</code>
+         */
+        public Builder clearSerialFlashPath() {
+          bitField0_ = (bitField0_ & ~0x00000040);
+          serialFlashPath_ = getDefaultInstance().getSerialFlashPath();
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string serial_flash_path = 8;</code>
+         */
+        public Builder setSerialFlashPathBytes(
+            com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000040;
+          serialFlashPath_ = value;
+          onChanged();
+          return this;
+        }
+
+        // optional string sd_card_filename = 3;
+        private java.lang.Object sdCardFilename_ = "";
+        /**
+         * <code>optional string sd_card_filename = 3;</code>
+         */
+        public boolean hasSdCardFilename() {
+          return ((bitField0_ & 0x00000080) == 0x00000080);
+        }
+        /**
+         * <code>optional string sd_card_filename = 3;</code>
+         */
+        public java.lang.String getSdCardFilename() {
+          java.lang.Object ref = sdCardFilename_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
+                .toStringUtf8();
+            sdCardFilename_ = s;
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         * <code>optional string sd_card_filename = 3;</code>
+         */
+        public com.google.protobuf.ByteString
+            getSdCardFilenameBytes() {
+          java.lang.Object ref = sdCardFilename_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
+            sdCardFilename_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         * <code>optional string sd_card_filename = 3;</code>
+         */
+        public Builder setSdCardFilename(
+            java.lang.String value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+          sdCardFilename_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string sd_card_filename = 3;</code>
+         */
+        public Builder clearSdCardFilename() {
+          bitField0_ = (bitField0_ & ~0x00000080);
+          sdCardFilename_ = getDefaultInstance().getSdCardFilename();
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string sd_card_filename = 3;</code>
+         */
+        public Builder setSdCardFilenameBytes(
+            com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+          sdCardFilename_ = value;
+          onChanged();
+          return this;
+        }
+
+        // optional string sd_card_path = 9;
+        private java.lang.Object sdCardPath_ = "";
+        /**
+         * <code>optional string sd_card_path = 9;</code>
+         */
+        public boolean hasSdCardPath() {
+          return ((bitField0_ & 0x00000100) == 0x00000100);
+        }
+        /**
+         * <code>optional string sd_card_path = 9;</code>
+         */
+        public java.lang.String getSdCardPath() {
+          java.lang.Object ref = sdCardPath_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
+                .toStringUtf8();
+            sdCardPath_ = s;
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         * <code>optional string sd_card_path = 9;</code>
+         */
+        public com.google.protobuf.ByteString
+            getSdCardPathBytes() {
+          java.lang.Object ref = sdCardPath_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
+            sdCardPath_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         * <code>optional string sd_card_path = 9;</code>
+         */
+        public Builder setSdCardPath(
+            java.lang.String value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000100;
+          sdCardPath_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string sd_card_path = 9;</code>
+         */
+        public Builder clearSdCardPath() {
+          bitField0_ = (bitField0_ & ~0x00000100);
+          sdCardPath_ = getDefaultInstance().getSdCardPath();
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string sd_card_path = 9;</code>
+         */
+        public Builder setSdCardPathBytes(
+            com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000100;
+          sdCardPath_ = value;
+          onChanged();
+          return this;
+        }
+
+        // @@protoc_insertion_point(builder_scope:hello.SyncResponse.FileDownload)
+      }
+
+      static {
+        defaultInstance = new FileDownload(true);
+        defaultInstance.initFields();
+      }
+
+      // @@protoc_insertion_point(class_scope:hello.SyncResponse.FileDownload)
+    }
+
     public interface AlarmOrBuilder
         extends com.google.protobuf.MessageOrBuilder {
 
       // optional uint32 start_time = 1;
       /**
        * <code>optional uint32 start_time = 1;</code>
+       *
+       * <pre>
+       * obselete,  use ring_offset_from_now
+       * </pre>
        */
       boolean hasStartTime();
       /**
        * <code>optional uint32 start_time = 1;</code>
+       *
+       * <pre>
+       * obselete,  use ring_offset_from_now
+       * </pre>
        */
       int getStartTime();
 
       // optional uint32 end_time = 2;
       /**
        * <code>optional uint32 end_time = 2;</code>
+       *
+       * <pre>
+       * obselete, use ring_offset_from_now + ring_duration
+       * </pre>
        */
       boolean hasEndTime();
       /**
        * <code>optional uint32 end_time = 2;</code>
+       *
+       * <pre>
+       * obselete, use ring_offset_from_now + ring_duration
+       * </pre>
        */
       int getEndTime();
 
@@ -10170,7 +11689,7 @@ public final class InputProtos {
        * <code>optional int32 ring_offset_from_now_in_second = 4;</code>
        *
        * <pre>
-       *repeated int64 ringtone_ids = 4 [packed = true];
+       * This is a more fault tolerance design
        * </pre>
        */
       boolean hasRingOffsetFromNowInSecond();
@@ -10178,7 +11697,7 @@ public final class InputProtos {
        * <code>optional int32 ring_offset_from_now_in_second = 4;</code>
        *
        * <pre>
-       *repeated int64 ringtone_ids = 4 [packed = true];
+       * This is a more fault tolerance design
        * </pre>
        */
       int getRingOffsetFromNowInSecond();
@@ -10314,12 +11833,20 @@ public final class InputProtos {
       private int startTime_;
       /**
        * <code>optional uint32 start_time = 1;</code>
+       *
+       * <pre>
+       * obselete,  use ring_offset_from_now
+       * </pre>
        */
       public boolean hasStartTime() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
        * <code>optional uint32 start_time = 1;</code>
+       *
+       * <pre>
+       * obselete,  use ring_offset_from_now
+       * </pre>
        */
       public int getStartTime() {
         return startTime_;
@@ -10330,12 +11857,20 @@ public final class InputProtos {
       private int endTime_;
       /**
        * <code>optional uint32 end_time = 2;</code>
+       *
+       * <pre>
+       * obselete, use ring_offset_from_now + ring_duration
+       * </pre>
        */
       public boolean hasEndTime() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
        * <code>optional uint32 end_time = 2;</code>
+       *
+       * <pre>
+       * obselete, use ring_offset_from_now + ring_duration
+       * </pre>
        */
       public int getEndTime() {
         return endTime_;
@@ -10364,7 +11899,7 @@ public final class InputProtos {
        * <code>optional int32 ring_offset_from_now_in_second = 4;</code>
        *
        * <pre>
-       *repeated int64 ringtone_ids = 4 [packed = true];
+       * This is a more fault tolerance design
        * </pre>
        */
       public boolean hasRingOffsetFromNowInSecond() {
@@ -10374,7 +11909,7 @@ public final class InputProtos {
        * <code>optional int32 ring_offset_from_now_in_second = 4;</code>
        *
        * <pre>
-       *repeated int64 ringtone_ids = 4 [packed = true];
+       * This is a more fault tolerance design
        * </pre>
        */
       public int getRingOffsetFromNowInSecond() {
@@ -10696,18 +12231,30 @@ public final class InputProtos {
         private int startTime_ ;
         /**
          * <code>optional uint32 start_time = 1;</code>
+         *
+         * <pre>
+         * obselete,  use ring_offset_from_now
+         * </pre>
          */
         public boolean hasStartTime() {
           return ((bitField0_ & 0x00000001) == 0x00000001);
         }
         /**
          * <code>optional uint32 start_time = 1;</code>
+         *
+         * <pre>
+         * obselete,  use ring_offset_from_now
+         * </pre>
          */
         public int getStartTime() {
           return startTime_;
         }
         /**
          * <code>optional uint32 start_time = 1;</code>
+         *
+         * <pre>
+         * obselete,  use ring_offset_from_now
+         * </pre>
          */
         public Builder setStartTime(int value) {
           bitField0_ |= 0x00000001;
@@ -10717,6 +12264,10 @@ public final class InputProtos {
         }
         /**
          * <code>optional uint32 start_time = 1;</code>
+         *
+         * <pre>
+         * obselete,  use ring_offset_from_now
+         * </pre>
          */
         public Builder clearStartTime() {
           bitField0_ = (bitField0_ & ~0x00000001);
@@ -10729,18 +12280,30 @@ public final class InputProtos {
         private int endTime_ ;
         /**
          * <code>optional uint32 end_time = 2;</code>
+         *
+         * <pre>
+         * obselete, use ring_offset_from_now + ring_duration
+         * </pre>
          */
         public boolean hasEndTime() {
           return ((bitField0_ & 0x00000002) == 0x00000002);
         }
         /**
          * <code>optional uint32 end_time = 2;</code>
+         *
+         * <pre>
+         * obselete, use ring_offset_from_now + ring_duration
+         * </pre>
          */
         public int getEndTime() {
           return endTime_;
         }
         /**
          * <code>optional uint32 end_time = 2;</code>
+         *
+         * <pre>
+         * obselete, use ring_offset_from_now + ring_duration
+         * </pre>
          */
         public Builder setEndTime(int value) {
           bitField0_ |= 0x00000002;
@@ -10750,6 +12313,10 @@ public final class InputProtos {
         }
         /**
          * <code>optional uint32 end_time = 2;</code>
+         *
+         * <pre>
+         * obselete, use ring_offset_from_now + ring_duration
+         * </pre>
          */
         public Builder clearEndTime() {
           bitField0_ = (bitField0_ & ~0x00000002);
@@ -10797,7 +12364,7 @@ public final class InputProtos {
          * <code>optional int32 ring_offset_from_now_in_second = 4;</code>
          *
          * <pre>
-         *repeated int64 ringtone_ids = 4 [packed = true];
+         * This is a more fault tolerance design
          * </pre>
          */
         public boolean hasRingOffsetFromNowInSecond() {
@@ -10807,7 +12374,7 @@ public final class InputProtos {
          * <code>optional int32 ring_offset_from_now_in_second = 4;</code>
          *
          * <pre>
-         *repeated int64 ringtone_ids = 4 [packed = true];
+         * This is a more fault tolerance design
          * </pre>
          */
         public int getRingOffsetFromNowInSecond() {
@@ -10817,7 +12384,7 @@ public final class InputProtos {
          * <code>optional int32 ring_offset_from_now_in_second = 4;</code>
          *
          * <pre>
-         *repeated int64 ringtone_ids = 4 [packed = true];
+         * This is a more fault tolerance design
          * </pre>
          */
         public Builder setRingOffsetFromNowInSecond(int value) {
@@ -10830,7 +12397,7 @@ public final class InputProtos {
          * <code>optional int32 ring_offset_from_now_in_second = 4;</code>
          *
          * <pre>
-         *repeated int64 ringtone_ids = 4 [packed = true];
+         * This is a more fault tolerance design
          * </pre>
          */
         public Builder clearRingOffsetFromNowInSecond() {
@@ -12085,740 +13652,88 @@ public final class InputProtos {
       // @@protoc_insertion_point(class_scope:hello.SyncResponse.WhiteNoise)
     }
 
-    public interface FirmwareUpdateOrBuilder
-        extends com.google.protobuf.MessageOrBuilder {
-
-      // optional int32 firmware_version = 1;
-      /**
-       * <code>optional int32 firmware_version = 1;</code>
-       */
-      boolean hasFirmwareVersion();
-      /**
-       * <code>optional int32 firmware_version = 1;</code>
-       */
-      int getFirmwareVersion();
-
-      // repeated string file_urls = 2;
-      /**
-       * <code>repeated string file_urls = 2;</code>
-       */
-      java.util.List<java.lang.String>
-      getFileUrlsList();
-      /**
-       * <code>repeated string file_urls = 2;</code>
-       */
-      int getFileUrlsCount();
-      /**
-       * <code>repeated string file_urls = 2;</code>
-       */
-      java.lang.String getFileUrls(int index);
-      /**
-       * <code>repeated string file_urls = 2;</code>
-       */
-      com.google.protobuf.ByteString
-          getFileUrlsBytes(int index);
-
-      // optional int32 expires_at = 3;
-      /**
-       * <code>optional int32 expires_at = 3;</code>
-       */
-      boolean hasExpiresAt();
-      /**
-       * <code>optional int32 expires_at = 3;</code>
-       */
-      int getExpiresAt();
-    }
-    /**
-     * Protobuf type {@code hello.SyncResponse.FirmwareUpdate}
-     */
-    public static final class FirmwareUpdate extends
-        com.google.protobuf.GeneratedMessage
-        implements FirmwareUpdateOrBuilder {
-      // Use FirmwareUpdate.newBuilder() to construct.
-      private FirmwareUpdate(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
-        super(builder);
-        this.unknownFields = builder.getUnknownFields();
-      }
-      private FirmwareUpdate(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
-
-      private static final FirmwareUpdate defaultInstance;
-      public static FirmwareUpdate getDefaultInstance() {
-        return defaultInstance;
-      }
-
-      public FirmwareUpdate getDefaultInstanceForType() {
-        return defaultInstance;
-      }
-
-      private final com.google.protobuf.UnknownFieldSet unknownFields;
-      @java.lang.Override
-      public final com.google.protobuf.UnknownFieldSet
-          getUnknownFields() {
-        return this.unknownFields;
-      }
-      private FirmwareUpdate(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        initFields();
-        int mutable_bitField0_ = 0;
-        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-            com.google.protobuf.UnknownFieldSet.newBuilder();
-        try {
-          boolean done = false;
-          while (!done) {
-            int tag = input.readTag();
-            switch (tag) {
-              case 0:
-                done = true;
-                break;
-              default: {
-                if (!parseUnknownField(input, unknownFields,
-                                       extensionRegistry, tag)) {
-                  done = true;
-                }
-                break;
-              }
-              case 8: {
-                bitField0_ |= 0x00000001;
-                firmwareVersion_ = input.readInt32();
-                break;
-              }
-              case 18: {
-                if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-                  fileUrls_ = new com.google.protobuf.LazyStringArrayList();
-                  mutable_bitField0_ |= 0x00000002;
-                }
-                fileUrls_.add(input.readBytes());
-                break;
-              }
-              case 24: {
-                bitField0_ |= 0x00000002;
-                expiresAt_ = input.readInt32();
-                break;
-              }
-            }
-          }
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          throw e.setUnfinishedMessage(this);
-        } catch (java.io.IOException e) {
-          throw new com.google.protobuf.InvalidProtocolBufferException(
-              e.getMessage()).setUnfinishedMessage(this);
-        } finally {
-          if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-            fileUrls_ = new com.google.protobuf.UnmodifiableLazyStringList(fileUrls_);
-          }
-          this.unknownFields = unknownFields.build();
-          makeExtensionsImmutable();
-        }
-      }
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return com.hello.suripu.api.input.InputProtos.internal_static_hello_SyncResponse_FirmwareUpdate_descriptor;
-      }
-
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return com.hello.suripu.api.input.InputProtos.internal_static_hello_SyncResponse_FirmwareUpdate_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.class, com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.Builder.class);
-      }
-
-      public static com.google.protobuf.Parser<FirmwareUpdate> PARSER =
-          new com.google.protobuf.AbstractParser<FirmwareUpdate>() {
-        public FirmwareUpdate parsePartialFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-          return new FirmwareUpdate(input, extensionRegistry);
-        }
-      };
-
-      @java.lang.Override
-      public com.google.protobuf.Parser<FirmwareUpdate> getParserForType() {
-        return PARSER;
-      }
-
-      private int bitField0_;
-      // optional int32 firmware_version = 1;
-      public static final int FIRMWARE_VERSION_FIELD_NUMBER = 1;
-      private int firmwareVersion_;
-      /**
-       * <code>optional int32 firmware_version = 1;</code>
-       */
-      public boolean hasFirmwareVersion() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>optional int32 firmware_version = 1;</code>
-       */
-      public int getFirmwareVersion() {
-        return firmwareVersion_;
-      }
-
-      // repeated string file_urls = 2;
-      public static final int FILE_URLS_FIELD_NUMBER = 2;
-      private com.google.protobuf.LazyStringList fileUrls_;
-      /**
-       * <code>repeated string file_urls = 2;</code>
-       */
-      public java.util.List<java.lang.String>
-          getFileUrlsList() {
-        return fileUrls_;
-      }
-      /**
-       * <code>repeated string file_urls = 2;</code>
-       */
-      public int getFileUrlsCount() {
-        return fileUrls_.size();
-      }
-      /**
-       * <code>repeated string file_urls = 2;</code>
-       */
-      public java.lang.String getFileUrls(int index) {
-        return fileUrls_.get(index);
-      }
-      /**
-       * <code>repeated string file_urls = 2;</code>
-       */
-      public com.google.protobuf.ByteString
-          getFileUrlsBytes(int index) {
-        return fileUrls_.getByteString(index);
-      }
-
-      // optional int32 expires_at = 3;
-      public static final int EXPIRES_AT_FIELD_NUMBER = 3;
-      private int expiresAt_;
-      /**
-       * <code>optional int32 expires_at = 3;</code>
-       */
-      public boolean hasExpiresAt() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>optional int32 expires_at = 3;</code>
-       */
-      public int getExpiresAt() {
-        return expiresAt_;
-      }
-
-      private void initFields() {
-        firmwareVersion_ = 0;
-        fileUrls_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        expiresAt_ = 0;
-      }
-      private byte memoizedIsInitialized = -1;
-      public final boolean isInitialized() {
-        byte isInitialized = memoizedIsInitialized;
-        if (isInitialized != -1) return isInitialized == 1;
-
-        memoizedIsInitialized = 1;
-        return true;
-      }
-
-      public void writeTo(com.google.protobuf.CodedOutputStream output)
-                          throws java.io.IOException {
-        getSerializedSize();
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          output.writeInt32(1, firmwareVersion_);
-        }
-        for (int i = 0; i < fileUrls_.size(); i++) {
-          output.writeBytes(2, fileUrls_.getByteString(i));
-        }
-        if (((bitField0_ & 0x00000002) == 0x00000002)) {
-          output.writeInt32(3, expiresAt_);
-        }
-        getUnknownFields().writeTo(output);
-      }
-
-      private int memoizedSerializedSize = -1;
-      public int getSerializedSize() {
-        int size = memoizedSerializedSize;
-        if (size != -1) return size;
-
-        size = 0;
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeInt32Size(1, firmwareVersion_);
-        }
-        {
-          int dataSize = 0;
-          for (int i = 0; i < fileUrls_.size(); i++) {
-            dataSize += com.google.protobuf.CodedOutputStream
-              .computeBytesSizeNoTag(fileUrls_.getByteString(i));
-          }
-          size += dataSize;
-          size += 1 * getFileUrlsList().size();
-        }
-        if (((bitField0_ & 0x00000002) == 0x00000002)) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeInt32Size(3, expiresAt_);
-        }
-        size += getUnknownFields().getSerializedSize();
-        memoizedSerializedSize = size;
-        return size;
-      }
-
-      private static final long serialVersionUID = 0L;
-      @java.lang.Override
-      protected java.lang.Object writeReplace()
-          throws java.io.ObjectStreamException {
-        return super.writeReplace();
-      }
-
-      public static com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate parseFrom(
-          com.google.protobuf.ByteString data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data);
-      }
-      public static com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate parseFrom(
-          com.google.protobuf.ByteString data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data, extensionRegistry);
-      }
-      public static com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate parseFrom(byte[] data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data);
-      }
-      public static com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate parseFrom(
-          byte[] data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data, extensionRegistry);
-      }
-      public static com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate parseFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return PARSER.parseFrom(input);
-      }
-      public static com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate parseFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return PARSER.parseFrom(input, extensionRegistry);
-      }
-      public static com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate parseDelimitedFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return PARSER.parseDelimitedFrom(input);
-      }
-      public static com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate parseDelimitedFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return PARSER.parseDelimitedFrom(input, extensionRegistry);
-      }
-      public static com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate parseFrom(
-          com.google.protobuf.CodedInputStream input)
-          throws java.io.IOException {
-        return PARSER.parseFrom(input);
-      }
-      public static com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate parseFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return PARSER.parseFrom(input, extensionRegistry);
-      }
-
-      public static Builder newBuilder() { return Builder.create(); }
-      public Builder newBuilderForType() { return newBuilder(); }
-      public static Builder newBuilder(com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate prototype) {
-        return newBuilder().mergeFrom(prototype);
-      }
-      public Builder toBuilder() { return newBuilder(this); }
-
-      @java.lang.Override
-      protected Builder newBuilderForType(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
-        Builder builder = new Builder(parent);
-        return builder;
-      }
-      /**
-       * Protobuf type {@code hello.SyncResponse.FirmwareUpdate}
-       */
-      public static final class Builder extends
-          com.google.protobuf.GeneratedMessage.Builder<Builder>
-         implements com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdateOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor
-            getDescriptor() {
-          return com.hello.suripu.api.input.InputProtos.internal_static_hello_SyncResponse_FirmwareUpdate_descriptor;
-        }
-
-        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
-            internalGetFieldAccessorTable() {
-          return com.hello.suripu.api.input.InputProtos.internal_static_hello_SyncResponse_FirmwareUpdate_fieldAccessorTable
-              .ensureFieldAccessorsInitialized(
-                  com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.class, com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.Builder.class);
-        }
-
-        // Construct using com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.newBuilder()
-        private Builder() {
-          maybeForceBuilderInitialization();
-        }
-
-        private Builder(
-            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
-          super(parent);
-          maybeForceBuilderInitialization();
-        }
-        private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
-          }
-        }
-        private static Builder create() {
-          return new Builder();
-        }
-
-        public Builder clear() {
-          super.clear();
-          firmwareVersion_ = 0;
-          bitField0_ = (bitField0_ & ~0x00000001);
-          fileUrls_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-          bitField0_ = (bitField0_ & ~0x00000002);
-          expiresAt_ = 0;
-          bitField0_ = (bitField0_ & ~0x00000004);
-          return this;
-        }
-
-        public Builder clone() {
-          return create().mergeFrom(buildPartial());
-        }
-
-        public com.google.protobuf.Descriptors.Descriptor
-            getDescriptorForType() {
-          return com.hello.suripu.api.input.InputProtos.internal_static_hello_SyncResponse_FirmwareUpdate_descriptor;
-        }
-
-        public com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate getDefaultInstanceForType() {
-          return com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.getDefaultInstance();
-        }
-
-        public com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate build() {
-          com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate result = buildPartial();
-          if (!result.isInitialized()) {
-            throw newUninitializedMessageException(result);
-          }
-          return result;
-        }
-
-        public com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate buildPartial() {
-          com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate result = new com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate(this);
-          int from_bitField0_ = bitField0_;
-          int to_bitField0_ = 0;
-          if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-            to_bitField0_ |= 0x00000001;
-          }
-          result.firmwareVersion_ = firmwareVersion_;
-          if (((bitField0_ & 0x00000002) == 0x00000002)) {
-            fileUrls_ = new com.google.protobuf.UnmodifiableLazyStringList(
-                fileUrls_);
-            bitField0_ = (bitField0_ & ~0x00000002);
-          }
-          result.fileUrls_ = fileUrls_;
-          if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
-            to_bitField0_ |= 0x00000002;
-          }
-          result.expiresAt_ = expiresAt_;
-          result.bitField0_ = to_bitField0_;
-          onBuilt();
-          return result;
-        }
-
-        public Builder mergeFrom(com.google.protobuf.Message other) {
-          if (other instanceof com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate) {
-            return mergeFrom((com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate)other);
-          } else {
-            super.mergeFrom(other);
-            return this;
-          }
-        }
-
-        public Builder mergeFrom(com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate other) {
-          if (other == com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.getDefaultInstance()) return this;
-          if (other.hasFirmwareVersion()) {
-            setFirmwareVersion(other.getFirmwareVersion());
-          }
-          if (!other.fileUrls_.isEmpty()) {
-            if (fileUrls_.isEmpty()) {
-              fileUrls_ = other.fileUrls_;
-              bitField0_ = (bitField0_ & ~0x00000002);
-            } else {
-              ensureFileUrlsIsMutable();
-              fileUrls_.addAll(other.fileUrls_);
-            }
-            onChanged();
-          }
-          if (other.hasExpiresAt()) {
-            setExpiresAt(other.getExpiresAt());
-          }
-          this.mergeUnknownFields(other.getUnknownFields());
-          return this;
-        }
-
-        public final boolean isInitialized() {
-          return true;
-        }
-
-        public Builder mergeFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws java.io.IOException {
-          com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate parsedMessage = null;
-          try {
-            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate) e.getUnfinishedMessage();
-            throw e;
-          } finally {
-            if (parsedMessage != null) {
-              mergeFrom(parsedMessage);
-            }
-          }
-          return this;
-        }
-        private int bitField0_;
-
-        // optional int32 firmware_version = 1;
-        private int firmwareVersion_ ;
-        /**
-         * <code>optional int32 firmware_version = 1;</code>
-         */
-        public boolean hasFirmwareVersion() {
-          return ((bitField0_ & 0x00000001) == 0x00000001);
-        }
-        /**
-         * <code>optional int32 firmware_version = 1;</code>
-         */
-        public int getFirmwareVersion() {
-          return firmwareVersion_;
-        }
-        /**
-         * <code>optional int32 firmware_version = 1;</code>
-         */
-        public Builder setFirmwareVersion(int value) {
-          bitField0_ |= 0x00000001;
-          firmwareVersion_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>optional int32 firmware_version = 1;</code>
-         */
-        public Builder clearFirmwareVersion() {
-          bitField0_ = (bitField0_ & ~0x00000001);
-          firmwareVersion_ = 0;
-          onChanged();
-          return this;
-        }
-
-        // repeated string file_urls = 2;
-        private com.google.protobuf.LazyStringList fileUrls_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        private void ensureFileUrlsIsMutable() {
-          if (!((bitField0_ & 0x00000002) == 0x00000002)) {
-            fileUrls_ = new com.google.protobuf.LazyStringArrayList(fileUrls_);
-            bitField0_ |= 0x00000002;
-           }
-        }
-        /**
-         * <code>repeated string file_urls = 2;</code>
-         */
-        public java.util.List<java.lang.String>
-            getFileUrlsList() {
-          return java.util.Collections.unmodifiableList(fileUrls_);
-        }
-        /**
-         * <code>repeated string file_urls = 2;</code>
-         */
-        public int getFileUrlsCount() {
-          return fileUrls_.size();
-        }
-        /**
-         * <code>repeated string file_urls = 2;</code>
-         */
-        public java.lang.String getFileUrls(int index) {
-          return fileUrls_.get(index);
-        }
-        /**
-         * <code>repeated string file_urls = 2;</code>
-         */
-        public com.google.protobuf.ByteString
-            getFileUrlsBytes(int index) {
-          return fileUrls_.getByteString(index);
-        }
-        /**
-         * <code>repeated string file_urls = 2;</code>
-         */
-        public Builder setFileUrls(
-            int index, java.lang.String value) {
-          if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureFileUrlsIsMutable();
-          fileUrls_.set(index, value);
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>repeated string file_urls = 2;</code>
-         */
-        public Builder addFileUrls(
-            java.lang.String value) {
-          if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureFileUrlsIsMutable();
-          fileUrls_.add(value);
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>repeated string file_urls = 2;</code>
-         */
-        public Builder addAllFileUrls(
-            java.lang.Iterable<java.lang.String> values) {
-          ensureFileUrlsIsMutable();
-          super.addAll(values, fileUrls_);
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>repeated string file_urls = 2;</code>
-         */
-        public Builder clearFileUrls() {
-          fileUrls_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-          bitField0_ = (bitField0_ & ~0x00000002);
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>repeated string file_urls = 2;</code>
-         */
-        public Builder addFileUrlsBytes(
-            com.google.protobuf.ByteString value) {
-          if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureFileUrlsIsMutable();
-          fileUrls_.add(value);
-          onChanged();
-          return this;
-        }
-
-        // optional int32 expires_at = 3;
-        private int expiresAt_ ;
-        /**
-         * <code>optional int32 expires_at = 3;</code>
-         */
-        public boolean hasExpiresAt() {
-          return ((bitField0_ & 0x00000004) == 0x00000004);
-        }
-        /**
-         * <code>optional int32 expires_at = 3;</code>
-         */
-        public int getExpiresAt() {
-          return expiresAt_;
-        }
-        /**
-         * <code>optional int32 expires_at = 3;</code>
-         */
-        public Builder setExpiresAt(int value) {
-          bitField0_ |= 0x00000004;
-          expiresAt_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>optional int32 expires_at = 3;</code>
-         */
-        public Builder clearExpiresAt() {
-          bitField0_ = (bitField0_ & ~0x00000004);
-          expiresAt_ = 0;
-          onChanged();
-          return this;
-        }
-
-        // @@protoc_insertion_point(builder_scope:hello.SyncResponse.FirmwareUpdate)
-      }
-
-      static {
-        defaultInstance = new FirmwareUpdate(true);
-        defaultInstance.initFields();
-      }
-
-      // @@protoc_insertion_point(class_scope:hello.SyncResponse.FirmwareUpdate)
-    }
-
     public interface FlashActionOrBuilder
         extends com.google.protobuf.MessageOrBuilder {
 
-      // optional .hello.SyncResponse.FlashAction.LEDAction led_1 = 1;
+      // optional int32 red = 1;
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_1 = 1;</code>
+       * <code>optional int32 red = 1;</code>
        */
-      boolean hasLed1();
+      boolean hasRed();
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_1 = 1;</code>
+       * <code>optional int32 red = 1;</code>
        */
-      com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction getLed1();
-      /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_1 = 1;</code>
-       */
-      com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder getLed1OrBuilder();
+      int getRed();
 
-      // optional .hello.SyncResponse.FlashAction.LEDAction led_2 = 2;
+      // optional int32 green = 2;
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_2 = 2;</code>
+       * <code>optional int32 green = 2;</code>
        */
-      boolean hasLed2();
+      boolean hasGreen();
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_2 = 2;</code>
+       * <code>optional int32 green = 2;</code>
        */
-      com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction getLed2();
-      /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_2 = 2;</code>
-       */
-      com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder getLed2OrBuilder();
+      int getGreen();
 
-      // optional .hello.SyncResponse.FlashAction.LEDAction led_3 = 3;
+      // optional int32 blue = 3;
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_3 = 3;</code>
+       * <code>optional int32 blue = 3;</code>
        */
-      boolean hasLed3();
+      boolean hasBlue();
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_3 = 3;</code>
+       * <code>optional int32 blue = 3;</code>
        */
-      com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction getLed3();
-      /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_3 = 3;</code>
-       */
-      com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder getLed3OrBuilder();
+      int getBlue();
 
-      // optional .hello.SyncResponse.FlashAction.LEDAction led_4 = 4;
+      // optional int32 delay_milliseconds = 4;
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_4 = 4;</code>
+       * <code>optional int32 delay_milliseconds = 4;</code>
        */
-      boolean hasLed4();
+      boolean hasDelayMilliseconds();
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_4 = 4;</code>
+       * <code>optional int32 delay_milliseconds = 4;</code>
        */
-      com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction getLed4();
-      /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_4 = 4;</code>
-       */
-      com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder getLed4OrBuilder();
+      int getDelayMilliseconds();
 
-      // optional .hello.SyncResponse.FlashAction.LEDAction led_5 = 5;
+      // optional bool fade_in = 5;
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_5 = 5;</code>
+       * <code>optional bool fade_in = 5;</code>
        */
-      boolean hasLed5();
+      boolean hasFadeIn();
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_5 = 5;</code>
+       * <code>optional bool fade_in = 5;</code>
        */
-      com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction getLed5();
+      boolean getFadeIn();
+
+      // optional bool fade_out = 6;
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_5 = 5;</code>
+       * <code>optional bool fade_out = 6;</code>
        */
-      com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder getLed5OrBuilder();
+      boolean hasFadeOut();
+      /**
+       * <code>optional bool fade_out = 6;</code>
+       */
+      boolean getFadeOut();
+
+      // optional bool rotate = 7;
+      /**
+       * <code>optional bool rotate = 7;</code>
+       */
+      boolean hasRotate();
+      /**
+       * <code>optional bool rotate = 7;</code>
+       */
+      boolean getRotate();
+
+      // optional int32 alpha = 8;
+      /**
+       * <code>optional int32 alpha = 8;</code>
+       */
+      boolean hasAlpha();
+      /**
+       * <code>optional int32 alpha = 8;</code>
+       */
+      int getAlpha();
     }
     /**
      * Protobuf type {@code hello.SyncResponse.FlashAction}
@@ -12871,69 +13786,44 @@ public final class InputProtos {
                 }
                 break;
               }
-              case 10: {
-                com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder subBuilder = null;
-                if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                  subBuilder = led1_.toBuilder();
-                }
-                led1_ = input.readMessage(com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.PARSER, extensionRegistry);
-                if (subBuilder != null) {
-                  subBuilder.mergeFrom(led1_);
-                  led1_ = subBuilder.buildPartial();
-                }
+              case 8: {
                 bitField0_ |= 0x00000001;
+                red_ = input.readInt32();
                 break;
               }
-              case 18: {
-                com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder subBuilder = null;
-                if (((bitField0_ & 0x00000002) == 0x00000002)) {
-                  subBuilder = led2_.toBuilder();
-                }
-                led2_ = input.readMessage(com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.PARSER, extensionRegistry);
-                if (subBuilder != null) {
-                  subBuilder.mergeFrom(led2_);
-                  led2_ = subBuilder.buildPartial();
-                }
+              case 16: {
                 bitField0_ |= 0x00000002;
+                green_ = input.readInt32();
                 break;
               }
-              case 26: {
-                com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder subBuilder = null;
-                if (((bitField0_ & 0x00000004) == 0x00000004)) {
-                  subBuilder = led3_.toBuilder();
-                }
-                led3_ = input.readMessage(com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.PARSER, extensionRegistry);
-                if (subBuilder != null) {
-                  subBuilder.mergeFrom(led3_);
-                  led3_ = subBuilder.buildPartial();
-                }
+              case 24: {
                 bitField0_ |= 0x00000004;
+                blue_ = input.readInt32();
                 break;
               }
-              case 34: {
-                com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder subBuilder = null;
-                if (((bitField0_ & 0x00000008) == 0x00000008)) {
-                  subBuilder = led4_.toBuilder();
-                }
-                led4_ = input.readMessage(com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.PARSER, extensionRegistry);
-                if (subBuilder != null) {
-                  subBuilder.mergeFrom(led4_);
-                  led4_ = subBuilder.buildPartial();
-                }
+              case 32: {
                 bitField0_ |= 0x00000008;
+                delayMilliseconds_ = input.readInt32();
                 break;
               }
-              case 42: {
-                com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder subBuilder = null;
-                if (((bitField0_ & 0x00000010) == 0x00000010)) {
-                  subBuilder = led5_.toBuilder();
-                }
-                led5_ = input.readMessage(com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.PARSER, extensionRegistry);
-                if (subBuilder != null) {
-                  subBuilder.mergeFrom(led5_);
-                  led5_ = subBuilder.buildPartial();
-                }
+              case 40: {
                 bitField0_ |= 0x00000010;
+                fadeIn_ = input.readBool();
+                break;
+              }
+              case 48: {
+                bitField0_ |= 0x00000020;
+                fadeOut_ = input.readBool();
+                break;
+              }
+              case 56: {
+                bitField0_ |= 0x00000040;
+                rotate_ = input.readBool();
+                break;
+              }
+              case 64: {
+                bitField0_ |= 0x00000080;
+                alpha_ = input.readInt32();
                 break;
               }
             }
@@ -12975,681 +13865,144 @@ public final class InputProtos {
         return PARSER;
       }
 
-      public interface LEDActionOrBuilder
-          extends com.google.protobuf.MessageOrBuilder {
-
-        // optional int32 color = 1;
-        /**
-         * <code>optional int32 color = 1;</code>
-         */
-        boolean hasColor();
-        /**
-         * <code>optional int32 color = 1;</code>
-         */
-        int getColor();
-
-        // optional int32 start_time = 2;
-        /**
-         * <code>optional int32 start_time = 2;</code>
-         */
-        boolean hasStartTime();
-        /**
-         * <code>optional int32 start_time = 2;</code>
-         */
-        int getStartTime();
-
-        // optional int32 end_time = 3;
-        /**
-         * <code>optional int32 end_time = 3;</code>
-         */
-        boolean hasEndTime();
-        /**
-         * <code>optional int32 end_time = 3;</code>
-         */
-        int getEndTime();
-      }
-      /**
-       * Protobuf type {@code hello.SyncResponse.FlashAction.LEDAction}
-       */
-      public static final class LEDAction extends
-          com.google.protobuf.GeneratedMessage
-          implements LEDActionOrBuilder {
-        // Use LEDAction.newBuilder() to construct.
-        private LEDAction(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
-          super(builder);
-          this.unknownFields = builder.getUnknownFields();
-        }
-        private LEDAction(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
-
-        private static final LEDAction defaultInstance;
-        public static LEDAction getDefaultInstance() {
-          return defaultInstance;
-        }
-
-        public LEDAction getDefaultInstanceForType() {
-          return defaultInstance;
-        }
-
-        private final com.google.protobuf.UnknownFieldSet unknownFields;
-        @java.lang.Override
-        public final com.google.protobuf.UnknownFieldSet
-            getUnknownFields() {
-          return this.unknownFields;
-        }
-        private LEDAction(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-          initFields();
-          int mutable_bitField0_ = 0;
-          com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-              com.google.protobuf.UnknownFieldSet.newBuilder();
-          try {
-            boolean done = false;
-            while (!done) {
-              int tag = input.readTag();
-              switch (tag) {
-                case 0:
-                  done = true;
-                  break;
-                default: {
-                  if (!parseUnknownField(input, unknownFields,
-                                         extensionRegistry, tag)) {
-                    done = true;
-                  }
-                  break;
-                }
-                case 8: {
-                  bitField0_ |= 0x00000001;
-                  color_ = input.readInt32();
-                  break;
-                }
-                case 16: {
-                  bitField0_ |= 0x00000002;
-                  startTime_ = input.readInt32();
-                  break;
-                }
-                case 24: {
-                  bitField0_ |= 0x00000004;
-                  endTime_ = input.readInt32();
-                  break;
-                }
-              }
-            }
-          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            throw e.setUnfinishedMessage(this);
-          } catch (java.io.IOException e) {
-            throw new com.google.protobuf.InvalidProtocolBufferException(
-                e.getMessage()).setUnfinishedMessage(this);
-          } finally {
-            this.unknownFields = unknownFields.build();
-            makeExtensionsImmutable();
-          }
-        }
-        public static final com.google.protobuf.Descriptors.Descriptor
-            getDescriptor() {
-          return com.hello.suripu.api.input.InputProtos.internal_static_hello_SyncResponse_FlashAction_LEDAction_descriptor;
-        }
-
-        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
-            internalGetFieldAccessorTable() {
-          return com.hello.suripu.api.input.InputProtos.internal_static_hello_SyncResponse_FlashAction_LEDAction_fieldAccessorTable
-              .ensureFieldAccessorsInitialized(
-                  com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.class, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder.class);
-        }
-
-        public static com.google.protobuf.Parser<LEDAction> PARSER =
-            new com.google.protobuf.AbstractParser<LEDAction>() {
-          public LEDAction parsePartialFrom(
-              com.google.protobuf.CodedInputStream input,
-              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-              throws com.google.protobuf.InvalidProtocolBufferException {
-            return new LEDAction(input, extensionRegistry);
-          }
-        };
-
-        @java.lang.Override
-        public com.google.protobuf.Parser<LEDAction> getParserForType() {
-          return PARSER;
-        }
-
-        private int bitField0_;
-        // optional int32 color = 1;
-        public static final int COLOR_FIELD_NUMBER = 1;
-        private int color_;
-        /**
-         * <code>optional int32 color = 1;</code>
-         */
-        public boolean hasColor() {
-          return ((bitField0_ & 0x00000001) == 0x00000001);
-        }
-        /**
-         * <code>optional int32 color = 1;</code>
-         */
-        public int getColor() {
-          return color_;
-        }
-
-        // optional int32 start_time = 2;
-        public static final int START_TIME_FIELD_NUMBER = 2;
-        private int startTime_;
-        /**
-         * <code>optional int32 start_time = 2;</code>
-         */
-        public boolean hasStartTime() {
-          return ((bitField0_ & 0x00000002) == 0x00000002);
-        }
-        /**
-         * <code>optional int32 start_time = 2;</code>
-         */
-        public int getStartTime() {
-          return startTime_;
-        }
-
-        // optional int32 end_time = 3;
-        public static final int END_TIME_FIELD_NUMBER = 3;
-        private int endTime_;
-        /**
-         * <code>optional int32 end_time = 3;</code>
-         */
-        public boolean hasEndTime() {
-          return ((bitField0_ & 0x00000004) == 0x00000004);
-        }
-        /**
-         * <code>optional int32 end_time = 3;</code>
-         */
-        public int getEndTime() {
-          return endTime_;
-        }
-
-        private void initFields() {
-          color_ = 0;
-          startTime_ = 0;
-          endTime_ = 0;
-        }
-        private byte memoizedIsInitialized = -1;
-        public final boolean isInitialized() {
-          byte isInitialized = memoizedIsInitialized;
-          if (isInitialized != -1) return isInitialized == 1;
-
-          memoizedIsInitialized = 1;
-          return true;
-        }
-
-        public void writeTo(com.google.protobuf.CodedOutputStream output)
-                            throws java.io.IOException {
-          getSerializedSize();
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
-            output.writeInt32(1, color_);
-          }
-          if (((bitField0_ & 0x00000002) == 0x00000002)) {
-            output.writeInt32(2, startTime_);
-          }
-          if (((bitField0_ & 0x00000004) == 0x00000004)) {
-            output.writeInt32(3, endTime_);
-          }
-          getUnknownFields().writeTo(output);
-        }
-
-        private int memoizedSerializedSize = -1;
-        public int getSerializedSize() {
-          int size = memoizedSerializedSize;
-          if (size != -1) return size;
-
-          size = 0;
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
-            size += com.google.protobuf.CodedOutputStream
-              .computeInt32Size(1, color_);
-          }
-          if (((bitField0_ & 0x00000002) == 0x00000002)) {
-            size += com.google.protobuf.CodedOutputStream
-              .computeInt32Size(2, startTime_);
-          }
-          if (((bitField0_ & 0x00000004) == 0x00000004)) {
-            size += com.google.protobuf.CodedOutputStream
-              .computeInt32Size(3, endTime_);
-          }
-          size += getUnknownFields().getSerializedSize();
-          memoizedSerializedSize = size;
-          return size;
-        }
-
-        private static final long serialVersionUID = 0L;
-        @java.lang.Override
-        protected java.lang.Object writeReplace()
-            throws java.io.ObjectStreamException {
-          return super.writeReplace();
-        }
-
-        public static com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction parseFrom(
-            com.google.protobuf.ByteString data)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-          return PARSER.parseFrom(data);
-        }
-        public static com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction parseFrom(
-            com.google.protobuf.ByteString data,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-          return PARSER.parseFrom(data, extensionRegistry);
-        }
-        public static com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction parseFrom(byte[] data)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-          return PARSER.parseFrom(data);
-        }
-        public static com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction parseFrom(
-            byte[] data,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-          return PARSER.parseFrom(data, extensionRegistry);
-        }
-        public static com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction parseFrom(java.io.InputStream input)
-            throws java.io.IOException {
-          return PARSER.parseFrom(input);
-        }
-        public static com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction parseFrom(
-            java.io.InputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws java.io.IOException {
-          return PARSER.parseFrom(input, extensionRegistry);
-        }
-        public static com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction parseDelimitedFrom(java.io.InputStream input)
-            throws java.io.IOException {
-          return PARSER.parseDelimitedFrom(input);
-        }
-        public static com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction parseDelimitedFrom(
-            java.io.InputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws java.io.IOException {
-          return PARSER.parseDelimitedFrom(input, extensionRegistry);
-        }
-        public static com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction parseFrom(
-            com.google.protobuf.CodedInputStream input)
-            throws java.io.IOException {
-          return PARSER.parseFrom(input);
-        }
-        public static com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction parseFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws java.io.IOException {
-          return PARSER.parseFrom(input, extensionRegistry);
-        }
-
-        public static Builder newBuilder() { return Builder.create(); }
-        public Builder newBuilderForType() { return newBuilder(); }
-        public static Builder newBuilder(com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction prototype) {
-          return newBuilder().mergeFrom(prototype);
-        }
-        public Builder toBuilder() { return newBuilder(this); }
-
-        @java.lang.Override
-        protected Builder newBuilderForType(
-            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
-          Builder builder = new Builder(parent);
-          return builder;
-        }
-        /**
-         * Protobuf type {@code hello.SyncResponse.FlashAction.LEDAction}
-         */
-        public static final class Builder extends
-            com.google.protobuf.GeneratedMessage.Builder<Builder>
-           implements com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder {
-          public static final com.google.protobuf.Descriptors.Descriptor
-              getDescriptor() {
-            return com.hello.suripu.api.input.InputProtos.internal_static_hello_SyncResponse_FlashAction_LEDAction_descriptor;
-          }
-
-          protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
-              internalGetFieldAccessorTable() {
-            return com.hello.suripu.api.input.InputProtos.internal_static_hello_SyncResponse_FlashAction_LEDAction_fieldAccessorTable
-                .ensureFieldAccessorsInitialized(
-                    com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.class, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder.class);
-          }
-
-          // Construct using com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.newBuilder()
-          private Builder() {
-            maybeForceBuilderInitialization();
-          }
-
-          private Builder(
-              com.google.protobuf.GeneratedMessage.BuilderParent parent) {
-            super(parent);
-            maybeForceBuilderInitialization();
-          }
-          private void maybeForceBuilderInitialization() {
-            if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
-            }
-          }
-          private static Builder create() {
-            return new Builder();
-          }
-
-          public Builder clear() {
-            super.clear();
-            color_ = 0;
-            bitField0_ = (bitField0_ & ~0x00000001);
-            startTime_ = 0;
-            bitField0_ = (bitField0_ & ~0x00000002);
-            endTime_ = 0;
-            bitField0_ = (bitField0_ & ~0x00000004);
-            return this;
-          }
-
-          public Builder clone() {
-            return create().mergeFrom(buildPartial());
-          }
-
-          public com.google.protobuf.Descriptors.Descriptor
-              getDescriptorForType() {
-            return com.hello.suripu.api.input.InputProtos.internal_static_hello_SyncResponse_FlashAction_LEDAction_descriptor;
-          }
-
-          public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction getDefaultInstanceForType() {
-            return com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
-          }
-
-          public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction build() {
-            com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction result = buildPartial();
-            if (!result.isInitialized()) {
-              throw newUninitializedMessageException(result);
-            }
-            return result;
-          }
-
-          public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction buildPartial() {
-            com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction result = new com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction(this);
-            int from_bitField0_ = bitField0_;
-            int to_bitField0_ = 0;
-            if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-              to_bitField0_ |= 0x00000001;
-            }
-            result.color_ = color_;
-            if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-              to_bitField0_ |= 0x00000002;
-            }
-            result.startTime_ = startTime_;
-            if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
-              to_bitField0_ |= 0x00000004;
-            }
-            result.endTime_ = endTime_;
-            result.bitField0_ = to_bitField0_;
-            onBuilt();
-            return result;
-          }
-
-          public Builder mergeFrom(com.google.protobuf.Message other) {
-            if (other instanceof com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction) {
-              return mergeFrom((com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction)other);
-            } else {
-              super.mergeFrom(other);
-              return this;
-            }
-          }
-
-          public Builder mergeFrom(com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction other) {
-            if (other == com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance()) return this;
-            if (other.hasColor()) {
-              setColor(other.getColor());
-            }
-            if (other.hasStartTime()) {
-              setStartTime(other.getStartTime());
-            }
-            if (other.hasEndTime()) {
-              setEndTime(other.getEndTime());
-            }
-            this.mergeUnknownFields(other.getUnknownFields());
-            return this;
-          }
-
-          public final boolean isInitialized() {
-            return true;
-          }
-
-          public Builder mergeFrom(
-              com.google.protobuf.CodedInputStream input,
-              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-              throws java.io.IOException {
-            com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction parsedMessage = null;
-            try {
-              parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-              parsedMessage = (com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction) e.getUnfinishedMessage();
-              throw e;
-            } finally {
-              if (parsedMessage != null) {
-                mergeFrom(parsedMessage);
-              }
-            }
-            return this;
-          }
-          private int bitField0_;
-
-          // optional int32 color = 1;
-          private int color_ ;
-          /**
-           * <code>optional int32 color = 1;</code>
-           */
-          public boolean hasColor() {
-            return ((bitField0_ & 0x00000001) == 0x00000001);
-          }
-          /**
-           * <code>optional int32 color = 1;</code>
-           */
-          public int getColor() {
-            return color_;
-          }
-          /**
-           * <code>optional int32 color = 1;</code>
-           */
-          public Builder setColor(int value) {
-            bitField0_ |= 0x00000001;
-            color_ = value;
-            onChanged();
-            return this;
-          }
-          /**
-           * <code>optional int32 color = 1;</code>
-           */
-          public Builder clearColor() {
-            bitField0_ = (bitField0_ & ~0x00000001);
-            color_ = 0;
-            onChanged();
-            return this;
-          }
-
-          // optional int32 start_time = 2;
-          private int startTime_ ;
-          /**
-           * <code>optional int32 start_time = 2;</code>
-           */
-          public boolean hasStartTime() {
-            return ((bitField0_ & 0x00000002) == 0x00000002);
-          }
-          /**
-           * <code>optional int32 start_time = 2;</code>
-           */
-          public int getStartTime() {
-            return startTime_;
-          }
-          /**
-           * <code>optional int32 start_time = 2;</code>
-           */
-          public Builder setStartTime(int value) {
-            bitField0_ |= 0x00000002;
-            startTime_ = value;
-            onChanged();
-            return this;
-          }
-          /**
-           * <code>optional int32 start_time = 2;</code>
-           */
-          public Builder clearStartTime() {
-            bitField0_ = (bitField0_ & ~0x00000002);
-            startTime_ = 0;
-            onChanged();
-            return this;
-          }
-
-          // optional int32 end_time = 3;
-          private int endTime_ ;
-          /**
-           * <code>optional int32 end_time = 3;</code>
-           */
-          public boolean hasEndTime() {
-            return ((bitField0_ & 0x00000004) == 0x00000004);
-          }
-          /**
-           * <code>optional int32 end_time = 3;</code>
-           */
-          public int getEndTime() {
-            return endTime_;
-          }
-          /**
-           * <code>optional int32 end_time = 3;</code>
-           */
-          public Builder setEndTime(int value) {
-            bitField0_ |= 0x00000004;
-            endTime_ = value;
-            onChanged();
-            return this;
-          }
-          /**
-           * <code>optional int32 end_time = 3;</code>
-           */
-          public Builder clearEndTime() {
-            bitField0_ = (bitField0_ & ~0x00000004);
-            endTime_ = 0;
-            onChanged();
-            return this;
-          }
-
-          // @@protoc_insertion_point(builder_scope:hello.SyncResponse.FlashAction.LEDAction)
-        }
-
-        static {
-          defaultInstance = new LEDAction(true);
-          defaultInstance.initFields();
-        }
-
-        // @@protoc_insertion_point(class_scope:hello.SyncResponse.FlashAction.LEDAction)
-      }
-
       private int bitField0_;
-      // optional .hello.SyncResponse.FlashAction.LEDAction led_1 = 1;
-      public static final int LED_1_FIELD_NUMBER = 1;
-      private com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction led1_;
+      // optional int32 red = 1;
+      public static final int RED_FIELD_NUMBER = 1;
+      private int red_;
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_1 = 1;</code>
+       * <code>optional int32 red = 1;</code>
        */
-      public boolean hasLed1() {
+      public boolean hasRed() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_1 = 1;</code>
+       * <code>optional int32 red = 1;</code>
        */
-      public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction getLed1() {
-        return led1_;
-      }
-      /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_1 = 1;</code>
-       */
-      public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder getLed1OrBuilder() {
-        return led1_;
+      public int getRed() {
+        return red_;
       }
 
-      // optional .hello.SyncResponse.FlashAction.LEDAction led_2 = 2;
-      public static final int LED_2_FIELD_NUMBER = 2;
-      private com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction led2_;
+      // optional int32 green = 2;
+      public static final int GREEN_FIELD_NUMBER = 2;
+      private int green_;
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_2 = 2;</code>
+       * <code>optional int32 green = 2;</code>
        */
-      public boolean hasLed2() {
+      public boolean hasGreen() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_2 = 2;</code>
+       * <code>optional int32 green = 2;</code>
        */
-      public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction getLed2() {
-        return led2_;
-      }
-      /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_2 = 2;</code>
-       */
-      public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder getLed2OrBuilder() {
-        return led2_;
+      public int getGreen() {
+        return green_;
       }
 
-      // optional .hello.SyncResponse.FlashAction.LEDAction led_3 = 3;
-      public static final int LED_3_FIELD_NUMBER = 3;
-      private com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction led3_;
+      // optional int32 blue = 3;
+      public static final int BLUE_FIELD_NUMBER = 3;
+      private int blue_;
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_3 = 3;</code>
+       * <code>optional int32 blue = 3;</code>
        */
-      public boolean hasLed3() {
+      public boolean hasBlue() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_3 = 3;</code>
+       * <code>optional int32 blue = 3;</code>
        */
-      public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction getLed3() {
-        return led3_;
-      }
-      /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_3 = 3;</code>
-       */
-      public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder getLed3OrBuilder() {
-        return led3_;
+      public int getBlue() {
+        return blue_;
       }
 
-      // optional .hello.SyncResponse.FlashAction.LEDAction led_4 = 4;
-      public static final int LED_4_FIELD_NUMBER = 4;
-      private com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction led4_;
+      // optional int32 delay_milliseconds = 4;
+      public static final int DELAY_MILLISECONDS_FIELD_NUMBER = 4;
+      private int delayMilliseconds_;
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_4 = 4;</code>
+       * <code>optional int32 delay_milliseconds = 4;</code>
        */
-      public boolean hasLed4() {
+      public boolean hasDelayMilliseconds() {
         return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_4 = 4;</code>
+       * <code>optional int32 delay_milliseconds = 4;</code>
        */
-      public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction getLed4() {
-        return led4_;
-      }
-      /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_4 = 4;</code>
-       */
-      public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder getLed4OrBuilder() {
-        return led4_;
+      public int getDelayMilliseconds() {
+        return delayMilliseconds_;
       }
 
-      // optional .hello.SyncResponse.FlashAction.LEDAction led_5 = 5;
-      public static final int LED_5_FIELD_NUMBER = 5;
-      private com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction led5_;
+      // optional bool fade_in = 5;
+      public static final int FADE_IN_FIELD_NUMBER = 5;
+      private boolean fadeIn_;
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_5 = 5;</code>
+       * <code>optional bool fade_in = 5;</code>
        */
-      public boolean hasLed5() {
+      public boolean hasFadeIn() {
         return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_5 = 5;</code>
+       * <code>optional bool fade_in = 5;</code>
        */
-      public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction getLed5() {
-        return led5_;
+      public boolean getFadeIn() {
+        return fadeIn_;
+      }
+
+      // optional bool fade_out = 6;
+      public static final int FADE_OUT_FIELD_NUMBER = 6;
+      private boolean fadeOut_;
+      /**
+       * <code>optional bool fade_out = 6;</code>
+       */
+      public boolean hasFadeOut() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
-       * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_5 = 5;</code>
+       * <code>optional bool fade_out = 6;</code>
        */
-      public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder getLed5OrBuilder() {
-        return led5_;
+      public boolean getFadeOut() {
+        return fadeOut_;
+      }
+
+      // optional bool rotate = 7;
+      public static final int ROTATE_FIELD_NUMBER = 7;
+      private boolean rotate_;
+      /**
+       * <code>optional bool rotate = 7;</code>
+       */
+      public boolean hasRotate() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional bool rotate = 7;</code>
+       */
+      public boolean getRotate() {
+        return rotate_;
+      }
+
+      // optional int32 alpha = 8;
+      public static final int ALPHA_FIELD_NUMBER = 8;
+      private int alpha_;
+      /**
+       * <code>optional int32 alpha = 8;</code>
+       */
+      public boolean hasAlpha() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional int32 alpha = 8;</code>
+       */
+      public int getAlpha() {
+        return alpha_;
       }
 
       private void initFields() {
-        led1_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
-        led2_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
-        led3_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
-        led4_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
-        led5_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
+        red_ = 0;
+        green_ = 0;
+        blue_ = 0;
+        delayMilliseconds_ = 0;
+        fadeIn_ = false;
+        fadeOut_ = false;
+        rotate_ = false;
+        alpha_ = 0;
       }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
@@ -13664,19 +14017,28 @@ public final class InputProtos {
                           throws java.io.IOException {
         getSerializedSize();
         if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          output.writeMessage(1, led1_);
+          output.writeInt32(1, red_);
         }
         if (((bitField0_ & 0x00000002) == 0x00000002)) {
-          output.writeMessage(2, led2_);
+          output.writeInt32(2, green_);
         }
         if (((bitField0_ & 0x00000004) == 0x00000004)) {
-          output.writeMessage(3, led3_);
+          output.writeInt32(3, blue_);
         }
         if (((bitField0_ & 0x00000008) == 0x00000008)) {
-          output.writeMessage(4, led4_);
+          output.writeInt32(4, delayMilliseconds_);
         }
         if (((bitField0_ & 0x00000010) == 0x00000010)) {
-          output.writeMessage(5, led5_);
+          output.writeBool(5, fadeIn_);
+        }
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          output.writeBool(6, fadeOut_);
+        }
+        if (((bitField0_ & 0x00000040) == 0x00000040)) {
+          output.writeBool(7, rotate_);
+        }
+        if (((bitField0_ & 0x00000080) == 0x00000080)) {
+          output.writeInt32(8, alpha_);
         }
         getUnknownFields().writeTo(output);
       }
@@ -13689,23 +14051,35 @@ public final class InputProtos {
         size = 0;
         if (((bitField0_ & 0x00000001) == 0x00000001)) {
           size += com.google.protobuf.CodedOutputStream
-            .computeMessageSize(1, led1_);
+            .computeInt32Size(1, red_);
         }
         if (((bitField0_ & 0x00000002) == 0x00000002)) {
           size += com.google.protobuf.CodedOutputStream
-            .computeMessageSize(2, led2_);
+            .computeInt32Size(2, green_);
         }
         if (((bitField0_ & 0x00000004) == 0x00000004)) {
           size += com.google.protobuf.CodedOutputStream
-            .computeMessageSize(3, led3_);
+            .computeInt32Size(3, blue_);
         }
         if (((bitField0_ & 0x00000008) == 0x00000008)) {
           size += com.google.protobuf.CodedOutputStream
-            .computeMessageSize(4, led4_);
+            .computeInt32Size(4, delayMilliseconds_);
         }
         if (((bitField0_ & 0x00000010) == 0x00000010)) {
           size += com.google.protobuf.CodedOutputStream
-            .computeMessageSize(5, led5_);
+            .computeBoolSize(5, fadeIn_);
+        }
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBoolSize(6, fadeOut_);
+        }
+        if (((bitField0_ & 0x00000040) == 0x00000040)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBoolSize(7, rotate_);
+        }
+        if (((bitField0_ & 0x00000080) == 0x00000080)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(8, alpha_);
         }
         size += getUnknownFields().getSerializedSize();
         memoizedSerializedSize = size;
@@ -13815,11 +14189,6 @@ public final class InputProtos {
         }
         private void maybeForceBuilderInitialization() {
           if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
-            getLed1FieldBuilder();
-            getLed2FieldBuilder();
-            getLed3FieldBuilder();
-            getLed4FieldBuilder();
-            getLed5FieldBuilder();
           }
         }
         private static Builder create() {
@@ -13828,36 +14197,22 @@ public final class InputProtos {
 
         public Builder clear() {
           super.clear();
-          if (led1Builder_ == null) {
-            led1_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
-          } else {
-            led1Builder_.clear();
-          }
+          red_ = 0;
           bitField0_ = (bitField0_ & ~0x00000001);
-          if (led2Builder_ == null) {
-            led2_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
-          } else {
-            led2Builder_.clear();
-          }
+          green_ = 0;
           bitField0_ = (bitField0_ & ~0x00000002);
-          if (led3Builder_ == null) {
-            led3_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
-          } else {
-            led3Builder_.clear();
-          }
+          blue_ = 0;
           bitField0_ = (bitField0_ & ~0x00000004);
-          if (led4Builder_ == null) {
-            led4_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
-          } else {
-            led4Builder_.clear();
-          }
+          delayMilliseconds_ = 0;
           bitField0_ = (bitField0_ & ~0x00000008);
-          if (led5Builder_ == null) {
-            led5_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
-          } else {
-            led5Builder_.clear();
-          }
+          fadeIn_ = false;
           bitField0_ = (bitField0_ & ~0x00000010);
+          fadeOut_ = false;
+          bitField0_ = (bitField0_ & ~0x00000020);
+          rotate_ = false;
+          bitField0_ = (bitField0_ & ~0x00000040);
+          alpha_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000080);
           return this;
         }
 
@@ -13889,43 +14244,35 @@ public final class InputProtos {
           if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
             to_bitField0_ |= 0x00000001;
           }
-          if (led1Builder_ == null) {
-            result.led1_ = led1_;
-          } else {
-            result.led1_ = led1Builder_.build();
-          }
+          result.red_ = red_;
           if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
             to_bitField0_ |= 0x00000002;
           }
-          if (led2Builder_ == null) {
-            result.led2_ = led2_;
-          } else {
-            result.led2_ = led2Builder_.build();
-          }
+          result.green_ = green_;
           if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
             to_bitField0_ |= 0x00000004;
           }
-          if (led3Builder_ == null) {
-            result.led3_ = led3_;
-          } else {
-            result.led3_ = led3Builder_.build();
-          }
+          result.blue_ = blue_;
           if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
             to_bitField0_ |= 0x00000008;
           }
-          if (led4Builder_ == null) {
-            result.led4_ = led4_;
-          } else {
-            result.led4_ = led4Builder_.build();
-          }
+          result.delayMilliseconds_ = delayMilliseconds_;
           if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
             to_bitField0_ |= 0x00000010;
           }
-          if (led5Builder_ == null) {
-            result.led5_ = led5_;
-          } else {
-            result.led5_ = led5Builder_.build();
+          result.fadeIn_ = fadeIn_;
+          if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+            to_bitField0_ |= 0x00000020;
           }
+          result.fadeOut_ = fadeOut_;
+          if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+            to_bitField0_ |= 0x00000040;
+          }
+          result.rotate_ = rotate_;
+          if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+            to_bitField0_ |= 0x00000080;
+          }
+          result.alpha_ = alpha_;
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -13942,20 +14289,29 @@ public final class InputProtos {
 
         public Builder mergeFrom(com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction other) {
           if (other == com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.getDefaultInstance()) return this;
-          if (other.hasLed1()) {
-            mergeLed1(other.getLed1());
+          if (other.hasRed()) {
+            setRed(other.getRed());
           }
-          if (other.hasLed2()) {
-            mergeLed2(other.getLed2());
+          if (other.hasGreen()) {
+            setGreen(other.getGreen());
           }
-          if (other.hasLed3()) {
-            mergeLed3(other.getLed3());
+          if (other.hasBlue()) {
+            setBlue(other.getBlue());
           }
-          if (other.hasLed4()) {
-            mergeLed4(other.getLed4());
+          if (other.hasDelayMilliseconds()) {
+            setDelayMilliseconds(other.getDelayMilliseconds());
           }
-          if (other.hasLed5()) {
-            mergeLed5(other.getLed5());
+          if (other.hasFadeIn()) {
+            setFadeIn(other.getFadeIn());
+          }
+          if (other.hasFadeOut()) {
+            setFadeOut(other.getFadeOut());
+          }
+          if (other.hasRotate()) {
+            setRotate(other.getRotate());
+          }
+          if (other.hasAlpha()) {
+            setAlpha(other.getAlpha());
           }
           this.mergeUnknownFields(other.getUnknownFields());
           return this;
@@ -13984,589 +14340,268 @@ public final class InputProtos {
         }
         private int bitField0_;
 
-        // optional .hello.SyncResponse.FlashAction.LEDAction led_1 = 1;
-        private com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction led1_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
-        private com.google.protobuf.SingleFieldBuilder<
-            com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder> led1Builder_;
+        // optional int32 red = 1;
+        private int red_ ;
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_1 = 1;</code>
+         * <code>optional int32 red = 1;</code>
          */
-        public boolean hasLed1() {
+        public boolean hasRed() {
           return ((bitField0_ & 0x00000001) == 0x00000001);
         }
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_1 = 1;</code>
+         * <code>optional int32 red = 1;</code>
          */
-        public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction getLed1() {
-          if (led1Builder_ == null) {
-            return led1_;
-          } else {
-            return led1Builder_.getMessage();
-          }
+        public int getRed() {
+          return red_;
         }
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_1 = 1;</code>
+         * <code>optional int32 red = 1;</code>
          */
-        public Builder setLed1(com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction value) {
-          if (led1Builder_ == null) {
-            if (value == null) {
-              throw new NullPointerException();
-            }
-            led1_ = value;
-            onChanged();
-          } else {
-            led1Builder_.setMessage(value);
-          }
+        public Builder setRed(int value) {
           bitField0_ |= 0x00000001;
-          return this;
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_1 = 1;</code>
-         */
-        public Builder setLed1(
-            com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder builderForValue) {
-          if (led1Builder_ == null) {
-            led1_ = builderForValue.build();
-            onChanged();
-          } else {
-            led1Builder_.setMessage(builderForValue.build());
-          }
-          bitField0_ |= 0x00000001;
-          return this;
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_1 = 1;</code>
-         */
-        public Builder mergeLed1(com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction value) {
-          if (led1Builder_ == null) {
-            if (((bitField0_ & 0x00000001) == 0x00000001) &&
-                led1_ != com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance()) {
-              led1_ =
-                com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.newBuilder(led1_).mergeFrom(value).buildPartial();
-            } else {
-              led1_ = value;
-            }
-            onChanged();
-          } else {
-            led1Builder_.mergeFrom(value);
-          }
-          bitField0_ |= 0x00000001;
-          return this;
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_1 = 1;</code>
-         */
-        public Builder clearLed1() {
-          if (led1Builder_ == null) {
-            led1_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
-            onChanged();
-          } else {
-            led1Builder_.clear();
-          }
-          bitField0_ = (bitField0_ & ~0x00000001);
-          return this;
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_1 = 1;</code>
-         */
-        public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder getLed1Builder() {
-          bitField0_ |= 0x00000001;
+          red_ = value;
           onChanged();
-          return getLed1FieldBuilder().getBuilder();
+          return this;
         }
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_1 = 1;</code>
+         * <code>optional int32 red = 1;</code>
          */
-        public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder getLed1OrBuilder() {
-          if (led1Builder_ != null) {
-            return led1Builder_.getMessageOrBuilder();
-          } else {
-            return led1_;
-          }
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_1 = 1;</code>
-         */
-        private com.google.protobuf.SingleFieldBuilder<
-            com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder> 
-            getLed1FieldBuilder() {
-          if (led1Builder_ == null) {
-            led1Builder_ = new com.google.protobuf.SingleFieldBuilder<
-                com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder>(
-                    led1_,
-                    getParentForChildren(),
-                    isClean());
-            led1_ = null;
-          }
-          return led1Builder_;
+        public Builder clearRed() {
+          bitField0_ = (bitField0_ & ~0x00000001);
+          red_ = 0;
+          onChanged();
+          return this;
         }
 
-        // optional .hello.SyncResponse.FlashAction.LEDAction led_2 = 2;
-        private com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction led2_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
-        private com.google.protobuf.SingleFieldBuilder<
-            com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder> led2Builder_;
+        // optional int32 green = 2;
+        private int green_ ;
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_2 = 2;</code>
+         * <code>optional int32 green = 2;</code>
          */
-        public boolean hasLed2() {
+        public boolean hasGreen() {
           return ((bitField0_ & 0x00000002) == 0x00000002);
         }
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_2 = 2;</code>
+         * <code>optional int32 green = 2;</code>
          */
-        public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction getLed2() {
-          if (led2Builder_ == null) {
-            return led2_;
-          } else {
-            return led2Builder_.getMessage();
-          }
+        public int getGreen() {
+          return green_;
         }
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_2 = 2;</code>
+         * <code>optional int32 green = 2;</code>
          */
-        public Builder setLed2(com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction value) {
-          if (led2Builder_ == null) {
-            if (value == null) {
-              throw new NullPointerException();
-            }
-            led2_ = value;
-            onChanged();
-          } else {
-            led2Builder_.setMessage(value);
-          }
+        public Builder setGreen(int value) {
           bitField0_ |= 0x00000002;
-          return this;
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_2 = 2;</code>
-         */
-        public Builder setLed2(
-            com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder builderForValue) {
-          if (led2Builder_ == null) {
-            led2_ = builderForValue.build();
-            onChanged();
-          } else {
-            led2Builder_.setMessage(builderForValue.build());
-          }
-          bitField0_ |= 0x00000002;
-          return this;
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_2 = 2;</code>
-         */
-        public Builder mergeLed2(com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction value) {
-          if (led2Builder_ == null) {
-            if (((bitField0_ & 0x00000002) == 0x00000002) &&
-                led2_ != com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance()) {
-              led2_ =
-                com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.newBuilder(led2_).mergeFrom(value).buildPartial();
-            } else {
-              led2_ = value;
-            }
-            onChanged();
-          } else {
-            led2Builder_.mergeFrom(value);
-          }
-          bitField0_ |= 0x00000002;
-          return this;
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_2 = 2;</code>
-         */
-        public Builder clearLed2() {
-          if (led2Builder_ == null) {
-            led2_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
-            onChanged();
-          } else {
-            led2Builder_.clear();
-          }
-          bitField0_ = (bitField0_ & ~0x00000002);
-          return this;
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_2 = 2;</code>
-         */
-        public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder getLed2Builder() {
-          bitField0_ |= 0x00000002;
+          green_ = value;
           onChanged();
-          return getLed2FieldBuilder().getBuilder();
+          return this;
         }
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_2 = 2;</code>
+         * <code>optional int32 green = 2;</code>
          */
-        public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder getLed2OrBuilder() {
-          if (led2Builder_ != null) {
-            return led2Builder_.getMessageOrBuilder();
-          } else {
-            return led2_;
-          }
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_2 = 2;</code>
-         */
-        private com.google.protobuf.SingleFieldBuilder<
-            com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder> 
-            getLed2FieldBuilder() {
-          if (led2Builder_ == null) {
-            led2Builder_ = new com.google.protobuf.SingleFieldBuilder<
-                com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder>(
-                    led2_,
-                    getParentForChildren(),
-                    isClean());
-            led2_ = null;
-          }
-          return led2Builder_;
+        public Builder clearGreen() {
+          bitField0_ = (bitField0_ & ~0x00000002);
+          green_ = 0;
+          onChanged();
+          return this;
         }
 
-        // optional .hello.SyncResponse.FlashAction.LEDAction led_3 = 3;
-        private com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction led3_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
-        private com.google.protobuf.SingleFieldBuilder<
-            com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder> led3Builder_;
+        // optional int32 blue = 3;
+        private int blue_ ;
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_3 = 3;</code>
+         * <code>optional int32 blue = 3;</code>
          */
-        public boolean hasLed3() {
+        public boolean hasBlue() {
           return ((bitField0_ & 0x00000004) == 0x00000004);
         }
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_3 = 3;</code>
+         * <code>optional int32 blue = 3;</code>
          */
-        public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction getLed3() {
-          if (led3Builder_ == null) {
-            return led3_;
-          } else {
-            return led3Builder_.getMessage();
-          }
+        public int getBlue() {
+          return blue_;
         }
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_3 = 3;</code>
+         * <code>optional int32 blue = 3;</code>
          */
-        public Builder setLed3(com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction value) {
-          if (led3Builder_ == null) {
-            if (value == null) {
-              throw new NullPointerException();
-            }
-            led3_ = value;
-            onChanged();
-          } else {
-            led3Builder_.setMessage(value);
-          }
+        public Builder setBlue(int value) {
           bitField0_ |= 0x00000004;
-          return this;
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_3 = 3;</code>
-         */
-        public Builder setLed3(
-            com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder builderForValue) {
-          if (led3Builder_ == null) {
-            led3_ = builderForValue.build();
-            onChanged();
-          } else {
-            led3Builder_.setMessage(builderForValue.build());
-          }
-          bitField0_ |= 0x00000004;
-          return this;
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_3 = 3;</code>
-         */
-        public Builder mergeLed3(com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction value) {
-          if (led3Builder_ == null) {
-            if (((bitField0_ & 0x00000004) == 0x00000004) &&
-                led3_ != com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance()) {
-              led3_ =
-                com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.newBuilder(led3_).mergeFrom(value).buildPartial();
-            } else {
-              led3_ = value;
-            }
-            onChanged();
-          } else {
-            led3Builder_.mergeFrom(value);
-          }
-          bitField0_ |= 0x00000004;
-          return this;
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_3 = 3;</code>
-         */
-        public Builder clearLed3() {
-          if (led3Builder_ == null) {
-            led3_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
-            onChanged();
-          } else {
-            led3Builder_.clear();
-          }
-          bitField0_ = (bitField0_ & ~0x00000004);
-          return this;
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_3 = 3;</code>
-         */
-        public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder getLed3Builder() {
-          bitField0_ |= 0x00000004;
+          blue_ = value;
           onChanged();
-          return getLed3FieldBuilder().getBuilder();
+          return this;
         }
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_3 = 3;</code>
+         * <code>optional int32 blue = 3;</code>
          */
-        public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder getLed3OrBuilder() {
-          if (led3Builder_ != null) {
-            return led3Builder_.getMessageOrBuilder();
-          } else {
-            return led3_;
-          }
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_3 = 3;</code>
-         */
-        private com.google.protobuf.SingleFieldBuilder<
-            com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder> 
-            getLed3FieldBuilder() {
-          if (led3Builder_ == null) {
-            led3Builder_ = new com.google.protobuf.SingleFieldBuilder<
-                com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder>(
-                    led3_,
-                    getParentForChildren(),
-                    isClean());
-            led3_ = null;
-          }
-          return led3Builder_;
+        public Builder clearBlue() {
+          bitField0_ = (bitField0_ & ~0x00000004);
+          blue_ = 0;
+          onChanged();
+          return this;
         }
 
-        // optional .hello.SyncResponse.FlashAction.LEDAction led_4 = 4;
-        private com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction led4_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
-        private com.google.protobuf.SingleFieldBuilder<
-            com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder> led4Builder_;
+        // optional int32 delay_milliseconds = 4;
+        private int delayMilliseconds_ ;
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_4 = 4;</code>
+         * <code>optional int32 delay_milliseconds = 4;</code>
          */
-        public boolean hasLed4() {
+        public boolean hasDelayMilliseconds() {
           return ((bitField0_ & 0x00000008) == 0x00000008);
         }
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_4 = 4;</code>
+         * <code>optional int32 delay_milliseconds = 4;</code>
          */
-        public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction getLed4() {
-          if (led4Builder_ == null) {
-            return led4_;
-          } else {
-            return led4Builder_.getMessage();
-          }
+        public int getDelayMilliseconds() {
+          return delayMilliseconds_;
         }
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_4 = 4;</code>
+         * <code>optional int32 delay_milliseconds = 4;</code>
          */
-        public Builder setLed4(com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction value) {
-          if (led4Builder_ == null) {
-            if (value == null) {
-              throw new NullPointerException();
-            }
-            led4_ = value;
-            onChanged();
-          } else {
-            led4Builder_.setMessage(value);
-          }
+        public Builder setDelayMilliseconds(int value) {
           bitField0_ |= 0x00000008;
-          return this;
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_4 = 4;</code>
-         */
-        public Builder setLed4(
-            com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder builderForValue) {
-          if (led4Builder_ == null) {
-            led4_ = builderForValue.build();
-            onChanged();
-          } else {
-            led4Builder_.setMessage(builderForValue.build());
-          }
-          bitField0_ |= 0x00000008;
-          return this;
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_4 = 4;</code>
-         */
-        public Builder mergeLed4(com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction value) {
-          if (led4Builder_ == null) {
-            if (((bitField0_ & 0x00000008) == 0x00000008) &&
-                led4_ != com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance()) {
-              led4_ =
-                com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.newBuilder(led4_).mergeFrom(value).buildPartial();
-            } else {
-              led4_ = value;
-            }
-            onChanged();
-          } else {
-            led4Builder_.mergeFrom(value);
-          }
-          bitField0_ |= 0x00000008;
-          return this;
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_4 = 4;</code>
-         */
-        public Builder clearLed4() {
-          if (led4Builder_ == null) {
-            led4_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
-            onChanged();
-          } else {
-            led4Builder_.clear();
-          }
-          bitField0_ = (bitField0_ & ~0x00000008);
-          return this;
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_4 = 4;</code>
-         */
-        public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder getLed4Builder() {
-          bitField0_ |= 0x00000008;
+          delayMilliseconds_ = value;
           onChanged();
-          return getLed4FieldBuilder().getBuilder();
+          return this;
         }
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_4 = 4;</code>
+         * <code>optional int32 delay_milliseconds = 4;</code>
          */
-        public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder getLed4OrBuilder() {
-          if (led4Builder_ != null) {
-            return led4Builder_.getMessageOrBuilder();
-          } else {
-            return led4_;
-          }
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_4 = 4;</code>
-         */
-        private com.google.protobuf.SingleFieldBuilder<
-            com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder> 
-            getLed4FieldBuilder() {
-          if (led4Builder_ == null) {
-            led4Builder_ = new com.google.protobuf.SingleFieldBuilder<
-                com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder>(
-                    led4_,
-                    getParentForChildren(),
-                    isClean());
-            led4_ = null;
-          }
-          return led4Builder_;
+        public Builder clearDelayMilliseconds() {
+          bitField0_ = (bitField0_ & ~0x00000008);
+          delayMilliseconds_ = 0;
+          onChanged();
+          return this;
         }
 
-        // optional .hello.SyncResponse.FlashAction.LEDAction led_5 = 5;
-        private com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction led5_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
-        private com.google.protobuf.SingleFieldBuilder<
-            com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder> led5Builder_;
+        // optional bool fade_in = 5;
+        private boolean fadeIn_ ;
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_5 = 5;</code>
+         * <code>optional bool fade_in = 5;</code>
          */
-        public boolean hasLed5() {
+        public boolean hasFadeIn() {
           return ((bitField0_ & 0x00000010) == 0x00000010);
         }
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_5 = 5;</code>
+         * <code>optional bool fade_in = 5;</code>
          */
-        public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction getLed5() {
-          if (led5Builder_ == null) {
-            return led5_;
-          } else {
-            return led5Builder_.getMessage();
-          }
+        public boolean getFadeIn() {
+          return fadeIn_;
         }
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_5 = 5;</code>
+         * <code>optional bool fade_in = 5;</code>
          */
-        public Builder setLed5(com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction value) {
-          if (led5Builder_ == null) {
-            if (value == null) {
-              throw new NullPointerException();
-            }
-            led5_ = value;
-            onChanged();
-          } else {
-            led5Builder_.setMessage(value);
-          }
+        public Builder setFadeIn(boolean value) {
           bitField0_ |= 0x00000010;
-          return this;
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_5 = 5;</code>
-         */
-        public Builder setLed5(
-            com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder builderForValue) {
-          if (led5Builder_ == null) {
-            led5_ = builderForValue.build();
-            onChanged();
-          } else {
-            led5Builder_.setMessage(builderForValue.build());
-          }
-          bitField0_ |= 0x00000010;
-          return this;
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_5 = 5;</code>
-         */
-        public Builder mergeLed5(com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction value) {
-          if (led5Builder_ == null) {
-            if (((bitField0_ & 0x00000010) == 0x00000010) &&
-                led5_ != com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance()) {
-              led5_ =
-                com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.newBuilder(led5_).mergeFrom(value).buildPartial();
-            } else {
-              led5_ = value;
-            }
-            onChanged();
-          } else {
-            led5Builder_.mergeFrom(value);
-          }
-          bitField0_ |= 0x00000010;
-          return this;
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_5 = 5;</code>
-         */
-        public Builder clearLed5() {
-          if (led5Builder_ == null) {
-            led5_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.getDefaultInstance();
-            onChanged();
-          } else {
-            led5Builder_.clear();
-          }
-          bitField0_ = (bitField0_ & ~0x00000010);
-          return this;
-        }
-        /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_5 = 5;</code>
-         */
-        public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder getLed5Builder() {
-          bitField0_ |= 0x00000010;
+          fadeIn_ = value;
           onChanged();
-          return getLed5FieldBuilder().getBuilder();
+          return this;
         }
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_5 = 5;</code>
+         * <code>optional bool fade_in = 5;</code>
          */
-        public com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder getLed5OrBuilder() {
-          if (led5Builder_ != null) {
-            return led5Builder_.getMessageOrBuilder();
-          } else {
-            return led5_;
-          }
+        public Builder clearFadeIn() {
+          bitField0_ = (bitField0_ & ~0x00000010);
+          fadeIn_ = false;
+          onChanged();
+          return this;
+        }
+
+        // optional bool fade_out = 6;
+        private boolean fadeOut_ ;
+        /**
+         * <code>optional bool fade_out = 6;</code>
+         */
+        public boolean hasFadeOut() {
+          return ((bitField0_ & 0x00000020) == 0x00000020);
         }
         /**
-         * <code>optional .hello.SyncResponse.FlashAction.LEDAction led_5 = 5;</code>
+         * <code>optional bool fade_out = 6;</code>
          */
-        private com.google.protobuf.SingleFieldBuilder<
-            com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder> 
-            getLed5FieldBuilder() {
-          if (led5Builder_ == null) {
-            led5Builder_ = new com.google.protobuf.SingleFieldBuilder<
-                com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDAction.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.LEDActionOrBuilder>(
-                    led5_,
-                    getParentForChildren(),
-                    isClean());
-            led5_ = null;
-          }
-          return led5Builder_;
+        public boolean getFadeOut() {
+          return fadeOut_;
+        }
+        /**
+         * <code>optional bool fade_out = 6;</code>
+         */
+        public Builder setFadeOut(boolean value) {
+          bitField0_ |= 0x00000020;
+          fadeOut_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional bool fade_out = 6;</code>
+         */
+        public Builder clearFadeOut() {
+          bitField0_ = (bitField0_ & ~0x00000020);
+          fadeOut_ = false;
+          onChanged();
+          return this;
+        }
+
+        // optional bool rotate = 7;
+        private boolean rotate_ ;
+        /**
+         * <code>optional bool rotate = 7;</code>
+         */
+        public boolean hasRotate() {
+          return ((bitField0_ & 0x00000040) == 0x00000040);
+        }
+        /**
+         * <code>optional bool rotate = 7;</code>
+         */
+        public boolean getRotate() {
+          return rotate_;
+        }
+        /**
+         * <code>optional bool rotate = 7;</code>
+         */
+        public Builder setRotate(boolean value) {
+          bitField0_ |= 0x00000040;
+          rotate_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional bool rotate = 7;</code>
+         */
+        public Builder clearRotate() {
+          bitField0_ = (bitField0_ & ~0x00000040);
+          rotate_ = false;
+          onChanged();
+          return this;
+        }
+
+        // optional int32 alpha = 8;
+        private int alpha_ ;
+        /**
+         * <code>optional int32 alpha = 8;</code>
+         */
+        public boolean hasAlpha() {
+          return ((bitField0_ & 0x00000080) == 0x00000080);
+        }
+        /**
+         * <code>optional int32 alpha = 8;</code>
+         */
+        public int getAlpha() {
+          return alpha_;
+        }
+        /**
+         * <code>optional int32 alpha = 8;</code>
+         */
+        public Builder setAlpha(int value) {
+          bitField0_ |= 0x00000080;
+          alpha_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int32 alpha = 8;</code>
+         */
+        public Builder clearAlpha() {
+          bitField0_ = (bitField0_ & ~0x00000080);
+          alpha_ = 0;
+          onChanged();
+          return this;
         }
 
         // @@protoc_insertion_point(builder_scope:hello.SyncResponse.FlashAction)
@@ -14765,28 +14800,6 @@ public final class InputProtos {
       return resetDevice_;
     }
 
-    // optional .hello.SyncResponse.FirmwareUpdate firmware_update = 11;
-    public static final int FIRMWARE_UPDATE_FIELD_NUMBER = 11;
-    private com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate firmwareUpdate_;
-    /**
-     * <code>optional .hello.SyncResponse.FirmwareUpdate firmware_update = 11;</code>
-     */
-    public boolean hasFirmwareUpdate() {
-      return ((bitField0_ & 0x00000400) == 0x00000400);
-    }
-    /**
-     * <code>optional .hello.SyncResponse.FirmwareUpdate firmware_update = 11;</code>
-     */
-    public com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate getFirmwareUpdate() {
-      return firmwareUpdate_;
-    }
-    /**
-     * <code>optional .hello.SyncResponse.FirmwareUpdate firmware_update = 11;</code>
-     */
-    public com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdateOrBuilder getFirmwareUpdateOrBuilder() {
-      return firmwareUpdate_;
-    }
-
     // optional .hello.SyncResponse.RoomConditions room_conditions = 12;
     public static final int ROOM_CONDITIONS_FIELD_NUMBER = 12;
     private com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions roomConditions_;
@@ -14794,13 +14807,49 @@ public final class InputProtos {
      * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
      */
     public boolean hasRoomConditions() {
-      return ((bitField0_ & 0x00000800) == 0x00000800);
+      return ((bitField0_ & 0x00000400) == 0x00000400);
     }
     /**
      * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
      */
     public com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions getRoomConditions() {
       return roomConditions_;
+    }
+
+    // repeated .hello.SyncResponse.FileDownload files = 13;
+    public static final int FILES_FIELD_NUMBER = 13;
+    private java.util.List<com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload> files_;
+    /**
+     * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+     */
+    public java.util.List<com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload> getFilesList() {
+      return files_;
+    }
+    /**
+     * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+     */
+    public java.util.List<? extends com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownloadOrBuilder> 
+        getFilesOrBuilderList() {
+      return files_;
+    }
+    /**
+     * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+     */
+    public int getFilesCount() {
+      return files_.size();
+    }
+    /**
+     * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+     */
+    public com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload getFiles(int index) {
+      return files_.get(index);
+    }
+    /**
+     * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+     */
+    public com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownloadOrBuilder getFilesOrBuilder(
+        int index) {
+      return files_.get(index);
     }
 
     private void initFields() {
@@ -14814,8 +14863,8 @@ public final class InputProtos {
       whiteNoise_ = com.hello.suripu.api.input.InputProtos.SyncResponse.WhiteNoise.getDefaultInstance();
       flashAction_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FlashAction.getDefaultInstance();
       resetDevice_ = false;
-      firmwareUpdate_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.getDefaultInstance();
       roomConditions_ = com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions.IDEAL;
+      files_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -14860,10 +14909,10 @@ public final class InputProtos {
         output.writeBool(10, resetDevice_);
       }
       if (((bitField0_ & 0x00000400) == 0x00000400)) {
-        output.writeMessage(11, firmwareUpdate_);
-      }
-      if (((bitField0_ & 0x00000800) == 0x00000800)) {
         output.writeEnum(12, roomConditions_.getNumber());
+      }
+      for (int i = 0; i < files_.size(); i++) {
+        output.writeMessage(13, files_.get(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -14916,11 +14965,11 @@ public final class InputProtos {
       }
       if (((bitField0_ & 0x00000400) == 0x00000400)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(11, firmwareUpdate_);
-      }
-      if (((bitField0_ & 0x00000800) == 0x00000800)) {
-        size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(12, roomConditions_.getNumber());
+      }
+      for (int i = 0; i < files_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(13, files_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -15034,7 +15083,7 @@ public final class InputProtos {
           getPairingActionFieldBuilder();
           getWhiteNoiseFieldBuilder();
           getFlashActionFieldBuilder();
-          getFirmwareUpdateFieldBuilder();
+          getFilesFieldBuilder();
         }
       }
       private static Builder create() {
@@ -15079,14 +15128,14 @@ public final class InputProtos {
         bitField0_ = (bitField0_ & ~0x00000100);
         resetDevice_ = false;
         bitField0_ = (bitField0_ & ~0x00000200);
-        if (firmwareUpdateBuilder_ == null) {
-          firmwareUpdate_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.getDefaultInstance();
-        } else {
-          firmwareUpdateBuilder_.clear();
-        }
-        bitField0_ = (bitField0_ & ~0x00000400);
         roomConditions_ = com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions.IDEAL;
-        bitField0_ = (bitField0_ & ~0x00000800);
+        bitField0_ = (bitField0_ & ~0x00000400);
+        if (filesBuilder_ == null) {
+          files_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000800);
+        } else {
+          filesBuilder_.clear();
+        }
         return this;
       }
 
@@ -15174,15 +15223,16 @@ public final class InputProtos {
         if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
           to_bitField0_ |= 0x00000400;
         }
-        if (firmwareUpdateBuilder_ == null) {
-          result.firmwareUpdate_ = firmwareUpdate_;
-        } else {
-          result.firmwareUpdate_ = firmwareUpdateBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
-          to_bitField0_ |= 0x00000800;
-        }
         result.roomConditions_ = roomConditions_;
+        if (filesBuilder_ == null) {
+          if (((bitField0_ & 0x00000800) == 0x00000800)) {
+            files_ = java.util.Collections.unmodifiableList(files_);
+            bitField0_ = (bitField0_ & ~0x00000800);
+          }
+          result.files_ = files_;
+        } else {
+          result.files_ = filesBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -15229,11 +15279,34 @@ public final class InputProtos {
         if (other.hasResetDevice()) {
           setResetDevice(other.getResetDevice());
         }
-        if (other.hasFirmwareUpdate()) {
-          mergeFirmwareUpdate(other.getFirmwareUpdate());
-        }
         if (other.hasRoomConditions()) {
           setRoomConditions(other.getRoomConditions());
+        }
+        if (filesBuilder_ == null) {
+          if (!other.files_.isEmpty()) {
+            if (files_.isEmpty()) {
+              files_ = other.files_;
+              bitField0_ = (bitField0_ & ~0x00000800);
+            } else {
+              ensureFilesIsMutable();
+              files_.addAll(other.files_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.files_.isEmpty()) {
+            if (filesBuilder_.isEmpty()) {
+              filesBuilder_.dispose();
+              filesBuilder_ = null;
+              files_ = other.files_;
+              bitField0_ = (bitField0_ & ~0x00000800);
+              filesBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getFilesFieldBuilder() : null;
+            } else {
+              filesBuilder_.addAllMessages(other.files_);
+            }
+          }
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -15928,130 +16001,13 @@ public final class InputProtos {
         return this;
       }
 
-      // optional .hello.SyncResponse.FirmwareUpdate firmware_update = 11;
-      private com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate firmwareUpdate_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.getDefaultInstance();
-      private com.google.protobuf.SingleFieldBuilder<
-          com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate, com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdateOrBuilder> firmwareUpdateBuilder_;
-      /**
-       * <code>optional .hello.SyncResponse.FirmwareUpdate firmware_update = 11;</code>
-       */
-      public boolean hasFirmwareUpdate() {
-        return ((bitField0_ & 0x00000400) == 0x00000400);
-      }
-      /**
-       * <code>optional .hello.SyncResponse.FirmwareUpdate firmware_update = 11;</code>
-       */
-      public com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate getFirmwareUpdate() {
-        if (firmwareUpdateBuilder_ == null) {
-          return firmwareUpdate_;
-        } else {
-          return firmwareUpdateBuilder_.getMessage();
-        }
-      }
-      /**
-       * <code>optional .hello.SyncResponse.FirmwareUpdate firmware_update = 11;</code>
-       */
-      public Builder setFirmwareUpdate(com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate value) {
-        if (firmwareUpdateBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          firmwareUpdate_ = value;
-          onChanged();
-        } else {
-          firmwareUpdateBuilder_.setMessage(value);
-        }
-        bitField0_ |= 0x00000400;
-        return this;
-      }
-      /**
-       * <code>optional .hello.SyncResponse.FirmwareUpdate firmware_update = 11;</code>
-       */
-      public Builder setFirmwareUpdate(
-          com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.Builder builderForValue) {
-        if (firmwareUpdateBuilder_ == null) {
-          firmwareUpdate_ = builderForValue.build();
-          onChanged();
-        } else {
-          firmwareUpdateBuilder_.setMessage(builderForValue.build());
-        }
-        bitField0_ |= 0x00000400;
-        return this;
-      }
-      /**
-       * <code>optional .hello.SyncResponse.FirmwareUpdate firmware_update = 11;</code>
-       */
-      public Builder mergeFirmwareUpdate(com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate value) {
-        if (firmwareUpdateBuilder_ == null) {
-          if (((bitField0_ & 0x00000400) == 0x00000400) &&
-              firmwareUpdate_ != com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.getDefaultInstance()) {
-            firmwareUpdate_ =
-              com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.newBuilder(firmwareUpdate_).mergeFrom(value).buildPartial();
-          } else {
-            firmwareUpdate_ = value;
-          }
-          onChanged();
-        } else {
-          firmwareUpdateBuilder_.mergeFrom(value);
-        }
-        bitField0_ |= 0x00000400;
-        return this;
-      }
-      /**
-       * <code>optional .hello.SyncResponse.FirmwareUpdate firmware_update = 11;</code>
-       */
-      public Builder clearFirmwareUpdate() {
-        if (firmwareUpdateBuilder_ == null) {
-          firmwareUpdate_ = com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.getDefaultInstance();
-          onChanged();
-        } else {
-          firmwareUpdateBuilder_.clear();
-        }
-        bitField0_ = (bitField0_ & ~0x00000400);
-        return this;
-      }
-      /**
-       * <code>optional .hello.SyncResponse.FirmwareUpdate firmware_update = 11;</code>
-       */
-      public com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.Builder getFirmwareUpdateBuilder() {
-        bitField0_ |= 0x00000400;
-        onChanged();
-        return getFirmwareUpdateFieldBuilder().getBuilder();
-      }
-      /**
-       * <code>optional .hello.SyncResponse.FirmwareUpdate firmware_update = 11;</code>
-       */
-      public com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdateOrBuilder getFirmwareUpdateOrBuilder() {
-        if (firmwareUpdateBuilder_ != null) {
-          return firmwareUpdateBuilder_.getMessageOrBuilder();
-        } else {
-          return firmwareUpdate_;
-        }
-      }
-      /**
-       * <code>optional .hello.SyncResponse.FirmwareUpdate firmware_update = 11;</code>
-       */
-      private com.google.protobuf.SingleFieldBuilder<
-          com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate, com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdateOrBuilder> 
-          getFirmwareUpdateFieldBuilder() {
-        if (firmwareUpdateBuilder_ == null) {
-          firmwareUpdateBuilder_ = new com.google.protobuf.SingleFieldBuilder<
-              com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate, com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdate.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FirmwareUpdateOrBuilder>(
-                  firmwareUpdate_,
-                  getParentForChildren(),
-                  isClean());
-          firmwareUpdate_ = null;
-        }
-        return firmwareUpdateBuilder_;
-      }
-
       // optional .hello.SyncResponse.RoomConditions room_conditions = 12;
       private com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions roomConditions_ = com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions.IDEAL;
       /**
        * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
        */
       public boolean hasRoomConditions() {
-        return ((bitField0_ & 0x00000800) == 0x00000800);
+        return ((bitField0_ & 0x00000400) == 0x00000400);
       }
       /**
        * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
@@ -16066,7 +16022,7 @@ public final class InputProtos {
         if (value == null) {
           throw new NullPointerException();
         }
-        bitField0_ |= 0x00000800;
+        bitField0_ |= 0x00000400;
         roomConditions_ = value;
         onChanged();
         return this;
@@ -16075,10 +16031,250 @@ public final class InputProtos {
        * <code>optional .hello.SyncResponse.RoomConditions room_conditions = 12;</code>
        */
       public Builder clearRoomConditions() {
-        bitField0_ = (bitField0_ & ~0x00000800);
+        bitField0_ = (bitField0_ & ~0x00000400);
         roomConditions_ = com.hello.suripu.api.input.InputProtos.SyncResponse.RoomConditions.IDEAL;
         onChanged();
         return this;
+      }
+
+      // repeated .hello.SyncResponse.FileDownload files = 13;
+      private java.util.List<com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload> files_ =
+        java.util.Collections.emptyList();
+      private void ensureFilesIsMutable() {
+        if (!((bitField0_ & 0x00000800) == 0x00000800)) {
+          files_ = new java.util.ArrayList<com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload>(files_);
+          bitField0_ |= 0x00000800;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload, com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownloadOrBuilder> filesBuilder_;
+
+      /**
+       * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+       */
+      public java.util.List<com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload> getFilesList() {
+        if (filesBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(files_);
+        } else {
+          return filesBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+       */
+      public int getFilesCount() {
+        if (filesBuilder_ == null) {
+          return files_.size();
+        } else {
+          return filesBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload getFiles(int index) {
+        if (filesBuilder_ == null) {
+          return files_.get(index);
+        } else {
+          return filesBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+       */
+      public Builder setFiles(
+          int index, com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload value) {
+        if (filesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureFilesIsMutable();
+          files_.set(index, value);
+          onChanged();
+        } else {
+          filesBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+       */
+      public Builder setFiles(
+          int index, com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload.Builder builderForValue) {
+        if (filesBuilder_ == null) {
+          ensureFilesIsMutable();
+          files_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          filesBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+       */
+      public Builder addFiles(com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload value) {
+        if (filesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureFilesIsMutable();
+          files_.add(value);
+          onChanged();
+        } else {
+          filesBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+       */
+      public Builder addFiles(
+          int index, com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload value) {
+        if (filesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureFilesIsMutable();
+          files_.add(index, value);
+          onChanged();
+        } else {
+          filesBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+       */
+      public Builder addFiles(
+          com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload.Builder builderForValue) {
+        if (filesBuilder_ == null) {
+          ensureFilesIsMutable();
+          files_.add(builderForValue.build());
+          onChanged();
+        } else {
+          filesBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+       */
+      public Builder addFiles(
+          int index, com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload.Builder builderForValue) {
+        if (filesBuilder_ == null) {
+          ensureFilesIsMutable();
+          files_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          filesBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+       */
+      public Builder addAllFiles(
+          java.lang.Iterable<? extends com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload> values) {
+        if (filesBuilder_ == null) {
+          ensureFilesIsMutable();
+          super.addAll(values, files_);
+          onChanged();
+        } else {
+          filesBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+       */
+      public Builder clearFiles() {
+        if (filesBuilder_ == null) {
+          files_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000800);
+          onChanged();
+        } else {
+          filesBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+       */
+      public Builder removeFiles(int index) {
+        if (filesBuilder_ == null) {
+          ensureFilesIsMutable();
+          files_.remove(index);
+          onChanged();
+        } else {
+          filesBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload.Builder getFilesBuilder(
+          int index) {
+        return getFilesFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownloadOrBuilder getFilesOrBuilder(
+          int index) {
+        if (filesBuilder_ == null) {
+          return files_.get(index);  } else {
+          return filesBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+       */
+      public java.util.List<? extends com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownloadOrBuilder> 
+           getFilesOrBuilderList() {
+        if (filesBuilder_ != null) {
+          return filesBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(files_);
+        }
+      }
+      /**
+       * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload.Builder addFilesBuilder() {
+        return getFilesFieldBuilder().addBuilder(
+            com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+       */
+      public com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload.Builder addFilesBuilder(
+          int index) {
+        return getFilesFieldBuilder().addBuilder(
+            index, com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.SyncResponse.FileDownload files = 13;</code>
+       */
+      public java.util.List<com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload.Builder> 
+           getFilesBuilderList() {
+        return getFilesFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload, com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownloadOrBuilder> 
+          getFilesFieldBuilder() {
+        if (filesBuilder_ == null) {
+          filesBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload, com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownload.Builder, com.hello.suripu.api.input.InputProtos.SyncResponse.FileDownloadOrBuilder>(
+                  files_,
+                  ((bitField0_ & 0x00000800) == 0x00000800),
+                  getParentForChildren(),
+                  isClean());
+          files_ = null;
+        }
+        return filesBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:hello.SyncResponse)
@@ -25025,6 +25221,11 @@ public final class InputProtos {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_SyncResponse_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_hello_SyncResponse_FileDownload_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_hello_SyncResponse_FileDownload_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_SyncResponse_Alarm_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -25040,20 +25241,10 @@ public final class InputProtos {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_SyncResponse_WhiteNoise_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_hello_SyncResponse_FirmwareUpdate_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_hello_SyncResponse_FirmwareUpdate_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_SyncResponse_FlashAction_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_SyncResponse_FlashAction_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_hello_SyncResponse_FlashAction_LEDAction_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_hello_SyncResponse_FlashAction_LEDAction_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_PillData_descriptor;
   private static
@@ -25148,7 +25339,7 @@ public final class InputProtos {
       "\022\021\n\tsignature\030\005 \001(\014\"%\n\022ActivationRespons" +
       "e\022\017\n\007success\030\001 \001(\010\"`\n\013SyncRequest\022\021\n\tdev" +
       "ice_id\030\001 \001(\t\022\030\n\020firmware_version\030\002 \001(\t\022\021",
-      "\n\tsignature\030\003 \001(\014\022\021\n\tsomething\030\004 \001(\t\"\303\n\n" +
+      "\n\tsignature\030\003 \001(\014\022\021\n\tsomething\030\004 \001(\t\"\202\n\n" +
       "\014SyncResponse\022\024\n\014upload_cycle\030\001 \001(\005\022\022\n\ns" +
       "ync_cycle\030\002 \001(\005\022\025\n\racc_scan_cyle\030\003 \001(\005\022\035" +
       "\n\025acc_sampling_interval\030\004 \001(\005\022 \n\030device_" +
@@ -25158,64 +25349,62 @@ public final class InputProtos {
       "tion\0223\n\013white_noise\030\010 \001(\0132\036.hello.SyncRe" +
       "sponse.WhiteNoise\0225\n\014flash_action\030\t \001(\0132" +
       "\037.hello.SyncResponse.FlashAction\022\024\n\014rese",
-      "t_device\030\n \001(\010\022;\n\017firmware_update\030\013 \001(\0132" +
-      "\".hello.SyncResponse.FirmwareUpdate\022;\n\017r" +
-      "oom_conditions\030\014 \001(\0162\".hello.SyncRespons" +
-      "e.RoomConditions\032\216\001\n\005Alarm\022\022\n\nstart_time" +
-      "\030\001 \001(\r\022\020\n\010end_time\030\002 \001(\r\022\026\n\013ringtone_id\030" +
-      "\003 \001(\005:\0011\022&\n\036ring_offset_from_now_in_seco" +
-      "nd\030\004 \001(\005\022\037\n\027ring_duration_in_second\030\005 \001(" +
-      "\005\032}\n\rPairingAction\022\014\n\004ssid\030\001 \001(\t\022:\n\004type" +
-      "\030\002 \001(\0162,.hello.SyncResponse.PairingActio" +
-      "n.ActionType\"\"\n\nActionType\022\010\n\004PAIR\020\000\022\n\n\006",
-      "UNPAIR\020\001\032D\n\nWhiteNoise\022\022\n\nstart_time\030\001 \001" +
-      "(\005\022\020\n\010end_time\030\002 \001(\005\022\020\n\010sound_id\030\003 \001(\005\032Q" +
-      "\n\016FirmwareUpdate\022\030\n\020firmware_version\030\001 \001" +
-      "(\005\022\021\n\tfile_urls\030\002 \003(\t\022\022\n\nexpires_at\030\003 \001(" +
-      "\005\032\361\002\n\013FlashAction\0228\n\005led_1\030\001 \001(\0132).hello" +
-      ".SyncResponse.FlashAction.LEDAction\0228\n\005l" +
-      "ed_2\030\002 \001(\0132).hello.SyncResponse.FlashAct" +
-      "ion.LEDAction\0228\n\005led_3\030\003 \001(\0132).hello.Syn" +
-      "cResponse.FlashAction.LEDAction\0228\n\005led_4" +
-      "\030\004 \001(\0132).hello.SyncResponse.FlashAction.",
-      "LEDAction\0228\n\005led_5\030\005 \001(\0132).hello.SyncRes" +
-      "ponse.FlashAction.LEDAction\032@\n\tLEDAction" +
-      "\022\r\n\005color\030\001 \001(\005\022\022\n\nstart_time\030\002 \001(\005\022\020\n\010e" +
-      "nd_time\030\003 \001(\005\"3\n\016RoomConditions\022\t\n\005IDEAL" +
-      "\020\001\022\013\n\007WARNING\020\002\022\t\n\005ALERT\020\003\"=\n\010PillData\022\017" +
-      "\n\007pill_id\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(\t\022\014\n\004d" +
-      "ata\030\003 \001(\014\"\357\001\n\017PillDataKinesis\022\017\n\007pill_id" +
-      "\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(\t\022\021\n\ttimestamp\030" +
-      "\003 \001(\003\022\r\n\005value\030\004 \001(\003\022\024\n\014offsetMillis\030\005 \001" +
-      "(\005\022\025\n\rencryptedData\030\006 \001(\014\022\024\n\014batteryLeve",
-      "l\030\007 \001(\005\022\027\n\017firmwareVersion\030\010 \001(\005\022\022\n\npill" +
-      "IdLong\030\t \001(\003\022\025\n\raccountIdLong\030\n \001(\003\022\016\n\006u" +
-      "pTime\030\013 \001(\005\"\324\001\n\016PillBlobHeader\022\035\n\025first_" +
-      "sequence_number\030\001 \001(\t\022\034\n\024last_sequence_n" +
-      "umber\030\002 \001(\t\022\031\n\021first_sample_date\030\003 \001(\t\022\030" +
-      "\n\020last_sample_date\030\004 \001(\t\022%\n\035compressed_b" +
-      "itmap_account_ids\030\005 \001(\014\022\026\n\016data_file_nam" +
-      "e\030\006 \001(\t\022\021\n\tnum_items\030\007 \001(\005\"*\n\010PillBlob\022\036" +
-      "\n\005items\030\001 \003(\0132\017.hello.PillData\"\214\001\n\nEvent" +
-      "Batch\022+\n\006events\030\001 \003(\0132\033.hello.EventBatch",
-      ".EventItem\032Q\n\tEventItem\022\027\n\017start_timesta" +
-      "mp\030\001 \001(\003\022\025\n\rend_timestamp\030\002 \001(\003\022\024\n\014offse" +
-      "tMillis\030\003 \001(\005\"\336\003\n\rperiodic_data\022\021\n\tunix_" +
-      "time\030\001 \001(\005\022\r\n\005light\030\002 \001(\005\022\023\n\013temperature" +
-      "\030\003 \001(\005\022\020\n\010humidity\030\004 \001(\005\022\014\n\004dust\030\005 \001(\005\022\014" +
-      "\n\004name\030\006 \001(\t\022\013\n\003mac\030\007 \001(\014\022\031\n\021light_varia" +
-      "bility\030\010 \001(\005\022\026\n\016light_tonality\030\t \001(\005\022\030\n\020" +
-      "firmware_version\030\n \001(\005\022\030\n\020dust_variabili" +
-      "ty\030\r \001(\005\022\020\n\010dust_max\030\016 \001(\005\022\020\n\010dust_min\030\017" +
-      " \001(\005\022-\n\005pills\030\013 \003(\0132\036.hello.periodic_dat",
-      "a.pill_data\022\021\n\tdevice_id\030\014 \001(\t\032\215\001\n\tpill_" +
-      "data\022\027\n\017firmwareVersion\030\001 \001(\005\022\033\n\023motionD" +
-      "ataEncrypted\030\002 \001(\014\022\020\n\010deviceId\030\003 \001(\t\022\024\n\014" +
-      "batteryLevel\030\004 \001(\005\022\016\n\006uptime\030\005 \001(\005\022\022\n\nmo" +
-      "tionData\030\006 \001(\005\">\n\010SenseLog\022\021\n\tunix_time\030" +
-      "\001 \001(\005\022\021\n\tdevice_id\030\002 \001(\t\022\014\n\004text\030\003 \001(\tB)" +
-      "\n\032com.hello.suripu.api.inputB\013InputProto" +
-      "s"
+      "t_device\030\n \001(\010\022;\n\017room_conditions\030\014 \001(\0162" +
+      "\".hello.SyncResponse.RoomConditions\022/\n\005f" +
+      "iles\030\r \003(\0132 .hello.SyncResponse.FileDown" +
+      "load\032\367\001\n\014FileDownload\022\014\n\004host\030\001 \001(\t\022\013\n\003u" +
+      "rl\030\002 \001(\t\022\034\n\024copy_to_serial_flash\030\004 \001(\010\022\037" +
+      "\n\027reset_network_processor\030\005 \001(\010\022#\n\033reset" +
+      "_application_processor\030\006 \001(\010\022\035\n\025serial_f" +
+      "lash_filename\030\007 \001(\t\022\031\n\021serial_flash_path" +
+      "\030\010 \001(\t\022\030\n\020sd_card_filename\030\003 \001(\t\022\024\n\014sd_c" +
+      "ard_path\030\t \001(\t\032\216\001\n\005Alarm\022\022\n\nstart_time\030\001",
+      " \001(\r\022\020\n\010end_time\030\002 \001(\r\022\026\n\013ringtone_id\030\003 " +
+      "\001(\005:\0011\022&\n\036ring_offset_from_now_in_second" +
+      "\030\004 \001(\005\022\037\n\027ring_duration_in_second\030\005 \001(\005\032" +
+      "}\n\rPairingAction\022\014\n\004ssid\030\001 \001(\t\022:\n\004type\030\002" +
+      " \001(\0162,.hello.SyncResponse.PairingAction." +
+      "ActionType\"\"\n\nActionType\022\010\n\004PAIR\020\000\022\n\n\006UN" +
+      "PAIR\020\001\032D\n\nWhiteNoise\022\022\n\nstart_time\030\001 \001(\005" +
+      "\022\020\n\010end_time\030\002 \001(\005\022\020\n\010sound_id\030\003 \001(\005\032\225\001\n" +
+      "\013FlashAction\022\013\n\003red\030\001 \001(\005\022\r\n\005green\030\002 \001(\005" +
+      "\022\014\n\004blue\030\003 \001(\005\022\032\n\022delay_milliseconds\030\004 \001",
+      "(\005\022\017\n\007fade_in\030\005 \001(\010\022\020\n\010fade_out\030\006 \001(\010\022\016\n" +
+      "\006rotate\030\007 \001(\010\022\r\n\005alpha\030\010 \001(\005\"3\n\016RoomCond" +
+      "itions\022\t\n\005IDEAL\020\001\022\013\n\007WARNING\020\002\022\t\n\005ALERT\020" +
+      "\003\"=\n\010PillData\022\017\n\007pill_id\030\001 \001(\t\022\022\n\naccoun" +
+      "t_id\030\002 \001(\t\022\014\n\004data\030\003 \001(\014\"\357\001\n\017PillDataKin" +
+      "esis\022\017\n\007pill_id\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(" +
+      "\t\022\021\n\ttimestamp\030\003 \001(\003\022\r\n\005value\030\004 \001(\003\022\024\n\014o" +
+      "ffsetMillis\030\005 \001(\005\022\025\n\rencryptedData\030\006 \001(\014" +
+      "\022\024\n\014batteryLevel\030\007 \001(\005\022\027\n\017firmwareVersio" +
+      "n\030\010 \001(\005\022\022\n\npillIdLong\030\t \001(\003\022\025\n\raccountId",
+      "Long\030\n \001(\003\022\016\n\006upTime\030\013 \001(\005\"\324\001\n\016PillBlobH" +
+      "eader\022\035\n\025first_sequence_number\030\001 \001(\t\022\034\n\024" +
+      "last_sequence_number\030\002 \001(\t\022\031\n\021first_samp" +
+      "le_date\030\003 \001(\t\022\030\n\020last_sample_date\030\004 \001(\t\022" +
+      "%\n\035compressed_bitmap_account_ids\030\005 \001(\014\022\026" +
+      "\n\016data_file_name\030\006 \001(\t\022\021\n\tnum_items\030\007 \001(" +
+      "\005\"*\n\010PillBlob\022\036\n\005items\030\001 \003(\0132\017.hello.Pil" +
+      "lData\"\214\001\n\nEventBatch\022+\n\006events\030\001 \003(\0132\033.h" +
+      "ello.EventBatch.EventItem\032Q\n\tEventItem\022\027" +
+      "\n\017start_timestamp\030\001 \001(\003\022\025\n\rend_timestamp",
+      "\030\002 \001(\003\022\024\n\014offsetMillis\030\003 \001(\005\"\336\003\n\rperiodi" +
+      "c_data\022\021\n\tunix_time\030\001 \001(\005\022\r\n\005light\030\002 \001(\005" +
+      "\022\023\n\013temperature\030\003 \001(\005\022\020\n\010humidity\030\004 \001(\005\022" +
+      "\014\n\004dust\030\005 \001(\005\022\014\n\004name\030\006 \001(\t\022\013\n\003mac\030\007 \001(\014" +
+      "\022\031\n\021light_variability\030\010 \001(\005\022\026\n\016light_ton" +
+      "ality\030\t \001(\005\022\030\n\020firmware_version\030\n \001(\005\022\030\n" +
+      "\020dust_variability\030\r \001(\005\022\020\n\010dust_max\030\016 \001(" +
+      "\005\022\020\n\010dust_min\030\017 \001(\005\022-\n\005pills\030\013 \003(\0132\036.hel" +
+      "lo.periodic_data.pill_data\022\021\n\tdevice_id\030" +
+      "\014 \001(\t\032\215\001\n\tpill_data\022\027\n\017firmwareVersion\030\001",
+      " \001(\005\022\033\n\023motionDataEncrypted\030\002 \001(\014\022\020\n\010dev" +
+      "iceId\030\003 \001(\t\022\024\n\014batteryLevel\030\004 \001(\005\022\016\n\006upt" +
+      "ime\030\005 \001(\005\022\022\n\nmotionData\030\006 \001(\005\">\n\010SenseLo" +
+      "g\022\021\n\tunix_time\030\001 \001(\005\022\021\n\tdevice_id\030\002 \001(\t\022" +
+      "\014\n\004text\030\003 \001(\tB)\n\032com.hello.suripu.api.in" +
+      "putB\013InputProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -25299,43 +25488,37 @@ public final class InputProtos {
           internal_static_hello_SyncResponse_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_SyncResponse_descriptor,
-              new java.lang.String[] { "UploadCycle", "SyncCycle", "AccScanCyle", "AccSamplingInterval", "DeviceSamplingInterval", "Alarm", "PairingAction", "WhiteNoise", "FlashAction", "ResetDevice", "FirmwareUpdate", "RoomConditions", });
-          internal_static_hello_SyncResponse_Alarm_descriptor =
+              new java.lang.String[] { "UploadCycle", "SyncCycle", "AccScanCyle", "AccSamplingInterval", "DeviceSamplingInterval", "Alarm", "PairingAction", "WhiteNoise", "FlashAction", "ResetDevice", "RoomConditions", "Files", });
+          internal_static_hello_SyncResponse_FileDownload_descriptor =
             internal_static_hello_SyncResponse_descriptor.getNestedTypes().get(0);
+          internal_static_hello_SyncResponse_FileDownload_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_SyncResponse_FileDownload_descriptor,
+              new java.lang.String[] { "Host", "Url", "CopyToSerialFlash", "ResetNetworkProcessor", "ResetApplicationProcessor", "SerialFlashFilename", "SerialFlashPath", "SdCardFilename", "SdCardPath", });
+          internal_static_hello_SyncResponse_Alarm_descriptor =
+            internal_static_hello_SyncResponse_descriptor.getNestedTypes().get(1);
           internal_static_hello_SyncResponse_Alarm_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_SyncResponse_Alarm_descriptor,
               new java.lang.String[] { "StartTime", "EndTime", "RingtoneId", "RingOffsetFromNowInSecond", "RingDurationInSecond", });
           internal_static_hello_SyncResponse_PairingAction_descriptor =
-            internal_static_hello_SyncResponse_descriptor.getNestedTypes().get(1);
+            internal_static_hello_SyncResponse_descriptor.getNestedTypes().get(2);
           internal_static_hello_SyncResponse_PairingAction_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_SyncResponse_PairingAction_descriptor,
               new java.lang.String[] { "Ssid", "Type", });
           internal_static_hello_SyncResponse_WhiteNoise_descriptor =
-            internal_static_hello_SyncResponse_descriptor.getNestedTypes().get(2);
+            internal_static_hello_SyncResponse_descriptor.getNestedTypes().get(3);
           internal_static_hello_SyncResponse_WhiteNoise_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_SyncResponse_WhiteNoise_descriptor,
               new java.lang.String[] { "StartTime", "EndTime", "SoundId", });
-          internal_static_hello_SyncResponse_FirmwareUpdate_descriptor =
-            internal_static_hello_SyncResponse_descriptor.getNestedTypes().get(3);
-          internal_static_hello_SyncResponse_FirmwareUpdate_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_hello_SyncResponse_FirmwareUpdate_descriptor,
-              new java.lang.String[] { "FirmwareVersion", "FileUrls", "ExpiresAt", });
           internal_static_hello_SyncResponse_FlashAction_descriptor =
             internal_static_hello_SyncResponse_descriptor.getNestedTypes().get(4);
           internal_static_hello_SyncResponse_FlashAction_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_SyncResponse_FlashAction_descriptor,
-              new java.lang.String[] { "Led1", "Led2", "Led3", "Led4", "Led5", });
-          internal_static_hello_SyncResponse_FlashAction_LEDAction_descriptor =
-            internal_static_hello_SyncResponse_FlashAction_descriptor.getNestedTypes().get(0);
-          internal_static_hello_SyncResponse_FlashAction_LEDAction_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_hello_SyncResponse_FlashAction_LEDAction_descriptor,
-              new java.lang.String[] { "Color", "StartTime", "EndTime", });
+              new java.lang.String[] { "Red", "Green", "Blue", "DelayMilliseconds", "FadeIn", "FadeOut", "Rotate", "Alpha", });
           internal_static_hello_PillData_descriptor =
             getDescriptor().getMessageTypes().get(8);
           internal_static_hello_PillData_fieldAccessorTable = new
