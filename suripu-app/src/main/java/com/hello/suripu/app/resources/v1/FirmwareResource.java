@@ -32,7 +32,7 @@ public class FirmwareResource {
             @PathParam("device_id") String deviceId,
             @PathParam("firmware_version") Integer firmwareVersion) {
 
-        final FirmwareFile updated = FirmwareFile.withS3Info(firmwareFile, "hello-firmware", "sense/" + firmwareFile.s3Key);
+        final FirmwareFile updated = FirmwareFile.withS3Info(firmwareFile, "hello-firmware", "sense" + firmwareFile.s3Key);
         firmwareUpdateStore.insertFile(updated, deviceId, firmwareVersion);
     }
 
