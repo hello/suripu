@@ -57,6 +57,7 @@ public class FirmwareUpdateStore {
             final SyncResponse.FileDownload fileDownload = SyncResponse.FileDownload.newBuilder()
                     .setUrl(s.getPath() + "?" + s.getQuery())
                     .setHost(s.getHost())
+                    .setCopyToSerialFlash(f.copyToSerialFlash)
                     .setResetApplicationProcessor(f.resetApplicationProcessor)
                     .setResetNetworkProcessor(f.resetNetworkProcessor)
                     .setSerialFlashFilename(f.serialFlashFilename)
