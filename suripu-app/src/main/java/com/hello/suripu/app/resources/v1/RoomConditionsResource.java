@@ -63,6 +63,32 @@ public class RoomConditionsResource {
         return roomState;
     }
 
+
+    private void validateLocalUTCQueryRange(final DateTime startQueryTimestampLocalUTC, final DateTime endQueryTimestampLocalUTC,
+                                            final Long accountId, final long allowedRangeInSeconds) {
+        if (startQueryTimestampLocalUTC == null || endQueryTimestampLocalUTC == null) {
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        if(startQueryTimestampLocalUTC.getZone().equals(DateTimeZone.UTC) == false ||
+                endQueryTimestampLocalUTC.getZone().equals(DateTimeZone.UTC) == false) {
+            LOGGER.error("validateLocalUTCQueryRange: Query start/end timestamp is not set to local UTC. start: {}, end: {}",
+                    startQueryTimestampLocalUTC,
+                    endQueryTimestampLocalUTC);
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        /*
+        * A DAY can be 48 hours. A week can be 2 * 7 * 24 hours at most.
+         */
+        if(Math.abs(startQueryTimestampLocalUTC.getMillis() - endQueryTimestampLocalUTC.getMillis()) > 2 * allowedRangeInSeconds * 1000) {
+            LOGGER.warn("Invalid request, query {} to {} range is too big for account_id = {}",
+                    startQueryTimestampLocalUTC, endQueryTimestampLocalUTC,
+                    accountId);
+            throw new WebApplicationException(Response.Status.FORBIDDEN);   // This should be FORBIDDEN
+        }
+    }
+
     /*
     * WARNING: This implementation will not giving out the data of last 24 hours.
     * It gives the data of last DAY, which is from a certain local timestamp
@@ -96,6 +122,10 @@ public class RoomConditionsResource {
          */
         final long queryStartTimeInLocalUTC = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC).minusDays(1).getMillis();
 
+        validateLocalUTCQueryRange(new DateTime(queryStartTimeInLocalUTC, DateTimeZone.UTC),
+                new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC),
+                accessToken.accountId,
+                allowedRangeInSeconds);
 
         // get latest device_id connected to this account
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
@@ -143,6 +173,11 @@ public class RoomConditionsResource {
          */
         final long queryStartTimeInLocalUTC = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC).minusDays(1).getMillis();
 
+        validateLocalUTCQueryRange(new DateTime(queryStartTimeInLocalUTC, DateTimeZone.UTC),
+                new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC),
+                accessToken.accountId,
+                allowedRangeInSeconds);
+
         // check that accountId, deviceName pair exists
         final Optional<Long> deviceId = deviceDAO.getIdForAccountIdDeviceId(accessToken.accountId, deviceName);
         if (!deviceId.isPresent()) {
@@ -180,6 +215,11 @@ public class RoomConditionsResource {
          */
         final long queryStartTimeInLocalUTC = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC).minusDays(1).getMillis();
 
+        validateLocalUTCQueryRange(new DateTime(queryStartTimeInLocalUTC, DateTimeZone.UTC),
+                new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC),
+                accessToken.accountId,
+                allowedRangeInSeconds);
+
         // get latest device_id connected to this account
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
         if(!deviceId.isPresent()) {
@@ -199,12 +239,12 @@ public class RoomConditionsResource {
      */
     private void validateQueryRange(final Long clientUtcTimestamp, final DateTime nowForServer, final Long accountId, final long allowedRangeInSeconds) {
         if (clientUtcTimestamp == null) {
-            throw new WebApplicationException(400);
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
         if(Math.abs(clientUtcTimestamp - nowForServer.getMillis()) > allowedRangeInSeconds * 1000) {
             LOGGER.warn("Invalid request, {} is too far off for account_id = {}", clientUtcTimestamp, accountId);
-            throw new WebApplicationException(400);
+            throw new WebApplicationException(Response.Status.FORBIDDEN);  // This should be FORBIDDEN
         }
     }
 
@@ -232,7 +272,10 @@ public class RoomConditionsResource {
         * We have to minutes one week instead of 7*24 hours, for the same reason that one week can be more/less than 7 * 24 hours
          */
         final long queryStartTimeInLocalUTC = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC).minusWeeks(1).getMillis();
-
+        validateLocalUTCQueryRange(new DateTime(queryStartTimeInLocalUTC, DateTimeZone.UTC),
+                new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC),
+                accessToken.accountId,
+                allowedRangeInSeconds);
 
         // get latest device_id connected to this account
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
