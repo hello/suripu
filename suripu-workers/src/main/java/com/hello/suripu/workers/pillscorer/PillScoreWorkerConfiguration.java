@@ -2,6 +2,7 @@ package com.hello.suripu.workers.pillscorer;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
+import com.hello.suripu.core.configuration.GraphiteConfiguration;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
 import com.yammer.dropwizard.config.Configuration;
@@ -22,6 +23,24 @@ public class PillScoreWorkerConfiguration extends Configuration {
 
     public DatabaseConfiguration getCommonDB() {
         return commonDB;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("metrics_enabled")
+    private Boolean metricsEnabled;
+
+    public Boolean getMetricsEnabled() {
+        return metricsEnabled;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("graphite")
+    private GraphiteConfiguration graphite;
+
+    public GraphiteConfiguration getGraphite() {
+        return graphite;
     }
 
     @Valid

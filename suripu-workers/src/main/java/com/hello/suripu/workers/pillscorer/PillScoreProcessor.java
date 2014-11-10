@@ -14,12 +14,16 @@ import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.models.PillSample;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.processors.PillScoreBatchByRecordsProcessor;
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.Counter;
+import com.yammer.metrics.core.Meter;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class PillScoreProcessor implements IRecordProcessor {
 
@@ -27,14 +31,17 @@ public class PillScoreProcessor implements IRecordProcessor {
 
     private final PillScoreBatchByRecordsProcessor pillProcessor;
     private int decodeErrors = 0;
+    private Counter messageCounter;
+    private Meter messageMeter;
 
     public PillScoreProcessor(final SleepScoreDAO sleepScoreDAO, final int dateMinuteBucket, final int checkpointThreshold) {
         this.pillProcessor = new PillScoreBatchByRecordsProcessor(sleepScoreDAO, dateMinuteBucket, checkpointThreshold);
+        this.messageCounter = Metrics.defaultRegistry().newCounter(PillScoreProcessor.class, "message_count");
+        this.messageMeter = Metrics.defaultRegistry().newMeter(PillScoreProcessor.class, "get-requests", "requests", TimeUnit.SECONDS);
     }
 
     @Override
     public void initialize(String s) {
-
     }
 
     @Override
@@ -62,6 +69,8 @@ public class PillScoreProcessor implements IRecordProcessor {
                 LOGGER.error("Failed to decode protobuf: {}", e.getMessage());
                 this.decodeErrors++;
             }
+            this.messageCounter.inc();
+            this.messageMeter.mark();
         }
 
         if (samples.size() > 0) {
