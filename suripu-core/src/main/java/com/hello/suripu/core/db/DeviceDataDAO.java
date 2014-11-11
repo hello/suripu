@@ -157,22 +157,42 @@ public abstract class DeviceDataDAO {
         }
 
         // create buckets with keys in UTC-Time
-        final int currentOffsetMillis = rows.get(0).offsetMillis;
-        final DateTime now = queryEndTime.withSecondOfMinute(0).withMillisOfSecond(0);
-        final int remainder = now.getMinuteOfHour() % slotDurationInMinutes;
-        final int minuteBucket = now.getMinuteOfHour() - remainder;
-        // if 4:36 -> bucket = 4:35
+        final int endOffsetMillis = rows.get(rows.size() - 1).offsetMillis;
+        final int startOffsetMillis = rows.get(0).offsetMillis;
 
-        final DateTime nowRounded = now.minusMinutes(remainder);
-        LOGGER.debug("Current Offset Milis = {}", currentOffsetMillis);
-        LOGGER.debug("Remainder = {}", remainder);
-        LOGGER.debug("Now (rounded) = {} ({})", nowRounded, nowRounded.getMillis());
 
         // final int numberOfBuckets= (queryDurationInHours * 60 / slotDurationInMinutes) + 1;   // This is wrong, duration in hours must come from actual data
 
         // We cannot estimate time duration by from local time, because time zone can change between
         // local start time and local end time. The only way to get interval is compute from absolute time.
-        final long absoluteIntervalMS = rows.get(rows.size() - 1).dateTimeUTC.getMillis() - rows.get(0).dateTimeUTC.getMillis();
+
+
+        final DateTime nowLocal = new DateTime(queryEndTime.getYear(),
+                queryEndTime.getMonthOfYear(),
+                queryEndTime.getDayOfMonth(),
+                queryEndTime.getHourOfDay(),
+                queryEndTime.getMinuteOfHour(),
+                DateTimeZone.forOffsetMillis(endOffsetMillis));
+
+        final DateTime startLocal = new DateTime(queryStartTime.getYear(),
+                queryStartTime.getMonthOfYear(),
+                queryStartTime.getDayOfMonth(),
+                queryStartTime.getHourOfDay(),
+                queryStartTime.getMinuteOfHour(),
+                DateTimeZone.forOffsetMillis(startOffsetMillis));
+
+        final long absoluteIntervalMS = nowLocal.getMillis() - startLocal.getMillis();
+        final DateTime now = new DateTime(nowLocal.getMillis(), DateTimeZone.UTC);
+
+        final int remainder = now.getMinuteOfHour() % slotDurationInMinutes;
+        final int minuteBucket = now.getMinuteOfHour() - remainder;
+        // if 4:36 -> bucket = 4:35
+
+        final DateTime nowRounded = now.minusMinutes(remainder);
+        LOGGER.debug("Current Offset Milis = {}", startOffsetMillis);
+        LOGGER.debug("Remainder = {}", remainder);
+        LOGGER.debug("Now (rounded) = {} ({})", nowRounded, nowRounded.getMillis());
+
         final int numberOfBuckets= (int) ((absoluteIntervalMS / DateTimeConstants.MILLIS_PER_MINUTE) / slotDurationInMinutes + 1);
 
         final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes);
@@ -191,7 +211,7 @@ public abstract class DeviceDataDAO {
 
         LOGGER.debug("New map size = {}", merged.size());
 
-        final List<Sample> sortedList = Bucketing.sortResults(merged, currentOffsetMillis);
+        final List<Sample> sortedList = Bucketing.sortResults(merged, startOffsetMillis);
         return sortedList;
     }
 
