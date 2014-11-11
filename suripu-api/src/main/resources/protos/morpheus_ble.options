@@ -1,2 +1,2 @@
-MorpheusCommand.PillData.deviceId             max_size:17
-MorpheusCommand.PillData.motionDataEntrypted  max_size:20
+pill_data.device_id              max_size:17
+pill_data.motion_data_entrypted  max_size:20

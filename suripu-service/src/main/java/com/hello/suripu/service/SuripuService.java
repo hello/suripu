@@ -24,6 +24,8 @@ import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
+import com.hello.suripu.core.firmware.FirmwareUpdateDAO;
+import com.hello.suripu.core.firmware.FirmwareUpdateStore;
 import com.hello.suripu.core.health.DynamoDbHealthCheck;
 import com.hello.suripu.core.health.KinesisHealthCheck;
 import com.hello.suripu.core.logging.DataLogger;
@@ -90,6 +92,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         commonDB.registerContainerFactory(new OptionalContainerFactory());
         commonDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
 
+
         sensorsDB.registerArgumentFactory(new JodaArgumentFactory());
         sensorsDB.registerContainerFactory(new OptionalContainerFactory());
         sensorsDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
@@ -100,7 +103,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
         final ScoreDAO scoreDAO = commonDB.onDemand(ScoreDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
-
+        final FirmwareUpdateDAO firmwareUpdateDAO = commonDB.onDemand(FirmwareUpdateDAO.class);
 
         final EventDAO eventDAO = commonDB.onDemand(EventDAO.class);
 
@@ -159,14 +162,21 @@ public class SuripuService extends Service<SuripuConfiguration> {
             LOGGER.warn("Metrics not enabled.");
         }
 
+        final FirmwareUpdateStore firmwareUpdateStore = new FirmwareUpdateStore(firmwareUpdateDAO, s3Client);
+
         final DataLogger activityLogger = kinesisLoggerFactory.get(QueueName.ACTIVITY_STREAM);
         environment.addProvider(new OAuthProvider(new OAuthAuthenticator(tokenStore), "protected-resources", activityLogger));
-        environment.addResource(new ReceiveResource(deviceDataDAO, deviceDAO,
+
+        final ReceiveResource receiveResource = new ReceiveResource(deviceDataDAO, deviceDAO,
                 publicKeyStore,
                 kinesisLoggerFactory,
                 mergedAlarmInfoDynamoDB,
                 configuration.getDebug(),
-                configuration.getRoomConditions()));
+                configuration.getRoomConditions(),
+                firmwareUpdateStore
+        );
+
+        environment.addResource(receiveResource);
         environment.addResource(new RegisterResource(deviceDAO, tokenStore, kinesisLoggerFactory, configuration.getDebug()));
         environment.addResource(new LogsResource(
                 configuration.getIndexLogConfiguration().getPrivateUrl(),
