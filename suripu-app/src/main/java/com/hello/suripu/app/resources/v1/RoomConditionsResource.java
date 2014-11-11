@@ -85,7 +85,7 @@ public class RoomConditionsResource {
             LOGGER.warn("Invalid request, query {} to {} range is too big for account_id = {}",
                     startQueryTimestampLocalUTC, endQueryTimestampLocalUTC,
                     accountId);
-            throw new WebApplicationException(Response.Status.FORBIDDEN);   // This should be FORBIDDEN
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);   // This should be FORBIDDEN
         }
     }
 
@@ -244,7 +244,7 @@ public class RoomConditionsResource {
 
         if(Math.abs(clientUtcTimestamp - nowForServer.getMillis()) > allowedRangeInSeconds * 1000) {
             LOGGER.warn("Invalid request, {} is too far off for account_id = {}", clientUtcTimestamp, accountId);
-            throw new WebApplicationException(Response.Status.FORBIDDEN);  // This should be FORBIDDEN
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);  // This should be FORBIDDEN
         }
     }
 
