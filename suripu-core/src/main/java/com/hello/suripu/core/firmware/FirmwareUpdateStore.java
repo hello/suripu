@@ -33,6 +33,11 @@ public class FirmwareUpdateStore {
         firmwareUpdateDAO.reset(deviceId);
     }
 
+
+    public List<FirmwareFile> getFirmwareFiles(final String deviceId, final Integer firmwareVersion) {
+        return firmwareUpdateDAO.getFiles(deviceId, firmwareVersion);
+    }
+
     public List<SyncResponse.FileDownload> getFirmwareUpdateContent(final String deviceId, final Integer currentFirmwareVersion) {
 
         final List<FirmwareFile> files = firmwareUpdateDAO.getFiles(deviceId, currentFirmwareVersion);
