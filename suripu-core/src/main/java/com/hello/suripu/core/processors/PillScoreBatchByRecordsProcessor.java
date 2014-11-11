@@ -6,6 +6,8 @@ import com.google.common.collect.TreeMultimap;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.models.PillSample;
 import com.hello.suripu.core.models.SleepScore;
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.Meter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by kingshy on 9/19/14.
@@ -32,8 +35,11 @@ public class PillScoreBatchByRecordsProcessor {
     // tracking process stats
     private int numRecordsInMemory;
     private int numPillRecordsProcessed;
-    private int numInserts = 0;
-    private int numUpdates = 0;
+
+    // metrics
+    private Meter insertRate;
+    private Meter updateRate;
+    private Meter processRate;
 
     // bunch of constants
     private final int checkpointThreshold; // no. of pills processed before we checkpoint kinesis
@@ -52,6 +58,9 @@ public class PillScoreBatchByRecordsProcessor {
         this.numRecordsInMemory = 0;
         this.lastProcessedTimestampMillis = 0L;
 
+        this.insertRate = Metrics.defaultRegistry().newMeter(PillScoreBatchByRecordsProcessor.class, "db_insert_rate", "inserts", TimeUnit.SECONDS);
+        this.updateRate = Metrics.defaultRegistry().newMeter(PillScoreBatchByRecordsProcessor.class, "db_update_rate", "updates", TimeUnit.SECONDS);
+        this.processRate = Metrics.defaultRegistry().newMeter(PillScoreBatchByRecordsProcessor.class, "records_processed", "records", TimeUnit.SECONDS);
     }
 
     /** main entry point to process any pill data
@@ -139,12 +148,15 @@ public class PillScoreBatchByRecordsProcessor {
             final Map<String, Integer> stats = this.sleepScoreDAO.saveScores(scores);
 
             final int saved = (stats.get("updated") + stats.get("inserted"));
-            this.numUpdates += stats.get("updated");
-            this.numInserts += stats.get("inserted");
             if (saved > 0) {
                 successPillIDs.add(pillID);
                 processed += data.size();
             }
+
+            this.insertRate.mark(stats.get("inserted"));
+            this.updateRate.mark(stats.get("updated"));
+            this.processRate.mark(data.size());
+
         }
 
         for (final String pillID: successPillIDs) {
