@@ -343,7 +343,8 @@ public class ReceiveResource {
                     .withAmbientLightVariance(data.getLightVariability())
                     .withAmbientLightPeakiness(data.getLightTonality())
                     .withOffsetMillis(userTimeZone.getOffset(roundedDateTime))
-                    .withDateTimeUTC(roundedDateTime);
+                    .withDateTimeUTC(roundedDateTime)
+                    .withFirmwareVersion(data.getFirmwareVersion());
 
             final DeviceData deviceData = builder.build();
 

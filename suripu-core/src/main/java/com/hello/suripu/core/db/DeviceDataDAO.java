@@ -32,10 +32,10 @@ public abstract class DeviceDataDAO {
 
     @SqlUpdate("INSERT INTO device_sensors_master (account_id, device_id, ts, local_utc_ts, offset_millis, " +
             "ambient_temp, ambient_light, ambient_light_variance, ambient_light_peakiness, ambient_humidity, " +
-            "ambient_air_quality, ambient_air_quality_raw, ambient_dust_variance, ambient_dust_min, ambient_dust_max) VALUES " +
+            "ambient_air_quality, ambient_air_quality_raw, ambient_dust_variance, ambient_dust_min, ambient_dust_max, firmware_version) VALUES " +
             "(:account_id, :device_id, :ts, :local_utc_ts, :offset_millis, " +
             ":ambient_temp, :ambient_light, :ambient_light_variance, :ambient_light_peakiness, :ambient_humidity, " +
-            ":ambient_air_quality, :ambient_air_quality_raw, :ambient_dust_variance, :ambient_dust_min, :ambient_dust_max)")
+            ":ambient_air_quality, :ambient_air_quality_raw, :ambient_dust_variance, :ambient_dust_min, :ambient_dust_max, :firmware_version)")
     public abstract void insert(@BindDeviceData final DeviceData deviceData);
 
     @RegisterMapper(DeviceDataMapper.class)
@@ -70,6 +70,7 @@ public abstract class DeviceDataDAO {
             "ROUND(AVG(ambient_dust_min)) as ambient_dust_min," +
             "ROUND(MAX(ambient_dust_max)) as ambient_dust_max," +
             "ROUND(MIN(offset_millis)) as offset_millis," +
+            "ROUND(MAX(firmware_version)) as firmware_version," +
             "date_trunc('hour', ts) + (CAST(date_part('minute', ts) AS integer) / :slot_duration) * :slot_duration * interval '1 min' AS ts_bucket " +
             "FROM device_sensors_master " +
             "WHERE account_id = :account_id AND device_id = :device_id " +
