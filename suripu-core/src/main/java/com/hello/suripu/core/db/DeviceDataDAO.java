@@ -188,7 +188,7 @@ public abstract class DeviceDataDAO {
         // if 4:36 -> bucket = 4:35
 
         final DateTime nowRounded = now.minusMinutes(remainder);
-        LOGGER.debug("Current Offset Milis = {}", endOffsetMillis);
+        LOGGER.debug("Current Offset Milis = {}", startOffsetMillis);
         LOGGER.debug("Remainder = {}", remainder);
         LOGGER.debug("Now (rounded) = {} ({})", nowRounded, nowRounded.getMillis());
 
@@ -210,7 +210,7 @@ public abstract class DeviceDataDAO {
 
         LOGGER.debug("New map size = {}", merged.size());
 
-        final List<Sample> sortedList = Bucketing.sortResults(merged, endOffsetMillis);
+        final List<Sample> sortedList = Bucketing.sortResults(merged, startOffsetMillis);
         return sortedList;
     }
 
