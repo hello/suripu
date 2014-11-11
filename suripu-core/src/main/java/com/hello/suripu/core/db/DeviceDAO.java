@@ -102,6 +102,6 @@ public interface DeviceDAO {
     //    @SqlQuery("SELECT * FROM pill_status WHERE pill_id = :pill_id;")
     @RegisterMapper(DeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
-    @SqlQuery("SELECT id, device_id AS pill_id, '1' AS firmware_version, 100 AS battery_level, ts AS last_seen from device_sensors_master WHERE device_id = :sense_id ORDER BY id DESC LIMIT 1;")
+    @SqlQuery("SELECT id, device_id AS pill_id, firmware_version AS firmware_version, 100 AS battery_level, ts AS last_seen from device_sensors_master WHERE device_id = :sense_id ORDER BY id DESC LIMIT 1;")
     Optional<DeviceStatus> senseStatus(@Bind("sense_id") final Long senseId);
 }
