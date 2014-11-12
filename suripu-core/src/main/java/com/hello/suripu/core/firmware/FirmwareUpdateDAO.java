@@ -10,7 +10,7 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 public interface FirmwareUpdateDAO {
 
 
-    @SqlQuery("SELECT * FROM firmware_updates WHERE device_id = :device_id AND firmware_version > :current_firmware_version ORDER BY ID ASC;")
+    @SqlQuery("SELECT * FROM firmware_updates WHERE device_id = :device_id AND firmware_version > :current_firmware_version ORDER BY ID ASC, reset_application_processor asc;")
     public ImmutableList<FirmwareFile> getFiles(@Bind("device_id") String deviceId, @Bind("current_firmware_version") Integer currentFirmwareVersion);
 
 
