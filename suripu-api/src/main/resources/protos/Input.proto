@@ -237,6 +237,7 @@ message EventBatch{
 }
 
 
+
 message periodic_data {
     optional int32 unix_time=1;
     optional int32 light=2;
@@ -245,28 +246,16 @@ message periodic_data {
     optional int32 dust=5;
     optional string name=6;
     optional bytes mac=7;
-
     optional int32 light_variability=8;
     optional int32 light_tonality=9;
-
     optional int32 firmware_version=10;
-
+    // Please DONOT reuse index 11, is for pilldata previously
+    optional string device_id = 12;
     optional int32 dust_variability=13;
     optional int32 dust_max=14;
-     optional int32 dust_min=15;
-
-    message pill_data {
-        // Be careful when copy paste, the index is not right :)
-        optional int32 firmwareVersion = 1;
-        optional bytes motionDataEncrypted = 2;
-        optional string deviceId = 3;
-        optional int32 batteryLevel = 4;
-        optional int32 uptime = 5;
-        optional int32 motionData = 6;
-    }
-    repeated pill_data pills=11;
-    optional string device_id = 12;
+    optional int32 dust_min=15;
 }
+
 
 
 message SenseLog {
