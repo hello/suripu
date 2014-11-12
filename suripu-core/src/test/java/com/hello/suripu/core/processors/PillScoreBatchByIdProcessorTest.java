@@ -21,8 +21,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Created by kingshy on 9/19/14.
  */
-public class PillProcessorTest {
-    private final static Logger LOGGER = LoggerFactory.getLogger(PillProcessorTest.class);
+public class PillScoreBatchByIdProcessorTest {
+    private final static Logger LOGGER = LoggerFactory.getLogger(PillScoreBatchByIdProcessorTest.class);
 
     private static int OFFSET_MILLIS = -25200000;
     private static int CHECKPOINT_THRESHOLD = 1;
@@ -62,7 +62,7 @@ public class PillProcessorTest {
             samples.put(this.accountID, sample);
         }
 
-        final PillProcessor pillProcessor = new PillProcessor(this.sleepScoreDAO, dateMinuteBucket, this.CHECKPOINT_THRESHOLD);
+        final PillScoreBatchByIdProcessor pillProcessor = new PillScoreBatchByIdProcessor(this.sleepScoreDAO, dateMinuteBucket, this.CHECKPOINT_THRESHOLD);
         final boolean ok = pillProcessor.processPillRecords(samples);
         final int numToProcess = pillProcessor.getNumInserted();
         assertThat(numToProcess, is(2));
@@ -81,7 +81,7 @@ public class PillProcessorTest {
             samples.put(this.accountID, sample);
         }
 
-        final PillProcessor pillProcessor = new PillProcessor(this.sleepScoreDAO, dateMinuteBucket, this.CHECKPOINT_THRESHOLD);
+        final PillScoreBatchByIdProcessor pillProcessor = new PillScoreBatchByIdProcessor(this.sleepScoreDAO, dateMinuteBucket, this.CHECKPOINT_THRESHOLD);
         final boolean ok = pillProcessor.processPillRecords(samples);
         final int numToProcess = pillProcessor.getNumInserted();
         assertThat(numToProcess, is(3));
@@ -100,7 +100,7 @@ public class PillProcessorTest {
             samples.put(this.accountID, sample);
         }
 
-        final PillProcessor pillProcessor = new PillProcessor(this.sleepScoreDAO, dateMinuteBucket, this.CHECKPOINT_THRESHOLD);
+        final PillScoreBatchByIdProcessor pillProcessor = new PillScoreBatchByIdProcessor(this.sleepScoreDAO, dateMinuteBucket, this.CHECKPOINT_THRESHOLD);
         final boolean ok = pillProcessor.processPillRecords(samples);
         final int numToProcess = pillProcessor.getToProcessIdsCount();
         assertThat(numToProcess, is(0));
@@ -122,7 +122,7 @@ public class PillProcessorTest {
             samples.put(this.accountID, sample);
         }
 
-        final PillProcessor pillProcessor = new PillProcessor(this.sleepScoreDAO, dateMinuteBucket, this.CHECKPOINT_THRESHOLD);
+        final PillScoreBatchByIdProcessor pillProcessor = new PillScoreBatchByIdProcessor(this.sleepScoreDAO, dateMinuteBucket, this.CHECKPOINT_THRESHOLD);
         boolean ok = pillProcessor.processPillRecords(samples);
         final int numInserted = pillProcessor.getNumInserted();
         assertThat(numInserted, is(4));
@@ -160,7 +160,7 @@ public class PillProcessorTest {
         Random r = new Random(5);
         final int dateMinuteBucket = 10;
 
-        final PillProcessor pillProcessor = new PillProcessor(this.sleepScoreDAO, dateMinuteBucket, this.CHECKPOINT_THRESHOLD);
+        final PillScoreBatchByIdProcessor pillProcessor = new PillScoreBatchByIdProcessor(this.sleepScoreDAO, dateMinuteBucket, this.CHECKPOINT_THRESHOLD);
 
         final PillSample sample1 = new PillSample(this.pillID, startTime.withMinuteOfHour(1), r.nextFloat(), this.OFFSET_MILLIS);
         samples.put(this.accountID, sample1);

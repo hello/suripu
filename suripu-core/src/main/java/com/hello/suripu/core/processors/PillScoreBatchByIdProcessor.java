@@ -19,8 +19,8 @@ import java.util.SortedSet;
 /**
  * Created by kingshy on 9/19/14.
  */
-public class PillProcessor {
-    private final static Logger LOGGER = LoggerFactory.getLogger(PillProcessor.class);
+public class PillScoreBatchByIdProcessor {
+    private final static Logger LOGGER = LoggerFactory.getLogger(PillScoreBatchByIdProcessor.class);
 
     private final SleepScoreDAO sleepScoreDAO;
 
@@ -43,7 +43,7 @@ public class PillProcessor {
     private final int dateMinuteBucketMillis;
     private long tooOldThreshold;
 
-    public PillProcessor(SleepScoreDAO sleepScoreDAO, final int dateMinuteBucket, final int checkpointThreshold) {
+    public PillScoreBatchByIdProcessor(SleepScoreDAO sleepScoreDAO, final int dateMinuteBucket, final int checkpointThreshold) {
         this.sleepScoreDAO = sleepScoreDAO;
         this.dateMinuteBucket = dateMinuteBucket;
         this.dateMinuteBucketMillis = dateMinuteBucket * 60 * 1000;
