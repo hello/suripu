@@ -5,9 +5,7 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
-import com.hello.suripu.core.models.AlarmInfo;
 import com.hello.suripu.core.models.DeviceAccountPair;
-import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -25,7 +23,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -65,12 +62,8 @@ public class TimeZoneResource {
         for(final DeviceAccountPair deviceAccountPair:deviceAccountMap)
         {
             try {
-                final AlarmInfo alarmInfo = new AlarmInfo(deviceAccountPair.externalDeviceId, token.accountId,
-                        Collections.EMPTY_LIST,
-                        Optional.<RingTime>absent(),
-                        Optional.of(DateTimeZone.forID(timeZoneHistory.timeZoneId)));
-
-                this.mergedAlarmInfoDynamoDB.setInfo(alarmInfo);
+                final DateTimeZone timeZone = DateTimeZone.forID(timeZoneHistory.timeZoneId);
+                this.mergedAlarmInfoDynamoDB.setTimeZone(deviceAccountPair.externalDeviceId, token.accountId, timeZone);
 
                 final Optional<TimeZoneHistory> timeZoneHistoryOptional = this.timeZoneHistoryDAODynamoDB.updateTimeZone(token.accountId,
                         timeZoneHistory.timeZoneId,
@@ -87,8 +80,8 @@ public class TimeZoneResource {
 
 
                 returnValue = new TimeZoneHistory(token.accountId,
-                        alarmInfo.timeZone.get().getOffset(DateTime.now()),
-                        alarmInfo.timeZone.get().getID());
+                        timeZone.getOffset(DateTime.now()),
+                        timeZone.getID());
             }catch (AmazonServiceException awsException){
                 LOGGER.error("Aws failed when account {} tries to set timezone.", token.accountId);
                 throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());

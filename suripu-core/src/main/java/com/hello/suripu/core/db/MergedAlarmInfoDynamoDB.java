@@ -69,74 +69,108 @@ public class MergedAlarmInfoDynamoDB {
     public static final int MAX_ALARM_COUNT = 7;
 
 
-    public void setInfo(final AlarmInfo info){
-        this.setInfo(info, DateTime.now());
+    private Map<String, AttributeValueUpdate> generateTimeZoneUpdateItem(final DateTimeZone timeZone){
+        final Map<String, AttributeValueUpdate> items = new HashMap<>();
+        items.put(TIMEZONE_ID_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                .withAction(AttributeAction.PUT)
+                .withValue(new AttributeValue().withS(timeZone.getID())));
+        return items;
     }
 
-    public boolean setInfo(final AlarmInfo info, final DateTime updateTime){
 
-        final HashMap<String, AttributeValue> keys = new HashMap<>();
-        keys.put(MORPHEUS_ID_ATTRIBUTE_NAME, new AttributeValue().withS(info.deviceId));
-        keys.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(info.accountId)));
-
-        final HashMap<String, AttributeValueUpdate> items = new HashMap<String, AttributeValueUpdate>();
-
-
+    private Map<String, AttributeValueUpdate> generateRingTimeUpdateItem(final RingTime ringTime){
         final ObjectMapper mapper = new ObjectMapper();
-        try {
-            boolean hasUpdate = false;
-            if(!info.alarmList.isEmpty()){
-                final String alarmListJSON = mapper.writeValueAsString(info.alarmList);
-                items.put(ALARM_TEMPLATES_ATTRIBUTE_NAME, new AttributeValueUpdate()
-                                .withAction(AttributeAction.PUT)
-                                .withValue(new AttributeValue().withS(alarmListJSON)));
-                hasUpdate = true;
-            }
-
-            if(info.ringTime.isPresent()){
-
-                items.put(EXPECTED_RING_TIME_ATTRIBUTE_NAME, new AttributeValueUpdate()
-                    .withAction(AttributeAction.PUT)
-                    .withValue(new AttributeValue().withN(String.valueOf(info.ringTime.get().expectedRingTimeUTC))));
-                items.put(ACTUAL_RING_TIME_ATTRIBUTE_NAME, new AttributeValueUpdate()
-                    .withAction(AttributeAction.PUT)
-                    .withValue(new AttributeValue().withN(String.valueOf(info.ringTime.get().actualRingTimeUTC))));
-                items.put(SOUND_IDS_ATTRIBUTE_NAME, new AttributeValueUpdate()
-                    .withAction(AttributeAction.PUT)
-                    .withValue(new AttributeValue().withS(mapper.writeValueAsString(info.ringTime.get().soundIds))));
-                hasUpdate = true;
-            }
-
-            if(info.timeZone.isPresent()){
-                items.put(TIMEZONE_ID_ATTRIBUTE_NAME, new AttributeValueUpdate()
-                    .withAction(AttributeAction.PUT)
-                    .withValue(new AttributeValue().withS(info.timeZone.get().getID())));
-                hasUpdate = true;
-            }
-
-            if(!hasUpdate){
-                LOGGER.warn("Nothing to update for device {}, account {} return.", info.deviceId, info.accountId);
-                return false;
-            }
-
-            items.put(UPDATED_AT_ATTRIBUTE_NAME, new AttributeValueUpdate()
+        final Map<String, AttributeValueUpdate> items = new HashMap<>();
+        items.put(EXPECTED_RING_TIME_ATTRIBUTE_NAME, new AttributeValueUpdate()
                 .withAction(AttributeAction.PUT)
-                .withValue(new AttributeValue().withN(String.valueOf(updateTime.getMillis()))));
+                .withValue(new AttributeValue().withN(String.valueOf(ringTime.expectedRingTimeUTC))));
+        items.put(ACTUAL_RING_TIME_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                .withAction(AttributeAction.PUT)
+                .withValue(new AttributeValue().withN(String.valueOf(ringTime.actualRingTimeUTC))));
 
-            final UpdateItemRequest updateItemRequest = new UpdateItemRequest()
-                    .withTableName(this.tableName)
-                    .withKey(keys)
-                    .withAttributeUpdates(items)
-                    .withReturnValues(ReturnValue.ALL_NEW);
-
-            final UpdateItemResult result = this.dynamoDBClient.updateItem(updateItemRequest);
-            return true;
-
-        } catch (JsonProcessingException ex) {
-            LOGGER.error("Set info for device {}, account {} failed, error: {}", info.deviceId, info.accountId, ex.getMessage());
+        try {
+            final String soundJSON = mapper.writeValueAsString(ringTime.soundIds);
+            items.put(SOUND_IDS_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                    .withAction(AttributeAction.PUT)
+                    .withValue(new AttributeValue().withS(soundJSON)));
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Deserialize sound ids error: {}", e.getMessage());
+            return Collections.EMPTY_MAP;
         }
 
-        return false;
+        return items;
+    }
+
+    private Map<String, AttributeValueUpdate> generateAlarmUpdateItem(final List<Alarm> alarmList){
+        final ObjectMapper mapper = new ObjectMapper();
+        final Map<String, AttributeValueUpdate> items = new HashMap<>();
+        final String alarmListJSON;
+        try {
+            alarmListJSON = mapper.writeValueAsString(alarmList);
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Deserialize alarmList error: {}", e.getMessage());
+            return Collections.EMPTY_MAP;
+        }
+        items.put(ALARM_TEMPLATES_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                .withAction(AttributeAction.PUT)
+                .withValue(new AttributeValue().withS(alarmListJSON)));
+        return items;
+    }
+
+
+    private UpdateItemRequest generateUpdateRequest(final String deviceId, final long accountId, final Map<String, AttributeValueUpdate> items){
+        items.put(UPDATED_AT_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                .withAction(AttributeAction.PUT)
+                .withValue(new AttributeValue().withN(String.valueOf(DateTime.now().getMillis()))));
+
+        final HashMap<String, AttributeValue> keys = new HashMap<>();
+        keys.put(MORPHEUS_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
+        keys.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
+
+        final UpdateItemRequest updateItemRequest = new UpdateItemRequest()
+                .withTableName(this.tableName)
+                .withKey(keys)
+                .withAttributeUpdates(items)
+                .withReturnValues(ReturnValue.ALL_NEW);
+
+        return updateItemRequest;
+    }
+
+
+    public boolean setTimeZone(final String deviceId, final long accountId, final DateTimeZone timeZone){
+        final Map<String, AttributeValueUpdate> items = generateTimeZoneUpdateItem(timeZone);
+        if(items.isEmpty()){
+            return false;
+        }
+
+        final UpdateItemRequest request = generateUpdateRequest(deviceId, accountId, items);
+        final UpdateItemResult result = this.dynamoDBClient.updateItem(request);
+        return true;
+
+    }
+
+    public boolean setAlarms(final String deviceId, final long accountId, final List<Alarm> alarms){
+        final Map<String, AttributeValueUpdate> items = generateAlarmUpdateItem(alarms);
+        if(items.isEmpty()){
+            return false;
+        }
+
+        final UpdateItemRequest request = generateUpdateRequest(deviceId, accountId, items);
+        final UpdateItemResult result = this.dynamoDBClient.updateItem(request);
+        return true;
+
+    }
+
+    public boolean setRingTime(final String deviceId, final long accountId, final RingTime ringTime){
+        final Map<String, AttributeValueUpdate> items = generateRingTimeUpdateItem(ringTime);
+        if(items.isEmpty()){
+            return false;
+        }
+
+        final UpdateItemRequest request = generateUpdateRequest(deviceId, accountId, items);
+        final UpdateItemResult result = this.dynamoDBClient.updateItem(request);
+        return true;
+
     }
 
     public Optional<AlarmInfo> getInfo(final String deviceId, final long accountId){
