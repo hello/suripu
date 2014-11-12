@@ -52,9 +52,9 @@ max_records: 1000
 # minutes of data to store in memory before processing
 date_minutes_bucket: 15
 
-# no. of pills to process before kinesis checkpoint
+# no. of pills/records to process before kinesis checkpoint
 # we want this number to be roughly no. of pills in the wild
-checkpoint_threshold: 500
+checkpoint_threshold: 1000
 
 # Logging settings.
 logging:

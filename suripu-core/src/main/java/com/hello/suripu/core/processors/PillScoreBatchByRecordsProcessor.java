@@ -46,7 +46,7 @@ public class PillScoreBatchByRecordsProcessor {
     private final int dateMinuteBucket; // data size threshold to process the pill
     private final long checkpointTimeThreshold;
 
-    public PillScoreBatchByRecordsProcessor(SleepScoreDAO sleepScoreDAO, final int dateMinuteBucket, final int checkpointThreshold) {
+    public PillScoreBatchByRecordsProcessor(final SleepScoreDAO sleepScoreDAO, final int dateMinuteBucket, final int checkpointThreshold) {
         this.sleepScoreDAO = sleepScoreDAO;
         this.dateMinuteBucket = dateMinuteBucket;
         this.checkpointThreshold = checkpointThreshold;
@@ -75,6 +75,11 @@ public class PillScoreBatchByRecordsProcessor {
 
         LOGGER.debug("number of records in memory: {}", this.numRecordsInMemory);
 
+        if (this.numRecordsInMemory == 0) {
+            // only heart-beat data is received. nothing to process. ok to checkpoint
+            return true;
+        }
+
         // compute scores and save to DB
         if (this.lastProcessedTimestampMillis == 0) {
             this.lastProcessedTimestampMillis = lastTimestampMillis;
@@ -86,6 +91,9 @@ public class PillScoreBatchByRecordsProcessor {
         if (this.numRecordsInMemory >= this.checkpointThreshold || timestampDiff >= this.checkpointTimeThreshold) {
             final int numSavedScores = this.computeAndSaveScores();
 
+            LOGGER.debug("Checkpoint threshold met: {}", this.numRecordsInMemory >= this.checkpointThreshold);
+            LOGGER.debug("Time threshold: {}", timestampDiff >= this.checkpointTimeThreshold);
+
             if (numSavedScores == this.numRecordsInMemory) {
                 this.numRecordsInMemory = 0;
                 this.lastProcessedTimestampMillis = lastTimestampMillis;
@@ -95,9 +103,20 @@ public class PillScoreBatchByRecordsProcessor {
         return false;
     }
 
-    public int getNumRecordsInMemory() {return this.numRecordsInMemory;}
+    /**
+     * @return no. of records kept in memory
+     */
+    public int getNumRecordsInMemory() {
+        return this.numRecordsInMemory;
+    }
 
-    public int getNumPillRecordsProcessed() {return this.numPillRecordsProcessed;}
+    /**
+     * @return no. of records processed. Use in tests.
+     */
+    public long getNumPillRecordsProcessed() {
+        return this.numPillRecordsProcessed;
+    }
+
     /**
      * Add each record to in-memory maps
      * @param pillRecords
@@ -110,11 +129,15 @@ public class PillScoreBatchByRecordsProcessor {
 
             List<PillSample> records = pillRecords.get(accountID);
             for (final PillSample record : records) {
-                final String pillID = record.sampleID;
 
-                this.pillAccountID.put(pillID, accountID); // map pill-id to account-id
-                this.pillData.put(pillID, record); // stores pill data
+                // only process non-heartbeat data
+                if (record.val != -1) {
+                    final String pillID = record.sampleID;
+                    this.pillAccountID.put(pillID, accountID); // map pill-id to account-id
+                    this.pillData.put(pillID, record); // stores pill data
+                }
 
+                LOGGER.debug("record account: {}, dt: {}", accountID, record.dateTime);
                 if (record.dateTime.getMillis() > lastTimestampMillis) {
                     lastTimestampMillis = record.dateTime.getMillis(); // track last-seen timestamp
                 }
@@ -133,7 +156,6 @@ public class PillScoreBatchByRecordsProcessor {
         int processed = 0;
         Set<String> successPillIDs = new HashSet<>();
 
-        //for (final String pillID: this.toProccessedIDs) {
         for (final String pillID : this.pillData.keySet()) {
             final Long accountID = this.pillAccountID.get(pillID);
             final SortedSet<PillSample> data = this.pillData.get(pillID);

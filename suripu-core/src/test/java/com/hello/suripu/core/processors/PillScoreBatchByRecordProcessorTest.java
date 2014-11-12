@@ -89,8 +89,8 @@ public class PillScoreBatchByRecordProcessorTest {
         final boolean ok = pillProcessor2.processPillRecords(samples);
         assertThat(ok, is(true));
 
-        final int numRecordsInProcessor = pillProcessor2.getNumPillRecordsProcessed();
-        assertThat(numRecordsInProcessor, is(numRecords));
+        final long numRecordsInProcessor = pillProcessor2.getNumPillRecordsProcessed();
+        assertThat(numRecordsInProcessor, is((long) numRecords));
 
     }
 
@@ -118,8 +118,8 @@ public class PillScoreBatchByRecordProcessorTest {
         ok = pillProcessor2.processPillRecords(samples);
         assertThat(ok, is(true));
 
-        final int numRecordsInProcessor = pillProcessor2.getNumPillRecordsProcessed();
-        assertThat(numRecordsInProcessor, is(numRecords+1));
+        final long numRecordsInProcessor = pillProcessor2.getNumPillRecordsProcessed();
+        assertThat(numRecordsInProcessor, is((long) (numRecords+1)));
 
     }
 

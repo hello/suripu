@@ -33,11 +33,13 @@ public class PillScoreProcessor implements IRecordProcessor {
     private int decodeErrors = 0;
     private Counter messageCounter;
     private Meter messageMeter;
+    private Meter checkpointMeter;
 
     public PillScoreProcessor(final SleepScoreDAO sleepScoreDAO, final int dateMinuteBucket, final int checkpointThreshold) {
         this.pillProcessor = new PillScoreBatchByRecordsProcessor(sleepScoreDAO, dateMinuteBucket, checkpointThreshold);
         this.messageCounter = Metrics.defaultRegistry().newCounter(PillScoreProcessor.class, "message_count");
         this.messageMeter = Metrics.defaultRegistry().newMeter(PillScoreProcessor.class, "get-requests", "requests", TimeUnit.SECONDS);
+        this.checkpointMeter = Metrics.defaultRegistry().newMeter(PillScoreProcessor.class, "checkpoint_rate", "checkpoints", TimeUnit.SECONDS);
     }
 
     @Override
@@ -78,6 +80,7 @@ public class PillScoreProcessor implements IRecordProcessor {
 
             if (okayToCheckpoint) {
                 LOGGER.debug("going to checkpoint {}", this.pillProcessor.getNumPillRecordsProcessed());
+                this.checkpointMeter.mark();
 
                 try {
                     iRecordProcessorCheckpointer.checkpoint();

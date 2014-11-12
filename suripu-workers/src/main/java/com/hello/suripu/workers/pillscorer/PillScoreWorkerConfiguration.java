@@ -89,7 +89,7 @@ public class PillScoreWorkerConfiguration extends Configuration {
 
     @Valid
     @NotNull
-    @Max(1000)
+    @Max(10000)
     @JsonProperty("checkpoint_threshold")
     private Integer checkpointThreshold;
 
