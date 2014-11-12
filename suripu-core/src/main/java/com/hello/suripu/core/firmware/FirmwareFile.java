@@ -1,6 +1,7 @@
 package com.hello.suripu.core.firmware;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class FirmwareFile {
@@ -32,6 +33,9 @@ public class FirmwareFile {
     @JsonProperty("sd_card_path")
     public final String sdCardPath;
 
+    @JsonIgnore
+    public String sha1;
+
     @JsonCreator
     public FirmwareFile(
             @JsonProperty("s3_bucket") final String s3Bucket,
@@ -52,12 +56,43 @@ public class FirmwareFile {
         this.serialFlashPath = serialFlashPath;
         this.sdCardFilename = sdCardFilename;
         this.sdCardPath = sdCardPath;
+        this.sha1 = "";
     }
 
+    public FirmwareFile(
+            final String s3Bucket,
+            final String s3Key,
+            final Boolean copyToSerialFlash,
+            final Boolean resetNetworkProcessor,
+            final Boolean resetApplicationProcessor,
+            final String serialFlashFilename,
+            final String serialFlashPath,
+            final String sdCardFilename,
+            final String sdCardPath,
+            final String sha1) {
+        this.s3Key = s3Key;
+        this.s3Bucket = s3Bucket;
+        this.copyToSerialFlash = copyToSerialFlash;
+        this.resetNetworkProcessor = resetNetworkProcessor;
+        this.resetApplicationProcessor = resetApplicationProcessor;
+        this.serialFlashFilename = serialFlashFilename;
+        this.serialFlashPath = serialFlashPath;
+        this.sdCardFilename = sdCardFilename;
+        this.sdCardPath = sdCardPath;
+        this.sha1 = sha1;
+    }
 
     public static FirmwareFile withS3Info(final FirmwareFile firmwareFile, final String s3Bucket, final String s3Key) {
         return new FirmwareFile(s3Bucket, s3Key, firmwareFile.copyToSerialFlash, firmwareFile.resetNetworkProcessor,
                 firmwareFile.resetApplicationProcessor, firmwareFile.serialFlashFilename, firmwareFile.serialFlashPath,
                 firmwareFile.sdCardFilename, firmwareFile.sdCardPath);
+    }
+
+
+
+    public static FirmwareFile withS3InfoAndSha1(final FirmwareFile firmwareFile, final String s3Bucket, final String s3Key, final String sha1) {
+        return new FirmwareFile(s3Bucket, s3Key, firmwareFile.copyToSerialFlash, firmwareFile.resetNetworkProcessor,
+                firmwareFile.resetApplicationProcessor, firmwareFile.serialFlashFilename, firmwareFile.serialFlashPath,
+                firmwareFile.sdCardFilename, firmwareFile.sdCardPath, sha1);
     }
 }

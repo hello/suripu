@@ -288,14 +288,14 @@ public class ReceiveResource {
                     .withAmbientLightVariance(data.getLightVariability())
                     .withAmbientLightPeakiness(data.getLightTonality())
                     .withOffsetMillis(userTimeZone.getOffset(roundedDateTime))
-                    .withDateTimeUTC(roundedDateTime);
-            LOGGER.info("Protpbuf message conversion finished.");
+                    .withDateTimeUTC(roundedDateTime)
+                    .withFirmwareVersion(data.getFirmwareVersion());
 
             final DeviceData deviceData = builder.build();
 
             try {
                 deviceDataDAO.insert(deviceData);
-                LOGGER.info("Data saved to DB: {}", TextFormat.shortDebugString(data));
+                LOGGER.trace("Data saved to DB: {}", TextFormat.shortDebugString(data));
             } catch (UnableToExecuteStatementException exception) {
                 final Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
                 if (!matcher.find()) {
@@ -385,10 +385,10 @@ public class ReceiveResource {
     @Timed
     public byte[] onPillBatchProtobufReceived(final byte[] body) {
         final SignedMessage signedMessage = SignedMessage.parse(body);
-        MorpheusBle.BatchedPillData batchPilldata = null;
+        MorpheusBle.batched_pill_data batchPilldata = null;
 
         try {
-            batchPilldata = MorpheusBle.BatchedPillData.parseFrom(signedMessage.body);
+            batchPilldata = MorpheusBle.batched_pill_data.parseFrom(signedMessage.body);
         } catch (IOException exception) {
             final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
             LOGGER.error(errorMessage);
@@ -425,7 +425,7 @@ public class ReceiveResource {
 
         // ********************* Pill Data Storage ****************************
         if(batchPilldata.getPillsCount() > 0){
-            for(final MorpheusBle.MorpheusCommand.PillData pill:batchPilldata.getPillsList()){
+            for(final MorpheusBle.pill_data pill:batchPilldata.getPillsList()){
 
                 final String pillId = pill.getDeviceId();
                 final Optional<DeviceAccountPair> internalPillPairingMap = this.deviceDAO.getInternalPillId(pillId);

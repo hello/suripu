@@ -71,6 +71,11 @@ public class SignedMessage {
          *
          */
 
+        if(body.length < (SIG_LENGTH + IV_LENGTH)) {
+            LOGGER.error("Body length is less than sum of signature and IV");
+            throw new RuntimeException("Invalid content");
+        }
+
         final int sigStartIndex = body.length - SIG_LENGTH;
         final int ivStartIndex = sigStartIndex - IV_LENGTH;
 

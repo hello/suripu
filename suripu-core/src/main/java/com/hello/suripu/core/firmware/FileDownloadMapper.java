@@ -19,7 +19,8 @@ public class FileDownloadMapper implements ResultSetMapper<FirmwareFile> {
                 r.getString("serial_flash_filename"),
                 r.getString("serial_flash_path"),
                 r.getString("sd_card_filename"),
-                r.getString("sd_card_path")
+                r.getString("sd_card_path"),
+                r.getString("sha1")
         );
     }
 }

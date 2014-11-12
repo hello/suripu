@@ -84,9 +84,9 @@ public class DeviceResources {
         for (final DeviceAccountPair sense : senses) {
             final Optional<DeviceStatus> senseStatusOptional = deviceDAO.senseStatus(sense.internalDeviceId);
             if(senseStatusOptional.isPresent()) {
-                devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.NORMAL, "alpha-1", senseStatusOptional.get().lastSeen));
+                devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.NORMAL, senseStatusOptional.get().firmwareVersion, senseStatusOptional.get().lastSeen));
             } else {
-                devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.NORMAL, "alpha-1", new DateTime(1970,1,1, 0,0,0)));
+                devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.UNKNOWN, senseStatusOptional.get().firmwareVersion, new DateTime(1970,1,1, 0,0,0)));
             }
         }
 
