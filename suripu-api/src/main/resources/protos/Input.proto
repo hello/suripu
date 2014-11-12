@@ -250,6 +250,7 @@ message periodic_data {
     optional bytes mac=7;
     optional int32 light_variability=8;
     optional int32 light_tonality=9;
+    // Please DONOT reuse index 11, is for pilldata previously
     optional int32 firmware_version=10;
     optional string device_id = 12;
 }
