@@ -11,6 +11,7 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,8 +82,9 @@ public class RoomConditionsResource {
         /*
         * A DAY can be 48 hours. A week can be 2 * 7 * 24 hours at most.
          */
-        if(Math.abs(startQueryTimestampLocalUTC.getMillis() - endQueryTimestampLocalUTC.getMillis()) > 2 * allowedRangeInSeconds * 1000) {
-            LOGGER.warn("Invalid request, query {} to {} range is too big for account_id = {}",
+        if(Math.abs(endQueryTimestampLocalUTC.getMillis() - DateTime.now().getMillis()) >
+                48 * 60 * DateTimeConstants.MILLIS_PER_MINUTE + allowedRangeInSeconds * 1000) {
+            LOGGER.warn("Invalid request, query clock offset {} to {} range is too big for account_id = {}",
                     startQueryTimestampLocalUTC, endQueryTimestampLocalUTC,
                     accountId);
             throw new WebApplicationException(Response.Status.BAD_REQUEST);   // This should be FORBIDDEN
