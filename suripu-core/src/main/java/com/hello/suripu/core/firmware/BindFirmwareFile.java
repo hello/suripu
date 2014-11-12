@@ -30,6 +30,7 @@ public @interface BindFirmwareFile {
                     q.bind("serial_flash_path", model.serialFlashPath);
                     q.bind("sd_card_filename", model.sdCardFilename);
                     q.bind("sd_card_path", model.sdCardPath);
+                    q.bind("sha1", model.sha1);
                 }
             };
         }

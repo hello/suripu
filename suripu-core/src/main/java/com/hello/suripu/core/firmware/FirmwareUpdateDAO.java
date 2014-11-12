@@ -15,9 +15,9 @@ public interface FirmwareUpdateDAO {
 
 
     @SqlUpdate("INSERT INTO firmware_updates(device_id, firmware_version, s3_bucket, s3_key, copy_to_serial_flash, reset_network_processor, reset_application_processor, " +
-            "serial_flash_filename, serial_flash_path, sd_card_filename, sd_card_path) " +
+            "serial_flash_filename, serial_flash_path, sd_card_filename, sd_card_path, sha1) " +
             "VALUES(:device_id, :firmware_version, :s3_bucket, :s3_key, :copy_to_serial_flash, :reset_network_processor, :reset_application_processor, " +
-            ":serial_flash_filename, :serial_flash_path, :sd_card_filename, :sd_card_path);")
+            ":serial_flash_filename, :serial_flash_path, :sd_card_filename, :sd_card_path, :sha1);")
     public void insert(@BindFirmwareFile FirmwareFile firmwareFile, @Bind("device_id") String deviceId, @Bind("firmware_version") Integer firmwareVersion);
 
     @SqlUpdate("DELETE FROM firmware_updates WHERE device_id = :device_id")

@@ -10263,6 +10263,16 @@ public final class InputProtos {
        */
       com.google.protobuf.ByteString
           getSdCardPathBytes();
+
+      // optional bytes sha1 = 10;
+      /**
+       * <code>optional bytes sha1 = 10;</code>
+       */
+      boolean hasSha1();
+      /**
+       * <code>optional bytes sha1 = 10;</code>
+       */
+      com.google.protobuf.ByteString getSha1();
     }
     /**
      * Protobuf type {@code hello.SyncResponse.FileDownload}
@@ -10358,6 +10368,11 @@ public final class InputProtos {
               case 74: {
                 bitField0_ |= 0x00000100;
                 sdCardPath_ = input.readBytes();
+                break;
+              }
+              case 82: {
+                bitField0_ |= 0x00000200;
+                sha1_ = input.readBytes();
                 break;
               }
             }
@@ -10706,6 +10721,22 @@ public final class InputProtos {
         }
       }
 
+      // optional bytes sha1 = 10;
+      public static final int SHA1_FIELD_NUMBER = 10;
+      private com.google.protobuf.ByteString sha1_;
+      /**
+       * <code>optional bytes sha1 = 10;</code>
+       */
+      public boolean hasSha1() {
+        return ((bitField0_ & 0x00000200) == 0x00000200);
+      }
+      /**
+       * <code>optional bytes sha1 = 10;</code>
+       */
+      public com.google.protobuf.ByteString getSha1() {
+        return sha1_;
+      }
+
       private void initFields() {
         host_ = "";
         url_ = "";
@@ -10716,6 +10747,7 @@ public final class InputProtos {
         serialFlashPath_ = "";
         sdCardFilename_ = "";
         sdCardPath_ = "";
+        sha1_ = com.google.protobuf.ByteString.EMPTY;
       }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
@@ -10755,6 +10787,9 @@ public final class InputProtos {
         }
         if (((bitField0_ & 0x00000100) == 0x00000100)) {
           output.writeBytes(9, getSdCardPathBytes());
+        }
+        if (((bitField0_ & 0x00000200) == 0x00000200)) {
+          output.writeBytes(10, sha1_);
         }
         getUnknownFields().writeTo(output);
       }
@@ -10800,6 +10835,10 @@ public final class InputProtos {
         if (((bitField0_ & 0x00000100) == 0x00000100)) {
           size += com.google.protobuf.CodedOutputStream
             .computeBytesSize(9, getSdCardPathBytes());
+        }
+        if (((bitField0_ & 0x00000200) == 0x00000200)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(10, sha1_);
         }
         size += getUnknownFields().getSerializedSize();
         memoizedSerializedSize = size;
@@ -10935,6 +10974,8 @@ public final class InputProtos {
           bitField0_ = (bitField0_ & ~0x00000080);
           sdCardPath_ = "";
           bitField0_ = (bitField0_ & ~0x00000100);
+          sha1_ = com.google.protobuf.ByteString.EMPTY;
+          bitField0_ = (bitField0_ & ~0x00000200);
           return this;
         }
 
@@ -10999,6 +11040,10 @@ public final class InputProtos {
             to_bitField0_ |= 0x00000100;
           }
           result.sdCardPath_ = sdCardPath_;
+          if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+            to_bitField0_ |= 0x00000200;
+          }
+          result.sha1_ = sha1_;
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -11053,6 +11098,9 @@ public final class InputProtos {
             bitField0_ |= 0x00000100;
             sdCardPath_ = other.sdCardPath_;
             onChanged();
+          }
+          if (other.hasSha1()) {
+            setSha1(other.getSha1());
           }
           this.mergeUnknownFields(other.getUnknownFields());
           return this;
@@ -11620,6 +11668,42 @@ public final class InputProtos {
   }
   bitField0_ |= 0x00000100;
           sdCardPath_ = value;
+          onChanged();
+          return this;
+        }
+
+        // optional bytes sha1 = 10;
+        private com.google.protobuf.ByteString sha1_ = com.google.protobuf.ByteString.EMPTY;
+        /**
+         * <code>optional bytes sha1 = 10;</code>
+         */
+        public boolean hasSha1() {
+          return ((bitField0_ & 0x00000200) == 0x00000200);
+        }
+        /**
+         * <code>optional bytes sha1 = 10;</code>
+         */
+        public com.google.protobuf.ByteString getSha1() {
+          return sha1_;
+        }
+        /**
+         * <code>optional bytes sha1 = 10;</code>
+         */
+        public Builder setSha1(com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000200;
+          sha1_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional bytes sha1 = 10;</code>
+         */
+        public Builder clearSha1() {
+          bitField0_ = (bitField0_ & ~0x00000200);
+          sha1_ = getDefaultInstance().getSha1();
           onChanged();
           return this;
         }
@@ -25339,7 +25423,7 @@ public final class InputProtos {
       "\022\021\n\tsignature\030\005 \001(\014\"%\n\022ActivationRespons" +
       "e\022\017\n\007success\030\001 \001(\010\"`\n\013SyncRequest\022\021\n\tdev" +
       "ice_id\030\001 \001(\t\022\030\n\020firmware_version\030\002 \001(\t\022\021",
-      "\n\tsignature\030\003 \001(\014\022\021\n\tsomething\030\004 \001(\t\"\202\n\n" +
+      "\n\tsignature\030\003 \001(\014\022\021\n\tsomething\030\004 \001(\t\"\220\n\n" +
       "\014SyncResponse\022\024\n\014upload_cycle\030\001 \001(\005\022\022\n\ns" +
       "ync_cycle\030\002 \001(\005\022\025\n\racc_scan_cyle\030\003 \001(\005\022\035" +
       "\n\025acc_sampling_interval\030\004 \001(\005\022 \n\030device_" +
@@ -25352,59 +25436,59 @@ public final class InputProtos {
       "t_device\030\n \001(\010\022;\n\017room_conditions\030\014 \001(\0162" +
       "\".hello.SyncResponse.RoomConditions\022/\n\005f" +
       "iles\030\r \003(\0132 .hello.SyncResponse.FileDown" +
-      "load\032\367\001\n\014FileDownload\022\014\n\004host\030\001 \001(\t\022\013\n\003u" +
+      "load\032\205\002\n\014FileDownload\022\014\n\004host\030\001 \001(\t\022\013\n\003u" +
       "rl\030\002 \001(\t\022\034\n\024copy_to_serial_flash\030\004 \001(\010\022\037" +
       "\n\027reset_network_processor\030\005 \001(\010\022#\n\033reset" +
       "_application_processor\030\006 \001(\010\022\035\n\025serial_f" +
       "lash_filename\030\007 \001(\t\022\031\n\021serial_flash_path" +
       "\030\010 \001(\t\022\030\n\020sd_card_filename\030\003 \001(\t\022\024\n\014sd_c" +
-      "ard_path\030\t \001(\t\032\216\001\n\005Alarm\022\022\n\nstart_time\030\001",
-      " \001(\r\022\020\n\010end_time\030\002 \001(\r\022\026\n\013ringtone_id\030\003 " +
-      "\001(\005:\0011\022&\n\036ring_offset_from_now_in_second" +
-      "\030\004 \001(\005\022\037\n\027ring_duration_in_second\030\005 \001(\005\032" +
-      "}\n\rPairingAction\022\014\n\004ssid\030\001 \001(\t\022:\n\004type\030\002" +
-      " \001(\0162,.hello.SyncResponse.PairingAction." +
-      "ActionType\"\"\n\nActionType\022\010\n\004PAIR\020\000\022\n\n\006UN" +
-      "PAIR\020\001\032D\n\nWhiteNoise\022\022\n\nstart_time\030\001 \001(\005" +
-      "\022\020\n\010end_time\030\002 \001(\005\022\020\n\010sound_id\030\003 \001(\005\032\225\001\n" +
-      "\013FlashAction\022\013\n\003red\030\001 \001(\005\022\r\n\005green\030\002 \001(\005" +
-      "\022\014\n\004blue\030\003 \001(\005\022\032\n\022delay_milliseconds\030\004 \001",
-      "(\005\022\017\n\007fade_in\030\005 \001(\010\022\020\n\010fade_out\030\006 \001(\010\022\016\n" +
-      "\006rotate\030\007 \001(\010\022\r\n\005alpha\030\010 \001(\005\"3\n\016RoomCond" +
-      "itions\022\t\n\005IDEAL\020\001\022\013\n\007WARNING\020\002\022\t\n\005ALERT\020" +
-      "\003\"=\n\010PillData\022\017\n\007pill_id\030\001 \001(\t\022\022\n\naccoun" +
-      "t_id\030\002 \001(\t\022\014\n\004data\030\003 \001(\014\"\357\001\n\017PillDataKin" +
-      "esis\022\017\n\007pill_id\030\001 \001(\t\022\022\n\naccount_id\030\002 \001(" +
-      "\t\022\021\n\ttimestamp\030\003 \001(\003\022\r\n\005value\030\004 \001(\003\022\024\n\014o" +
-      "ffsetMillis\030\005 \001(\005\022\025\n\rencryptedData\030\006 \001(\014" +
-      "\022\024\n\014batteryLevel\030\007 \001(\005\022\027\n\017firmwareVersio" +
-      "n\030\010 \001(\005\022\022\n\npillIdLong\030\t \001(\003\022\025\n\raccountId",
-      "Long\030\n \001(\003\022\016\n\006upTime\030\013 \001(\005\"\324\001\n\016PillBlobH" +
-      "eader\022\035\n\025first_sequence_number\030\001 \001(\t\022\034\n\024" +
-      "last_sequence_number\030\002 \001(\t\022\031\n\021first_samp" +
-      "le_date\030\003 \001(\t\022\030\n\020last_sample_date\030\004 \001(\t\022" +
-      "%\n\035compressed_bitmap_account_ids\030\005 \001(\014\022\026" +
-      "\n\016data_file_name\030\006 \001(\t\022\021\n\tnum_items\030\007 \001(" +
-      "\005\"*\n\010PillBlob\022\036\n\005items\030\001 \003(\0132\017.hello.Pil" +
-      "lData\"\214\001\n\nEventBatch\022+\n\006events\030\001 \003(\0132\033.h" +
-      "ello.EventBatch.EventItem\032Q\n\tEventItem\022\027" +
-      "\n\017start_timestamp\030\001 \001(\003\022\025\n\rend_timestamp",
-      "\030\002 \001(\003\022\024\n\014offsetMillis\030\003 \001(\005\"\336\003\n\rperiodi" +
-      "c_data\022\021\n\tunix_time\030\001 \001(\005\022\r\n\005light\030\002 \001(\005" +
-      "\022\023\n\013temperature\030\003 \001(\005\022\020\n\010humidity\030\004 \001(\005\022" +
-      "\014\n\004dust\030\005 \001(\005\022\014\n\004name\030\006 \001(\t\022\013\n\003mac\030\007 \001(\014" +
-      "\022\031\n\021light_variability\030\010 \001(\005\022\026\n\016light_ton" +
-      "ality\030\t \001(\005\022\030\n\020firmware_version\030\n \001(\005\022\030\n" +
-      "\020dust_variability\030\r \001(\005\022\020\n\010dust_max\030\016 \001(" +
-      "\005\022\020\n\010dust_min\030\017 \001(\005\022-\n\005pills\030\013 \003(\0132\036.hel" +
-      "lo.periodic_data.pill_data\022\021\n\tdevice_id\030" +
-      "\014 \001(\t\032\215\001\n\tpill_data\022\027\n\017firmwareVersion\030\001",
-      " \001(\005\022\033\n\023motionDataEncrypted\030\002 \001(\014\022\020\n\010dev" +
-      "iceId\030\003 \001(\t\022\024\n\014batteryLevel\030\004 \001(\005\022\016\n\006upt" +
-      "ime\030\005 \001(\005\022\022\n\nmotionData\030\006 \001(\005\">\n\010SenseLo" +
-      "g\022\021\n\tunix_time\030\001 \001(\005\022\021\n\tdevice_id\030\002 \001(\t\022" +
-      "\014\n\004text\030\003 \001(\tB)\n\032com.hello.suripu.api.in" +
-      "putB\013InputProtos"
+      "ard_path\030\t \001(\t\022\014\n\004sha1\030\n \001(\014\032\216\001\n\005Alarm\022\022",
+      "\n\nstart_time\030\001 \001(\r\022\020\n\010end_time\030\002 \001(\r\022\026\n\013" +
+      "ringtone_id\030\003 \001(\005:\0011\022&\n\036ring_offset_from" +
+      "_now_in_second\030\004 \001(\005\022\037\n\027ring_duration_in" +
+      "_second\030\005 \001(\005\032}\n\rPairingAction\022\014\n\004ssid\030\001" +
+      " \001(\t\022:\n\004type\030\002 \001(\0162,.hello.SyncResponse." +
+      "PairingAction.ActionType\"\"\n\nActionType\022\010" +
+      "\n\004PAIR\020\000\022\n\n\006UNPAIR\020\001\032D\n\nWhiteNoise\022\022\n\nst" +
+      "art_time\030\001 \001(\005\022\020\n\010end_time\030\002 \001(\005\022\020\n\010soun" +
+      "d_id\030\003 \001(\005\032\225\001\n\013FlashAction\022\013\n\003red\030\001 \001(\005\022" +
+      "\r\n\005green\030\002 \001(\005\022\014\n\004blue\030\003 \001(\005\022\032\n\022delay_mi",
+      "lliseconds\030\004 \001(\005\022\017\n\007fade_in\030\005 \001(\010\022\020\n\010fad" +
+      "e_out\030\006 \001(\010\022\016\n\006rotate\030\007 \001(\010\022\r\n\005alpha\030\010 \001" +
+      "(\005\"3\n\016RoomConditions\022\t\n\005IDEAL\020\001\022\013\n\007WARNI" +
+      "NG\020\002\022\t\n\005ALERT\020\003\"=\n\010PillData\022\017\n\007pill_id\030\001" +
+      " \001(\t\022\022\n\naccount_id\030\002 \001(\t\022\014\n\004data\030\003 \001(\014\"\357" +
+      "\001\n\017PillDataKinesis\022\017\n\007pill_id\030\001 \001(\t\022\022\n\na" +
+      "ccount_id\030\002 \001(\t\022\021\n\ttimestamp\030\003 \001(\003\022\r\n\005va" +
+      "lue\030\004 \001(\003\022\024\n\014offsetMillis\030\005 \001(\005\022\025\n\rencry" +
+      "ptedData\030\006 \001(\014\022\024\n\014batteryLevel\030\007 \001(\005\022\027\n\017" +
+      "firmwareVersion\030\010 \001(\005\022\022\n\npillIdLong\030\t \001(",
+      "\003\022\025\n\raccountIdLong\030\n \001(\003\022\016\n\006upTime\030\013 \001(\005" +
+      "\"\324\001\n\016PillBlobHeader\022\035\n\025first_sequence_nu" +
+      "mber\030\001 \001(\t\022\034\n\024last_sequence_number\030\002 \001(\t" +
+      "\022\031\n\021first_sample_date\030\003 \001(\t\022\030\n\020last_samp" +
+      "le_date\030\004 \001(\t\022%\n\035compressed_bitmap_accou" +
+      "nt_ids\030\005 \001(\014\022\026\n\016data_file_name\030\006 \001(\t\022\021\n\t" +
+      "num_items\030\007 \001(\005\"*\n\010PillBlob\022\036\n\005items\030\001 \003" +
+      "(\0132\017.hello.PillData\"\214\001\n\nEventBatch\022+\n\006ev" +
+      "ents\030\001 \003(\0132\033.hello.EventBatch.EventItem\032" +
+      "Q\n\tEventItem\022\027\n\017start_timestamp\030\001 \001(\003\022\025\n",
+      "\rend_timestamp\030\002 \001(\003\022\024\n\014offsetMillis\030\003 \001" +
+      "(\005\"\336\003\n\rperiodic_data\022\021\n\tunix_time\030\001 \001(\005\022" +
+      "\r\n\005light\030\002 \001(\005\022\023\n\013temperature\030\003 \001(\005\022\020\n\010h" +
+      "umidity\030\004 \001(\005\022\014\n\004dust\030\005 \001(\005\022\014\n\004name\030\006 \001(" +
+      "\t\022\013\n\003mac\030\007 \001(\014\022\031\n\021light_variability\030\010 \001(" +
+      "\005\022\026\n\016light_tonality\030\t \001(\005\022\030\n\020firmware_ve" +
+      "rsion\030\n \001(\005\022\030\n\020dust_variability\030\r \001(\005\022\020\n" +
+      "\010dust_max\030\016 \001(\005\022\020\n\010dust_min\030\017 \001(\005\022-\n\005pil" +
+      "ls\030\013 \003(\0132\036.hello.periodic_data.pill_data" +
+      "\022\021\n\tdevice_id\030\014 \001(\t\032\215\001\n\tpill_data\022\027\n\017fir",
+      "mwareVersion\030\001 \001(\005\022\033\n\023motionDataEncrypte" +
+      "d\030\002 \001(\014\022\020\n\010deviceId\030\003 \001(\t\022\024\n\014batteryLeve" +
+      "l\030\004 \001(\005\022\016\n\006uptime\030\005 \001(\005\022\022\n\nmotionData\030\006 " +
+      "\001(\005\">\n\010SenseLog\022\021\n\tunix_time\030\001 \001(\005\022\021\n\tde" +
+      "vice_id\030\002 \001(\t\022\014\n\004text\030\003 \001(\tB)\n\032com.hello" +
+      ".suripu.api.inputB\013InputProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -25494,7 +25578,7 @@ public final class InputProtos {
           internal_static_hello_SyncResponse_FileDownload_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_SyncResponse_FileDownload_descriptor,
-              new java.lang.String[] { "Host", "Url", "CopyToSerialFlash", "ResetNetworkProcessor", "ResetApplicationProcessor", "SerialFlashFilename", "SerialFlashPath", "SdCardFilename", "SdCardPath", });
+              new java.lang.String[] { "Host", "Url", "CopyToSerialFlash", "ResetNetworkProcessor", "ResetApplicationProcessor", "SerialFlashFilename", "SerialFlashPath", "SdCardFilename", "SdCardPath", "Sha1", });
           internal_static_hello_SyncResponse_Alarm_descriptor =
             internal_static_hello_SyncResponse_descriptor.getNestedTypes().get(1);
           internal_static_hello_SyncResponse_Alarm_fieldAccessorTable = new

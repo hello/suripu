@@ -123,6 +123,7 @@ message SyncResponse {
         optional string serial_flash_path =8;
         optional string sd_card_filename =3;
         optional string sd_card_path =9;
+        optional bytes sha1 = 10;
     }
 
     message Alarm {

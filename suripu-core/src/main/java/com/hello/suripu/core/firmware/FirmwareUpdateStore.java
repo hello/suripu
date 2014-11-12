@@ -3,7 +3,10 @@ package com.hello.suripu.core.firmware;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
+import com.google.protobuf.ByteString;
 import com.hello.suripu.api.input.InputProtos.SyncResponse;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +62,7 @@ public class FirmwareUpdateStore {
             final URL s = s3.generatePresignedUrl(generatePresignedUrlRequest);
             LOGGER.debug("{}", s);
 
-            final SyncResponse.FileDownload fileDownload = SyncResponse.FileDownload.newBuilder()
+            final SyncResponse.FileDownload.Builder fileDownloadBuilder = SyncResponse.FileDownload.newBuilder()
                     .setUrl(s.getPath() + "?" + s.getQuery())
                     .setHost(s.getHost())
                     .setCopyToSerialFlash(f.copyToSerialFlash)
@@ -68,9 +71,17 @@ public class FirmwareUpdateStore {
                     .setSerialFlashFilename(f.serialFlashFilename)
                     .setSerialFlashPath(f.serialFlashPath)
                     .setSdCardFilename(f.sdCardFilename)
-                    .setSdCardPath(f.sdCardPath)
-                    .build();
-            fileDownloadList.add(fileDownload);
+                    .setSdCardPath(f.sdCardPath);
+
+            if(!f.sha1.isEmpty()) {
+                try {
+                    fileDownloadBuilder.setSha1(ByteString.copyFrom(Hex.decodeHex(f.sha1.toCharArray())));
+                } catch (DecoderException e) {
+                    LOGGER.error("Failed decoding sha1 from hex");
+                }
+            }
+
+            fileDownloadList.add(fileDownloadBuilder.build());
         }
 
         return fileDownloadList;
