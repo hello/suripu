@@ -51,8 +51,6 @@ public class LogsResource {
                     .type(MediaType.TEXT_PLAIN_TYPE).build()
             );
         }
-        LOGGER.debug("Received protobuf message {}", log);
-
 
         // get MAC address of morpheus
 
@@ -76,14 +74,19 @@ public class LogsResource {
             );
         }
 
+        final Map<String, String> fields = new HashMap<>();
+        final Map<String, String> categories = new HashMap<>();
+
         final String documentId = String.format("%s-%d", log.getDeviceId(), DateTime.now().getMillis());
 
-        final Map<String, String> fields = new HashMap<>();
         fields.put("device_id", log.getDeviceId());
         fields.put("text", log.getText());
+        fields.put("ts", String.valueOf(log.getUnixTime()));
+
+        categories.put("device_id", log.getDeviceId());
 
         try {
-            index.addDocument(documentId, fields);
+            index.addDocument(documentId, fields, null, categories);
         } catch (IndexDoesNotExistException e) {
             LOGGER.error(e.getMessage());
         } catch (IOException e) {
