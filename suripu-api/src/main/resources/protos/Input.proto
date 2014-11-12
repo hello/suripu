@@ -244,16 +244,16 @@ message periodic_data {
     optional int32 temperature=3;
     optional int32 humidity=4;
     optional int32 dust=5;
-    optional int32 dust_variability=13;
-    optional int32 dust_max=14;
-    optional int32 dust_min=15;
     optional string name=6;
     optional bytes mac=7;
     optional int32 light_variability=8;
     optional int32 light_tonality=9;
-    // Please DONOT reuse index 11, is for pilldata previously
     optional int32 firmware_version=10;
+    // Please DONOT reuse index 11, is for pilldata previously
     optional string device_id = 12;
+    optional int32 dust_variability=13;
+    optional int32 dust_max=14;
+    optional int32 dust_min=15;
 }
 
 
