@@ -113,11 +113,22 @@ message SyncRequest {
 
 message SyncResponse {
 
+    message FileDownload {
+        optional string host =1;
+        optional string url =2;
+        optional bool copy_to_serial_flash =4;
+        optional bool reset_network_processor =5;
+        optional bool reset_application_processor =6;
+        optional string serial_flash_filename =7;
+        optional string serial_flash_path =8;
+        optional string sd_card_filename =3;
+        optional string sd_card_path =9;
+    }
+
     message Alarm {
-        optional uint32 start_time = 1;
-        optional uint32 end_time = 2;
+        optional uint32 start_time = 1;  // obselete,  use ring_offset_from_now
+        optional uint32 end_time = 2;  // obselete, use ring_offset_from_now + ring_duration
         optional int32 ringtone_id = 3 [default = 1];
-        //repeated int64 ringtone_ids = 4 [packed = true];
         optional int32 ring_offset_from_now_in_second = 4;  // This is a more fault tolerance design
         optional int32 ring_duration_in_second = 5;
     }
@@ -139,24 +150,16 @@ message SyncResponse {
         optional int32 sound_id = 3;
     }
 
-    message FirmwareUpdate {
-        optional int32  firmware_version = 1;
-        repeated string file_urls = 2;
-        optional int32 expires_at = 3;
-    }
-
     message FlashAction {
-        message LEDAction {
-            optional int32 color = 1;
-            optional int32 start_time = 2;
-            optional int32 end_time = 3;
-        }
+        optional int32 red =1;
+        optional int32 green =2;
+        optional int32 blue =3;
 
-        optional LEDAction led_1 = 1;
-        optional LEDAction led_2 = 2;
-        optional LEDAction led_3 = 3;
-        optional LEDAction led_4 = 4;
-        optional LEDAction led_5 = 5;
+        optional int32 delay_milliseconds = 4;
+        optional bool fade_in = 5;
+        optional bool fade_out = 6;
+        optional bool rotate = 7;
+        optional int32 alpha = 8;
     }
 
     enum RoomConditions {
@@ -177,11 +180,11 @@ message SyncResponse {
     optional WhiteNoise white_noise = 8;
     optional FlashAction flash_action = 9;
     optional bool reset_device = 10;
-
-    optional FirmwareUpdate firmware_update = 11;
     optional RoomConditions room_conditions = 12;
+    repeated FileDownload files = 13;
 
     // TODO: settings for snoring detection
+    // TODO: settings for firmware update
 }
 
 // TODO:

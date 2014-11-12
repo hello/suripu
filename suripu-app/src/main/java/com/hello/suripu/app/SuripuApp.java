@@ -4,6 +4,8 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.sns.AmazonSNSClient;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -22,6 +24,7 @@ import com.hello.suripu.app.resources.v1.AlarmResource;
 import com.hello.suripu.app.resources.v1.ApplicationResource;
 import com.hello.suripu.app.resources.v1.DeviceResources;
 import com.hello.suripu.app.resources.v1.EventResource;
+import com.hello.suripu.app.resources.v1.FirmwareResource;
 import com.hello.suripu.app.resources.v1.InsightsResource;
 import com.hello.suripu.app.resources.v1.MobilePushRegistrationResource;
 import com.hello.suripu.app.resources.v1.OAuthResource;
@@ -53,6 +56,8 @@ import com.hello.suripu.core.db.notifications.DynamoDBNotificationSubscriptionDA
 import com.hello.suripu.core.db.notifications.NotificationSubscriptionsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
+import com.hello.suripu.core.firmware.FirmwareUpdateDAO;
+import com.hello.suripu.core.firmware.FirmwareUpdateStore;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
@@ -148,6 +153,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AmazonSNSClient snsClient = new AmazonSNSClient(awsCredentialsProvider);
         final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider);
 
+        final AmazonS3 amazonS3 = new AmazonS3Client(awsCredentialsProvider);
+
         final String eventTableName = configuration.getEventDBConfiguration().getTableName();
 
         final EventDAODynamoDB eventDAODynamoDB = new EventDAODynamoDB(dynamoDBClient, eventTableName);
@@ -231,6 +238,11 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addResource(new QuestionsResource(accountDAO, questionResponseDAO));
         environment.addResource(new InsightsResource(accountDAO));
+
+        final FirmwareUpdateDAO firmwareUpdateDAO = commonDB.onDemand(FirmwareUpdateDAO.class);
+        final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);
+        final FirmwareUpdateStore firmwareUpdateStore = new FirmwareUpdateStore(firmwareUpdateDAO, s3Client);
+        environment.addResource(new FirmwareResource(firmwareUpdateStore, "hello-firmware", amazonS3));
 
         LOGGER.debug("{}", DateTime.now(DateTimeZone.UTC).getMillis());
 

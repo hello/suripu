@@ -10,6 +10,7 @@ import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -31,10 +32,10 @@ public abstract class DeviceDataDAO {
 
     @SqlUpdate("INSERT INTO device_sensors_master (account_id, device_id, ts, local_utc_ts, offset_millis, " +
             "ambient_temp, ambient_light, ambient_light_variance, ambient_light_peakiness, ambient_humidity, " +
-            "ambient_air_quality, ambient_air_quality_raw, ambient_dust_variance, ambient_dust_min, ambient_dust_max) VALUES " +
+            "ambient_air_quality, ambient_air_quality_raw, ambient_dust_variance, ambient_dust_min, ambient_dust_max, firmware_version) VALUES " +
             "(:account_id, :device_id, :ts, :local_utc_ts, :offset_millis, " +
             ":ambient_temp, :ambient_light, :ambient_light_variance, :ambient_light_peakiness, :ambient_humidity, " +
-            ":ambient_air_quality, :ambient_air_quality_raw, :ambient_dust_variance, :ambient_dust_min, :ambient_dust_max)")
+            ":ambient_air_quality, :ambient_air_quality_raw, :ambient_dust_variance, :ambient_dust_min, :ambient_dust_max, :firmware_version)")
     public abstract void insert(@BindDeviceData final DeviceData deviceData);
 
     @RegisterMapper(DeviceDataMapper.class)
@@ -69,6 +70,7 @@ public abstract class DeviceDataDAO {
             "ROUND(AVG(ambient_dust_min)) as ambient_dust_min," +
             "ROUND(MAX(ambient_dust_max)) as ambient_dust_max," +
             "ROUND(MIN(offset_millis)) as offset_millis," +
+            "ROUND(MAX(firmware_version)) as firmware_version," +
             "date_trunc('hour', ts) + (CAST(date_part('minute', ts) AS integer) / :slot_duration) * :slot_duration * interval '1 min' AS ts_bucket " +
             "FROM device_sensors_master " +
             "WHERE account_id = :account_id AND device_id = :device_id " +
@@ -76,6 +78,35 @@ public abstract class DeviceDataDAO {
             "GROUP BY ts_bucket " +
             "ORDER BY ts_bucket ASC")
     public abstract ImmutableList<DeviceData> getBetweenByLocalTimeAggregateBySlotDuration(
+            @Bind("account_id") Long accountId,
+            @Bind("device_id") Long deviceId,
+            @Bind("start_ts") DateTime start,
+            @Bind("end_ts") DateTime end,
+            @Bind("slot_duration") Integer slotDuration);
+
+
+    @RegisterMapper(DeviceDataBucketMapper.class)
+    @SqlQuery("SELECT " +
+            "MAX(account_id) AS account_id," +
+            "MAX(device_id) AS device_id," +
+            "ROUND(AVG(ambient_temp)) as ambient_temp," +
+            "ROUND(AVG(ambient_light)) as ambient_light," +
+            "ROUND(AVG(ambient_light_variance)) as ambient_light_variance," +
+            "ROUND(AVG(ambient_light_peakiness)) as ambient_light_peakiness," +
+            "ROUND(AVG(ambient_humidity)) as ambient_humidity," +
+            "ROUND(AVG(ambient_air_quality)) as ambient_air_quality," +
+            "ROUND(AVG(ambient_air_quality_raw)) as ambient_air_quality_raw," +
+            "ROUND(AVG(ambient_dust_variance)) as ambient_dust_variance," +
+            "ROUND(AVG(ambient_dust_min)) as ambient_dust_min," +
+            "ROUND(MAX(ambient_dust_max)) as ambient_dust_max," +
+            "ROUND(MIN(offset_millis)) as offset_millis," +
+            "date_trunc('hour', ts) + (CAST(date_part('minute', ts) AS integer) / :slot_duration) * :slot_duration * interval '1 min' AS ts_bucket " +
+            "FROM device_sensors_master " +
+            "WHERE account_id = :account_id AND device_id = :device_id " +
+            "AND ts >= :start_ts AND ts < :end_ts " +
+            "GROUP BY ts_bucket " +
+            "ORDER BY ts_bucket ASC")
+    public abstract ImmutableList<DeviceData> getBetweenByAbsoluteTimeAggregateBySlotDuration(
             @Bind("account_id") Long accountId,
             @Bind("device_id") Long deviceId,
             @Bind("start_ts") DateTime start,
@@ -93,32 +124,116 @@ public abstract class DeviceDataDAO {
 
     /**
      * Generate time serie for given sensor. Return empty list if no data
-     * @param clientUtcTimestamp
+     * @param queryStartTimestampInLocalUTC
+     * @param queryEndTimestampInLocalUTC
      * @param accountId
      * @param deviceId
      * @param slotDurationInMinutes
-     * @param queryDurationInHours
      * @param sensor
      * @return
      */
     @Timed
-    public List<Sample> generateTimeSerie(
-            final Long clientUtcTimestamp,
+    public List<Sample> generateTimeSeriesByLocalTime(
+            final Long queryStartTimestampInLocalUTC,
+            final Long queryEndTimestampInLocalUTC,
             final Long accountId,
             final Long deviceId,
             final int slotDurationInMinutes,
-            final int queryDurationInHours,
             final String sensor) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
-        final DateTime queryEndTime = new DateTime(clientUtcTimestamp, DateTimeZone.UTC);
-        final DateTime queryStartTime = queryEndTime.minusHours(queryDurationInHours);
+        final DateTime queryEndTime = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC);
+        final DateTime queryStartTime = new DateTime(queryStartTimestampInLocalUTC, DateTimeZone.UTC);
 
-        LOGGER.debug("Client utcTimeStamp : {} ({})", clientUtcTimestamp, new DateTime(clientUtcTimestamp));
+        LOGGER.debug("Client utcTimeStamp : {} ({})", queryEndTimestampInLocalUTC, new DateTime(queryEndTimestampInLocalUTC));
         LOGGER.debug("QueryEndTime: {} ({})", queryEndTime, queryEndTime.getMillis());
         LOGGER.debug("QueryStartTime: {} ({})", queryStartTime, queryStartTime.getMillis());
 
         final List<DeviceData> rows = getBetweenByLocalTimeAggregateBySlotDuration(accountId, deviceId, queryStartTime, queryEndTime, slotDurationInMinutes);
+        LOGGER.debug("Retrieved {} rows from database", rows.size());
+
+        if(rows.size() == 0) {
+            return new ArrayList<>();
+        }
+
+        // create buckets with keys in UTC-Time
+        final int endOffsetMillis = rows.get(rows.size() - 1).offsetMillis;
+        final int startOffsetMillis = rows.get(0).offsetMillis;
+
+
+        // final int numberOfBuckets= (queryDurationInHours * 60 / slotDurationInMinutes) + 1;   // This is wrong, duration in hours must come from actual data
+
+        // We cannot estimate time duration by from local time, because time zone can change between
+        // local start time and local end time. The only way to get interval is compute from absolute time.
+
+
+        final DateTime nowLocal = new DateTime(queryEndTime.getYear(),
+                queryEndTime.getMonthOfYear(),
+                queryEndTime.getDayOfMonth(),
+                queryEndTime.getHourOfDay(),
+                queryEndTime.getMinuteOfHour(),
+                DateTimeZone.forOffsetMillis(endOffsetMillis));
+
+        final DateTime startLocal = new DateTime(queryStartTime.getYear(),
+                queryStartTime.getMonthOfYear(),
+                queryStartTime.getDayOfMonth(),
+                queryStartTime.getHourOfDay(),
+                queryStartTime.getMinuteOfHour(),
+                DateTimeZone.forOffsetMillis(startOffsetMillis));
+
+        final long absoluteIntervalMS = nowLocal.getMillis() - startLocal.getMillis();
+        final DateTime now = new DateTime(nowLocal.getMillis(), DateTimeZone.UTC);
+
+        final int remainder = now.getMinuteOfHour() % slotDurationInMinutes;
+        final int minuteBucket = now.getMinuteOfHour() - remainder;
+        // if 4:36 -> bucket = 4:35
+
+        final DateTime nowRounded = now.minusMinutes(remainder);
+        LOGGER.debug("Current Offset Milis = {}", startOffsetMillis);
+        LOGGER.debug("Remainder = {}", remainder);
+        LOGGER.debug("Now (rounded) = {} ({})", nowRounded, nowRounded.getMillis());
+
+        final int numberOfBuckets= (int) ((absoluteIntervalMS / DateTimeConstants.MILLIS_PER_MINUTE) / slotDurationInMinutes + 1);
+
+        final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes);
+
+        LOGGER.debug("Map size = {}", map.size());
+
+
+        final Optional<Map<Long, Sample>> optionalPopulatedMap = Bucketing.populateMap(rows, sensor);
+
+        if(!optionalPopulatedMap.isPresent()) {
+            return Collections.EMPTY_LIST;
+        }
+
+        // Override map with values from DB
+        final Map<Long, Sample> merged = Bucketing.mergeResults(map, optionalPopulatedMap.get());
+
+        LOGGER.debug("New map size = {}", merged.size());
+
+        final List<Sample> sortedList = Bucketing.sortResults(merged, startOffsetMillis);
+        return sortedList;
+    }
+
+
+    @Timed
+    public List<Sample> generateTimeSeriesByUTCTime(
+            final Long queryStartTimestampInUTC,
+            final Long queryEndTimestampInUTC,
+            final Long accountId,
+            final Long deviceId,
+            final int slotDurationInMinutes,
+            final String sensor) {
+
+        // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
+        final DateTime queryEndTime = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC);
+        final DateTime queryStartTime = new DateTime(queryStartTimestampInUTC, DateTimeZone.UTC);
+
+        LOGGER.debug("Client utcTimeStamp : {} ({})", queryEndTimestampInUTC, new DateTime(queryEndTimestampInUTC));
+        LOGGER.debug("QueryEndTime: {} ({})", queryEndTime, queryEndTime.getMillis());
+        LOGGER.debug("QueryStartTime: {} ({})", queryStartTime, queryStartTime.getMillis());
+
+        final List<DeviceData> rows = getBetweenByAbsoluteTimeAggregateBySlotDuration(accountId, deviceId, queryStartTime, queryEndTime, slotDurationInMinutes);
         LOGGER.debug("Retrieved {} rows from database", rows.size());
 
         if(rows.size() == 0) {
@@ -138,8 +253,8 @@ public abstract class DeviceDataDAO {
         LOGGER.debug("Now (rounded) = {} ({})", nowRounded, nowRounded.getMillis());
 
 
-//        int numberOfBuckets= (12 * 24) + 1;
-        final int numberOfBuckets= (queryDurationInHours * 60 / slotDurationInMinutes) + 1;
+        final long absoluteIntervalMS = queryEndTimestampInUTC - queryStartTimestampInUTC;
+        final int numberOfBuckets= (int) ((absoluteIntervalMS / DateTimeConstants.MILLIS_PER_MINUTE) / slotDurationInMinutes + 1);
 
         final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes);
 

@@ -1,5 +1,6 @@
 package com.hello.suripu.core.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import org.joda.time.DateTime;
@@ -55,6 +56,9 @@ public class DeviceData {
     @JsonProperty("offset_millis")
     public final Integer offsetMillis;
 
+    @JsonIgnore
+    public final Integer firmwareVersion;
+
     public DeviceData(
             final Long accountId,
             final Long deviceId,
@@ -69,7 +73,8 @@ public class DeviceData {
             final int ambientLightVariance,
             final int ambientLightPeakiness,
             final DateTime dateTimeUTC,
-            final Integer offsetMillis) {
+            final Integer offsetMillis,
+            final Integer firmwareVersion) {
         this.accountId = accountId;
         this.deviceId = deviceId;
         this.ambientTemperature = ambientTemperature;
@@ -84,6 +89,7 @@ public class DeviceData {
         this.ambientLightVariance = ambientLightVariance;
         this.ambientLightPeakiness = ambientLightPeakiness;
         this.offsetMillis = offsetMillis;
+        this.firmwareVersion = firmwareVersion;
 
         checkNotNull(this.accountId);
         checkNotNull(this.deviceId);
@@ -133,6 +139,7 @@ public class DeviceData {
         private int ambientLightPeakiness;
         private DateTime dateTimeUTC;
         private Integer offsetMillis;
+        private Integer firmwareVersion;
 
         public Builder withAccountId(final Long accountId){
             this.accountId = accountId;
@@ -204,10 +211,15 @@ public class DeviceData {
             return this;
         }
 
+        public Builder withFirmwareVersion(final Integer firmwareVersion){
+            this.firmwareVersion = firmwareVersion;
+            return this;
+        }
+
         public DeviceData build(){
             return new DeviceData(this.accountId, this.deviceId, this.ambientTemperature, this.ambientHumidity,
                     this.ambientAirQuality, this.ambientAirQualityRaw, this.ambientDustVariance, this.ambientDustMin, this.ambientDustMax,
-                    this.ambientLight, this.ambientLightVariance, this.ambientLightPeakiness, this.dateTimeUTC, this.offsetMillis);
+                    this.ambientLight, this.ambientLightVariance, this.ambientLightPeakiness, this.dateTimeUTC, this.offsetMillis, firmwareVersion);
         }
 
 
