@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
+import com.hello.suripu.core.util.DateTimeUtil;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -64,9 +65,13 @@ public class Account {
     @JsonProperty("last_modified")
     public final Long lastModified;
 
-    @JsonProperty("dob")
+    @JsonIgnore
     public final DateTime DOB;
 
+    @JsonProperty("dob")
+    public String getDateTime() {
+        return DateTimeUtil.dateToYmdString(DOB);
+    }
 
     /**
      *

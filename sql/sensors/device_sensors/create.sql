@@ -90,6 +90,9 @@ ALTER TABLE device_sensors_master ADD COLUMN ambient_dust_variance INTEGER DEFAU
 ALTER TABLE device_sensors_master ADD COLUMN ambient_dust_min INTEGER DEFAULT 0;
 ALTER TABLE device_sensors_master ADD COLUMN ambient_dust_max INTEGER DEFAULT 0;
 
+-- additional firmware info (11/10/2014)
+ALTER TABLE device_sensors_master ADD COLUMN firmware_version INTEGER DEFAULT 0;
+
 
 -- Trigger function for master insert
 CREATE OR REPLACE FUNCTION device_sensors_master_insert_function() RETURNS TRIGGER LANGUAGE plpgsql AS

@@ -465,8 +465,10 @@ public class TimelineUtils {
      */
     public static String generateMessage(final SleepStats sleepStats) {
         final Integer percentageOfSoundSleep = Math.round(new Float(sleepStats.soundSleepDurationInMinutes) /sleepStats.sleepDurationInMinutes * 100);
-        return String.format("You slept for a total of **%d minutes**, soundly for %d minutes (%d%%) and moved %d times",
-                sleepStats.sleepDurationInMinutes, sleepStats.soundSleepDurationInMinutes, percentageOfSoundSleep, sleepStats.numberOfMotionEvents);
+        final double sleepDurationInHours = sleepStats.sleepDurationInMinutes / 60.0;
+        final double soundDurationInHours = sleepStats.soundSleepDurationInMinutes / 60.0;
+        return String.format("You slept for a total of **%.1f hours**, soundly for %.1f hours, (%d%%) and moved %d times",
+                sleepDurationInHours, soundDurationInHours, percentageOfSoundSleep, sleepStats.numberOfMotionEvents);
     }
 
     public static List<Insight> generateRandomInsights(int seed) {

@@ -27,7 +27,8 @@ public class DeviceDataBucketMapper implements ResultSetMapper<DeviceData>{
                 r.getInt("ambient_light_peakiness"),
                 new DateTime(r.getTimestamp("ts_bucket"), DateTimeZone.UTC),
                 //new DateTime(r.getTimestamp("local_utc_ts"), DateTimeZone.UTC),
-                r.getInt("offset_millis")
+                r.getInt("offset_millis"),
+                r.getInt("firmware_version")
         );
         return deviceData;
     }

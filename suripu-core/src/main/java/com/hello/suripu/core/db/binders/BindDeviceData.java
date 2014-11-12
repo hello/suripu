@@ -39,6 +39,7 @@ public @interface BindDeviceData {
                     q.bind("ts", model.dateTimeUTC);
                     q.bind("local_utc_ts", model.dateTimeUTC.plusMillis(model.offsetMillis));
                     q.bind("offset_millis", model.offsetMillis);
+                    q.bind("firmware_version", model.firmwareVersion);
                 }
             };
         }
