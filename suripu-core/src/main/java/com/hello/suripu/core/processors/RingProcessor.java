@@ -1,7 +1,6 @@
 package com.hello.suripu.core.processors;
 
 import com.amazonaws.AmazonServiceException;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.DataSource;
@@ -23,7 +22,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -105,10 +103,7 @@ public class RingProcessor {
                         // There is no current ring time. The next ring is the first alarm this device have.
                         // At this time, the next ring is a regular alarm, not smart yet.
 
-                        mergedAlarmInfoDynamoDB.setInfo(new AlarmInfo(morpheusId, alarmInfo.accountId,
-                                Collections.EMPTY_LIST,
-                                Optional.of(nextRingTime),
-                                Optional.<DateTimeZone>absent()));
+                        mergedAlarmInfoDynamoDB.setRingTime(morpheusId, alarmInfo.accountId, nextRingTime);
 
                     } else {
                         if (currentRingTime.equals(nextRingTime)) {
@@ -161,10 +156,7 @@ public class RingProcessor {
                                     final RingTime smartAlarmRingTime = new RingTime(selectedSmartAlarmTime, nextRingTime.expectedRingTimeUTC, nextRingTime.soundIds);
 
                                     LOGGER.info("Device {} ring time updated to {}", morpheusId, new DateTime(smartAlarmRingTime.actualRingTimeUTC, alarmInfo.timeZone.get()));
-                                    mergedAlarmInfoDynamoDB.setInfo(new AlarmInfo(alarmInfo.deviceId, alarmInfo.accountId,
-                                            Collections.EMPTY_LIST,
-                                            Optional.of(smartAlarmRingTime),
-                                            Optional.<DateTimeZone>absent()));
+                                    mergedAlarmInfoDynamoDB.setRingTime(alarmInfo.deviceId, alarmInfo.accountId, smartAlarmRingTime);
                                     nextRingTime = smartAlarmRingTime;
 
                                 } else {
@@ -185,10 +177,7 @@ public class RingProcessor {
                             final DateTime nextRingTimeLocal = new DateTime(nextRingTime.actualRingTimeUTC, alarmInfo.timeZone.get());
 
                             LOGGER.info("Device {} ring time updated to {}", morpheusId, nextRingTimeLocal);
-                            mergedAlarmInfoDynamoDB.setInfo(new AlarmInfo(alarmInfo.deviceId, alarmInfo.accountId,
-                                    Collections.EMPTY_LIST,
-                                    Optional.of(nextRingTime),
-                                    Optional.<DateTimeZone>absent()));
+                            mergedAlarmInfoDynamoDB.setRingTime(alarmInfo.deviceId, alarmInfo.accountId, nextRingTime);
                         }
                     }
 

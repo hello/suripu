@@ -71,11 +71,7 @@ public class MergedAlarmInfoDynamoDBIT {
 
     @Test
     public void testCreateAndRetrieve(){
-        final AlarmInfo alarmInfo = new AlarmInfo(this.deviceId, this.accountId,
-                Collections.EMPTY_LIST,
-                Optional.<RingTime>absent(),
-                Optional.of(DateTimeZone.UTC));
-        this.mergedAlarmInfoDynamoDB.setInfo(alarmInfo);
+        this.mergedAlarmInfoDynamoDB.setAlarms(this.deviceId, this.accountId, Collections.EMPTY_LIST);
         final Optional<AlarmInfo> retrieved = this.mergedAlarmInfoDynamoDB.getInfo(this.deviceId, this.accountId);
         assertThat(retrieved.isPresent(), is(true));
         assertThat(retrieved.get().timeZone.isPresent(), is(true));
@@ -84,17 +80,8 @@ public class MergedAlarmInfoDynamoDBIT {
     @Test
     public void testUpdateNotAppend(){
         final RingTime ringTime = new RingTime(DateTime.now().getMillis(), DateTime.now().getMillis(), new long[]{1L});
-        final AlarmInfo alarmInfo = new AlarmInfo(this.deviceId, this.accountId,
-                Collections.EMPTY_LIST,
-                Optional.of(ringTime),
-                Optional.<DateTimeZone>absent());
-        this.mergedAlarmInfoDynamoDB.setInfo(alarmInfo);
-
-        final AlarmInfo updatedAlarmInfo = new AlarmInfo(this.deviceId, this.accountId,
-                Collections.EMPTY_LIST,
-                Optional.<RingTime>absent(),
-                Optional.of(DateTimeZone.UTC));
-        this.mergedAlarmInfoDynamoDB.setInfo(updatedAlarmInfo);
+        this.mergedAlarmInfoDynamoDB.setRingTime(this.deviceId, this.accountId, ringTime);
+        this.mergedAlarmInfoDynamoDB.setTimeZone(this.deviceId, this.accountId, DateTimeZone.UTC);
 
         final List<AlarmInfo> alarmInfoList = this.mergedAlarmInfoDynamoDB.getInfo(this.deviceId);
         assertThat(alarmInfoList.size(), is(1));

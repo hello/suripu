@@ -9,14 +9,12 @@ import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmInfo;
 import com.hello.suripu.core.models.AlarmSound;
 import com.hello.suripu.core.models.DeviceAccountPair;
-import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +70,7 @@ public class AlarmResource {
                 LOGGER.warn("Merge alarm info table doesn't have record for device {}, account {}.", deviceAccountMap.get(0).externalDeviceId, token.accountId);
 
                 // At account creation, the merged table doesn't have any alarm info, so let's create an empty one
-                mergedAlarmInfoDynamoDB.setInfo(AlarmInfo.createEmpty(deviceAccountMap.get(0).externalDeviceId, token.accountId));
+                mergedAlarmInfoDynamoDB.setAlarms(deviceAccountMap.get(0).externalDeviceId, token.accountId, Collections.EMPTY_LIST);
                 LOGGER.warn("Saved empty alarm info for device {} and account {}.", deviceAccountMap.get(0).externalDeviceId, token.accountId);
 //                throw new WebApplicationException(Response.Status.BAD_REQUEST);
                 return Collections.emptyList();
@@ -114,11 +112,7 @@ public class AlarmResource {
 
         for(final DeviceAccountPair deviceAccountPair:deviceAccountMap){
             try {
-                final AlarmInfo alarmInfo = new AlarmInfo(deviceAccountPair.externalDeviceId, token.accountId,
-                        alarms,
-                        Optional.<RingTime>absent(),
-                        Optional.<DateTimeZone>absent());
-                this.mergedAlarmInfoDynamoDB.setInfo(alarmInfo);
+                this.mergedAlarmInfoDynamoDB.setAlarms(deviceAccountPair.externalDeviceId, token.accountId, alarms);
                 this.alarmDAODynamoDB.setAlarms(token.accountId, alarms);
             }catch (AmazonServiceException awsException){
                 LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);
