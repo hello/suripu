@@ -360,6 +360,13 @@ public class ReceiveResource {
             responseBuilder.addAllFiles(fileDownloadList);
         }
 
+
+        final InputProtos.SyncResponse.AudioControl.Builder audioControl = InputProtos.SyncResponse.AudioControl
+                .newBuilder()
+                .setAudioCaptureAction(InputProtos.SyncResponse.AudioControl.AudioCaptureAction.OFF);
+
+        responseBuilder.setAudioControl(audioControl);
+
         final InputProtos.SyncResponse syncResponse = responseBuilder.build();
 
         LOGGER.debug("Len pb = {}", syncResponse.toByteArray().length);

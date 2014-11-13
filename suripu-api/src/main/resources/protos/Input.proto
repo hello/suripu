@@ -1,5 +1,6 @@
 package hello;
 
+import "matrix.proto";
 option java_package = "com.hello.suripu.api.input";
 option java_outer_classname = "InputProtos";
 // option optimize_for = SPEED;
@@ -113,18 +114,18 @@ message SyncRequest {
 
 message SyncResponse {
 
-    message FileDownload {
-        optional string host =1;
-        optional string url =2;
-        optional bool copy_to_serial_flash =4;
-        optional bool reset_network_processor =5;
-        optional bool reset_application_processor =6;
-        optional string serial_flash_filename =7;
-        optional string serial_flash_path =8;
-        optional string sd_card_filename =3;
-        optional string sd_card_path =9;
-        optional bytes sha1 = 10;
-    }
+	message FileDownload {
+		optional string host =1;
+		optional string url =2;
+		optional bool copy_to_serial_flash =4;
+		optional bool reset_network_processor =5;
+		optional bool reset_application_processor =6;
+		optional string serial_flash_filename =7;
+		optional string serial_flash_path =8;
+		optional string sd_card_filename =3;
+		optional string sd_card_path =9;
+		optional bytes sha1 = 10;
+	}
 
     message Alarm {
         optional uint32 start_time = 1;  // obselete,  use ring_offset_from_now
@@ -153,20 +154,52 @@ message SyncResponse {
 
     message FlashAction {
         optional int32 red =1;
-        optional int32 green =2;
-        optional int32 blue =3;
+		optional int32 green =2;
+		optional int32 blue =3;
 
-        optional int32 delay_milliseconds = 4;
-        optional bool fade_in = 5;
-        optional bool fade_out = 6;
-        optional bool rotate = 7;
-        optional int32 alpha = 8;
+		optional int32 delay_milliseconds = 4;
+		optional bool fade_in = 5;
+		optional bool fade_out = 6;
+		optional bool rotate = 7;
+		optional int32 alpha = 8;
     }
 
     enum RoomConditions {
         IDEAL = 1;
         WARNING = 2;
         ALERT = 3;
+    }
+
+   message AudioControl {
+         //turn on/off audio capture
+         enum AudioCaptureAction {
+             OFF = 0;
+             ON = 1;
+         }
+
+        //minimum log2 audio energy above background noise to save off and classify.
+        //500 is a good value for this.  Raise to 1000 to be less sensitive.
+        optional int32 audio_min_energy_threshold = 1;
+
+        //feature vectors come in every 32ms  ( 256 / 16000Hz * 2, where the "2" is for the average 2, decimate)
+        //so every 1875 feat vecs is a minute.
+        optional int32 audio_num_feat_vecs_until_attempt_feature_upload = 2;
+
+        //buffer size in bytes of audio features.  Note every ~330 bytes is 32 feat vecs, ergo 1 minute is about 20K
+        //the buffer should be sized for your upload period
+        optional int32 audio_feat_buffer_size = 3;
+
+        //frames are 16ms long (256/16000).  When you detect snoring (or whatever), this is how many frames of data you want to record
+        optional int32 audio_recording_period_in_frames = 4;
+
+        //Matrix == 2D array of integers with some describing strings
+        //audio classifier and HMM determines when you should record to sd card
+        //You can think of the classifier as a high level feature extraction
+        //The HMM evaluation "fuses" the high level classification together
+        optional Matrix audio_recording_classifier = 5;
+        optional Matrix audio_recording_hmm = 6;
+
+        optional AudioCaptureAction audio_capture_action = 8;
     }
 
     // TODO: failure cases (timeout, exponential backoff, etc.)
@@ -182,7 +215,9 @@ message SyncResponse {
     optional FlashAction flash_action = 9;
     optional bool reset_device = 10;
     optional RoomConditions room_conditions = 12;
-    repeated FileDownload files = 13;
+	repeated FileDownload files = 13;
+	optional bool reset_to_factory_fw = 14;
+    optional AudioControl audio_control = 15;
 
     // TODO: settings for snoring detection
     // TODO: settings for firmware update

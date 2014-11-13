@@ -107,7 +107,7 @@ public class FirmwareResource {
     public List<FirmwareFile> getFirmwareFiles(
             @Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
             @PathParam("device_id") final String deviceId,
-            @PathParam("firmare_version") final Integer firmwareVersion) {
+            @PathParam("firmware_version") final Integer firmwareVersion) {
 
         return firmwareUpdateStore.getFirmwareFiles(deviceId,firmwareVersion);
     }
