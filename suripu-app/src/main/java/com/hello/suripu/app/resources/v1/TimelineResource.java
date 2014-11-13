@@ -1,5 +1,7 @@
 package com.hello.suripu.app.resources.v1;
 
+import com.amazonaws.HttpMethod;
+import com.amazonaws.services.s3.AmazonS3;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
@@ -34,7 +36,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Path("/v1/timeline")
@@ -49,13 +53,18 @@ public class TimelineResource {
     private final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB;
     private final int dateBucketPeriod;
     private final SunData sunData;
+    private final AmazonS3 s3;
+    private final String bucketName;
+
     public TimelineResource(final TrackerMotionDAO trackerMotionDAO,
                             final DeviceDAO deviceDAO,
                             final SleepLabelDAO sleepLabelDAO,
                             final SleepScoreDAO sleepScoreDAO,
                             final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
                             final int dateBucketPeriod,
-                            final SunData sunData) {
+                            final SunData sunData,
+                            final AmazonS3 s3,
+                            final String bucketName) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
         this.sleepLabelDAO = sleepLabelDAO;
@@ -63,6 +72,8 @@ public class TimelineResource {
         this.aggregateSleepScoreDAODynamoDB = aggregateSleepScoreDAODynamoDB;
         this.dateBucketPeriod = dateBucketPeriod;
         this.sunData = sunData;
+        this.s3 = s3;
+        this.bucketName = bucketName;
     }
 
     @Timed
@@ -108,6 +119,8 @@ public class TimelineResource {
             extraSegments.add(sleepTimeSegment.get());
         }
 
+
+
         // add partner movement data, check if there's a partner
         final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accessToken.accountId);
         if (optionalPartnerAccountId.isPresent()) {
@@ -132,14 +145,25 @@ public class TimelineResource {
         if(sunrise.isPresent()) {
             final String sunriseMessage = Event.getMessage(Event.Type.SUNRISE, sunrise.get());
 
-            final SleepSegment sunriseSegment = new SleepSegment(1L, sunrise.get().getMillis(), 0, 60, -1, Event.Type.SUNRISE, sunriseMessage, new ArrayList<SensorReading>());
 
+            final Date expiration = new java.util.Date();
+            long msec = expiration.getTime();
+            msec += 1000 * 60 * 60; // 1 hour.
+            expiration.setTime(msec);
+            final URL url = s3.generatePresignedUrl(bucketName, "mario.mp3", expiration, HttpMethod.GET);
+            final SleepSegment.SoundInfo soundInfo = new SleepSegment.SoundInfo(url.toExternalForm(), 2000);
+
+            final SleepSegment sunriseSegment = new SleepSegment(1L, sunrise.get().getMillis(), 0, 60, -1, Event.Type.SUNRISE, sunriseMessage, new ArrayList<SensorReading>(), soundInfo);
+//            final SleepSegment audioSleepSegment = new SleepSegment(99L, sunrise.get().plusMinutes(5).getMillis(), 0, 60, -1, Event.Type.SNORING, "ZzZzZzZzZ", new ArrayList<SensorReading>(), soundInfo);
             extraSegments.add(sunriseSegment);
+//            extraSegments.add(audioSleepSegment);
 
             LOGGER.debug(sunriseMessage);
         }
 
-        // TODO: add sound, light, temperature event segments
+        // TODO: add sound
+
+
 
 
         // combine all segments
