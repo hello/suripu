@@ -236,7 +236,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addResource(new MobilePushRegistrationResource(subscriptionDAO));
 
-        environment.addResource(new QuestionsResource(accountDAO, questionResponseDAO));
+        environment.addResource(new QuestionsResource(accountDAO, questionResponseDAO, timeZoneHistoryDAODynamoDB, configuration.getQuestionConfigs().getNumSkips()));
         environment.addResource(new InsightsResource(accountDAO));
 
         final FirmwareUpdateDAO firmwareUpdateDAO = commonDB.onDemand(FirmwareUpdateDAO.class);

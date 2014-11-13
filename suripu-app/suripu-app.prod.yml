@@ -157,3 +157,6 @@ kinesis:
     audio_features : audio_features
     activity_stream : activity_stream
     registrations: registrations
+
+question_configs:
+  num_skips : 5

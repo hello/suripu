@@ -72,11 +72,10 @@ public class Question {
     final public String text;
 
     @JsonProperty("choices")
-    final List<Choice> choiceList;
+    final public List<Choice> choiceList;
 
     @JsonProperty("ask_local_date")
-    final DateTime askLocalDate;
-
+    final public DateTime askLocalDate;
 
     @JsonIgnore
     final public Type type;
@@ -88,13 +87,13 @@ public class Question {
     final public ASK_TIME askTime;
 
     @JsonIgnore
-    final int dependency;
+    final public int dependency;
 
     @JsonIgnore
-    final int parentId;
+    final public int parentId;
 
     @JsonIgnore
-    final String lang;
+    final public String lang;
 
     public Question(final Integer id, final Long accountQuestionId, final String text, final String lang,
                     final Type type, final FREQUENCY frequency, final ASK_TIME askTime, final int dependency, final int parentId,

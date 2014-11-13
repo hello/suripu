@@ -3,9 +3,11 @@ package com.hello.suripu.app.resources.v1;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.QuestionResponseDAO;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
+import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -37,12 +39,14 @@ public class QuestionsResource {
 
     private final AccountDAO accountDAO;
     private final QuestionResponseDAO questionResponseDAO;
+    private final TimeZoneHistoryDAODynamoDB tzHistoryDAO;
     private final QuestionProcessor questionProcessor;
 
-    public QuestionsResource(final AccountDAO accountDAO, final QuestionResponseDAO questionResponseDAO) {
+    public QuestionsResource(final AccountDAO accountDAO, final QuestionResponseDAO questionResponseDAO, final TimeZoneHistoryDAODynamoDB tzHistoryDAO, final int checkSkipsNum) {
         this.accountDAO = accountDAO;
         this.questionResponseDAO = questionResponseDAO;
-        this.questionProcessor = new QuestionProcessor(this.questionResponseDAO);
+        this.tzHistoryDAO = tzHistoryDAO;
+        this.questionProcessor = new QuestionProcessor(this.questionResponseDAO, checkSkipsNum);
     }
 
     @Timed
@@ -58,8 +62,12 @@ public class QuestionsResource {
             throw new WebApplicationException(404);
         }
 
-        // TODO: get user timezone, remove this once we hook up the database
-        final int timeZoneOffset = - 26200000;
+        int timeZoneOffset = - 26200000;
+        final Optional<TimeZoneHistory> tzHistory = this.tzHistoryDAO.getCurrentTimeZone(accessToken.accountId);
+        if (tzHistory.isPresent()) {
+            timeZoneOffset = tzHistory.get().offsetMillis;
+        }
+
         final DateTime today = DateTime.now(DateTimeZone.UTC).plusMillis(timeZoneOffset).withTimeAtStartOfDay();
         LOGGER.debug("today = {}", today);
         if(date != null && !date.equals(today.toString("yyyy-MM-dd"))) {
@@ -88,7 +96,8 @@ public class QuestionsResource {
             questionId = questionIdOptional.get();
         }
 
-        this.questionResponseDAO.insertResponse(accessToken.accountId, questionId, accountQuestionId, choice.id);
+        this.questionProcessor.saveResponse(accessToken.accountId, questionId, accountQuestionId, choice);
+
     }
 
     @Timed
@@ -99,7 +108,14 @@ public class QuestionsResource {
                              @PathParam("question_id") final Integer questionId,
                              @QueryParam("account_question_id") final Long accountQuestionId) {
         LOGGER.debug("Skipping question {} for account id = {}", questionId, accessToken.accountId);
-        this.questionProcessor.skipQuestion(accessToken.accountId, questionId, accountQuestionId);
+
+        final Optional<TimeZoneHistory> tzHistory = this.tzHistoryDAO.getCurrentTimeZone(accessToken.accountId);
+        int timeZoneOffset = - 26200000;
+        if (tzHistory.isPresent()) {
+            timeZoneOffset = tzHistory.get().offsetMillis;
+        }
+
+        this.questionProcessor.skipQuestion(accessToken.accountId, questionId, accountQuestionId, timeZoneOffset);
     }
 
 }
