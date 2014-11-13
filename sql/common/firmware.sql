@@ -19,3 +19,6 @@ CREATE TABLE firmware_updates (
 
 GRANT ALL PRIVILEGES ON firmware_updates TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE firmware_updates_id_seq TO ingress_user;
+
+
+ALTER TABLE firmware_updates ADD COLUMN sha1 VARCHAR 100;

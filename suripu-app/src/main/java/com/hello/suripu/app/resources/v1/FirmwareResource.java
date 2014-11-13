@@ -3,13 +3,17 @@ package com.hello.suripu.app.resources.v1;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.core.firmware.FirmwareFile;
 import com.hello.suripu.core.firmware.FirmwareUpdateStore;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -20,16 +24,18 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Deprecated
 @Path("/v1/firmware")
 public class FirmwareResource {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(FirmwareResource.class);
 
     private final FirmwareUpdateStore firmwareUpdateStore;
     private final AmazonS3 amazonS3;
@@ -73,8 +79,24 @@ public class FirmwareResource {
             final List<FirmwareFile> files) {
 
         for(final FirmwareFile firmwareFile : files) {
-            final FirmwareFile updated = FirmwareFile.withS3Info(firmwareFile, "hello-firmware", "sense/" + firmwareFile.s3Key);
+
+            if(firmwareFile.resetApplicationProcessor) {
+                final S3Object object = amazonS3.getObject(bucketName, firmwareFile.s3Key);
+                final S3ObjectInputStream s3ObjectInputStream = object.getObjectContent();
+                try {
+                    final String sha1 = DigestUtils.sha1Hex(s3ObjectInputStream);
+                    final FirmwareFile updated = FirmwareFile.withS3InfoAndSha1(firmwareFile, bucketName, firmwareFile.s3Key, sha1);
+                    firmwareUpdateStore.insertFile(updated, deviceId, firmwareVersion);
+                    continue;
+                } catch (IOException e) {
+                    LOGGER.error("Failed computing sha1 for {}", firmwareFile.s3Key);
+                    throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+                }
+            }
+
+            final FirmwareFile updated = FirmwareFile.withS3Info(firmwareFile, bucketName, firmwareFile.s3Key);
             firmwareUpdateStore.insertFile(updated, deviceId, firmwareVersion);
+
         }
     }
 

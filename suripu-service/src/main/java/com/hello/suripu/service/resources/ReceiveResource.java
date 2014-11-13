@@ -230,61 +230,6 @@ public class ReceiveResource {
         // This is the default timezone.
         DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
 
-        // ********************* Pill Data Storage ****************************
-        if(data.getPillsCount() > 0){
-            final List<InputProtos.periodic_data.pill_data> pillList = data.getPillsList();
-            for(final InputProtos.periodic_data.pill_data pill:pillList){
-
-                final String pillId = pill.getDeviceId();
-                final Optional<DeviceAccountPair> internalPillPairingMap = this.deviceDAO.getInternalPillId(pillId);
-                if(!internalPillPairingMap.isPresent()){
-                    LOGGER.warn("Cannot find internal pill id for pill {}", pillId);
-                    continue;
-                }
-
-                final InputProtos.PillDataKinesis.Builder pillKinesisDataBuilder = InputProtos.PillDataKinesis.newBuilder();
-
-                pillKinesisDataBuilder.setAccountIdLong(internalPillPairingMap.get().accountId)
-                        .setPillIdLong(internalPillPairingMap.get().internalDeviceId)
-                        .setTimestamp(roundedDateTime.getMillis())
-                        .setOffsetMillis(userTimeZone.getOffset(roundedDateTime));
-
-
-
-                if(pill.hasBatteryLevel()){
-                    pillKinesisDataBuilder.setBatteryLevel(pill.getBatteryLevel());
-                }
-
-                if(pill.hasFirmwareVersion()){
-                    pillKinesisDataBuilder.setFirmwareVersion(pill.getFirmwareVersion());
-                }
-
-                if(pill.hasUptime()){
-                    pillKinesisDataBuilder.setUpTime(pill.getUptime());
-                }
-
-                if(pill.hasMotionDataEncrypted()){
-                    pillKinesisDataBuilder.setEncryptedData(pill.getMotionDataEncrypted());
-                }
-
-                if(pill.hasMotionData()){
-                    long amplitude = pill.getMotionData();
-                    if(amplitude < 0){
-                        // Java is signed
-                        amplitude += 0xFFFFFFFF;
-                    }
-                    pillKinesisDataBuilder.setValue(TrackerMotion.Utils.rawToMilliMS2(amplitude));
-                }
-
-                final byte[] pillDataBytes = pillKinesisDataBuilder.build().toByteArray();
-                final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.PILL_DATA);
-                final String sequenceNumber = dataLogger.put(internalPillPairingMap.get().internalDeviceId.toString(),  // WTF?
-                        pillDataBytes);
-                LOGGER.debug("Pill Data added to Kinesis with sequenceNumber = {}", sequenceNumber);
-
-            }
-        }
-
         // ********************* Morpheus Data and Alarm processing **************************
         // Here comes to a discussion: Shall we loop over the device_id:account_id relation based on the
         // DynamoDB "cache" or PostgresSQL accout_device_map table?
@@ -350,7 +295,7 @@ public class ReceiveResource {
 
             try {
                 deviceDataDAO.insert(deviceData);
-                LOGGER.info("Data saved to DB: {}", TextFormat.shortDebugString(data));
+                LOGGER.trace("Data saved to DB: {}", TextFormat.shortDebugString(data));
             } catch (UnableToExecuteStatementException exception) {
                 final Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
                 if (!matcher.find()) {
