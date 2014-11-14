@@ -4,7 +4,7 @@ import com.flaptor.indextank.apiclient.IndexDoesNotExistException;
 import com.flaptor.indextank.apiclient.IndexTankClient;
 import com.google.common.base.Optional;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
-import com.hello.suripu.api.input.InputProtos;
+import com.hello.suripu.api.logging.LogProtos;
 import com.hello.suripu.service.SignedMessage;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -38,10 +38,10 @@ public class LogsResource {
     public void saveLogs(byte[] body) {
 
         final SignedMessage signedMessage = SignedMessage.parse(body);
-        InputProtos.SenseLog log;
+        LogProtos.sense_log log;
 
         try {
-            log = InputProtos.SenseLog.parseFrom(signedMessage.body);
+            log = LogProtos.sense_log.parseFrom(signedMessage.body);
         } catch (IOException exception) {
             final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
             LOGGER.error(errorMessage);

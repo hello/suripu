@@ -4,7 +4,7 @@ import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.google.protobuf.ByteString;
-import com.hello.suripu.api.input.InputProtos.SyncResponse;
+import com.hello.suripu.api.output.OutputProtos.SyncResponse;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;

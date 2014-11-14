@@ -2,7 +2,8 @@ package com.hello.suripu.service.resources;
 
 import com.google.common.base.Optional;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
-import com.hello.suripu.api.ble.MorpheusBle;
+import com.hello.suripu.api.ble.SenseCommandProtos;
+import com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -64,12 +65,12 @@ public class RegisterResource {
         this.kinesisLoggerFactory = kinesisLoggerFactory;
     }
 
-    private boolean checkCommandType(final MorpheusBle.MorpheusCommand morpheusCommand, final PairAction action){
+    private boolean checkCommandType(final MorpheusCommand morpheusCommand, final PairAction action){
         switch (action){
             case PAIR_PILL:
-                return morpheusCommand.getType() == MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_PILL;
+                return morpheusCommand.getType() == MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_PILL;
             case PAIR_MORPHEUS:
-                return morpheusCommand.getType() == MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE;
+                return morpheusCommand.getType() == MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE;
             default:
                 return false;
         }
@@ -78,7 +79,7 @@ public class RegisterResource {
 
     private byte[] pair(final byte[] encryptedRequest, final byte[] keyBytes, final PairAction action) {
 
-        final MorpheusBle.MorpheusCommand.Builder builder = MorpheusBle.MorpheusCommand.newBuilder()
+        final MorpheusCommand.Builder builder = MorpheusCommand.newBuilder()
                 .setVersion(PROTOBUF_VERSION);
 
         final SignedMessage signedMessage = SignedMessage.parse(encryptedRequest);
@@ -87,28 +88,28 @@ public class RegisterResource {
 
         if(error.isPresent()) {
             LOGGER.error("Fail to validate signature {}", error.get().message);
-            builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
-            builder.setError(MorpheusBle.ErrorType.INTERNAL_DATA_ERROR);
+            builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
+            builder.setError(SenseCommandProtos.ErrorType.INTERNAL_DATA_ERROR);
             return builder.build().toByteArray();
         }
 
-        MorpheusBle.MorpheusCommand morpheusCommand;
+        MorpheusCommand morpheusCommand;
         try {
-            morpheusCommand = MorpheusBle.MorpheusCommand.parseFrom(signedMessage.body);
+            morpheusCommand = MorpheusCommand.parseFrom(signedMessage.body);
 
         } catch (IOException exception) {
             final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
             LOGGER.error(errorMessage);
 
-            builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
-            builder.setError(MorpheusBle.ErrorType.INTERNAL_OPERATION_FAILED);
+            builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
+            builder.setError(SenseCommandProtos.ErrorType.INTERNAL_OPERATION_FAILED);
             return builder.build().toByteArray();
         }
 
         
         if(!checkCommandType(morpheusCommand, action)){
-            builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
-            builder.setError(MorpheusBle.ErrorType.INTERNAL_DATA_ERROR);
+            builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
+            builder.setError(SenseCommandProtos.ErrorType.INTERNAL_DATA_ERROR);
             LOGGER.error("Wrong request command type {}", morpheusCommand.getType());
             return builder.build().toByteArray();
         }
@@ -125,8 +126,8 @@ public class RegisterResource {
                 DateTime.now());
 
         if(!accessTokenOptional.isPresent()) {
-            builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
-            builder.setError(MorpheusBle.ErrorType.INTERNAL_OPERATION_FAILED);
+            builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
+            builder.setError(SenseCommandProtos.ErrorType.INTERNAL_OPERATION_FAILED);
             LOGGER.error("Token not found {} for device Id {}", token, deviceId);
             return builder.build().toByteArray();
         }
@@ -140,12 +141,12 @@ public class RegisterResource {
 
 
                     this.deviceDAO.registerSense(accountId, deviceId);
-                    builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE);
+                    builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE);
                     break;
                 case PAIR_PILL:
 
                     this.deviceDAO.registerTracker(accountId, deviceId);
-                    builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_PILL);
+                    builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_PILL);
                     break;
             }
 
@@ -156,15 +157,15 @@ public class RegisterResource {
             final Matcher matcher = PG_UNIQ_PATTERN.matcher(sqlExp.getMessage());
             if (!matcher.find()) {
                 LOGGER.error("SQL error {}", sqlExp.getMessage());
-                builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
-                builder.setError(MorpheusBle.ErrorType.INTERNAL_OPERATION_FAILED);
+                builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
+                builder.setError(SenseCommandProtos.ErrorType.INTERNAL_OPERATION_FAILED);
             }else {
                 LOGGER.error(sqlExp.getMessage());
                 //TODO: enforce the constrain
                 LOGGER.warn("Account {} tries to pair a paired device {} ",
                         accountId, deviceId);
-                builder.setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
-                builder.setError(MorpheusBle.ErrorType.DEVICE_ALREADY_PAIRED);
+                builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
+                builder.setError(SenseCommandProtos.ErrorType.DEVICE_ALREADY_PAIRED);
             }
         }
 

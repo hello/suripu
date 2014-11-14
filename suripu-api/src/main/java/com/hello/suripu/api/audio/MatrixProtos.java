@@ -31,47 +31,47 @@ public final class MatrixProtos {
      */
     int getUnixTime();
 
-    // optional .hello.Matrix matrix_payload = 3;
+    // optional .Matrix matrix_payload = 3;
     /**
-     * <code>optional .hello.Matrix matrix_payload = 3;</code>
+     * <code>optional .Matrix matrix_payload = 3;</code>
      */
     boolean hasMatrixPayload();
     /**
-     * <code>optional .hello.Matrix matrix_payload = 3;</code>
+     * <code>optional .Matrix matrix_payload = 3;</code>
      */
-    com.hello.suripu.api.audio.MatrixProtos.Matrix getMatrixPayload();
+    Matrix getMatrixPayload();
     /**
-     * <code>optional .hello.Matrix matrix_payload = 3;</code>
+     * <code>optional .Matrix matrix_payload = 3;</code>
      */
-    com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder getMatrixPayloadOrBuilder();
+    MatrixOrBuilder getMatrixPayloadOrBuilder();
 
-    // repeated .hello.Matrix matrix_list = 4;
+    // repeated .Matrix matrix_list = 4;
     /**
-     * <code>repeated .hello.Matrix matrix_list = 4;</code>
+     * <code>repeated .Matrix matrix_list = 4;</code>
      */
-    java.util.List<com.hello.suripu.api.audio.MatrixProtos.Matrix> 
+    java.util.List<Matrix>
         getMatrixListList();
     /**
-     * <code>repeated .hello.Matrix matrix_list = 4;</code>
+     * <code>repeated .Matrix matrix_list = 4;</code>
      */
-    com.hello.suripu.api.audio.MatrixProtos.Matrix getMatrixList(int index);
+    Matrix getMatrixList(int index);
     /**
-     * <code>repeated .hello.Matrix matrix_list = 4;</code>
+     * <code>repeated .Matrix matrix_list = 4;</code>
      */
     int getMatrixListCount();
     /**
-     * <code>repeated .hello.Matrix matrix_list = 4;</code>
+     * <code>repeated .Matrix matrix_list = 4;</code>
      */
-    java.util.List<? extends com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder> 
+    java.util.List<? extends MatrixOrBuilder>
         getMatrixListOrBuilderList();
     /**
-     * <code>repeated .hello.Matrix matrix_list = 4;</code>
+     * <code>repeated .Matrix matrix_list = 4;</code>
      */
-    com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder getMatrixListOrBuilder(
-        int index);
+    MatrixOrBuilder getMatrixListOrBuilder(
+            int index);
   }
   /**
-   * Protobuf type {@code hello.MatrixClientMessage}
+   * Protobuf type {@code MatrixClientMessage}
    */
   public static final class MatrixClientMessage extends
       com.google.protobuf.GeneratedMessage
@@ -93,7 +93,7 @@ public final class MatrixProtos {
     }
 
     private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @java.lang.Override
+    @Override
     public final com.google.protobuf.UnknownFieldSet
         getUnknownFields() {
       return this.unknownFields;
@@ -132,11 +132,11 @@ public final class MatrixProtos {
               break;
             }
             case 26: {
-              com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder subBuilder = null;
+              Matrix.Builder subBuilder = null;
               if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 subBuilder = matrixPayload_.toBuilder();
               }
-              matrixPayload_ = input.readMessage(com.hello.suripu.api.audio.MatrixProtos.Matrix.PARSER, extensionRegistry);
+              matrixPayload_ = input.readMessage(Matrix.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(matrixPayload_);
                 matrixPayload_ = subBuilder.buildPartial();
@@ -146,10 +146,10 @@ public final class MatrixProtos {
             }
             case 34: {
               if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
-                matrixList_ = new java.util.ArrayList<com.hello.suripu.api.audio.MatrixProtos.Matrix>();
+                matrixList_ = new java.util.ArrayList<Matrix>();
                 mutable_bitField0_ |= 0x00000008;
               }
-              matrixList_.add(input.readMessage(com.hello.suripu.api.audio.MatrixProtos.Matrix.PARSER, extensionRegistry));
+              matrixList_.add(input.readMessage(Matrix.PARSER, extensionRegistry));
               break;
             }
           }
@@ -169,14 +169,14 @@ public final class MatrixProtos {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.hello.suripu.api.audio.MatrixProtos.internal_static_hello_MatrixClientMessage_descriptor;
+      return MatrixProtos.internal_static_MatrixClientMessage_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+    protected FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.hello.suripu.api.audio.MatrixProtos.internal_static_hello_MatrixClientMessage_fieldAccessorTable
+      return MatrixProtos.internal_static_MatrixClientMessage_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage.class, com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage.Builder.class);
+              MatrixClientMessage.class, Builder.class);
     }
 
     public static com.google.protobuf.Parser<MatrixClientMessage> PARSER =
@@ -189,7 +189,7 @@ public final class MatrixProtos {
       }
     };
 
-    @java.lang.Override
+    @Override
     public com.google.protobuf.Parser<MatrixClientMessage> getParserForType() {
       return PARSER;
     }
@@ -227,60 +227,60 @@ public final class MatrixProtos {
       return unixTime_;
     }
 
-    // optional .hello.Matrix matrix_payload = 3;
+    // optional .Matrix matrix_payload = 3;
     public static final int MATRIX_PAYLOAD_FIELD_NUMBER = 3;
-    private com.hello.suripu.api.audio.MatrixProtos.Matrix matrixPayload_;
+    private Matrix matrixPayload_;
     /**
-     * <code>optional .hello.Matrix matrix_payload = 3;</code>
+     * <code>optional .Matrix matrix_payload = 3;</code>
      */
     public boolean hasMatrixPayload() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
-     * <code>optional .hello.Matrix matrix_payload = 3;</code>
+     * <code>optional .Matrix matrix_payload = 3;</code>
      */
-    public com.hello.suripu.api.audio.MatrixProtos.Matrix getMatrixPayload() {
+    public Matrix getMatrixPayload() {
       return matrixPayload_;
     }
     /**
-     * <code>optional .hello.Matrix matrix_payload = 3;</code>
+     * <code>optional .Matrix matrix_payload = 3;</code>
      */
-    public com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder getMatrixPayloadOrBuilder() {
+    public MatrixOrBuilder getMatrixPayloadOrBuilder() {
       return matrixPayload_;
     }
 
-    // repeated .hello.Matrix matrix_list = 4;
+    // repeated .Matrix matrix_list = 4;
     public static final int MATRIX_LIST_FIELD_NUMBER = 4;
-    private java.util.List<com.hello.suripu.api.audio.MatrixProtos.Matrix> matrixList_;
+    private java.util.List<Matrix> matrixList_;
     /**
-     * <code>repeated .hello.Matrix matrix_list = 4;</code>
+     * <code>repeated .Matrix matrix_list = 4;</code>
      */
-    public java.util.List<com.hello.suripu.api.audio.MatrixProtos.Matrix> getMatrixListList() {
+    public java.util.List<Matrix> getMatrixListList() {
       return matrixList_;
     }
     /**
-     * <code>repeated .hello.Matrix matrix_list = 4;</code>
+     * <code>repeated .Matrix matrix_list = 4;</code>
      */
-    public java.util.List<? extends com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder> 
+    public java.util.List<? extends MatrixOrBuilder>
         getMatrixListOrBuilderList() {
       return matrixList_;
     }
     /**
-     * <code>repeated .hello.Matrix matrix_list = 4;</code>
+     * <code>repeated .Matrix matrix_list = 4;</code>
      */
     public int getMatrixListCount() {
       return matrixList_.size();
     }
     /**
-     * <code>repeated .hello.Matrix matrix_list = 4;</code>
+     * <code>repeated .Matrix matrix_list = 4;</code>
      */
-    public com.hello.suripu.api.audio.MatrixProtos.Matrix getMatrixList(int index) {
+    public Matrix getMatrixList(int index) {
       return matrixList_.get(index);
     }
     /**
-     * <code>repeated .hello.Matrix matrix_list = 4;</code>
+     * <code>repeated .Matrix matrix_list = 4;</code>
      */
-    public com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder getMatrixListOrBuilder(
+    public MatrixOrBuilder getMatrixListOrBuilder(
         int index) {
       return matrixList_.get(index);
     }
@@ -288,7 +288,7 @@ public final class MatrixProtos {
     private void initFields() {
       mac_ = com.google.protobuf.ByteString.EMPTY;
       unixTime_ = 0;
-      matrixPayload_ = com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance();
+      matrixPayload_ = Matrix.getDefaultInstance();
       matrixList_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
@@ -358,59 +358,59 @@ public final class MatrixProtos {
     }
 
     private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    protected java.lang.Object writeReplace()
+    @Override
+    protected Object writeReplace()
         throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
 
-    public static com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage parseFrom(
+    public static MatrixClientMessage parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage parseFrom(
+    public static MatrixClientMessage parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage parseFrom(byte[] data)
+    public static MatrixClientMessage parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage parseFrom(
+    public static MatrixClientMessage parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage parseFrom(java.io.InputStream input)
+    public static MatrixClientMessage parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage parseFrom(
+    public static MatrixClientMessage parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseFrom(input, extensionRegistry);
     }
-    public static com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage parseDelimitedFrom(java.io.InputStream input)
+    public static MatrixClientMessage parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input);
     }
-    public static com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage parseDelimitedFrom(
+    public static MatrixClientMessage parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
-    public static com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage parseFrom(
+    public static MatrixClientMessage parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage parseFrom(
+    public static MatrixClientMessage parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -419,33 +419,33 @@ public final class MatrixProtos {
 
     public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage prototype) {
+    public static Builder newBuilder(MatrixClientMessage prototype) {
       return newBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() { return newBuilder(this); }
 
-    @java.lang.Override
+    @Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
     /**
-     * Protobuf type {@code hello.MatrixClientMessage}
+     * Protobuf type {@code MatrixClientMessage}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessageOrBuilder {
+       implements MatrixClientMessageOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return com.hello.suripu.api.audio.MatrixProtos.internal_static_hello_MatrixClientMessage_descriptor;
+        return MatrixProtos.internal_static_MatrixClientMessage_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      protected FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return com.hello.suripu.api.audio.MatrixProtos.internal_static_hello_MatrixClientMessage_fieldAccessorTable
+        return MatrixProtos.internal_static_MatrixClientMessage_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage.class, com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage.Builder.class);
+                MatrixClientMessage.class, Builder.class);
       }
 
       // Construct using com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage.newBuilder()
@@ -454,7 +454,7 @@ public final class MatrixProtos {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
@@ -475,7 +475,7 @@ public final class MatrixProtos {
         unixTime_ = 0;
         bitField0_ = (bitField0_ & ~0x00000002);
         if (matrixPayloadBuilder_ == null) {
-          matrixPayload_ = com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance();
+          matrixPayload_ = Matrix.getDefaultInstance();
         } else {
           matrixPayloadBuilder_.clear();
         }
@@ -495,23 +495,23 @@ public final class MatrixProtos {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return com.hello.suripu.api.audio.MatrixProtos.internal_static_hello_MatrixClientMessage_descriptor;
+        return MatrixProtos.internal_static_MatrixClientMessage_descriptor;
       }
 
-      public com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage getDefaultInstanceForType() {
-        return com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage.getDefaultInstance();
+      public MatrixClientMessage getDefaultInstanceForType() {
+        return MatrixClientMessage.getDefaultInstance();
       }
 
-      public com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage build() {
-        com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage result = buildPartial();
+      public MatrixClientMessage build() {
+        MatrixClientMessage result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage buildPartial() {
-        com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage result = new com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage(this);
+      public MatrixClientMessage buildPartial() {
+        MatrixClientMessage result = new MatrixClientMessage(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -545,16 +545,16 @@ public final class MatrixProtos {
       }
 
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage) {
-          return mergeFrom((com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage)other);
+        if (other instanceof MatrixClientMessage) {
+          return mergeFrom((MatrixClientMessage)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage other) {
-        if (other == com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage.getDefaultInstance()) return this;
+      public Builder mergeFrom(MatrixClientMessage other) {
+        if (other == MatrixClientMessage.getDefaultInstance()) return this;
         if (other.hasMac()) {
           setMac(other.getMac());
         }
@@ -614,11 +614,11 @@ public final class MatrixProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage parsedMessage = null;
+        MatrixClientMessage parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.hello.suripu.api.audio.MatrixProtos.MatrixClientMessage) e.getUnfinishedMessage();
+          parsedMessage = (MatrixClientMessage) e.getUnfinishedMessage();
           throw e;
         } finally {
           if (parsedMessage != null) {
@@ -698,20 +698,20 @@ public final class MatrixProtos {
         return this;
       }
 
-      // optional .hello.Matrix matrix_payload = 3;
-      private com.hello.suripu.api.audio.MatrixProtos.Matrix matrixPayload_ = com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance();
+      // optional .Matrix matrix_payload = 3;
+      private Matrix matrixPayload_ = Matrix.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
-          com.hello.suripu.api.audio.MatrixProtos.Matrix, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder, com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder> matrixPayloadBuilder_;
+          Matrix, Matrix.Builder, MatrixOrBuilder> matrixPayloadBuilder_;
       /**
-       * <code>optional .hello.Matrix matrix_payload = 3;</code>
+       * <code>optional .Matrix matrix_payload = 3;</code>
        */
       public boolean hasMatrixPayload() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
-       * <code>optional .hello.Matrix matrix_payload = 3;</code>
+       * <code>optional .Matrix matrix_payload = 3;</code>
        */
-      public com.hello.suripu.api.audio.MatrixProtos.Matrix getMatrixPayload() {
+      public Matrix getMatrixPayload() {
         if (matrixPayloadBuilder_ == null) {
           return matrixPayload_;
         } else {
@@ -719,9 +719,9 @@ public final class MatrixProtos {
         }
       }
       /**
-       * <code>optional .hello.Matrix matrix_payload = 3;</code>
+       * <code>optional .Matrix matrix_payload = 3;</code>
        */
-      public Builder setMatrixPayload(com.hello.suripu.api.audio.MatrixProtos.Matrix value) {
+      public Builder setMatrixPayload(Matrix value) {
         if (matrixPayloadBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -735,10 +735,10 @@ public final class MatrixProtos {
         return this;
       }
       /**
-       * <code>optional .hello.Matrix matrix_payload = 3;</code>
+       * <code>optional .Matrix matrix_payload = 3;</code>
        */
       public Builder setMatrixPayload(
-          com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder builderForValue) {
+          Matrix.Builder builderForValue) {
         if (matrixPayloadBuilder_ == null) {
           matrixPayload_ = builderForValue.build();
           onChanged();
@@ -749,14 +749,14 @@ public final class MatrixProtos {
         return this;
       }
       /**
-       * <code>optional .hello.Matrix matrix_payload = 3;</code>
+       * <code>optional .Matrix matrix_payload = 3;</code>
        */
-      public Builder mergeMatrixPayload(com.hello.suripu.api.audio.MatrixProtos.Matrix value) {
+      public Builder mergeMatrixPayload(Matrix value) {
         if (matrixPayloadBuilder_ == null) {
           if (((bitField0_ & 0x00000004) == 0x00000004) &&
-              matrixPayload_ != com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance()) {
+              matrixPayload_ != Matrix.getDefaultInstance()) {
             matrixPayload_ =
-              com.hello.suripu.api.audio.MatrixProtos.Matrix.newBuilder(matrixPayload_).mergeFrom(value).buildPartial();
+              Matrix.newBuilder(matrixPayload_).mergeFrom(value).buildPartial();
           } else {
             matrixPayload_ = value;
           }
@@ -768,11 +768,11 @@ public final class MatrixProtos {
         return this;
       }
       /**
-       * <code>optional .hello.Matrix matrix_payload = 3;</code>
+       * <code>optional .Matrix matrix_payload = 3;</code>
        */
       public Builder clearMatrixPayload() {
         if (matrixPayloadBuilder_ == null) {
-          matrixPayload_ = com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance();
+          matrixPayload_ = Matrix.getDefaultInstance();
           onChanged();
         } else {
           matrixPayloadBuilder_.clear();
@@ -781,17 +781,17 @@ public final class MatrixProtos {
         return this;
       }
       /**
-       * <code>optional .hello.Matrix matrix_payload = 3;</code>
+       * <code>optional .Matrix matrix_payload = 3;</code>
        */
-      public com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder getMatrixPayloadBuilder() {
+      public Matrix.Builder getMatrixPayloadBuilder() {
         bitField0_ |= 0x00000004;
         onChanged();
         return getMatrixPayloadFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .hello.Matrix matrix_payload = 3;</code>
+       * <code>optional .Matrix matrix_payload = 3;</code>
        */
-      public com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder getMatrixPayloadOrBuilder() {
+      public MatrixOrBuilder getMatrixPayloadOrBuilder() {
         if (matrixPayloadBuilder_ != null) {
           return matrixPayloadBuilder_.getMessageOrBuilder();
         } else {
@@ -799,14 +799,14 @@ public final class MatrixProtos {
         }
       }
       /**
-       * <code>optional .hello.Matrix matrix_payload = 3;</code>
+       * <code>optional .Matrix matrix_payload = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilder<
-          com.hello.suripu.api.audio.MatrixProtos.Matrix, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder, com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder> 
+          Matrix, Matrix.Builder, MatrixOrBuilder>
           getMatrixPayloadFieldBuilder() {
         if (matrixPayloadBuilder_ == null) {
           matrixPayloadBuilder_ = new com.google.protobuf.SingleFieldBuilder<
-              com.hello.suripu.api.audio.MatrixProtos.Matrix, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder, com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder>(
+              Matrix, Matrix.Builder, MatrixOrBuilder>(
                   matrixPayload_,
                   getParentForChildren(),
                   isClean());
@@ -815,23 +815,23 @@ public final class MatrixProtos {
         return matrixPayloadBuilder_;
       }
 
-      // repeated .hello.Matrix matrix_list = 4;
-      private java.util.List<com.hello.suripu.api.audio.MatrixProtos.Matrix> matrixList_ =
+      // repeated .Matrix matrix_list = 4;
+      private java.util.List<Matrix> matrixList_ =
         java.util.Collections.emptyList();
       private void ensureMatrixListIsMutable() {
         if (!((bitField0_ & 0x00000008) == 0x00000008)) {
-          matrixList_ = new java.util.ArrayList<com.hello.suripu.api.audio.MatrixProtos.Matrix>(matrixList_);
+          matrixList_ = new java.util.ArrayList<Matrix>(matrixList_);
           bitField0_ |= 0x00000008;
          }
       }
 
       private com.google.protobuf.RepeatedFieldBuilder<
-          com.hello.suripu.api.audio.MatrixProtos.Matrix, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder, com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder> matrixListBuilder_;
+          Matrix, Matrix.Builder, MatrixOrBuilder> matrixListBuilder_;
 
       /**
-       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       * <code>repeated .Matrix matrix_list = 4;</code>
        */
-      public java.util.List<com.hello.suripu.api.audio.MatrixProtos.Matrix> getMatrixListList() {
+      public java.util.List<Matrix> getMatrixListList() {
         if (matrixListBuilder_ == null) {
           return java.util.Collections.unmodifiableList(matrixList_);
         } else {
@@ -839,7 +839,7 @@ public final class MatrixProtos {
         }
       }
       /**
-       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       * <code>repeated .Matrix matrix_list = 4;</code>
        */
       public int getMatrixListCount() {
         if (matrixListBuilder_ == null) {
@@ -849,9 +849,9 @@ public final class MatrixProtos {
         }
       }
       /**
-       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       * <code>repeated .Matrix matrix_list = 4;</code>
        */
-      public com.hello.suripu.api.audio.MatrixProtos.Matrix getMatrixList(int index) {
+      public Matrix getMatrixList(int index) {
         if (matrixListBuilder_ == null) {
           return matrixList_.get(index);
         } else {
@@ -859,10 +859,10 @@ public final class MatrixProtos {
         }
       }
       /**
-       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       * <code>repeated .Matrix matrix_list = 4;</code>
        */
       public Builder setMatrixList(
-          int index, com.hello.suripu.api.audio.MatrixProtos.Matrix value) {
+          int index, Matrix value) {
         if (matrixListBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -876,10 +876,10 @@ public final class MatrixProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       * <code>repeated .Matrix matrix_list = 4;</code>
        */
       public Builder setMatrixList(
-          int index, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder builderForValue) {
+          int index, Matrix.Builder builderForValue) {
         if (matrixListBuilder_ == null) {
           ensureMatrixListIsMutable();
           matrixList_.set(index, builderForValue.build());
@@ -890,9 +890,9 @@ public final class MatrixProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       * <code>repeated .Matrix matrix_list = 4;</code>
        */
-      public Builder addMatrixList(com.hello.suripu.api.audio.MatrixProtos.Matrix value) {
+      public Builder addMatrixList(Matrix value) {
         if (matrixListBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -906,10 +906,10 @@ public final class MatrixProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       * <code>repeated .Matrix matrix_list = 4;</code>
        */
       public Builder addMatrixList(
-          int index, com.hello.suripu.api.audio.MatrixProtos.Matrix value) {
+          int index, Matrix value) {
         if (matrixListBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -923,10 +923,10 @@ public final class MatrixProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       * <code>repeated .Matrix matrix_list = 4;</code>
        */
       public Builder addMatrixList(
-          com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder builderForValue) {
+          Matrix.Builder builderForValue) {
         if (matrixListBuilder_ == null) {
           ensureMatrixListIsMutable();
           matrixList_.add(builderForValue.build());
@@ -937,10 +937,10 @@ public final class MatrixProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       * <code>repeated .Matrix matrix_list = 4;</code>
        */
       public Builder addMatrixList(
-          int index, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder builderForValue) {
+          int index, Matrix.Builder builderForValue) {
         if (matrixListBuilder_ == null) {
           ensureMatrixListIsMutable();
           matrixList_.add(index, builderForValue.build());
@@ -951,10 +951,10 @@ public final class MatrixProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       * <code>repeated .Matrix matrix_list = 4;</code>
        */
       public Builder addAllMatrixList(
-          java.lang.Iterable<? extends com.hello.suripu.api.audio.MatrixProtos.Matrix> values) {
+          Iterable<? extends Matrix> values) {
         if (matrixListBuilder_ == null) {
           ensureMatrixListIsMutable();
           super.addAll(values, matrixList_);
@@ -965,7 +965,7 @@ public final class MatrixProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       * <code>repeated .Matrix matrix_list = 4;</code>
        */
       public Builder clearMatrixList() {
         if (matrixListBuilder_ == null) {
@@ -978,7 +978,7 @@ public final class MatrixProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       * <code>repeated .Matrix matrix_list = 4;</code>
        */
       public Builder removeMatrixList(int index) {
         if (matrixListBuilder_ == null) {
@@ -991,16 +991,16 @@ public final class MatrixProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       * <code>repeated .Matrix matrix_list = 4;</code>
        */
-      public com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder getMatrixListBuilder(
+      public Matrix.Builder getMatrixListBuilder(
           int index) {
         return getMatrixListFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       * <code>repeated .Matrix matrix_list = 4;</code>
        */
-      public com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder getMatrixListOrBuilder(
+      public MatrixOrBuilder getMatrixListOrBuilder(
           int index) {
         if (matrixListBuilder_ == null) {
           return matrixList_.get(index);  } else {
@@ -1008,9 +1008,9 @@ public final class MatrixProtos {
         }
       }
       /**
-       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       * <code>repeated .Matrix matrix_list = 4;</code>
        */
-      public java.util.List<? extends com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder> 
+      public java.util.List<? extends MatrixOrBuilder>
            getMatrixListOrBuilderList() {
         if (matrixListBuilder_ != null) {
           return matrixListBuilder_.getMessageOrBuilderList();
@@ -1019,33 +1019,33 @@ public final class MatrixProtos {
         }
       }
       /**
-       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       * <code>repeated .Matrix matrix_list = 4;</code>
        */
-      public com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder addMatrixListBuilder() {
+      public Matrix.Builder addMatrixListBuilder() {
         return getMatrixListFieldBuilder().addBuilder(
-            com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance());
+            Matrix.getDefaultInstance());
       }
       /**
-       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       * <code>repeated .Matrix matrix_list = 4;</code>
        */
-      public com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder addMatrixListBuilder(
+      public Matrix.Builder addMatrixListBuilder(
           int index) {
         return getMatrixListFieldBuilder().addBuilder(
-            index, com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance());
+            index, Matrix.getDefaultInstance());
       }
       /**
-       * <code>repeated .hello.Matrix matrix_list = 4;</code>
+       * <code>repeated .Matrix matrix_list = 4;</code>
        */
-      public java.util.List<com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder> 
+      public java.util.List<Matrix.Builder>
            getMatrixListBuilderList() {
         return getMatrixListFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilder<
-          com.hello.suripu.api.audio.MatrixProtos.Matrix, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder, com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder> 
+          Matrix, Matrix.Builder, MatrixOrBuilder>
           getMatrixListFieldBuilder() {
         if (matrixListBuilder_ == null) {
           matrixListBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
-              com.hello.suripu.api.audio.MatrixProtos.Matrix, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder, com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder>(
+              Matrix, Matrix.Builder, MatrixOrBuilder>(
                   matrixList_,
                   ((bitField0_ & 0x00000008) == 0x00000008),
                   getParentForChildren(),
@@ -1055,7 +1055,7 @@ public final class MatrixProtos {
         return matrixListBuilder_;
       }
 
-      // @@protoc_insertion_point(builder_scope:hello.MatrixClientMessage)
+      // @@protoc_insertion_point(builder_scope:MatrixClientMessage)
     }
 
     static {
@@ -1063,7 +1063,7 @@ public final class MatrixProtos {
       defaultInstance.initFields();
     }
 
-    // @@protoc_insertion_point(class_scope:hello.MatrixClientMessage)
+    // @@protoc_insertion_point(class_scope:MatrixClientMessage)
   }
 
   public interface MatrixOrBuilder
@@ -1077,7 +1077,7 @@ public final class MatrixProtos {
     /**
      * <code>required string id = 1;</code>
      */
-    java.lang.String getId();
+    String getId();
     /**
      * <code>required string id = 1;</code>
      */
@@ -1104,21 +1104,21 @@ public final class MatrixProtos {
      */
     int getCols();
 
-    // required .hello.Matrix.DataType datatype = 4;
+    // required .Matrix.DataType datatype = 4;
     /**
-     * <code>required .hello.Matrix.DataType datatype = 4;</code>
+     * <code>required .Matrix.DataType datatype = 4;</code>
      */
     boolean hasDatatype();
     /**
-     * <code>required .hello.Matrix.DataType datatype = 4;</code>
+     * <code>required .Matrix.DataType datatype = 4;</code>
      */
-    com.hello.suripu.api.audio.MatrixProtos.Matrix.DataType getDatatype();
+    Matrix.DataType getDatatype();
 
     // repeated sint32 idata = 5;
     /**
      * <code>repeated sint32 idata = 5;</code>
      */
-    java.util.List<java.lang.Integer> getIdataList();
+    java.util.List<Integer> getIdataList();
     /**
      * <code>repeated sint32 idata = 5;</code>
      */
@@ -1132,7 +1132,7 @@ public final class MatrixProtos {
     /**
      * <code>repeated float fdata = 6;</code>
      */
-    java.util.List<java.lang.Float> getFdataList();
+    java.util.List<Float> getFdataList();
     /**
      * <code>repeated float fdata = 6;</code>
      */
@@ -1170,7 +1170,7 @@ public final class MatrixProtos {
     /**
      * <code>required string tags = 9;</code>
      */
-    java.lang.String getTags();
+    String getTags();
     /**
      * <code>required string tags = 9;</code>
      */
@@ -1185,7 +1185,7 @@ public final class MatrixProtos {
     /**
      * <code>required string source = 10;</code>
      */
-    java.lang.String getSource();
+    String getSource();
     /**
      * <code>required string source = 10;</code>
      */
@@ -1193,7 +1193,7 @@ public final class MatrixProtos {
         getSourceBytes();
   }
   /**
-   * Protobuf type {@code hello.Matrix}
+   * Protobuf type {@code Matrix}
    */
   public static final class Matrix extends
       com.google.protobuf.GeneratedMessage
@@ -1215,7 +1215,7 @@ public final class MatrixProtos {
     }
 
     private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @java.lang.Override
+    @Override
     public final com.google.protobuf.UnknownFieldSet
         getUnknownFields() {
       return this.unknownFields;
@@ -1260,7 +1260,7 @@ public final class MatrixProtos {
             }
             case 32: {
               int rawValue = input.readEnum();
-              com.hello.suripu.api.audio.MatrixProtos.Matrix.DataType value = com.hello.suripu.api.audio.MatrixProtos.Matrix.DataType.valueOf(rawValue);
+              DataType value = DataType.valueOf(rawValue);
               if (value == null) {
                 unknownFields.mergeVarintField(4, rawValue);
               } else {
@@ -1271,7 +1271,7 @@ public final class MatrixProtos {
             }
             case 40: {
               if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
-                idata_ = new java.util.ArrayList<java.lang.Integer>();
+                idata_ = new java.util.ArrayList<Integer>();
                 mutable_bitField0_ |= 0x00000010;
               }
               idata_.add(input.readSInt32());
@@ -1281,7 +1281,7 @@ public final class MatrixProtos {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
               if (!((mutable_bitField0_ & 0x00000010) == 0x00000010) && input.getBytesUntilLimit() > 0) {
-                idata_ = new java.util.ArrayList<java.lang.Integer>();
+                idata_ = new java.util.ArrayList<Integer>();
                 mutable_bitField0_ |= 0x00000010;
               }
               while (input.getBytesUntilLimit() > 0) {
@@ -1292,7 +1292,7 @@ public final class MatrixProtos {
             }
             case 53: {
               if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
-                fdata_ = new java.util.ArrayList<java.lang.Float>();
+                fdata_ = new java.util.ArrayList<Float>();
                 mutable_bitField0_ |= 0x00000020;
               }
               fdata_.add(input.readFloat());
@@ -1302,7 +1302,7 @@ public final class MatrixProtos {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
               if (!((mutable_bitField0_ & 0x00000020) == 0x00000020) && input.getBytesUntilLimit() > 0) {
-                fdata_ = new java.util.ArrayList<java.lang.Float>();
+                fdata_ = new java.util.ArrayList<Float>();
                 mutable_bitField0_ |= 0x00000020;
               }
               while (input.getBytesUntilLimit() > 0) {
@@ -1351,14 +1351,14 @@ public final class MatrixProtos {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.hello.suripu.api.audio.MatrixProtos.internal_static_hello_Matrix_descriptor;
+      return MatrixProtos.internal_static_Matrix_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+    protected FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.hello.suripu.api.audio.MatrixProtos.internal_static_hello_Matrix_fieldAccessorTable
+      return MatrixProtos.internal_static_Matrix_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.hello.suripu.api.audio.MatrixProtos.Matrix.class, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder.class);
+              Matrix.class, Builder.class);
     }
 
     public static com.google.protobuf.Parser<Matrix> PARSER =
@@ -1371,13 +1371,13 @@ public final class MatrixProtos {
       }
     };
 
-    @java.lang.Override
+    @Override
     public com.google.protobuf.Parser<Matrix> getParserForType() {
       return PARSER;
     }
 
     /**
-     * Protobuf enum {@code hello.Matrix.DataType}
+     * Protobuf enum {@code Matrix.DataType}
      */
     public enum DataType
         implements com.google.protobuf.ProtocolMessageEnum {
@@ -1433,7 +1433,7 @@ public final class MatrixProtos {
       }
       public static final com.google.protobuf.Descriptors.EnumDescriptor
           getDescriptor() {
-        return com.hello.suripu.api.audio.MatrixProtos.Matrix.getDescriptor().getEnumTypes().get(0);
+        return Matrix.getDescriptor().getEnumTypes().get(0);
       }
 
       private static final DataType[] VALUES = values();
@@ -1441,7 +1441,7 @@ public final class MatrixProtos {
       public static DataType valueOf(
           com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
         if (desc.getType() != getDescriptor()) {
-          throw new java.lang.IllegalArgumentException(
+          throw new IllegalArgumentException(
             "EnumValueDescriptor is not for this type.");
         }
         return VALUES[desc.getIndex()];
@@ -1455,13 +1455,13 @@ public final class MatrixProtos {
         this.value = value;
       }
 
-      // @@protoc_insertion_point(enum_scope:hello.Matrix.DataType)
+      // @@protoc_insertion_point(enum_scope:Matrix.DataType)
     }
 
     private int bitField0_;
     // required string id = 1;
     public static final int ID_FIELD_NUMBER = 1;
-    private java.lang.Object id_;
+    private Object id_;
     /**
      * <code>required string id = 1;</code>
      */
@@ -1471,14 +1471,14 @@ public final class MatrixProtos {
     /**
      * <code>required string id = 1;</code>
      */
-    public java.lang.String getId() {
-      java.lang.Object ref = id_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getId() {
+      Object ref = id_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
+        String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           id_ = s;
         }
@@ -1490,11 +1490,11 @@ public final class MatrixProtos {
      */
     public com.google.protobuf.ByteString
         getIdBytes() {
-      java.lang.Object ref = id_;
-      if (ref instanceof java.lang.String) {
+      Object ref = id_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         id_ = b;
         return b;
       } else {
@@ -1534,29 +1534,29 @@ public final class MatrixProtos {
       return cols_;
     }
 
-    // required .hello.Matrix.DataType datatype = 4;
+    // required .Matrix.DataType datatype = 4;
     public static final int DATATYPE_FIELD_NUMBER = 4;
-    private com.hello.suripu.api.audio.MatrixProtos.Matrix.DataType datatype_;
+    private DataType datatype_;
     /**
-     * <code>required .hello.Matrix.DataType datatype = 4;</code>
+     * <code>required .Matrix.DataType datatype = 4;</code>
      */
     public boolean hasDatatype() {
       return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
-     * <code>required .hello.Matrix.DataType datatype = 4;</code>
+     * <code>required .Matrix.DataType datatype = 4;</code>
      */
-    public com.hello.suripu.api.audio.MatrixProtos.Matrix.DataType getDatatype() {
+    public DataType getDatatype() {
       return datatype_;
     }
 
     // repeated sint32 idata = 5;
     public static final int IDATA_FIELD_NUMBER = 5;
-    private java.util.List<java.lang.Integer> idata_;
+    private java.util.List<Integer> idata_;
     /**
      * <code>repeated sint32 idata = 5;</code>
      */
-    public java.util.List<java.lang.Integer>
+    public java.util.List<Integer>
         getIdataList() {
       return idata_;
     }
@@ -1575,11 +1575,11 @@ public final class MatrixProtos {
 
     // repeated float fdata = 6;
     public static final int FDATA_FIELD_NUMBER = 6;
-    private java.util.List<java.lang.Float> fdata_;
+    private java.util.List<Float> fdata_;
     /**
      * <code>repeated float fdata = 6;</code>
      */
-    public java.util.List<java.lang.Float>
+    public java.util.List<Float>
         getFdataList() {
       return fdata_;
     }
@@ -1630,7 +1630,7 @@ public final class MatrixProtos {
 
     // required string tags = 9;
     public static final int TAGS_FIELD_NUMBER = 9;
-    private java.lang.Object tags_;
+    private Object tags_;
     /**
      * <code>required string tags = 9;</code>
      */
@@ -1640,14 +1640,14 @@ public final class MatrixProtos {
     /**
      * <code>required string tags = 9;</code>
      */
-    public java.lang.String getTags() {
-      java.lang.Object ref = tags_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getTags() {
+      Object ref = tags_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
+        String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           tags_ = s;
         }
@@ -1659,11 +1659,11 @@ public final class MatrixProtos {
      */
     public com.google.protobuf.ByteString
         getTagsBytes() {
-      java.lang.Object ref = tags_;
-      if (ref instanceof java.lang.String) {
+      Object ref = tags_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         tags_ = b;
         return b;
       } else {
@@ -1673,7 +1673,7 @@ public final class MatrixProtos {
 
     // required string source = 10;
     public static final int SOURCE_FIELD_NUMBER = 10;
-    private java.lang.Object source_;
+    private Object source_;
     /**
      * <code>required string source = 10;</code>
      */
@@ -1683,14 +1683,14 @@ public final class MatrixProtos {
     /**
      * <code>required string source = 10;</code>
      */
-    public java.lang.String getSource() {
-      java.lang.Object ref = source_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getSource() {
+      Object ref = source_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
+        String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           source_ = s;
         }
@@ -1702,11 +1702,11 @@ public final class MatrixProtos {
      */
     public com.google.protobuf.ByteString
         getSourceBytes() {
-      java.lang.Object ref = source_;
-      if (ref instanceof java.lang.String) {
+      Object ref = source_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         source_ = b;
         return b;
       } else {
@@ -1718,7 +1718,7 @@ public final class MatrixProtos {
       id_ = "";
       rows_ = 0;
       cols_ = 0;
-      datatype_ = com.hello.suripu.api.audio.MatrixProtos.Matrix.DataType.FLOAT;
+      datatype_ = DataType.FLOAT;
       idata_ = java.util.Collections.emptyList();
       fdata_ = java.util.Collections.emptyList();
       time1_ = 0L;
@@ -1862,59 +1862,59 @@ public final class MatrixProtos {
     }
 
     private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    protected java.lang.Object writeReplace()
+    @Override
+    protected Object writeReplace()
         throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
 
-    public static com.hello.suripu.api.audio.MatrixProtos.Matrix parseFrom(
+    public static Matrix parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static com.hello.suripu.api.audio.MatrixProtos.Matrix parseFrom(
+    public static Matrix parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static com.hello.suripu.api.audio.MatrixProtos.Matrix parseFrom(byte[] data)
+    public static Matrix parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static com.hello.suripu.api.audio.MatrixProtos.Matrix parseFrom(
+    public static Matrix parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static com.hello.suripu.api.audio.MatrixProtos.Matrix parseFrom(java.io.InputStream input)
+    public static Matrix parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static com.hello.suripu.api.audio.MatrixProtos.Matrix parseFrom(
+    public static Matrix parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseFrom(input, extensionRegistry);
     }
-    public static com.hello.suripu.api.audio.MatrixProtos.Matrix parseDelimitedFrom(java.io.InputStream input)
+    public static Matrix parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input);
     }
-    public static com.hello.suripu.api.audio.MatrixProtos.Matrix parseDelimitedFrom(
+    public static Matrix parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
-    public static com.hello.suripu.api.audio.MatrixProtos.Matrix parseFrom(
+    public static Matrix parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static com.hello.suripu.api.audio.MatrixProtos.Matrix parseFrom(
+    public static Matrix parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -1923,33 +1923,33 @@ public final class MatrixProtos {
 
     public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(com.hello.suripu.api.audio.MatrixProtos.Matrix prototype) {
+    public static Builder newBuilder(Matrix prototype) {
       return newBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() { return newBuilder(this); }
 
-    @java.lang.Override
+    @Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
     /**
-     * Protobuf type {@code hello.Matrix}
+     * Protobuf type {@code Matrix}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder {
+       implements MatrixOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return com.hello.suripu.api.audio.MatrixProtos.internal_static_hello_Matrix_descriptor;
+        return MatrixProtos.internal_static_Matrix_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      protected FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return com.hello.suripu.api.audio.MatrixProtos.internal_static_hello_Matrix_fieldAccessorTable
+        return MatrixProtos.internal_static_Matrix_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                com.hello.suripu.api.audio.MatrixProtos.Matrix.class, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder.class);
+                Matrix.class, Builder.class);
       }
 
       // Construct using com.hello.suripu.api.audio.MatrixProtos.Matrix.newBuilder()
@@ -1958,7 +1958,7 @@ public final class MatrixProtos {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
@@ -1978,7 +1978,7 @@ public final class MatrixProtos {
         bitField0_ = (bitField0_ & ~0x00000002);
         cols_ = 0;
         bitField0_ = (bitField0_ & ~0x00000004);
-        datatype_ = com.hello.suripu.api.audio.MatrixProtos.Matrix.DataType.FLOAT;
+        datatype_ = DataType.FLOAT;
         bitField0_ = (bitField0_ & ~0x00000008);
         idata_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -2001,23 +2001,23 @@ public final class MatrixProtos {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return com.hello.suripu.api.audio.MatrixProtos.internal_static_hello_Matrix_descriptor;
+        return MatrixProtos.internal_static_Matrix_descriptor;
       }
 
-      public com.hello.suripu.api.audio.MatrixProtos.Matrix getDefaultInstanceForType() {
-        return com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance();
+      public Matrix getDefaultInstanceForType() {
+        return Matrix.getDefaultInstance();
       }
 
-      public com.hello.suripu.api.audio.MatrixProtos.Matrix build() {
-        com.hello.suripu.api.audio.MatrixProtos.Matrix result = buildPartial();
+      public Matrix build() {
+        Matrix result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public com.hello.suripu.api.audio.MatrixProtos.Matrix buildPartial() {
-        com.hello.suripu.api.audio.MatrixProtos.Matrix result = new com.hello.suripu.api.audio.MatrixProtos.Matrix(this);
+      public Matrix buildPartial() {
+        Matrix result = new Matrix(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2068,16 +2068,16 @@ public final class MatrixProtos {
       }
 
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof com.hello.suripu.api.audio.MatrixProtos.Matrix) {
-          return mergeFrom((com.hello.suripu.api.audio.MatrixProtos.Matrix)other);
+        if (other instanceof Matrix) {
+          return mergeFrom((Matrix)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(com.hello.suripu.api.audio.MatrixProtos.Matrix other) {
-        if (other == com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance()) return this;
+      public Builder mergeFrom(Matrix other) {
+        if (other == Matrix.getDefaultInstance()) return this;
         if (other.hasId()) {
           bitField0_ |= 0x00000001;
           id_ = other.id_;
@@ -2172,11 +2172,11 @@ public final class MatrixProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.hello.suripu.api.audio.MatrixProtos.Matrix parsedMessage = null;
+        Matrix parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.hello.suripu.api.audio.MatrixProtos.Matrix) e.getUnfinishedMessage();
+          parsedMessage = (Matrix) e.getUnfinishedMessage();
           throw e;
         } finally {
           if (parsedMessage != null) {
@@ -2188,7 +2188,7 @@ public final class MatrixProtos {
       private int bitField0_;
 
       // required string id = 1;
-      private java.lang.Object id_ = "";
+      private Object id_ = "";
       /**
        * <code>required string id = 1;</code>
        */
@@ -2198,15 +2198,15 @@ public final class MatrixProtos {
       /**
        * <code>required string id = 1;</code>
        */
-      public java.lang.String getId() {
-        java.lang.Object ref = id_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+      public String getId() {
+        Object ref = id_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           id_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
@@ -2214,11 +2214,11 @@ public final class MatrixProtos {
        */
       public com.google.protobuf.ByteString
           getIdBytes() {
-        java.lang.Object ref = id_;
+        Object ref = id_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           id_ = b;
           return b;
         } else {
@@ -2229,7 +2229,7 @@ public final class MatrixProtos {
        * <code>required string id = 1;</code>
        */
       public Builder setId(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -2327,24 +2327,24 @@ public final class MatrixProtos {
         return this;
       }
 
-      // required .hello.Matrix.DataType datatype = 4;
-      private com.hello.suripu.api.audio.MatrixProtos.Matrix.DataType datatype_ = com.hello.suripu.api.audio.MatrixProtos.Matrix.DataType.FLOAT;
+      // required .Matrix.DataType datatype = 4;
+      private DataType datatype_ = DataType.FLOAT;
       /**
-       * <code>required .hello.Matrix.DataType datatype = 4;</code>
+       * <code>required .Matrix.DataType datatype = 4;</code>
        */
       public boolean hasDatatype() {
         return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
-       * <code>required .hello.Matrix.DataType datatype = 4;</code>
+       * <code>required .Matrix.DataType datatype = 4;</code>
        */
-      public com.hello.suripu.api.audio.MatrixProtos.Matrix.DataType getDatatype() {
+      public DataType getDatatype() {
         return datatype_;
       }
       /**
-       * <code>required .hello.Matrix.DataType datatype = 4;</code>
+       * <code>required .Matrix.DataType datatype = 4;</code>
        */
-      public Builder setDatatype(com.hello.suripu.api.audio.MatrixProtos.Matrix.DataType value) {
+      public Builder setDatatype(DataType value) {
         if (value == null) {
           throw new NullPointerException();
         }
@@ -2354,27 +2354,27 @@ public final class MatrixProtos {
         return this;
       }
       /**
-       * <code>required .hello.Matrix.DataType datatype = 4;</code>
+       * <code>required .Matrix.DataType datatype = 4;</code>
        */
       public Builder clearDatatype() {
         bitField0_ = (bitField0_ & ~0x00000008);
-        datatype_ = com.hello.suripu.api.audio.MatrixProtos.Matrix.DataType.FLOAT;
+        datatype_ = DataType.FLOAT;
         onChanged();
         return this;
       }
 
       // repeated sint32 idata = 5;
-      private java.util.List<java.lang.Integer> idata_ = java.util.Collections.emptyList();
+      private java.util.List<Integer> idata_ = java.util.Collections.emptyList();
       private void ensureIdataIsMutable() {
         if (!((bitField0_ & 0x00000010) == 0x00000010)) {
-          idata_ = new java.util.ArrayList<java.lang.Integer>(idata_);
+          idata_ = new java.util.ArrayList<Integer>(idata_);
           bitField0_ |= 0x00000010;
          }
       }
       /**
        * <code>repeated sint32 idata = 5;</code>
        */
-      public java.util.List<java.lang.Integer>
+      public java.util.List<Integer>
           getIdataList() {
         return java.util.Collections.unmodifiableList(idata_);
       }
@@ -2413,7 +2413,7 @@ public final class MatrixProtos {
        * <code>repeated sint32 idata = 5;</code>
        */
       public Builder addAllIdata(
-          java.lang.Iterable<? extends java.lang.Integer> values) {
+          Iterable<? extends Integer> values) {
         ensureIdataIsMutable();
         super.addAll(values, idata_);
         onChanged();
@@ -2430,17 +2430,17 @@ public final class MatrixProtos {
       }
 
       // repeated float fdata = 6;
-      private java.util.List<java.lang.Float> fdata_ = java.util.Collections.emptyList();
+      private java.util.List<Float> fdata_ = java.util.Collections.emptyList();
       private void ensureFdataIsMutable() {
         if (!((bitField0_ & 0x00000020) == 0x00000020)) {
-          fdata_ = new java.util.ArrayList<java.lang.Float>(fdata_);
+          fdata_ = new java.util.ArrayList<Float>(fdata_);
           bitField0_ |= 0x00000020;
          }
       }
       /**
        * <code>repeated float fdata = 6;</code>
        */
-      public java.util.List<java.lang.Float>
+      public java.util.List<Float>
           getFdataList() {
         return java.util.Collections.unmodifiableList(fdata_);
       }
@@ -2479,7 +2479,7 @@ public final class MatrixProtos {
        * <code>repeated float fdata = 6;</code>
        */
       public Builder addAllFdata(
-          java.lang.Iterable<? extends java.lang.Float> values) {
+          Iterable<? extends Float> values) {
         ensureFdataIsMutable();
         super.addAll(values, fdata_);
         onChanged();
@@ -2562,7 +2562,7 @@ public final class MatrixProtos {
       }
 
       // required string tags = 9;
-      private java.lang.Object tags_ = "";
+      private Object tags_ = "";
       /**
        * <code>required string tags = 9;</code>
        */
@@ -2572,15 +2572,15 @@ public final class MatrixProtos {
       /**
        * <code>required string tags = 9;</code>
        */
-      public java.lang.String getTags() {
-        java.lang.Object ref = tags_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+      public String getTags() {
+        Object ref = tags_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           tags_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
@@ -2588,11 +2588,11 @@ public final class MatrixProtos {
        */
       public com.google.protobuf.ByteString
           getTagsBytes() {
-        java.lang.Object ref = tags_;
+        Object ref = tags_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           tags_ = b;
           return b;
         } else {
@@ -2603,7 +2603,7 @@ public final class MatrixProtos {
        * <code>required string tags = 9;</code>
        */
       public Builder setTags(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -2636,7 +2636,7 @@ public final class MatrixProtos {
       }
 
       // required string source = 10;
-      private java.lang.Object source_ = "";
+      private Object source_ = "";
       /**
        * <code>required string source = 10;</code>
        */
@@ -2646,15 +2646,15 @@ public final class MatrixProtos {
       /**
        * <code>required string source = 10;</code>
        */
-      public java.lang.String getSource() {
-        java.lang.Object ref = source_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+      public String getSource() {
+        Object ref = source_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           source_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
@@ -2662,11 +2662,11 @@ public final class MatrixProtos {
        */
       public com.google.protobuf.ByteString
           getSourceBytes() {
-        java.lang.Object ref = source_;
+        Object ref = source_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           source_ = b;
           return b;
         } else {
@@ -2677,7 +2677,7 @@ public final class MatrixProtos {
        * <code>required string source = 10;</code>
        */
       public Builder setSource(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -2709,7 +2709,7 @@ public final class MatrixProtos {
         return this;
       }
 
-      // @@protoc_insertion_point(builder_scope:hello.Matrix)
+      // @@protoc_insertion_point(builder_scope:Matrix)
     }
 
     static {
@@ -2717,19 +2717,19 @@ public final class MatrixProtos {
       defaultInstance.initFields();
     }
 
-    // @@protoc_insertion_point(class_scope:hello.Matrix)
+    // @@protoc_insertion_point(class_scope:Matrix)
   }
 
   private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_hello_MatrixClientMessage_descriptor;
+    internal_static_MatrixClientMessage_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_hello_MatrixClientMessage_fieldAccessorTable;
+      internal_static_MatrixClientMessage_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_hello_Matrix_descriptor;
+    internal_static_Matrix_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_hello_Matrix_fieldAccessorTable;
+      internal_static_Matrix_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -2738,36 +2738,35 @@ public final class MatrixProtos {
   private static com.google.protobuf.Descriptors.FileDescriptor
       descriptor;
   static {
-    java.lang.String[] descriptorData = {
-      "\n\014matrix.proto\022\005hello\"\200\001\n\023MatrixClientMe" +
-      "ssage\022\013\n\003mac\030\001 \001(\014\022\021\n\tunix_time\030\002 \001(\005\022%\n" +
-      "\016matrix_payload\030\003 \001(\0132\r.hello.Matrix\022\"\n\013" +
-      "matrix_list\030\004 \003(\0132\r.hello.Matrix\"\324\001\n\006Mat" +
-      "rix\022\n\n\002id\030\001 \002(\t\022\014\n\004rows\030\002 \002(\005\022\014\n\004cols\030\003 " +
-      "\002(\005\022(\n\010datatype\030\004 \002(\0162\026.hello.Matrix.Dat" +
-      "aType\022\r\n\005idata\030\005 \003(\021\022\r\n\005fdata\030\006 \003(\002\022\r\n\005t" +
-      "ime1\030\007 \002(\003\022\r\n\005time2\030\010 \002(\003\022\014\n\004tags\030\t \002(\t\022" +
-      "\016\n\006source\030\n \002(\t\"\036\n\010DataType\022\t\n\005FLOAT\020\000\022\007" +
-      "\n\003INT\020\001B*\n\032com.hello.suripu.api.audioB\014M",
-      "atrixProtos"
+    String[] descriptorData = {
+      "\n\014matrix.proto\"t\n\023MatrixClientMessage\022\013\n" +
+      "\003mac\030\001 \001(\014\022\021\n\tunix_time\030\002 \001(\005\022\037\n\016matrix_" +
+      "payload\030\003 \001(\0132\007.Matrix\022\034\n\013matrix_list\030\004 " +
+      "\003(\0132\007.Matrix\"\316\001\n\006Matrix\022\n\n\002id\030\001 \002(\t\022\014\n\004r" +
+      "ows\030\002 \002(\005\022\014\n\004cols\030\003 \002(\005\022\"\n\010datatype\030\004 \002(" +
+      "\0162\020.Matrix.DataType\022\r\n\005idata\030\005 \003(\021\022\r\n\005fd" +
+      "ata\030\006 \003(\002\022\r\n\005time1\030\007 \002(\003\022\r\n\005time2\030\010 \002(\003\022" +
+      "\014\n\004tags\030\t \002(\t\022\016\n\006source\030\n \002(\t\"\036\n\010DataTyp" +
+      "e\022\t\n\005FLOAT\020\000\022\007\n\003INT\020\001B*\n\032com.hello.surip" +
+      "u.api.audioB\014MatrixProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
         public com.google.protobuf.ExtensionRegistry assignDescriptors(
             com.google.protobuf.Descriptors.FileDescriptor root) {
           descriptor = root;
-          internal_static_hello_MatrixClientMessage_descriptor =
+          internal_static_MatrixClientMessage_descriptor =
             getDescriptor().getMessageTypes().get(0);
-          internal_static_hello_MatrixClientMessage_fieldAccessorTable = new
+          internal_static_MatrixClientMessage_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_hello_MatrixClientMessage_descriptor,
-              new java.lang.String[] { "Mac", "UnixTime", "MatrixPayload", "MatrixList", });
-          internal_static_hello_Matrix_descriptor =
+              internal_static_MatrixClientMessage_descriptor,
+              new String[] { "Mac", "UnixTime", "MatrixPayload", "MatrixList", });
+          internal_static_Matrix_descriptor =
             getDescriptor().getMessageTypes().get(1);
-          internal_static_hello_Matrix_fieldAccessorTable = new
+          internal_static_Matrix_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_hello_Matrix_descriptor,
-              new java.lang.String[] { "Id", "Rows", "Cols", "Datatype", "Idata", "Fdata", "Time1", "Time2", "Tags", "Source", });
+              internal_static_Matrix_descriptor,
+              new String[] { "Id", "Rows", "Cols", "Datatype", "Idata", "Fdata", "Time1", "Time2", "Tags", "Source", });
           return null;
         }
       };
