@@ -7,7 +7,7 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorC
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.hello.suripu.api.input.InputProtos;
+import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
@@ -57,7 +57,7 @@ public class AlarmRecordProcessor implements IRecordProcessor {
 
         for (final Record record : records) {
             try {
-                final InputProtos.periodic_data data = InputProtos.periodic_data.parseFrom(record.getData().array());
+                final DataInputProtos.periodic_data data = DataInputProtos.periodic_data.parseFrom(record.getData().array());
 
                 // get MAC address of morpheus
                 final byte[] mac = Arrays.copyOf(data.getMac().toByteArray(), 6);

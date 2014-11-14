@@ -1,7 +1,7 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
-import com.hello.suripu.api.input.InputProtos;
+import com.hello.suripu.api.input.DataInputProtos.periodic_data;
 import org.apache.commons.codec.binary.Hex;
 
 /**
@@ -19,7 +19,7 @@ public class DeviceIdUtil {
     }
 
 
-    public static Optional<String> getMorpheusId(final InputProtos.periodic_data morpheusData){
+    public static Optional<String> getMorpheusId(final periodic_data morpheusData){
         if(!morpheusData.hasDeviceId()){
             if(!morpheusData.hasMac()){
                 return Optional.absent();
