@@ -31,6 +31,7 @@ import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.core.util.DeviceIdUtil;
 import com.hello.suripu.service.SignedMessage;
+import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -39,6 +40,7 @@ import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -50,6 +52,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +61,10 @@ import java.util.regex.Pattern;
 
 
 @Path("/in")
-public class ReceiveResource {
+public class ReceiveResource extends BaseResource {
+
+    @Inject
+    RolloutClient featureFlipper;
 
     private static final Pattern PG_UNIQ_PATTERN = Pattern.compile("ERROR: duplicate key value violates unique constraint \"(\\w+)\"");
     private static final Logger LOGGER = LoggerFactory.getLogger(ReceiveResource.class);
@@ -356,13 +362,15 @@ public class ReceiveResource {
 
         responseBuilder.setRoomConditions(OutputProtos.SyncResponse.RoomConditions.valueOf(this.roomConditions));
 
-        final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdateContent(data.getDeviceId(), data.getFirmwareVersion());
-        if(!fileDownloadList.isEmpty()) {
-            LOGGER.debug("Adding {} files to Files to Download list", fileDownloadList.size());
-            responseBuilder.addAllFiles(fileDownloadList);
+        final String firmwareFeature = String.format("firmware_%d", data.getFirmwareVersion());
+        if(featureFlipper.deviceFeatureActive(firmwareFeature, data.getDeviceId(), new ArrayList<String>())) {
+            LOGGER.debug("Feature is active!");
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdateContent(data.getDeviceId(), data.getFirmwareVersion());
+            if(!fileDownloadList.isEmpty()) {
+                LOGGER.debug("Adding {} files to Files to Download list", fileDownloadList.size());
+                responseBuilder.addAllFiles(fileDownloadList);
+            }
         }
-
-
         final OutputProtos.SyncResponse.AudioControl.Builder audioControl = OutputProtos.SyncResponse.AudioControl
                 .newBuilder()
                 .setAudioCaptureAction(OutputProtos.SyncResponse.AudioControl.AudioCaptureAction.OFF);

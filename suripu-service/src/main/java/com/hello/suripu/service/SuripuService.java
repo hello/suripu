@@ -43,6 +43,7 @@ import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
 import com.hello.suripu.service.cli.CreateKeyStoreDynamoDBTable;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
+import com.hello.suripu.service.modules.RolloutModule;
 import com.hello.suripu.service.resources.AudioResource;
 import com.hello.suripu.service.resources.DownloadResource;
 import com.hello.suripu.service.resources.LogsResource;
@@ -111,6 +112,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
 
         final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
+        dynamoDBClient.setEndpoint(configuration.getDynamoDBConfiguration().getEndpoint());
         final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);
         final String bucketName = configuration.getAudioBucketName();
 
@@ -167,6 +169,10 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final DataLogger activityLogger = kinesisLoggerFactory.get(QueueName.ACTIVITY_STREAM);
         environment.addProvider(new OAuthProvider(new OAuthAuthenticator(tokenStore), "protected-resources", activityLogger));
 
+
+        final RolloutModule module = new RolloutModule(dynamoDBClient, 10, "namespace1");
+        ObjectGraphRoot.getInstance().init(module);
+
         final ReceiveResource receiveResource = new ReceiveResource(deviceDataDAO, deviceDAO,
                 publicKeyStore,
                 kinesisLoggerFactory,
@@ -175,6 +181,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 configuration.getRoomConditions(),
                 firmwareUpdateStore
         );
+
+
 
         environment.addResource(receiveResource);
         environment.addResource(new RegisterResource(deviceDAO, tokenStore, kinesisLoggerFactory, configuration.getDebug()));

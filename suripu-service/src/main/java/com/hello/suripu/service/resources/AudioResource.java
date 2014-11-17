@@ -3,6 +3,7 @@ package com.hello.suripu.service.resources;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.google.common.base.Optional;
+import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.audio.MatrixProtos;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.util.DeviceIdUtil;
@@ -12,9 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -81,12 +82,13 @@ public class AudioResource {
 
 
     @POST
-    @Path("/{device_id}")
-    public void getAudio(@Context HttpServletRequest request, byte[] body, @PathParam("device_id") String deviceId) {
+    @Path("/audio")
+    @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
+    public void getAudio(@Context HttpServletRequest request, byte[] body) {
 
         final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(body);
         final String now = DateTime.now().toString();
-        final String objectName = String.format("%s_%s", deviceId, now);
+        final String objectName = String.format("%s_%s", "something", now);
         final ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentLength(body.length);
         s3Client.putObject(audioBucketName, objectName, byteArrayInputStream, metadata);
