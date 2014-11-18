@@ -20,6 +20,8 @@ import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
@@ -38,6 +40,8 @@ import static org.mockito.Mockito.when;
  * Created by pangwu on 9/24/14.
  */
 public class RingProcessorMultiUserTest {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(RingProcessorMultiUserTest.class);
 
     private final RingTimeDAODynamoDB ringTimeDAODynamoDB = mock(RingTimeDAODynamoDB.class);
     private final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB = mock(MergedAlarmInfoDynamoDB.class);
@@ -67,7 +71,7 @@ public class RingProcessorMultiUserTest {
                 motions.add(new TrackerMotion(1L, 1L, 1L, timestamp, (int)value, offsetMillis));
             }
         }catch (IOException ioe){
-            ioe.printStackTrace();
+            LOGGER.error("Failed parsing CSV");
         }
 
         final DateTime alarmDeadlineLocalUTC = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.UTC);
@@ -142,7 +146,7 @@ public class RingProcessorMultiUserTest {
                 motions1.add(new TrackerMotion(1L, 1L, 1L, timestamp, (int)value, offsetMillis));
             }
         }catch (IOException ioe){
-            ioe.printStackTrace();
+            LOGGER.error("Failed parsing CSV");
         }
 
         final DateTime dataCollectionTimeLocalUTC = new DateTime(2014, 9, 23, 8, 21, 0, 0, DateTimeZone.UTC);
@@ -350,7 +354,7 @@ public class RingProcessorMultiUserTest {
                 motions1.add(new TrackerMotion(1L, 1L, 1L, timestamp, (int)value, offsetMillis));
             }
         }catch (IOException ioe){
-            ioe.printStackTrace();
+            LOGGER.error("Failed parsing CSV");
         }
 
         final DateTime dataCollectionTimeLocalUTC = new DateTime(2014, 9, 23, 8, 21, DateTimeZone.UTC);

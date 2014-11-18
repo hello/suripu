@@ -3,6 +3,8 @@ package com.hello.suripu.core.models;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.common.primitives.UnsignedInts;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -16,6 +18,8 @@ import static org.hamcrest.Matchers.is;
  * If Jackson change the AES payload format these tests should fail.
  */
 public class TrackerMotionUtilTest {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(TrackerMotionUtilTest.class);
 
     @Test
     public void testRawToMilliG(){
@@ -50,7 +54,7 @@ public class TrackerMotionUtilTest {
             assertThat(actual, is(expected));
 
         } catch (IllegalArgumentException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
     }
 
@@ -71,7 +75,7 @@ public class TrackerMotionUtilTest {
             expectedLong = UnsignedInts.toLong(littleEndianDataInputStream.readInt());
             littleEndianDataInputStream.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
 
 
@@ -81,7 +85,7 @@ public class TrackerMotionUtilTest {
 
 
         } catch (IllegalArgumentException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
 
         assertThat(actual, is(expectedLong));

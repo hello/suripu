@@ -16,16 +16,19 @@ import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.EventDAO;
+import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.PublicKeyStoreDynamoDB;
 import com.hello.suripu.core.db.ScoreDAO;
+import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.firmware.FirmwareUpdateDAO;
 import com.hello.suripu.core.firmware.FirmwareUpdateStore;
+import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.health.DynamoDbHealthCheck;
 import com.hello.suripu.core.health.KinesisHealthCheck;
 import com.hello.suripu.core.logging.DataLogger;
@@ -43,6 +46,7 @@ import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
 import com.hello.suripu.service.cli.CreateKeyStoreDynamoDBTable;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
+import com.hello.suripu.service.modules.RolloutModule;
 import com.hello.suripu.service.resources.AudioResource;
 import com.hello.suripu.service.resources.DownloadResource;
 import com.hello.suripu.service.resources.LogsResource;
@@ -111,6 +115,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
 
         final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
+        dynamoDBClient.setEndpoint(configuration.getDynamoDBConfiguration().getEndpoint());
         final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);
         final String bucketName = configuration.getAudioBucketName();
 
@@ -166,6 +171,13 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
         final DataLogger activityLogger = kinesisLoggerFactory.get(QueueName.ACTIVITY_STREAM);
         environment.addProvider(new OAuthProvider(new OAuthAuthenticator(tokenStore), "protected-resources", activityLogger));
+        dynamoDBClient.setEndpoint(configuration.getDynamoDBConfiguration().getEndpoint());
+        final TeamStore teamStore = new TeamStore(dynamoDBClient, "teams");
+        final GroupFlipper groupFlipper = new GroupFlipper(teamStore, 10);
+
+        final FeatureStore featureStore = new FeatureStore(dynamoDBClient, "features", "namespace1");
+        final RolloutModule module = new RolloutModule(featureStore, 10);
+        ObjectGraphRoot.getInstance().init(module);
 
         final ReceiveResource receiveResource = new ReceiveResource(deviceDataDAO, deviceDAO,
                 publicKeyStore,
@@ -173,8 +185,11 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 mergedAlarmInfoDynamoDB,
                 configuration.getDebug(),
                 configuration.getRoomConditions(),
-                firmwareUpdateStore
+                firmwareUpdateStore,
+                groupFlipper
         );
+
+
 
         environment.addResource(receiveResource);
         environment.addResource(new RegisterResource(deviceDAO, tokenStore, kinesisLoggerFactory, configuration.getDebug()));

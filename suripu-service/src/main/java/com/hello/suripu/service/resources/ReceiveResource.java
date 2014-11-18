@@ -17,6 +17,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.firmware.FirmwareUpdateStore;
+import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.models.AlarmInfo;
@@ -31,6 +32,7 @@ import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.core.util.DeviceIdUtil;
 import com.hello.suripu.service.SignedMessage;
+import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -39,6 +41,7 @@ import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -58,7 +61,10 @@ import java.util.regex.Pattern;
 
 
 @Path("/in")
-public class ReceiveResource {
+public class ReceiveResource extends BaseResource {
+
+    @Inject
+    RolloutClient featureFlipper;
 
     private static final Pattern PG_UNIQ_PATTERN = Pattern.compile("ERROR: duplicate key value violates unique constraint \"(\\w+)\"");
     private static final Logger LOGGER = LoggerFactory.getLogger(ReceiveResource.class);
@@ -74,6 +80,7 @@ public class ReceiveResource {
     private final Integer roomConditions;
 
     private final FirmwareUpdateStore firmwareUpdateStore;
+    private final GroupFlipper groupFlipper;
 
     @Context
     HttpServletRequest request;
@@ -88,7 +95,8 @@ public class ReceiveResource {
                            final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
                            final Boolean debug,
                            final Integer roomConditions,
-                           final FirmwareUpdateStore firmwareUpdateStore) {
+                           final FirmwareUpdateStore firmwareUpdateStore,
+                           final GroupFlipper groupFlipper) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
 
@@ -108,6 +116,7 @@ public class ReceiveResource {
 
         cache = CacheBuilder.newBuilder().build(loader);
         this.firmwareUpdateStore = firmwareUpdateStore;
+        this.groupFlipper = groupFlipper;
     }
 
     @POST
@@ -356,12 +365,18 @@ public class ReceiveResource {
 
         responseBuilder.setRoomConditions(OutputProtos.SyncResponse.RoomConditions.valueOf(this.roomConditions));
 
+        final String firmwareFeature = String.format("firmware_release", data.getFirmwareVersion());
+        final List<String> groups = groupFlipper.getGroups(data.getDeviceId());
+        LOGGER.debug("Groups for {} = {}", data.getDeviceId(), groups);
+        if(featureFlipper.deviceFeatureActive(firmwareFeature, data.getDeviceId(), groups)) {
+            LOGGER.debug("Feature is active!");
+        }
+
         final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdateContent(data.getDeviceId(), data.getFirmwareVersion());
         if(!fileDownloadList.isEmpty()) {
             LOGGER.debug("Adding {} files to Files to Download list", fileDownloadList.size());
             responseBuilder.addAllFiles(fileDownloadList);
         }
-
 
         final OutputProtos.SyncResponse.AudioControl.Builder audioControl = OutputProtos.SyncResponse.AudioControl
                 .newBuilder()

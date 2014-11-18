@@ -14,6 +14,10 @@ public interface FirmwareUpdateDAO {
     public ImmutableList<FirmwareFile> getFiles(@Bind("device_id") String deviceId, @Bind("current_firmware_version") Integer currentFirmwareVersion);
 
 
+    @SqlQuery("SELECT * FROM firmware_updates WHERE firmware_version > :current_firmware_version ORDER BY reset_application_processor ASC;")
+    public ImmutableList<FirmwareFile> getFilesForFirmwareVersion(@Bind("current_firmware_version") Integer currentFirmwareVersion);
+
+
     @SqlUpdate("INSERT INTO firmware_updates(device_id, firmware_version, s3_bucket, s3_key, copy_to_serial_flash, reset_network_processor, reset_application_processor, " +
             "serial_flash_filename, serial_flash_path, sd_card_filename, sd_card_path, sha1) " +
             "VALUES(:device_id, :firmware_version, :s3_bucket, :s3_key, :copy_to_serial_flash, :reset_network_processor, :reset_application_processor, " +

@@ -19,6 +19,8 @@ import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.WebApplicationException;
 import java.util.ArrayList;
@@ -36,6 +38,7 @@ import static org.mockito.Mockito.when;
  */
 public class AlarmResourceTestIT {
 
+    private final static Logger LOGGER = LoggerFactory.getLogger(AlarmResourceTestIT.class);
 
     private BasicAWSCredentials awsCredentials;
     private AmazonDynamoDBClient amazonDynamoDBClient;
@@ -95,7 +98,7 @@ public class AlarmResourceTestIT {
 
 
         }catch (ResourceInUseException rie){
-            rie.printStackTrace();
+            LOGGER.warn("Can not create existing table");
         }
 
 
@@ -178,7 +181,7 @@ public class AlarmResourceTestIT {
 
 
         }catch (ResourceNotFoundException ex){
-            ex.printStackTrace();
+            LOGGER.warn("Can not delete non existing table");
         }
 
         try {
@@ -187,7 +190,7 @@ public class AlarmResourceTestIT {
 
 
         }catch (ResourceNotFoundException ex){
-            ex.printStackTrace();
+            LOGGER.warn("Can not delete non existing table");
         }
 
         this.validList.clear();

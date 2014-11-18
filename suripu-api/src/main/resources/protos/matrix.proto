@@ -1,7 +1,7 @@
 package hello;
 
 option java_package = "com.hello.suripu.api.audio";
-option java_outer_classname = "MatrixProtos";
+option java_outer_classname = "Audio";
 // option optimize_for = SPEED;
 
 message MatrixClientMessage {
@@ -27,4 +27,12 @@ message Matrix {
   required int64 time2 = 8;
   required string tags = 9;
   required string source = 10;
+}
+
+message FileMessage {
+  optional bytes mac = 1; //device mac address (really device ID)
+  optional int32 unix_time = 2; //time in which transfer took place
+  optional bytes data = 3; //file data
+  optional int64 position = 4; //position in which you wish to start in the file use this to resume a file transfer
+  optional string fileid = 5; //some sort of unique identifier of the file (name + device + time or something)
 }
