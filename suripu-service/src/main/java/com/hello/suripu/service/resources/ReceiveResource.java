@@ -365,16 +365,19 @@ public class ReceiveResource extends BaseResource {
 
         responseBuilder.setRoomConditions(OutputProtos.SyncResponse.RoomConditions.valueOf(this.roomConditions));
 
-        final String firmwareFeature = String.format("firmware_%d", data.getFirmwareVersion());
+        final String firmwareFeature = String.format("firmware_release", data.getFirmwareVersion());
         final List<String> groups = groupFlipper.getGroups(data.getDeviceId());
+        LOGGER.debug("Groups for {} = {}", data.getDeviceId(), groups);
         if(featureFlipper.deviceFeatureActive(firmwareFeature, data.getDeviceId(), groups)) {
             LOGGER.debug("Feature is active!");
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(data.getFirmwareVersion());
-            if(!fileDownloadList.isEmpty()) {
-                LOGGER.debug("Adding {} files to Files to Download list", fileDownloadList.size());
-                responseBuilder.addAllFiles(fileDownloadList);
-            }
         }
+
+        final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdateContent(data.getDeviceId(), data.getFirmwareVersion());
+        if(!fileDownloadList.isEmpty()) {
+            LOGGER.debug("Adding {} files to Files to Download list", fileDownloadList.size());
+            responseBuilder.addAllFiles(fileDownloadList);
+        }
+
         final OutputProtos.SyncResponse.AudioControl.Builder audioControl = OutputProtos.SyncResponse.AudioControl
                 .newBuilder()
                 .setAudioCaptureAction(OutputProtos.SyncResponse.AudioControl.AudioCaptureAction.OFF);
