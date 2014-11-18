@@ -95,7 +95,7 @@ public class AudioResource {
         try {
             byteArrayInputStream.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("Failed saving to S3: {}", e.getMessage());
         }
     }
 }

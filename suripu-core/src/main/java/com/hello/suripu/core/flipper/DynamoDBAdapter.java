@@ -1,19 +1,12 @@
 package com.hello.suripu.core.flipper;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
-import com.amazonaws.services.dynamodbv2.model.Condition;
-import com.amazonaws.services.dynamodbv2.model.QueryRequest;
-import com.amazonaws.services.dynamodbv2.model.QueryResult;
-import com.amazonaws.services.dynamodbv2.model.ReturnConsumedCapacity;
 import com.google.common.collect.Sets;
+import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.models.Feature;
 import com.librato.rollout.RolloutAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -30,13 +23,11 @@ public class DynamoDBAdapter implements RolloutAdapter{
     private final AtomicReference<Map<String, Feature>> features = new AtomicReference<Map<String, Feature>>();
     private ScheduledFuture scheduledFuture;
     private final Integer pollingIntervalInSeconds;
-    private final AmazonDynamoDBClient client;
-    private final String namespace;
+    private final FeatureStore featureStore;
 
-    public DynamoDBAdapter(final AmazonDynamoDBClient client, final Integer pollingIntervalInSeconds, final String namespace) {
-        this.client = client;
+    public DynamoDBAdapter(final FeatureStore featureStore, final Integer pollingIntervalInSeconds) {
+        this.featureStore = featureStore;
         this.pollingIntervalInSeconds = pollingIntervalInSeconds;
-        this.namespace = namespace;
         start();
     }
 
@@ -46,7 +37,7 @@ public class DynamoDBAdapter implements RolloutAdapter{
         scheduledFuture = executorService.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                final Map<String, Feature> temp = getData();
+                final Map<String, Feature> temp = featureStore.getData();
                 features.set(temp);
             }
         } , pollingIntervalInSeconds, pollingIntervalInSeconds, TimeUnit.SECONDS);
@@ -54,7 +45,7 @@ public class DynamoDBAdapter implements RolloutAdapter{
 
 
     public void start() {
-        final Map<String, Feature> temp = getData();
+        final Map<String, Feature> temp = featureStore.getData();
         features.set(temp);
         LOGGER.info("Starting polling");
         startPolling();
@@ -65,43 +56,6 @@ public class DynamoDBAdapter implements RolloutAdapter{
         LOGGER.info("Stopped polling");
         executorService.shutdown();
         LOGGER.info("ThreadPool shutdown");
-    }
-
-    private Map<String, Feature> getData() {
-        LOGGER.trace("Calling getData");
-
-        final Map<String, Condition> conditions = new HashMap<>();
-        conditions.put("ns", new Condition()
-            .withComparisonOperator(ComparisonOperator.EQ)
-            .withAttributeValueList(new AttributeValue().withS(namespace)));
-        conditions.put("name", new Condition()
-            .withComparisonOperator(ComparisonOperator.BEGINS_WITH)
-            .withAttributeValueList(new AttributeValue().withS("o")));
-
-        final int queryLimit = 100;
-
-        final QueryRequest query = new QueryRequest("features")
-            .withKeyConditions(conditions)
-            .withLimit(queryLimit)
-            .withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
-
-
-        final QueryResult results = client.query(query);
-
-
-        final Map<String, Feature> finalMap = new HashMap<>();
-
-        for(final Map<String, AttributeValue> map : results.getItems()) {
-            final String name = map.get("name").getS();
-            final String value = map.get("value").getS();
-            try {
-                finalMap.put(name, Feature.convertToFeature(name, value));
-            } catch (RuntimeException e) {
-                LOGGER.error("Failed to parse feature: {} reason: {}", value, e.getMessage());
-            }
-        }
-
-        return finalMap;
     }
 
     @Override
@@ -158,7 +112,6 @@ public class DynamoDBAdapter implements RolloutAdapter{
         }
 
         // Next, check percentage
-
         if (hashId % 10 < f.percentage / 10) {
             LOGGER.trace("Included in percentage");
             return true;
@@ -166,11 +119,5 @@ public class DynamoDBAdapter implements RolloutAdapter{
 
         LOGGER.trace("Feature is NOT active");
         return false;
-    }
-
-    private class RolloutException extends RuntimeException {
-        public RolloutException(final String message) {
-            super(message);
-        }
     }
 }

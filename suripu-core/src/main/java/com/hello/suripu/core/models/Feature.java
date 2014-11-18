@@ -64,12 +64,18 @@ public class Feature {
         final Splitter splitter = Splitter.on("|");
         final String[] splitResult = Iterables.toArray(splitter.split(value), String.class);
         if (splitResult.length != 3) {
-            throw new RuntimeException("Invalid format for feature");
+            throw new FeatureException("Invalid format for feature");
         }
 
         final List<String> groups = Arrays.asList(splitResult[2].split(","));
         final List<String> userIds = Arrays.asList(splitResult[1].split(","));
         final int percentage = Integer.parseInt(splitResult[0]);
         return new Feature(featureName, userIds, groups, percentage);
+    }
+
+    public static class FeatureException extends RuntimeException {
+        public FeatureException(String msg) {
+            super(msg);
+        }
     }
 }

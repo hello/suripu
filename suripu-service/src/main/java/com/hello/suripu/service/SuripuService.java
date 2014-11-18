@@ -16,6 +16,7 @@ import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.EventDAO;
+import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.PublicKeyStoreDynamoDB;
@@ -174,7 +175,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final TeamStore teamStore = new TeamStore(dynamoDBClient, "teams");
         final GroupFlipper groupFlipper = new GroupFlipper(teamStore, 10);
 
-        final RolloutModule module = new RolloutModule(dynamoDBClient, 10, "namespace1");
+        final FeatureStore featureStore = new FeatureStore(dynamoDBClient, "features", "namespace1");
+        final RolloutModule module = new RolloutModule(featureStore, 10);
         ObjectGraphRoot.getInstance().init(module);
 
         final ReceiveResource receiveResource = new ReceiveResource(deviceDataDAO, deviceDAO,

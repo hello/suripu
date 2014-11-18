@@ -1,6 +1,6 @@
 package com.hello.suripu.service.modules;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.flipper.DynamoDBAdapter;
 import com.hello.suripu.service.resources.ReceiveResource;
 import com.librato.rollout.RolloutAdapter;
@@ -14,19 +14,17 @@ import javax.inject.Singleton;
         ReceiveResource.class
 })
 public class RolloutModule {
-    private final AmazonDynamoDBClient dynamoDB;
+    private final FeatureStore featureStore;
     private final Integer pollingIntervalInSeconds;
-    private final String namespace;
 
-    public RolloutModule(final AmazonDynamoDBClient dynamoDB, final Integer pollingIntervalInSeconds, final String namespace) {
-        this.dynamoDB = dynamoDB;
+    public RolloutModule(final FeatureStore featureStore, final Integer pollingIntervalInSeconds) {
+        this.featureStore = featureStore;
         this.pollingIntervalInSeconds = pollingIntervalInSeconds;
-        this.namespace = namespace;
     }
 
     @Provides @Singleton
     RolloutAdapter providesRolloutAdapter() {
-        return new DynamoDBAdapter(dynamoDB, pollingIntervalInSeconds, namespace);
+        return new DynamoDBAdapter(featureStore, pollingIntervalInSeconds);
     }
 
     @Provides @Singleton

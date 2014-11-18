@@ -32,7 +32,7 @@ public class FeatureStore {
         this.namespace = namespace;
     }
 
-    private Map<String, Feature> getData() {
+    public Map<String, Feature> getData() {
         LOGGER.trace("Calling getData");
 
         final Map<String, Condition> conditions = new HashMap<>();
@@ -43,7 +43,7 @@ public class FeatureStore {
                 .withComparisonOperator(ComparisonOperator.GT)
                 .withAttributeValueList(new AttributeValue().withS(" ")));
 
-        final int queryLimit = 100;
+        final int queryLimit = 100; //TODO: scan table instead?
 
         final QueryRequest query = new QueryRequest(tableName)
                 .withKeyConditions(conditions)
@@ -59,7 +59,11 @@ public class FeatureStore {
         for(final Map<String, AttributeValue> map : results.getItems()) {
             final String name = map.get("name").getS();
             final String value = map.get("value").getS();
-            finalMap.put(name, Feature.convertToFeature(name, value));
+            try {
+                finalMap.put(name, Feature.convertToFeature(name, value));
+            } catch (Feature.FeatureException e) {
+                LOGGER.error("Feature {} is not properly formatted: {}", name, e.getMessage());
+            }
         }
 
         return finalMap;

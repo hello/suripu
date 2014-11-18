@@ -66,7 +66,7 @@ def contains_same_keys(local_files, prod_files):
 def maven_clean_compile():
    print info("Running $mvn clean compile now. Might take a few seconds to complete")
    try:
-     mvn_str = subprocess.check_output(['mvn','clean','compile'])
+     mvn_str = subprocess.check_output(['mvn','clean','verify'])
      for line in mvn_str.split('\n'):
        if line.startswith("[INFO] suripu-"):
          print info(line.split("[INFO] ")[1])
