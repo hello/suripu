@@ -29,6 +29,10 @@ public class TeamStore {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TeamStore.class);
 
+    private final static String NAME_ATTRIBUTE_NAME = "name";
+    private final static String TYPE_ATTRIBUTE_NAME = "type";
+    private final static String MEMBERS_ATTRIBUTE_NAME = "type";
+
     public enum Type {
         DEVICES("devices"),
         USERS("users");
@@ -51,9 +55,9 @@ public class TeamStore {
     public void createTeam(final Team team, final Type type) {
 
         final Map<String, AttributeValue> item = new HashMap<>();
-        item.put("type", new AttributeValue().withS(type.toString()));
-        item.put("name", new AttributeValue().withS(team.name));
-        item.put("members", new AttributeValue().withSS(team.ids));
+        item.put(TYPE_ATTRIBUTE_NAME, new AttributeValue().withS(type.toString()));
+        item.put(NAME_ATTRIBUTE_NAME, new AttributeValue().withS(team.name));
+        item.put(MEMBERS_ATTRIBUTE_NAME, new AttributeValue().withSS(team.ids));
 
         final PutItemRequest putItemRequest = new PutItemRequest();
         putItemRequest.withTableName(tableName)
@@ -66,8 +70,8 @@ public class TeamStore {
     public Optional<Team> getTeam(final String teamName, final Type type) {
 
         final Map<String, AttributeValue> item = new HashMap<>();
-        item.put("type", new AttributeValue().withS(type.toString()));
-        item.put("name", new AttributeValue().withS(teamName));
+        item.put(TYPE_ATTRIBUTE_NAME, new AttributeValue().withS(type.toString()));
+        item.put(NAME_ATTRIBUTE_NAME, new AttributeValue().withS(teamName));
 
 
         final GetItemRequest getItemRequest = new GetItemRequest();
@@ -82,11 +86,11 @@ public class TeamStore {
     public List<Team> getTeams(final Type type) {
 
         final Map<String, Condition> conditions = new HashMap<>();
-        conditions.put("type", new Condition()
+        conditions.put(TYPE_ATTRIBUTE_NAME, new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
                 .withAttributeValueList(new AttributeValue().withS(type.toString())));
 
-        conditions.put("name", new Condition()
+        conditions.put(NAME_ATTRIBUTE_NAME, new Condition()
                 .withComparisonOperator(ComparisonOperator.GT)
                 .withAttributeValueList(new AttributeValue().withS(" ")));
 
@@ -121,8 +125,8 @@ public class TeamStore {
         final DeleteItemRequest deleteItemRequest = new DeleteItemRequest();
         deleteItemRequest.withTableName(tableName);
         final Map<String, AttributeValue> attributes = new HashMap<>();
-        attributes.put("type", new AttributeValue().withS(type.toString()));
-        attributes.put("name", new AttributeValue().withS(team.name));
+        attributes.put(TYPE_ATTRIBUTE_NAME, new AttributeValue().withS(type.toString()));
+        attributes.put(NAME_ATTRIBUTE_NAME, new AttributeValue().withS(team.name));
         deleteItemRequest.withKey(attributes);
 
         dynamoDB.deleteItem(deleteItemRequest);
@@ -136,13 +140,13 @@ public class TeamStore {
      * @return Optional of Team
      */
     private Optional<Team> makeTeam(Map<String, AttributeValue> attributes, Type type) {
-        if(!attributes.containsKey("name") || !attributes.containsKey("members")) {
+        if(!attributes.containsKey(NAME_ATTRIBUTE_NAME) || !attributes.containsKey(MEMBERS_ATTRIBUTE_NAME)) {
             return Optional.absent();
         }
 
         final Set<String> members = new HashSet<String>();
-        members.addAll(attributes.get("members").getSS());
-        final Team team = new Team(attributes.get("name").getS(), members);
+        members.addAll(attributes.get(MEMBERS_ATTRIBUTE_NAME).getSS());
+        final Team team = new Team(attributes.get(NAME_ATTRIBUTE_NAME).getS(), members);
         return Optional.of(team);
     }
 
@@ -156,8 +160,8 @@ public class TeamStore {
     private void update(final String teamName, final Type type, final List<String> deviceId, final AttributeAction attributeAction) {
         final UpdateItemRequest updateItemRequest = new UpdateItemRequest();
         final Map<String, AttributeValue> keys = new HashMap<>();
-        keys.put("type", new AttributeValue().withS(type.toString()));
-        keys.put("name", new AttributeValue().withS(teamName));
+        keys.put(TYPE_ATTRIBUTE_NAME, new AttributeValue().withS(type.toString()));
+        keys.put(NAME_ATTRIBUTE_NAME, new AttributeValue().withS(teamName));
         final AttributeValueUpdate update = new AttributeValueUpdate()
                 .withAction(attributeAction)
                 .withValue(new AttributeValue().withSS(deviceId));
@@ -165,7 +169,7 @@ public class TeamStore {
         updateItemRequest
                 .withTableName(tableName)
                 .withKey(keys)
-                .addAttributeUpdatesEntry("members", update);
+                .addAttributeUpdatesEntry(MEMBERS_ATTRIBUTE_NAME, update);
 
         dynamoDB.updateItem(updateItemRequest);
     }

@@ -20,6 +20,9 @@ import java.util.Map;
 public class FeatureStore {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStore.class);
+    private static final String NAME_ATTRIBUTE_NAME = "name";
+    private static final String NAMESPACE_ATTRIBUTE_NAME = "ns";
+    private static final String VALUE_ATTRIBUTE_NAME = "value";
 
     private final AmazonDynamoDB amazonDynamoDB;
     private final String tableName;
@@ -36,10 +39,10 @@ public class FeatureStore {
         LOGGER.trace("Calling getData");
 
         final Map<String, Condition> conditions = new HashMap<>();
-        conditions.put("ns", new Condition()
+        conditions.put(NAMESPACE_ATTRIBUTE_NAME, new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
                 .withAttributeValueList(new AttributeValue().withS(namespace)));
-        conditions.put("name", new Condition()
+        conditions.put(NAME_ATTRIBUTE_NAME, new Condition()
                 .withComparisonOperator(ComparisonOperator.GT)
                 .withAttributeValueList(new AttributeValue().withS(" ")));
 
@@ -57,8 +60,8 @@ public class FeatureStore {
         final Map<String, Feature> finalMap = new HashMap<>();
 
         for(final Map<String, AttributeValue> map : results.getItems()) {
-            final String name = map.get("name").getS();
-            final String value = map.get("value").getS();
+            final String name = map.get(NAME_ATTRIBUTE_NAME).getS();
+            final String value = map.get(VALUE_ATTRIBUTE_NAME).getS();
             try {
                 finalMap.put(name, Feature.convertToFeature(name, value));
             } catch (Feature.FeatureException e) {
@@ -72,9 +75,9 @@ public class FeatureStore {
     public void put(final Feature feature) {
         final PutItemRequest putItemRequest = new PutItemRequest();
         putItemRequest.withTableName(tableName)
-                .addItemEntry("ns",new AttributeValue().withS(namespace))
-                .addItemEntry("name", new AttributeValue().withS(feature.name))
-                .addItemEntry("value", new AttributeValue().withS(feature.serialize()));
+                .addItemEntry(NAMESPACE_ATTRIBUTE_NAME,new AttributeValue().withS(namespace))
+                .addItemEntry(NAME_ATTRIBUTE_NAME, new AttributeValue().withS(feature.name))
+                .addItemEntry(VALUE_ATTRIBUTE_NAME, new AttributeValue().withS(feature.serialize()));
 
         amazonDynamoDB.putItem(putItemRequest);
     }
