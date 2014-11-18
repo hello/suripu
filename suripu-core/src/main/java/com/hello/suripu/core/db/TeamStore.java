@@ -31,7 +31,7 @@ public class TeamStore {
 
     private final static String NAME_ATTRIBUTE_NAME = "name";
     private final static String TYPE_ATTRIBUTE_NAME = "type";
-    private final static String MEMBERS_ATTRIBUTE_NAME = "type";
+    private final static String MEMBERS_ATTRIBUTE_NAME = "members";
 
     public enum Type {
         DEVICES("devices"),
@@ -144,7 +144,11 @@ public class TeamStore {
             return Optional.absent();
         }
 
-        final Set<String> members = new HashSet<String>();
+        final Set<String> members = new HashSet<>();
+        if(attributes.get(MEMBERS_ATTRIBUTE_NAME).getSS() == null) {
+            return Optional.absent();
+        }
+
         members.addAll(attributes.get(MEMBERS_ATTRIBUTE_NAME).getSS());
         final Team team = new Team(attributes.get(NAME_ATTRIBUTE_NAME).getS(), members);
         return Optional.of(team);

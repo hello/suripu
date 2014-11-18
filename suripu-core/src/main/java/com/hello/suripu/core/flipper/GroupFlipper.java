@@ -99,7 +99,7 @@ public class GroupFlipper {
                 s.clear();
             }
         }
-
+        LOGGER.trace("{}", finalMap);
         return finalMap;
     }
     public List<String> getGroups(String deviceId) {
