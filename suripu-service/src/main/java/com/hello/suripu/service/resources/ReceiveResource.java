@@ -7,6 +7,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.protobuf.TextFormat;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
+import com.hello.suripu.api.audio.AudioControlProtos;
 import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.api.input.InputProtos;
@@ -371,9 +372,9 @@ public class ReceiveResource extends BaseResource {
                 responseBuilder.addAllFiles(fileDownloadList);
             }
         }
-        final OutputProtos.SyncResponse.AudioControl.Builder audioControl = OutputProtos.SyncResponse.AudioControl
+        final AudioControlProtos.AudioControl.Builder audioControl = AudioControlProtos.AudioControl
                 .newBuilder()
-                .setAudioCaptureAction(OutputProtos.SyncResponse.AudioControl.AudioCaptureAction.OFF);
+                .setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.OFF);
 
         responseBuilder.setAudioControl(audioControl);
 

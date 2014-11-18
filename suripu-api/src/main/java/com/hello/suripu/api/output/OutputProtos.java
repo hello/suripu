@@ -69,11 +69,11 @@ public final class OutputProtos {
     /**
      * <code>optional .SyncResponse.Alarm alarm = 6;</code>
      */
-    SyncResponse.Alarm getAlarm();
+    com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm getAlarm();
     /**
      * <code>optional .SyncResponse.Alarm alarm = 6;</code>
      */
-    SyncResponse.AlarmOrBuilder getAlarmOrBuilder();
+    com.hello.suripu.api.output.OutputProtos.SyncResponse.AlarmOrBuilder getAlarmOrBuilder();
 
     // optional .SyncResponse.PairingAction pairing_action = 7;
     /**
@@ -83,11 +83,11 @@ public final class OutputProtos {
     /**
      * <code>optional .SyncResponse.PairingAction pairing_action = 7;</code>
      */
-    SyncResponse.PairingAction getPairingAction();
+    com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction getPairingAction();
     /**
      * <code>optional .SyncResponse.PairingAction pairing_action = 7;</code>
      */
-    SyncResponse.PairingActionOrBuilder getPairingActionOrBuilder();
+    com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingActionOrBuilder getPairingActionOrBuilder();
 
     // optional .SyncResponse.WhiteNoise white_noise = 8;
     /**
@@ -97,11 +97,11 @@ public final class OutputProtos {
     /**
      * <code>optional .SyncResponse.WhiteNoise white_noise = 8;</code>
      */
-    SyncResponse.WhiteNoise getWhiteNoise();
+    com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise getWhiteNoise();
     /**
      * <code>optional .SyncResponse.WhiteNoise white_noise = 8;</code>
      */
-    SyncResponse.WhiteNoiseOrBuilder getWhiteNoiseOrBuilder();
+    com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoiseOrBuilder getWhiteNoiseOrBuilder();
 
     // optional .SyncResponse.FlashAction flash_action = 9;
     /**
@@ -111,11 +111,11 @@ public final class OutputProtos {
     /**
      * <code>optional .SyncResponse.FlashAction flash_action = 9;</code>
      */
-    SyncResponse.FlashAction getFlashAction();
+    com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction getFlashAction();
     /**
      * <code>optional .SyncResponse.FlashAction flash_action = 9;</code>
      */
-    SyncResponse.FlashActionOrBuilder getFlashActionOrBuilder();
+    com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashActionOrBuilder getFlashActionOrBuilder();
 
     // optional bool reset_device = 10;
     /**
@@ -135,18 +135,18 @@ public final class OutputProtos {
     /**
      * <code>optional .SyncResponse.RoomConditions room_conditions = 12;</code>
      */
-    SyncResponse.RoomConditions getRoomConditions();
+    com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions getRoomConditions();
 
     // repeated .SyncResponse.FileDownload files = 13;
     /**
      * <code>repeated .SyncResponse.FileDownload files = 13;</code>
      */
-    java.util.List<SyncResponse.FileDownload>
+    java.util.List<com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload> 
         getFilesList();
     /**
      * <code>repeated .SyncResponse.FileDownload files = 13;</code>
      */
-    SyncResponse.FileDownload getFiles(int index);
+    com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload getFiles(int index);
     /**
      * <code>repeated .SyncResponse.FileDownload files = 13;</code>
      */
@@ -154,13 +154,13 @@ public final class OutputProtos {
     /**
      * <code>repeated .SyncResponse.FileDownload files = 13;</code>
      */
-    java.util.List<? extends SyncResponse.FileDownloadOrBuilder>
+    java.util.List<? extends com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownloadOrBuilder> 
         getFilesOrBuilderList();
     /**
      * <code>repeated .SyncResponse.FileDownload files = 13;</code>
      */
-    SyncResponse.FileDownloadOrBuilder getFilesOrBuilder(
-            int index);
+    com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownloadOrBuilder getFilesOrBuilder(
+        int index);
 
     // optional bool reset_to_factory_fw = 14;
     /**
@@ -172,19 +172,19 @@ public final class OutputProtos {
      */
     boolean getResetToFactoryFw();
 
-    // optional .SyncResponse.AudioControl audio_control = 15;
+    // optional .AudioControl audio_control = 15;
     /**
-     * <code>optional .SyncResponse.AudioControl audio_control = 15;</code>
+     * <code>optional .AudioControl audio_control = 15;</code>
      */
     boolean hasAudioControl();
     /**
-     * <code>optional .SyncResponse.AudioControl audio_control = 15;</code>
+     * <code>optional .AudioControl audio_control = 15;</code>
      */
-    SyncResponse.AudioControl getAudioControl();
+    com.hello.suripu.api.audio.AudioControlProtos.AudioControl getAudioControl();
     /**
-     * <code>optional .SyncResponse.AudioControl audio_control = 15;</code>
+     * <code>optional .AudioControl audio_control = 15;</code>
      */
-    SyncResponse.AudioControlOrBuilder getAudioControlOrBuilder();
+    com.hello.suripu.api.audio.AudioControlProtos.AudioControlOrBuilder getAudioControlOrBuilder();
   }
   /**
    * Protobuf type {@code SyncResponse}
@@ -209,7 +209,7 @@ public final class OutputProtos {
     }
 
     private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @Override
+    @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
         getUnknownFields() {
       return this.unknownFields;
@@ -263,11 +263,11 @@ public final class OutputProtos {
               break;
             }
             case 50: {
-              Alarm.Builder subBuilder = null;
+              com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.Builder subBuilder = null;
               if (((bitField0_ & 0x00000020) == 0x00000020)) {
                 subBuilder = alarm_.toBuilder();
               }
-              alarm_ = input.readMessage(Alarm.PARSER, extensionRegistry);
+              alarm_ = input.readMessage(com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(alarm_);
                 alarm_ = subBuilder.buildPartial();
@@ -276,11 +276,11 @@ public final class OutputProtos {
               break;
             }
             case 58: {
-              PairingAction.Builder subBuilder = null;
+              com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.Builder subBuilder = null;
               if (((bitField0_ & 0x00000040) == 0x00000040)) {
                 subBuilder = pairingAction_.toBuilder();
               }
-              pairingAction_ = input.readMessage(PairingAction.PARSER, extensionRegistry);
+              pairingAction_ = input.readMessage(com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(pairingAction_);
                 pairingAction_ = subBuilder.buildPartial();
@@ -289,11 +289,11 @@ public final class OutputProtos {
               break;
             }
             case 66: {
-              WhiteNoise.Builder subBuilder = null;
+              com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.Builder subBuilder = null;
               if (((bitField0_ & 0x00000080) == 0x00000080)) {
                 subBuilder = whiteNoise_.toBuilder();
               }
-              whiteNoise_ = input.readMessage(WhiteNoise.PARSER, extensionRegistry);
+              whiteNoise_ = input.readMessage(com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(whiteNoise_);
                 whiteNoise_ = subBuilder.buildPartial();
@@ -302,11 +302,11 @@ public final class OutputProtos {
               break;
             }
             case 74: {
-              FlashAction.Builder subBuilder = null;
+              com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction.Builder subBuilder = null;
               if (((bitField0_ & 0x00000100) == 0x00000100)) {
                 subBuilder = flashAction_.toBuilder();
               }
-              flashAction_ = input.readMessage(FlashAction.PARSER, extensionRegistry);
+              flashAction_ = input.readMessage(com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(flashAction_);
                 flashAction_ = subBuilder.buildPartial();
@@ -321,7 +321,7 @@ public final class OutputProtos {
             }
             case 96: {
               int rawValue = input.readEnum();
-              RoomConditions value = RoomConditions.valueOf(rawValue);
+              com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions value = com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions.valueOf(rawValue);
               if (value == null) {
                 unknownFields.mergeVarintField(12, rawValue);
               } else {
@@ -332,10 +332,10 @@ public final class OutputProtos {
             }
             case 106: {
               if (!((mutable_bitField0_ & 0x00000800) == 0x00000800)) {
-                files_ = new java.util.ArrayList<FileDownload>();
+                files_ = new java.util.ArrayList<com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload>();
                 mutable_bitField0_ |= 0x00000800;
               }
-              files_.add(input.readMessage(FileDownload.PARSER, extensionRegistry));
+              files_.add(input.readMessage(com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload.PARSER, extensionRegistry));
               break;
             }
             case 112: {
@@ -344,11 +344,11 @@ public final class OutputProtos {
               break;
             }
             case 122: {
-              AudioControl.Builder subBuilder = null;
+              com.hello.suripu.api.audio.AudioControlProtos.AudioControl.Builder subBuilder = null;
               if (((bitField0_ & 0x00001000) == 0x00001000)) {
                 subBuilder = audioControl_.toBuilder();
               }
-              audioControl_ = input.readMessage(AudioControl.PARSER, extensionRegistry);
+              audioControl_ = input.readMessage(com.hello.suripu.api.audio.AudioControlProtos.AudioControl.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(audioControl_);
                 audioControl_ = subBuilder.buildPartial();
@@ -373,14 +373,14 @@ public final class OutputProtos {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return OutputProtos.internal_static_SyncResponse_descriptor;
+      return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_descriptor;
     }
 
-    protected FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return OutputProtos.internal_static_SyncResponse_fieldAccessorTable
+      return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              SyncResponse.class, Builder.class);
+              com.hello.suripu.api.output.OutputProtos.SyncResponse.class, com.hello.suripu.api.output.OutputProtos.SyncResponse.Builder.class);
     }
 
     public static com.google.protobuf.Parser<SyncResponse> PARSER =
@@ -393,7 +393,7 @@ public final class OutputProtos {
       }
     };
 
-    @Override
+    @java.lang.Override
     public com.google.protobuf.Parser<SyncResponse> getParserForType() {
       return PARSER;
     }
@@ -464,7 +464,7 @@ public final class OutputProtos {
       }
       public static final com.google.protobuf.Descriptors.EnumDescriptor
           getDescriptor() {
-        return SyncResponse.getDescriptor().getEnumTypes().get(0);
+        return com.hello.suripu.api.output.OutputProtos.SyncResponse.getDescriptor().getEnumTypes().get(0);
       }
 
       private static final RoomConditions[] VALUES = values();
@@ -472,7 +472,7 @@ public final class OutputProtos {
       public static RoomConditions valueOf(
           com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
         if (desc.getType() != getDescriptor()) {
-          throw new IllegalArgumentException(
+          throw new java.lang.IllegalArgumentException(
             "EnumValueDescriptor is not for this type.");
         }
         return VALUES[desc.getIndex()];
@@ -500,7 +500,7 @@ public final class OutputProtos {
       /**
        * <code>optional string host = 1;</code>
        */
-      String getHost();
+      java.lang.String getHost();
       /**
        * <code>optional string host = 1;</code>
        */
@@ -515,7 +515,7 @@ public final class OutputProtos {
       /**
        * <code>optional string url = 2;</code>
        */
-      String getUrl();
+      java.lang.String getUrl();
       /**
        * <code>optional string url = 2;</code>
        */
@@ -560,7 +560,7 @@ public final class OutputProtos {
       /**
        * <code>optional string serial_flash_filename = 7;</code>
        */
-      String getSerialFlashFilename();
+      java.lang.String getSerialFlashFilename();
       /**
        * <code>optional string serial_flash_filename = 7;</code>
        */
@@ -575,7 +575,7 @@ public final class OutputProtos {
       /**
        * <code>optional string serial_flash_path = 8;</code>
        */
-      String getSerialFlashPath();
+      java.lang.String getSerialFlashPath();
       /**
        * <code>optional string serial_flash_path = 8;</code>
        */
@@ -590,7 +590,7 @@ public final class OutputProtos {
       /**
        * <code>optional string sd_card_filename = 3;</code>
        */
-      String getSdCardFilename();
+      java.lang.String getSdCardFilename();
       /**
        * <code>optional string sd_card_filename = 3;</code>
        */
@@ -605,7 +605,7 @@ public final class OutputProtos {
       /**
        * <code>optional string sd_card_path = 9;</code>
        */
-      String getSdCardPath();
+      java.lang.String getSdCardPath();
       /**
        * <code>optional string sd_card_path = 9;</code>
        */
@@ -645,7 +645,7 @@ public final class OutputProtos {
       }
 
       private final com.google.protobuf.UnknownFieldSet unknownFields;
-      @Override
+      @java.lang.Override
       public final com.google.protobuf.UnknownFieldSet
           getUnknownFields() {
         return this.unknownFields;
@@ -737,14 +737,14 @@ public final class OutputProtos {
       }
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return OutputProtos.internal_static_SyncResponse_FileDownload_descriptor;
+        return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_FileDownload_descriptor;
       }
 
-      protected FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return OutputProtos.internal_static_SyncResponse_FileDownload_fieldAccessorTable
+        return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_FileDownload_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                FileDownload.class, Builder.class);
+                com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload.class, com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload.Builder.class);
       }
 
       public static com.google.protobuf.Parser<FileDownload> PARSER =
@@ -757,7 +757,7 @@ public final class OutputProtos {
         }
       };
 
-      @Override
+      @java.lang.Override
       public com.google.protobuf.Parser<FileDownload> getParserForType() {
         return PARSER;
       }
@@ -765,7 +765,7 @@ public final class OutputProtos {
       private int bitField0_;
       // optional string host = 1;
       public static final int HOST_FIELD_NUMBER = 1;
-      private Object host_;
+      private java.lang.Object host_;
       /**
        * <code>optional string host = 1;</code>
        */
@@ -775,14 +775,14 @@ public final class OutputProtos {
       /**
        * <code>optional string host = 1;</code>
        */
-      public String getHost() {
-        Object ref = host_;
-        if (ref instanceof String) {
-          return (String) ref;
+      public java.lang.String getHost() {
+        java.lang.Object ref = host_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
         } else {
           com.google.protobuf.ByteString bs = 
               (com.google.protobuf.ByteString) ref;
-          String s = bs.toStringUtf8();
+          java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             host_ = s;
           }
@@ -794,11 +794,11 @@ public final class OutputProtos {
        */
       public com.google.protobuf.ByteString
           getHostBytes() {
-        Object ref = host_;
-        if (ref instanceof String) {
+        java.lang.Object ref = host_;
+        if (ref instanceof java.lang.String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (String) ref);
+                  (java.lang.String) ref);
           host_ = b;
           return b;
         } else {
@@ -808,7 +808,7 @@ public final class OutputProtos {
 
       // optional string url = 2;
       public static final int URL_FIELD_NUMBER = 2;
-      private Object url_;
+      private java.lang.Object url_;
       /**
        * <code>optional string url = 2;</code>
        */
@@ -818,14 +818,14 @@ public final class OutputProtos {
       /**
        * <code>optional string url = 2;</code>
        */
-      public String getUrl() {
-        Object ref = url_;
-        if (ref instanceof String) {
-          return (String) ref;
+      public java.lang.String getUrl() {
+        java.lang.Object ref = url_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
         } else {
           com.google.protobuf.ByteString bs = 
               (com.google.protobuf.ByteString) ref;
-          String s = bs.toStringUtf8();
+          java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             url_ = s;
           }
@@ -837,11 +837,11 @@ public final class OutputProtos {
        */
       public com.google.protobuf.ByteString
           getUrlBytes() {
-        Object ref = url_;
-        if (ref instanceof String) {
+        java.lang.Object ref = url_;
+        if (ref instanceof java.lang.String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (String) ref);
+                  (java.lang.String) ref);
           url_ = b;
           return b;
         } else {
@@ -899,7 +899,7 @@ public final class OutputProtos {
 
       // optional string serial_flash_filename = 7;
       public static final int SERIAL_FLASH_FILENAME_FIELD_NUMBER = 7;
-      private Object serialFlashFilename_;
+      private java.lang.Object serialFlashFilename_;
       /**
        * <code>optional string serial_flash_filename = 7;</code>
        */
@@ -909,14 +909,14 @@ public final class OutputProtos {
       /**
        * <code>optional string serial_flash_filename = 7;</code>
        */
-      public String getSerialFlashFilename() {
-        Object ref = serialFlashFilename_;
-        if (ref instanceof String) {
-          return (String) ref;
+      public java.lang.String getSerialFlashFilename() {
+        java.lang.Object ref = serialFlashFilename_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
         } else {
           com.google.protobuf.ByteString bs = 
               (com.google.protobuf.ByteString) ref;
-          String s = bs.toStringUtf8();
+          java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             serialFlashFilename_ = s;
           }
@@ -928,11 +928,11 @@ public final class OutputProtos {
        */
       public com.google.protobuf.ByteString
           getSerialFlashFilenameBytes() {
-        Object ref = serialFlashFilename_;
-        if (ref instanceof String) {
+        java.lang.Object ref = serialFlashFilename_;
+        if (ref instanceof java.lang.String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (String) ref);
+                  (java.lang.String) ref);
           serialFlashFilename_ = b;
           return b;
         } else {
@@ -942,7 +942,7 @@ public final class OutputProtos {
 
       // optional string serial_flash_path = 8;
       public static final int SERIAL_FLASH_PATH_FIELD_NUMBER = 8;
-      private Object serialFlashPath_;
+      private java.lang.Object serialFlashPath_;
       /**
        * <code>optional string serial_flash_path = 8;</code>
        */
@@ -952,14 +952,14 @@ public final class OutputProtos {
       /**
        * <code>optional string serial_flash_path = 8;</code>
        */
-      public String getSerialFlashPath() {
-        Object ref = serialFlashPath_;
-        if (ref instanceof String) {
-          return (String) ref;
+      public java.lang.String getSerialFlashPath() {
+        java.lang.Object ref = serialFlashPath_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
         } else {
           com.google.protobuf.ByteString bs = 
               (com.google.protobuf.ByteString) ref;
-          String s = bs.toStringUtf8();
+          java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             serialFlashPath_ = s;
           }
@@ -971,11 +971,11 @@ public final class OutputProtos {
        */
       public com.google.protobuf.ByteString
           getSerialFlashPathBytes() {
-        Object ref = serialFlashPath_;
-        if (ref instanceof String) {
+        java.lang.Object ref = serialFlashPath_;
+        if (ref instanceof java.lang.String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (String) ref);
+                  (java.lang.String) ref);
           serialFlashPath_ = b;
           return b;
         } else {
@@ -985,7 +985,7 @@ public final class OutputProtos {
 
       // optional string sd_card_filename = 3;
       public static final int SD_CARD_FILENAME_FIELD_NUMBER = 3;
-      private Object sdCardFilename_;
+      private java.lang.Object sdCardFilename_;
       /**
        * <code>optional string sd_card_filename = 3;</code>
        */
@@ -995,14 +995,14 @@ public final class OutputProtos {
       /**
        * <code>optional string sd_card_filename = 3;</code>
        */
-      public String getSdCardFilename() {
-        Object ref = sdCardFilename_;
-        if (ref instanceof String) {
-          return (String) ref;
+      public java.lang.String getSdCardFilename() {
+        java.lang.Object ref = sdCardFilename_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
         } else {
           com.google.protobuf.ByteString bs = 
               (com.google.protobuf.ByteString) ref;
-          String s = bs.toStringUtf8();
+          java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             sdCardFilename_ = s;
           }
@@ -1014,11 +1014,11 @@ public final class OutputProtos {
        */
       public com.google.protobuf.ByteString
           getSdCardFilenameBytes() {
-        Object ref = sdCardFilename_;
-        if (ref instanceof String) {
+        java.lang.Object ref = sdCardFilename_;
+        if (ref instanceof java.lang.String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (String) ref);
+                  (java.lang.String) ref);
           sdCardFilename_ = b;
           return b;
         } else {
@@ -1028,7 +1028,7 @@ public final class OutputProtos {
 
       // optional string sd_card_path = 9;
       public static final int SD_CARD_PATH_FIELD_NUMBER = 9;
-      private Object sdCardPath_;
+      private java.lang.Object sdCardPath_;
       /**
        * <code>optional string sd_card_path = 9;</code>
        */
@@ -1038,14 +1038,14 @@ public final class OutputProtos {
       /**
        * <code>optional string sd_card_path = 9;</code>
        */
-      public String getSdCardPath() {
-        Object ref = sdCardPath_;
-        if (ref instanceof String) {
-          return (String) ref;
+      public java.lang.String getSdCardPath() {
+        java.lang.Object ref = sdCardPath_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
         } else {
           com.google.protobuf.ByteString bs = 
               (com.google.protobuf.ByteString) ref;
-          String s = bs.toStringUtf8();
+          java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             sdCardPath_ = s;
           }
@@ -1057,11 +1057,11 @@ public final class OutputProtos {
        */
       public com.google.protobuf.ByteString
           getSdCardPathBytes() {
-        Object ref = sdCardPath_;
-        if (ref instanceof String) {
+        java.lang.Object ref = sdCardPath_;
+        if (ref instanceof java.lang.String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (String) ref);
+                  (java.lang.String) ref);
           sdCardPath_ = b;
           return b;
         } else {
@@ -1194,59 +1194,59 @@ public final class OutputProtos {
       }
 
       private static final long serialVersionUID = 0L;
-      @Override
-      protected Object writeReplace()
+      @java.lang.Override
+      protected java.lang.Object writeReplace()
           throws java.io.ObjectStreamException {
         return super.writeReplace();
       }
 
-      public static FileDownload parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-      public static FileDownload parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static FileDownload parseFrom(byte[] data)
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload parseFrom(byte[] data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-      public static FileDownload parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload parseFrom(
           byte[] data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static FileDownload parseFrom(java.io.InputStream input)
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload parseFrom(java.io.InputStream input)
           throws java.io.IOException {
         return PARSER.parseFrom(input);
       }
-      public static FileDownload parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload parseFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
         return PARSER.parseFrom(input, extensionRegistry);
       }
-      public static FileDownload parseDelimitedFrom(java.io.InputStream input)
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload parseDelimitedFrom(java.io.InputStream input)
           throws java.io.IOException {
         return PARSER.parseDelimitedFrom(input);
       }
-      public static FileDownload parseDelimitedFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload parseDelimitedFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
         return PARSER.parseDelimitedFrom(input, extensionRegistry);
       }
-      public static FileDownload parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload parseFrom(
           com.google.protobuf.CodedInputStream input)
           throws java.io.IOException {
         return PARSER.parseFrom(input);
       }
-      public static FileDownload parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
@@ -1255,14 +1255,14 @@ public final class OutputProtos {
 
       public static Builder newBuilder() { return Builder.create(); }
       public Builder newBuilderForType() { return newBuilder(); }
-      public static Builder newBuilder(FileDownload prototype) {
+      public static Builder newBuilder(com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload prototype) {
         return newBuilder().mergeFrom(prototype);
       }
       public Builder toBuilder() { return newBuilder(this); }
 
-      @Override
+      @java.lang.Override
       protected Builder newBuilderForType(
-          BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         Builder builder = new Builder(parent);
         return builder;
       }
@@ -1271,17 +1271,17 @@ public final class OutputProtos {
        */
       public static final class Builder extends
           com.google.protobuf.GeneratedMessage.Builder<Builder>
-         implements FileDownloadOrBuilder {
+         implements com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownloadOrBuilder {
         public static final com.google.protobuf.Descriptors.Descriptor
             getDescriptor() {
-          return OutputProtos.internal_static_SyncResponse_FileDownload_descriptor;
+          return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_FileDownload_descriptor;
         }
 
-        protected FieldAccessorTable
+        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return OutputProtos.internal_static_SyncResponse_FileDownload_fieldAccessorTable
+          return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_FileDownload_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  FileDownload.class, Builder.class);
+                  com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload.class, com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload.Builder.class);
         }
 
         // Construct using com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload.newBuilder()
@@ -1290,7 +1290,7 @@ public final class OutputProtos {
         }
 
         private Builder(
-            BuilderParent parent) {
+            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
@@ -1333,23 +1333,23 @@ public final class OutputProtos {
 
         public com.google.protobuf.Descriptors.Descriptor
             getDescriptorForType() {
-          return OutputProtos.internal_static_SyncResponse_FileDownload_descriptor;
+          return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_FileDownload_descriptor;
         }
 
-        public FileDownload getDefaultInstanceForType() {
-          return FileDownload.getDefaultInstance();
+        public com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload getDefaultInstanceForType() {
+          return com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload.getDefaultInstance();
         }
 
-        public FileDownload build() {
-          FileDownload result = buildPartial();
+        public com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload build() {
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload result = buildPartial();
           if (!result.isInitialized()) {
             throw newUninitializedMessageException(result);
           }
           return result;
         }
 
-        public FileDownload buildPartial() {
-          FileDownload result = new FileDownload(this);
+        public com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload buildPartial() {
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload result = new com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload(this);
           int from_bitField0_ = bitField0_;
           int to_bitField0_ = 0;
           if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -1398,16 +1398,16 @@ public final class OutputProtos {
         }
 
         public Builder mergeFrom(com.google.protobuf.Message other) {
-          if (other instanceof FileDownload) {
-            return mergeFrom((FileDownload)other);
+          if (other instanceof com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload) {
+            return mergeFrom((com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload)other);
           } else {
             super.mergeFrom(other);
             return this;
           }
         }
 
-        public Builder mergeFrom(FileDownload other) {
-          if (other == FileDownload.getDefaultInstance()) return this;
+        public Builder mergeFrom(com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload other) {
+          if (other == com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload.getDefaultInstance()) return this;
           if (other.hasHost()) {
             bitField0_ |= 0x00000001;
             host_ = other.host_;
@@ -1462,11 +1462,11 @@ public final class OutputProtos {
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws java.io.IOException {
-          FileDownload parsedMessage = null;
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload parsedMessage = null;
           try {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (FileDownload) e.getUnfinishedMessage();
+            parsedMessage = (com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload) e.getUnfinishedMessage();
             throw e;
           } finally {
             if (parsedMessage != null) {
@@ -1478,7 +1478,7 @@ public final class OutputProtos {
         private int bitField0_;
 
         // optional string host = 1;
-        private Object host_ = "";
+        private java.lang.Object host_ = "";
         /**
          * <code>optional string host = 1;</code>
          */
@@ -1488,15 +1488,15 @@ public final class OutputProtos {
         /**
          * <code>optional string host = 1;</code>
          */
-        public String getHost() {
-          Object ref = host_;
-          if (!(ref instanceof String)) {
-            String s = ((com.google.protobuf.ByteString) ref)
+        public java.lang.String getHost() {
+          java.lang.Object ref = host_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
                 .toStringUtf8();
             host_ = s;
             return s;
           } else {
-            return (String) ref;
+            return (java.lang.String) ref;
           }
         }
         /**
@@ -1504,11 +1504,11 @@ public final class OutputProtos {
          */
         public com.google.protobuf.ByteString
             getHostBytes() {
-          Object ref = host_;
+          java.lang.Object ref = host_;
           if (ref instanceof String) {
             com.google.protobuf.ByteString b = 
                 com.google.protobuf.ByteString.copyFromUtf8(
-                    (String) ref);
+                    (java.lang.String) ref);
             host_ = b;
             return b;
           } else {
@@ -1519,7 +1519,7 @@ public final class OutputProtos {
          * <code>optional string host = 1;</code>
          */
         public Builder setHost(
-            String value) {
+            java.lang.String value) {
           if (value == null) {
     throw new NullPointerException();
   }
@@ -1552,7 +1552,7 @@ public final class OutputProtos {
         }
 
         // optional string url = 2;
-        private Object url_ = "";
+        private java.lang.Object url_ = "";
         /**
          * <code>optional string url = 2;</code>
          */
@@ -1562,15 +1562,15 @@ public final class OutputProtos {
         /**
          * <code>optional string url = 2;</code>
          */
-        public String getUrl() {
-          Object ref = url_;
-          if (!(ref instanceof String)) {
-            String s = ((com.google.protobuf.ByteString) ref)
+        public java.lang.String getUrl() {
+          java.lang.Object ref = url_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
                 .toStringUtf8();
             url_ = s;
             return s;
           } else {
-            return (String) ref;
+            return (java.lang.String) ref;
           }
         }
         /**
@@ -1578,11 +1578,11 @@ public final class OutputProtos {
          */
         public com.google.protobuf.ByteString
             getUrlBytes() {
-          Object ref = url_;
+          java.lang.Object ref = url_;
           if (ref instanceof String) {
             com.google.protobuf.ByteString b = 
                 com.google.protobuf.ByteString.copyFromUtf8(
-                    (String) ref);
+                    (java.lang.String) ref);
             url_ = b;
             return b;
           } else {
@@ -1593,7 +1593,7 @@ public final class OutputProtos {
          * <code>optional string url = 2;</code>
          */
         public Builder setUrl(
-            String value) {
+            java.lang.String value) {
           if (value == null) {
     throw new NullPointerException();
   }
@@ -1725,7 +1725,7 @@ public final class OutputProtos {
         }
 
         // optional string serial_flash_filename = 7;
-        private Object serialFlashFilename_ = "";
+        private java.lang.Object serialFlashFilename_ = "";
         /**
          * <code>optional string serial_flash_filename = 7;</code>
          */
@@ -1735,15 +1735,15 @@ public final class OutputProtos {
         /**
          * <code>optional string serial_flash_filename = 7;</code>
          */
-        public String getSerialFlashFilename() {
-          Object ref = serialFlashFilename_;
-          if (!(ref instanceof String)) {
-            String s = ((com.google.protobuf.ByteString) ref)
+        public java.lang.String getSerialFlashFilename() {
+          java.lang.Object ref = serialFlashFilename_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
                 .toStringUtf8();
             serialFlashFilename_ = s;
             return s;
           } else {
-            return (String) ref;
+            return (java.lang.String) ref;
           }
         }
         /**
@@ -1751,11 +1751,11 @@ public final class OutputProtos {
          */
         public com.google.protobuf.ByteString
             getSerialFlashFilenameBytes() {
-          Object ref = serialFlashFilename_;
+          java.lang.Object ref = serialFlashFilename_;
           if (ref instanceof String) {
             com.google.protobuf.ByteString b = 
                 com.google.protobuf.ByteString.copyFromUtf8(
-                    (String) ref);
+                    (java.lang.String) ref);
             serialFlashFilename_ = b;
             return b;
           } else {
@@ -1766,7 +1766,7 @@ public final class OutputProtos {
          * <code>optional string serial_flash_filename = 7;</code>
          */
         public Builder setSerialFlashFilename(
-            String value) {
+            java.lang.String value) {
           if (value == null) {
     throw new NullPointerException();
   }
@@ -1799,7 +1799,7 @@ public final class OutputProtos {
         }
 
         // optional string serial_flash_path = 8;
-        private Object serialFlashPath_ = "";
+        private java.lang.Object serialFlashPath_ = "";
         /**
          * <code>optional string serial_flash_path = 8;</code>
          */
@@ -1809,15 +1809,15 @@ public final class OutputProtos {
         /**
          * <code>optional string serial_flash_path = 8;</code>
          */
-        public String getSerialFlashPath() {
-          Object ref = serialFlashPath_;
-          if (!(ref instanceof String)) {
-            String s = ((com.google.protobuf.ByteString) ref)
+        public java.lang.String getSerialFlashPath() {
+          java.lang.Object ref = serialFlashPath_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
                 .toStringUtf8();
             serialFlashPath_ = s;
             return s;
           } else {
-            return (String) ref;
+            return (java.lang.String) ref;
           }
         }
         /**
@@ -1825,11 +1825,11 @@ public final class OutputProtos {
          */
         public com.google.protobuf.ByteString
             getSerialFlashPathBytes() {
-          Object ref = serialFlashPath_;
+          java.lang.Object ref = serialFlashPath_;
           if (ref instanceof String) {
             com.google.protobuf.ByteString b = 
                 com.google.protobuf.ByteString.copyFromUtf8(
-                    (String) ref);
+                    (java.lang.String) ref);
             serialFlashPath_ = b;
             return b;
           } else {
@@ -1840,7 +1840,7 @@ public final class OutputProtos {
          * <code>optional string serial_flash_path = 8;</code>
          */
         public Builder setSerialFlashPath(
-            String value) {
+            java.lang.String value) {
           if (value == null) {
     throw new NullPointerException();
   }
@@ -1873,7 +1873,7 @@ public final class OutputProtos {
         }
 
         // optional string sd_card_filename = 3;
-        private Object sdCardFilename_ = "";
+        private java.lang.Object sdCardFilename_ = "";
         /**
          * <code>optional string sd_card_filename = 3;</code>
          */
@@ -1883,15 +1883,15 @@ public final class OutputProtos {
         /**
          * <code>optional string sd_card_filename = 3;</code>
          */
-        public String getSdCardFilename() {
-          Object ref = sdCardFilename_;
-          if (!(ref instanceof String)) {
-            String s = ((com.google.protobuf.ByteString) ref)
+        public java.lang.String getSdCardFilename() {
+          java.lang.Object ref = sdCardFilename_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
                 .toStringUtf8();
             sdCardFilename_ = s;
             return s;
           } else {
-            return (String) ref;
+            return (java.lang.String) ref;
           }
         }
         /**
@@ -1899,11 +1899,11 @@ public final class OutputProtos {
          */
         public com.google.protobuf.ByteString
             getSdCardFilenameBytes() {
-          Object ref = sdCardFilename_;
+          java.lang.Object ref = sdCardFilename_;
           if (ref instanceof String) {
             com.google.protobuf.ByteString b = 
                 com.google.protobuf.ByteString.copyFromUtf8(
-                    (String) ref);
+                    (java.lang.String) ref);
             sdCardFilename_ = b;
             return b;
           } else {
@@ -1914,7 +1914,7 @@ public final class OutputProtos {
          * <code>optional string sd_card_filename = 3;</code>
          */
         public Builder setSdCardFilename(
-            String value) {
+            java.lang.String value) {
           if (value == null) {
     throw new NullPointerException();
   }
@@ -1947,7 +1947,7 @@ public final class OutputProtos {
         }
 
         // optional string sd_card_path = 9;
-        private Object sdCardPath_ = "";
+        private java.lang.Object sdCardPath_ = "";
         /**
          * <code>optional string sd_card_path = 9;</code>
          */
@@ -1957,15 +1957,15 @@ public final class OutputProtos {
         /**
          * <code>optional string sd_card_path = 9;</code>
          */
-        public String getSdCardPath() {
-          Object ref = sdCardPath_;
-          if (!(ref instanceof String)) {
-            String s = ((com.google.protobuf.ByteString) ref)
+        public java.lang.String getSdCardPath() {
+          java.lang.Object ref = sdCardPath_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
                 .toStringUtf8();
             sdCardPath_ = s;
             return s;
           } else {
-            return (String) ref;
+            return (java.lang.String) ref;
           }
         }
         /**
@@ -1973,11 +1973,11 @@ public final class OutputProtos {
          */
         public com.google.protobuf.ByteString
             getSdCardPathBytes() {
-          Object ref = sdCardPath_;
+          java.lang.Object ref = sdCardPath_;
           if (ref instanceof String) {
             com.google.protobuf.ByteString b = 
                 com.google.protobuf.ByteString.copyFromUtf8(
-                    (String) ref);
+                    (java.lang.String) ref);
             sdCardPath_ = b;
             return b;
           } else {
@@ -1988,7 +1988,7 @@ public final class OutputProtos {
          * <code>optional string sd_card_path = 9;</code>
          */
         public Builder setSdCardPath(
-            String value) {
+            java.lang.String value) {
           if (value == null) {
     throw new NullPointerException();
   }
@@ -2167,7 +2167,7 @@ public final class OutputProtos {
       }
 
       private final com.google.protobuf.UnknownFieldSet unknownFields;
-      @Override
+      @java.lang.Override
       public final com.google.protobuf.UnknownFieldSet
           getUnknownFields() {
         return this.unknownFields;
@@ -2234,14 +2234,14 @@ public final class OutputProtos {
       }
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return OutputProtos.internal_static_SyncResponse_Alarm_descriptor;
+        return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_Alarm_descriptor;
       }
 
-      protected FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return OutputProtos.internal_static_SyncResponse_Alarm_fieldAccessorTable
+        return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_Alarm_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                Alarm.class, Builder.class);
+                com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.class, com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.Builder.class);
       }
 
       public static com.google.protobuf.Parser<Alarm> PARSER =
@@ -2254,7 +2254,7 @@ public final class OutputProtos {
         }
       };
 
-      @Override
+      @java.lang.Override
       public com.google.protobuf.Parser<Alarm> getParserForType() {
         return PARSER;
       }
@@ -2433,59 +2433,59 @@ public final class OutputProtos {
       }
 
       private static final long serialVersionUID = 0L;
-      @Override
-      protected Object writeReplace()
+      @java.lang.Override
+      protected java.lang.Object writeReplace()
           throws java.io.ObjectStreamException {
         return super.writeReplace();
       }
 
-      public static Alarm parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-      public static Alarm parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static Alarm parseFrom(byte[] data)
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm parseFrom(byte[] data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-      public static Alarm parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm parseFrom(
           byte[] data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static Alarm parseFrom(java.io.InputStream input)
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm parseFrom(java.io.InputStream input)
           throws java.io.IOException {
         return PARSER.parseFrom(input);
       }
-      public static Alarm parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm parseFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
         return PARSER.parseFrom(input, extensionRegistry);
       }
-      public static Alarm parseDelimitedFrom(java.io.InputStream input)
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm parseDelimitedFrom(java.io.InputStream input)
           throws java.io.IOException {
         return PARSER.parseDelimitedFrom(input);
       }
-      public static Alarm parseDelimitedFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm parseDelimitedFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
         return PARSER.parseDelimitedFrom(input, extensionRegistry);
       }
-      public static Alarm parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm parseFrom(
           com.google.protobuf.CodedInputStream input)
           throws java.io.IOException {
         return PARSER.parseFrom(input);
       }
-      public static Alarm parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
@@ -2494,14 +2494,14 @@ public final class OutputProtos {
 
       public static Builder newBuilder() { return Builder.create(); }
       public Builder newBuilderForType() { return newBuilder(); }
-      public static Builder newBuilder(Alarm prototype) {
+      public static Builder newBuilder(com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm prototype) {
         return newBuilder().mergeFrom(prototype);
       }
       public Builder toBuilder() { return newBuilder(this); }
 
-      @Override
+      @java.lang.Override
       protected Builder newBuilderForType(
-          BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         Builder builder = new Builder(parent);
         return builder;
       }
@@ -2510,17 +2510,17 @@ public final class OutputProtos {
        */
       public static final class Builder extends
           com.google.protobuf.GeneratedMessage.Builder<Builder>
-         implements AlarmOrBuilder {
+         implements com.hello.suripu.api.output.OutputProtos.SyncResponse.AlarmOrBuilder {
         public static final com.google.protobuf.Descriptors.Descriptor
             getDescriptor() {
-          return OutputProtos.internal_static_SyncResponse_Alarm_descriptor;
+          return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_Alarm_descriptor;
         }
 
-        protected FieldAccessorTable
+        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return OutputProtos.internal_static_SyncResponse_Alarm_fieldAccessorTable
+          return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_Alarm_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  Alarm.class, Builder.class);
+                  com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.class, com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.Builder.class);
         }
 
         // Construct using com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.newBuilder()
@@ -2529,7 +2529,7 @@ public final class OutputProtos {
         }
 
         private Builder(
-            BuilderParent parent) {
+            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
@@ -2562,23 +2562,23 @@ public final class OutputProtos {
 
         public com.google.protobuf.Descriptors.Descriptor
             getDescriptorForType() {
-          return OutputProtos.internal_static_SyncResponse_Alarm_descriptor;
+          return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_Alarm_descriptor;
         }
 
-        public Alarm getDefaultInstanceForType() {
-          return Alarm.getDefaultInstance();
+        public com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm getDefaultInstanceForType() {
+          return com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.getDefaultInstance();
         }
 
-        public Alarm build() {
-          Alarm result = buildPartial();
+        public com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm build() {
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm result = buildPartial();
           if (!result.isInitialized()) {
             throw newUninitializedMessageException(result);
           }
           return result;
         }
 
-        public Alarm buildPartial() {
-          Alarm result = new Alarm(this);
+        public com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm buildPartial() {
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm result = new com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm(this);
           int from_bitField0_ = bitField0_;
           int to_bitField0_ = 0;
           if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2607,16 +2607,16 @@ public final class OutputProtos {
         }
 
         public Builder mergeFrom(com.google.protobuf.Message other) {
-          if (other instanceof Alarm) {
-            return mergeFrom((Alarm)other);
+          if (other instanceof com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm) {
+            return mergeFrom((com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm)other);
           } else {
             super.mergeFrom(other);
             return this;
           }
         }
 
-        public Builder mergeFrom(Alarm other) {
-          if (other == Alarm.getDefaultInstance()) return this;
+        public Builder mergeFrom(com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm other) {
+          if (other == com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.getDefaultInstance()) return this;
           if (other.hasStartTime()) {
             setStartTime(other.getStartTime());
           }
@@ -2644,11 +2644,11 @@ public final class OutputProtos {
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws java.io.IOException {
-          Alarm parsedMessage = null;
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm parsedMessage = null;
           try {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (Alarm) e.getUnfinishedMessage();
+            parsedMessage = (com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm) e.getUnfinishedMessage();
             throw e;
           } finally {
             if (parsedMessage != null) {
@@ -2894,7 +2894,7 @@ public final class OutputProtos {
       /**
        * <code>optional string ssid = 1;</code>
        */
-      String getSsid();
+      java.lang.String getSsid();
       /**
        * <code>optional string ssid = 1;</code>
        */
@@ -2909,7 +2909,7 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.PairingAction.ActionType type = 2;</code>
        */
-      PairingAction.ActionType getType();
+      com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.ActionType getType();
     }
     /**
      * Protobuf type {@code SyncResponse.PairingAction}
@@ -2934,7 +2934,7 @@ public final class OutputProtos {
       }
 
       private final com.google.protobuf.UnknownFieldSet unknownFields;
-      @Override
+      @java.lang.Override
       public final com.google.protobuf.UnknownFieldSet
           getUnknownFields() {
         return this.unknownFields;
@@ -2969,7 +2969,7 @@ public final class OutputProtos {
               }
               case 16: {
                 int rawValue = input.readEnum();
-                ActionType value = ActionType.valueOf(rawValue);
+                com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.ActionType value = com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.ActionType.valueOf(rawValue);
                 if (value == null) {
                   unknownFields.mergeVarintField(2, rawValue);
                 } else {
@@ -2992,14 +2992,14 @@ public final class OutputProtos {
       }
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return OutputProtos.internal_static_SyncResponse_PairingAction_descriptor;
+        return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_PairingAction_descriptor;
       }
 
-      protected FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return OutputProtos.internal_static_SyncResponse_PairingAction_fieldAccessorTable
+        return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_PairingAction_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                PairingAction.class, Builder.class);
+                com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.class, com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.Builder.class);
       }
 
       public static com.google.protobuf.Parser<PairingAction> PARSER =
@@ -3012,7 +3012,7 @@ public final class OutputProtos {
         }
       };
 
-      @Override
+      @java.lang.Override
       public com.google.protobuf.Parser<PairingAction> getParserForType() {
         return PARSER;
       }
@@ -3074,7 +3074,7 @@ public final class OutputProtos {
         }
         public static final com.google.protobuf.Descriptors.EnumDescriptor
             getDescriptor() {
-          return PairingAction.getDescriptor().getEnumTypes().get(0);
+          return com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.getDescriptor().getEnumTypes().get(0);
         }
 
         private static final ActionType[] VALUES = values();
@@ -3082,7 +3082,7 @@ public final class OutputProtos {
         public static ActionType valueOf(
             com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
           if (desc.getType() != getDescriptor()) {
-            throw new IllegalArgumentException(
+            throw new java.lang.IllegalArgumentException(
               "EnumValueDescriptor is not for this type.");
           }
           return VALUES[desc.getIndex()];
@@ -3102,7 +3102,7 @@ public final class OutputProtos {
       private int bitField0_;
       // optional string ssid = 1;
       public static final int SSID_FIELD_NUMBER = 1;
-      private Object ssid_;
+      private java.lang.Object ssid_;
       /**
        * <code>optional string ssid = 1;</code>
        */
@@ -3112,14 +3112,14 @@ public final class OutputProtos {
       /**
        * <code>optional string ssid = 1;</code>
        */
-      public String getSsid() {
-        Object ref = ssid_;
-        if (ref instanceof String) {
-          return (String) ref;
+      public java.lang.String getSsid() {
+        java.lang.Object ref = ssid_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
         } else {
           com.google.protobuf.ByteString bs = 
               (com.google.protobuf.ByteString) ref;
-          String s = bs.toStringUtf8();
+          java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             ssid_ = s;
           }
@@ -3131,11 +3131,11 @@ public final class OutputProtos {
        */
       public com.google.protobuf.ByteString
           getSsidBytes() {
-        Object ref = ssid_;
-        if (ref instanceof String) {
+        java.lang.Object ref = ssid_;
+        if (ref instanceof java.lang.String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (String) ref);
+                  (java.lang.String) ref);
           ssid_ = b;
           return b;
         } else {
@@ -3145,7 +3145,7 @@ public final class OutputProtos {
 
       // optional .SyncResponse.PairingAction.ActionType type = 2;
       public static final int TYPE_FIELD_NUMBER = 2;
-      private ActionType type_;
+      private com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.ActionType type_;
       /**
        * <code>optional .SyncResponse.PairingAction.ActionType type = 2;</code>
        */
@@ -3155,13 +3155,13 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.PairingAction.ActionType type = 2;</code>
        */
-      public ActionType getType() {
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.ActionType getType() {
         return type_;
       }
 
       private void initFields() {
         ssid_ = "";
-        type_ = ActionType.PAIR;
+        type_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.ActionType.PAIR;
       }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
@@ -3204,59 +3204,59 @@ public final class OutputProtos {
       }
 
       private static final long serialVersionUID = 0L;
-      @Override
-      protected Object writeReplace()
+      @java.lang.Override
+      protected java.lang.Object writeReplace()
           throws java.io.ObjectStreamException {
         return super.writeReplace();
       }
 
-      public static PairingAction parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-      public static PairingAction parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static PairingAction parseFrom(byte[] data)
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction parseFrom(byte[] data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-      public static PairingAction parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction parseFrom(
           byte[] data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static PairingAction parseFrom(java.io.InputStream input)
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction parseFrom(java.io.InputStream input)
           throws java.io.IOException {
         return PARSER.parseFrom(input);
       }
-      public static PairingAction parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction parseFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
         return PARSER.parseFrom(input, extensionRegistry);
       }
-      public static PairingAction parseDelimitedFrom(java.io.InputStream input)
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction parseDelimitedFrom(java.io.InputStream input)
           throws java.io.IOException {
         return PARSER.parseDelimitedFrom(input);
       }
-      public static PairingAction parseDelimitedFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction parseDelimitedFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
         return PARSER.parseDelimitedFrom(input, extensionRegistry);
       }
-      public static PairingAction parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction parseFrom(
           com.google.protobuf.CodedInputStream input)
           throws java.io.IOException {
         return PARSER.parseFrom(input);
       }
-      public static PairingAction parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
@@ -3265,14 +3265,14 @@ public final class OutputProtos {
 
       public static Builder newBuilder() { return Builder.create(); }
       public Builder newBuilderForType() { return newBuilder(); }
-      public static Builder newBuilder(PairingAction prototype) {
+      public static Builder newBuilder(com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction prototype) {
         return newBuilder().mergeFrom(prototype);
       }
       public Builder toBuilder() { return newBuilder(this); }
 
-      @Override
+      @java.lang.Override
       protected Builder newBuilderForType(
-          BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         Builder builder = new Builder(parent);
         return builder;
       }
@@ -3281,17 +3281,17 @@ public final class OutputProtos {
        */
       public static final class Builder extends
           com.google.protobuf.GeneratedMessage.Builder<Builder>
-         implements PairingActionOrBuilder {
+         implements com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingActionOrBuilder {
         public static final com.google.protobuf.Descriptors.Descriptor
             getDescriptor() {
-          return OutputProtos.internal_static_SyncResponse_PairingAction_descriptor;
+          return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_PairingAction_descriptor;
         }
 
-        protected FieldAccessorTable
+        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return OutputProtos.internal_static_SyncResponse_PairingAction_fieldAccessorTable
+          return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_PairingAction_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  PairingAction.class, Builder.class);
+                  com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.class, com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.Builder.class);
         }
 
         // Construct using com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.newBuilder()
@@ -3300,7 +3300,7 @@ public final class OutputProtos {
         }
 
         private Builder(
-            BuilderParent parent) {
+            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
@@ -3316,7 +3316,7 @@ public final class OutputProtos {
           super.clear();
           ssid_ = "";
           bitField0_ = (bitField0_ & ~0x00000001);
-          type_ = ActionType.PAIR;
+          type_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.ActionType.PAIR;
           bitField0_ = (bitField0_ & ~0x00000002);
           return this;
         }
@@ -3327,23 +3327,23 @@ public final class OutputProtos {
 
         public com.google.protobuf.Descriptors.Descriptor
             getDescriptorForType() {
-          return OutputProtos.internal_static_SyncResponse_PairingAction_descriptor;
+          return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_PairingAction_descriptor;
         }
 
-        public PairingAction getDefaultInstanceForType() {
-          return PairingAction.getDefaultInstance();
+        public com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction getDefaultInstanceForType() {
+          return com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.getDefaultInstance();
         }
 
-        public PairingAction build() {
-          PairingAction result = buildPartial();
+        public com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction build() {
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction result = buildPartial();
           if (!result.isInitialized()) {
             throw newUninitializedMessageException(result);
           }
           return result;
         }
 
-        public PairingAction buildPartial() {
-          PairingAction result = new PairingAction(this);
+        public com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction buildPartial() {
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction result = new com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction(this);
           int from_bitField0_ = bitField0_;
           int to_bitField0_ = 0;
           if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -3360,16 +3360,16 @@ public final class OutputProtos {
         }
 
         public Builder mergeFrom(com.google.protobuf.Message other) {
-          if (other instanceof PairingAction) {
-            return mergeFrom((PairingAction)other);
+          if (other instanceof com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction) {
+            return mergeFrom((com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction)other);
           } else {
             super.mergeFrom(other);
             return this;
           }
         }
 
-        public Builder mergeFrom(PairingAction other) {
-          if (other == PairingAction.getDefaultInstance()) return this;
+        public Builder mergeFrom(com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction other) {
+          if (other == com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.getDefaultInstance()) return this;
           if (other.hasSsid()) {
             bitField0_ |= 0x00000001;
             ssid_ = other.ssid_;
@@ -3390,11 +3390,11 @@ public final class OutputProtos {
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws java.io.IOException {
-          PairingAction parsedMessage = null;
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction parsedMessage = null;
           try {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (PairingAction) e.getUnfinishedMessage();
+            parsedMessage = (com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction) e.getUnfinishedMessage();
             throw e;
           } finally {
             if (parsedMessage != null) {
@@ -3406,7 +3406,7 @@ public final class OutputProtos {
         private int bitField0_;
 
         // optional string ssid = 1;
-        private Object ssid_ = "";
+        private java.lang.Object ssid_ = "";
         /**
          * <code>optional string ssid = 1;</code>
          */
@@ -3416,15 +3416,15 @@ public final class OutputProtos {
         /**
          * <code>optional string ssid = 1;</code>
          */
-        public String getSsid() {
-          Object ref = ssid_;
-          if (!(ref instanceof String)) {
-            String s = ((com.google.protobuf.ByteString) ref)
+        public java.lang.String getSsid() {
+          java.lang.Object ref = ssid_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
                 .toStringUtf8();
             ssid_ = s;
             return s;
           } else {
-            return (String) ref;
+            return (java.lang.String) ref;
           }
         }
         /**
@@ -3432,11 +3432,11 @@ public final class OutputProtos {
          */
         public com.google.protobuf.ByteString
             getSsidBytes() {
-          Object ref = ssid_;
+          java.lang.Object ref = ssid_;
           if (ref instanceof String) {
             com.google.protobuf.ByteString b = 
                 com.google.protobuf.ByteString.copyFromUtf8(
-                    (String) ref);
+                    (java.lang.String) ref);
             ssid_ = b;
             return b;
           } else {
@@ -3447,7 +3447,7 @@ public final class OutputProtos {
          * <code>optional string ssid = 1;</code>
          */
         public Builder setSsid(
-            String value) {
+            java.lang.String value) {
           if (value == null) {
     throw new NullPointerException();
   }
@@ -3480,7 +3480,7 @@ public final class OutputProtos {
         }
 
         // optional .SyncResponse.PairingAction.ActionType type = 2;
-        private ActionType type_ = ActionType.PAIR;
+        private com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.ActionType type_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.ActionType.PAIR;
         /**
          * <code>optional .SyncResponse.PairingAction.ActionType type = 2;</code>
          */
@@ -3490,13 +3490,13 @@ public final class OutputProtos {
         /**
          * <code>optional .SyncResponse.PairingAction.ActionType type = 2;</code>
          */
-        public ActionType getType() {
+        public com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.ActionType getType() {
           return type_;
         }
         /**
          * <code>optional .SyncResponse.PairingAction.ActionType type = 2;</code>
          */
-        public Builder setType(ActionType value) {
+        public Builder setType(com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.ActionType value) {
           if (value == null) {
             throw new NullPointerException();
           }
@@ -3510,7 +3510,7 @@ public final class OutputProtos {
          */
         public Builder clearType() {
           bitField0_ = (bitField0_ & ~0x00000002);
-          type_ = ActionType.PAIR;
+          type_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.ActionType.PAIR;
           onChanged();
           return this;
         }
@@ -3582,7 +3582,7 @@ public final class OutputProtos {
       }
 
       private final com.google.protobuf.UnknownFieldSet unknownFields;
-      @Override
+      @java.lang.Override
       public final com.google.protobuf.UnknownFieldSet
           getUnknownFields() {
         return this.unknownFields;
@@ -3639,14 +3639,14 @@ public final class OutputProtos {
       }
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return OutputProtos.internal_static_SyncResponse_WhiteNoise_descriptor;
+        return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_WhiteNoise_descriptor;
       }
 
-      protected FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return OutputProtos.internal_static_SyncResponse_WhiteNoise_fieldAccessorTable
+        return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_WhiteNoise_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                WhiteNoise.class, Builder.class);
+                com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.class, com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.Builder.class);
       }
 
       public static com.google.protobuf.Parser<WhiteNoise> PARSER =
@@ -3659,7 +3659,7 @@ public final class OutputProtos {
         }
       };
 
-      @Override
+      @java.lang.Override
       public com.google.protobuf.Parser<WhiteNoise> getParserForType() {
         return PARSER;
       }
@@ -3766,59 +3766,59 @@ public final class OutputProtos {
       }
 
       private static final long serialVersionUID = 0L;
-      @Override
-      protected Object writeReplace()
+      @java.lang.Override
+      protected java.lang.Object writeReplace()
           throws java.io.ObjectStreamException {
         return super.writeReplace();
       }
 
-      public static WhiteNoise parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-      public static WhiteNoise parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static WhiteNoise parseFrom(byte[] data)
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise parseFrom(byte[] data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-      public static WhiteNoise parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise parseFrom(
           byte[] data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static WhiteNoise parseFrom(java.io.InputStream input)
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise parseFrom(java.io.InputStream input)
           throws java.io.IOException {
         return PARSER.parseFrom(input);
       }
-      public static WhiteNoise parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise parseFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
         return PARSER.parseFrom(input, extensionRegistry);
       }
-      public static WhiteNoise parseDelimitedFrom(java.io.InputStream input)
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise parseDelimitedFrom(java.io.InputStream input)
           throws java.io.IOException {
         return PARSER.parseDelimitedFrom(input);
       }
-      public static WhiteNoise parseDelimitedFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise parseDelimitedFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
         return PARSER.parseDelimitedFrom(input, extensionRegistry);
       }
-      public static WhiteNoise parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise parseFrom(
           com.google.protobuf.CodedInputStream input)
           throws java.io.IOException {
         return PARSER.parseFrom(input);
       }
-      public static WhiteNoise parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
@@ -3827,14 +3827,14 @@ public final class OutputProtos {
 
       public static Builder newBuilder() { return Builder.create(); }
       public Builder newBuilderForType() { return newBuilder(); }
-      public static Builder newBuilder(WhiteNoise prototype) {
+      public static Builder newBuilder(com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise prototype) {
         return newBuilder().mergeFrom(prototype);
       }
       public Builder toBuilder() { return newBuilder(this); }
 
-      @Override
+      @java.lang.Override
       protected Builder newBuilderForType(
-          BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         Builder builder = new Builder(parent);
         return builder;
       }
@@ -3843,17 +3843,17 @@ public final class OutputProtos {
        */
       public static final class Builder extends
           com.google.protobuf.GeneratedMessage.Builder<Builder>
-         implements WhiteNoiseOrBuilder {
+         implements com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoiseOrBuilder {
         public static final com.google.protobuf.Descriptors.Descriptor
             getDescriptor() {
-          return OutputProtos.internal_static_SyncResponse_WhiteNoise_descriptor;
+          return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_WhiteNoise_descriptor;
         }
 
-        protected FieldAccessorTable
+        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return OutputProtos.internal_static_SyncResponse_WhiteNoise_fieldAccessorTable
+          return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_WhiteNoise_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  WhiteNoise.class, Builder.class);
+                  com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.class, com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.Builder.class);
         }
 
         // Construct using com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.newBuilder()
@@ -3862,7 +3862,7 @@ public final class OutputProtos {
         }
 
         private Builder(
-            BuilderParent parent) {
+            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
@@ -3891,23 +3891,23 @@ public final class OutputProtos {
 
         public com.google.protobuf.Descriptors.Descriptor
             getDescriptorForType() {
-          return OutputProtos.internal_static_SyncResponse_WhiteNoise_descriptor;
+          return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_WhiteNoise_descriptor;
         }
 
-        public WhiteNoise getDefaultInstanceForType() {
-          return WhiteNoise.getDefaultInstance();
+        public com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise getDefaultInstanceForType() {
+          return com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.getDefaultInstance();
         }
 
-        public WhiteNoise build() {
-          WhiteNoise result = buildPartial();
+        public com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise build() {
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise result = buildPartial();
           if (!result.isInitialized()) {
             throw newUninitializedMessageException(result);
           }
           return result;
         }
 
-        public WhiteNoise buildPartial() {
-          WhiteNoise result = new WhiteNoise(this);
+        public com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise buildPartial() {
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise result = new com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise(this);
           int from_bitField0_ = bitField0_;
           int to_bitField0_ = 0;
           if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -3928,16 +3928,16 @@ public final class OutputProtos {
         }
 
         public Builder mergeFrom(com.google.protobuf.Message other) {
-          if (other instanceof WhiteNoise) {
-            return mergeFrom((WhiteNoise)other);
+          if (other instanceof com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise) {
+            return mergeFrom((com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise)other);
           } else {
             super.mergeFrom(other);
             return this;
           }
         }
 
-        public Builder mergeFrom(WhiteNoise other) {
-          if (other == WhiteNoise.getDefaultInstance()) return this;
+        public Builder mergeFrom(com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise other) {
+          if (other == com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.getDefaultInstance()) return this;
           if (other.hasStartTime()) {
             setStartTime(other.getStartTime());
           }
@@ -3959,11 +3959,11 @@ public final class OutputProtos {
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws java.io.IOException {
-          WhiteNoise parsedMessage = null;
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise parsedMessage = null;
           try {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (WhiteNoise) e.getUnfinishedMessage();
+            parsedMessage = (com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise) e.getUnfinishedMessage();
             throw e;
           } finally {
             if (parsedMessage != null) {
@@ -4190,7 +4190,7 @@ public final class OutputProtos {
       }
 
       private final com.google.protobuf.UnknownFieldSet unknownFields;
-      @Override
+      @java.lang.Override
       public final com.google.protobuf.UnknownFieldSet
           getUnknownFields() {
         return this.unknownFields;
@@ -4272,14 +4272,14 @@ public final class OutputProtos {
       }
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return OutputProtos.internal_static_SyncResponse_FlashAction_descriptor;
+        return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_FlashAction_descriptor;
       }
 
-      protected FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return OutputProtos.internal_static_SyncResponse_FlashAction_fieldAccessorTable
+        return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_FlashAction_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                FlashAction.class, Builder.class);
+                com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction.class, com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction.Builder.class);
       }
 
       public static com.google.protobuf.Parser<FlashAction> PARSER =
@@ -4292,7 +4292,7 @@ public final class OutputProtos {
         }
       };
 
-      @Override
+      @java.lang.Override
       public com.google.protobuf.Parser<FlashAction> getParserForType() {
         return PARSER;
       }
@@ -4519,59 +4519,59 @@ public final class OutputProtos {
       }
 
       private static final long serialVersionUID = 0L;
-      @Override
-      protected Object writeReplace()
+      @java.lang.Override
+      protected java.lang.Object writeReplace()
           throws java.io.ObjectStreamException {
         return super.writeReplace();
       }
 
-      public static FlashAction parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-      public static FlashAction parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static FlashAction parseFrom(byte[] data)
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction parseFrom(byte[] data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-      public static FlashAction parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction parseFrom(
           byte[] data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static FlashAction parseFrom(java.io.InputStream input)
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction parseFrom(java.io.InputStream input)
           throws java.io.IOException {
         return PARSER.parseFrom(input);
       }
-      public static FlashAction parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction parseFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
         return PARSER.parseFrom(input, extensionRegistry);
       }
-      public static FlashAction parseDelimitedFrom(java.io.InputStream input)
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction parseDelimitedFrom(java.io.InputStream input)
           throws java.io.IOException {
         return PARSER.parseDelimitedFrom(input);
       }
-      public static FlashAction parseDelimitedFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction parseDelimitedFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
         return PARSER.parseDelimitedFrom(input, extensionRegistry);
       }
-      public static FlashAction parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction parseFrom(
           com.google.protobuf.CodedInputStream input)
           throws java.io.IOException {
         return PARSER.parseFrom(input);
       }
-      public static FlashAction parseFrom(
+      public static com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
@@ -4580,14 +4580,14 @@ public final class OutputProtos {
 
       public static Builder newBuilder() { return Builder.create(); }
       public Builder newBuilderForType() { return newBuilder(); }
-      public static Builder newBuilder(FlashAction prototype) {
+      public static Builder newBuilder(com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction prototype) {
         return newBuilder().mergeFrom(prototype);
       }
       public Builder toBuilder() { return newBuilder(this); }
 
-      @Override
+      @java.lang.Override
       protected Builder newBuilderForType(
-          BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         Builder builder = new Builder(parent);
         return builder;
       }
@@ -4596,17 +4596,17 @@ public final class OutputProtos {
        */
       public static final class Builder extends
           com.google.protobuf.GeneratedMessage.Builder<Builder>
-         implements FlashActionOrBuilder {
+         implements com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashActionOrBuilder {
         public static final com.google.protobuf.Descriptors.Descriptor
             getDescriptor() {
-          return OutputProtos.internal_static_SyncResponse_FlashAction_descriptor;
+          return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_FlashAction_descriptor;
         }
 
-        protected FieldAccessorTable
+        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return OutputProtos.internal_static_SyncResponse_FlashAction_fieldAccessorTable
+          return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_FlashAction_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  FlashAction.class, Builder.class);
+                  com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction.class, com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction.Builder.class);
         }
 
         // Construct using com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction.newBuilder()
@@ -4615,7 +4615,7 @@ public final class OutputProtos {
         }
 
         private Builder(
-            BuilderParent parent) {
+            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
@@ -4654,23 +4654,23 @@ public final class OutputProtos {
 
         public com.google.protobuf.Descriptors.Descriptor
             getDescriptorForType() {
-          return OutputProtos.internal_static_SyncResponse_FlashAction_descriptor;
+          return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_FlashAction_descriptor;
         }
 
-        public FlashAction getDefaultInstanceForType() {
-          return FlashAction.getDefaultInstance();
+        public com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction getDefaultInstanceForType() {
+          return com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction.getDefaultInstance();
         }
 
-        public FlashAction build() {
-          FlashAction result = buildPartial();
+        public com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction build() {
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction result = buildPartial();
           if (!result.isInitialized()) {
             throw newUninitializedMessageException(result);
           }
           return result;
         }
 
-        public FlashAction buildPartial() {
-          FlashAction result = new FlashAction(this);
+        public com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction buildPartial() {
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction result = new com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction(this);
           int from_bitField0_ = bitField0_;
           int to_bitField0_ = 0;
           if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -4711,16 +4711,16 @@ public final class OutputProtos {
         }
 
         public Builder mergeFrom(com.google.protobuf.Message other) {
-          if (other instanceof FlashAction) {
-            return mergeFrom((FlashAction)other);
+          if (other instanceof com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction) {
+            return mergeFrom((com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction)other);
           } else {
             super.mergeFrom(other);
             return this;
           }
         }
 
-        public Builder mergeFrom(FlashAction other) {
-          if (other == FlashAction.getDefaultInstance()) return this;
+        public Builder mergeFrom(com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction other) {
+          if (other == com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction.getDefaultInstance()) return this;
           if (other.hasRed()) {
             setRed(other.getRed());
           }
@@ -4757,11 +4757,11 @@ public final class OutputProtos {
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws java.io.IOException {
-          FlashAction parsedMessage = null;
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction parsedMessage = null;
           try {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (FlashAction) e.getUnfinishedMessage();
+            parsedMessage = (com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction) e.getUnfinishedMessage();
             throw e;
           } finally {
             if (parsedMessage != null) {
@@ -5047,1486 +5047,6 @@ public final class OutputProtos {
       // @@protoc_insertion_point(class_scope:SyncResponse.FlashAction)
     }
 
-    public interface AudioControlOrBuilder
-        extends com.google.protobuf.MessageOrBuilder {
-
-      // optional int32 audio_min_energy_threshold = 1;
-      /**
-       * <code>optional int32 audio_min_energy_threshold = 1;</code>
-       *
-       * <pre>
-       *minimum log2 audio energy above background noise to save off and classify.
-       *500 is a good value for this.  Raise to 1000 to be less sensitive.    
-       * </pre>
-       */
-      boolean hasAudioMinEnergyThreshold();
-      /**
-       * <code>optional int32 audio_min_energy_threshold = 1;</code>
-       *
-       * <pre>
-       *minimum log2 audio energy above background noise to save off and classify.
-       *500 is a good value for this.  Raise to 1000 to be less sensitive.    
-       * </pre>
-       */
-      int getAudioMinEnergyThreshold();
-
-      // optional int32 audio_num_feat_vecs_until_attempt_feature_upload = 2;
-      /**
-       * <code>optional int32 audio_num_feat_vecs_until_attempt_feature_upload = 2;</code>
-       *
-       * <pre>
-       *feature vectors come in every 32ms  ( 256 / 16000Hz * 2, where the "2" is for the average 2, decimate)
-       *so every 1875 feat vecs is a minute. 
-       * </pre>
-       */
-      boolean hasAudioNumFeatVecsUntilAttemptFeatureUpload();
-      /**
-       * <code>optional int32 audio_num_feat_vecs_until_attempt_feature_upload = 2;</code>
-       *
-       * <pre>
-       *feature vectors come in every 32ms  ( 256 / 16000Hz * 2, where the "2" is for the average 2, decimate)
-       *so every 1875 feat vecs is a minute. 
-       * </pre>
-       */
-      int getAudioNumFeatVecsUntilAttemptFeatureUpload();
-
-      // optional int32 audio_feat_buffer_size = 3;
-      /**
-       * <code>optional int32 audio_feat_buffer_size = 3;</code>
-       *
-       * <pre>
-       *buffer size in bytes of audio features.  Note every ~330 bytes is 32 feat vecs, ergo 1 minute is about 20K
-       *the buffer should be sized for your upload period 
-       * </pre>
-       */
-      boolean hasAudioFeatBufferSize();
-      /**
-       * <code>optional int32 audio_feat_buffer_size = 3;</code>
-       *
-       * <pre>
-       *buffer size in bytes of audio features.  Note every ~330 bytes is 32 feat vecs, ergo 1 minute is about 20K
-       *the buffer should be sized for your upload period 
-       * </pre>
-       */
-      int getAudioFeatBufferSize();
-
-      // optional int32 audio_recording_period_in_frames = 4;
-      /**
-       * <code>optional int32 audio_recording_period_in_frames = 4;</code>
-       *
-       * <pre>
-       *frames are 16ms long (256/16000).  When you detect snoring (or whatever), this is how many frames of data you want to record
-       * </pre>
-       */
-      boolean hasAudioRecordingPeriodInFrames();
-      /**
-       * <code>optional int32 audio_recording_period_in_frames = 4;</code>
-       *
-       * <pre>
-       *frames are 16ms long (256/16000).  When you detect snoring (or whatever), this is how many frames of data you want to record
-       * </pre>
-       */
-      int getAudioRecordingPeriodInFrames();
-
-      // optional .Matrix audio_recording_classifier = 5;
-      /**
-       * <code>optional .Matrix audio_recording_classifier = 5;</code>
-       *
-       * <pre>
-       *Matrix == 2D array of integers with some describing strings
-       *audio classifier and HMM determines when you should record to sd card
-       *You can think of the classifier as a high level feature extraction
-       *The HMM evaluation "fuses" the high level classification together
-       * </pre>
-       */
-      boolean hasAudioRecordingClassifier();
-      /**
-       * <code>optional .Matrix audio_recording_classifier = 5;</code>
-       *
-       * <pre>
-       *Matrix == 2D array of integers with some describing strings
-       *audio classifier and HMM determines when you should record to sd card
-       *You can think of the classifier as a high level feature extraction
-       *The HMM evaluation "fuses" the high level classification together
-       * </pre>
-       */
-      com.hello.suripu.api.audio.MatrixProtos.Matrix getAudioRecordingClassifier();
-      /**
-       * <code>optional .Matrix audio_recording_classifier = 5;</code>
-       *
-       * <pre>
-       *Matrix == 2D array of integers with some describing strings
-       *audio classifier and HMM determines when you should record to sd card
-       *You can think of the classifier as a high level feature extraction
-       *The HMM evaluation "fuses" the high level classification together
-       * </pre>
-       */
-      com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder getAudioRecordingClassifierOrBuilder();
-
-      // optional .Matrix audio_recording_hmm = 6;
-      /**
-       * <code>optional .Matrix audio_recording_hmm = 6;</code>
-       */
-      boolean hasAudioRecordingHmm();
-      /**
-       * <code>optional .Matrix audio_recording_hmm = 6;</code>
-       */
-      com.hello.suripu.api.audio.MatrixProtos.Matrix getAudioRecordingHmm();
-      /**
-       * <code>optional .Matrix audio_recording_hmm = 6;</code>
-       */
-      com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder getAudioRecordingHmmOrBuilder();
-
-      // optional .SyncResponse.AudioControl.AudioCaptureAction audio_capture_action = 8;
-      /**
-       * <code>optional .SyncResponse.AudioControl.AudioCaptureAction audio_capture_action = 8;</code>
-       */
-      boolean hasAudioCaptureAction();
-      /**
-       * <code>optional .SyncResponse.AudioControl.AudioCaptureAction audio_capture_action = 8;</code>
-       */
-      AudioControl.AudioCaptureAction getAudioCaptureAction();
-    }
-    /**
-     * Protobuf type {@code SyncResponse.AudioControl}
-     */
-    public static final class AudioControl extends
-        com.google.protobuf.GeneratedMessage
-        implements AudioControlOrBuilder {
-      // Use AudioControl.newBuilder() to construct.
-      private AudioControl(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
-        super(builder);
-        this.unknownFields = builder.getUnknownFields();
-      }
-      private AudioControl(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
-
-      private static final AudioControl defaultInstance;
-      public static AudioControl getDefaultInstance() {
-        return defaultInstance;
-      }
-
-      public AudioControl getDefaultInstanceForType() {
-        return defaultInstance;
-      }
-
-      private final com.google.protobuf.UnknownFieldSet unknownFields;
-      @Override
-      public final com.google.protobuf.UnknownFieldSet
-          getUnknownFields() {
-        return this.unknownFields;
-      }
-      private AudioControl(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        initFields();
-        int mutable_bitField0_ = 0;
-        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-            com.google.protobuf.UnknownFieldSet.newBuilder();
-        try {
-          boolean done = false;
-          while (!done) {
-            int tag = input.readTag();
-            switch (tag) {
-              case 0:
-                done = true;
-                break;
-              default: {
-                if (!parseUnknownField(input, unknownFields,
-                                       extensionRegistry, tag)) {
-                  done = true;
-                }
-                break;
-              }
-              case 8: {
-                bitField0_ |= 0x00000001;
-                audioMinEnergyThreshold_ = input.readInt32();
-                break;
-              }
-              case 16: {
-                bitField0_ |= 0x00000002;
-                audioNumFeatVecsUntilAttemptFeatureUpload_ = input.readInt32();
-                break;
-              }
-              case 24: {
-                bitField0_ |= 0x00000004;
-                audioFeatBufferSize_ = input.readInt32();
-                break;
-              }
-              case 32: {
-                bitField0_ |= 0x00000008;
-                audioRecordingPeriodInFrames_ = input.readInt32();
-                break;
-              }
-              case 42: {
-                com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder subBuilder = null;
-                if (((bitField0_ & 0x00000010) == 0x00000010)) {
-                  subBuilder = audioRecordingClassifier_.toBuilder();
-                }
-                audioRecordingClassifier_ = input.readMessage(com.hello.suripu.api.audio.MatrixProtos.Matrix.PARSER, extensionRegistry);
-                if (subBuilder != null) {
-                  subBuilder.mergeFrom(audioRecordingClassifier_);
-                  audioRecordingClassifier_ = subBuilder.buildPartial();
-                }
-                bitField0_ |= 0x00000010;
-                break;
-              }
-              case 50: {
-                com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder subBuilder = null;
-                if (((bitField0_ & 0x00000020) == 0x00000020)) {
-                  subBuilder = audioRecordingHmm_.toBuilder();
-                }
-                audioRecordingHmm_ = input.readMessage(com.hello.suripu.api.audio.MatrixProtos.Matrix.PARSER, extensionRegistry);
-                if (subBuilder != null) {
-                  subBuilder.mergeFrom(audioRecordingHmm_);
-                  audioRecordingHmm_ = subBuilder.buildPartial();
-                }
-                bitField0_ |= 0x00000020;
-                break;
-              }
-              case 64: {
-                int rawValue = input.readEnum();
-                AudioCaptureAction value = AudioCaptureAction.valueOf(rawValue);
-                if (value == null) {
-                  unknownFields.mergeVarintField(8, rawValue);
-                } else {
-                  bitField0_ |= 0x00000040;
-                  audioCaptureAction_ = value;
-                }
-                break;
-              }
-            }
-          }
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          throw e.setUnfinishedMessage(this);
-        } catch (java.io.IOException e) {
-          throw new com.google.protobuf.InvalidProtocolBufferException(
-              e.getMessage()).setUnfinishedMessage(this);
-        } finally {
-          this.unknownFields = unknownFields.build();
-          makeExtensionsImmutable();
-        }
-      }
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return OutputProtos.internal_static_SyncResponse_AudioControl_descriptor;
-      }
-
-      protected FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return OutputProtos.internal_static_SyncResponse_AudioControl_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                AudioControl.class, Builder.class);
-      }
-
-      public static com.google.protobuf.Parser<AudioControl> PARSER =
-          new com.google.protobuf.AbstractParser<AudioControl>() {
-        public AudioControl parsePartialFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-          return new AudioControl(input, extensionRegistry);
-        }
-      };
-
-      @Override
-      public com.google.protobuf.Parser<AudioControl> getParserForType() {
-        return PARSER;
-      }
-
-      /**
-       * Protobuf enum {@code SyncResponse.AudioControl.AudioCaptureAction}
-       *
-       * <pre>
-       *turn on/off audio capture
-       * </pre>
-       */
-      public enum AudioCaptureAction
-          implements com.google.protobuf.ProtocolMessageEnum {
-        /**
-         * <code>OFF = 0;</code>
-         */
-        OFF(0, 0),
-        /**
-         * <code>ON = 1;</code>
-         */
-        ON(1, 1),
-        ;
-
-        /**
-         * <code>OFF = 0;</code>
-         */
-        public static final int OFF_VALUE = 0;
-        /**
-         * <code>ON = 1;</code>
-         */
-        public static final int ON_VALUE = 1;
-
-
-        public final int getNumber() { return value; }
-
-        public static AudioCaptureAction valueOf(int value) {
-          switch (value) {
-            case 0: return OFF;
-            case 1: return ON;
-            default: return null;
-          }
-        }
-
-        public static com.google.protobuf.Internal.EnumLiteMap<AudioCaptureAction>
-            internalGetValueMap() {
-          return internalValueMap;
-        }
-        private static com.google.protobuf.Internal.EnumLiteMap<AudioCaptureAction>
-            internalValueMap =
-              new com.google.protobuf.Internal.EnumLiteMap<AudioCaptureAction>() {
-                public AudioCaptureAction findValueByNumber(int number) {
-                  return AudioCaptureAction.valueOf(number);
-                }
-              };
-
-        public final com.google.protobuf.Descriptors.EnumValueDescriptor
-            getValueDescriptor() {
-          return getDescriptor().getValues().get(index);
-        }
-        public final com.google.protobuf.Descriptors.EnumDescriptor
-            getDescriptorForType() {
-          return getDescriptor();
-        }
-        public static final com.google.protobuf.Descriptors.EnumDescriptor
-            getDescriptor() {
-          return AudioControl.getDescriptor().getEnumTypes().get(0);
-        }
-
-        private static final AudioCaptureAction[] VALUES = values();
-
-        public static AudioCaptureAction valueOf(
-            com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
-          if (desc.getType() != getDescriptor()) {
-            throw new IllegalArgumentException(
-              "EnumValueDescriptor is not for this type.");
-          }
-          return VALUES[desc.getIndex()];
-        }
-
-        private final int index;
-        private final int value;
-
-        private AudioCaptureAction(int index, int value) {
-          this.index = index;
-          this.value = value;
-        }
-
-        // @@protoc_insertion_point(enum_scope:SyncResponse.AudioControl.AudioCaptureAction)
-      }
-
-      private int bitField0_;
-      // optional int32 audio_min_energy_threshold = 1;
-      public static final int AUDIO_MIN_ENERGY_THRESHOLD_FIELD_NUMBER = 1;
-      private int audioMinEnergyThreshold_;
-      /**
-       * <code>optional int32 audio_min_energy_threshold = 1;</code>
-       *
-       * <pre>
-       *minimum log2 audio energy above background noise to save off and classify.
-       *500 is a good value for this.  Raise to 1000 to be less sensitive.    
-       * </pre>
-       */
-      public boolean hasAudioMinEnergyThreshold() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>optional int32 audio_min_energy_threshold = 1;</code>
-       *
-       * <pre>
-       *minimum log2 audio energy above background noise to save off and classify.
-       *500 is a good value for this.  Raise to 1000 to be less sensitive.    
-       * </pre>
-       */
-      public int getAudioMinEnergyThreshold() {
-        return audioMinEnergyThreshold_;
-      }
-
-      // optional int32 audio_num_feat_vecs_until_attempt_feature_upload = 2;
-      public static final int AUDIO_NUM_FEAT_VECS_UNTIL_ATTEMPT_FEATURE_UPLOAD_FIELD_NUMBER = 2;
-      private int audioNumFeatVecsUntilAttemptFeatureUpload_;
-      /**
-       * <code>optional int32 audio_num_feat_vecs_until_attempt_feature_upload = 2;</code>
-       *
-       * <pre>
-       *feature vectors come in every 32ms  ( 256 / 16000Hz * 2, where the "2" is for the average 2, decimate)
-       *so every 1875 feat vecs is a minute. 
-       * </pre>
-       */
-      public boolean hasAudioNumFeatVecsUntilAttemptFeatureUpload() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>optional int32 audio_num_feat_vecs_until_attempt_feature_upload = 2;</code>
-       *
-       * <pre>
-       *feature vectors come in every 32ms  ( 256 / 16000Hz * 2, where the "2" is for the average 2, decimate)
-       *so every 1875 feat vecs is a minute. 
-       * </pre>
-       */
-      public int getAudioNumFeatVecsUntilAttemptFeatureUpload() {
-        return audioNumFeatVecsUntilAttemptFeatureUpload_;
-      }
-
-      // optional int32 audio_feat_buffer_size = 3;
-      public static final int AUDIO_FEAT_BUFFER_SIZE_FIELD_NUMBER = 3;
-      private int audioFeatBufferSize_;
-      /**
-       * <code>optional int32 audio_feat_buffer_size = 3;</code>
-       *
-       * <pre>
-       *buffer size in bytes of audio features.  Note every ~330 bytes is 32 feat vecs, ergo 1 minute is about 20K
-       *the buffer should be sized for your upload period 
-       * </pre>
-       */
-      public boolean hasAudioFeatBufferSize() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
-      }
-      /**
-       * <code>optional int32 audio_feat_buffer_size = 3;</code>
-       *
-       * <pre>
-       *buffer size in bytes of audio features.  Note every ~330 bytes is 32 feat vecs, ergo 1 minute is about 20K
-       *the buffer should be sized for your upload period 
-       * </pre>
-       */
-      public int getAudioFeatBufferSize() {
-        return audioFeatBufferSize_;
-      }
-
-      // optional int32 audio_recording_period_in_frames = 4;
-      public static final int AUDIO_RECORDING_PERIOD_IN_FRAMES_FIELD_NUMBER = 4;
-      private int audioRecordingPeriodInFrames_;
-      /**
-       * <code>optional int32 audio_recording_period_in_frames = 4;</code>
-       *
-       * <pre>
-       *frames are 16ms long (256/16000).  When you detect snoring (or whatever), this is how many frames of data you want to record
-       * </pre>
-       */
-      public boolean hasAudioRecordingPeriodInFrames() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
-      }
-      /**
-       * <code>optional int32 audio_recording_period_in_frames = 4;</code>
-       *
-       * <pre>
-       *frames are 16ms long (256/16000).  When you detect snoring (or whatever), this is how many frames of data you want to record
-       * </pre>
-       */
-      public int getAudioRecordingPeriodInFrames() {
-        return audioRecordingPeriodInFrames_;
-      }
-
-      // optional .Matrix audio_recording_classifier = 5;
-      public static final int AUDIO_RECORDING_CLASSIFIER_FIELD_NUMBER = 5;
-      private com.hello.suripu.api.audio.MatrixProtos.Matrix audioRecordingClassifier_;
-      /**
-       * <code>optional .Matrix audio_recording_classifier = 5;</code>
-       *
-       * <pre>
-       *Matrix == 2D array of integers with some describing strings
-       *audio classifier and HMM determines when you should record to sd card
-       *You can think of the classifier as a high level feature extraction
-       *The HMM evaluation "fuses" the high level classification together
-       * </pre>
-       */
-      public boolean hasAudioRecordingClassifier() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
-      }
-      /**
-       * <code>optional .Matrix audio_recording_classifier = 5;</code>
-       *
-       * <pre>
-       *Matrix == 2D array of integers with some describing strings
-       *audio classifier and HMM determines when you should record to sd card
-       *You can think of the classifier as a high level feature extraction
-       *The HMM evaluation "fuses" the high level classification together
-       * </pre>
-       */
-      public com.hello.suripu.api.audio.MatrixProtos.Matrix getAudioRecordingClassifier() {
-        return audioRecordingClassifier_;
-      }
-      /**
-       * <code>optional .Matrix audio_recording_classifier = 5;</code>
-       *
-       * <pre>
-       *Matrix == 2D array of integers with some describing strings
-       *audio classifier and HMM determines when you should record to sd card
-       *You can think of the classifier as a high level feature extraction
-       *The HMM evaluation "fuses" the high level classification together
-       * </pre>
-       */
-      public com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder getAudioRecordingClassifierOrBuilder() {
-        return audioRecordingClassifier_;
-      }
-
-      // optional .Matrix audio_recording_hmm = 6;
-      public static final int AUDIO_RECORDING_HMM_FIELD_NUMBER = 6;
-      private com.hello.suripu.api.audio.MatrixProtos.Matrix audioRecordingHmm_;
-      /**
-       * <code>optional .Matrix audio_recording_hmm = 6;</code>
-       */
-      public boolean hasAudioRecordingHmm() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
-      }
-      /**
-       * <code>optional .Matrix audio_recording_hmm = 6;</code>
-       */
-      public com.hello.suripu.api.audio.MatrixProtos.Matrix getAudioRecordingHmm() {
-        return audioRecordingHmm_;
-      }
-      /**
-       * <code>optional .Matrix audio_recording_hmm = 6;</code>
-       */
-      public com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder getAudioRecordingHmmOrBuilder() {
-        return audioRecordingHmm_;
-      }
-
-      // optional .SyncResponse.AudioControl.AudioCaptureAction audio_capture_action = 8;
-      public static final int AUDIO_CAPTURE_ACTION_FIELD_NUMBER = 8;
-      private AudioCaptureAction audioCaptureAction_;
-      /**
-       * <code>optional .SyncResponse.AudioControl.AudioCaptureAction audio_capture_action = 8;</code>
-       */
-      public boolean hasAudioCaptureAction() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
-      }
-      /**
-       * <code>optional .SyncResponse.AudioControl.AudioCaptureAction audio_capture_action = 8;</code>
-       */
-      public AudioCaptureAction getAudioCaptureAction() {
-        return audioCaptureAction_;
-      }
-
-      private void initFields() {
-        audioMinEnergyThreshold_ = 0;
-        audioNumFeatVecsUntilAttemptFeatureUpload_ = 0;
-        audioFeatBufferSize_ = 0;
-        audioRecordingPeriodInFrames_ = 0;
-        audioRecordingClassifier_ = com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance();
-        audioRecordingHmm_ = com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance();
-        audioCaptureAction_ = AudioCaptureAction.OFF;
-      }
-      private byte memoizedIsInitialized = -1;
-      public final boolean isInitialized() {
-        byte isInitialized = memoizedIsInitialized;
-        if (isInitialized != -1) return isInitialized == 1;
-
-        if (hasAudioRecordingClassifier()) {
-          if (!getAudioRecordingClassifier().isInitialized()) {
-            memoizedIsInitialized = 0;
-            return false;
-          }
-        }
-        if (hasAudioRecordingHmm()) {
-          if (!getAudioRecordingHmm().isInitialized()) {
-            memoizedIsInitialized = 0;
-            return false;
-          }
-        }
-        memoizedIsInitialized = 1;
-        return true;
-      }
-
-      public void writeTo(com.google.protobuf.CodedOutputStream output)
-                          throws java.io.IOException {
-        getSerializedSize();
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          output.writeInt32(1, audioMinEnergyThreshold_);
-        }
-        if (((bitField0_ & 0x00000002) == 0x00000002)) {
-          output.writeInt32(2, audioNumFeatVecsUntilAttemptFeatureUpload_);
-        }
-        if (((bitField0_ & 0x00000004) == 0x00000004)) {
-          output.writeInt32(3, audioFeatBufferSize_);
-        }
-        if (((bitField0_ & 0x00000008) == 0x00000008)) {
-          output.writeInt32(4, audioRecordingPeriodInFrames_);
-        }
-        if (((bitField0_ & 0x00000010) == 0x00000010)) {
-          output.writeMessage(5, audioRecordingClassifier_);
-        }
-        if (((bitField0_ & 0x00000020) == 0x00000020)) {
-          output.writeMessage(6, audioRecordingHmm_);
-        }
-        if (((bitField0_ & 0x00000040) == 0x00000040)) {
-          output.writeEnum(8, audioCaptureAction_.getNumber());
-        }
-        getUnknownFields().writeTo(output);
-      }
-
-      private int memoizedSerializedSize = -1;
-      public int getSerializedSize() {
-        int size = memoizedSerializedSize;
-        if (size != -1) return size;
-
-        size = 0;
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeInt32Size(1, audioMinEnergyThreshold_);
-        }
-        if (((bitField0_ & 0x00000002) == 0x00000002)) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeInt32Size(2, audioNumFeatVecsUntilAttemptFeatureUpload_);
-        }
-        if (((bitField0_ & 0x00000004) == 0x00000004)) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeInt32Size(3, audioFeatBufferSize_);
-        }
-        if (((bitField0_ & 0x00000008) == 0x00000008)) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeInt32Size(4, audioRecordingPeriodInFrames_);
-        }
-        if (((bitField0_ & 0x00000010) == 0x00000010)) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeMessageSize(5, audioRecordingClassifier_);
-        }
-        if (((bitField0_ & 0x00000020) == 0x00000020)) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeMessageSize(6, audioRecordingHmm_);
-        }
-        if (((bitField0_ & 0x00000040) == 0x00000040)) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeEnumSize(8, audioCaptureAction_.getNumber());
-        }
-        size += getUnknownFields().getSerializedSize();
-        memoizedSerializedSize = size;
-        return size;
-      }
-
-      private static final long serialVersionUID = 0L;
-      @Override
-      protected Object writeReplace()
-          throws java.io.ObjectStreamException {
-        return super.writeReplace();
-      }
-
-      public static AudioControl parseFrom(
-          com.google.protobuf.ByteString data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data);
-      }
-      public static AudioControl parseFrom(
-          com.google.protobuf.ByteString data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data, extensionRegistry);
-      }
-      public static AudioControl parseFrom(byte[] data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data);
-      }
-      public static AudioControl parseFrom(
-          byte[] data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data, extensionRegistry);
-      }
-      public static AudioControl parseFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return PARSER.parseFrom(input);
-      }
-      public static AudioControl parseFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return PARSER.parseFrom(input, extensionRegistry);
-      }
-      public static AudioControl parseDelimitedFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return PARSER.parseDelimitedFrom(input);
-      }
-      public static AudioControl parseDelimitedFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return PARSER.parseDelimitedFrom(input, extensionRegistry);
-      }
-      public static AudioControl parseFrom(
-          com.google.protobuf.CodedInputStream input)
-          throws java.io.IOException {
-        return PARSER.parseFrom(input);
-      }
-      public static AudioControl parseFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return PARSER.parseFrom(input, extensionRegistry);
-      }
-
-      public static Builder newBuilder() { return Builder.create(); }
-      public Builder newBuilderForType() { return newBuilder(); }
-      public static Builder newBuilder(AudioControl prototype) {
-        return newBuilder().mergeFrom(prototype);
-      }
-      public Builder toBuilder() { return newBuilder(this); }
-
-      @Override
-      protected Builder newBuilderForType(
-          BuilderParent parent) {
-        Builder builder = new Builder(parent);
-        return builder;
-      }
-      /**
-       * Protobuf type {@code SyncResponse.AudioControl}
-       */
-      public static final class Builder extends
-          com.google.protobuf.GeneratedMessage.Builder<Builder>
-         implements AudioControlOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor
-            getDescriptor() {
-          return OutputProtos.internal_static_SyncResponse_AudioControl_descriptor;
-        }
-
-        protected FieldAccessorTable
-            internalGetFieldAccessorTable() {
-          return OutputProtos.internal_static_SyncResponse_AudioControl_fieldAccessorTable
-              .ensureFieldAccessorsInitialized(
-                  AudioControl.class, Builder.class);
-        }
-
-        // Construct using com.hello.suripu.api.output.OutputProtos.SyncResponse.AudioControl.newBuilder()
-        private Builder() {
-          maybeForceBuilderInitialization();
-        }
-
-        private Builder(
-            BuilderParent parent) {
-          super(parent);
-          maybeForceBuilderInitialization();
-        }
-        private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
-            getAudioRecordingClassifierFieldBuilder();
-            getAudioRecordingHmmFieldBuilder();
-          }
-        }
-        private static Builder create() {
-          return new Builder();
-        }
-
-        public Builder clear() {
-          super.clear();
-          audioMinEnergyThreshold_ = 0;
-          bitField0_ = (bitField0_ & ~0x00000001);
-          audioNumFeatVecsUntilAttemptFeatureUpload_ = 0;
-          bitField0_ = (bitField0_ & ~0x00000002);
-          audioFeatBufferSize_ = 0;
-          bitField0_ = (bitField0_ & ~0x00000004);
-          audioRecordingPeriodInFrames_ = 0;
-          bitField0_ = (bitField0_ & ~0x00000008);
-          if (audioRecordingClassifierBuilder_ == null) {
-            audioRecordingClassifier_ = com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance();
-          } else {
-            audioRecordingClassifierBuilder_.clear();
-          }
-          bitField0_ = (bitField0_ & ~0x00000010);
-          if (audioRecordingHmmBuilder_ == null) {
-            audioRecordingHmm_ = com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance();
-          } else {
-            audioRecordingHmmBuilder_.clear();
-          }
-          bitField0_ = (bitField0_ & ~0x00000020);
-          audioCaptureAction_ = AudioCaptureAction.OFF;
-          bitField0_ = (bitField0_ & ~0x00000040);
-          return this;
-        }
-
-        public Builder clone() {
-          return create().mergeFrom(buildPartial());
-        }
-
-        public com.google.protobuf.Descriptors.Descriptor
-            getDescriptorForType() {
-          return OutputProtos.internal_static_SyncResponse_AudioControl_descriptor;
-        }
-
-        public AudioControl getDefaultInstanceForType() {
-          return AudioControl.getDefaultInstance();
-        }
-
-        public AudioControl build() {
-          AudioControl result = buildPartial();
-          if (!result.isInitialized()) {
-            throw newUninitializedMessageException(result);
-          }
-          return result;
-        }
-
-        public AudioControl buildPartial() {
-          AudioControl result = new AudioControl(this);
-          int from_bitField0_ = bitField0_;
-          int to_bitField0_ = 0;
-          if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-            to_bitField0_ |= 0x00000001;
-          }
-          result.audioMinEnergyThreshold_ = audioMinEnergyThreshold_;
-          if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-            to_bitField0_ |= 0x00000002;
-          }
-          result.audioNumFeatVecsUntilAttemptFeatureUpload_ = audioNumFeatVecsUntilAttemptFeatureUpload_;
-          if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
-            to_bitField0_ |= 0x00000004;
-          }
-          result.audioFeatBufferSize_ = audioFeatBufferSize_;
-          if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
-            to_bitField0_ |= 0x00000008;
-          }
-          result.audioRecordingPeriodInFrames_ = audioRecordingPeriodInFrames_;
-          if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
-            to_bitField0_ |= 0x00000010;
-          }
-          if (audioRecordingClassifierBuilder_ == null) {
-            result.audioRecordingClassifier_ = audioRecordingClassifier_;
-          } else {
-            result.audioRecordingClassifier_ = audioRecordingClassifierBuilder_.build();
-          }
-          if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
-            to_bitField0_ |= 0x00000020;
-          }
-          if (audioRecordingHmmBuilder_ == null) {
-            result.audioRecordingHmm_ = audioRecordingHmm_;
-          } else {
-            result.audioRecordingHmm_ = audioRecordingHmmBuilder_.build();
-          }
-          if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
-            to_bitField0_ |= 0x00000040;
-          }
-          result.audioCaptureAction_ = audioCaptureAction_;
-          result.bitField0_ = to_bitField0_;
-          onBuilt();
-          return result;
-        }
-
-        public Builder mergeFrom(com.google.protobuf.Message other) {
-          if (other instanceof AudioControl) {
-            return mergeFrom((AudioControl)other);
-          } else {
-            super.mergeFrom(other);
-            return this;
-          }
-        }
-
-        public Builder mergeFrom(AudioControl other) {
-          if (other == AudioControl.getDefaultInstance()) return this;
-          if (other.hasAudioMinEnergyThreshold()) {
-            setAudioMinEnergyThreshold(other.getAudioMinEnergyThreshold());
-          }
-          if (other.hasAudioNumFeatVecsUntilAttemptFeatureUpload()) {
-            setAudioNumFeatVecsUntilAttemptFeatureUpload(other.getAudioNumFeatVecsUntilAttemptFeatureUpload());
-          }
-          if (other.hasAudioFeatBufferSize()) {
-            setAudioFeatBufferSize(other.getAudioFeatBufferSize());
-          }
-          if (other.hasAudioRecordingPeriodInFrames()) {
-            setAudioRecordingPeriodInFrames(other.getAudioRecordingPeriodInFrames());
-          }
-          if (other.hasAudioRecordingClassifier()) {
-            mergeAudioRecordingClassifier(other.getAudioRecordingClassifier());
-          }
-          if (other.hasAudioRecordingHmm()) {
-            mergeAudioRecordingHmm(other.getAudioRecordingHmm());
-          }
-          if (other.hasAudioCaptureAction()) {
-            setAudioCaptureAction(other.getAudioCaptureAction());
-          }
-          this.mergeUnknownFields(other.getUnknownFields());
-          return this;
-        }
-
-        public final boolean isInitialized() {
-          if (hasAudioRecordingClassifier()) {
-            if (!getAudioRecordingClassifier().isInitialized()) {
-              
-              return false;
-            }
-          }
-          if (hasAudioRecordingHmm()) {
-            if (!getAudioRecordingHmm().isInitialized()) {
-              
-              return false;
-            }
-          }
-          return true;
-        }
-
-        public Builder mergeFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws java.io.IOException {
-          AudioControl parsedMessage = null;
-          try {
-            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (AudioControl) e.getUnfinishedMessage();
-            throw e;
-          } finally {
-            if (parsedMessage != null) {
-              mergeFrom(parsedMessage);
-            }
-          }
-          return this;
-        }
-        private int bitField0_;
-
-        // optional int32 audio_min_energy_threshold = 1;
-        private int audioMinEnergyThreshold_ ;
-        /**
-         * <code>optional int32 audio_min_energy_threshold = 1;</code>
-         *
-         * <pre>
-         *minimum log2 audio energy above background noise to save off and classify.
-         *500 is a good value for this.  Raise to 1000 to be less sensitive.    
-         * </pre>
-         */
-        public boolean hasAudioMinEnergyThreshold() {
-          return ((bitField0_ & 0x00000001) == 0x00000001);
-        }
-        /**
-         * <code>optional int32 audio_min_energy_threshold = 1;</code>
-         *
-         * <pre>
-         *minimum log2 audio energy above background noise to save off and classify.
-         *500 is a good value for this.  Raise to 1000 to be less sensitive.    
-         * </pre>
-         */
-        public int getAudioMinEnergyThreshold() {
-          return audioMinEnergyThreshold_;
-        }
-        /**
-         * <code>optional int32 audio_min_energy_threshold = 1;</code>
-         *
-         * <pre>
-         *minimum log2 audio energy above background noise to save off and classify.
-         *500 is a good value for this.  Raise to 1000 to be less sensitive.    
-         * </pre>
-         */
-        public Builder setAudioMinEnergyThreshold(int value) {
-          bitField0_ |= 0x00000001;
-          audioMinEnergyThreshold_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>optional int32 audio_min_energy_threshold = 1;</code>
-         *
-         * <pre>
-         *minimum log2 audio energy above background noise to save off and classify.
-         *500 is a good value for this.  Raise to 1000 to be less sensitive.    
-         * </pre>
-         */
-        public Builder clearAudioMinEnergyThreshold() {
-          bitField0_ = (bitField0_ & ~0x00000001);
-          audioMinEnergyThreshold_ = 0;
-          onChanged();
-          return this;
-        }
-
-        // optional int32 audio_num_feat_vecs_until_attempt_feature_upload = 2;
-        private int audioNumFeatVecsUntilAttemptFeatureUpload_ ;
-        /**
-         * <code>optional int32 audio_num_feat_vecs_until_attempt_feature_upload = 2;</code>
-         *
-         * <pre>
-         *feature vectors come in every 32ms  ( 256 / 16000Hz * 2, where the "2" is for the average 2, decimate)
-         *so every 1875 feat vecs is a minute. 
-         * </pre>
-         */
-        public boolean hasAudioNumFeatVecsUntilAttemptFeatureUpload() {
-          return ((bitField0_ & 0x00000002) == 0x00000002);
-        }
-        /**
-         * <code>optional int32 audio_num_feat_vecs_until_attempt_feature_upload = 2;</code>
-         *
-         * <pre>
-         *feature vectors come in every 32ms  ( 256 / 16000Hz * 2, where the "2" is for the average 2, decimate)
-         *so every 1875 feat vecs is a minute. 
-         * </pre>
-         */
-        public int getAudioNumFeatVecsUntilAttemptFeatureUpload() {
-          return audioNumFeatVecsUntilAttemptFeatureUpload_;
-        }
-        /**
-         * <code>optional int32 audio_num_feat_vecs_until_attempt_feature_upload = 2;</code>
-         *
-         * <pre>
-         *feature vectors come in every 32ms  ( 256 / 16000Hz * 2, where the "2" is for the average 2, decimate)
-         *so every 1875 feat vecs is a minute. 
-         * </pre>
-         */
-        public Builder setAudioNumFeatVecsUntilAttemptFeatureUpload(int value) {
-          bitField0_ |= 0x00000002;
-          audioNumFeatVecsUntilAttemptFeatureUpload_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>optional int32 audio_num_feat_vecs_until_attempt_feature_upload = 2;</code>
-         *
-         * <pre>
-         *feature vectors come in every 32ms  ( 256 / 16000Hz * 2, where the "2" is for the average 2, decimate)
-         *so every 1875 feat vecs is a minute. 
-         * </pre>
-         */
-        public Builder clearAudioNumFeatVecsUntilAttemptFeatureUpload() {
-          bitField0_ = (bitField0_ & ~0x00000002);
-          audioNumFeatVecsUntilAttemptFeatureUpload_ = 0;
-          onChanged();
-          return this;
-        }
-
-        // optional int32 audio_feat_buffer_size = 3;
-        private int audioFeatBufferSize_ ;
-        /**
-         * <code>optional int32 audio_feat_buffer_size = 3;</code>
-         *
-         * <pre>
-         *buffer size in bytes of audio features.  Note every ~330 bytes is 32 feat vecs, ergo 1 minute is about 20K
-         *the buffer should be sized for your upload period 
-         * </pre>
-         */
-        public boolean hasAudioFeatBufferSize() {
-          return ((bitField0_ & 0x00000004) == 0x00000004);
-        }
-        /**
-         * <code>optional int32 audio_feat_buffer_size = 3;</code>
-         *
-         * <pre>
-         *buffer size in bytes of audio features.  Note every ~330 bytes is 32 feat vecs, ergo 1 minute is about 20K
-         *the buffer should be sized for your upload period 
-         * </pre>
-         */
-        public int getAudioFeatBufferSize() {
-          return audioFeatBufferSize_;
-        }
-        /**
-         * <code>optional int32 audio_feat_buffer_size = 3;</code>
-         *
-         * <pre>
-         *buffer size in bytes of audio features.  Note every ~330 bytes is 32 feat vecs, ergo 1 minute is about 20K
-         *the buffer should be sized for your upload period 
-         * </pre>
-         */
-        public Builder setAudioFeatBufferSize(int value) {
-          bitField0_ |= 0x00000004;
-          audioFeatBufferSize_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>optional int32 audio_feat_buffer_size = 3;</code>
-         *
-         * <pre>
-         *buffer size in bytes of audio features.  Note every ~330 bytes is 32 feat vecs, ergo 1 minute is about 20K
-         *the buffer should be sized for your upload period 
-         * </pre>
-         */
-        public Builder clearAudioFeatBufferSize() {
-          bitField0_ = (bitField0_ & ~0x00000004);
-          audioFeatBufferSize_ = 0;
-          onChanged();
-          return this;
-        }
-
-        // optional int32 audio_recording_period_in_frames = 4;
-        private int audioRecordingPeriodInFrames_ ;
-        /**
-         * <code>optional int32 audio_recording_period_in_frames = 4;</code>
-         *
-         * <pre>
-         *frames are 16ms long (256/16000).  When you detect snoring (or whatever), this is how many frames of data you want to record
-         * </pre>
-         */
-        public boolean hasAudioRecordingPeriodInFrames() {
-          return ((bitField0_ & 0x00000008) == 0x00000008);
-        }
-        /**
-         * <code>optional int32 audio_recording_period_in_frames = 4;</code>
-         *
-         * <pre>
-         *frames are 16ms long (256/16000).  When you detect snoring (or whatever), this is how many frames of data you want to record
-         * </pre>
-         */
-        public int getAudioRecordingPeriodInFrames() {
-          return audioRecordingPeriodInFrames_;
-        }
-        /**
-         * <code>optional int32 audio_recording_period_in_frames = 4;</code>
-         *
-         * <pre>
-         *frames are 16ms long (256/16000).  When you detect snoring (or whatever), this is how many frames of data you want to record
-         * </pre>
-         */
-        public Builder setAudioRecordingPeriodInFrames(int value) {
-          bitField0_ |= 0x00000008;
-          audioRecordingPeriodInFrames_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>optional int32 audio_recording_period_in_frames = 4;</code>
-         *
-         * <pre>
-         *frames are 16ms long (256/16000).  When you detect snoring (or whatever), this is how many frames of data you want to record
-         * </pre>
-         */
-        public Builder clearAudioRecordingPeriodInFrames() {
-          bitField0_ = (bitField0_ & ~0x00000008);
-          audioRecordingPeriodInFrames_ = 0;
-          onChanged();
-          return this;
-        }
-
-        // optional .Matrix audio_recording_classifier = 5;
-        private com.hello.suripu.api.audio.MatrixProtos.Matrix audioRecordingClassifier_ = com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance();
-        private com.google.protobuf.SingleFieldBuilder<
-            com.hello.suripu.api.audio.MatrixProtos.Matrix, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder, com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder> audioRecordingClassifierBuilder_;
-        /**
-         * <code>optional .Matrix audio_recording_classifier = 5;</code>
-         *
-         * <pre>
-         *Matrix == 2D array of integers with some describing strings
-         *audio classifier and HMM determines when you should record to sd card
-         *You can think of the classifier as a high level feature extraction
-         *The HMM evaluation "fuses" the high level classification together
-         * </pre>
-         */
-        public boolean hasAudioRecordingClassifier() {
-          return ((bitField0_ & 0x00000010) == 0x00000010);
-        }
-        /**
-         * <code>optional .Matrix audio_recording_classifier = 5;</code>
-         *
-         * <pre>
-         *Matrix == 2D array of integers with some describing strings
-         *audio classifier and HMM determines when you should record to sd card
-         *You can think of the classifier as a high level feature extraction
-         *The HMM evaluation "fuses" the high level classification together
-         * </pre>
-         */
-        public com.hello.suripu.api.audio.MatrixProtos.Matrix getAudioRecordingClassifier() {
-          if (audioRecordingClassifierBuilder_ == null) {
-            return audioRecordingClassifier_;
-          } else {
-            return audioRecordingClassifierBuilder_.getMessage();
-          }
-        }
-        /**
-         * <code>optional .Matrix audio_recording_classifier = 5;</code>
-         *
-         * <pre>
-         *Matrix == 2D array of integers with some describing strings
-         *audio classifier and HMM determines when you should record to sd card
-         *You can think of the classifier as a high level feature extraction
-         *The HMM evaluation "fuses" the high level classification together
-         * </pre>
-         */
-        public Builder setAudioRecordingClassifier(com.hello.suripu.api.audio.MatrixProtos.Matrix value) {
-          if (audioRecordingClassifierBuilder_ == null) {
-            if (value == null) {
-              throw new NullPointerException();
-            }
-            audioRecordingClassifier_ = value;
-            onChanged();
-          } else {
-            audioRecordingClassifierBuilder_.setMessage(value);
-          }
-          bitField0_ |= 0x00000010;
-          return this;
-        }
-        /**
-         * <code>optional .Matrix audio_recording_classifier = 5;</code>
-         *
-         * <pre>
-         *Matrix == 2D array of integers with some describing strings
-         *audio classifier and HMM determines when you should record to sd card
-         *You can think of the classifier as a high level feature extraction
-         *The HMM evaluation "fuses" the high level classification together
-         * </pre>
-         */
-        public Builder setAudioRecordingClassifier(
-            com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder builderForValue) {
-          if (audioRecordingClassifierBuilder_ == null) {
-            audioRecordingClassifier_ = builderForValue.build();
-            onChanged();
-          } else {
-            audioRecordingClassifierBuilder_.setMessage(builderForValue.build());
-          }
-          bitField0_ |= 0x00000010;
-          return this;
-        }
-        /**
-         * <code>optional .Matrix audio_recording_classifier = 5;</code>
-         *
-         * <pre>
-         *Matrix == 2D array of integers with some describing strings
-         *audio classifier and HMM determines when you should record to sd card
-         *You can think of the classifier as a high level feature extraction
-         *The HMM evaluation "fuses" the high level classification together
-         * </pre>
-         */
-        public Builder mergeAudioRecordingClassifier(com.hello.suripu.api.audio.MatrixProtos.Matrix value) {
-          if (audioRecordingClassifierBuilder_ == null) {
-            if (((bitField0_ & 0x00000010) == 0x00000010) &&
-                audioRecordingClassifier_ != com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance()) {
-              audioRecordingClassifier_ =
-                com.hello.suripu.api.audio.MatrixProtos.Matrix.newBuilder(audioRecordingClassifier_).mergeFrom(value).buildPartial();
-            } else {
-              audioRecordingClassifier_ = value;
-            }
-            onChanged();
-          } else {
-            audioRecordingClassifierBuilder_.mergeFrom(value);
-          }
-          bitField0_ |= 0x00000010;
-          return this;
-        }
-        /**
-         * <code>optional .Matrix audio_recording_classifier = 5;</code>
-         *
-         * <pre>
-         *Matrix == 2D array of integers with some describing strings
-         *audio classifier and HMM determines when you should record to sd card
-         *You can think of the classifier as a high level feature extraction
-         *The HMM evaluation "fuses" the high level classification together
-         * </pre>
-         */
-        public Builder clearAudioRecordingClassifier() {
-          if (audioRecordingClassifierBuilder_ == null) {
-            audioRecordingClassifier_ = com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance();
-            onChanged();
-          } else {
-            audioRecordingClassifierBuilder_.clear();
-          }
-          bitField0_ = (bitField0_ & ~0x00000010);
-          return this;
-        }
-        /**
-         * <code>optional .Matrix audio_recording_classifier = 5;</code>
-         *
-         * <pre>
-         *Matrix == 2D array of integers with some describing strings
-         *audio classifier and HMM determines when you should record to sd card
-         *You can think of the classifier as a high level feature extraction
-         *The HMM evaluation "fuses" the high level classification together
-         * </pre>
-         */
-        public com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder getAudioRecordingClassifierBuilder() {
-          bitField0_ |= 0x00000010;
-          onChanged();
-          return getAudioRecordingClassifierFieldBuilder().getBuilder();
-        }
-        /**
-         * <code>optional .Matrix audio_recording_classifier = 5;</code>
-         *
-         * <pre>
-         *Matrix == 2D array of integers with some describing strings
-         *audio classifier and HMM determines when you should record to sd card
-         *You can think of the classifier as a high level feature extraction
-         *The HMM evaluation "fuses" the high level classification together
-         * </pre>
-         */
-        public com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder getAudioRecordingClassifierOrBuilder() {
-          if (audioRecordingClassifierBuilder_ != null) {
-            return audioRecordingClassifierBuilder_.getMessageOrBuilder();
-          } else {
-            return audioRecordingClassifier_;
-          }
-        }
-        /**
-         * <code>optional .Matrix audio_recording_classifier = 5;</code>
-         *
-         * <pre>
-         *Matrix == 2D array of integers with some describing strings
-         *audio classifier and HMM determines when you should record to sd card
-         *You can think of the classifier as a high level feature extraction
-         *The HMM evaluation "fuses" the high level classification together
-         * </pre>
-         */
-        private com.google.protobuf.SingleFieldBuilder<
-            com.hello.suripu.api.audio.MatrixProtos.Matrix, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder, com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder> 
-            getAudioRecordingClassifierFieldBuilder() {
-          if (audioRecordingClassifierBuilder_ == null) {
-            audioRecordingClassifierBuilder_ = new com.google.protobuf.SingleFieldBuilder<
-                com.hello.suripu.api.audio.MatrixProtos.Matrix, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder, com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder>(
-                    audioRecordingClassifier_,
-                    getParentForChildren(),
-                    isClean());
-            audioRecordingClassifier_ = null;
-          }
-          return audioRecordingClassifierBuilder_;
-        }
-
-        // optional .Matrix audio_recording_hmm = 6;
-        private com.hello.suripu.api.audio.MatrixProtos.Matrix audioRecordingHmm_ = com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance();
-        private com.google.protobuf.SingleFieldBuilder<
-            com.hello.suripu.api.audio.MatrixProtos.Matrix, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder, com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder> audioRecordingHmmBuilder_;
-        /**
-         * <code>optional .Matrix audio_recording_hmm = 6;</code>
-         */
-        public boolean hasAudioRecordingHmm() {
-          return ((bitField0_ & 0x00000020) == 0x00000020);
-        }
-        /**
-         * <code>optional .Matrix audio_recording_hmm = 6;</code>
-         */
-        public com.hello.suripu.api.audio.MatrixProtos.Matrix getAudioRecordingHmm() {
-          if (audioRecordingHmmBuilder_ == null) {
-            return audioRecordingHmm_;
-          } else {
-            return audioRecordingHmmBuilder_.getMessage();
-          }
-        }
-        /**
-         * <code>optional .Matrix audio_recording_hmm = 6;</code>
-         */
-        public Builder setAudioRecordingHmm(com.hello.suripu.api.audio.MatrixProtos.Matrix value) {
-          if (audioRecordingHmmBuilder_ == null) {
-            if (value == null) {
-              throw new NullPointerException();
-            }
-            audioRecordingHmm_ = value;
-            onChanged();
-          } else {
-            audioRecordingHmmBuilder_.setMessage(value);
-          }
-          bitField0_ |= 0x00000020;
-          return this;
-        }
-        /**
-         * <code>optional .Matrix audio_recording_hmm = 6;</code>
-         */
-        public Builder setAudioRecordingHmm(
-            com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder builderForValue) {
-          if (audioRecordingHmmBuilder_ == null) {
-            audioRecordingHmm_ = builderForValue.build();
-            onChanged();
-          } else {
-            audioRecordingHmmBuilder_.setMessage(builderForValue.build());
-          }
-          bitField0_ |= 0x00000020;
-          return this;
-        }
-        /**
-         * <code>optional .Matrix audio_recording_hmm = 6;</code>
-         */
-        public Builder mergeAudioRecordingHmm(com.hello.suripu.api.audio.MatrixProtos.Matrix value) {
-          if (audioRecordingHmmBuilder_ == null) {
-            if (((bitField0_ & 0x00000020) == 0x00000020) &&
-                audioRecordingHmm_ != com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance()) {
-              audioRecordingHmm_ =
-                com.hello.suripu.api.audio.MatrixProtos.Matrix.newBuilder(audioRecordingHmm_).mergeFrom(value).buildPartial();
-            } else {
-              audioRecordingHmm_ = value;
-            }
-            onChanged();
-          } else {
-            audioRecordingHmmBuilder_.mergeFrom(value);
-          }
-          bitField0_ |= 0x00000020;
-          return this;
-        }
-        /**
-         * <code>optional .Matrix audio_recording_hmm = 6;</code>
-         */
-        public Builder clearAudioRecordingHmm() {
-          if (audioRecordingHmmBuilder_ == null) {
-            audioRecordingHmm_ = com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance();
-            onChanged();
-          } else {
-            audioRecordingHmmBuilder_.clear();
-          }
-          bitField0_ = (bitField0_ & ~0x00000020);
-          return this;
-        }
-        /**
-         * <code>optional .Matrix audio_recording_hmm = 6;</code>
-         */
-        public com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder getAudioRecordingHmmBuilder() {
-          bitField0_ |= 0x00000020;
-          onChanged();
-          return getAudioRecordingHmmFieldBuilder().getBuilder();
-        }
-        /**
-         * <code>optional .Matrix audio_recording_hmm = 6;</code>
-         */
-        public com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder getAudioRecordingHmmOrBuilder() {
-          if (audioRecordingHmmBuilder_ != null) {
-            return audioRecordingHmmBuilder_.getMessageOrBuilder();
-          } else {
-            return audioRecordingHmm_;
-          }
-        }
-        /**
-         * <code>optional .Matrix audio_recording_hmm = 6;</code>
-         */
-        private com.google.protobuf.SingleFieldBuilder<
-            com.hello.suripu.api.audio.MatrixProtos.Matrix, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder, com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder> 
-            getAudioRecordingHmmFieldBuilder() {
-          if (audioRecordingHmmBuilder_ == null) {
-            audioRecordingHmmBuilder_ = new com.google.protobuf.SingleFieldBuilder<
-                com.hello.suripu.api.audio.MatrixProtos.Matrix, com.hello.suripu.api.audio.MatrixProtos.Matrix.Builder, com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder>(
-                    audioRecordingHmm_,
-                    getParentForChildren(),
-                    isClean());
-            audioRecordingHmm_ = null;
-          }
-          return audioRecordingHmmBuilder_;
-        }
-
-        // optional .SyncResponse.AudioControl.AudioCaptureAction audio_capture_action = 8;
-        private AudioCaptureAction audioCaptureAction_ = AudioCaptureAction.OFF;
-        /**
-         * <code>optional .SyncResponse.AudioControl.AudioCaptureAction audio_capture_action = 8;</code>
-         */
-        public boolean hasAudioCaptureAction() {
-          return ((bitField0_ & 0x00000040) == 0x00000040);
-        }
-        /**
-         * <code>optional .SyncResponse.AudioControl.AudioCaptureAction audio_capture_action = 8;</code>
-         */
-        public AudioCaptureAction getAudioCaptureAction() {
-          return audioCaptureAction_;
-        }
-        /**
-         * <code>optional .SyncResponse.AudioControl.AudioCaptureAction audio_capture_action = 8;</code>
-         */
-        public Builder setAudioCaptureAction(AudioCaptureAction value) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000040;
-          audioCaptureAction_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>optional .SyncResponse.AudioControl.AudioCaptureAction audio_capture_action = 8;</code>
-         */
-        public Builder clearAudioCaptureAction() {
-          bitField0_ = (bitField0_ & ~0x00000040);
-          audioCaptureAction_ = AudioCaptureAction.OFF;
-          onChanged();
-          return this;
-        }
-
-        // @@protoc_insertion_point(builder_scope:SyncResponse.AudioControl)
-      }
-
-      static {
-        defaultInstance = new AudioControl(true);
-        defaultInstance.initFields();
-      }
-
-      // @@protoc_insertion_point(class_scope:SyncResponse.AudioControl)
-    }
-
     private int bitField0_;
     // optional int32 upload_cycle = 1;
     public static final int UPLOAD_CYCLE_FIELD_NUMBER = 1;
@@ -6610,7 +5130,7 @@ public final class OutputProtos {
 
     // optional .SyncResponse.Alarm alarm = 6;
     public static final int ALARM_FIELD_NUMBER = 6;
-    private Alarm alarm_;
+    private com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm alarm_;
     /**
      * <code>optional .SyncResponse.Alarm alarm = 6;</code>
      */
@@ -6620,19 +5140,19 @@ public final class OutputProtos {
     /**
      * <code>optional .SyncResponse.Alarm alarm = 6;</code>
      */
-    public Alarm getAlarm() {
+    public com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm getAlarm() {
       return alarm_;
     }
     /**
      * <code>optional .SyncResponse.Alarm alarm = 6;</code>
      */
-    public AlarmOrBuilder getAlarmOrBuilder() {
+    public com.hello.suripu.api.output.OutputProtos.SyncResponse.AlarmOrBuilder getAlarmOrBuilder() {
       return alarm_;
     }
 
     // optional .SyncResponse.PairingAction pairing_action = 7;
     public static final int PAIRING_ACTION_FIELD_NUMBER = 7;
-    private PairingAction pairingAction_;
+    private com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction pairingAction_;
     /**
      * <code>optional .SyncResponse.PairingAction pairing_action = 7;</code>
      */
@@ -6642,19 +5162,19 @@ public final class OutputProtos {
     /**
      * <code>optional .SyncResponse.PairingAction pairing_action = 7;</code>
      */
-    public PairingAction getPairingAction() {
+    public com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction getPairingAction() {
       return pairingAction_;
     }
     /**
      * <code>optional .SyncResponse.PairingAction pairing_action = 7;</code>
      */
-    public PairingActionOrBuilder getPairingActionOrBuilder() {
+    public com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingActionOrBuilder getPairingActionOrBuilder() {
       return pairingAction_;
     }
 
     // optional .SyncResponse.WhiteNoise white_noise = 8;
     public static final int WHITE_NOISE_FIELD_NUMBER = 8;
-    private WhiteNoise whiteNoise_;
+    private com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise whiteNoise_;
     /**
      * <code>optional .SyncResponse.WhiteNoise white_noise = 8;</code>
      */
@@ -6664,19 +5184,19 @@ public final class OutputProtos {
     /**
      * <code>optional .SyncResponse.WhiteNoise white_noise = 8;</code>
      */
-    public WhiteNoise getWhiteNoise() {
+    public com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise getWhiteNoise() {
       return whiteNoise_;
     }
     /**
      * <code>optional .SyncResponse.WhiteNoise white_noise = 8;</code>
      */
-    public WhiteNoiseOrBuilder getWhiteNoiseOrBuilder() {
+    public com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoiseOrBuilder getWhiteNoiseOrBuilder() {
       return whiteNoise_;
     }
 
     // optional .SyncResponse.FlashAction flash_action = 9;
     public static final int FLASH_ACTION_FIELD_NUMBER = 9;
-    private FlashAction flashAction_;
+    private com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction flashAction_;
     /**
      * <code>optional .SyncResponse.FlashAction flash_action = 9;</code>
      */
@@ -6686,13 +5206,13 @@ public final class OutputProtos {
     /**
      * <code>optional .SyncResponse.FlashAction flash_action = 9;</code>
      */
-    public FlashAction getFlashAction() {
+    public com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction getFlashAction() {
       return flashAction_;
     }
     /**
      * <code>optional .SyncResponse.FlashAction flash_action = 9;</code>
      */
-    public FlashActionOrBuilder getFlashActionOrBuilder() {
+    public com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashActionOrBuilder getFlashActionOrBuilder() {
       return flashAction_;
     }
 
@@ -6714,7 +5234,7 @@ public final class OutputProtos {
 
     // optional .SyncResponse.RoomConditions room_conditions = 12;
     public static final int ROOM_CONDITIONS_FIELD_NUMBER = 12;
-    private RoomConditions roomConditions_;
+    private com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions roomConditions_;
     /**
      * <code>optional .SyncResponse.RoomConditions room_conditions = 12;</code>
      */
@@ -6724,23 +5244,23 @@ public final class OutputProtos {
     /**
      * <code>optional .SyncResponse.RoomConditions room_conditions = 12;</code>
      */
-    public RoomConditions getRoomConditions() {
+    public com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions getRoomConditions() {
       return roomConditions_;
     }
 
     // repeated .SyncResponse.FileDownload files = 13;
     public static final int FILES_FIELD_NUMBER = 13;
-    private java.util.List<FileDownload> files_;
+    private java.util.List<com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload> files_;
     /**
      * <code>repeated .SyncResponse.FileDownload files = 13;</code>
      */
-    public java.util.List<FileDownload> getFilesList() {
+    public java.util.List<com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload> getFilesList() {
       return files_;
     }
     /**
      * <code>repeated .SyncResponse.FileDownload files = 13;</code>
      */
-    public java.util.List<? extends FileDownloadOrBuilder>
+    public java.util.List<? extends com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownloadOrBuilder> 
         getFilesOrBuilderList() {
       return files_;
     }
@@ -6753,13 +5273,13 @@ public final class OutputProtos {
     /**
      * <code>repeated .SyncResponse.FileDownload files = 13;</code>
      */
-    public FileDownload getFiles(int index) {
+    public com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload getFiles(int index) {
       return files_.get(index);
     }
     /**
      * <code>repeated .SyncResponse.FileDownload files = 13;</code>
      */
-    public FileDownloadOrBuilder getFilesOrBuilder(
+    public com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownloadOrBuilder getFilesOrBuilder(
         int index) {
       return files_.get(index);
     }
@@ -6780,25 +5300,25 @@ public final class OutputProtos {
       return resetToFactoryFw_;
     }
 
-    // optional .SyncResponse.AudioControl audio_control = 15;
+    // optional .AudioControl audio_control = 15;
     public static final int AUDIO_CONTROL_FIELD_NUMBER = 15;
-    private AudioControl audioControl_;
+    private com.hello.suripu.api.audio.AudioControlProtos.AudioControl audioControl_;
     /**
-     * <code>optional .SyncResponse.AudioControl audio_control = 15;</code>
+     * <code>optional .AudioControl audio_control = 15;</code>
      */
     public boolean hasAudioControl() {
       return ((bitField0_ & 0x00001000) == 0x00001000);
     }
     /**
-     * <code>optional .SyncResponse.AudioControl audio_control = 15;</code>
+     * <code>optional .AudioControl audio_control = 15;</code>
      */
-    public AudioControl getAudioControl() {
+    public com.hello.suripu.api.audio.AudioControlProtos.AudioControl getAudioControl() {
       return audioControl_;
     }
     /**
-     * <code>optional .SyncResponse.AudioControl audio_control = 15;</code>
+     * <code>optional .AudioControl audio_control = 15;</code>
      */
-    public AudioControlOrBuilder getAudioControlOrBuilder() {
+    public com.hello.suripu.api.audio.AudioControlProtos.AudioControlOrBuilder getAudioControlOrBuilder() {
       return audioControl_;
     }
 
@@ -6808,27 +5328,21 @@ public final class OutputProtos {
       accScanCyle_ = 0;
       accSamplingInterval_ = 0;
       deviceSamplingInterval_ = 0;
-      alarm_ = Alarm.getDefaultInstance();
-      pairingAction_ = PairingAction.getDefaultInstance();
-      whiteNoise_ = WhiteNoise.getDefaultInstance();
-      flashAction_ = FlashAction.getDefaultInstance();
+      alarm_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.getDefaultInstance();
+      pairingAction_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.getDefaultInstance();
+      whiteNoise_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.getDefaultInstance();
+      flashAction_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction.getDefaultInstance();
       resetDevice_ = false;
-      roomConditions_ = RoomConditions.IDEAL;
+      roomConditions_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions.IDEAL;
       files_ = java.util.Collections.emptyList();
       resetToFactoryFw_ = false;
-      audioControl_ = AudioControl.getDefaultInstance();
+      audioControl_ = com.hello.suripu.api.audio.AudioControlProtos.AudioControl.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized != -1) return isInitialized == 1;
 
-      if (hasAudioControl()) {
-        if (!getAudioControl().isInitialized()) {
-          memoizedIsInitialized = 0;
-          return false;
-        }
-      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -6949,59 +5463,59 @@ public final class OutputProtos {
     }
 
     private static final long serialVersionUID = 0L;
-    @Override
-    protected Object writeReplace()
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
         throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
 
-    public static SyncResponse parseFrom(
+    public static com.hello.suripu.api.output.OutputProtos.SyncResponse parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static SyncResponse parseFrom(
+    public static com.hello.suripu.api.output.OutputProtos.SyncResponse parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static SyncResponse parseFrom(byte[] data)
+    public static com.hello.suripu.api.output.OutputProtos.SyncResponse parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static SyncResponse parseFrom(
+    public static com.hello.suripu.api.output.OutputProtos.SyncResponse parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static SyncResponse parseFrom(java.io.InputStream input)
+    public static com.hello.suripu.api.output.OutputProtos.SyncResponse parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static SyncResponse parseFrom(
+    public static com.hello.suripu.api.output.OutputProtos.SyncResponse parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseFrom(input, extensionRegistry);
     }
-    public static SyncResponse parseDelimitedFrom(java.io.InputStream input)
+    public static com.hello.suripu.api.output.OutputProtos.SyncResponse parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input);
     }
-    public static SyncResponse parseDelimitedFrom(
+    public static com.hello.suripu.api.output.OutputProtos.SyncResponse parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
-    public static SyncResponse parseFrom(
+    public static com.hello.suripu.api.output.OutputProtos.SyncResponse parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static SyncResponse parseFrom(
+    public static com.hello.suripu.api.output.OutputProtos.SyncResponse parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -7010,14 +5524,14 @@ public final class OutputProtos {
 
     public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(SyncResponse prototype) {
+    public static Builder newBuilder(com.hello.suripu.api.output.OutputProtos.SyncResponse prototype) {
       return newBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() { return newBuilder(this); }
 
-    @Override
+    @java.lang.Override
     protected Builder newBuilderForType(
-        BuilderParent parent) {
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -7026,17 +5540,17 @@ public final class OutputProtos {
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements SyncResponseOrBuilder {
+       implements com.hello.suripu.api.output.OutputProtos.SyncResponseOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return OutputProtos.internal_static_SyncResponse_descriptor;
+        return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_descriptor;
       }
 
-      protected FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return OutputProtos.internal_static_SyncResponse_fieldAccessorTable
+        return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                SyncResponse.class, Builder.class);
+                com.hello.suripu.api.output.OutputProtos.SyncResponse.class, com.hello.suripu.api.output.OutputProtos.SyncResponse.Builder.class);
       }
 
       // Construct using com.hello.suripu.api.output.OutputProtos.SyncResponse.newBuilder()
@@ -7045,7 +5559,7 @@ public final class OutputProtos {
       }
 
       private Builder(
-          BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
@@ -7076,32 +5590,32 @@ public final class OutputProtos {
         deviceSamplingInterval_ = 0;
         bitField0_ = (bitField0_ & ~0x00000010);
         if (alarmBuilder_ == null) {
-          alarm_ = Alarm.getDefaultInstance();
+          alarm_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.getDefaultInstance();
         } else {
           alarmBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000020);
         if (pairingActionBuilder_ == null) {
-          pairingAction_ = PairingAction.getDefaultInstance();
+          pairingAction_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.getDefaultInstance();
         } else {
           pairingActionBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000040);
         if (whiteNoiseBuilder_ == null) {
-          whiteNoise_ = WhiteNoise.getDefaultInstance();
+          whiteNoise_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.getDefaultInstance();
         } else {
           whiteNoiseBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000080);
         if (flashActionBuilder_ == null) {
-          flashAction_ = FlashAction.getDefaultInstance();
+          flashAction_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction.getDefaultInstance();
         } else {
           flashActionBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000100);
         resetDevice_ = false;
         bitField0_ = (bitField0_ & ~0x00000200);
-        roomConditions_ = RoomConditions.IDEAL;
+        roomConditions_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions.IDEAL;
         bitField0_ = (bitField0_ & ~0x00000400);
         if (filesBuilder_ == null) {
           files_ = java.util.Collections.emptyList();
@@ -7112,7 +5626,7 @@ public final class OutputProtos {
         resetToFactoryFw_ = false;
         bitField0_ = (bitField0_ & ~0x00001000);
         if (audioControlBuilder_ == null) {
-          audioControl_ = AudioControl.getDefaultInstance();
+          audioControl_ = com.hello.suripu.api.audio.AudioControlProtos.AudioControl.getDefaultInstance();
         } else {
           audioControlBuilder_.clear();
         }
@@ -7126,23 +5640,23 @@ public final class OutputProtos {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return OutputProtos.internal_static_SyncResponse_descriptor;
+        return com.hello.suripu.api.output.OutputProtos.internal_static_SyncResponse_descriptor;
       }
 
-      public SyncResponse getDefaultInstanceForType() {
-        return SyncResponse.getDefaultInstance();
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse getDefaultInstanceForType() {
+        return com.hello.suripu.api.output.OutputProtos.SyncResponse.getDefaultInstance();
       }
 
-      public SyncResponse build() {
-        SyncResponse result = buildPartial();
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse build() {
+        com.hello.suripu.api.output.OutputProtos.SyncResponse result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public SyncResponse buildPartial() {
-        SyncResponse result = new SyncResponse(this);
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse buildPartial() {
+        com.hello.suripu.api.output.OutputProtos.SyncResponse result = new com.hello.suripu.api.output.OutputProtos.SyncResponse(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -7232,16 +5746,16 @@ public final class OutputProtos {
       }
 
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof SyncResponse) {
-          return mergeFrom((SyncResponse)other);
+        if (other instanceof com.hello.suripu.api.output.OutputProtos.SyncResponse) {
+          return mergeFrom((com.hello.suripu.api.output.OutputProtos.SyncResponse)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(SyncResponse other) {
-        if (other == SyncResponse.getDefaultInstance()) return this;
+      public Builder mergeFrom(com.hello.suripu.api.output.OutputProtos.SyncResponse other) {
+        if (other == com.hello.suripu.api.output.OutputProtos.SyncResponse.getDefaultInstance()) return this;
         if (other.hasUploadCycle()) {
           setUploadCycle(other.getUploadCycle());
         }
@@ -7312,12 +5826,6 @@ public final class OutputProtos {
       }
 
       public final boolean isInitialized() {
-        if (hasAudioControl()) {
-          if (!getAudioControl().isInitialized()) {
-            
-            return false;
-          }
-        }
         return true;
       }
 
@@ -7325,11 +5833,11 @@ public final class OutputProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        SyncResponse parsedMessage = null;
+        com.hello.suripu.api.output.OutputProtos.SyncResponse parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (SyncResponse) e.getUnfinishedMessage();
+          parsedMessage = (com.hello.suripu.api.output.OutputProtos.SyncResponse) e.getUnfinishedMessage();
           throw e;
         } finally {
           if (parsedMessage != null) {
@@ -7506,9 +6014,9 @@ public final class OutputProtos {
       }
 
       // optional .SyncResponse.Alarm alarm = 6;
-      private Alarm alarm_ = Alarm.getDefaultInstance();
+      private com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm alarm_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
-          Alarm, Alarm.Builder, AlarmOrBuilder> alarmBuilder_;
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm, com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.Builder, com.hello.suripu.api.output.OutputProtos.SyncResponse.AlarmOrBuilder> alarmBuilder_;
       /**
        * <code>optional .SyncResponse.Alarm alarm = 6;</code>
        */
@@ -7518,7 +6026,7 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.Alarm alarm = 6;</code>
        */
-      public Alarm getAlarm() {
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm getAlarm() {
         if (alarmBuilder_ == null) {
           return alarm_;
         } else {
@@ -7528,7 +6036,7 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.Alarm alarm = 6;</code>
        */
-      public Builder setAlarm(Alarm value) {
+      public Builder setAlarm(com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm value) {
         if (alarmBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -7545,7 +6053,7 @@ public final class OutputProtos {
        * <code>optional .SyncResponse.Alarm alarm = 6;</code>
        */
       public Builder setAlarm(
-          Alarm.Builder builderForValue) {
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.Builder builderForValue) {
         if (alarmBuilder_ == null) {
           alarm_ = builderForValue.build();
           onChanged();
@@ -7558,12 +6066,12 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.Alarm alarm = 6;</code>
        */
-      public Builder mergeAlarm(Alarm value) {
+      public Builder mergeAlarm(com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm value) {
         if (alarmBuilder_ == null) {
           if (((bitField0_ & 0x00000020) == 0x00000020) &&
-              alarm_ != Alarm.getDefaultInstance()) {
+              alarm_ != com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.getDefaultInstance()) {
             alarm_ =
-              Alarm.newBuilder(alarm_).mergeFrom(value).buildPartial();
+              com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.newBuilder(alarm_).mergeFrom(value).buildPartial();
           } else {
             alarm_ = value;
           }
@@ -7579,7 +6087,7 @@ public final class OutputProtos {
        */
       public Builder clearAlarm() {
         if (alarmBuilder_ == null) {
-          alarm_ = Alarm.getDefaultInstance();
+          alarm_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.getDefaultInstance();
           onChanged();
         } else {
           alarmBuilder_.clear();
@@ -7590,7 +6098,7 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.Alarm alarm = 6;</code>
        */
-      public Alarm.Builder getAlarmBuilder() {
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.Builder getAlarmBuilder() {
         bitField0_ |= 0x00000020;
         onChanged();
         return getAlarmFieldBuilder().getBuilder();
@@ -7598,7 +6106,7 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.Alarm alarm = 6;</code>
        */
-      public AlarmOrBuilder getAlarmOrBuilder() {
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse.AlarmOrBuilder getAlarmOrBuilder() {
         if (alarmBuilder_ != null) {
           return alarmBuilder_.getMessageOrBuilder();
         } else {
@@ -7609,11 +6117,11 @@ public final class OutputProtos {
        * <code>optional .SyncResponse.Alarm alarm = 6;</code>
        */
       private com.google.protobuf.SingleFieldBuilder<
-          Alarm, Alarm.Builder, AlarmOrBuilder>
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm, com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.Builder, com.hello.suripu.api.output.OutputProtos.SyncResponse.AlarmOrBuilder> 
           getAlarmFieldBuilder() {
         if (alarmBuilder_ == null) {
           alarmBuilder_ = new com.google.protobuf.SingleFieldBuilder<
-              Alarm, Alarm.Builder, AlarmOrBuilder>(
+              com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm, com.hello.suripu.api.output.OutputProtos.SyncResponse.Alarm.Builder, com.hello.suripu.api.output.OutputProtos.SyncResponse.AlarmOrBuilder>(
                   alarm_,
                   getParentForChildren(),
                   isClean());
@@ -7623,9 +6131,9 @@ public final class OutputProtos {
       }
 
       // optional .SyncResponse.PairingAction pairing_action = 7;
-      private PairingAction pairingAction_ = PairingAction.getDefaultInstance();
+      private com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction pairingAction_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
-          PairingAction, PairingAction.Builder, PairingActionOrBuilder> pairingActionBuilder_;
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction, com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.Builder, com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingActionOrBuilder> pairingActionBuilder_;
       /**
        * <code>optional .SyncResponse.PairingAction pairing_action = 7;</code>
        */
@@ -7635,7 +6143,7 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.PairingAction pairing_action = 7;</code>
        */
-      public PairingAction getPairingAction() {
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction getPairingAction() {
         if (pairingActionBuilder_ == null) {
           return pairingAction_;
         } else {
@@ -7645,7 +6153,7 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.PairingAction pairing_action = 7;</code>
        */
-      public Builder setPairingAction(PairingAction value) {
+      public Builder setPairingAction(com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction value) {
         if (pairingActionBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -7662,7 +6170,7 @@ public final class OutputProtos {
        * <code>optional .SyncResponse.PairingAction pairing_action = 7;</code>
        */
       public Builder setPairingAction(
-          PairingAction.Builder builderForValue) {
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.Builder builderForValue) {
         if (pairingActionBuilder_ == null) {
           pairingAction_ = builderForValue.build();
           onChanged();
@@ -7675,12 +6183,12 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.PairingAction pairing_action = 7;</code>
        */
-      public Builder mergePairingAction(PairingAction value) {
+      public Builder mergePairingAction(com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction value) {
         if (pairingActionBuilder_ == null) {
           if (((bitField0_ & 0x00000040) == 0x00000040) &&
-              pairingAction_ != PairingAction.getDefaultInstance()) {
+              pairingAction_ != com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.getDefaultInstance()) {
             pairingAction_ =
-              PairingAction.newBuilder(pairingAction_).mergeFrom(value).buildPartial();
+              com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.newBuilder(pairingAction_).mergeFrom(value).buildPartial();
           } else {
             pairingAction_ = value;
           }
@@ -7696,7 +6204,7 @@ public final class OutputProtos {
        */
       public Builder clearPairingAction() {
         if (pairingActionBuilder_ == null) {
-          pairingAction_ = PairingAction.getDefaultInstance();
+          pairingAction_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.getDefaultInstance();
           onChanged();
         } else {
           pairingActionBuilder_.clear();
@@ -7707,7 +6215,7 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.PairingAction pairing_action = 7;</code>
        */
-      public PairingAction.Builder getPairingActionBuilder() {
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.Builder getPairingActionBuilder() {
         bitField0_ |= 0x00000040;
         onChanged();
         return getPairingActionFieldBuilder().getBuilder();
@@ -7715,7 +6223,7 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.PairingAction pairing_action = 7;</code>
        */
-      public PairingActionOrBuilder getPairingActionOrBuilder() {
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingActionOrBuilder getPairingActionOrBuilder() {
         if (pairingActionBuilder_ != null) {
           return pairingActionBuilder_.getMessageOrBuilder();
         } else {
@@ -7726,11 +6234,11 @@ public final class OutputProtos {
        * <code>optional .SyncResponse.PairingAction pairing_action = 7;</code>
        */
       private com.google.protobuf.SingleFieldBuilder<
-          PairingAction, PairingAction.Builder, PairingActionOrBuilder>
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction, com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.Builder, com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingActionOrBuilder> 
           getPairingActionFieldBuilder() {
         if (pairingActionBuilder_ == null) {
           pairingActionBuilder_ = new com.google.protobuf.SingleFieldBuilder<
-              PairingAction, PairingAction.Builder, PairingActionOrBuilder>(
+              com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction, com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingAction.Builder, com.hello.suripu.api.output.OutputProtos.SyncResponse.PairingActionOrBuilder>(
                   pairingAction_,
                   getParentForChildren(),
                   isClean());
@@ -7740,9 +6248,9 @@ public final class OutputProtos {
       }
 
       // optional .SyncResponse.WhiteNoise white_noise = 8;
-      private WhiteNoise whiteNoise_ = WhiteNoise.getDefaultInstance();
+      private com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise whiteNoise_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
-          WhiteNoise, WhiteNoise.Builder, WhiteNoiseOrBuilder> whiteNoiseBuilder_;
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise, com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.Builder, com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoiseOrBuilder> whiteNoiseBuilder_;
       /**
        * <code>optional .SyncResponse.WhiteNoise white_noise = 8;</code>
        */
@@ -7752,7 +6260,7 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.WhiteNoise white_noise = 8;</code>
        */
-      public WhiteNoise getWhiteNoise() {
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise getWhiteNoise() {
         if (whiteNoiseBuilder_ == null) {
           return whiteNoise_;
         } else {
@@ -7762,7 +6270,7 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.WhiteNoise white_noise = 8;</code>
        */
-      public Builder setWhiteNoise(WhiteNoise value) {
+      public Builder setWhiteNoise(com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise value) {
         if (whiteNoiseBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -7779,7 +6287,7 @@ public final class OutputProtos {
        * <code>optional .SyncResponse.WhiteNoise white_noise = 8;</code>
        */
       public Builder setWhiteNoise(
-          WhiteNoise.Builder builderForValue) {
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.Builder builderForValue) {
         if (whiteNoiseBuilder_ == null) {
           whiteNoise_ = builderForValue.build();
           onChanged();
@@ -7792,12 +6300,12 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.WhiteNoise white_noise = 8;</code>
        */
-      public Builder mergeWhiteNoise(WhiteNoise value) {
+      public Builder mergeWhiteNoise(com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise value) {
         if (whiteNoiseBuilder_ == null) {
           if (((bitField0_ & 0x00000080) == 0x00000080) &&
-              whiteNoise_ != WhiteNoise.getDefaultInstance()) {
+              whiteNoise_ != com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.getDefaultInstance()) {
             whiteNoise_ =
-              WhiteNoise.newBuilder(whiteNoise_).mergeFrom(value).buildPartial();
+              com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.newBuilder(whiteNoise_).mergeFrom(value).buildPartial();
           } else {
             whiteNoise_ = value;
           }
@@ -7813,7 +6321,7 @@ public final class OutputProtos {
        */
       public Builder clearWhiteNoise() {
         if (whiteNoiseBuilder_ == null) {
-          whiteNoise_ = WhiteNoise.getDefaultInstance();
+          whiteNoise_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.getDefaultInstance();
           onChanged();
         } else {
           whiteNoiseBuilder_.clear();
@@ -7824,7 +6332,7 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.WhiteNoise white_noise = 8;</code>
        */
-      public WhiteNoise.Builder getWhiteNoiseBuilder() {
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.Builder getWhiteNoiseBuilder() {
         bitField0_ |= 0x00000080;
         onChanged();
         return getWhiteNoiseFieldBuilder().getBuilder();
@@ -7832,7 +6340,7 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.WhiteNoise white_noise = 8;</code>
        */
-      public WhiteNoiseOrBuilder getWhiteNoiseOrBuilder() {
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoiseOrBuilder getWhiteNoiseOrBuilder() {
         if (whiteNoiseBuilder_ != null) {
           return whiteNoiseBuilder_.getMessageOrBuilder();
         } else {
@@ -7843,11 +6351,11 @@ public final class OutputProtos {
        * <code>optional .SyncResponse.WhiteNoise white_noise = 8;</code>
        */
       private com.google.protobuf.SingleFieldBuilder<
-          WhiteNoise, WhiteNoise.Builder, WhiteNoiseOrBuilder>
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise, com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.Builder, com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoiseOrBuilder> 
           getWhiteNoiseFieldBuilder() {
         if (whiteNoiseBuilder_ == null) {
           whiteNoiseBuilder_ = new com.google.protobuf.SingleFieldBuilder<
-              WhiteNoise, WhiteNoise.Builder, WhiteNoiseOrBuilder>(
+              com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise, com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoise.Builder, com.hello.suripu.api.output.OutputProtos.SyncResponse.WhiteNoiseOrBuilder>(
                   whiteNoise_,
                   getParentForChildren(),
                   isClean());
@@ -7857,9 +6365,9 @@ public final class OutputProtos {
       }
 
       // optional .SyncResponse.FlashAction flash_action = 9;
-      private FlashAction flashAction_ = FlashAction.getDefaultInstance();
+      private com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction flashAction_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
-          FlashAction, FlashAction.Builder, FlashActionOrBuilder> flashActionBuilder_;
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction, com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction.Builder, com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashActionOrBuilder> flashActionBuilder_;
       /**
        * <code>optional .SyncResponse.FlashAction flash_action = 9;</code>
        */
@@ -7869,7 +6377,7 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.FlashAction flash_action = 9;</code>
        */
-      public FlashAction getFlashAction() {
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction getFlashAction() {
         if (flashActionBuilder_ == null) {
           return flashAction_;
         } else {
@@ -7879,7 +6387,7 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.FlashAction flash_action = 9;</code>
        */
-      public Builder setFlashAction(FlashAction value) {
+      public Builder setFlashAction(com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction value) {
         if (flashActionBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -7896,7 +6404,7 @@ public final class OutputProtos {
        * <code>optional .SyncResponse.FlashAction flash_action = 9;</code>
        */
       public Builder setFlashAction(
-          FlashAction.Builder builderForValue) {
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction.Builder builderForValue) {
         if (flashActionBuilder_ == null) {
           flashAction_ = builderForValue.build();
           onChanged();
@@ -7909,12 +6417,12 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.FlashAction flash_action = 9;</code>
        */
-      public Builder mergeFlashAction(FlashAction value) {
+      public Builder mergeFlashAction(com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction value) {
         if (flashActionBuilder_ == null) {
           if (((bitField0_ & 0x00000100) == 0x00000100) &&
-              flashAction_ != FlashAction.getDefaultInstance()) {
+              flashAction_ != com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction.getDefaultInstance()) {
             flashAction_ =
-              FlashAction.newBuilder(flashAction_).mergeFrom(value).buildPartial();
+              com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction.newBuilder(flashAction_).mergeFrom(value).buildPartial();
           } else {
             flashAction_ = value;
           }
@@ -7930,7 +6438,7 @@ public final class OutputProtos {
        */
       public Builder clearFlashAction() {
         if (flashActionBuilder_ == null) {
-          flashAction_ = FlashAction.getDefaultInstance();
+          flashAction_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction.getDefaultInstance();
           onChanged();
         } else {
           flashActionBuilder_.clear();
@@ -7941,7 +6449,7 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.FlashAction flash_action = 9;</code>
        */
-      public FlashAction.Builder getFlashActionBuilder() {
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction.Builder getFlashActionBuilder() {
         bitField0_ |= 0x00000100;
         onChanged();
         return getFlashActionFieldBuilder().getBuilder();
@@ -7949,7 +6457,7 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.FlashAction flash_action = 9;</code>
        */
-      public FlashActionOrBuilder getFlashActionOrBuilder() {
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashActionOrBuilder getFlashActionOrBuilder() {
         if (flashActionBuilder_ != null) {
           return flashActionBuilder_.getMessageOrBuilder();
         } else {
@@ -7960,11 +6468,11 @@ public final class OutputProtos {
        * <code>optional .SyncResponse.FlashAction flash_action = 9;</code>
        */
       private com.google.protobuf.SingleFieldBuilder<
-          FlashAction, FlashAction.Builder, FlashActionOrBuilder>
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction, com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction.Builder, com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashActionOrBuilder> 
           getFlashActionFieldBuilder() {
         if (flashActionBuilder_ == null) {
           flashActionBuilder_ = new com.google.protobuf.SingleFieldBuilder<
-              FlashAction, FlashAction.Builder, FlashActionOrBuilder>(
+              com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction, com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashAction.Builder, com.hello.suripu.api.output.OutputProtos.SyncResponse.FlashActionOrBuilder>(
                   flashAction_,
                   getParentForChildren(),
                   isClean());
@@ -8007,7 +6515,7 @@ public final class OutputProtos {
       }
 
       // optional .SyncResponse.RoomConditions room_conditions = 12;
-      private RoomConditions roomConditions_ = RoomConditions.IDEAL;
+      private com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions roomConditions_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions.IDEAL;
       /**
        * <code>optional .SyncResponse.RoomConditions room_conditions = 12;</code>
        */
@@ -8017,13 +6525,13 @@ public final class OutputProtos {
       /**
        * <code>optional .SyncResponse.RoomConditions room_conditions = 12;</code>
        */
-      public RoomConditions getRoomConditions() {
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions getRoomConditions() {
         return roomConditions_;
       }
       /**
        * <code>optional .SyncResponse.RoomConditions room_conditions = 12;</code>
        */
-      public Builder setRoomConditions(RoomConditions value) {
+      public Builder setRoomConditions(com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions value) {
         if (value == null) {
           throw new NullPointerException();
         }
@@ -8037,28 +6545,28 @@ public final class OutputProtos {
        */
       public Builder clearRoomConditions() {
         bitField0_ = (bitField0_ & ~0x00000400);
-        roomConditions_ = RoomConditions.IDEAL;
+        roomConditions_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions.IDEAL;
         onChanged();
         return this;
       }
 
       // repeated .SyncResponse.FileDownload files = 13;
-      private java.util.List<FileDownload> files_ =
+      private java.util.List<com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload> files_ =
         java.util.Collections.emptyList();
       private void ensureFilesIsMutable() {
         if (!((bitField0_ & 0x00000800) == 0x00000800)) {
-          files_ = new java.util.ArrayList<FileDownload>(files_);
+          files_ = new java.util.ArrayList<com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload>(files_);
           bitField0_ |= 0x00000800;
          }
       }
 
       private com.google.protobuf.RepeatedFieldBuilder<
-          FileDownload, FileDownload.Builder, FileDownloadOrBuilder> filesBuilder_;
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload, com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload.Builder, com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownloadOrBuilder> filesBuilder_;
 
       /**
        * <code>repeated .SyncResponse.FileDownload files = 13;</code>
        */
-      public java.util.List<FileDownload> getFilesList() {
+      public java.util.List<com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload> getFilesList() {
         if (filesBuilder_ == null) {
           return java.util.Collections.unmodifiableList(files_);
         } else {
@@ -8078,7 +6586,7 @@ public final class OutputProtos {
       /**
        * <code>repeated .SyncResponse.FileDownload files = 13;</code>
        */
-      public FileDownload getFiles(int index) {
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload getFiles(int index) {
         if (filesBuilder_ == null) {
           return files_.get(index);
         } else {
@@ -8089,7 +6597,7 @@ public final class OutputProtos {
        * <code>repeated .SyncResponse.FileDownload files = 13;</code>
        */
       public Builder setFiles(
-          int index, FileDownload value) {
+          int index, com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload value) {
         if (filesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -8106,7 +6614,7 @@ public final class OutputProtos {
        * <code>repeated .SyncResponse.FileDownload files = 13;</code>
        */
       public Builder setFiles(
-          int index, FileDownload.Builder builderForValue) {
+          int index, com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload.Builder builderForValue) {
         if (filesBuilder_ == null) {
           ensureFilesIsMutable();
           files_.set(index, builderForValue.build());
@@ -8119,7 +6627,7 @@ public final class OutputProtos {
       /**
        * <code>repeated .SyncResponse.FileDownload files = 13;</code>
        */
-      public Builder addFiles(FileDownload value) {
+      public Builder addFiles(com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload value) {
         if (filesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -8136,7 +6644,7 @@ public final class OutputProtos {
        * <code>repeated .SyncResponse.FileDownload files = 13;</code>
        */
       public Builder addFiles(
-          int index, FileDownload value) {
+          int index, com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload value) {
         if (filesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -8153,7 +6661,7 @@ public final class OutputProtos {
        * <code>repeated .SyncResponse.FileDownload files = 13;</code>
        */
       public Builder addFiles(
-          FileDownload.Builder builderForValue) {
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload.Builder builderForValue) {
         if (filesBuilder_ == null) {
           ensureFilesIsMutable();
           files_.add(builderForValue.build());
@@ -8167,7 +6675,7 @@ public final class OutputProtos {
        * <code>repeated .SyncResponse.FileDownload files = 13;</code>
        */
       public Builder addFiles(
-          int index, FileDownload.Builder builderForValue) {
+          int index, com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload.Builder builderForValue) {
         if (filesBuilder_ == null) {
           ensureFilesIsMutable();
           files_.add(index, builderForValue.build());
@@ -8181,7 +6689,7 @@ public final class OutputProtos {
        * <code>repeated .SyncResponse.FileDownload files = 13;</code>
        */
       public Builder addAllFiles(
-          Iterable<? extends FileDownload> values) {
+          java.lang.Iterable<? extends com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload> values) {
         if (filesBuilder_ == null) {
           ensureFilesIsMutable();
           super.addAll(values, files_);
@@ -8220,14 +6728,14 @@ public final class OutputProtos {
       /**
        * <code>repeated .SyncResponse.FileDownload files = 13;</code>
        */
-      public FileDownload.Builder getFilesBuilder(
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload.Builder getFilesBuilder(
           int index) {
         return getFilesFieldBuilder().getBuilder(index);
       }
       /**
        * <code>repeated .SyncResponse.FileDownload files = 13;</code>
        */
-      public FileDownloadOrBuilder getFilesOrBuilder(
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownloadOrBuilder getFilesOrBuilder(
           int index) {
         if (filesBuilder_ == null) {
           return files_.get(index);  } else {
@@ -8237,7 +6745,7 @@ public final class OutputProtos {
       /**
        * <code>repeated .SyncResponse.FileDownload files = 13;</code>
        */
-      public java.util.List<? extends FileDownloadOrBuilder>
+      public java.util.List<? extends com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownloadOrBuilder> 
            getFilesOrBuilderList() {
         if (filesBuilder_ != null) {
           return filesBuilder_.getMessageOrBuilderList();
@@ -8248,31 +6756,31 @@ public final class OutputProtos {
       /**
        * <code>repeated .SyncResponse.FileDownload files = 13;</code>
        */
-      public FileDownload.Builder addFilesBuilder() {
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload.Builder addFilesBuilder() {
         return getFilesFieldBuilder().addBuilder(
-            FileDownload.getDefaultInstance());
+            com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload.getDefaultInstance());
       }
       /**
        * <code>repeated .SyncResponse.FileDownload files = 13;</code>
        */
-      public FileDownload.Builder addFilesBuilder(
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload.Builder addFilesBuilder(
           int index) {
         return getFilesFieldBuilder().addBuilder(
-            index, FileDownload.getDefaultInstance());
+            index, com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload.getDefaultInstance());
       }
       /**
        * <code>repeated .SyncResponse.FileDownload files = 13;</code>
        */
-      public java.util.List<FileDownload.Builder>
+      public java.util.List<com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload.Builder> 
            getFilesBuilderList() {
         return getFilesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilder<
-          FileDownload, FileDownload.Builder, FileDownloadOrBuilder>
+          com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload, com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload.Builder, com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownloadOrBuilder> 
           getFilesFieldBuilder() {
         if (filesBuilder_ == null) {
           filesBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
-              FileDownload, FileDownload.Builder, FileDownloadOrBuilder>(
+              com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload, com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownload.Builder, com.hello.suripu.api.output.OutputProtos.SyncResponse.FileDownloadOrBuilder>(
                   files_,
                   ((bitField0_ & 0x00000800) == 0x00000800),
                   getParentForChildren(),
@@ -8315,20 +6823,20 @@ public final class OutputProtos {
         return this;
       }
 
-      // optional .SyncResponse.AudioControl audio_control = 15;
-      private AudioControl audioControl_ = AudioControl.getDefaultInstance();
+      // optional .AudioControl audio_control = 15;
+      private com.hello.suripu.api.audio.AudioControlProtos.AudioControl audioControl_ = com.hello.suripu.api.audio.AudioControlProtos.AudioControl.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
-          AudioControl, AudioControl.Builder, AudioControlOrBuilder> audioControlBuilder_;
+          com.hello.suripu.api.audio.AudioControlProtos.AudioControl, com.hello.suripu.api.audio.AudioControlProtos.AudioControl.Builder, com.hello.suripu.api.audio.AudioControlProtos.AudioControlOrBuilder> audioControlBuilder_;
       /**
-       * <code>optional .SyncResponse.AudioControl audio_control = 15;</code>
+       * <code>optional .AudioControl audio_control = 15;</code>
        */
       public boolean hasAudioControl() {
         return ((bitField0_ & 0x00002000) == 0x00002000);
       }
       /**
-       * <code>optional .SyncResponse.AudioControl audio_control = 15;</code>
+       * <code>optional .AudioControl audio_control = 15;</code>
        */
-      public AudioControl getAudioControl() {
+      public com.hello.suripu.api.audio.AudioControlProtos.AudioControl getAudioControl() {
         if (audioControlBuilder_ == null) {
           return audioControl_;
         } else {
@@ -8336,9 +6844,9 @@ public final class OutputProtos {
         }
       }
       /**
-       * <code>optional .SyncResponse.AudioControl audio_control = 15;</code>
+       * <code>optional .AudioControl audio_control = 15;</code>
        */
-      public Builder setAudioControl(AudioControl value) {
+      public Builder setAudioControl(com.hello.suripu.api.audio.AudioControlProtos.AudioControl value) {
         if (audioControlBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -8352,10 +6860,10 @@ public final class OutputProtos {
         return this;
       }
       /**
-       * <code>optional .SyncResponse.AudioControl audio_control = 15;</code>
+       * <code>optional .AudioControl audio_control = 15;</code>
        */
       public Builder setAudioControl(
-          AudioControl.Builder builderForValue) {
+          com.hello.suripu.api.audio.AudioControlProtos.AudioControl.Builder builderForValue) {
         if (audioControlBuilder_ == null) {
           audioControl_ = builderForValue.build();
           onChanged();
@@ -8366,14 +6874,14 @@ public final class OutputProtos {
         return this;
       }
       /**
-       * <code>optional .SyncResponse.AudioControl audio_control = 15;</code>
+       * <code>optional .AudioControl audio_control = 15;</code>
        */
-      public Builder mergeAudioControl(AudioControl value) {
+      public Builder mergeAudioControl(com.hello.suripu.api.audio.AudioControlProtos.AudioControl value) {
         if (audioControlBuilder_ == null) {
           if (((bitField0_ & 0x00002000) == 0x00002000) &&
-              audioControl_ != AudioControl.getDefaultInstance()) {
+              audioControl_ != com.hello.suripu.api.audio.AudioControlProtos.AudioControl.getDefaultInstance()) {
             audioControl_ =
-              AudioControl.newBuilder(audioControl_).mergeFrom(value).buildPartial();
+              com.hello.suripu.api.audio.AudioControlProtos.AudioControl.newBuilder(audioControl_).mergeFrom(value).buildPartial();
           } else {
             audioControl_ = value;
           }
@@ -8385,11 +6893,11 @@ public final class OutputProtos {
         return this;
       }
       /**
-       * <code>optional .SyncResponse.AudioControl audio_control = 15;</code>
+       * <code>optional .AudioControl audio_control = 15;</code>
        */
       public Builder clearAudioControl() {
         if (audioControlBuilder_ == null) {
-          audioControl_ = AudioControl.getDefaultInstance();
+          audioControl_ = com.hello.suripu.api.audio.AudioControlProtos.AudioControl.getDefaultInstance();
           onChanged();
         } else {
           audioControlBuilder_.clear();
@@ -8398,17 +6906,17 @@ public final class OutputProtos {
         return this;
       }
       /**
-       * <code>optional .SyncResponse.AudioControl audio_control = 15;</code>
+       * <code>optional .AudioControl audio_control = 15;</code>
        */
-      public AudioControl.Builder getAudioControlBuilder() {
+      public com.hello.suripu.api.audio.AudioControlProtos.AudioControl.Builder getAudioControlBuilder() {
         bitField0_ |= 0x00002000;
         onChanged();
         return getAudioControlFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .SyncResponse.AudioControl audio_control = 15;</code>
+       * <code>optional .AudioControl audio_control = 15;</code>
        */
-      public AudioControlOrBuilder getAudioControlOrBuilder() {
+      public com.hello.suripu.api.audio.AudioControlProtos.AudioControlOrBuilder getAudioControlOrBuilder() {
         if (audioControlBuilder_ != null) {
           return audioControlBuilder_.getMessageOrBuilder();
         } else {
@@ -8416,14 +6924,14 @@ public final class OutputProtos {
         }
       }
       /**
-       * <code>optional .SyncResponse.AudioControl audio_control = 15;</code>
+       * <code>optional .AudioControl audio_control = 15;</code>
        */
       private com.google.protobuf.SingleFieldBuilder<
-          AudioControl, AudioControl.Builder, AudioControlOrBuilder>
+          com.hello.suripu.api.audio.AudioControlProtos.AudioControl, com.hello.suripu.api.audio.AudioControlProtos.AudioControl.Builder, com.hello.suripu.api.audio.AudioControlProtos.AudioControlOrBuilder> 
           getAudioControlFieldBuilder() {
         if (audioControlBuilder_ == null) {
           audioControlBuilder_ = new com.google.protobuf.SingleFieldBuilder<
-              AudioControl, AudioControl.Builder, AudioControlOrBuilder>(
+              com.hello.suripu.api.audio.AudioControlProtos.AudioControl, com.hello.suripu.api.audio.AudioControlProtos.AudioControl.Builder, com.hello.suripu.api.audio.AudioControlProtos.AudioControlOrBuilder>(
                   audioControl_,
                   getParentForChildren(),
                   isClean());
@@ -8473,11 +6981,6 @@ public final class OutputProtos {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_SyncResponse_FlashAction_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_SyncResponse_AudioControl_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_SyncResponse_AudioControl_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -8486,53 +6989,43 @@ public final class OutputProtos {
   private static com.google.protobuf.Descriptors.FileDescriptor
       descriptor;
   static {
-    String[] descriptorData = {
-      "\n\023sync_response.proto\032\014matrix.proto\"\266\r\n\014" +
-      "SyncResponse\022\024\n\014upload_cycle\030\001 \001(\005\022\022\n\nsy" +
-      "nc_cycle\030\002 \001(\005\022\025\n\racc_scan_cyle\030\003 \001(\005\022\035\n" +
-      "\025acc_sampling_interval\030\004 \001(\005\022 \n\030device_s" +
-      "ampling_interval\030\005 \001(\005\022\"\n\005alarm\030\006 \001(\0132\023." +
-      "SyncResponse.Alarm\0223\n\016pairing_action\030\007 \001" +
-      "(\0132\033.SyncResponse.PairingAction\022-\n\013white" +
-      "_noise\030\010 \001(\0132\030.SyncResponse.WhiteNoise\022/" +
-      "\n\014flash_action\030\t \001(\0132\031.SyncResponse.Flas" +
-      "hAction\022\024\n\014reset_device\030\n \001(\010\0225\n\017room_co",
-      "nditions\030\014 \001(\0162\034.SyncResponse.RoomCondit" +
-      "ions\022)\n\005files\030\r \003(\0132\032.SyncResponse.FileD" +
-      "ownload\022\033\n\023reset_to_factory_fw\030\016 \001(\010\0221\n\r" +
-      "audio_control\030\017 \001(\0132\032.SyncResponse.Audio" +
-      "Control\032\205\002\n\014FileDownload\022\014\n\004host\030\001 \001(\t\022\013" +
-      "\n\003url\030\002 \001(\t\022\034\n\024copy_to_serial_flash\030\004 \001(" +
-      "\010\022\037\n\027reset_network_processor\030\005 \001(\010\022#\n\033re" +
-      "set_application_processor\030\006 \001(\010\022\035\n\025seria" +
-      "l_flash_filename\030\007 \001(\t\022\031\n\021serial_flash_p" +
-      "ath\030\010 \001(\t\022\030\n\020sd_card_filename\030\003 \001(\t\022\024\n\014s",
-      "d_card_path\030\t \001(\t\022\014\n\004sha1\030\n \001(\014\032\216\001\n\005Alar" +
-      "m\022\022\n\nstart_time\030\001 \001(\r\022\020\n\010end_time\030\002 \001(\r\022" +
-      "\026\n\013ringtone_id\030\003 \001(\005:\0011\022&\n\036ring_offset_f" +
-      "rom_now_in_second\030\004 \001(\005\022\037\n\027ring_duration" +
-      "_in_second\030\005 \001(\005\032w\n\rPairingAction\022\014\n\004ssi" +
-      "d\030\001 \001(\t\0224\n\004type\030\002 \001(\0162&.SyncResponse.Pai" +
-      "ringAction.ActionType\"\"\n\nActionType\022\010\n\004P" +
-      "AIR\020\000\022\n\n\006UNPAIR\020\001\032D\n\nWhiteNoise\022\022\n\nstart" +
-      "_time\030\001 \001(\005\022\020\n\010end_time\030\002 \001(\005\022\020\n\010sound_i" +
-      "d\030\003 \001(\005\032\225\001\n\013FlashAction\022\013\n\003red\030\001 \001(\005\022\r\n\005",
-      "green\030\002 \001(\005\022\014\n\004blue\030\003 \001(\005\022\032\n\022delay_milli" +
-      "seconds\030\004 \001(\005\022\017\n\007fade_in\030\005 \001(\010\022\020\n\010fade_o" +
-      "ut\030\006 \001(\010\022\016\n\006rotate\030\007 \001(\010\022\r\n\005alpha\030\010 \001(\005\032" +
-      "\375\002\n\014AudioControl\022\"\n\032audio_min_energy_thr" +
-      "eshold\030\001 \001(\005\0228\n0audio_num_feat_vecs_unti" +
-      "l_attempt_feature_upload\030\002 \001(\005\022\036\n\026audio_" +
-      "feat_buffer_size\030\003 \001(\005\022(\n audio_recordin" +
-      "g_period_in_frames\030\004 \001(\005\022+\n\032audio_record" +
-      "ing_classifier\030\005 \001(\0132\007.Matrix\022$\n\023audio_r" +
-      "ecording_hmm\030\006 \001(\0132\007.Matrix\022K\n\024audio_cap",
-      "ture_action\030\010 \001(\0162-.SyncResponse.AudioCo" +
-      "ntrol.AudioCaptureAction\"%\n\022AudioCapture" +
-      "Action\022\007\n\003OFF\020\000\022\006\n\002ON\020\001\"3\n\016RoomCondition" +
-      "s\022\t\n\005IDEAL\020\001\022\013\n\007WARNING\020\002\022\t\n\005ALERT\020\003B+\n\033" +
-      "com.hello.suripu.api.outputB\014OutputProto" +
-      "s"
+    java.lang.String[] descriptorData = {
+      "\n\023sync_response.proto\032\023audio_control.pro" +
+      "to\"\251\n\n\014SyncResponse\022\024\n\014upload_cycle\030\001 \001(" +
+      "\005\022\022\n\nsync_cycle\030\002 \001(\005\022\025\n\racc_scan_cyle\030\003" +
+      " \001(\005\022\035\n\025acc_sampling_interval\030\004 \001(\005\022 \n\030d" +
+      "evice_sampling_interval\030\005 \001(\005\022\"\n\005alarm\030\006" +
+      " \001(\0132\023.SyncResponse.Alarm\0223\n\016pairing_act" +
+      "ion\030\007 \001(\0132\033.SyncResponse.PairingAction\022-" +
+      "\n\013white_noise\030\010 \001(\0132\030.SyncResponse.White" +
+      "Noise\022/\n\014flash_action\030\t \001(\0132\031.SyncRespon" +
+      "se.FlashAction\022\024\n\014reset_device\030\n \001(\010\0225\n\017",
+      "room_conditions\030\014 \001(\0162\034.SyncResponse.Roo" +
+      "mConditions\022)\n\005files\030\r \003(\0132\032.SyncRespons" +
+      "e.FileDownload\022\033\n\023reset_to_factory_fw\030\016 " +
+      "\001(\010\022$\n\raudio_control\030\017 \001(\0132\r.AudioContro" +
+      "l\032\205\002\n\014FileDownload\022\014\n\004host\030\001 \001(\t\022\013\n\003url\030" +
+      "\002 \001(\t\022\034\n\024copy_to_serial_flash\030\004 \001(\010\022\037\n\027r" +
+      "eset_network_processor\030\005 \001(\010\022#\n\033reset_ap" +
+      "plication_processor\030\006 \001(\010\022\035\n\025serial_flas" +
+      "h_filename\030\007 \001(\t\022\031\n\021serial_flash_path\030\010 " +
+      "\001(\t\022\030\n\020sd_card_filename\030\003 \001(\t\022\024\n\014sd_card",
+      "_path\030\t \001(\t\022\014\n\004sha1\030\n \001(\014\032\216\001\n\005Alarm\022\022\n\ns" +
+      "tart_time\030\001 \001(\r\022\020\n\010end_time\030\002 \001(\r\022\026\n\013rin" +
+      "gtone_id\030\003 \001(\005:\0011\022&\n\036ring_offset_from_no" +
+      "w_in_second\030\004 \001(\005\022\037\n\027ring_duration_in_se" +
+      "cond\030\005 \001(\005\032w\n\rPairingAction\022\014\n\004ssid\030\001 \001(" +
+      "\t\0224\n\004type\030\002 \001(\0162&.SyncResponse.PairingAc" +
+      "tion.ActionType\"\"\n\nActionType\022\010\n\004PAIR\020\000\022" +
+      "\n\n\006UNPAIR\020\001\032D\n\nWhiteNoise\022\022\n\nstart_time\030" +
+      "\001 \001(\005\022\020\n\010end_time\030\002 \001(\005\022\020\n\010sound_id\030\003 \001(" +
+      "\005\032\225\001\n\013FlashAction\022\013\n\003red\030\001 \001(\005\022\r\n\005green\030",
+      "\002 \001(\005\022\014\n\004blue\030\003 \001(\005\022\032\n\022delay_millisecond" +
+      "s\030\004 \001(\005\022\017\n\007fade_in\030\005 \001(\010\022\020\n\010fade_out\030\006 \001" +
+      "(\010\022\016\n\006rotate\030\007 \001(\010\022\r\n\005alpha\030\010 \001(\005\"3\n\016Roo" +
+      "mConditions\022\t\n\005IDEAL\020\001\022\013\n\007WARNING\020\002\022\t\n\005A" +
+      "LERT\020\003B+\n\033com.hello.suripu.api.outputB\014O" +
+      "utputProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -8544,50 +7037,44 @@ public final class OutputProtos {
           internal_static_SyncResponse_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_SyncResponse_descriptor,
-              new String[] { "UploadCycle", "SyncCycle", "AccScanCyle", "AccSamplingInterval", "DeviceSamplingInterval", "Alarm", "PairingAction", "WhiteNoise", "FlashAction", "ResetDevice", "RoomConditions", "Files", "ResetToFactoryFw", "AudioControl", });
+              new java.lang.String[] { "UploadCycle", "SyncCycle", "AccScanCyle", "AccSamplingInterval", "DeviceSamplingInterval", "Alarm", "PairingAction", "WhiteNoise", "FlashAction", "ResetDevice", "RoomConditions", "Files", "ResetToFactoryFw", "AudioControl", });
           internal_static_SyncResponse_FileDownload_descriptor =
             internal_static_SyncResponse_descriptor.getNestedTypes().get(0);
           internal_static_SyncResponse_FileDownload_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_SyncResponse_FileDownload_descriptor,
-              new String[] { "Host", "Url", "CopyToSerialFlash", "ResetNetworkProcessor", "ResetApplicationProcessor", "SerialFlashFilename", "SerialFlashPath", "SdCardFilename", "SdCardPath", "Sha1", });
+              new java.lang.String[] { "Host", "Url", "CopyToSerialFlash", "ResetNetworkProcessor", "ResetApplicationProcessor", "SerialFlashFilename", "SerialFlashPath", "SdCardFilename", "SdCardPath", "Sha1", });
           internal_static_SyncResponse_Alarm_descriptor =
             internal_static_SyncResponse_descriptor.getNestedTypes().get(1);
           internal_static_SyncResponse_Alarm_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_SyncResponse_Alarm_descriptor,
-              new String[] { "StartTime", "EndTime", "RingtoneId", "RingOffsetFromNowInSecond", "RingDurationInSecond", });
+              new java.lang.String[] { "StartTime", "EndTime", "RingtoneId", "RingOffsetFromNowInSecond", "RingDurationInSecond", });
           internal_static_SyncResponse_PairingAction_descriptor =
             internal_static_SyncResponse_descriptor.getNestedTypes().get(2);
           internal_static_SyncResponse_PairingAction_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_SyncResponse_PairingAction_descriptor,
-              new String[] { "Ssid", "Type", });
+              new java.lang.String[] { "Ssid", "Type", });
           internal_static_SyncResponse_WhiteNoise_descriptor =
             internal_static_SyncResponse_descriptor.getNestedTypes().get(3);
           internal_static_SyncResponse_WhiteNoise_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_SyncResponse_WhiteNoise_descriptor,
-              new String[] { "StartTime", "EndTime", "SoundId", });
+              new java.lang.String[] { "StartTime", "EndTime", "SoundId", });
           internal_static_SyncResponse_FlashAction_descriptor =
             internal_static_SyncResponse_descriptor.getNestedTypes().get(4);
           internal_static_SyncResponse_FlashAction_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_SyncResponse_FlashAction_descriptor,
-              new String[] { "Red", "Green", "Blue", "DelayMilliseconds", "FadeIn", "FadeOut", "Rotate", "Alpha", });
-          internal_static_SyncResponse_AudioControl_descriptor =
-            internal_static_SyncResponse_descriptor.getNestedTypes().get(5);
-          internal_static_SyncResponse_AudioControl_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_SyncResponse_AudioControl_descriptor,
-              new String[] { "AudioMinEnergyThreshold", "AudioNumFeatVecsUntilAttemptFeatureUpload", "AudioFeatBufferSize", "AudioRecordingPeriodInFrames", "AudioRecordingClassifier", "AudioRecordingHmm", "AudioCaptureAction", });
+              new java.lang.String[] { "Red", "Green", "Blue", "DelayMilliseconds", "FadeIn", "FadeOut", "Rotate", "Alpha", });
           return null;
         }
       };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-          com.hello.suripu.api.audio.MatrixProtos.getDescriptor(),
+          com.hello.suripu.api.audio.AudioControlProtos.getDescriptor(),
         }, assigner);
   }
 
