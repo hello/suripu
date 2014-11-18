@@ -34,18 +34,18 @@ public class QuestionProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(QuestionProcessor.class);
     private static final Pattern PG_UNIQ_PATTERN = Pattern.compile("ERROR: duplicate key value violates unique constraint \"(\\w+)\"");
 
-    private static int MAX_SKIPS_ALLOWED = 8;
-    private static int MAX_BASE_QUESTION_ID = 10000; // reserved ids for base, one-time questions in EN
+    private static final int MAX_SKIPS_ALLOWED = 8;
+    private static final int MAX_BASE_QUESTION_ID = 10000; // reserved ids for base, one-time questions in EN
+    private static final int NEW_ACCOUNT_AGE = 1; // less than 1 day
+    private static final int NEW_USER_NUM_Q = 3; // no. of on-boarding questions
+    private static final int OLD_ACCOUNT_AGE = 1000; // older accounts are more than this many days
 
     private final QuestionResponseDAO questionResponseDAO;
-
-    private final ListMultimap<String, Question> availableQuestions;
-    private final Map<Integer, Question> questionIdMap;
-
     private final int checkSkipsNum;
 
-    // bitmaps to track if user has answered one-time question
-
+    private final ListMultimap<Question.FREQUENCY, Question> availableQuestions;
+    private final Map<Integer, Question> questionIdMap;
+    private final Set<Integer> baseQuestionIds = new HashSet<>();
 
     public QuestionProcessor(final QuestionResponseDAO questionResponseDAO, final int checkSkipsNum) {
         this.questionResponseDAO = questionResponseDAO;
@@ -56,23 +56,28 @@ public class QuestionProcessor {
 
         final ImmutableList<Question> allQuestions = this.questionResponseDAO.getAllQuestions();
         for (final Question question : allQuestions) {
-            this.availableQuestions.put(question.frequency.toString(), question);
+            this.availableQuestions.put(question.frequency, question);
             this.questionIdMap.put(question.id, question);
+            if (question.frequency == Question.FREQUENCY.ONE_TIME) {
+                baseQuestionIds.add(question.id);
+            }
         }
     }
 
     /**
      * Get a list of questions for the user, or pre-generate one
-     * @param accountId
-     * @param today
-     * @param numQuestions
-     * @return
      */
-    public List<Question> getQuestions(final Long accountId, final DateTime today, final Integer numQuestions) {
+    public List<Question> getQuestions(final Long accountId, final int accountAgeInDays, final DateTime today, final Integer numQuestions) {
+
+        // brand new user - get on-boarding questions
+        if (accountAgeInDays < NEW_ACCOUNT_AGE) {
+            return this.getOnBoardingQuestions(accountId, today);
+        }
 
         // check if user has skipped too many questions in the past.
         final boolean pauseQuestion = this.pauseQuestions(accountId, today);
         if (pauseQuestion) {
+            LOGGER.debug("Pause questions for user {}", accountId);
             return Collections.emptyList();
         }
 
@@ -84,7 +89,14 @@ public class QuestionProcessor {
 
         // get additional questions if needed
         final Integer getMoreNum = numQuestions - preGeneratedQuestions.size();
-        List<Question> questions = this.getAdditionalQuestions(accountId, today, getMoreNum, preGeneratedQuestions.keySet());
+        List<Question> questions;
+
+        if (accountAgeInDays < OLD_ACCOUNT_AGE) {
+            questions = this.getNewbieQuestions(accountId, today, getMoreNum, preGeneratedQuestions.keySet());
+        } else {
+            questions = this.getOldieQuestions(accountId, today, getMoreNum, preGeneratedQuestions.keySet());
+        }
+
         if (!preGeneratedQuestions.isEmpty()) {
             questions.addAll(new ArrayList<>(preGeneratedQuestions.values()));
         }
@@ -94,10 +106,6 @@ public class QuestionProcessor {
 
     /**
      * Save response to a question
-     * @param accountId
-     * @param questionId
-     * @param accountQuestionId
-     * @param choice
      */
     public void saveResponse(final Long accountId, final int questionId, final Long accountQuestionId, final Choice choice) {
 
@@ -113,10 +121,6 @@ public class QuestionProcessor {
 
     /**
      * Record a skipped question, set the next ask-time for this user
-     * @param accountId
-     * @param questionId
-     * @param accountQuestionId
-     * @param tzOffsetMillis
      */
     public void skipQuestion(final Long accountId, final Integer questionId, final Long accountQuestionId, final int tzOffsetMillis) {
 
@@ -125,14 +129,15 @@ public class QuestionProcessor {
 
         // find out how many the user has skipped
         final List<Long> skippedIds = this.getConsecutiveSkipsCount(accountId);
-        int skipCount = skippedIds.size();;
-        if (skipCount == 0 || skippedIds.get(0) != accountQuestionId) {
+        int skipCount = skippedIds.size();
+        if (skipCount == 0 || !skippedIds.get(0).equals(accountQuestionId))
             skipCount++; // last skip insert is not retrieved
-        }
 
         // set a delay for next ask time
-        skipCount = Math.max(skipCount, this.MAX_SKIPS_ALLOWED);
+        skipCount = Math.max(skipCount, MAX_SKIPS_ALLOWED);
         final int skipDays = (int) Math.exp((double) skipCount / 2.0);
+
+        LOGGER.debug("User has skipped {} consecutive questions, pause for {} days", skipCount, skipDays);
 
         final DateTime nextAskDate = DateTime.now(DateTimeZone.UTC).plusMillis(tzOffsetMillis).withTimeAtStartOfDay().plusDays(skipDays);
         this.questionResponseDAO.setNextAskTime(accountId, nextAskDate);
@@ -143,55 +148,159 @@ public class QuestionProcessor {
         // get last N questions, and check for consecutive skips
         final List<Long> skippedIds = new ArrayList<>();
 
-//        Optional<List<Response>> optionalResponses = this.questionResponseDAO.getLastFewResponses(accountId, this.checkSkipsNum);
-//        if (optionalResponses.isPresent()) {
         final List<Response> responses = this.questionResponseDAO.getLastFewResponses(accountId, this.checkSkipsNum);
-        if (true) {
-            for (final Response response : responses) {
-                if (!response.skip) {
-                    // not a skip, bolt
-                    break;
-                }
-                skippedIds.add(response.accountQuestionId);
+        for (final Response response : responses) {
+            if (!response.skip) {
+                // not a skip, bolt
+                break;
             }
+            skippedIds.add(response.accountQuestionId);
         }
         return skippedIds;
     }
 
-    //TODO
-    private List<Question> getAdditionalQuestions(final Long accountId, final DateTime today, final Integer numQuestions, final Set<Integer> seenIds) {
-        // TODO: logic to choose question
+    private List<Question> getOnBoardingQuestions(Long accountId, DateTime today) {
 
-        Random rnd = new Random();
+        // check if we have already generated a list of questions
+        final Map<Integer, Question> preGeneratedQuestions = this.getPreGeneratedQuestions(accountId, today, NEW_USER_NUM_Q);
+        if (preGeneratedQuestions.size() >= NEW_USER_NUM_Q) {
+            return new ArrayList<>(preGeneratedQuestions.values());
+        }
 
-        // for now, get a random, one-time question
+        final List<Question> onboardingQs = new ArrayList<>();
+        onboardingQs.add(questionIdMap.get(0));
+        onboardingQs.add(questionIdMap.get(1));
+        onboardingQs.add(questionIdMap.get(2));
+
+        final DateTime expiration = today.plusDays(1);
+        this.questionResponseDAO.insertAccountOnBoardingQuestions(accountId, today, expiration); // save to DB
+
+        return onboardingQs;
+    }
+
+    /**
+     * Get questions for accounts less than 2 weeks old
+     */
+    private List<Question> getNewbieQuestions(final Long accountId, final DateTime today, final Integer numQuestions, final Set<Integer> seenIds) {
+
+        final List<Question> questions = new ArrayList<>();
+
+        // add questions that has already been selected
         final Set<Integer> addedIds = new HashSet<>();
         addedIds.addAll(seenIds);
 
-        final List<Question> questionsPool = this.availableQuestions.get(Question.FREQUENCY.ONE_TIME.toString());
-        final int poolSize = questionsPool.size();
+        // from DB, get answered base-questions and other answered questions from the past week
+        addedIds.addAll(this.getUserAnsweredQuestionIds(accountId));
+
+        // always include the ONE daily calibration question, most important Q has lower id
+        final Question question = this.availableQuestions.get(Question.FREQUENCY.DAILY).get(0);
+        addedIds.add(question.id);
+        final Long savedID = this.saveGeneratedQuestion(accountId, question.id, today);
+        if (savedID > 0L) {
+            questions.add(Question.withAskTimeAccountQId(question, savedID, today));
+        }
+
+        // pick some base question, check if we already got responses from all
+        final Boolean answeredAllBaseQs = addedIds.containsAll(this.baseQuestionIds);
+        if (!answeredAllBaseQs) {
+            // randomly pick some base questions
+            final List<Question> someQs = this.randomlySelectFromQuestionPool(accountId, addedIds, Question.FREQUENCY.ONE_TIME, today, numQuestions - 1);
+            if (someQs.size() > 0) {
+                questions.addAll(someQs);
+            }
+        }
+
+        // pull from ongoing questions pool if we don't have enough
+        if (questions.size() < numQuestions) {
+            final int additionQuestions = numQuestions - questions.size();
+            final List<Question> moreQs = this.randomlySelectFromQuestionPool(accountId, addedIds, Question.FREQUENCY.OCCASIONALLY, today, additionQuestions);
+            if (moreQs.size() > 0) {
+                questions.addAll(moreQs);
+            }
+        }
+
+        return questions;
+    }
+
+    /** TODO: logic to be implemented
+     - determine ask frequency based on no. of responses from user in the first two weeks
+     0 - once a week
+     1 - 4 responses (25%) every 4 days
+     5 - 9 (60%) every 3 days
+     10 - 13 (80%) every 2 days
+     14 - 17 (100%) every other day
+     - base questions:
+     - take weekdays/weekends into account
+     - do not repeat base/ongoing questions within 2 ask days
+     */
+    private List<Question> getOldieQuestions(final Long accountId, final DateTime today, final Integer numQuestions, final Set<Integer> seenIds) {
+
+        final List<Question> questions = new ArrayList<>();
+
+        // add questions that has already been selected
+        final Set<Integer> addedIds = new HashSet<>();
+        addedIds.addAll(seenIds);
+
+        // add base-questions that has been answered, and question-id of those answered in the past week
+        addedIds.addAll(this.getUserAnsweredQuestionIds(accountId));
+
+        // always choose ONE random daily-question
+        List<Question> selectedQs;
+        selectedQs = this.randomlySelectFromQuestionPool(accountId, seenIds, Question.FREQUENCY.DAILY, today, 1);
+        addedIds.add(selectedQs.get(0).id);
+        questions.addAll(selectedQs);
+
+
+        // first dib for base-question, randomly choose ONE
+        if (questions.size() < numQuestions) {
+            final Boolean answeredAll = addedIds.containsAll(this.baseQuestionIds);
+            if (!answeredAll) {
+                selectedQs.clear();
+                selectedQs = this.randomlySelectFromQuestionPool(accountId, addedIds, Question.FREQUENCY.ONE_TIME, today, 1);
+                addedIds.add(selectedQs.get(0).id);
+                questions.addAll(selectedQs);
+            }
+        }
+
+        // pick from ongoing-questions if we need more
+        if (questions.size() < numQuestions) {
+            final int numToGet = numQuestions - questions.size();
+            selectedQs.clear();
+            selectedQs= this.randomlySelectFromQuestionPool(accountId, addedIds, Question.FREQUENCY.OCCASIONALLY, today, numToGet);
+            if (selectedQs.size() > 0) {
+                questions.addAll(selectedQs);
+            }
+        }
+
+        return questions;
+    }
+
+    private List<Question> randomlySelectFromQuestionPool(final long accountId, final Set<Integer> seenIds,
+                                                          final Question.FREQUENCY questionType,
+                                                          final DateTime today, final int numQuestions) {
+
+        final List<Question> questions = new ArrayList<>();
+
+        final Set<Integer> addedIds = new HashSet<>();
+        addedIds.addAll(seenIds);
+
+        List<Question> questionsPool = this.availableQuestions.get(questionType);
+        int poolSize = questionsPool.size();
 
         int loop = 0;
-        final DateTime expiration = today.plusDays(1);
-        final List<Question> questions = new ArrayList<>();
+
+        Random rnd = new Random();
 
         while (questions.size() < numQuestions) {
             final int qid = rnd.nextInt(poolSize); // next random question
             final Question question = questionsPool.get(qid);
 
             if (!addedIds.contains(question.id)) {
-                try {
-                    // insert into DB for later retrieval
-                    // TODO: make this batch Insert
-                    final Long accountQId = this.questionResponseDAO.insertAccountQuestion(accountId, question.id, today, expiration);
-                    questions.add(Question.withAskTimeAccountQId(question, accountQId, today));
-                } catch (UnableToExecuteStatementException exception) {
-                    Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
-                    if (matcher.find()) {
-                        LOGGER.debug("Question already exist");
-                    }
-                }
                 addedIds.add(question.id);
+                final Long savedId = this.saveGeneratedQuestion(accountId, question.id, today);
+                if (savedId > 0L) {
+                    questions.add(Question.withAskTimeAccountQId(question, savedId, today));
+                }
             }
 
             loop++;
@@ -202,8 +311,28 @@ public class QuestionProcessor {
         return questions;
     }
 
-    private List<Integer> getUserAnsweredBaseIds (final Long accountId) {
-        final List<Integer> baseIds = this.questionResponseDAO.getAccountAnsweredBaseIds(accountId, this.MAX_BASE_QUESTION_ID);
+    private Long saveGeneratedQuestion(final Long accountId, final Integer id, final DateTime today) {
+        try {
+            // insert into DB for later retrieval, TODO: make this batch Insert?
+            final DateTime expiration = today.plusDays(1);
+            return this.questionResponseDAO.insertAccountQuestion(accountId, id, today, expiration);
+
+        } catch (UnableToExecuteStatementException exception) {
+            final Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
+            if (matcher.find()) {
+                LOGGER.debug("Question already exist");
+            }
+        }
+        return 0L;
+    }
+
+    /**
+     * Get ids of base questions answered, and recently answered questions (one week)
+     */
+    private List<Integer> getUserAnsweredQuestionIds (final Long accountId) {
+        final DateTime oneWeekAgo = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(7);
+        final List<Integer> baseIds = this.questionResponseDAO.getBaseAndRecentAnsweredQuestionIds(accountId, MAX_BASE_QUESTION_ID, oneWeekAgo);
+        LOGGER.debug("User has seen {} base questions", baseIds.size());
         return baseIds;
     }
 
@@ -229,9 +358,6 @@ public class QuestionProcessor {
 
     /**
      * Check if we need to pause questions for this account
-     * @param accountId
-     * @param today
-     * @return
      */
     private boolean pauseQuestions(Long accountId, DateTime today) {
         final Optional<Timestamp> nextAskTimestamp = this.questionResponseDAO.getNextAskTime(accountId);

@@ -17,6 +17,7 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 /**
  * Created by kingshy on 10/24/14.
@@ -24,7 +25,7 @@ import java.sql.Timestamp;
 public interface QuestionResponseDAO {
 
     @RegisterMapper(QuestionMapper.class)
-    @SqlQuery("SELECT * FROM questions")
+    @SqlQuery("SELECT * FROM questions ORDER BY id")
     ImmutableList<Question> getAllQuestions();
 
     @GetGeneratedKeys
@@ -48,6 +49,15 @@ public interface QuestionResponseDAO {
             "(:account_id, :question_id, :created_local, :expires_local)")
     Long insertAccountQuestion(@Bind("account_id") long accountId,
                                @Bind("question_id") Integer questionId,
+                               @Bind("created_local") DateTime createdLocal,
+                               @Bind("expires_local") DateTime expiresLocal);
+
+    @SqlUpdate("INSERT INTO account_questions " +
+            "(account_id, question_id, created_local_utc_ts, expires_local_utc_ts) VALUES " +
+            "(:account_id, 1, :created_local, :expires_local), " +
+            "(:account_id, 2, :created_local, :expires_local), " +
+            "(:account_id, 3, :created_local, :expires_local)")
+    Long insertAccountOnBoardingQuestions(@Bind("account_id") long accountId,
                                @Bind("created_local") DateTime createdLocal,
                                @Bind("expires_local") DateTime expiresLocal);
 
@@ -75,13 +85,15 @@ public interface QuestionResponseDAO {
     ImmutableList<Response> getLastFewResponses(@Bind("account_id") long accountId,
                                                           @Bind("limit") int limit);
 
-    @SqlQuery("SELECT question_id FROM responses WHERE account_id = :account_id AND question_id < :max_base_id")
-    ImmutableList<Integer> getAccountAnsweredBaseIds(@Bind("account_id") long accountId,
-                                                     @Bind("max_base_id") int maxBaseId);
+    @SqlQuery("SELECT DISTINCT question_id FROM responses WHERE account_id = :account_id AND " +
+            "(question_id < :max_base_id OR created >= :one_week_ago)")
+    List<Integer> getBaseAndRecentAnsweredQuestionIds(@Bind("account_id") long accountId,
+                                                       @Bind("max_base_id") int maxBaseId,
+                                                       @Bind("one_week_ago") DateTime oneWeekAgo);
 
     @SingleValueResult
     @SqlQuery("SELECT next_ask_time_local_utc FROM account_question_ask_time WHERE account_id = :account_id ORDER BY id DESC LIMIT 1")
-    Optional<Timestamp> getNextAskTime(@Bind("account_id") long account_id);
+    Optional<Timestamp> getNextAskTime(@Bind("account_id") long accountId);
 
     @GetGeneratedKeys
     @SqlUpdate("INSERT INTO account_question_ask_time (account_id, next_ask_time_local_utc) VALUES " +

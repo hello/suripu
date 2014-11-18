@@ -36,17 +36,16 @@ import java.util.List;
 public class QuestionsResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(QuestionsResource.class);
+    private static final long DAY_IN_MILLIS = 86400000L;
 
     private final AccountDAO accountDAO;
-    private final QuestionResponseDAO questionResponseDAO;
     private final TimeZoneHistoryDAODynamoDB tzHistoryDAO;
     private final QuestionProcessor questionProcessor;
 
     public QuestionsResource(final AccountDAO accountDAO, final QuestionResponseDAO questionResponseDAO, final TimeZoneHistoryDAODynamoDB tzHistoryDAO, final int checkSkipsNum) {
         this.accountDAO = accountDAO;
-        this.questionResponseDAO = questionResponseDAO;
         this.tzHistoryDAO = tzHistoryDAO;
-        this.questionProcessor = new QuestionProcessor(this.questionResponseDAO, checkSkipsNum);
+        this.questionProcessor = new QuestionProcessor(questionResponseDAO, checkSkipsNum);
     }
 
     @Timed
@@ -76,9 +75,9 @@ public class QuestionsResource {
 
         // get question
         final int numToGet = 2;
-        final List<Question> questions = this.questionProcessor.getQuestions(accessToken.accountId, today, numToGet);
+        final int accountAgeInDays =  (int) ((DateTime.now(DateTimeZone.UTC).getMillis() - accountOptional.get().created.getMillis()) / DAY_IN_MILLIS);
 
-        return questions;
+        return this.questionProcessor.getQuestions(accessToken.accountId, accountAgeInDays, today, numToGet);
     }
 
     @Timed
