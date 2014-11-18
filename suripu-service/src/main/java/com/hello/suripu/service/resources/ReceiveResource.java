@@ -7,8 +7,10 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.protobuf.TextFormat;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
-import com.hello.suripu.api.ble.MorpheusBle;
+import com.hello.suripu.api.ble.SenseCommandProtos;
+import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.api.input.InputProtos;
+import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -174,10 +176,10 @@ public class ReceiveResource {
     @Timed
     public byte[] morpheusProtobufReceiveEncrypted(final byte[] body) {
         final SignedMessage signedMessage = SignedMessage.parse(body);
-        InputProtos.periodic_data data = null;
+        DataInputProtos.periodic_data data = null;
 
         try {
-            data = InputProtos.periodic_data.parseFrom(signedMessage.body);
+            data = DataInputProtos.periodic_data.parseFrom(signedMessage.body);
         } catch (IOException exception) {
             final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
             LOGGER.error(errorMessage);
@@ -318,7 +320,7 @@ public class ReceiveResource {
         final String sequenceNumber = dataLogger.put(shardingKey, morpheusDataInBytes);
         LOGGER.trace("Morpheus data saved to Kinesis with sequence number = {}", sequenceNumber);
 
-        final InputProtos.SyncResponse.Builder responseBuilder = InputProtos.SyncResponse.newBuilder();
+        final OutputProtos.SyncResponse.Builder responseBuilder = OutputProtos.SyncResponse.newBuilder();
         final RingTime nextRegularRingTime = RingProcessor.getNextRegularRingTime(alarmInfoList,
                 deviceName,
                 DateTime.now());
@@ -339,7 +341,7 @@ public class ReceiveResource {
             ringOffsetFromNowInSecond = (int) ((nextRingTimestamp - DateTime.now().getMillis()) / DateTimeConstants.MILLIS_PER_SECOND);
         }
 
-        final InputProtos.SyncResponse.Alarm.Builder alarmBuilder = InputProtos.SyncResponse.Alarm.newBuilder()
+        final OutputProtos.SyncResponse.Alarm.Builder alarmBuilder = OutputProtos.SyncResponse.Alarm.newBuilder()
                 .setStartTime((int) (nextRingTimestamp / DateTimeConstants.MILLIS_PER_SECOND))
                 .setEndTime((int) ((nextRingTimestamp + ringDurationInMS) / DateTimeConstants.MILLIS_PER_SECOND))
                 .setRingDurationInSecond(30)
@@ -352,15 +354,22 @@ public class ReceiveResource {
 
         responseBuilder.setAlarm(alarmBuilder.build());
 
-        responseBuilder.setRoomConditions(InputProtos.SyncResponse.RoomConditions.valueOf(this.roomConditions));
+        responseBuilder.setRoomConditions(OutputProtos.SyncResponse.RoomConditions.valueOf(this.roomConditions));
 
-        final List<InputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdateContent(data.getDeviceId(), data.getFirmwareVersion());
+        final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdateContent(data.getDeviceId(), data.getFirmwareVersion());
         if(!fileDownloadList.isEmpty()) {
             LOGGER.debug("Adding {} files to Files to Download list", fileDownloadList.size());
             responseBuilder.addAllFiles(fileDownloadList);
         }
 
-        final InputProtos.SyncResponse syncResponse = responseBuilder.build();
+
+        final OutputProtos.SyncResponse.AudioControl.Builder audioControl = OutputProtos.SyncResponse.AudioControl
+                .newBuilder()
+                .setAudioCaptureAction(OutputProtos.SyncResponse.AudioControl.AudioCaptureAction.OFF);
+
+        responseBuilder.setAudioControl(audioControl);
+
+        final OutputProtos.SyncResponse syncResponse = responseBuilder.build();
 
         LOGGER.debug("Len pb = {}", syncResponse.toByteArray().length);
 
@@ -385,10 +394,10 @@ public class ReceiveResource {
     @Timed
     public byte[] onPillBatchProtobufReceived(final byte[] body) {
         final SignedMessage signedMessage = SignedMessage.parse(body);
-        MorpheusBle.batched_pill_data batchPilldata = null;
+        SenseCommandProtos.batched_pill_data batchPilldata = null;
 
         try {
-            batchPilldata = MorpheusBle.batched_pill_data.parseFrom(signedMessage.body);
+            batchPilldata = SenseCommandProtos.batched_pill_data.parseFrom(signedMessage.body);
         } catch (IOException exception) {
             final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
             LOGGER.error(errorMessage);
@@ -425,7 +434,7 @@ public class ReceiveResource {
 
         // ********************* Pill Data Storage ****************************
         if(batchPilldata.getPillsCount() > 0){
-            for(final MorpheusBle.pill_data pill:batchPilldata.getPillsList()){
+            for(final SenseCommandProtos.pill_data pill:batchPilldata.getPillsList()){
 
                 final String pillId = pill.getDeviceId();
                 final Optional<DeviceAccountPair> internalPillPairingMap = this.deviceDAO.getInternalPillId(pillId);
@@ -474,8 +483,8 @@ public class ReceiveResource {
             }
         }
 
-        final MorpheusBle.MorpheusCommand responseCommand = MorpheusBle.MorpheusCommand.newBuilder()
-                .setType(MorpheusBle.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PILL_DATA)
+        final SenseCommandProtos.MorpheusCommand responseCommand = SenseCommandProtos.MorpheusCommand.newBuilder()
+                .setType(SenseCommandProtos.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PILL_DATA)
                 .setVersion(0)
                 .build();
 
