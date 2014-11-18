@@ -366,7 +366,7 @@ public class ReceiveResource extends BaseResource {
 
         responseBuilder.setRoomConditions(OutputProtos.SyncResponse.RoomConditions.valueOf(this.roomConditions));
 
-        final String firmwareFeature = String.format("firmware_release", data.getFirmwareVersion());
+        final String firmwareFeature = String.format("firmware_release_%s", data.getFirmwareVersion());
         final List<String> groups = groupFlipper.getGroups(data.getDeviceId());
         LOGGER.debug("Groups for {} = {}", data.getDeviceId(), groups);
         if(featureFlipper.deviceFeatureActive(firmwareFeature, data.getDeviceId(), groups)) {
