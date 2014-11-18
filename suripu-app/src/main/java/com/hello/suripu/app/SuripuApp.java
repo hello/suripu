@@ -24,6 +24,7 @@ import com.hello.suripu.app.resources.v1.AlarmResource;
 import com.hello.suripu.app.resources.v1.ApplicationResource;
 import com.hello.suripu.app.resources.v1.DeviceResources;
 import com.hello.suripu.app.resources.v1.EventResource;
+import com.hello.suripu.app.resources.v1.FeaturesResource;
 import com.hello.suripu.app.resources.v1.FirmwareResource;
 import com.hello.suripu.app.resources.v1.InsightsResource;
 import com.hello.suripu.app.resources.v1.MobilePushRegistrationResource;
@@ -47,6 +48,7 @@ import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.EventDAODynamoDB;
+import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
@@ -219,6 +221,10 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addProvider(new OAuthProvider(new OAuthAuthenticator(accessTokenStore), "protected-resources", activityLogger));
 
+        final String namespace = (configuration.getDebug()) ? "dev" : "prod";
+
+        final FeatureStore featureStore = new FeatureStore(dynamoDBClient, "features", namespace);
+
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, subscriptionDAO));
         environment.addResource(new AccountResource(accountDAO));
         environment.addResource(new ApplicationResource(applicationStore));
@@ -236,6 +242,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO));
 
         environment.addResource(new MobilePushRegistrationResource(subscriptionDAO));
+        environment.addResource(new FeaturesResource(featureStore));
 
         environment.addResource(new QuestionsResource(accountDAO));
         environment.addResource(new InsightsResource(accountDAO));

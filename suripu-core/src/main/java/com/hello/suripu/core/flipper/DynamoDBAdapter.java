@@ -7,16 +7,12 @@ import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ReturnConsumedCapacity;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.hello.suripu.core.models.Feature;
 import com.librato.rollout.RolloutAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -30,7 +26,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class DynamoDBAdapter implements RolloutAdapter{
 
-    private static final Splitter splitter = Splitter.on('|');
     private static final Logger LOGGER = LoggerFactory.getLogger(DynamoDBAdapter.class);
     private final AtomicReference<Map<String, Feature>> features = new AtomicReference<Map<String, Feature>>();
     private ScheduledFuture scheduledFuture;
@@ -100,8 +95,8 @@ public class DynamoDBAdapter implements RolloutAdapter{
             final String name = map.get("name").getS();
             final String value = map.get("value").getS();
             try {
-                finalMap.put(name, convertToFeature(name, value));
-            } catch (RolloutException e) {
+                finalMap.put(name, Feature.convertToFeature(name, value));
+            } catch (RuntimeException e) {
                 LOGGER.error("Failed to parse feature: {} reason: {}", value, e.getMessage());
             }
         }
@@ -171,44 +166,6 @@ public class DynamoDBAdapter implements RolloutAdapter{
 
         LOGGER.trace("Feature is NOT active");
         return false;
-    }
-
-
-    /**
-     * Converts a String percentage|user_id,user_id,...|group,_group
-     * to a Feature
-     * @param featureName
-     * @param value
-     * @return immutable Feature object
-     */
-    private Feature convertToFeature(final String featureName, final String value) {
-        final String[] splitResult = Iterables.toArray(splitter.split(value), String.class);
-        if (splitResult.length != 3) {
-            LOGGER.error("Invalid format: {}, (length {})", value, splitResult.length);
-            throw new RolloutException("Invalid format for feature");
-        }
-
-        final List<String> groups = Arrays.asList(splitResult[2].split(","));
-        final List<String> userIds = Arrays.asList(splitResult[1].split(","));
-        final int percentage = Integer.parseInt(splitResult[0]);
-        return new Feature(featureName, userIds, groups, percentage);
-    }
-
-    /**
-     * Feature object
-     */
-    private class Feature {
-        public final String name;
-        public final Set<String> ids;
-        public final Set<String> groups;
-        public final Integer percentage;
-
-        private Feature(final String name, final Collection<String> ids, final Collection<String> groups, final Integer percentage) {
-            this.name = name;
-            this.ids = ImmutableSet.copyOf(ids);
-            this.groups = ImmutableSet.copyOf(groups);
-            this.percentage = percentage;
-        }
     }
 
     private class RolloutException extends RuntimeException {
