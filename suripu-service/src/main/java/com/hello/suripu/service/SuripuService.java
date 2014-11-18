@@ -184,7 +184,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 kinesisLoggerFactory,
                 mergedAlarmInfoDynamoDB,
                 configuration.getDebug(),
-                configuration.getRoomConditions(),
+                // the room condition in config file is intentionally left there, just in case we figure out it is still useful.
+                // Let's remove it in the next next deploy.
                 firmwareUpdateStore,
                 groupFlipper
         );
