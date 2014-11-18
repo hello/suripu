@@ -86,4 +86,50 @@ public class FirmwareUpdateStore {
 
         return fileDownloadList;
     }
+
+    public List<SyncResponse.FileDownload> getFirmwareUpdate(final Integer currentFirmwareVersion) {
+
+        final List<FirmwareFile> files = firmwareUpdateDAO.getFilesForFirmwareVersion(currentFirmwareVersion);
+
+        LOGGER.debug("Found {} files to update", files.size());
+        final List<SyncResponse.FileDownload> fileDownloadList = new ArrayList<>();
+
+        final Date expiration = new java.util.Date();
+        long msec = expiration.getTime();
+        msec += 1000 * 60 * 60; // 1 hour.
+        expiration.setTime(msec);
+
+        for(final FirmwareFile f : files) {
+
+            final GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(f.s3Bucket, f.s3Key);
+            generatePresignedUrlRequest.setMethod(HttpMethod.GET); // Default.
+            generatePresignedUrlRequest.setExpiration(expiration);
+
+            final URL s = s3.generatePresignedUrl(generatePresignedUrlRequest);
+            LOGGER.debug("{}", s);
+
+            final SyncResponse.FileDownload.Builder fileDownloadBuilder = SyncResponse.FileDownload.newBuilder()
+                    .setUrl(s.getPath() + "?" + s.getQuery())
+                    .setHost(s.getHost())
+                    .setCopyToSerialFlash(f.copyToSerialFlash)
+                    .setResetApplicationProcessor(f.resetApplicationProcessor)
+                    .setResetNetworkProcessor(f.resetNetworkProcessor)
+                    .setSerialFlashFilename(f.serialFlashFilename)
+                    .setSerialFlashPath(f.serialFlashPath)
+                    .setSdCardFilename(f.sdCardFilename)
+                    .setSdCardPath(f.sdCardPath);
+
+            if(!f.sha1.isEmpty()) {
+                try {
+                    fileDownloadBuilder.setSha1(ByteString.copyFrom(Hex.decodeHex(f.sha1.toCharArray())));
+                } catch (DecoderException e) {
+                    LOGGER.error("Failed decoding sha1 from hex");
+                }
+            }
+
+            fileDownloadList.add(fileDownloadBuilder.build());
+        }
+
+        return fileDownloadList;
+    }
 }

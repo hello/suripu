@@ -146,7 +146,6 @@ public class MergedAlarmInfoDynamoDB {
         final UpdateItemRequest request = generateUpdateRequest(deviceId, accountId, items);
         final UpdateItemResult result = this.dynamoDBClient.updateItem(request);
         return true;
-
     }
 
     public boolean setAlarms(final String deviceId, final long accountId, final List<Alarm> alarms){
@@ -158,7 +157,6 @@ public class MergedAlarmInfoDynamoDB {
         final UpdateItemRequest request = generateUpdateRequest(deviceId, accountId, items);
         final UpdateItemResult result = this.dynamoDBClient.updateItem(request);
         return true;
-
     }
 
     public boolean setRingTime(final String deviceId, final long accountId, final RingTime ringTime){
@@ -170,7 +168,6 @@ public class MergedAlarmInfoDynamoDB {
         final UpdateItemRequest request = generateUpdateRequest(deviceId, accountId, items);
         final UpdateItemResult result = this.dynamoDBClient.updateItem(request);
         return true;
-
     }
 
     public Optional<AlarmInfo> getInfo(final String deviceId, final long accountId){
@@ -225,9 +222,9 @@ public class MergedAlarmInfoDynamoDB {
             }
 
             final long accountId = Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN());
-            List<Alarm> alarmListOptional = getAlarmListFromAttributes(deviceId, accountId, item);
-            Optional<RingTime> ringTimeOptional = getRingTimeFromAttributes(deviceId, accountId, item);
-            Optional<DateTimeZone> dateTimeZoneOptional = getTimeZoneFromAttributes(deviceId, accountId, item);
+            final List<Alarm> alarmListOptional = getAlarmListFromAttributes(deviceId, accountId, item);
+            final Optional<RingTime> ringTimeOptional = getRingTimeFromAttributes(deviceId, accountId, item);
+            final Optional<DateTimeZone> dateTimeZoneOptional = getTimeZoneFromAttributes(deviceId, accountId, item);
             alarmInfos.add(new AlarmInfo(deviceId, accountId, alarmListOptional, ringTimeOptional, dateTimeZoneOptional));
         }
 

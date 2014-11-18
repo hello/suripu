@@ -18,6 +18,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.firmware.FirmwareUpdateStore;
+import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.models.AlarmInfo;
@@ -53,7 +54,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +81,7 @@ public class ReceiveResource extends BaseResource {
     private final Integer roomConditions;
 
     private final FirmwareUpdateStore firmwareUpdateStore;
+    private final GroupFlipper groupFlipper;
 
     @Context
     HttpServletRequest request;
@@ -95,7 +96,8 @@ public class ReceiveResource extends BaseResource {
                            final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
                            final Boolean debug,
                            final Integer roomConditions,
-                           final FirmwareUpdateStore firmwareUpdateStore) {
+                           final FirmwareUpdateStore firmwareUpdateStore,
+                           final GroupFlipper groupFlipper) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
 
@@ -115,6 +117,7 @@ public class ReceiveResource extends BaseResource {
 
         cache = CacheBuilder.newBuilder().build(loader);
         this.firmwareUpdateStore = firmwareUpdateStore;
+        this.groupFlipper = groupFlipper;
     }
 
     @POST
@@ -363,18 +366,22 @@ public class ReceiveResource extends BaseResource {
 
         responseBuilder.setRoomConditions(OutputProtos.SyncResponse.RoomConditions.valueOf(this.roomConditions));
 
-        final String firmwareFeature = String.format("firmware_%d", data.getFirmwareVersion());
-        if(featureFlipper.deviceFeatureActive(firmwareFeature, data.getDeviceId(), new ArrayList<String>())) {
+        final String firmwareFeature = String.format("firmware_release", data.getFirmwareVersion());
+        final List<String> groups = groupFlipper.getGroups(data.getDeviceId());
+        LOGGER.debug("Groups for {} = {}", data.getDeviceId(), groups);
+        if(featureFlipper.deviceFeatureActive(firmwareFeature, data.getDeviceId(), groups)) {
             LOGGER.debug("Feature is active!");
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdateContent(data.getDeviceId(), data.getFirmwareVersion());
-            if(!fileDownloadList.isEmpty()) {
-                LOGGER.debug("Adding {} files to Files to Download list", fileDownloadList.size());
-                responseBuilder.addAllFiles(fileDownloadList);
-            }
         }
+
         final AudioControlProtos.AudioControl.Builder audioControl = AudioControlProtos.AudioControl
                 .newBuilder()
                 .setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.OFF);
+
+        final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdateContent(data.getDeviceId(), data.getFirmwareVersion());
+        if(!fileDownloadList.isEmpty()) {
+            LOGGER.debug("Adding {} files to Files to Download list", fileDownloadList.size());
+            responseBuilder.addAllFiles(fileDownloadList);
+        }
 
         responseBuilder.setAudioControl(audioControl);
 

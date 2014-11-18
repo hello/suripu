@@ -16,16 +16,19 @@ import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.EventDAO;
+import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.db.PublicKeyStoreDynamoDB;
 import com.hello.suripu.core.db.ScoreDAO;
+import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.firmware.FirmwareUpdateDAO;
 import com.hello.suripu.core.firmware.FirmwareUpdateStore;
+import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.health.DynamoDbHealthCheck;
 import com.hello.suripu.core.health.KinesisHealthCheck;
 import com.hello.suripu.core.logging.DataLogger;
@@ -168,9 +171,12 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
         final DataLogger activityLogger = kinesisLoggerFactory.get(QueueName.ACTIVITY_STREAM);
         environment.addProvider(new OAuthProvider(new OAuthAuthenticator(tokenStore), "protected-resources", activityLogger));
+        dynamoDBClient.setEndpoint(configuration.getDynamoDBConfiguration().getEndpoint());
+        final TeamStore teamStore = new TeamStore(dynamoDBClient, "teams");
+        final GroupFlipper groupFlipper = new GroupFlipper(teamStore, 10);
 
-
-        final RolloutModule module = new RolloutModule(dynamoDBClient, 10, "namespace1");
+        final FeatureStore featureStore = new FeatureStore(dynamoDBClient, "features", "namespace1");
+        final RolloutModule module = new RolloutModule(featureStore, 10);
         ObjectGraphRoot.getInstance().init(module);
 
         final ReceiveResource receiveResource = new ReceiveResource(deviceDataDAO, deviceDAO,
@@ -179,7 +185,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 mergedAlarmInfoDynamoDB,
                 configuration.getDebug(),
                 configuration.getRoomConditions(),
-                firmwareUpdateStore
+                firmwareUpdateStore,
+                groupFlipper
         );
 
 

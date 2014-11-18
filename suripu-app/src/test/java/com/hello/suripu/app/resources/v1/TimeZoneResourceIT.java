@@ -20,6 +20,8 @@ import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.WebApplicationException;
 import java.util.ArrayList;
@@ -35,6 +37,8 @@ import static org.mockito.Mockito.when;
  * Created by pangwu on 9/19/14.
  */
 public class TimeZoneResourceIT {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(TimeZoneResourceIT.class);
 
     private BasicAWSCredentials awsCredentials;
     private AmazonDynamoDBClient amazonDynamoDBClient;
@@ -92,7 +96,7 @@ public class TimeZoneResourceIT {
 
 
         }catch (ResourceInUseException rie){
-            rie.printStackTrace();
+            LOGGER.warn("Can not create table: {}", rie.getMessage());
         }
 
     }
@@ -107,7 +111,7 @@ public class TimeZoneResourceIT {
 
 
         }catch (ResourceNotFoundException ex){
-            ex.printStackTrace();
+            LOGGER.warn("Can not delete table: {}", ex.getMessage());
         }
 
 
@@ -117,13 +121,13 @@ public class TimeZoneResourceIT {
 
 
         }catch (ResourceNotFoundException ex){
-            ex.printStackTrace();
+            LOGGER.warn("Can not delete table: {}", ex.getMessage());
         }
     }
 
 
     @Test
-    public void testUpdateTimeZone(){
+    public void testUpdateTimeZone() {
         int offsetMillis  = DateTimeZone.getDefault().getOffset(DateTime.now());
         final TimeZoneHistory history = new TimeZoneHistory(offsetMillis,
                 DateTime.now().getZone().getID());
@@ -136,7 +140,7 @@ public class TimeZoneResourceIT {
     }
 
     @Test(expected = WebApplicationException.class)
-    public void testUpdateTimeZoneWhenDynamoIsDown(){
+    public void testUpdateTimeZoneWhenDynamoIsDown() {
         cleanUp();
         int offsetMillis  = DateTimeZone.getDefault().getOffset(DateTime.now());
         final TimeZoneHistory history = new TimeZoneHistory(offsetMillis,
