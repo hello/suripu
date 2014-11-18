@@ -12,6 +12,8 @@ import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -20,6 +22,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * Created by pangwu on 9/19/14.
  */
 public class RingTimeDAODynamoDBIT {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(RingTimeDAODynamoDBIT.class);
+
     private BasicAWSCredentials awsCredentials;
     private AmazonDynamoDBClient amazonDynamoDBClient;
     private RingTimeDAODynamoDB ringTimeDAODynamoDB;
@@ -45,9 +50,8 @@ public class RingTimeDAODynamoDBIT {
 
 
         }catch (ResourceInUseException rie){
-            rie.printStackTrace();
+            LOGGER.error("Can not create existing table");
         }
-
     }
 
     @After
@@ -56,8 +60,8 @@ public class RingTimeDAODynamoDBIT {
                 .withTableName(tableName);
         try {
             this.amazonDynamoDBClient.deleteTable(deleteTableRequest);
-        }catch (ResourceNotFoundException ex){
-            ex.printStackTrace();
+        } catch (ResourceNotFoundException ex){
+            LOGGER.error("Can not delete non existing table");
         }
     }
 
@@ -87,10 +91,8 @@ public class RingTimeDAODynamoDBIT {
 
     @Test
     public void testGetEmptyRingTime(){
-
         final RingTime ringTimeOptional = this.ringTimeDAODynamoDB.getNextRingTime("test morpheus");
         assertThat(ringTimeOptional, is(RingTime.createEmpty()));
-
     }
 
 }

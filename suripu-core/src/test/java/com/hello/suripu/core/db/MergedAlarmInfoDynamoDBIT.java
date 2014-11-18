@@ -14,6 +14,8 @@ import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
@@ -25,6 +27,8 @@ import static org.hamcrest.Matchers.is;
  * Created by pangwu on 9/26/14.
  */
 public class MergedAlarmInfoDynamoDBIT {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(AlarmDAODynamoDB.class);
 
     private BasicAWSCredentials awsCredentials;
     private AmazonDynamoDBClient amazonDynamoDBClient;
@@ -53,7 +57,7 @@ public class MergedAlarmInfoDynamoDBIT {
 
 
         }catch (ResourceInUseException rie){
-            rie.printStackTrace();
+            LOGGER.warn("Can not create existing table");
         }
 
     }
@@ -65,7 +69,7 @@ public class MergedAlarmInfoDynamoDBIT {
         try {
             this.amazonDynamoDBClient.deleteTable(deleteTableRequest);
         }catch (ResourceNotFoundException ex){
-            ex.printStackTrace();
+            LOGGER.warn("Can not delete non existing table");
         }
     }
 
@@ -74,7 +78,7 @@ public class MergedAlarmInfoDynamoDBIT {
         this.mergedAlarmInfoDynamoDB.setAlarms(this.deviceId, this.accountId, Collections.EMPTY_LIST);
         final Optional<AlarmInfo> retrieved = this.mergedAlarmInfoDynamoDB.getInfo(this.deviceId, this.accountId);
         assertThat(retrieved.isPresent(), is(true));
-        assertThat(retrieved.get().timeZone.isPresent(), is(true));
+        assertThat(retrieved.get().timeZone.isPresent(), is(false));
     }
 
     @Test

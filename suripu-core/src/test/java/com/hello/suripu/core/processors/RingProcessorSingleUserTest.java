@@ -19,6 +19,8 @@ import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
@@ -36,6 +38,8 @@ import static org.mockito.Mockito.when;
  * Created by pangwu on 9/24/14.
  */
 public class RingProcessorSingleUserTest {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(RingProcessorSingleUserTest.class);
 
     private final AlarmDAODynamoDB alarmDAODynamoDB = mock(AlarmDAODynamoDB.class);
 
@@ -87,7 +91,7 @@ public class RingProcessorSingleUserTest {
                 motions.add(new TrackerMotion(1L, 1L, 1L, timestamp, (int)value, offsetMillis));
             }
         }catch (IOException ioe){
-            ioe.printStackTrace();
+            LOGGER.error("Failed parsing CSV: {}", ioe.getMessage());
         }
 
         final DateTime alarmDeadlineLocalUTC = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.UTC);
@@ -674,7 +678,4 @@ public class RingProcessorSingleUserTest {
         assertThat(ringTime.actualRingTimeUTC, is(deadline.minusMinutes(3).getMillis()));
         assertThat(ringTime.isSmart(), is(true));
     }
-
-
-
 }

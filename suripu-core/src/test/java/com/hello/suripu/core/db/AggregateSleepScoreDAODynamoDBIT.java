@@ -39,7 +39,7 @@ public class AggregateSleepScoreDAODynamoDBIT {
 
     private static final String VERSION = "v_0_1";
     private static final String SCORE_TYPE = "sleep";
-    private final String tableName = "sleep_score";
+    private final String tableName = "test_sleep_score";
 
 
     @Before
@@ -63,7 +63,6 @@ public class AggregateSleepScoreDAODynamoDBIT {
             );
         }catch (ResourceInUseException rie){
             LOGGER.warn("Problem creating table");
-            rie.printStackTrace();
         }
     }
 
@@ -74,7 +73,7 @@ public class AggregateSleepScoreDAODynamoDBIT {
         try {
             this.amazonDynamoDBClient.deleteTable(deleteTableRequest);
         }catch (ResourceNotFoundException ex){
-            ex.printStackTrace();
+            LOGGER.warn("Can not delete non existing table");
         }
     }
 
@@ -102,7 +101,7 @@ public class AggregateSleepScoreDAODynamoDBIT {
         try {
             Thread.sleep(1);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            LOGGER.warn("Thread interrupted: {}", e.getMessage());
         }
 
         final AggregateScore retrievedScore = this.aggregateSleepScoreDAODynamoDB.getSingleScore(accountId, date);
@@ -136,7 +135,7 @@ public class AggregateSleepScoreDAODynamoDBIT {
         try {
             Thread.sleep(1);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            LOGGER.warn("Thread interrupted: {}", e.getMessage());
         }
         // let's read the batch back
         final ImmutableList<AggregateScore> retrievedScores = this.aggregateSleepScoreDAODynamoDB.getBatchScores(
