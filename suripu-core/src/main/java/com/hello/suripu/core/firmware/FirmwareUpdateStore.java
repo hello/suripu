@@ -5,14 +5,18 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.protobuf.ByteString;
 import com.hello.suripu.api.output.OutputProtos.SyncResponse;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
@@ -108,7 +112,7 @@ public class FirmwareUpdateStore {
         final List<String> files = new ArrayList<>();
 
         for(final S3ObjectSummary summary: objectListing.getObjectSummaries()) {
-            if(!summary.getKey().contains(".map") || summary.getKey().contains(".out")) {
+            if(!summary.getKey().contains(".map") && !summary.getKey().contains(".out") && !summary.getKey().contains(".txt")) {
                 LOGGER.trace("Adding file: {} to list of files to be prepared for update", summary.getKey());
                 files.add(summary.getKey());
             }
@@ -135,6 +139,19 @@ public class FirmwareUpdateStore {
                     .setHost(s.getHost()); // TODO: replace with hello s3 proxy
 
             if(f.contains("kitsune.bin")) {
+
+
+                final S3Object s3Object = s3.getObject(bucketName, f);
+                final S3ObjectInputStream s3ObjectInputStream = s3Object.getObjectContent();
+
+                try {
+                    final byte[] sha1 = DigestUtils.sha1(s3ObjectInputStream);
+                    fileDownloadBuilder.setSha1(ByteString.copyFrom(sha1));
+                } catch (IOException e) {
+                    LOGGER.error("Failed computing sha1 for {}", f);
+                    throw new RuntimeException(e.getMessage());
+                }
+
                 final boolean copyToSerialFlash = true;
                 final boolean resetApplicationProcessor = true;
                 final String serialFlashFilename = "mcuimgx.bin";
@@ -149,12 +166,6 @@ public class FirmwareUpdateStore {
                 fileDownloadBuilder.setSdCardFilename(sdCardFilename);
                 fileDownloadBuilder.setSdCardPath(sdCardPath);
 
-                final String fakeSha1 = "fakeSha1";
-                try {
-                    fileDownloadBuilder.setSha1(ByteString.copyFrom(Hex.decodeHex(fakeSha1.toCharArray())));
-                } catch (DecoderException e) {
-                    LOGGER.error("Failed decoding sha1 from hex");
-                }
 
                 fileDownloadList.add(fileDownloadBuilder.build());
             }

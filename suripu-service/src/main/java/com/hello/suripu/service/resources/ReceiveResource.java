@@ -130,7 +130,7 @@ public class ReceiveResource extends BaseResource {
 
         final List<DeviceAccountPair> pairs = deviceDAO.getTrackerIds(accessToken.accountId);
 
-        final Map<String, Long> pairsLookup = new HashMap<String, Long>(pairs.size());
+        final Map<String, Long> pairsLookup = new HashMap<>(pairs.size());
         for (DeviceAccountPair pair: pairs) {
             pairsLookup.put(pair.externalDeviceId, pair.internalDeviceId);
         }
