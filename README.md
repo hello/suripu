@@ -1,3 +1,5 @@
+# suripu [![Build Status](https://magnum.travis-ci.com/hello/suripu.svg?token=tR1bHuwpRhYiEKnjx5ev&branch=master)](https://magnum.travis-ci.com/hello/suripu)
+
 Suripu スリープ means “sleep” in Japanese.
 
 For up to date information see our [wiki](https://github.com/hello/suripu/wiki)
