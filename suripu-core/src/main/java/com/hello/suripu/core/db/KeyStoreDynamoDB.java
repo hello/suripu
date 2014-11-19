@@ -17,6 +17,8 @@ import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,15 +26,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-public class PublicKeyStoreDynamoDB implements PublicKeyStore {
+public class KeyStoreDynamoDB implements KeyStore {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(PublicKeyStoreDynamoDB.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(KeyStoreDynamoDB.class);
 
     private final AmazonDynamoDBClient dynamoDBClient;
     private final String keyStoreTableName;
 
     private final static String DEVICE_ID_ATTRIBUTE_NAME = "device_id";
-    private final static String PUBLIC_KEY_ATTRIBUTE_NAME = "public_key";
+    private final static String AES_KEY_ATTRIBUTE_NAME = "aes_key";
+
+    //TODO : when transition is over, remove this
+    private final static byte[] DEFAULT_AES_KEY = "1234567891234567".getBytes();
 
 
     final CacheLoader loader = new CacheLoader<String, Optional<byte[]>>() {
@@ -43,7 +48,7 @@ public class PublicKeyStoreDynamoDB implements PublicKeyStore {
 
     final LoadingCache<String, Optional<byte[]>> cache;
 
-    public PublicKeyStoreDynamoDB(
+    public KeyStoreDynamoDB(
             final AmazonDynamoDBClient dynamoDBClient,
             final String keyStoreTableName) {
         this.dynamoDBClient = dynamoDBClient;
@@ -67,7 +72,7 @@ public class PublicKeyStoreDynamoDB implements PublicKeyStore {
     public void put(final String deviceId, final String publicKey) {
         final Map<String, AttributeValue> attributes = new HashMap<String, AttributeValue>();
         attributes.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
-        attributes.put(PUBLIC_KEY_ATTRIBUTE_NAME, new AttributeValue().withS(publicKey));
+        attributes.put(AES_KEY_ATTRIBUTE_NAME, new AttributeValue().withS(publicKey));
 
         final PutItemRequest putItemRequest = new PutItemRequest()
                 .withTableName(keyStoreTableName)
@@ -87,13 +92,20 @@ public class PublicKeyStoreDynamoDB implements PublicKeyStore {
         final GetItemResult getItemResult = dynamoDBClient.getItem(getItemRequest);
 
         LOGGER.warn(getItemResult.toString());
-        if(getItemResult.getItem() == null || !getItemResult.getItem().containsKey(PUBLIC_KEY_ATTRIBUTE_NAME)) {
+        if(getItemResult.getItem() == null || !getItemResult.getItem().containsKey(AES_KEY_ATTRIBUTE_NAME)) {
             LOGGER.warn("Did not find anything for device_id = {}", deviceId);
-            return Optional.absent();
+
+            return Optional.of(DEFAULT_AES_KEY);
         }
 
-        final String base64EncodedPublicKey = getItemResult.getItem().get(PUBLIC_KEY_ATTRIBUTE_NAME).getS();
-        return Optional.of(base64EncodedPublicKey.getBytes());
+        final String hexEncodedKey = getItemResult.getItem().get(AES_KEY_ATTRIBUTE_NAME).getS();
+        try {
+            return Optional.of(Hex.decodeHex(hexEncodedKey.toCharArray()));
+        } catch (DecoderException e) {
+            LOGGER.error("Failed to decode key from store");
+        }
+
+        return Optional.absent();
 
     }
 

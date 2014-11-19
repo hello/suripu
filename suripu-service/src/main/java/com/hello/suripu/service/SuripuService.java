@@ -18,8 +18,8 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.EventDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
-import com.hello.suripu.core.db.PublicKeyStore;
-import com.hello.suripu.core.db.PublicKeyStoreDynamoDB;
+import com.hello.suripu.core.db.KeyStore;
+import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
@@ -137,7 +137,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         dynamoDBClient.setEndpoint(configuration.getDynamoDBConfiguration().getEndpoint());
         // TODO; set region here?
 
-        final PublicKeyStore publicKeyStore = new PublicKeyStoreDynamoDB(
+        final KeyStore keyStore = new KeyStoreDynamoDB(
                 dynamoDBClient,
                 configuration.getDynamoDBConfiguration().getTableName()
         );
@@ -180,7 +180,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         ObjectGraphRoot.getInstance().init(module);
 
         final ReceiveResource receiveResource = new ReceiveResource(deviceDataDAO, deviceDAO,
-                publicKeyStore,
+                keyStore,
                 kinesisLoggerFactory,
                 mergedAlarmInfoDynamoDB,
                 configuration.getDebug(),
@@ -202,7 +202,14 @@ public class SuripuService extends Service<SuripuConfiguration> {
         environment.addResource(new VersionResource());
 
         final DataLogger audioDataLogger = kinesisLoggerFactory.get(QueueName.AUDIO_FEATURES);
-        environment.addResource(new AudioResource(s3Client, bucketName, audioDataLogger, configuration.getDebug()));
+        final DataLogger audioMetaDataLogger = kinesisLoggerFactory.get(QueueName.ENCODE_AUDIO);
+        environment.addResource(
+                new AudioResource(
+                        s3Client,
+                        bucketName,
+                        audioDataLogger,
+                        configuration.getDebug(),
+                        audioMetaDataLogger));
 
         environment.addResource(new DownloadResource(s3Client, "hello-firmware"));
 

@@ -115,6 +115,7 @@ kinesis:
     audio_features : audio_features
     activity_stream : activity_stream
     registrations: registrations
+    encode_audio: encode_audio
 
 
 audio_bucket_name : hello-data
