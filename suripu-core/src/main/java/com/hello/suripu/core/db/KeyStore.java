@@ -2,7 +2,7 @@ package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
 
-public interface PublicKeyStore {
+public interface KeyStore {
 
     /**
      * Retrieves a public key (in bytes) from a store

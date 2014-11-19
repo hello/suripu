@@ -8,7 +8,8 @@ public enum QueueName {
     MORPHEUS_DATA ("morpheus_data"),
     AUDIO_FEATURES("audio_features"),
     ACTIVITY_STREAM("activity_stream"),
-    REGISTRATIONS("registrations");
+    REGISTRATIONS("registrations"),
+    ENCODE_AUDIO("encode_audio");
 
     private String value;
 

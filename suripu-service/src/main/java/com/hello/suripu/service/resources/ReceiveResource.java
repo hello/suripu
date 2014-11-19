@@ -2,9 +2,7 @@ package com.hello.suripu.service.resources;
 
 import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
-import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.protobuf.TextFormat;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.audio.AudioControlProtos;
@@ -15,8 +13,8 @@ import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
-import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.firmware.FirmwareUpdateStore;
 import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.logging.DataLogger;
@@ -48,7 +46,6 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.HEAD;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -76,7 +73,7 @@ public class ReceiveResource extends BaseResource {
 
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
-    private final PublicKeyStore publicKeyStore;
+    private final KeyStore keyStore;
     private final MergedAlarmInfoDynamoDB mergedInfoDynamoDB;
 
     private final KinesisLoggerFactory kinesisLoggerFactory;
@@ -88,11 +85,9 @@ public class ReceiveResource extends BaseResource {
     @Context
     HttpServletRequest request;
 
-    private final LoadingCache<String, Optional<byte[]>> cache;
-
     public ReceiveResource(final DeviceDataDAO deviceDataDAO,
                            final DeviceDAO deviceDAO,
-                           final PublicKeyStore publicKeyStore,
+                           final KeyStore keyStore,
                            final KinesisLoggerFactory kinesisLoggerFactory,
                            final MergedAlarmInfoDynamoDB mergedInfoDynamoDB,
                            final Boolean debug,
@@ -101,20 +96,19 @@ public class ReceiveResource extends BaseResource {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
 
-        this.publicKeyStore = publicKeyStore;
+        this.keyStore = keyStore;
         this.kinesisLoggerFactory = kinesisLoggerFactory;
 
         this.mergedInfoDynamoDB = mergedInfoDynamoDB;
 
         this.debug = debug;
 
-        CacheLoader<String, Optional<byte[]>> loader = new CacheLoader<String, Optional<byte[]>>() {
+        final CacheLoader<String, Optional<byte[]>> loader = new CacheLoader<String, Optional<byte[]>>() {
             public Optional<byte[]> load(String key) {
-                return publicKeyStore.get(key);
+                return keyStore.get(key);
             }
         };
 
-        cache = CacheBuilder.newBuilder().build(loader);
         this.firmwareUpdateStore = firmwareUpdateStore;
         this.groupFlipper = groupFlipper;
     }
@@ -215,9 +209,13 @@ public class ReceiveResource extends BaseResource {
         LOGGER.debug("Received valid protobuf {}", deviceName.toString());
         LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
 
-        // TODO: Fetch key from Datastore
-        final byte[] keyBytes = "1234567891234567".getBytes();
-        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytes);
+        final Optional<byte[]> optionalKeyBytes = keyStore.get(data.getDeviceId());
+        if(!optionalKeyBytes.isPresent()) {
+            LOGGER.error("Failed to get key from key store for device_id = {}", data.getDeviceId());
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(optionalKeyBytes.get());
 
         if(error.isPresent()) {
             LOGGER.error(error.get().message);
@@ -391,7 +389,7 @@ public class ReceiveResource extends BaseResource {
 
         LOGGER.debug("Len pb = {}", syncResponse.toByteArray().length);
 
-        final Optional<byte[]> signedResponse = SignedMessage.sign(syncResponse.toByteArray(), keyBytes);
+        final Optional<byte[]> signedResponse = SignedMessage.sign(syncResponse.toByteArray(), optionalKeyBytes.get());
         if(!signedResponse.isPresent()) {
             LOGGER.error("Failed signing message");
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -428,9 +426,12 @@ public class ReceiveResource extends BaseResource {
         LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(batchPilldata));
 
 
-        // TODO: Fetch key from Datastore
-        final byte[] keyBytes = "1234567891234567".getBytes();
-        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytes);
+        final Optional<byte[]> optionalKeyBytes = keyStore.get(batchPilldata.getDeviceId());
+        if(!optionalKeyBytes.isPresent()) {
+            LOGGER.error("Failed to get key from key store for device_id = {}", batchPilldata.getDeviceId());
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(optionalKeyBytes.get());
 
         if(error.isPresent()) {
             LOGGER.error(error.get().message);
@@ -506,7 +507,7 @@ public class ReceiveResource extends BaseResource {
                 .setVersion(0)
                 .build();
 
-        final Optional<byte[]> signedResponse = SignedMessage.sign(responseCommand.toByteArray(), keyBytes);
+        final Optional<byte[]> signedResponse = SignedMessage.sign(responseCommand.toByteArray(), optionalKeyBytes.get());
         if(!signedResponse.isPresent()) {
             LOGGER.error("Failed signing message");
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)

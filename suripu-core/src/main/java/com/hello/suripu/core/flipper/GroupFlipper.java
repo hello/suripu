@@ -75,33 +75,34 @@ public class GroupFlipper {
      * @param userTeams
      * @return
      */
-    private Map<String, Set<String>> denormalizeGroups(List<Team> deviceTeams, List<Team> userTeams) {
+    public static Map<String, Set<String>> denormalizeGroups(List<Team> deviceTeams, List<Team> userTeams) {
         final Map<String, Set<String>> finalMap = new HashMap<>();
 
         for(final Team team: deviceTeams) {
-            final Set<String> s = new HashSet<>();
             for(final String deviceId : team.ids) {
+                final Set<String> s = new HashSet<>();
                 s.add(team.name);
                 finalMap.put(deviceId, s);
-                s.clear();
             }
         }
 
         for(final Team team: userTeams) {
-            final Set<String> s = new HashSet<>();
+
             for(final String userId : team.ids) {
+                final Set<String> s = new HashSet<>();
                 if(finalMap.containsKey(userId)) {
                     finalMap.get(userId).add(team.name);
                 } else {
                     s.add(team.name);
                     finalMap.put(userId, s);
                 }
-                s.clear();
             }
         }
         LOGGER.trace("{}", finalMap);
         return finalMap;
     }
+
+
     public List<String> getGroups(String deviceId) {
         final Set<String> deviceGroups = groups.get().get(deviceId);
         if(deviceGroups == null) {

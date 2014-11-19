@@ -6,8 +6,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.hello.dropwizard.mikkusu.helpers.JacksonProtobufProvider;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
-import com.hello.suripu.core.db.PublicKeyStore;
-import com.hello.suripu.core.db.PublicKeyStoreDynamoDB;
+import com.hello.suripu.core.db.KeyStore;
+import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.factory.cli.CreateTableCommand;
 import com.hello.suripu.factory.configuration.SuripuFactoryConfiguration;
 import com.hello.suripu.core.health.DynamoDbHealthCheck;
@@ -42,12 +42,12 @@ public class SuripuFactory extends Service<SuripuFactoryConfiguration>{
         dynamoDBClient.setEndpoint(configuration.getDynamoDBConfiguration().getEndpoint());
         // TODO; set region here?
 
-        final PublicKeyStore publicKeyStore = new PublicKeyStoreDynamoDB(
+        final KeyStore keyStore = new KeyStoreDynamoDB(
                 dynamoDBClient,
                 configuration.getDynamoDBConfiguration().getTableName()
         );
 
-        environment.addResource(new FactoryResource(publicKeyStore));
+        environment.addResource(new FactoryResource(keyStore));
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());
         environment.manage(new DynamoDBClientManaged(dynamoDBClient));

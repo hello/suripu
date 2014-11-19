@@ -1,6 +1,6 @@
 package com.hello.suripu.factory.resources;
 
-import com.hello.suripu.core.db.PublicKeyStore;
+import com.hello.suripu.core.db.KeyStore;
 import com.yammer.metrics.annotation.Timed;
 
 import javax.ws.rs.PUT;
@@ -12,10 +12,10 @@ import javax.ws.rs.core.Response;
 @Path("register")
 public class FactoryResource {
 
-    private final PublicKeyStore publicKeyStore;
+    private final KeyStore keyStore;
 
-    public FactoryResource(final PublicKeyStore publicKeyStore) {
-        this.publicKeyStore = publicKeyStore;
+    public FactoryResource(final KeyStore keyStore) {
+        this.keyStore = keyStore;
     }
 
     @PUT
@@ -35,7 +35,7 @@ public class FactoryResource {
         // Body = base64 encoded public key
         // TODO : validate device id format
 
-        publicKeyStore.put(deviceId, body);
+        keyStore.put(deviceId, body);
         return Response.ok().build();
     }
 }

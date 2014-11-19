@@ -2,6 +2,7 @@ package com.hello.suripu.service.modules;
 
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.flipper.DynamoDBAdapter;
+import com.hello.suripu.service.resources.AudioResource;
 import com.hello.suripu.service.resources.ReceiveResource;
 import com.librato.rollout.RolloutAdapter;
 import com.librato.rollout.RolloutClient;
@@ -11,7 +12,8 @@ import dagger.Provides;
 import javax.inject.Singleton;
 
 @Module(injects = {
-        ReceiveResource.class
+        ReceiveResource.class,
+        AudioResource.class
 })
 public class RolloutModule {
     private final FeatureStore featureStore;
