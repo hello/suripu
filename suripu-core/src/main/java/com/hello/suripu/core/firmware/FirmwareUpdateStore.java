@@ -3,6 +3,9 @@ package com.hello.suripu.core.firmware;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.protobuf.ByteString;
 import com.hello.suripu.api.output.OutputProtos.SyncResponse;
 import org.apache.commons.codec.DecoderException;
@@ -21,10 +24,12 @@ public class FirmwareUpdateStore {
 
     private final FirmwareUpdateDAO firmwareUpdateDAO;
     private final AmazonS3 s3;
+    private final String bucketName;
 
-    public FirmwareUpdateStore(final FirmwareUpdateDAO firmwareUpdateDAOImpl, final AmazonS3 s3) {
+    public FirmwareUpdateStore(final FirmwareUpdateDAO firmwareUpdateDAOImpl, final AmazonS3 s3, final String bucketName) {
         this.firmwareUpdateDAO = firmwareUpdateDAOImpl;
         this.s3 = s3;
+        this.bucketName = bucketName;
     }
 
 
@@ -87,11 +92,28 @@ public class FirmwareUpdateStore {
         return fileDownloadList;
     }
 
-    public List<SyncResponse.FileDownload> getFirmwareUpdate(final Integer currentFirmwareVersion) {
+    /**
+     * Downloads files from s3 bucket matching the group name
+     * @param group
+     * @return
+     */
+    public List<SyncResponse.FileDownload> getFirmwareUpdate(final String group) {
 
-        final List<FirmwareFile> files = firmwareUpdateDAO.getFilesForFirmwareVersion(currentFirmwareVersion);
+        final ListObjectsRequest listObjectsRequest = new ListObjectsRequest();
+        listObjectsRequest.withBucketName(bucketName);
+        listObjectsRequest.withPrefix("sense/" + group);
 
-        LOGGER.debug("Found {} files to update", files.size());
+        // TODO: add caching?
+        final ObjectListing objectListing = s3.listObjects(listObjectsRequest);
+        final List<String> files = new ArrayList<>();
+
+        for(final S3ObjectSummary summary: objectListing.getObjectSummaries()) {
+            if(!summary.getKey().contains(".map") || summary.getKey().contains(".out")) {
+                LOGGER.trace("Adding file: {} to list of files to be prepared for update", summary.getKey());
+                files.add(summary.getKey());
+            }
+        }
+
         final List<SyncResponse.FileDownload> fileDownloadList = new ArrayList<>();
 
         final Date expiration = new java.util.Date();
@@ -99,35 +121,43 @@ public class FirmwareUpdateStore {
         msec += 1000 * 60 * 60; // 1 hour.
         expiration.setTime(msec);
 
-        for(final FirmwareFile f : files) {
+        for(final String f : files) {
 
-            final GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(f.s3Bucket, f.s3Key);
+            final GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, f);
             generatePresignedUrlRequest.setMethod(HttpMethod.GET); // Default.
             generatePresignedUrlRequest.setExpiration(expiration);
 
             final URL s = s3.generatePresignedUrl(generatePresignedUrlRequest);
-            LOGGER.debug("{}", s);
+            LOGGER.debug("S3 URL: {}", s);
 
             final SyncResponse.FileDownload.Builder fileDownloadBuilder = SyncResponse.FileDownload.newBuilder()
                     .setUrl(s.getPath() + "?" + s.getQuery())
-                    .setHost(s.getHost())
-                    .setCopyToSerialFlash(f.copyToSerialFlash)
-                    .setResetApplicationProcessor(f.resetApplicationProcessor)
-                    .setResetNetworkProcessor(f.resetNetworkProcessor)
-                    .setSerialFlashFilename(f.serialFlashFilename)
-                    .setSerialFlashPath(f.serialFlashPath)
-                    .setSdCardFilename(f.sdCardFilename)
-                    .setSdCardPath(f.sdCardPath);
+                    .setHost(s.getHost()); // TODO: replace with hello s3 proxy
 
-            if(!f.sha1.isEmpty()) {
+            if(f.contains("kitsune.bin")) {
+                final boolean copyToSerialFlash = true;
+                final boolean resetApplicationProcessor = true;
+                final String serialFlashFilename = "mcuimgx.bin";
+                final String serialFlashPath = "/sys/";
+                final String sdCardFilename = "mcuimgx.bin";
+                final String sdCardPath = "/";
+
+                fileDownloadBuilder.setCopyToSerialFlash(copyToSerialFlash);
+                fileDownloadBuilder.setResetApplicationProcessor(resetApplicationProcessor);
+                fileDownloadBuilder.setSerialFlashFilename(serialFlashFilename);
+                fileDownloadBuilder.setSerialFlashPath(serialFlashPath);
+                fileDownloadBuilder.setSdCardFilename(sdCardFilename);
+                fileDownloadBuilder.setSdCardPath(sdCardPath);
+
+                final String fakeSha1 = "fakeSha1";
                 try {
-                    fileDownloadBuilder.setSha1(ByteString.copyFrom(Hex.decodeHex(f.sha1.toCharArray())));
+                    fileDownloadBuilder.setSha1(ByteString.copyFrom(Hex.decodeHex(fakeSha1.toCharArray())));
                 } catch (DecoderException e) {
                     LOGGER.error("Failed decoding sha1 from hex");
                 }
-            }
 
-            fileDownloadList.add(fileDownloadBuilder.build());
+                fileDownloadList.add(fileDownloadBuilder.build());
+            }
         }
 
         return fileDownloadList;
