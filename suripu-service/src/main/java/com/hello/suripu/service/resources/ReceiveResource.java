@@ -20,6 +20,7 @@ import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.models.AlarmInfo;
+import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.RingTime;
@@ -30,6 +31,7 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.core.util.DeviceIdUtil;
+import com.hello.suripu.core.util.RoomConditionUtil;
 import com.hello.suripu.service.SignedMessage;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
@@ -72,11 +74,10 @@ public class ReceiveResource extends BaseResource {
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
     private final KeyStore keyStore;
-    private final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
+    private final MergedAlarmInfoDynamoDB mergedInfoDynamoDB;
 
     private final KinesisLoggerFactory kinesisLoggerFactory;
     private final Boolean debug;
-    private final Integer roomConditions;
 
     private final FirmwareUpdateStore firmwareUpdateStore;
     private final GroupFlipper groupFlipper;
@@ -88,10 +89,8 @@ public class ReceiveResource extends BaseResource {
                            final DeviceDAO deviceDAO,
                            final KeyStore keyStore,
                            final KinesisLoggerFactory kinesisLoggerFactory,
-
-                           final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
+                           final MergedAlarmInfoDynamoDB mergedInfoDynamoDB,
                            final Boolean debug,
-                           final Integer roomConditions,
                            final FirmwareUpdateStore firmwareUpdateStore,
                            final GroupFlipper groupFlipper) {
         this.deviceDataDAO = deviceDataDAO;
@@ -100,8 +99,7 @@ public class ReceiveResource extends BaseResource {
         this.keyStore = keyStore;
         this.kinesisLoggerFactory = kinesisLoggerFactory;
 
-        this.mergedAlarmInfoDynamoDB = mergedAlarmInfoDynamoDB;
-        this.roomConditions = roomConditions;
+        this.mergedInfoDynamoDB = mergedInfoDynamoDB;
 
         this.debug = debug;
 
@@ -231,7 +229,7 @@ public class ReceiveResource extends BaseResource {
         // requests to break our bank(Assume that Dynamo DB never goes down).
         // May be we should somehow cache these data to reduce load & cost.
         final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceName);
-        final List<AlarmInfo> alarmInfoList = this.mergedAlarmInfoDynamoDB.getInfo(deviceName);  // get alarm related info from DynamoDB "cache".
+        final List<AlarmInfo> alarmInfoList = this.mergedInfoDynamoDB.getInfo(deviceName);  // get alarm related info from DynamoDB "cache".
         RingTime nextRingTimeFromWorker = RingTime.createEmpty();
 
         LOGGER.debug("Found {} pairs", deviceAccountPairs.size());
@@ -240,6 +238,7 @@ public class ReceiveResource extends BaseResource {
         final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
         // This is the default timezone.
         DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
+        final OutputProtos.SyncResponse.Builder responseBuilder = OutputProtos.SyncResponse.newBuilder();
 
         // ********************* Morpheus Data and Alarm processing **************************
         // Here comes to a discussion: Shall we loop over the device_id:account_id relation based on the
@@ -303,6 +302,10 @@ public class ReceiveResource extends BaseResource {
                     .withFirmwareVersion(data.getFirmwareVersion());
 
             final DeviceData deviceData = builder.build();
+            final CurrentRoomState currentRoomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), 2);
+            responseBuilder.setRoomConditions(
+                    OutputProtos.SyncResponse.RoomConditions.valueOf(
+                            RoomConditionUtil.getGeneralRoomCondition(currentRoomState).ordinal()));
 
             try {
                 deviceDataDAO.insert(deviceData);
@@ -329,7 +332,7 @@ public class ReceiveResource extends BaseResource {
         final String sequenceNumber = dataLogger.put(shardingKey, morpheusDataInBytes);
         LOGGER.trace("Morpheus data saved to Kinesis with sequence number = {}", sequenceNumber);
 
-        final OutputProtos.SyncResponse.Builder responseBuilder = OutputProtos.SyncResponse.newBuilder();
+
         final RingTime nextRegularRingTime = RingProcessor.getNextRegularRingTime(alarmInfoList,
                 deviceName,
                 DateTime.now());
@@ -353,7 +356,7 @@ public class ReceiveResource extends BaseResource {
         final OutputProtos.SyncResponse.Alarm.Builder alarmBuilder = OutputProtos.SyncResponse.Alarm.newBuilder()
                 .setStartTime((int) (nextRingTimestamp / DateTimeConstants.MILLIS_PER_SECOND))
                 .setEndTime((int) ((nextRingTimestamp + ringDurationInMS) / DateTimeConstants.MILLIS_PER_SECOND))
-                .setRingDurationInSecond(30)
+                .setRingDurationInSecond(ringDurationInMS / DateTimeConstants.MILLIS_PER_SECOND)
                 .setRingOffsetFromNowInSecond(ringOffsetFromNowInSecond);
 
         // TODO: Fix the IndexOutOfBoundException
@@ -362,8 +365,6 @@ public class ReceiveResource extends BaseResource {
 //        }
 
         responseBuilder.setAlarm(alarmBuilder.build());
-
-        responseBuilder.setRoomConditions(OutputProtos.SyncResponse.RoomConditions.valueOf(this.roomConditions));
 
         final String firmwareFeature = String.format("firmware_release_%s", data.getFirmwareVersion());
         final List<String> groups = groupFlipper.getGroups(data.getDeviceId());
@@ -443,7 +444,7 @@ public class ReceiveResource extends BaseResource {
         // This is the default timezone.
         DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
         final String senseId  = batchPilldata.getDeviceId();
-        final List<AlarmInfo> alarmInfoList = this.mergedAlarmInfoDynamoDB.getInfo(senseId);
+        final List<AlarmInfo> alarmInfoList = this.mergedInfoDynamoDB.getInfo(senseId);
         for(final AlarmInfo info:alarmInfoList){
             if(info.timeZone.isPresent()){
                 userTimeZone = info.timeZone.get();
