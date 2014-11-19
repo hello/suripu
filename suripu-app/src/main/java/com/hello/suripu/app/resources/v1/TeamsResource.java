@@ -123,24 +123,22 @@ public class TeamsResource {
     }
 
     @DELETE
-    @Path("/devices/{team_name}/{device_id}")
+    @Path("/devices")
     public void removeFromDevicesTeam(
             @Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
-            @PathParam("team_name") final String teamName,
-            @PathParam("device_id") final String deviceId) {
-        final List<String> ids = new ArrayList<>();
-        ids.add(deviceId);
-        teamStore.remove(teamName, TeamStore.Type.DEVICES, ids);
+            @Valid final Team team) {
+        final List<String> ids = new ArrayList<>(team.ids.size());
+        ids.addAll(team.ids);
+        teamStore.remove(team.name, TeamStore.Type.DEVICES, ids);
     }
 
     @DELETE
-    @Path("/users/{team_name}/{user_id}")
+    @Path("/users")
     public void removeFromUsersTeam(
             @Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
-            @PathParam("team_name") final String teamName,
-            @PathParam("user_id") final Long userId) {
-        final List<String> ids = new ArrayList<>();
-        ids.add(String.valueOf(userId));
-        teamStore.remove(teamName, TeamStore.Type.USERS, ids);
+            @Valid final Team team) {
+        final List<String> ids = new ArrayList<>(team.ids.size());
+        ids.addAll(team.ids);
+        teamStore.remove(team.name, TeamStore.Type.USERS, ids);
     }
 }
