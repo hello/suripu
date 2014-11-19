@@ -122,7 +122,7 @@ public class FirmwareResource {
 
 
         final ListObjectsRequest listObjectsRequest = new ListObjectsRequest();
-        listObjectsRequest.withBucketName(bucketName);
+        listObjectsRequest.withBucketName(bucketName); // TODO: Move this to Firmware store
         listObjectsRequest.withPrefix("sense/" + s3key);
 
         final ObjectListing objectListing = amazonS3.listObjects(listObjectsRequest);

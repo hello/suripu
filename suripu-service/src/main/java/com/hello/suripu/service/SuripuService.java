@@ -167,16 +167,18 @@ public class SuripuService extends Service<SuripuConfiguration> {
             LOGGER.warn("Metrics not enabled.");
         }
 
-        final FirmwareUpdateStore firmwareUpdateStore = new FirmwareUpdateStore(firmwareUpdateDAO, s3Client);
+        final FirmwareUpdateStore firmwareUpdateStore = new FirmwareUpdateStore(firmwareUpdateDAO, s3Client, "hello-firmware");
 
         final DataLogger activityLogger = kinesisLoggerFactory.get(QueueName.ACTIVITY_STREAM);
         environment.addProvider(new OAuthProvider(new OAuthAuthenticator(tokenStore), "protected-resources", activityLogger));
         dynamoDBClient.setEndpoint(configuration.getDynamoDBConfiguration().getEndpoint());
         final TeamStore teamStore = new TeamStore(dynamoDBClient, "teams");
-        final GroupFlipper groupFlipper = new GroupFlipper(teamStore, 10);
+        final GroupFlipper groupFlipper = new GroupFlipper(teamStore, 30);
 
-        final FeatureStore featureStore = new FeatureStore(dynamoDBClient, "features", "namespace1");
-        final RolloutModule module = new RolloutModule(featureStore, 10);
+        final String namespace = (configuration.getDebug()) ? "dev" : "prod";
+        final FeatureStore featureStore = new FeatureStore(dynamoDBClient, "features", namespace);
+
+        final RolloutModule module = new RolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(module);
 
         final ReceiveResource receiveResource = new ReceiveResource(deviceDataDAO, deviceDAO,

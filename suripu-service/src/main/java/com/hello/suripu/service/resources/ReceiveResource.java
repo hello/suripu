@@ -368,20 +368,27 @@ public class ReceiveResource extends BaseResource {
 
         final String firmwareFeature = String.format("firmware_release_%s", data.getFirmwareVersion());
         final List<String> groups = groupFlipper.getGroups(data.getDeviceId());
-        LOGGER.debug("Groups for {} = {}", data.getDeviceId(), groups);
         if(featureFlipper.deviceFeatureActive(firmwareFeature, data.getDeviceId(), groups)) {
             LOGGER.debug("Feature is active!");
+        }
+
+
+        if(!groups.isEmpty()) {
+            LOGGER.debug("DeviceId {} belongs to groups: {}", data.getDeviceId(), groups);
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(groups.get(0));
+            LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+            responseBuilder.addAllFiles(fileDownloadList);
+        } else {
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdateContent(data.getDeviceId(), data.getFirmwareVersion());
+            if(!fileDownloadList.isEmpty()) {
+                LOGGER.debug("Adding {} files to Files to Download list", fileDownloadList.size());
+                responseBuilder.addAllFiles(fileDownloadList);
+            }
         }
 
         final AudioControlProtos.AudioControl.Builder audioControl = AudioControlProtos.AudioControl
                 .newBuilder()
                 .setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.OFF);
-
-        final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdateContent(data.getDeviceId(), data.getFirmwareVersion());
-        if(!fileDownloadList.isEmpty()) {
-            LOGGER.debug("Adding {} files to Files to Download list", fileDownloadList.size());
-            responseBuilder.addAllFiles(fileDownloadList);
-        }
 
         responseBuilder.setAudioControl(audioControl);
 
@@ -423,7 +430,7 @@ public class ReceiveResource extends BaseResource {
                     .type(MediaType.TEXT_PLAIN_TYPE).build()
             );
         }
-        LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(batchPilldata));
+        LOGGER.debug("Received for pill protobuf message {}", TextFormat.shortDebugString(batchPilldata));
 
 
         final Optional<byte[]> optionalKeyBytes = keyStore.get(batchPilldata.getDeviceId());
@@ -497,7 +504,7 @@ public class ReceiveResource extends BaseResource {
                 final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.PILL_DATA);
                 final String sequenceNumber = dataLogger.put(internalPillPairingMap.get().internalDeviceId.toString(),  // WTF?
                         pillDataBytes);
-                LOGGER.debug("Pill Data added to Kinesis with sequenceNumber = {}", sequenceNumber);
+                LOGGER.trace("Pill Data added to Kinesis with sequenceNumber = {}", sequenceNumber);
 
             }
         }
