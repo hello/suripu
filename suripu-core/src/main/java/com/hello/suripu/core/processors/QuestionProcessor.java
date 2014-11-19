@@ -38,7 +38,7 @@ public class QuestionProcessor {
     private static final int MAX_BASE_QUESTION_ID = 10000; // reserved ids for base, one-time questions in EN
     private static final int NEW_ACCOUNT_AGE = 1; // less than 1 day
     private static final int NEW_USER_NUM_Q = 3; // no. of on-boarding questions
-    private static final int OLD_ACCOUNT_AGE = 1000; // older accounts are more than this many days
+    private static final int OLD_ACCOUNT_AGE = 7; // older accounts are more than this many days
 
     private final QuestionResponseDAO questionResponseDAO;
     private final int checkSkipsNum;
@@ -106,6 +106,7 @@ public class QuestionProcessor {
 
     /**
      * Save response to a question
+     * TODO: deal with checkboxes response
      */
     public void saveResponse(final Long accountId, final int questionId, final Long accountQuestionId, final Choice choice) {
 
@@ -168,9 +169,9 @@ public class QuestionProcessor {
         }
 
         final List<Question> onboardingQs = new ArrayList<>();
-        onboardingQs.add(questionIdMap.get(0));
         onboardingQs.add(questionIdMap.get(1));
         onboardingQs.add(questionIdMap.get(2));
+        onboardingQs.add(questionIdMap.get(3));
 
         final DateTime expiration = today.plusDays(1);
         this.questionResponseDAO.insertAccountOnBoardingQuestions(accountId, today, expiration); // save to DB
@@ -339,7 +340,7 @@ public class QuestionProcessor {
     private Map<Integer, Question> getPreGeneratedQuestions(final Long accountId, final DateTime today, final int numQuestions) {
         final DateTime expiration = today.plusDays(1);
         final ImmutableList<AccountQuestion> questionIds = this.questionResponseDAO.getAccountQuestions(accountId, expiration, numQuestions);
-        if (questionIds.size() == 0) {
+        if (questionIds == null || questionIds.size() == 0) {
             return Collections.emptyMap();
         }
 
