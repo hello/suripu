@@ -1,5 +1,6 @@
 package com.hello.suripu.core.processors;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.models.Choice;
@@ -11,6 +12,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,8 +30,8 @@ public class QuestionProcessorTest {
     private final static int CHECK_SKIP_NUM = 5;
 
     private final DateTime today = DateTime.now().withTimeAtStartOfDay();
-    private final static String pillID = "10";
-    private final static Long ACCOUNT_ID = 1L;
+    private final static Long ACCOUNT_ID_PASS = 1L;
+    private final static Long ACCOUNT_ID_FAIL = 1L;
 
     private QuestionProcessor questionProcessor;
 
@@ -38,7 +40,23 @@ public class QuestionProcessorTest {
         final List<Question> questions = this.getQuestions();
 
         final QuestionResponseDAO questionResponseDAO = mock(QuestionResponseDAO.class);
+
         when(questionResponseDAO.getAllQuestions()).thenReturn(ImmutableList.<Question>of().copyOf(questions));
+
+        final Timestamp nextAskTimePass = new Timestamp(today.minusDays(2).getMillis());
+        when(questionResponseDAO.getNextAskTime(ACCOUNT_ID_PASS)).thenReturn(Optional.fromNullable(nextAskTimePass));
+
+        final Timestamp nextAskTimeFail = new Timestamp(today.minusDays(2).getMillis());
+        when(questionResponseDAO.getNextAskTime(ACCOUNT_ID_FAIL)).thenReturn(Optional.fromNullable(nextAskTimeFail));
+
+        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 1, today, today.plusDays(1))).thenReturn(10L);
+        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 2, today, today.plusDays(1))).thenReturn(11L);
+        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 3, today, today.plusDays(1))).thenReturn(12L);
+        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 4, today, today.plusDays(1))).thenReturn(13L);
+        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 5, today, today.plusDays(1))).thenReturn(14L);
+        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10000, today, today.plusDays(1))).thenReturn(15L);
+        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10002, today, today.plusDays(1))).thenReturn(16L);
+        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10003, today, today.plusDays(1))).thenReturn(17L);
         questionProcessor = new QuestionProcessor(questionResponseDAO, CHECK_SKIP_NUM);
     }
 
@@ -141,7 +159,7 @@ public class QuestionProcessorTest {
         qid = 10003;
         choices.add(new Choice(32, "great", qid));
         choices.add(new Choice(33, "normal", qid));
-        choices.add(new Choice(33, "shitty", qid));
+        choices.add(new Choice(34, "shitty", qid));
         questions.add(new Question(qid, accountQId,
                 "How are you feeling?", "EN",
                 Question.Type.CHOICE,
@@ -155,14 +173,67 @@ public class QuestionProcessorTest {
     @Test
     public void getOnBoardingQuestions() {
         final int accountAge = 0; // zero-days
-        final List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID, accountAge, this.today, 2);
+        final List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, 2);
 
-        LOGGER.debug("Questions {}", questions);
         assertThat(questions.size(), is(3));
 
         for (int i = 0; i < questions.size(); i++) {
+            LOGGER.debug("Questions {}", questions.get(i));
             assertThat(questions.get(i).id, is(i+1));
         }
+    }
+
+    @Test
+    public void getNewbieQuestions() {
+        // expects one base and one calibration if asking for two
+        final int accountAge = 2;
+        int numQ = 2;
+        List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ);
+        assertThat(questions.size(), is(numQ));
+
+        boolean foundBaseQ = false;
+        boolean foundCalibrationQ = false;
+        for (int i = 0; i < questions.size(); i++) {
+            final Question.FREQUENCY qfreq = questions.get(i).frequency;
+            if (qfreq == Question.FREQUENCY.ONE_TIME) {
+                foundBaseQ = true;
+            } else if (qfreq == Question.FREQUENCY.DAILY) {
+                foundCalibrationQ = true;
+            }
+        }
+        assertThat(foundBaseQ, is(true));
+        assertThat(foundCalibrationQ, is(true));
+
+        // try getting three questions
+        numQ = 3;
+        questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ);
+        assertThat(questions.size(), is(numQ));
+        int countBaseQ = 0;
+        foundCalibrationQ = false;
+        for (int i = 0; i < questions.size(); i++) {
+            final Question.FREQUENCY qfreq = questions.get(i).frequency;
+            if (qfreq == Question.FREQUENCY.ONE_TIME) {
+                countBaseQ++;
+            } else if (qfreq == Question.FREQUENCY.DAILY) {
+                foundCalibrationQ = true;
+            }
+        }
+        assertThat(countBaseQ, is(2));
+        assertThat(foundCalibrationQ, is(true));
+
+    }
+
+    @Test
+    public void saveResponse() {
+        final int qid = 10003;
+        Choice choice = new Choice(34, "shitty", qid);
+        boolean saved = this.questionProcessor.saveResponse(ACCOUNT_ID_PASS, qid, 1L, choice);
+        assertThat(saved, is(true));
+
+        Choice wrongChoice = new Choice(30, "no", qid);
+        saved = this.questionProcessor.saveResponse(ACCOUNT_ID_FAIL, qid, 2L, wrongChoice);
+        assertThat(saved, is(false));
+
     }
 
 }

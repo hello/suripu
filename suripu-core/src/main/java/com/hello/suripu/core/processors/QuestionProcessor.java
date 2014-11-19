@@ -108,15 +108,22 @@ public class QuestionProcessor {
      * Save response to a question
      * TODO: deal with checkboxes response
      */
-    public void saveResponse(final Long accountId, final int questionId, final Long accountQuestionId, final Choice choice) {
+    public boolean saveResponse(final Long accountId, final int questionId, final Long accountQuestionId, final Choice choice) {
 
         //check if choice is a valid one before saving to DB
         final Question responseToQuestion = this.questionIdMap.get(questionId);
         if (responseToQuestion.choiceList.contains(choice)) {
-            this.questionResponseDAO.insertResponse(accountId, questionId, accountQuestionId, choice.id);
+            try {
+                this.questionResponseDAO.insertResponse(accountId, questionId, accountQuestionId, choice.id);
+                return true;
+            } catch (UnableToExecuteStatementException exception) {
+                LOGGER.warn("Fail to insert response to question {}", accountQuestionId);
+                return false;
+            }
         } else {
             // response choice is not associated with this question
             LOGGER.warn("Account {} response to {} is not a valid choice: {}", accountId, accountQuestionId, choice);
+            return false;
         }
     }
 

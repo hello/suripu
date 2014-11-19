@@ -96,7 +96,6 @@ public class QuestionsResource {
         }
 
         this.questionProcessor.saveResponse(accessToken.accountId, questionId, accountQuestionId, choice);
-
     }
 
     @Timed
