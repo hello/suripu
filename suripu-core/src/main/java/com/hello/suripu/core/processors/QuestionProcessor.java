@@ -47,6 +47,7 @@ public class QuestionProcessor {
     private final Map<Integer, Question> questionIdMap;
     private final Set<Integer> baseQuestionIds = new HashSet<>();
 
+
     public QuestionProcessor(final QuestionResponseDAO questionResponseDAO, final int checkSkipsNum) {
         this.questionResponseDAO = questionResponseDAO;
         this.checkSkipsNum = checkSkipsNum;
@@ -106,25 +107,31 @@ public class QuestionProcessor {
 
     /**
      * Save response to a question
-     * TODO: deal with checkboxes response
      */
-    public boolean saveResponse(final Long accountId, final int questionId, final Long accountQuestionId, final Choice choice) {
+    public boolean saveResponse(final Long accountId, final int questionId, final Long accountQuestionId, final List<Choice> choices) {
 
         //check if choice is a valid one before saving to DB
         final Question responseToQuestion = this.questionIdMap.get(questionId);
-        if (responseToQuestion.choiceList.contains(choice)) {
-            try {
-                this.questionResponseDAO.insertResponse(accountId, questionId, accountQuestionId, choice.id);
-                return true;
-            } catch (UnableToExecuteStatementException exception) {
-                LOGGER.warn("Fail to insert response to question {}", accountQuestionId);
-                return false;
+        int saved = 0;
+
+        for (final Choice choice : choices) {
+            if (responseToQuestion.choiceList.contains(choice)) {
+                try {
+                    this.questionResponseDAO.insertResponse(accountId, questionId, accountQuestionId, choice.id);
+                    saved++;
+                } catch (UnableToExecuteStatementException exception) {
+                    LOGGER.warn("Fail to insert response {} to question {}", choice.id, accountQuestionId);
+                }
+            } else {
+                LOGGER.warn("Account {} response to {} is not a valid choice: {}", accountId, accountQuestionId, choice);
             }
-        } else {
-            // response choice is not associated with this question
-            LOGGER.warn("Account {} response to {} is not a valid choice: {}", accountId, accountQuestionId, choice);
+        }
+
+        if (saved != choices.size()) {
+            LOGGER.warn("Not all responses saved. Account {}, question {}, {}/{}", accountId, accountQuestionId, saved, choices.size());
             return false;
         }
+        return true;
     }
 
     /**
@@ -132,25 +139,28 @@ public class QuestionProcessor {
      */
     public void skipQuestion(final Long accountId, final Integer questionId, final Long accountQuestionId, final int tzOffsetMillis) {
 
-        // add skips to table
+        // save skip
         this.questionResponseDAO.insertSkippedQuestion(accountId, questionId, accountQuestionId);
 
+        // determine next time to ask
+        this.setNextAskDate(accountId, tzOffsetMillis);
+    }
+
+    public int setNextAskDate (final Long accountId, final int tzOffsetMillis) {
         // find out how many the user has skipped
         final List<Long> skippedIds = this.getConsecutiveSkipsCount(accountId);
-        int skipCount = skippedIds.size();
-        if (skipCount == 0 || !skippedIds.get(0).equals(accountQuestionId))
-            skipCount++; // last skip insert is not retrieved
 
-        // set a delay for next ask time
-        skipCount = Math.max(skipCount, MAX_SKIPS_ALLOWED);
+        // set a delay for next ask time, max days to skip is 55 days
+        final int skipCount = Math.min(skippedIds.size(), MAX_SKIPS_ALLOWED);
         final int skipDays = (int) Math.exp((double) skipCount / 2.0);
 
         LOGGER.debug("User has skipped {} consecutive questions, pause for {} days", skipCount, skipDays);
 
         final DateTime nextAskDate = DateTime.now(DateTimeZone.UTC).plusMillis(tzOffsetMillis).withTimeAtStartOfDay().plusDays(skipDays);
         this.questionResponseDAO.setNextAskTime(accountId, nextAskDate);
-    }
 
+        return skipDays;
+    }
 
     private List<Long> getConsecutiveSkipsCount(final Long accountId) {
         // get last N questions, and check for consecutive skips
@@ -230,7 +240,7 @@ public class QuestionProcessor {
         return questions;
     }
 
-    /** TODO: logic to be implemented
+    /** TODO: more logic to be implemented
      - determine ask frequency based on no. of responses from user in the first two weeks
      0 - once a week
      1 - 4 responses (25%) every 4 days

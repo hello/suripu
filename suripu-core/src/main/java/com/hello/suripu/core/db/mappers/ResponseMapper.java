@@ -16,12 +16,12 @@ public class ResponseMapper implements ResultSetMapper<Response> {
     @Override
     public Response map(int index, ResultSet r, StatementContext ctx) throws SQLException {
 
-        DateTime askTime;
+        DateTime askTime = DateTime.now(DateTimeZone.UTC);
         try {
-            int foundAskTime = r.findColumn("ask_time");
-            askTime = new DateTime(r.getTimestamp("ask_time"), DateTimeZone.UTC);
+            if (r.findColumn("ask_time") > 0) {
+                askTime = new DateTime(r.getTimestamp("ask_time"), DateTimeZone.UTC);
+            }
         } catch (SQLException error) {
-            askTime = DateTime.now(DateTimeZone.UTC);
         }
 
         // default as no response -- use when checking for skips
@@ -30,14 +30,14 @@ public class ResponseMapper implements ResultSetMapper<Response> {
         if (r.getTimestamp("created") != null) {
             created = new DateTime(r.getTimestamp("created"), DateTimeZone.UTC);
             skip = r.getBoolean("skip");
-
         }
 
         return new Response(
                 r.getLong("id"),
                 r.getLong("account_id"),
                 r.getInt("question_id"),
-                "", // empty response string
+                "", // empty response string for now
+                r.getInt("response_id"),
                 skip,
                 created,
                 r.getLong("account_question_id"),

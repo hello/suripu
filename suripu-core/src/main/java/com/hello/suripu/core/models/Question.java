@@ -96,7 +96,8 @@ public class Question {
     final public String lang;
 
     public Question(final Integer id, final Long accountQuestionId, final String text, final String lang,
-                    final Type type, final FREQUENCY frequency, final ASK_TIME askTime, final int dependency, final int parentId,
+                    final Type type, final FREQUENCY frequency, final ASK_TIME askTime,
+                    final int dependency, final int parentId,
                     final DateTime askLocalDate, final List<Choice> choiceList) {
         this.id = id;
         this.accountQuestionId = accountQuestionId;

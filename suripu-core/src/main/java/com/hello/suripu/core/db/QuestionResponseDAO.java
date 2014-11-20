@@ -76,6 +76,7 @@ public interface QuestionResponseDAO {
     @SqlQuery("SELECT 0 AS id, Q.account_id AS account_id, " +
             "Q.question_id AS question_id, " +
             "Q.id AS account_question_id, " +
+            "R.response_id AS response_id, " +
             "R.skip AS skip, " +
             "R.created AS created, " +
             "Q.created_local_utc_ts AS ask_time  " +

@@ -85,11 +85,10 @@ public class QuestionsResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public void saveAnswer(@Scope(OAuthScope.QUESTIONS_READ) final AccessToken accessToken,
                            @QueryParam("account_question_id") final Long accountQuestionId,
-                           @Valid final Choice choice) {
+                           @Valid final List<Choice> choice) {
         LOGGER.debug("Saving answer for account id = {}", accessToken.accountId);
-        LOGGER.debug("Choice was = {}", choice.id);
 
-        Optional<Integer> questionIdOptional = choice.questionId;
+        Optional<Integer> questionIdOptional = choice.get(0).questionId;
         Integer questionId = 0;
         if (questionIdOptional.isPresent()) {
             questionId = questionIdOptional.get();
