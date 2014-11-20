@@ -31,7 +31,7 @@ public class QuestionProcessorTest {
 
     private final DateTime today = DateTime.now().withTimeAtStartOfDay();
     private final static Long ACCOUNT_ID_PASS = 1L;
-    private final static Long ACCOUNT_ID_FAIL = 1L;
+    private final static Long ACCOUNT_ID_FAIL = 2L;
 
     private QuestionProcessor questionProcessor;
 
@@ -46,7 +46,7 @@ public class QuestionProcessorTest {
         final Timestamp nextAskTimePass = new Timestamp(today.minusDays(2).getMillis());
         when(questionResponseDAO.getNextAskTime(ACCOUNT_ID_PASS)).thenReturn(Optional.fromNullable(nextAskTimePass));
 
-        final Timestamp nextAskTimeFail = new Timestamp(today.minusDays(2).getMillis());
+        final Timestamp nextAskTimeFail = new Timestamp(today.plusDays(2).getMillis());
         when(questionResponseDAO.getNextAskTime(ACCOUNT_ID_FAIL)).thenReturn(Optional.fromNullable(nextAskTimeFail));
 
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 1, today, today.plusDays(1))).thenReturn(10L);
@@ -221,6 +221,40 @@ public class QuestionProcessorTest {
         assertThat(countBaseQ, is(2));
         assertThat(foundCalibrationQ, is(true));
 
+        // get 7, should include one ongoing question
+        numQ = 7;
+        questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ);
+        foundBaseQ = false;
+        boolean foundOngoing = false;
+        foundCalibrationQ = false;
+        for (int i = 0; i < questions.size(); i++) {
+            final Question.FREQUENCY qfreq = questions.get(i).frequency;
+            if (qfreq == Question.FREQUENCY.ONE_TIME) {
+                foundBaseQ = true;
+            } else if (qfreq == Question.FREQUENCY.DAILY) {
+                foundCalibrationQ = true;
+            } else if (qfreq == Question.FREQUENCY.OCCASIONALLY) {
+                foundOngoing = true;
+            }
+        }
+        assertThat(foundBaseQ, is(true));
+        assertThat(foundOngoing, is(true));
+        assertThat(foundCalibrationQ, is(true));
+    }
+
+    @Test
+    public void testOnBoardingQuestion() {
+
+    }
+
+    @Test
+    public void testPauseQuestion() {
+        final int numQ = 3;
+        final int accountAge = 2;
+
+        final List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_FAIL, accountAge, this.today, numQ);
+
+        assertThat(questions.size(), is(0));
     }
 
     @Test
