@@ -12,6 +12,17 @@ import java.util.List;
 
 public class SleepSegment implements Comparable {
 
+    public static class SoundInfo {
+
+        public final String url;
+        public final Integer durationMillis;
+
+        public SoundInfo(final String url, final Integer durationMillis) {
+            this.url = url;
+            this.durationMillis = durationMillis;
+        }
+    }
+
     @JsonProperty("id")
     final public Long id;
 
@@ -37,6 +48,8 @@ public class SleepSegment implements Comparable {
     @JsonProperty("offset_millis")
     final public Integer offsetMillis;
 
+    @JsonProperty("sound")
+    final public SoundInfo soundInfo;
 
     /**
      *
@@ -49,7 +62,7 @@ public class SleepSegment implements Comparable {
      * @param sensors
      */
     public SleepSegment(final Long id, final Long timestamp, final Integer offsetMillis, final Integer durationInSeconds,
-                        final Integer sleepDepth, final Event.Type eventType, final String message, final List<SensorReading> sensors) {
+                        final Integer sleepDepth, final Event.Type eventType, final String message, final List<SensorReading> sensors, final SoundInfo soundInfo) {
         this.id = id;
         this.timestamp = timestamp;
         this.offsetMillis = offsetMillis;
@@ -57,18 +70,19 @@ public class SleepSegment implements Comparable {
         this.sleepDepth = sleepDepth;
         this.eventType = eventType;
         this.message = message;
+        this.soundInfo = soundInfo;
         this.sensors = sensors;
     }
 
 
     public static SleepSegment withSleepDepth(final SleepSegment segment, final Integer sleepDepth) {
         return new SleepSegment(segment.id, segment.timestamp, segment.offsetMillis, segment.durationInSeconds, sleepDepth,
-                segment.eventType, segment.message, segment.sensors);
+                segment.eventType, segment.message, segment.sensors, segment.soundInfo);
     }
 
     public static SleepSegment withSleepDepthAndDuration(final SleepSegment segment, final Integer sleepDepth, final Integer durationInSeconds) {
         return new SleepSegment(segment.id, segment.timestamp, segment.offsetMillis, durationInSeconds, sleepDepth,
-                segment.eventType, segment.message, segment.sensors);
+                segment.eventType, segment.message, segment.sensors, segment.soundInfo);
     }
 
     public static SleepSegment withEventType(final SleepSegment segment, final Event.Type eventType) {
@@ -77,7 +91,7 @@ public class SleepSegment implements Comparable {
                 segment.offsetMillis, segment.durationInSeconds, segment.sleepDepth,
                 eventType,
                 Event.getMessage(eventType, new DateTime(segment.timestamp, DateTimeZone.UTC).plusMillis(segment.offsetMillis)),
-                segment.sensors);
+                segment.sensors, segment.soundInfo);
     }
 
     @Override
@@ -91,6 +105,7 @@ public class SleepSegment implements Comparable {
                 .add("eventType", eventType)
                 .add("message", message)
                 .add("sensors", sensors)
+                .add("soundInfo", soundInfo)
                 .add("$when", new DateTime(timestamp))
                 .add("$minutes", durationInSeconds/60)
                 .toString();

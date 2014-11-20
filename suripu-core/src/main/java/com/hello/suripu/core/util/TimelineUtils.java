@@ -74,7 +74,7 @@ public class TimelineUtils {
         if (durationInMillis < threshold * ONE_MIN_IN_MILLIS) {
             durationInMillis = threshold * ONE_MIN_IN_MILLIS;
         }
-        return new SleepSegment(id, timestamp, offsetMillis, Math.round(durationInMillis / 1000), sleepDepth, eventType, message, sensors);
+        return new SleepSegment(id, timestamp, offsetMillis, Math.round(durationInMillis / 1000), sleepDepth, eventType, message, sensors, null);
     }
 
 
@@ -128,7 +128,8 @@ public class TimelineUtils {
                             100, // depth 100 => motionless
                             Event.Type.NONE,
                             "",
-                            Collections.<SensorReading>emptyList());
+                            Collections.<SensorReading>emptyList(),
+                            null);
                     sleepSegments.add(sleepSegment);
                 }
 
@@ -164,7 +165,8 @@ public class TimelineUtils {
                     sleepDepth,
                     eventType,
                     eventMessage,
-                    readings);
+                    readings,
+                    null);
             sleepSegments.add(sleepSegment);
             lastTimestamp = trackerMotion.timestamp + ONE_MIN_IN_MILLIS;
         }
@@ -284,7 +286,7 @@ public class TimelineUtils {
 
         int minSleepDepth = sleepSegments.get(0).sleepDepth;
         String message = sleepSegments.get(0).message;
-
+        SleepSegment.SoundInfo soundInfo = sleepSegments.get(0).soundInfo;
         final Set<Event.Type> eventTypes = new HashSet<>();
 
         for(final SleepSegment sleepSegment : sleepSegments) {
@@ -293,10 +295,16 @@ public class TimelineUtils {
                 minSleepDepth = sleepSegment.sleepDepth;
                 message  = Event.getMessage(sleepSegment.eventType);
             }
+
+            if(sleepSegment.eventType.equals(Event.Type.SUNRISE)) {
+                soundInfo = sleepSegment.soundInfo;
+            }
         }
 
 
         final Event.Type finalEventType = Event.getHighPriorityEvents(eventTypes);
+
+
         final SleepSegment sleepSegment = new SleepSegment(
                 sleepSegments.get(0).id,
                 sleepSegments.get(0).timestamp,
@@ -304,7 +312,8 @@ public class TimelineUtils {
                 sleepSegments.size() * 60, minSleepDepth,
                 finalEventType,
                 message,
-                new ArrayList<SensorReading>()
+                new ArrayList<SensorReading>(),
+                soundInfo
         );
         return sleepSegment;
     }
@@ -377,7 +386,7 @@ public class TimelineUtils {
         final Multimap<Long, SleepSegment> extraSegmentMap = ArrayListMultimap.create();
         final List<SleepSegment> temp = new ArrayList<>();
 
-        for (SleepSegment segment : extraSegments) {
+        for (final SleepSegment segment : extraSegments) {
             if (segment.timestamp < startTimestamp) {
                 temp.add(segment);
             } else {
