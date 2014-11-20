@@ -1,12 +1,12 @@
 package com.hello.suripu.app.utils;
 
 import com.hello.suripu.core.models.TrackerMotion;
-import javafx.util.Pair;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -33,7 +33,7 @@ public class TrackerMotionDataSourceTest {
     @Test
     public void testGetQueryBoundary(){
         final DateTime dayOfNightLocalUTC = new DateTime(2014, 11, 1, 0, 0, DateTimeZone.UTC);
-        final Pair<DateTime, DateTime> boundary = TrackerMotionDataSource.getStartEndQueryTimeLocalUTC(dayOfNightLocalUTC, 20, 16);
+        final Map.Entry<DateTime, DateTime> boundary = TrackerMotionDataSource.getStartEndQueryTimeLocalUTC(dayOfNightLocalUTC, 20, 16);
         assertThat(boundary.getKey(), is(new DateTime(2014, 11, 1, 20, 0, DateTimeZone.UTC)));
         assertThat(boundary.getValue(), is(new DateTime(2014, 11, 2, 16, 0, DateTimeZone.UTC)));
     }
@@ -41,7 +41,7 @@ public class TrackerMotionDataSourceTest {
     @Test(expected = IllegalArgumentException.class)
     public void testGetQueryBoundaryInvalidDayOfNight(){
         final DateTime dayOfNightLocalUTC = new DateTime(2014, 11, 1, 0, 0, DateTimeZone.forOffsetMillis(-255200));
-        final Pair<DateTime, DateTime> boundary = TrackerMotionDataSource.getStartEndQueryTimeLocalUTC(dayOfNightLocalUTC, 20, 16);
+        final Map.Entry<DateTime, DateTime> boundary = TrackerMotionDataSource.getStartEndQueryTimeLocalUTC(dayOfNightLocalUTC, 20, 16);
 
     }
 }
