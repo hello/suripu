@@ -376,7 +376,7 @@ public class ReceiveResource extends BaseResource {
 
         if(!groups.isEmpty()) {
             LOGGER.debug("DeviceId {} belongs to groups: {}", data.getDeviceId(), groups);
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(groups.get(0));
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(groups.get(0), data.getFirmwareVersion());
             LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
             responseBuilder.addAllFiles(fileDownloadList);
         } else {
