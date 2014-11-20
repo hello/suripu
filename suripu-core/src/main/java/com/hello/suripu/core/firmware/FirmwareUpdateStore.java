@@ -131,7 +131,12 @@ public class FirmwareUpdateStore {
                     final Iterable<String> strings = Splitter.on("\n").split(text);
                     final String firstLine = strings.iterator().next();
                     String[] parts = firstLine.split(":");
-                    firmwareVersion = Integer.parseInt(parts[1].trim(), 16);
+                    try {
+                        firmwareVersion = Integer.parseInt(parts[1].trim(), 16);
+                    } catch (NumberFormatException nfe) {
+                        LOGGER.error("Firmware version in {} is not a valid firmware version. Ignoring this update", group);
+                        firmwareVersion = currentFirmwareVersion;
+                    }
                 } catch (IOException e) {
                     LOGGER.error("{}", e.getMessage());
                 }
