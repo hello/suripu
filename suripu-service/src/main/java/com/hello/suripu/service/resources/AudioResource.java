@@ -98,7 +98,7 @@ public class AudioResource extends BaseResource {
 
 
     @POST
-    @Path("/audio")
+    @Path("/raw")
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     public void getAudio(@Context HttpServletRequest request, byte[] body) {
 
