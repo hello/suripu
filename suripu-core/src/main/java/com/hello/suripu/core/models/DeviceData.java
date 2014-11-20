@@ -107,7 +107,7 @@ public class DeviceData {
 
     public static float dbIntToFloatDust(final int valueFromDB) {return valueFromDB / DUST_FLOAT_TO_INT_MULTIPLIER; }
 
-    public static int convertDustAnalogToMicroGM3(final int AnalogValue, final int firmwareVersion) {
+    public static int convertDustAnalogToMilliGM3(final int AnalogValue, final int firmwareVersion) {
         // convert raw counts to ppm for dust sensor
         float voltage = (float) AnalogValue / MAX_DUST_ANALOG_VALUE * 4.0f;
 
@@ -120,7 +120,7 @@ public class DeviceData {
 
         voltage = Math.min(voltage, maxVoltage);
         voltage = Math.max(voltage, minVoltage);
-        final float dustDensity = coeff * voltage - intercept; // micro-gram per m^3
+        final float dustDensity = coeff * voltage - intercept; // milli-gram per m^3
         return (int) (dustDensity * DUST_FLOAT_TO_INT_MULTIPLIER);
     }
 
@@ -162,7 +162,7 @@ public class DeviceData {
         }
 
         public Builder withAmbientAirQuality(final int ambientAirQuality, final int firmwareVersion){
-            this.ambientAirQuality = convertDustAnalogToMicroGM3(ambientAirQuality, firmwareVersion);
+            this.ambientAirQuality = convertDustAnalogToMilliGM3(ambientAirQuality, firmwareVersion);
             return this;
         }
 

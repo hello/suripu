@@ -91,8 +91,8 @@ public class CurrentRoomState {
         // BEWARE, MUTABLE STATE BELOW. SCAAAAAARY
         Float temp = DeviceData.dbIntToFloat(data.ambientTemperature);
         Float humidity = DeviceData.dbIntToFloat(data.ambientHumidity);
-        final int dustDensity = DeviceData.convertDustAnalogToMicroGM3(data.ambientDustMax, 0); // max values are raw counts
-        Float particulates = DeviceData.dbIntToFloatDust(dustDensity);
+        final int dustDensity = DeviceData.convertDustAnalogToMilliGM3(data.ambientDustMax, 0); // max values are raw counts
+        Float particulates = DeviceData.dbIntToFloatDust(dustDensity) * 1000.0f; // convert to micro-g
         State temperatureState;
         State humidityState;
         State particulatesState;
@@ -135,7 +135,7 @@ public class CurrentRoomState {
         // Air Quality
         if(particulates == null) {
             particulatesState = new State(humidity, "Could not retrieve recent particulates reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.MICRO_G_M3);
-        } else if (particulates > 0.025) { // 35.0 divide by 1440 minutes
+        } else if (particulates > 12.0) { // see http://www.sparetheair.com/publications/AQI_Lookup_Table-PM25.pdf
             particulatesState = new State(particulates, "Air particulates level is higher than usual, do not let this condition persists for more than 24 hours", State.Condition.WARNING, data.dateTimeUTC, State.Unit.MICRO_G_M3);
         } else if (particulates > 35.0) {
             particulatesState = new State(particulates, "Air Particulates EPA standard: Daily: 35 µg/m3, AQI = 99", State.Condition.ALERT, data.dateTimeUTC, State.Unit.MICRO_G_M3);
