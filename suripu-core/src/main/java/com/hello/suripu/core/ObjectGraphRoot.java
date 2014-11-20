@@ -1,4 +1,4 @@
-package com.hello.suripu.service;
+package com.hello.suripu.core;
 
 import dagger.ObjectGraph;
 

@@ -9,6 +9,7 @@ import com.hello.suripu.api.audio.FileTransfer;
 import com.hello.suripu.api.audio.MatrixProtos;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.logging.DataLogger;
+import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DeviceIdUtil;
 import com.hello.suripu.service.SignedMessage;
 import com.librato.rollout.RolloutClient;
