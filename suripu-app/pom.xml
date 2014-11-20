@@ -3,7 +3,7 @@
     <parent>
         <artifactId>suripu-parent</artifactId>
         <groupId>com.hello.suripu</groupId>
-        <version>0.1.142-SNAPSHOT</version>
+        <version>0.1.145-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -13,7 +13,7 @@
         <dependency>
             <groupId>com.hello.suripu</groupId>
             <artifactId>suripu-core</artifactId>
-            <version>0.1.142-SNAPSHOT</version>
+            <version>0.1.145-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -35,6 +35,17 @@
                     <artifactId>dropwizard-core</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.dagger</groupId>
+            <artifactId>dagger</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.dagger</groupId>
+            <artifactId>dagger-compiler</artifactId>
+            <version>1.2.2</version>
+            <optional>true</optional>
         </dependency>
     </dependencies>
     <build>

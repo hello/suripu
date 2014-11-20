@@ -30,6 +30,7 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.RingProcessor;
+import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DeviceIdUtil;
 import com.hello.suripu.core.util.RoomConditionUtil;
 import com.hello.suripu.service.SignedMessage;
@@ -130,7 +131,7 @@ public class ReceiveResource extends BaseResource {
 
         final List<DeviceAccountPair> pairs = deviceDAO.getTrackerIds(accessToken.accountId);
 
-        final Map<String, Long> pairsLookup = new HashMap<String, Long>(pairs.size());
+        final Map<String, Long> pairsLookup = new HashMap<>(pairs.size());
         for (DeviceAccountPair pair: pairs) {
             pairsLookup.put(pair.externalDeviceId, pair.internalDeviceId);
         }
@@ -375,7 +376,7 @@ public class ReceiveResource extends BaseResource {
 
         if(!groups.isEmpty()) {
             LOGGER.debug("DeviceId {} belongs to groups: {}", data.getDeviceId(), groups);
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(groups.get(0));
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(groups.get(0), data.getFirmwareVersion());
             LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
             responseBuilder.addAllFiles(fileDownloadList);
         } else {

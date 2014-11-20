@@ -3,7 +3,7 @@
     <parent>
         <artifactId>suripu-parent</artifactId>
         <groupId>com.hello.suripu</groupId>
-        <version>0.1.142-SNAPSHOT</version>
+        <version>0.1.145-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -19,7 +19,7 @@
         <dependency>
             <groupId>com.hello.suripu</groupId>
             <artifactId>suripu-algorithm</artifactId>
-            <version>0.1.142-SNAPSHOT</version>
+            <version>0.1.145-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.yammer.dropwizard</groupId>
@@ -44,7 +44,7 @@
         <dependency>
             <groupId>com.hello.suripu</groupId>
             <artifactId>suripu-api</artifactId>
-            <version>0.1.142-SNAPSHOT</version>
+            <version>0.1.145-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.xerial.snappy</groupId>
@@ -60,6 +60,17 @@
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>1.10</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.dagger</groupId>
+            <artifactId>dagger</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.dagger</groupId>
+            <artifactId>dagger-compiler</artifactId>
+            <version>1.2.2</version>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 </project>

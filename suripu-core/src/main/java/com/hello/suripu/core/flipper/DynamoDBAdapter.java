@@ -85,7 +85,7 @@ public class DynamoDBAdapter implements RolloutAdapter{
 
         final Feature f = features.get().get(feature);
         if(f == null) {
-            LOGGER.error("Feature is null");
+            LOGGER.error("Feature {} is null", feature);
             return false;
         }
 
