@@ -27,5 +27,5 @@ public abstract class SleepDetectionAlgorithm {
         return this.smoothWindow;
     }
 
-    public abstract Segment getSleepPeriod(final DateTime dateOfTheNight) throws AlgorithmException;
+    public abstract Segment getSleepPeriod(final DateTime dateOfTheNightLocalUTC) throws AlgorithmException;
 }
