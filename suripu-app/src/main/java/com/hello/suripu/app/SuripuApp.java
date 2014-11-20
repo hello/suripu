@@ -19,6 +19,7 @@ import com.hello.suripu.app.cli.CreateRingTimeDynamoDBTable;
 import com.hello.suripu.app.cli.CreateSleepScoreDynamoDBTable;
 import com.hello.suripu.app.cli.RecreateEventsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
+import com.hello.suripu.app.modules.RolloutAppModule;
 import com.hello.suripu.app.resources.v1.AccountResource;
 import com.hello.suripu.app.resources.v1.AlarmResource;
 import com.hello.suripu.app.resources.v1.ApplicationResource;
@@ -36,6 +37,7 @@ import com.hello.suripu.app.resources.v1.SleepLabelResource;
 import com.hello.suripu.app.resources.v1.TeamsResource;
 import com.hello.suripu.app.resources.v1.TimeZoneResource;
 import com.hello.suripu.app.resources.v1.TimelineResource;
+import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
@@ -224,6 +226,10 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final String namespace = (configuration.getDebug()) ? "dev" : "prod";
 
         final FeatureStore featureStore = new FeatureStore(dynamoDBClient, "features", namespace);
+
+
+        final RolloutAppModule module = new RolloutAppModule(featureStore, 30);
+        ObjectGraphRoot.getInstance().init(module);
 
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, subscriptionDAO));
         environment.addResource(new AccountResource(accountDAO));

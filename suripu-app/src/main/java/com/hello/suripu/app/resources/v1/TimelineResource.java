@@ -7,6 +7,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Insight;
@@ -19,9 +20,11 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.PartnerMotion;
+import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.SunData;
 import com.hello.suripu.core.util.TimelineUtils;
+import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -29,6 +32,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -38,7 +42,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Path("/v1/timeline")
-public class TimelineResource {
+public class TimelineResource extends BaseResource {
+
+    @Inject
+    RolloutClient feature;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineResource.class);
 
@@ -141,6 +148,9 @@ public class TimelineResource {
 
         // TODO: add sound, light, temperature event segments
 
+        if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION, accessToken.accountId, new ArrayList<String>())) {
+            LOGGER.trace("has access to feature");
+        }
 
         // combine all segments
         if (extraSegments.size() > 0) {
