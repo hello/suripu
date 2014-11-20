@@ -37,11 +37,11 @@ public class QuietPeriodDetectionAlgorithm extends SleepDetectionAlgorithm {
     }
 
     @Override
-    public Segment getSleepPeriod(final DateTime dateOfTheNight) throws AlgorithmException {
+    public Segment getSleepPeriod(final DateTime dateOfTheNightLocalUTC) throws AlgorithmException {
 
-        final ImmutableList<AmplitudeData> rawData = getDataSource().getDataForDate(dateOfTheNight);
+        final ImmutableList<AmplitudeData> rawData = getDataSource().getDataForDate(dateOfTheNightLocalUTC);
         if(rawData.size() == 0){
-            throw new AlgorithmException("No data available for date: " + dateOfTheNight);
+            throw new AlgorithmException("No data available for date: " + dateOfTheNightLocalUTC);
         }
 
         // Step 1: Aggregate the data based on a 10 minute interval.

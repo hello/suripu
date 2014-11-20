@@ -32,15 +32,15 @@ public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
 
     private enum PaddingMode { PAD_EARLY, PAD_LATE }
 
-    public AwakeDetectionAlgorithm(final DataSource<AmplitudeData> dataSource, final int smootheWindowMillis){
-        super(dataSource, smootheWindowMillis);
+    public AwakeDetectionAlgorithm(final DataSource<AmplitudeData> dataSource, final int smoothWindowMillis){
+        super(dataSource, smoothWindowMillis);
     }
 
     @Override
-    public Segment getSleepPeriod(final DateTime dateOfTheNight) throws AlgorithmException {
-        final ImmutableList<AmplitudeData> rawData = getDataSource().getDataForDate(dateOfTheNight);
+    public Segment getSleepPeriod(final DateTime dateOfTheNightLocalUTC) throws AlgorithmException {
+        final ImmutableList<AmplitudeData> rawData = getDataSource().getDataForDate(dateOfTheNightLocalUTC);
         if(rawData.size() == 0){
-            throw new AlgorithmException("No data available for date: " + dateOfTheNight);
+            throw new AlgorithmException("No data available for date: " + dateOfTheNightLocalUTC);
         }
 
         // Step 1: Aggregate the data based on a 10 minute interval.
@@ -49,11 +49,11 @@ public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
 
         // Step 2: Generate two folds of data, first fold for fall asleep detection
         // The second fold for wake up detection.
-        final AmplitudeDataPreprocessor cutBefore4am = new DataCutter(dateOfTheNight.withTimeAtStartOfDay().plusHours(12),
-                dateOfTheNight.withTimeAtStartOfDay().plusDays(1).plusHours(4));
+        final AmplitudeDataPreprocessor cutBefore4am = new DataCutter(dateOfTheNightLocalUTC.withTimeAtStartOfDay(),
+                dateOfTheNightLocalUTC.withTimeAtStartOfDay().plusDays(1).plusHours(4));
 
-        final AmplitudeDataPreprocessor cutAfter4am = new DataCutter(dateOfTheNight.withTimeAtStartOfDay().plusDays(1).plusHours(4),
-                dateOfTheNight.withTimeAtStartOfDay().plusDays(1).plusHours(12));
+        final AmplitudeDataPreprocessor cutAfter4am = new DataCutter(dateOfTheNightLocalUTC.withTimeAtStartOfDay().plusDays(1).plusHours(4),
+                dateOfTheNightLocalUTC.withTimeAtStartOfDay().plusDays(1));
 
         final ImmutableList<AmplitudeData> fallAsleepPeriodData = cutBefore4am.process(smoothedData);
         final ImmutableList<AmplitudeData> wakeUpPeriodData = cutAfter4am.process(smoothedData);

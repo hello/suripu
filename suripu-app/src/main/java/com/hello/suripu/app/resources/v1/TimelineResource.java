@@ -4,6 +4,11 @@ import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.hello.suripu.algorithm.core.Segment;
+import com.hello.suripu.algorithm.sleep.AwakeDetectionAlgorithm;
+import com.hello.suripu.algorithm.sleep.QuietPeriodDetectionAlgorithm;
+import com.hello.suripu.algorithm.sleep.SleepDetectionAlgorithm;
+import com.hello.suripu.app.utils.TrackerMotionDataSource;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
@@ -29,6 +34,7 @@ import com.hello.suripu.core.util.TimelineUtils;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
@@ -126,6 +132,49 @@ public class TimelineResource extends BaseResource {
             extraSegments.add(sleepTimeSegment.get());
         }
 
+        if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION_PANG, accessToken.accountId, new ArrayList<String>())) {
+            // A day starts with 8pm local time and ends with 4pm local time next day
+            final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions, 20, 16);
+            final int smoothWindowSize = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  //TODO: make it configable.
+
+            final SleepDetectionAlgorithm awakeDetectionAlgorithm = new AwakeDetectionAlgorithm(dataSource, smoothWindowSize);
+
+            try {
+                final Segment segmentFromAwakeDetection = awakeDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay());
+                final SleepSegment sleepSegmentFromAwakeDetection = new SleepSegment(1L,
+                        segmentFromAwakeDetection.getStartTimestamp(),
+                        segmentFromAwakeDetection.getOffsetMillis(),
+                        (int) segmentFromAwakeDetection.getDuration() / DateTimeConstants.MILLIS_PER_SECOND,
+                        -1, Event.Type.SLEEP,
+                        "Sleep Time From Awake Detection Algorithm", new ArrayList<SensorReading>(), null);
+                extraSegments.add(sleepSegmentFromAwakeDetection);
+                LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
+                        new DateTime(segmentFromAwakeDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())),
+                        new DateTime(segmentFromAwakeDetection.getEndTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())));
+            }catch (Exception ex){
+                LOGGER.error("Generate sleep period from Awake Detection Algorithm failed: {}", ex.getMessage());
+            }
+
+            final SleepDetectionAlgorithm quietPeriodDetectionAlgorithm = new QuietPeriodDetectionAlgorithm(dataSource, smoothWindowSize);
+
+            try {
+                final Segment segmentFromQuietPeriodDetection = quietPeriodDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay());
+                final SleepSegment sleepSegmentFromQuietPeriodDetection = new SleepSegment(1L,
+                        segmentFromQuietPeriodDetection.getStartTimestamp(),
+                        segmentFromQuietPeriodDetection.getOffsetMillis(),
+                        (int) segmentFromQuietPeriodDetection.getDuration() / DateTimeConstants.MILLIS_PER_SECOND,
+                        -1, Event.Type.SLEEP,
+                        "Sleep Time From Quiet Period Detection Algorithm", new ArrayList<SensorReading>(), null);
+                extraSegments.add(sleepSegmentFromQuietPeriodDetection);
+                LOGGER.info("Sleep Time From Quiet Period Detection Algorithm: {} - {}",
+                        new DateTime(segmentFromQuietPeriodDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromQuietPeriodDetection.getOffsetMillis())),
+                        new DateTime(segmentFromQuietPeriodDetection.getEndTimestamp(), DateTimeZone.forOffsetMillis(segmentFromQuietPeriodDetection.getOffsetMillis())));
+            }catch (Exception ex){
+                LOGGER.error("Generate sleep period from Quiet Period Detection Algorithm failed: {}", ex.getMessage());
+            }
+
+        }
+
 
 
         // add partner movement data, check if there's a partner
@@ -172,11 +221,6 @@ public class TimelineResource extends BaseResource {
 
         // TODO: add sound
 
-
-
-        if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION, accessToken.accountId, new ArrayList<String>())) {
-            LOGGER.trace("has access to feature");
-        }
 
         // combine all segments
         if (extraSegments.size() > 0) {
