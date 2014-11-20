@@ -106,7 +106,7 @@ public class FirmwareUpdateStore {
      * @param group
      * @return
      */
-    public List<SyncResponse.FileDownload> getFirmwareUpdate(final String group, final int currentFirmwareVersion) {
+    public List<SyncResponse.FileDownload> getFirmwareUpdate(final String deviceId, final String group, final int currentFirmwareVersion) {
 
         final ListObjectsRequest listObjectsRequest = new ListObjectsRequest();
         listObjectsRequest.withBucketName(bucketName);
@@ -125,25 +125,27 @@ public class FirmwareUpdateStore {
             if(summary.getKey().contains("build_info.txt")) {
                 final S3Object s3Object = s3.getObject(bucketName, summary.getKey());
                 final S3ObjectInputStream s3ObjectInputStream = s3Object.getObjectContent();
-
+                String text ;
                 try {
-                    final String text = CharStreams.toString(new InputStreamReader(s3ObjectInputStream, Charsets.UTF_8));
-                    final Iterable<String> strings = Splitter.on("\n").split(text);
-                    final String firstLine = strings.iterator().next();
-                    String[] parts = firstLine.split(":");
-                    try {
-                        firmwareVersion = Integer.parseInt(parts[1].trim(), 16);
-                    } catch (NumberFormatException nfe) {
-                        LOGGER.error("Firmware version in {} is not a valid firmware version. Ignoring this update", group);
-                        firmwareVersion = currentFirmwareVersion;
-                    }
+                    text = CharStreams.toString(new InputStreamReader(s3ObjectInputStream, Charsets.UTF_8));
                 } catch (IOException e) {
-                    LOGGER.error("{}", e.getMessage());
+                    LOGGER.error("Failed reading build_info from s3: {}", e.getMessage());
+                    return Collections.EMPTY_LIST;
+                }
+
+                final Iterable<String> strings = Splitter.on("\n").split(text);
+                final String firstLine = strings.iterator().next();
+                String[] parts = firstLine.split(":");
+                try {
+                    firmwareVersion = Integer.parseInt(parts[1].trim(), 16);
+                } catch (NumberFormatException nfe) {
+                    LOGGER.error("Firmware version in {} is not a valid firmware version. Ignoring this update", group);
+                    return Collections.EMPTY_LIST;
                 }
             }
         }
 
-        LOGGER.warn("Versions to update: {}, current version = {}", firmwareVersion, currentFirmwareVersion);
+        LOGGER.warn("Versions to update: {}, current version = {} for deviceId = {}", firmwareVersion, currentFirmwareVersion, deviceId);
         if (firmwareVersion.equals(currentFirmwareVersion)) {
             LOGGER.warn("Versions match: {}, current version = {}", firmwareVersion, currentFirmwareVersion);
             return Collections.EMPTY_LIST;
