@@ -14,6 +14,8 @@ import org.joda.time.DateTimeConstants;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,6 +31,8 @@ import static org.hamcrest.core.Is.is;
  * Created by pangwu on 9/16/14.
  */
 public class AlarmDAODynamoDBIT {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(AlarmDAODynamoDBIT.class);
 
     private BasicAWSCredentials awsCredentials;
     private AmazonDynamoDBClient amazonDynamoDBClient;
@@ -54,7 +58,7 @@ public class AlarmDAODynamoDBIT {
 
 
         }catch (ResourceInUseException rie){
-            rie.printStackTrace();
+            LOGGER.warn("Table already exists");
         }
     }
 
@@ -66,7 +70,7 @@ public class AlarmDAODynamoDBIT {
         try {
             this.amazonDynamoDBClient.deleteTable(deleteTableRequest);
         }catch (ResourceNotFoundException ex){
-            ex.printStackTrace();
+            LOGGER.warn("Can't delete existing table");
         }
     }
 

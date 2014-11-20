@@ -13,6 +13,8 @@ import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.not;
@@ -22,6 +24,8 @@ import static org.hamcrest.core.Is.is;
  * Created by pangwu on 6/16/14.
  */
 public class TimeZoneHistoryDAODynamoDBIT {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(TimeZoneHistoryDAODynamoDBIT.class);
 
     private BasicAWSCredentials awsCredentials;
     private AmazonDynamoDBClient amazonDynamoDBClient;
@@ -48,9 +52,8 @@ public class TimeZoneHistoryDAODynamoDBIT {
 
 
         }catch (ResourceInUseException rie){
-            rie.printStackTrace();
+            LOGGER.warn("Can't create existing table");
         }
-
     }
 
     @After
@@ -60,7 +63,7 @@ public class TimeZoneHistoryDAODynamoDBIT {
         try {
             this.amazonDynamoDBClient.deleteTable(deleteTableRequest);
         }catch (ResourceNotFoundException ex){
-            ex.printStackTrace();
+            LOGGER.error("Can't delete non existing table");
         }
     }
 
@@ -75,8 +78,6 @@ public class TimeZoneHistoryDAODynamoDBIT {
         assertThat(updated.isPresent(), is(true));
 
         assertThat(updated.get().offsetMillis, is(offsetMillis));
-
-
     }
 
     @Test
@@ -101,8 +102,6 @@ public class TimeZoneHistoryDAODynamoDBIT {
 
 
         assertThat(updated.get().offsetMillis, is(0));
-
-
     }
 
 
@@ -122,7 +121,6 @@ public class TimeZoneHistoryDAODynamoDBIT {
 
         // This timezone, created from offset millis, should not appear in the standard timezone id list.
         assertThat(DateTimeZone.getAvailableIDs().contains(zoneFromOffset.getID()), is(false));
-
     }
 
 
@@ -142,8 +140,6 @@ public class TimeZoneHistoryDAODynamoDBIT {
 
         assertThat(updated.get().offsetMillis, is(offsetMillis));
         assertThat(updated.get().timeZoneId, is(timeZone.getID()));
-
-
     }
 
 

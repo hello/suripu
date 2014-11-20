@@ -94,7 +94,7 @@ public final class AudioProtos {
     }
 
     private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @Override
+    @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
         getUnknownFields() {
       return this.unknownFields;
@@ -166,14 +166,14 @@ public final class AudioProtos {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return AudioProtos.internal_static_audio_data_descriptor;
+      return com.hello.suripu.api.audio.AudioProtos.internal_static_audio_data_descriptor;
     }
 
-    protected FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return AudioProtos.internal_static_audio_data_fieldAccessorTable
+      return com.hello.suripu.api.audio.AudioProtos.internal_static_audio_data_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              audio_data.class, Builder.class);
+              com.hello.suripu.api.audio.AudioProtos.audio_data.class, com.hello.suripu.api.audio.AudioProtos.audio_data.Builder.class);
     }
 
     public static com.google.protobuf.Parser<audio_data> PARSER =
@@ -186,7 +186,7 @@ public final class AudioProtos {
       }
     };
 
-    @Override
+    @java.lang.Override
     public com.google.protobuf.Parser<audio_data> getParserForType() {
       return PARSER;
     }
@@ -365,59 +365,59 @@ public final class AudioProtos {
     }
 
     private static final long serialVersionUID = 0L;
-    @Override
-    protected Object writeReplace()
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
         throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
 
-    public static audio_data parseFrom(
+    public static com.hello.suripu.api.audio.AudioProtos.audio_data parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static audio_data parseFrom(
+    public static com.hello.suripu.api.audio.AudioProtos.audio_data parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static audio_data parseFrom(byte[] data)
+    public static com.hello.suripu.api.audio.AudioProtos.audio_data parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static audio_data parseFrom(
+    public static com.hello.suripu.api.audio.AudioProtos.audio_data parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static audio_data parseFrom(java.io.InputStream input)
+    public static com.hello.suripu.api.audio.AudioProtos.audio_data parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static audio_data parseFrom(
+    public static com.hello.suripu.api.audio.AudioProtos.audio_data parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseFrom(input, extensionRegistry);
     }
-    public static audio_data parseDelimitedFrom(java.io.InputStream input)
+    public static com.hello.suripu.api.audio.AudioProtos.audio_data parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input);
     }
-    public static audio_data parseDelimitedFrom(
+    public static com.hello.suripu.api.audio.AudioProtos.audio_data parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
-    public static audio_data parseFrom(
+    public static com.hello.suripu.api.audio.AudioProtos.audio_data parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static audio_data parseFrom(
+    public static com.hello.suripu.api.audio.AudioProtos.audio_data parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -426,14 +426,14 @@ public final class AudioProtos {
 
     public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(audio_data prototype) {
+    public static Builder newBuilder(com.hello.suripu.api.audio.AudioProtos.audio_data prototype) {
       return newBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() { return newBuilder(this); }
 
-    @Override
+    @java.lang.Override
     protected Builder newBuilderForType(
-        BuilderParent parent) {
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -442,17 +442,17 @@ public final class AudioProtos {
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements audio_dataOrBuilder {
+       implements com.hello.suripu.api.audio.AudioProtos.audio_dataOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return AudioProtos.internal_static_audio_data_descriptor;
+        return com.hello.suripu.api.audio.AudioProtos.internal_static_audio_data_descriptor;
       }
 
-      protected FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return AudioProtos.internal_static_audio_data_fieldAccessorTable
+        return com.hello.suripu.api.audio.AudioProtos.internal_static_audio_data_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                audio_data.class, Builder.class);
+                com.hello.suripu.api.audio.AudioProtos.audio_data.class, com.hello.suripu.api.audio.AudioProtos.audio_data.Builder.class);
       }
 
       // Construct using com.hello.suripu.api.audio.AudioProtos.audio_data.newBuilder()
@@ -461,7 +461,7 @@ public final class AudioProtos {
       }
 
       private Builder(
-          BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
@@ -496,23 +496,23 @@ public final class AudioProtos {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return AudioProtos.internal_static_audio_data_descriptor;
+        return com.hello.suripu.api.audio.AudioProtos.internal_static_audio_data_descriptor;
       }
 
-      public audio_data getDefaultInstanceForType() {
-        return audio_data.getDefaultInstance();
+      public com.hello.suripu.api.audio.AudioProtos.audio_data getDefaultInstanceForType() {
+        return com.hello.suripu.api.audio.AudioProtos.audio_data.getDefaultInstance();
       }
 
-      public audio_data build() {
-        audio_data result = buildPartial();
+      public com.hello.suripu.api.audio.AudioProtos.audio_data build() {
+        com.hello.suripu.api.audio.AudioProtos.audio_data result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public audio_data buildPartial() {
-        audio_data result = new audio_data(this);
+      public com.hello.suripu.api.audio.AudioProtos.audio_data buildPartial() {
+        com.hello.suripu.api.audio.AudioProtos.audio_data result = new com.hello.suripu.api.audio.AudioProtos.audio_data(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -545,16 +545,16 @@ public final class AudioProtos {
       }
 
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof audio_data) {
-          return mergeFrom((audio_data)other);
+        if (other instanceof com.hello.suripu.api.audio.AudioProtos.audio_data) {
+          return mergeFrom((com.hello.suripu.api.audio.AudioProtos.audio_data)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(audio_data other) {
-        if (other == audio_data.getDefaultInstance()) return this;
+      public Builder mergeFrom(com.hello.suripu.api.audio.AudioProtos.audio_data other) {
+        if (other == com.hello.suripu.api.audio.AudioProtos.audio_data.getDefaultInstance()) return this;
         if (other.hasFeatures()) {
           setFeatures(other.getFeatures());
         }
@@ -585,11 +585,11 @@ public final class AudioProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        audio_data parsedMessage = null;
+        com.hello.suripu.api.audio.AudioProtos.audio_data parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (audio_data) e.getUnfinishedMessage();
+          parsedMessage = (com.hello.suripu.api.audio.AudioProtos.audio_data) e.getUnfinishedMessage();
           throw e;
         } finally {
           if (parsedMessage != null) {
@@ -828,7 +828,7 @@ public final class AudioProtos {
   private static com.google.protobuf.Descriptors.FileDescriptor
       descriptor;
   static {
-    String[] descriptorData = {
+    java.lang.String[] descriptorData = {
       "\n\020audio_data.proto\"|\n\naudio_data\022\020\n\010feat" +
       "ures\030\001 \001(\014\022\027\n\017feature_version\030\002 \001(\005\022\017\n\007s" +
       "amples\030\003 \001(\005\022\014\n\004rate\030\004 \001(\005\022\025\n\raudio_vers" +
@@ -845,7 +845,7 @@ public final class AudioProtos {
           internal_static_audio_data_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_audio_data_descriptor,
-              new String[] { "Features", "FeatureVersion", "Samples", "Rate", "AudioVersion", "Audio", });
+              new java.lang.String[] { "Features", "FeatureVersion", "Samples", "Rate", "AudioVersion", "Audio", });
           return null;
         }
       };

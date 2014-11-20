@@ -24,6 +24,7 @@ import com.hello.suripu.app.resources.v1.AlarmResource;
 import com.hello.suripu.app.resources.v1.ApplicationResource;
 import com.hello.suripu.app.resources.v1.DeviceResources;
 import com.hello.suripu.app.resources.v1.EventResource;
+import com.hello.suripu.app.resources.v1.FeaturesResource;
 import com.hello.suripu.app.resources.v1.FirmwareResource;
 import com.hello.suripu.app.resources.v1.InsightsResource;
 import com.hello.suripu.app.resources.v1.MobilePushRegistrationResource;
@@ -32,6 +33,7 @@ import com.hello.suripu.app.resources.v1.QuestionsResource;
 import com.hello.suripu.app.resources.v1.RoomConditionsResource;
 import com.hello.suripu.app.resources.v1.ScoresResource;
 import com.hello.suripu.app.resources.v1.SleepLabelResource;
+import com.hello.suripu.app.resources.v1.TeamsResource;
 import com.hello.suripu.app.resources.v1.TimeZoneResource;
 import com.hello.suripu.app.resources.v1.TimelineResource;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
@@ -46,10 +48,12 @@ import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.EventDAODynamoDB;
+import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
+import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.notifications.DynamoDBNotificationSubscriptionDAO;
@@ -183,6 +187,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 snsClient,
                 arns
         );
+        dynamoDBClient.setEndpoint(configuration.getEventDBConfiguration().getEndpoint());
+        final TeamStore teamStore = new TeamStore(dynamoDBClient, "teams");
 
         final ImmutableMap<QueueName, String> streams = ImmutableMap.copyOf(configuration.getKinesisConfiguration().getStreams());
         final KinesisLoggerFactory kinesisLoggerFactory = new KinesisLoggerFactory(kinesisClient, streams);
@@ -218,6 +224,10 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addProvider(new OAuthProvider(new OAuthAuthenticator(accessTokenStore), "protected-resources", activityLogger));
 
+        final String namespace = (configuration.getDebug()) ? "dev" : "prod";
+
+        final FeatureStore featureStore = new FeatureStore(dynamoDBClient, "features", namespace);
+
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, subscriptionDAO));
         environment.addResource(new AccountResource(accountDAO));
         environment.addResource(new ApplicationResource(applicationStore));
@@ -235,14 +245,16 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO));
 
         environment.addResource(new MobilePushRegistrationResource(subscriptionDAO));
+        environment.addResource(new FeaturesResource(featureStore));
 
         environment.addResource(new QuestionsResource(accountDAO, questionResponseDAO, timeZoneHistoryDAODynamoDB, configuration.getQuestionConfigs().getNumSkips()));
         environment.addResource(new InsightsResource(accountDAO));
+        environment.addResource(new TeamsResource(teamStore));
 
         final FirmwareUpdateDAO firmwareUpdateDAO = commonDB.onDemand(FirmwareUpdateDAO.class);
         final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);
-        final FirmwareUpdateStore firmwareUpdateStore = new FirmwareUpdateStore(firmwareUpdateDAO, s3Client);
-        environment.addResource(new FirmwareResource(firmwareUpdateStore, "hello-firmware", amazonS3));
+        final FirmwareUpdateStore firmwareUpdateStore = new FirmwareUpdateStore(firmwareUpdateDAO, s3Client, "hello-firmware");
+        environment.addResource(new FirmwareResource(firmwareUpdateStore, "hello-firmware", amazonS3)); // TODO: move logic from resource to FirmwareUpdateStore
 
         LOGGER.debug("{}", DateTime.now(DateTimeZone.UTC).getMillis());
 

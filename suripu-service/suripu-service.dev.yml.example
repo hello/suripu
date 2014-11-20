@@ -105,7 +105,7 @@ http:
 dynamodb:
   endpoint : http://localhost:7777
   region: us-east-1
-  table_name: public_key_table
+  table_name: key_store
 
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
@@ -115,6 +115,7 @@ kinesis:
     audio_features : audio_features
     activity_stream : activity_stream
     registrations: registrations
+    encode_audio: encode_audio
 
 
 audio_bucket_name : hello-data

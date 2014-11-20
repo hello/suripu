@@ -73,7 +73,7 @@ public class TrackerMotionDAOIT {
             this.trackerMotionDAO.deleteDataTrackerID(this.trackerID);
 
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            LOGGER.error("No driver found for database:{}", e.getMessage());
         }
 
     }

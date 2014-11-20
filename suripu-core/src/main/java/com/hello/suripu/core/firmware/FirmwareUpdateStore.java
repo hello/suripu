@@ -3,13 +3,20 @@ package com.hello.suripu.core.firmware;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.protobuf.ByteString;
 import com.hello.suripu.api.output.OutputProtos.SyncResponse;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
@@ -21,10 +28,12 @@ public class FirmwareUpdateStore {
 
     private final FirmwareUpdateDAO firmwareUpdateDAO;
     private final AmazonS3 s3;
+    private final String bucketName;
 
-    public FirmwareUpdateStore(final FirmwareUpdateDAO firmwareUpdateDAOImpl, final AmazonS3 s3) {
+    public FirmwareUpdateStore(final FirmwareUpdateDAO firmwareUpdateDAOImpl, final AmazonS3 s3, final String bucketName) {
         this.firmwareUpdateDAO = firmwareUpdateDAOImpl;
         this.s3 = s3;
+        this.bucketName = bucketName;
     }
 
 
@@ -82,6 +91,84 @@ public class FirmwareUpdateStore {
             }
 
             fileDownloadList.add(fileDownloadBuilder.build());
+        }
+
+        return fileDownloadList;
+    }
+
+    /**
+     * Downloads files from s3 bucket matching the group name
+     * @param group
+     * @return
+     */
+    public List<SyncResponse.FileDownload> getFirmwareUpdate(final String group) {
+
+        final ListObjectsRequest listObjectsRequest = new ListObjectsRequest();
+        listObjectsRequest.withBucketName(bucketName);
+        listObjectsRequest.withPrefix("sense/" + group);
+
+        // TODO: add caching?
+        final ObjectListing objectListing = s3.listObjects(listObjectsRequest);
+        final List<String> files = new ArrayList<>();
+
+        for(final S3ObjectSummary summary: objectListing.getObjectSummaries()) {
+            if(!summary.getKey().contains(".map") && !summary.getKey().contains(".out") && !summary.getKey().contains(".txt")) {
+                LOGGER.trace("Adding file: {} to list of files to be prepared for update", summary.getKey());
+                files.add(summary.getKey());
+            }
+        }
+
+        final List<SyncResponse.FileDownload> fileDownloadList = new ArrayList<>();
+
+        final Date expiration = new java.util.Date();
+        long msec = expiration.getTime();
+        msec += 1000 * 60 * 60; // 1 hour.
+        expiration.setTime(msec);
+
+        for(final String f : files) {
+
+            final GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, f);
+            generatePresignedUrlRequest.setMethod(HttpMethod.GET); // Default.
+            generatePresignedUrlRequest.setExpiration(expiration);
+
+            final URL s = s3.generatePresignedUrl(generatePresignedUrlRequest);
+            LOGGER.debug("S3 URL: {}", s);
+
+            final SyncResponse.FileDownload.Builder fileDownloadBuilder = SyncResponse.FileDownload.newBuilder()
+                    .setUrl(s.getPath() + "?" + s.getQuery())
+                    .setHost(s.getHost()); // TODO: replace with hello s3 proxy
+
+            if(f.contains("kitsune.bin")) {
+
+
+                final S3Object s3Object = s3.getObject(bucketName, f);
+                final S3ObjectInputStream s3ObjectInputStream = s3Object.getObjectContent();
+
+                try {
+                    final byte[] sha1 = DigestUtils.sha1(s3ObjectInputStream);
+                    fileDownloadBuilder.setSha1(ByteString.copyFrom(sha1));
+                } catch (IOException e) {
+                    LOGGER.error("Failed computing sha1 for {}", f);
+                    throw new RuntimeException(e.getMessage());
+                }
+
+                final boolean copyToSerialFlash = true;
+                final boolean resetApplicationProcessor = true;
+                final String serialFlashFilename = "mcuimgx.bin";
+                final String serialFlashPath = "/sys/";
+                final String sdCardFilename = "mcuimgx.bin";
+                final String sdCardPath = "/";
+
+                fileDownloadBuilder.setCopyToSerialFlash(copyToSerialFlash);
+                fileDownloadBuilder.setResetApplicationProcessor(resetApplicationProcessor);
+                fileDownloadBuilder.setSerialFlashFilename(serialFlashFilename);
+                fileDownloadBuilder.setSerialFlashPath(serialFlashPath);
+                fileDownloadBuilder.setSdCardFilename(sdCardFilename);
+                fileDownloadBuilder.setSdCardPath(sdCardPath);
+
+
+                fileDownloadList.add(fileDownloadBuilder.build());
+            }
         }
 
         return fileDownloadList;

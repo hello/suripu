@@ -2,11 +2,10 @@ package com.hello.suripu.service.resources;
 
 import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
-import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.protobuf.TextFormat;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
+import com.hello.suripu.api.audio.AudioControlProtos;
 import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.api.input.InputProtos;
@@ -14,12 +13,14 @@ import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
-import com.hello.suripu.core.db.PublicKeyStore;
 import com.hello.suripu.core.firmware.FirmwareUpdateStore;
+import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.models.AlarmInfo;
+import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.RingTime;
@@ -30,7 +31,9 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.core.util.DeviceIdUtil;
+import com.hello.suripu.core.util.RoomConditionUtil;
 import com.hello.suripu.service.SignedMessage;
+import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -39,6 +42,7 @@ import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -58,7 +62,10 @@ import java.util.regex.Pattern;
 
 
 @Path("/in")
-public class ReceiveResource {
+public class ReceiveResource extends BaseResource {
+
+    @Inject
+    RolloutClient featureFlipper;
 
     private static final Pattern PG_UNIQ_PATTERN = Pattern.compile("ERROR: duplicate key value violates unique constraint \"(\\w+)\"");
     private static final Logger LOGGER = LoggerFactory.getLogger(ReceiveResource.class);
@@ -66,48 +73,44 @@ public class ReceiveResource {
 
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
-    private final PublicKeyStore publicKeyStore;
-    private final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
+    private final KeyStore keyStore;
+    private final MergedAlarmInfoDynamoDB mergedInfoDynamoDB;
 
     private final KinesisLoggerFactory kinesisLoggerFactory;
     private final Boolean debug;
-    private final Integer roomConditions;
 
     private final FirmwareUpdateStore firmwareUpdateStore;
+    private final GroupFlipper groupFlipper;
 
     @Context
     HttpServletRequest request;
 
-    private final LoadingCache<String, Optional<byte[]>> cache;
-
     public ReceiveResource(final DeviceDataDAO deviceDataDAO,
                            final DeviceDAO deviceDAO,
-                           final PublicKeyStore publicKeyStore,
+                           final KeyStore keyStore,
                            final KinesisLoggerFactory kinesisLoggerFactory,
-
-                           final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
+                           final MergedAlarmInfoDynamoDB mergedInfoDynamoDB,
                            final Boolean debug,
-                           final Integer roomConditions,
-                           final FirmwareUpdateStore firmwareUpdateStore) {
+                           final FirmwareUpdateStore firmwareUpdateStore,
+                           final GroupFlipper groupFlipper) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
 
-        this.publicKeyStore = publicKeyStore;
+        this.keyStore = keyStore;
         this.kinesisLoggerFactory = kinesisLoggerFactory;
 
-        this.mergedAlarmInfoDynamoDB = mergedAlarmInfoDynamoDB;
-        this.roomConditions = roomConditions;
+        this.mergedInfoDynamoDB = mergedInfoDynamoDB;
 
         this.debug = debug;
 
-        CacheLoader<String, Optional<byte[]>> loader = new CacheLoader<String, Optional<byte[]>>() {
+        final CacheLoader<String, Optional<byte[]>> loader = new CacheLoader<String, Optional<byte[]>>() {
             public Optional<byte[]> load(String key) {
-                return publicKeyStore.get(key);
+                return keyStore.get(key);
             }
         };
 
-        cache = CacheBuilder.newBuilder().build(loader);
         this.firmwareUpdateStore = firmwareUpdateStore;
+        this.groupFlipper = groupFlipper;
     }
 
     @POST
@@ -127,7 +130,7 @@ public class ReceiveResource {
 
         final List<DeviceAccountPair> pairs = deviceDAO.getTrackerIds(accessToken.accountId);
 
-        final Map<String, Long> pairsLookup = new HashMap<String, Long>(pairs.size());
+        final Map<String, Long> pairsLookup = new HashMap<>(pairs.size());
         for (DeviceAccountPair pair: pairs) {
             pairsLookup.put(pair.externalDeviceId, pair.internalDeviceId);
         }
@@ -206,9 +209,13 @@ public class ReceiveResource {
         LOGGER.debug("Received valid protobuf {}", deviceName.toString());
         LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
 
-        // TODO: Fetch key from Datastore
-        final byte[] keyBytes = "1234567891234567".getBytes();
-        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytes);
+        final Optional<byte[]> optionalKeyBytes = keyStore.get(data.getDeviceId());
+        if(!optionalKeyBytes.isPresent()) {
+            LOGGER.error("Failed to get key from key store for device_id = {}", data.getDeviceId());
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(optionalKeyBytes.get());
 
         if(error.isPresent()) {
             LOGGER.error(error.get().message);
@@ -222,7 +229,7 @@ public class ReceiveResource {
         // requests to break our bank(Assume that Dynamo DB never goes down).
         // May be we should somehow cache these data to reduce load & cost.
         final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceName);
-        final List<AlarmInfo> alarmInfoList = this.mergedAlarmInfoDynamoDB.getInfo(deviceName);  // get alarm related info from DynamoDB "cache".
+        final List<AlarmInfo> alarmInfoList = this.mergedInfoDynamoDB.getInfo(deviceName);  // get alarm related info from DynamoDB "cache".
         RingTime nextRingTimeFromWorker = RingTime.createEmpty();
 
         LOGGER.debug("Found {} pairs", deviceAccountPairs.size());
@@ -231,6 +238,7 @@ public class ReceiveResource {
         final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
         // This is the default timezone.
         DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
+        final OutputProtos.SyncResponse.Builder responseBuilder = OutputProtos.SyncResponse.newBuilder();
 
         // ********************* Morpheus Data and Alarm processing **************************
         // Here comes to a discussion: Shall we loop over the device_id:account_id relation based on the
@@ -294,6 +302,10 @@ public class ReceiveResource {
                     .withFirmwareVersion(data.getFirmwareVersion());
 
             final DeviceData deviceData = builder.build();
+            final CurrentRoomState currentRoomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), 2);
+            responseBuilder.setRoomConditions(
+                    OutputProtos.SyncResponse.RoomConditions.valueOf(
+                            RoomConditionUtil.getGeneralRoomCondition(currentRoomState).ordinal()));
 
             try {
                 deviceDataDAO.insert(deviceData);
@@ -320,7 +332,7 @@ public class ReceiveResource {
         final String sequenceNumber = dataLogger.put(shardingKey, morpheusDataInBytes);
         LOGGER.trace("Morpheus data saved to Kinesis with sequence number = {}", sequenceNumber);
 
-        final OutputProtos.SyncResponse.Builder responseBuilder = OutputProtos.SyncResponse.newBuilder();
+
         final RingTime nextRegularRingTime = RingProcessor.getNextRegularRingTime(alarmInfoList,
                 deviceName,
                 DateTime.now());
@@ -344,7 +356,7 @@ public class ReceiveResource {
         final OutputProtos.SyncResponse.Alarm.Builder alarmBuilder = OutputProtos.SyncResponse.Alarm.newBuilder()
                 .setStartTime((int) (nextRingTimestamp / DateTimeConstants.MILLIS_PER_SECOND))
                 .setEndTime((int) ((nextRingTimestamp + ringDurationInMS) / DateTimeConstants.MILLIS_PER_SECOND))
-                .setRingDurationInSecond(30)
+                .setRingDurationInSecond(ringDurationInMS / DateTimeConstants.MILLIS_PER_SECOND)
                 .setRingOffsetFromNowInSecond(ringOffsetFromNowInSecond);
 
         // TODO: Fix the IndexOutOfBoundException
@@ -354,18 +366,29 @@ public class ReceiveResource {
 
         responseBuilder.setAlarm(alarmBuilder.build());
 
-        responseBuilder.setRoomConditions(OutputProtos.SyncResponse.RoomConditions.valueOf(this.roomConditions));
-
-        final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdateContent(data.getDeviceId(), data.getFirmwareVersion());
-        if(!fileDownloadList.isEmpty()) {
-            LOGGER.debug("Adding {} files to Files to Download list", fileDownloadList.size());
-            responseBuilder.addAllFiles(fileDownloadList);
+        final String firmwareFeature = String.format("firmware_release_%s", data.getFirmwareVersion());
+        final List<String> groups = groupFlipper.getGroups(data.getDeviceId());
+        if(featureFlipper.deviceFeatureActive(firmwareFeature, data.getDeviceId(), groups)) {
+            LOGGER.debug("Feature is active!");
         }
 
 
-        final OutputProtos.SyncResponse.AudioControl.Builder audioControl = OutputProtos.SyncResponse.AudioControl
+        if(!groups.isEmpty()) {
+            LOGGER.debug("DeviceId {} belongs to groups: {}", data.getDeviceId(), groups);
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(groups.get(0));
+            LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+            responseBuilder.addAllFiles(fileDownloadList);
+        } else {
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdateContent(data.getDeviceId(), data.getFirmwareVersion());
+            if(!fileDownloadList.isEmpty()) {
+                LOGGER.debug("Adding {} files to Files to Download list", fileDownloadList.size());
+                responseBuilder.addAllFiles(fileDownloadList);
+            }
+        }
+
+        final AudioControlProtos.AudioControl.Builder audioControl = AudioControlProtos.AudioControl
                 .newBuilder()
-                .setAudioCaptureAction(OutputProtos.SyncResponse.AudioControl.AudioCaptureAction.OFF);
+                .setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.OFF);
 
         responseBuilder.setAudioControl(audioControl);
 
@@ -373,7 +396,7 @@ public class ReceiveResource {
 
         LOGGER.debug("Len pb = {}", syncResponse.toByteArray().length);
 
-        final Optional<byte[]> signedResponse = SignedMessage.sign(syncResponse.toByteArray(), keyBytes);
+        final Optional<byte[]> signedResponse = SignedMessage.sign(syncResponse.toByteArray(), optionalKeyBytes.get());
         if(!signedResponse.isPresent()) {
             LOGGER.error("Failed signing message");
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -407,12 +430,15 @@ public class ReceiveResource {
                     .type(MediaType.TEXT_PLAIN_TYPE).build()
             );
         }
-        LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(batchPilldata));
+        LOGGER.debug("Received for pill protobuf message {}", TextFormat.shortDebugString(batchPilldata));
 
 
-        // TODO: Fetch key from Datastore
-        final byte[] keyBytes = "1234567891234567".getBytes();
-        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytes);
+        final Optional<byte[]> optionalKeyBytes = keyStore.get(batchPilldata.getDeviceId());
+        if(!optionalKeyBytes.isPresent()) {
+            LOGGER.error("Failed to get key from key store for device_id = {}", batchPilldata.getDeviceId());
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(optionalKeyBytes.get());
 
         if(error.isPresent()) {
             LOGGER.error(error.get().message);
@@ -425,7 +451,7 @@ public class ReceiveResource {
         // This is the default timezone.
         DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
         final String senseId  = batchPilldata.getDeviceId();
-        final List<AlarmInfo> alarmInfoList = this.mergedAlarmInfoDynamoDB.getInfo(senseId);
+        final List<AlarmInfo> alarmInfoList = this.mergedInfoDynamoDB.getInfo(senseId);
         for(final AlarmInfo info:alarmInfoList){
             if(info.timeZone.isPresent()){
                 userTimeZone = info.timeZone.get();
@@ -478,7 +504,7 @@ public class ReceiveResource {
                 final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.PILL_DATA);
                 final String sequenceNumber = dataLogger.put(internalPillPairingMap.get().internalDeviceId.toString(),  // WTF?
                         pillDataBytes);
-                LOGGER.debug("Pill Data added to Kinesis with sequenceNumber = {}", sequenceNumber);
+                LOGGER.trace("Pill Data added to Kinesis with sequenceNumber = {}", sequenceNumber);
 
             }
         }
@@ -488,7 +514,7 @@ public class ReceiveResource {
                 .setVersion(0)
                 .build();
 
-        final Optional<byte[]> signedResponse = SignedMessage.sign(responseCommand.toByteArray(), keyBytes);
+        final Optional<byte[]> signedResponse = SignedMessage.sign(responseCommand.toByteArray(), optionalKeyBytes.get());
         if(!signedResponse.isPresent()) {
             LOGGER.error("Failed signing message");
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)

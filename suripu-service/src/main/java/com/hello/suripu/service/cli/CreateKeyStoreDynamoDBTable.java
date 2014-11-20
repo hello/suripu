@@ -5,9 +5,7 @@ import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
-import com.hello.suripu.core.db.PublicKeyStore;
-import com.hello.suripu.core.db.PublicKeyStoreDynamoDB;
-import com.hello.suripu.core.db.RingTimeDAODynamoDB;
+import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -28,7 +26,7 @@ public class CreateKeyStoreDynamoDBTable extends ConfiguredCommand<SuripuConfigu
         client.setEndpoint(configuration.getRingTimeDBConfiguration().getEndpoint());
         final String tableName = configuration.getRingTimeDBConfiguration().getTableName();
 
-        final CreateTableResult result = PublicKeyStoreDynamoDB.createTable(tableName, client);
+        final CreateTableResult result = KeyStoreDynamoDB.createTable(tableName, client);
         final TableDescription description = result.getTableDescription();
         System.out.println(description.getTableStatus());
     }

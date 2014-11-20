@@ -185,7 +185,7 @@ public final class SenseCommandProtos {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return SenseCommandProtos.getDescriptor().getEnumTypes().get(0);
+      return com.hello.suripu.api.ble.SenseCommandProtos.getDescriptor().getEnumTypes().get(0);
     }
 
     private static final ErrorType[] VALUES = values();
@@ -193,7 +193,7 @@ public final class SenseCommandProtos {
     public static ErrorType valueOf(
         com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
       if (desc.getType() != getDescriptor()) {
-        throw new IllegalArgumentException(
+        throw new java.lang.IllegalArgumentException(
           "EnumValueDescriptor is not for this type.");
       }
       return VALUES[desc.getIndex()];
@@ -285,7 +285,7 @@ public final class SenseCommandProtos {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return SenseCommandProtos.getDescriptor().getEnumTypes().get(1);
+      return com.hello.suripu.api.ble.SenseCommandProtos.getDescriptor().getEnumTypes().get(1);
     }
 
     private static final wifi_connection_state[] VALUES = values();
@@ -293,7 +293,7 @@ public final class SenseCommandProtos {
     public static wifi_connection_state valueOf(
         com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
       if (desc.getType() != getDescriptor()) {
-        throw new IllegalArgumentException(
+        throw new java.lang.IllegalArgumentException(
           "EnumValueDescriptor is not for this type.");
       }
       return VALUES[desc.getIndex()];
@@ -321,7 +321,7 @@ public final class SenseCommandProtos {
     /**
      * <code>required string ssid = 1;</code>
      */
-    String getSsid();
+    java.lang.String getSsid();
     /**
      * <code>required string ssid = 1;</code>
      */
@@ -356,7 +356,7 @@ public final class SenseCommandProtos {
     /**
      * <code>required .wifi_endpoint.sec_type security_type = 5;</code>
      */
-    wifi_endpoint.sec_type getSecurityType();
+    com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type getSecurityType();
   }
   /**
    * Protobuf type {@code wifi_endpoint}
@@ -381,7 +381,7 @@ public final class SenseCommandProtos {
     }
 
     private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @Override
+    @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
         getUnknownFields() {
       return this.unknownFields;
@@ -426,7 +426,7 @@ public final class SenseCommandProtos {
             }
             case 40: {
               int rawValue = input.readEnum();
-              sec_type value = sec_type.valueOf(rawValue);
+              com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type value = com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type.valueOf(rawValue);
               if (value == null) {
                 unknownFields.mergeVarintField(5, rawValue);
               } else {
@@ -449,14 +449,14 @@ public final class SenseCommandProtos {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return SenseCommandProtos.internal_static_wifi_endpoint_descriptor;
+      return com.hello.suripu.api.ble.SenseCommandProtos.internal_static_wifi_endpoint_descriptor;
     }
 
-    protected FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return SenseCommandProtos.internal_static_wifi_endpoint_fieldAccessorTable
+      return com.hello.suripu.api.ble.SenseCommandProtos.internal_static_wifi_endpoint_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              wifi_endpoint.class, Builder.class);
+              com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.class, com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.Builder.class);
     }
 
     public static com.google.protobuf.Parser<wifi_endpoint> PARSER =
@@ -469,7 +469,7 @@ public final class SenseCommandProtos {
       }
     };
 
-    @Override
+    @java.lang.Override
     public com.google.protobuf.Parser<wifi_endpoint> getParserForType() {
       return PARSER;
     }
@@ -558,7 +558,7 @@ public final class SenseCommandProtos {
       }
       public static final com.google.protobuf.Descriptors.EnumDescriptor
           getDescriptor() {
-        return wifi_endpoint.getDescriptor().getEnumTypes().get(0);
+        return com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.getDescriptor().getEnumTypes().get(0);
       }
 
       private static final sec_type[] VALUES = values();
@@ -566,7 +566,7 @@ public final class SenseCommandProtos {
       public static sec_type valueOf(
           com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
         if (desc.getType() != getDescriptor()) {
-          throw new IllegalArgumentException(
+          throw new java.lang.IllegalArgumentException(
             "EnumValueDescriptor is not for this type.");
         }
         return VALUES[desc.getIndex()];
@@ -586,7 +586,7 @@ public final class SenseCommandProtos {
     private int bitField0_;
     // required string ssid = 1;
     public static final int SSID_FIELD_NUMBER = 1;
-    private Object ssid_;
+    private java.lang.Object ssid_;
     /**
      * <code>required string ssid = 1;</code>
      */
@@ -596,14 +596,14 @@ public final class SenseCommandProtos {
     /**
      * <code>required string ssid = 1;</code>
      */
-    public String getSsid() {
-      Object ref = ssid_;
-      if (ref instanceof String) {
-        return (String) ref;
+    public java.lang.String getSsid() {
+      java.lang.Object ref = ssid_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        String s = bs.toStringUtf8();
+        java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           ssid_ = s;
         }
@@ -615,11 +615,11 @@ public final class SenseCommandProtos {
      */
     public com.google.protobuf.ByteString
         getSsidBytes() {
-      Object ref = ssid_;
-      if (ref instanceof String) {
+      java.lang.Object ref = ssid_;
+      if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (String) ref);
+                (java.lang.String) ref);
         ssid_ = b;
         return b;
       } else {
@@ -661,7 +661,7 @@ public final class SenseCommandProtos {
 
     // required .wifi_endpoint.sec_type security_type = 5;
     public static final int SECURITY_TYPE_FIELD_NUMBER = 5;
-    private sec_type securityType_;
+    private com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type securityType_;
     /**
      * <code>required .wifi_endpoint.sec_type security_type = 5;</code>
      */
@@ -671,7 +671,7 @@ public final class SenseCommandProtos {
     /**
      * <code>required .wifi_endpoint.sec_type security_type = 5;</code>
      */
-    public sec_type getSecurityType() {
+    public com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type getSecurityType() {
       return securityType_;
     }
 
@@ -679,7 +679,7 @@ public final class SenseCommandProtos {
       ssid_ = "";
       bssid_ = com.google.protobuf.ByteString.EMPTY;
       rssi_ = 0;
-      securityType_ = sec_type.SL_SCAN_SEC_TYPE_OPEN;
+      securityType_ = com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -748,59 +748,59 @@ public final class SenseCommandProtos {
     }
 
     private static final long serialVersionUID = 0L;
-    @Override
-    protected Object writeReplace()
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
         throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
 
-    public static wifi_endpoint parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static wifi_endpoint parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static wifi_endpoint parseFrom(byte[] data)
+    public static com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static wifi_endpoint parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static wifi_endpoint parseFrom(java.io.InputStream input)
+    public static com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static wifi_endpoint parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseFrom(input, extensionRegistry);
     }
-    public static wifi_endpoint parseDelimitedFrom(java.io.InputStream input)
+    public static com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input);
     }
-    public static wifi_endpoint parseDelimitedFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
-    public static wifi_endpoint parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static wifi_endpoint parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -809,14 +809,14 @@ public final class SenseCommandProtos {
 
     public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(wifi_endpoint prototype) {
+    public static Builder newBuilder(com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint prototype) {
       return newBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() { return newBuilder(this); }
 
-    @Override
+    @java.lang.Override
     protected Builder newBuilderForType(
-        BuilderParent parent) {
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -825,17 +825,17 @@ public final class SenseCommandProtos {
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements wifi_endpointOrBuilder {
+       implements com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpointOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return SenseCommandProtos.internal_static_wifi_endpoint_descriptor;
+        return com.hello.suripu.api.ble.SenseCommandProtos.internal_static_wifi_endpoint_descriptor;
       }
 
-      protected FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return SenseCommandProtos.internal_static_wifi_endpoint_fieldAccessorTable
+        return com.hello.suripu.api.ble.SenseCommandProtos.internal_static_wifi_endpoint_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                wifi_endpoint.class, Builder.class);
+                com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.class, com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.Builder.class);
       }
 
       // Construct using com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.newBuilder()
@@ -844,7 +844,7 @@ public final class SenseCommandProtos {
       }
 
       private Builder(
-          BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
@@ -864,7 +864,7 @@ public final class SenseCommandProtos {
         bitField0_ = (bitField0_ & ~0x00000002);
         rssi_ = 0;
         bitField0_ = (bitField0_ & ~0x00000004);
-        securityType_ = sec_type.SL_SCAN_SEC_TYPE_OPEN;
+        securityType_ = com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
         bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
@@ -875,23 +875,23 @@ public final class SenseCommandProtos {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return SenseCommandProtos.internal_static_wifi_endpoint_descriptor;
+        return com.hello.suripu.api.ble.SenseCommandProtos.internal_static_wifi_endpoint_descriptor;
       }
 
-      public wifi_endpoint getDefaultInstanceForType() {
-        return wifi_endpoint.getDefaultInstance();
+      public com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint getDefaultInstanceForType() {
+        return com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.getDefaultInstance();
       }
 
-      public wifi_endpoint build() {
-        wifi_endpoint result = buildPartial();
+      public com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint build() {
+        com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public wifi_endpoint buildPartial() {
-        wifi_endpoint result = new wifi_endpoint(this);
+      public com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint buildPartial() {
+        com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint result = new com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -916,16 +916,16 @@ public final class SenseCommandProtos {
       }
 
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof wifi_endpoint) {
-          return mergeFrom((wifi_endpoint)other);
+        if (other instanceof com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint) {
+          return mergeFrom((com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(wifi_endpoint other) {
-        if (other == wifi_endpoint.getDefaultInstance()) return this;
+      public Builder mergeFrom(com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint other) {
+        if (other == com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.getDefaultInstance()) return this;
         if (other.hasSsid()) {
           bitField0_ |= 0x00000001;
           ssid_ = other.ssid_;
@@ -964,11 +964,11 @@ public final class SenseCommandProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        wifi_endpoint parsedMessage = null;
+        com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (wifi_endpoint) e.getUnfinishedMessage();
+          parsedMessage = (com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint) e.getUnfinishedMessage();
           throw e;
         } finally {
           if (parsedMessage != null) {
@@ -980,7 +980,7 @@ public final class SenseCommandProtos {
       private int bitField0_;
 
       // required string ssid = 1;
-      private Object ssid_ = "";
+      private java.lang.Object ssid_ = "";
       /**
        * <code>required string ssid = 1;</code>
        */
@@ -990,15 +990,15 @@ public final class SenseCommandProtos {
       /**
        * <code>required string ssid = 1;</code>
        */
-      public String getSsid() {
-        Object ref = ssid_;
-        if (!(ref instanceof String)) {
-          String s = ((com.google.protobuf.ByteString) ref)
+      public java.lang.String getSsid() {
+        java.lang.Object ref = ssid_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           ssid_ = s;
           return s;
         } else {
-          return (String) ref;
+          return (java.lang.String) ref;
         }
       }
       /**
@@ -1006,11 +1006,11 @@ public final class SenseCommandProtos {
        */
       public com.google.protobuf.ByteString
           getSsidBytes() {
-        Object ref = ssid_;
+        java.lang.Object ref = ssid_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (String) ref);
+                  (java.lang.String) ref);
           ssid_ = b;
           return b;
         } else {
@@ -1021,7 +1021,7 @@ public final class SenseCommandProtos {
        * <code>required string ssid = 1;</code>
        */
       public Builder setSsid(
-          String value) {
+          java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -1123,7 +1123,7 @@ public final class SenseCommandProtos {
       }
 
       // required .wifi_endpoint.sec_type security_type = 5;
-      private sec_type securityType_ = sec_type.SL_SCAN_SEC_TYPE_OPEN;
+      private com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type securityType_ = com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
       /**
        * <code>required .wifi_endpoint.sec_type security_type = 5;</code>
        */
@@ -1133,13 +1133,13 @@ public final class SenseCommandProtos {
       /**
        * <code>required .wifi_endpoint.sec_type security_type = 5;</code>
        */
-      public sec_type getSecurityType() {
+      public com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type getSecurityType() {
         return securityType_;
       }
       /**
        * <code>required .wifi_endpoint.sec_type security_type = 5;</code>
        */
-      public Builder setSecurityType(sec_type value) {
+      public Builder setSecurityType(com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type value) {
         if (value == null) {
           throw new NullPointerException();
         }
@@ -1153,7 +1153,7 @@ public final class SenseCommandProtos {
        */
       public Builder clearSecurityType() {
         bitField0_ = (bitField0_ & ~0x00000008);
-        securityType_ = sec_type.SL_SCAN_SEC_TYPE_OPEN;
+        securityType_ = com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
         onChanged();
         return this;
       }
@@ -1180,7 +1180,7 @@ public final class SenseCommandProtos {
     /**
      * <code>required string device_id = 1;</code>
      */
-    String getDeviceId();
+    java.lang.String getDeviceId();
     /**
      * <code>required string device_id = 1;</code>
      */
@@ -1260,7 +1260,7 @@ public final class SenseCommandProtos {
     }
 
     private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @Override
+    @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
         getUnknownFields() {
       return this.unknownFields;
@@ -1332,14 +1332,14 @@ public final class SenseCommandProtos {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return SenseCommandProtos.internal_static_pill_data_descriptor;
+      return com.hello.suripu.api.ble.SenseCommandProtos.internal_static_pill_data_descriptor;
     }
 
-    protected FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return SenseCommandProtos.internal_static_pill_data_fieldAccessorTable
+      return com.hello.suripu.api.ble.SenseCommandProtos.internal_static_pill_data_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              pill_data.class, Builder.class);
+              com.hello.suripu.api.ble.SenseCommandProtos.pill_data.class, com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder.class);
     }
 
     public static com.google.protobuf.Parser<pill_data> PARSER =
@@ -1352,7 +1352,7 @@ public final class SenseCommandProtos {
       }
     };
 
-    @Override
+    @java.lang.Override
     public com.google.protobuf.Parser<pill_data> getParserForType() {
       return PARSER;
     }
@@ -1360,7 +1360,7 @@ public final class SenseCommandProtos {
     private int bitField0_;
     // required string device_id = 1;
     public static final int DEVICE_ID_FIELD_NUMBER = 1;
-    private Object deviceId_;
+    private java.lang.Object deviceId_;
     /**
      * <code>required string device_id = 1;</code>
      */
@@ -1370,14 +1370,14 @@ public final class SenseCommandProtos {
     /**
      * <code>required string device_id = 1;</code>
      */
-    public String getDeviceId() {
-      Object ref = deviceId_;
-      if (ref instanceof String) {
-        return (String) ref;
+    public java.lang.String getDeviceId() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        String s = bs.toStringUtf8();
+        java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           deviceId_ = s;
         }
@@ -1389,11 +1389,11 @@ public final class SenseCommandProtos {
      */
     public com.google.protobuf.ByteString
         getDeviceIdBytes() {
-      Object ref = deviceId_;
-      if (ref instanceof String) {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (String) ref);
+                (java.lang.String) ref);
         deviceId_ = b;
         return b;
       } else {
@@ -1566,59 +1566,59 @@ public final class SenseCommandProtos {
     }
 
     private static final long serialVersionUID = 0L;
-    @Override
-    protected Object writeReplace()
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
         throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
 
-    public static pill_data parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.pill_data parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static pill_data parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.pill_data parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static pill_data parseFrom(byte[] data)
+    public static com.hello.suripu.api.ble.SenseCommandProtos.pill_data parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static pill_data parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.pill_data parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static pill_data parseFrom(java.io.InputStream input)
+    public static com.hello.suripu.api.ble.SenseCommandProtos.pill_data parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static pill_data parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.pill_data parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseFrom(input, extensionRegistry);
     }
-    public static pill_data parseDelimitedFrom(java.io.InputStream input)
+    public static com.hello.suripu.api.ble.SenseCommandProtos.pill_data parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input);
     }
-    public static pill_data parseDelimitedFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.pill_data parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
-    public static pill_data parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.pill_data parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static pill_data parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.pill_data parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -1627,14 +1627,14 @@ public final class SenseCommandProtos {
 
     public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(pill_data prototype) {
+    public static Builder newBuilder(com.hello.suripu.api.ble.SenseCommandProtos.pill_data prototype) {
       return newBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() { return newBuilder(this); }
 
-    @Override
+    @java.lang.Override
     protected Builder newBuilderForType(
-        BuilderParent parent) {
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -1643,17 +1643,17 @@ public final class SenseCommandProtos {
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements pill_dataOrBuilder {
+       implements com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return SenseCommandProtos.internal_static_pill_data_descriptor;
+        return com.hello.suripu.api.ble.SenseCommandProtos.internal_static_pill_data_descriptor;
       }
 
-      protected FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return SenseCommandProtos.internal_static_pill_data_fieldAccessorTable
+        return com.hello.suripu.api.ble.SenseCommandProtos.internal_static_pill_data_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                pill_data.class, Builder.class);
+                com.hello.suripu.api.ble.SenseCommandProtos.pill_data.class, com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder.class);
       }
 
       // Construct using com.hello.suripu.api.ble.SenseCommandProtos.pill_data.newBuilder()
@@ -1662,7 +1662,7 @@ public final class SenseCommandProtos {
       }
 
       private Builder(
-          BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
@@ -1697,23 +1697,23 @@ public final class SenseCommandProtos {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return SenseCommandProtos.internal_static_pill_data_descriptor;
+        return com.hello.suripu.api.ble.SenseCommandProtos.internal_static_pill_data_descriptor;
       }
 
-      public pill_data getDefaultInstanceForType() {
-        return pill_data.getDefaultInstance();
+      public com.hello.suripu.api.ble.SenseCommandProtos.pill_data getDefaultInstanceForType() {
+        return com.hello.suripu.api.ble.SenseCommandProtos.pill_data.getDefaultInstance();
       }
 
-      public pill_data build() {
-        pill_data result = buildPartial();
+      public com.hello.suripu.api.ble.SenseCommandProtos.pill_data build() {
+        com.hello.suripu.api.ble.SenseCommandProtos.pill_data result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public pill_data buildPartial() {
-        pill_data result = new pill_data(this);
+      public com.hello.suripu.api.ble.SenseCommandProtos.pill_data buildPartial() {
+        com.hello.suripu.api.ble.SenseCommandProtos.pill_data result = new com.hello.suripu.api.ble.SenseCommandProtos.pill_data(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -1746,16 +1746,16 @@ public final class SenseCommandProtos {
       }
 
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof pill_data) {
-          return mergeFrom((pill_data)other);
+        if (other instanceof com.hello.suripu.api.ble.SenseCommandProtos.pill_data) {
+          return mergeFrom((com.hello.suripu.api.ble.SenseCommandProtos.pill_data)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(pill_data other) {
-        if (other == pill_data.getDefaultInstance()) return this;
+      public Builder mergeFrom(com.hello.suripu.api.ble.SenseCommandProtos.pill_data other) {
+        if (other == com.hello.suripu.api.ble.SenseCommandProtos.pill_data.getDefaultInstance()) return this;
         if (other.hasDeviceId()) {
           bitField0_ |= 0x00000001;
           deviceId_ = other.deviceId_;
@@ -1796,11 +1796,11 @@ public final class SenseCommandProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        pill_data parsedMessage = null;
+        com.hello.suripu.api.ble.SenseCommandProtos.pill_data parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (pill_data) e.getUnfinishedMessage();
+          parsedMessage = (com.hello.suripu.api.ble.SenseCommandProtos.pill_data) e.getUnfinishedMessage();
           throw e;
         } finally {
           if (parsedMessage != null) {
@@ -1812,7 +1812,7 @@ public final class SenseCommandProtos {
       private int bitField0_;
 
       // required string device_id = 1;
-      private Object deviceId_ = "";
+      private java.lang.Object deviceId_ = "";
       /**
        * <code>required string device_id = 1;</code>
        */
@@ -1822,15 +1822,15 @@ public final class SenseCommandProtos {
       /**
        * <code>required string device_id = 1;</code>
        */
-      public String getDeviceId() {
-        Object ref = deviceId_;
-        if (!(ref instanceof String)) {
-          String s = ((com.google.protobuf.ByteString) ref)
+      public java.lang.String getDeviceId() {
+        java.lang.Object ref = deviceId_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           deviceId_ = s;
           return s;
         } else {
-          return (String) ref;
+          return (java.lang.String) ref;
         }
       }
       /**
@@ -1838,11 +1838,11 @@ public final class SenseCommandProtos {
        */
       public com.google.protobuf.ByteString
           getDeviceIdBytes() {
-        Object ref = deviceId_;
+        java.lang.Object ref = deviceId_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (String) ref);
+                  (java.lang.String) ref);
           deviceId_ = b;
           return b;
         } else {
@@ -1853,7 +1853,7 @@ public final class SenseCommandProtos {
        * <code>required string device_id = 1;</code>
        */
       public Builder setDeviceId(
-          String value) {
+          java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -2085,7 +2085,7 @@ public final class SenseCommandProtos {
     /**
      * <code>required .MorpheusCommand.CommandType type = 2;</code>
      */
-    MorpheusCommand.CommandType getType();
+    com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand.CommandType getType();
 
     // optional string deviceId = 3;
     /**
@@ -2095,7 +2095,7 @@ public final class SenseCommandProtos {
     /**
      * <code>optional string deviceId = 3;</code>
      */
-    String getDeviceId();
+    java.lang.String getDeviceId();
     /**
      * <code>optional string deviceId = 3;</code>
      */
@@ -2118,7 +2118,7 @@ public final class SenseCommandProtos {
      * Used by MORPHEUS_COMMAND_PAIR_PILL
      * </pre>
      */
-    String getAccountId();
+    java.lang.String getAccountId();
     /**
      * <code>optional string accountId = 4;</code>
      *
@@ -2145,7 +2145,7 @@ public final class SenseCommandProtos {
      * MORPHEUS_COMMAND_ERROR
      * </pre>
      */
-    ErrorType getError();
+    com.hello.suripu.api.ble.SenseCommandProtos.ErrorType getError();
 
     // optional string wifiName = 6;
     /**
@@ -2155,7 +2155,7 @@ public final class SenseCommandProtos {
     /**
      * <code>optional string wifiName = 6;</code>
      */
-    String getWifiName();
+    java.lang.String getWifiName();
     /**
      * <code>optional string wifiName = 6;</code>
      */
@@ -2170,7 +2170,7 @@ public final class SenseCommandProtos {
     /**
      * <code>optional string wifiSSID = 7;</code>
      */
-    String getWifiSSID();
+    java.lang.String getWifiSSID();
     /**
      * <code>optional string wifiSSID = 7;</code>
      */
@@ -2185,7 +2185,7 @@ public final class SenseCommandProtos {
     /**
      * <code>optional string wifiPassword = 8;</code>
      */
-    String getWifiPassword();
+    java.lang.String getWifiPassword();
     /**
      * <code>optional string wifiPassword = 8;</code>
      */
@@ -2236,12 +2236,12 @@ public final class SenseCommandProtos {
     /**
      * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
      */
-    java.util.List<wifi_endpoint>
+    java.util.List<com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint> 
         getWifiScanResultList();
     /**
      * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
      */
-    wifi_endpoint getWifiScanResult(int index);
+    com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint getWifiScanResult(int index);
     /**
      * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
      */
@@ -2249,13 +2249,13 @@ public final class SenseCommandProtos {
     /**
      * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
      */
-    java.util.List<? extends wifi_endpointOrBuilder>
+    java.util.List<? extends com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpointOrBuilder> 
         getWifiScanResultOrBuilderList();
     /**
      * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
      */
-    wifi_endpointOrBuilder getWifiScanResultOrBuilder(
-            int index);
+    com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpointOrBuilder getWifiScanResultOrBuilder(
+        int index);
 
     // optional .wifi_endpoint.sec_type security_type = 15;
     /**
@@ -2265,7 +2265,7 @@ public final class SenseCommandProtos {
     /**
      * <code>optional .wifi_endpoint.sec_type security_type = 15;</code>
      */
-    wifi_endpoint.sec_type getSecurityType();
+    com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type getSecurityType();
 
     // optional .pill_data pill_data = 16;
     /**
@@ -2275,11 +2275,11 @@ public final class SenseCommandProtos {
     /**
      * <code>optional .pill_data pill_data = 16;</code>
      */
-    pill_data getPillData();
+    com.hello.suripu.api.ble.SenseCommandProtos.pill_data getPillData();
     /**
      * <code>optional .pill_data pill_data = 16;</code>
      */
-    pill_dataOrBuilder getPillDataOrBuilder();
+    com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder getPillDataOrBuilder();
 
     // optional .wifi_connection_state wifi_connection_state = 17;
     /**
@@ -2289,7 +2289,7 @@ public final class SenseCommandProtos {
     /**
      * <code>optional .wifi_connection_state wifi_connection_state = 17;</code>
      */
-    wifi_connection_state getWifiConnectionState();
+    com.hello.suripu.api.ble.SenseCommandProtos.wifi_connection_state getWifiConnectionState();
   }
   /**
    * Protobuf type {@code MorpheusCommand}
@@ -2314,7 +2314,7 @@ public final class SenseCommandProtos {
     }
 
     private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @Override
+    @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
         getUnknownFields() {
       return this.unknownFields;
@@ -2349,7 +2349,7 @@ public final class SenseCommandProtos {
             }
             case 16: {
               int rawValue = input.readEnum();
-              CommandType value = CommandType.valueOf(rawValue);
+              com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand.CommandType value = com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand.CommandType.valueOf(rawValue);
               if (value == null) {
                 unknownFields.mergeVarintField(2, rawValue);
               } else {
@@ -2370,7 +2370,7 @@ public final class SenseCommandProtos {
             }
             case 40: {
               int rawValue = input.readEnum();
-              ErrorType value = ErrorType.valueOf(rawValue);
+              com.hello.suripu.api.ble.SenseCommandProtos.ErrorType value = com.hello.suripu.api.ble.SenseCommandProtos.ErrorType.valueOf(rawValue);
               if (value == null) {
                 unknownFields.mergeVarintField(5, rawValue);
               } else {
@@ -2411,15 +2411,15 @@ public final class SenseCommandProtos {
             }
             case 114: {
               if (!((mutable_bitField0_ & 0x00000800) == 0x00000800)) {
-                wifiScanResult_ = new java.util.ArrayList<wifi_endpoint>();
+                wifiScanResult_ = new java.util.ArrayList<com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint>();
                 mutable_bitField0_ |= 0x00000800;
               }
-              wifiScanResult_.add(input.readMessage(wifi_endpoint.PARSER, extensionRegistry));
+              wifiScanResult_.add(input.readMessage(com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.PARSER, extensionRegistry));
               break;
             }
             case 120: {
               int rawValue = input.readEnum();
-              wifi_endpoint.sec_type value = wifi_endpoint.sec_type.valueOf(rawValue);
+              com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type value = com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type.valueOf(rawValue);
               if (value == null) {
                 unknownFields.mergeVarintField(15, rawValue);
               } else {
@@ -2429,11 +2429,11 @@ public final class SenseCommandProtos {
               break;
             }
             case 130: {
-              pill_data.Builder subBuilder = null;
+              com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder subBuilder = null;
               if (((bitField0_ & 0x00001000) == 0x00001000)) {
                 subBuilder = pillData_.toBuilder();
               }
-              pillData_ = input.readMessage(pill_data.PARSER, extensionRegistry);
+              pillData_ = input.readMessage(com.hello.suripu.api.ble.SenseCommandProtos.pill_data.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(pillData_);
                 pillData_ = subBuilder.buildPartial();
@@ -2443,7 +2443,7 @@ public final class SenseCommandProtos {
             }
             case 136: {
               int rawValue = input.readEnum();
-              wifi_connection_state value = wifi_connection_state.valueOf(rawValue);
+              com.hello.suripu.api.ble.SenseCommandProtos.wifi_connection_state value = com.hello.suripu.api.ble.SenseCommandProtos.wifi_connection_state.valueOf(rawValue);
               if (value == null) {
                 unknownFields.mergeVarintField(17, rawValue);
               } else {
@@ -2469,14 +2469,14 @@ public final class SenseCommandProtos {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return SenseCommandProtos.internal_static_MorpheusCommand_descriptor;
+      return com.hello.suripu.api.ble.SenseCommandProtos.internal_static_MorpheusCommand_descriptor;
     }
 
-    protected FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return SenseCommandProtos.internal_static_MorpheusCommand_fieldAccessorTable
+      return com.hello.suripu.api.ble.SenseCommandProtos.internal_static_MorpheusCommand_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              MorpheusCommand.class, Builder.class);
+              com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand.class, com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand.Builder.class);
     }
 
     public static com.google.protobuf.Parser<MorpheusCommand> PARSER =
@@ -2489,7 +2489,7 @@ public final class SenseCommandProtos {
       }
     };
 
-    @Override
+    @java.lang.Override
     public com.google.protobuf.Parser<MorpheusCommand> getParserForType() {
       return PARSER;
     }
@@ -2739,7 +2739,7 @@ public final class SenseCommandProtos {
       }
       public static final com.google.protobuf.Descriptors.EnumDescriptor
           getDescriptor() {
-        return MorpheusCommand.getDescriptor().getEnumTypes().get(0);
+        return com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand.getDescriptor().getEnumTypes().get(0);
       }
 
       private static final CommandType[] VALUES = values();
@@ -2747,7 +2747,7 @@ public final class SenseCommandProtos {
       public static CommandType valueOf(
           com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
         if (desc.getType() != getDescriptor()) {
-          throw new IllegalArgumentException(
+          throw new java.lang.IllegalArgumentException(
             "EnumValueDescriptor is not for this type.");
         }
         return VALUES[desc.getIndex()];
@@ -2783,7 +2783,7 @@ public final class SenseCommandProtos {
 
     // required .MorpheusCommand.CommandType type = 2;
     public static final int TYPE_FIELD_NUMBER = 2;
-    private CommandType type_;
+    private com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand.CommandType type_;
     /**
      * <code>required .MorpheusCommand.CommandType type = 2;</code>
      */
@@ -2793,13 +2793,13 @@ public final class SenseCommandProtos {
     /**
      * <code>required .MorpheusCommand.CommandType type = 2;</code>
      */
-    public CommandType getType() {
+    public com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand.CommandType getType() {
       return type_;
     }
 
     // optional string deviceId = 3;
     public static final int DEVICEID_FIELD_NUMBER = 3;
-    private Object deviceId_;
+    private java.lang.Object deviceId_;
     /**
      * <code>optional string deviceId = 3;</code>
      */
@@ -2809,14 +2809,14 @@ public final class SenseCommandProtos {
     /**
      * <code>optional string deviceId = 3;</code>
      */
-    public String getDeviceId() {
-      Object ref = deviceId_;
-      if (ref instanceof String) {
-        return (String) ref;
+    public java.lang.String getDeviceId() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        String s = bs.toStringUtf8();
+        java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           deviceId_ = s;
         }
@@ -2828,11 +2828,11 @@ public final class SenseCommandProtos {
      */
     public com.google.protobuf.ByteString
         getDeviceIdBytes() {
-      Object ref = deviceId_;
-      if (ref instanceof String) {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (String) ref);
+                (java.lang.String) ref);
         deviceId_ = b;
         return b;
       } else {
@@ -2842,7 +2842,7 @@ public final class SenseCommandProtos {
 
     // optional string accountId = 4;
     public static final int ACCOUNTID_FIELD_NUMBER = 4;
-    private Object accountId_;
+    private java.lang.Object accountId_;
     /**
      * <code>optional string accountId = 4;</code>
      *
@@ -2860,14 +2860,14 @@ public final class SenseCommandProtos {
      * Used by MORPHEUS_COMMAND_PAIR_PILL
      * </pre>
      */
-    public String getAccountId() {
-      Object ref = accountId_;
-      if (ref instanceof String) {
-        return (String) ref;
+    public java.lang.String getAccountId() {
+      java.lang.Object ref = accountId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        String s = bs.toStringUtf8();
+        java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           accountId_ = s;
         }
@@ -2883,11 +2883,11 @@ public final class SenseCommandProtos {
      */
     public com.google.protobuf.ByteString
         getAccountIdBytes() {
-      Object ref = accountId_;
-      if (ref instanceof String) {
+      java.lang.Object ref = accountId_;
+      if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (String) ref);
+                (java.lang.String) ref);
         accountId_ = b;
         return b;
       } else {
@@ -2897,7 +2897,7 @@ public final class SenseCommandProtos {
 
     // optional .ErrorType error = 5;
     public static final int ERROR_FIELD_NUMBER = 5;
-    private ErrorType error_;
+    private com.hello.suripu.api.ble.SenseCommandProtos.ErrorType error_;
     /**
      * <code>optional .ErrorType error = 5;</code>
      *
@@ -2915,13 +2915,13 @@ public final class SenseCommandProtos {
      * MORPHEUS_COMMAND_ERROR
      * </pre>
      */
-    public ErrorType getError() {
+    public com.hello.suripu.api.ble.SenseCommandProtos.ErrorType getError() {
       return error_;
     }
 
     // optional string wifiName = 6;
     public static final int WIFINAME_FIELD_NUMBER = 6;
-    private Object wifiName_;
+    private java.lang.Object wifiName_;
     /**
      * <code>optional string wifiName = 6;</code>
      */
@@ -2931,14 +2931,14 @@ public final class SenseCommandProtos {
     /**
      * <code>optional string wifiName = 6;</code>
      */
-    public String getWifiName() {
-      Object ref = wifiName_;
-      if (ref instanceof String) {
-        return (String) ref;
+    public java.lang.String getWifiName() {
+      java.lang.Object ref = wifiName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        String s = bs.toStringUtf8();
+        java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           wifiName_ = s;
         }
@@ -2950,11 +2950,11 @@ public final class SenseCommandProtos {
      */
     public com.google.protobuf.ByteString
         getWifiNameBytes() {
-      Object ref = wifiName_;
-      if (ref instanceof String) {
+      java.lang.Object ref = wifiName_;
+      if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (String) ref);
+                (java.lang.String) ref);
         wifiName_ = b;
         return b;
       } else {
@@ -2964,7 +2964,7 @@ public final class SenseCommandProtos {
 
     // optional string wifiSSID = 7;
     public static final int WIFISSID_FIELD_NUMBER = 7;
-    private Object wifiSSID_;
+    private java.lang.Object wifiSSID_;
     /**
      * <code>optional string wifiSSID = 7;</code>
      */
@@ -2974,14 +2974,14 @@ public final class SenseCommandProtos {
     /**
      * <code>optional string wifiSSID = 7;</code>
      */
-    public String getWifiSSID() {
-      Object ref = wifiSSID_;
-      if (ref instanceof String) {
-        return (String) ref;
+    public java.lang.String getWifiSSID() {
+      java.lang.Object ref = wifiSSID_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        String s = bs.toStringUtf8();
+        java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           wifiSSID_ = s;
         }
@@ -2993,11 +2993,11 @@ public final class SenseCommandProtos {
      */
     public com.google.protobuf.ByteString
         getWifiSSIDBytes() {
-      Object ref = wifiSSID_;
-      if (ref instanceof String) {
+      java.lang.Object ref = wifiSSID_;
+      if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (String) ref);
+                (java.lang.String) ref);
         wifiSSID_ = b;
         return b;
       } else {
@@ -3007,7 +3007,7 @@ public final class SenseCommandProtos {
 
     // optional string wifiPassword = 8;
     public static final int WIFIPASSWORD_FIELD_NUMBER = 8;
-    private Object wifiPassword_;
+    private java.lang.Object wifiPassword_;
     /**
      * <code>optional string wifiPassword = 8;</code>
      */
@@ -3017,14 +3017,14 @@ public final class SenseCommandProtos {
     /**
      * <code>optional string wifiPassword = 8;</code>
      */
-    public String getWifiPassword() {
-      Object ref = wifiPassword_;
-      if (ref instanceof String) {
-        return (String) ref;
+    public java.lang.String getWifiPassword() {
+      java.lang.Object ref = wifiPassword_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        String s = bs.toStringUtf8();
+        java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           wifiPassword_ = s;
         }
@@ -3036,11 +3036,11 @@ public final class SenseCommandProtos {
      */
     public com.google.protobuf.ByteString
         getWifiPasswordBytes() {
-      Object ref = wifiPassword_;
-      if (ref instanceof String) {
+      java.lang.Object ref = wifiPassword_;
+      if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (String) ref);
+                (java.lang.String) ref);
         wifiPassword_ = b;
         return b;
       } else {
@@ -3108,17 +3108,17 @@ public final class SenseCommandProtos {
 
     // repeated .wifi_endpoint wifi_scan_result = 14;
     public static final int WIFI_SCAN_RESULT_FIELD_NUMBER = 14;
-    private java.util.List<wifi_endpoint> wifiScanResult_;
+    private java.util.List<com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint> wifiScanResult_;
     /**
      * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
      */
-    public java.util.List<wifi_endpoint> getWifiScanResultList() {
+    public java.util.List<com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint> getWifiScanResultList() {
       return wifiScanResult_;
     }
     /**
      * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
      */
-    public java.util.List<? extends wifi_endpointOrBuilder>
+    public java.util.List<? extends com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpointOrBuilder> 
         getWifiScanResultOrBuilderList() {
       return wifiScanResult_;
     }
@@ -3131,20 +3131,20 @@ public final class SenseCommandProtos {
     /**
      * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
      */
-    public wifi_endpoint getWifiScanResult(int index) {
+    public com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint getWifiScanResult(int index) {
       return wifiScanResult_.get(index);
     }
     /**
      * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
      */
-    public wifi_endpointOrBuilder getWifiScanResultOrBuilder(
+    public com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpointOrBuilder getWifiScanResultOrBuilder(
         int index) {
       return wifiScanResult_.get(index);
     }
 
     // optional .wifi_endpoint.sec_type security_type = 15;
     public static final int SECURITY_TYPE_FIELD_NUMBER = 15;
-    private wifi_endpoint.sec_type securityType_;
+    private com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type securityType_;
     /**
      * <code>optional .wifi_endpoint.sec_type security_type = 15;</code>
      */
@@ -3154,13 +3154,13 @@ public final class SenseCommandProtos {
     /**
      * <code>optional .wifi_endpoint.sec_type security_type = 15;</code>
      */
-    public wifi_endpoint.sec_type getSecurityType() {
+    public com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type getSecurityType() {
       return securityType_;
     }
 
     // optional .pill_data pill_data = 16;
     public static final int PILL_DATA_FIELD_NUMBER = 16;
-    private pill_data pillData_;
+    private com.hello.suripu.api.ble.SenseCommandProtos.pill_data pillData_;
     /**
      * <code>optional .pill_data pill_data = 16;</code>
      */
@@ -3170,19 +3170,19 @@ public final class SenseCommandProtos {
     /**
      * <code>optional .pill_data pill_data = 16;</code>
      */
-    public pill_data getPillData() {
+    public com.hello.suripu.api.ble.SenseCommandProtos.pill_data getPillData() {
       return pillData_;
     }
     /**
      * <code>optional .pill_data pill_data = 16;</code>
      */
-    public pill_dataOrBuilder getPillDataOrBuilder() {
+    public com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder getPillDataOrBuilder() {
       return pillData_;
     }
 
     // optional .wifi_connection_state wifi_connection_state = 17;
     public static final int WIFI_CONNECTION_STATE_FIELD_NUMBER = 17;
-    private wifi_connection_state wifiConnectionState_;
+    private com.hello.suripu.api.ble.SenseCommandProtos.wifi_connection_state wifiConnectionState_;
     /**
      * <code>optional .wifi_connection_state wifi_connection_state = 17;</code>
      */
@@ -3192,16 +3192,16 @@ public final class SenseCommandProtos {
     /**
      * <code>optional .wifi_connection_state wifi_connection_state = 17;</code>
      */
-    public wifi_connection_state getWifiConnectionState() {
+    public com.hello.suripu.api.ble.SenseCommandProtos.wifi_connection_state getWifiConnectionState() {
       return wifiConnectionState_;
     }
 
     private void initFields() {
       version_ = 0;
-      type_ = CommandType.MORPHEUS_COMMAND_SET_TIME;
+      type_ = com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand.CommandType.MORPHEUS_COMMAND_SET_TIME;
       deviceId_ = "";
       accountId_ = "";
-      error_ = ErrorType.TIME_OUT;
+      error_ = com.hello.suripu.api.ble.SenseCommandProtos.ErrorType.TIME_OUT;
       wifiName_ = "";
       wifiSSID_ = "";
       wifiPassword_ = "";
@@ -3209,9 +3209,9 @@ public final class SenseCommandProtos {
       uptime_ = 0;
       firmwareVersion_ = 0;
       wifiScanResult_ = java.util.Collections.emptyList();
-      securityType_ = wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
-      pillData_ = pill_data.getDefaultInstance();
-      wifiConnectionState_ = wifi_connection_state.NO_WLAN_CONNECTED;
+      securityType_ = com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
+      pillData_ = com.hello.suripu.api.ble.SenseCommandProtos.pill_data.getDefaultInstance();
+      wifiConnectionState_ = com.hello.suripu.api.ble.SenseCommandProtos.wifi_connection_state.NO_WLAN_CONNECTED;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -3365,59 +3365,59 @@ public final class SenseCommandProtos {
     }
 
     private static final long serialVersionUID = 0L;
-    @Override
-    protected Object writeReplace()
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
         throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
 
-    public static MorpheusCommand parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static MorpheusCommand parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static MorpheusCommand parseFrom(byte[] data)
+    public static com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static MorpheusCommand parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static MorpheusCommand parseFrom(java.io.InputStream input)
+    public static com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static MorpheusCommand parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseFrom(input, extensionRegistry);
     }
-    public static MorpheusCommand parseDelimitedFrom(java.io.InputStream input)
+    public static com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input);
     }
-    public static MorpheusCommand parseDelimitedFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
-    public static MorpheusCommand parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static MorpheusCommand parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -3426,14 +3426,14 @@ public final class SenseCommandProtos {
 
     public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(MorpheusCommand prototype) {
+    public static Builder newBuilder(com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand prototype) {
       return newBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() { return newBuilder(this); }
 
-    @Override
+    @java.lang.Override
     protected Builder newBuilderForType(
-        BuilderParent parent) {
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -3442,17 +3442,17 @@ public final class SenseCommandProtos {
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements MorpheusCommandOrBuilder {
+       implements com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommandOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return SenseCommandProtos.internal_static_MorpheusCommand_descriptor;
+        return com.hello.suripu.api.ble.SenseCommandProtos.internal_static_MorpheusCommand_descriptor;
       }
 
-      protected FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return SenseCommandProtos.internal_static_MorpheusCommand_fieldAccessorTable
+        return com.hello.suripu.api.ble.SenseCommandProtos.internal_static_MorpheusCommand_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                MorpheusCommand.class, Builder.class);
+                com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand.class, com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand.Builder.class);
       }
 
       // Construct using com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand.newBuilder()
@@ -3461,7 +3461,7 @@ public final class SenseCommandProtos {
       }
 
       private Builder(
-          BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
@@ -3479,13 +3479,13 @@ public final class SenseCommandProtos {
         super.clear();
         version_ = 0;
         bitField0_ = (bitField0_ & ~0x00000001);
-        type_ = CommandType.MORPHEUS_COMMAND_SET_TIME;
+        type_ = com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand.CommandType.MORPHEUS_COMMAND_SET_TIME;
         bitField0_ = (bitField0_ & ~0x00000002);
         deviceId_ = "";
         bitField0_ = (bitField0_ & ~0x00000004);
         accountId_ = "";
         bitField0_ = (bitField0_ & ~0x00000008);
-        error_ = ErrorType.TIME_OUT;
+        error_ = com.hello.suripu.api.ble.SenseCommandProtos.ErrorType.TIME_OUT;
         bitField0_ = (bitField0_ & ~0x00000010);
         wifiName_ = "";
         bitField0_ = (bitField0_ & ~0x00000020);
@@ -3505,15 +3505,15 @@ public final class SenseCommandProtos {
         } else {
           wifiScanResultBuilder_.clear();
         }
-        securityType_ = wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
+        securityType_ = com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
         bitField0_ = (bitField0_ & ~0x00001000);
         if (pillDataBuilder_ == null) {
-          pillData_ = pill_data.getDefaultInstance();
+          pillData_ = com.hello.suripu.api.ble.SenseCommandProtos.pill_data.getDefaultInstance();
         } else {
           pillDataBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00002000);
-        wifiConnectionState_ = wifi_connection_state.NO_WLAN_CONNECTED;
+        wifiConnectionState_ = com.hello.suripu.api.ble.SenseCommandProtos.wifi_connection_state.NO_WLAN_CONNECTED;
         bitField0_ = (bitField0_ & ~0x00004000);
         return this;
       }
@@ -3524,23 +3524,23 @@ public final class SenseCommandProtos {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return SenseCommandProtos.internal_static_MorpheusCommand_descriptor;
+        return com.hello.suripu.api.ble.SenseCommandProtos.internal_static_MorpheusCommand_descriptor;
       }
 
-      public MorpheusCommand getDefaultInstanceForType() {
-        return MorpheusCommand.getDefaultInstance();
+      public com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand getDefaultInstanceForType() {
+        return com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand.getDefaultInstance();
       }
 
-      public MorpheusCommand build() {
-        MorpheusCommand result = buildPartial();
+      public com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand build() {
+        com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public MorpheusCommand buildPartial() {
-        MorpheusCommand result = new MorpheusCommand(this);
+      public com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand buildPartial() {
+        com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand result = new com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -3618,16 +3618,16 @@ public final class SenseCommandProtos {
       }
 
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof MorpheusCommand) {
-          return mergeFrom((MorpheusCommand)other);
+        if (other instanceof com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand) {
+          return mergeFrom((com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(MorpheusCommand other) {
-        if (other == MorpheusCommand.getDefaultInstance()) return this;
+      public Builder mergeFrom(com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand other) {
+        if (other == com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand.getDefaultInstance()) return this;
         if (other.hasVersion()) {
           setVersion(other.getVersion());
         }
@@ -3738,11 +3738,11 @@ public final class SenseCommandProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        MorpheusCommand parsedMessage = null;
+        com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (MorpheusCommand) e.getUnfinishedMessage();
+          parsedMessage = (com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand) e.getUnfinishedMessage();
           throw e;
         } finally {
           if (parsedMessage != null) {
@@ -3787,7 +3787,7 @@ public final class SenseCommandProtos {
       }
 
       // required .MorpheusCommand.CommandType type = 2;
-      private CommandType type_ = CommandType.MORPHEUS_COMMAND_SET_TIME;
+      private com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand.CommandType type_ = com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand.CommandType.MORPHEUS_COMMAND_SET_TIME;
       /**
        * <code>required .MorpheusCommand.CommandType type = 2;</code>
        */
@@ -3797,13 +3797,13 @@ public final class SenseCommandProtos {
       /**
        * <code>required .MorpheusCommand.CommandType type = 2;</code>
        */
-      public CommandType getType() {
+      public com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand.CommandType getType() {
         return type_;
       }
       /**
        * <code>required .MorpheusCommand.CommandType type = 2;</code>
        */
-      public Builder setType(CommandType value) {
+      public Builder setType(com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand.CommandType value) {
         if (value == null) {
           throw new NullPointerException();
         }
@@ -3817,13 +3817,13 @@ public final class SenseCommandProtos {
        */
       public Builder clearType() {
         bitField0_ = (bitField0_ & ~0x00000002);
-        type_ = CommandType.MORPHEUS_COMMAND_SET_TIME;
+        type_ = com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand.CommandType.MORPHEUS_COMMAND_SET_TIME;
         onChanged();
         return this;
       }
 
       // optional string deviceId = 3;
-      private Object deviceId_ = "";
+      private java.lang.Object deviceId_ = "";
       /**
        * <code>optional string deviceId = 3;</code>
        */
@@ -3833,15 +3833,15 @@ public final class SenseCommandProtos {
       /**
        * <code>optional string deviceId = 3;</code>
        */
-      public String getDeviceId() {
-        Object ref = deviceId_;
-        if (!(ref instanceof String)) {
-          String s = ((com.google.protobuf.ByteString) ref)
+      public java.lang.String getDeviceId() {
+        java.lang.Object ref = deviceId_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           deviceId_ = s;
           return s;
         } else {
-          return (String) ref;
+          return (java.lang.String) ref;
         }
       }
       /**
@@ -3849,11 +3849,11 @@ public final class SenseCommandProtos {
        */
       public com.google.protobuf.ByteString
           getDeviceIdBytes() {
-        Object ref = deviceId_;
+        java.lang.Object ref = deviceId_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (String) ref);
+                  (java.lang.String) ref);
           deviceId_ = b;
           return b;
         } else {
@@ -3864,7 +3864,7 @@ public final class SenseCommandProtos {
        * <code>optional string deviceId = 3;</code>
        */
       public Builder setDeviceId(
-          String value) {
+          java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -3897,7 +3897,7 @@ public final class SenseCommandProtos {
       }
 
       // optional string accountId = 4;
-      private Object accountId_ = "";
+      private java.lang.Object accountId_ = "";
       /**
        * <code>optional string accountId = 4;</code>
        *
@@ -3915,15 +3915,15 @@ public final class SenseCommandProtos {
        * Used by MORPHEUS_COMMAND_PAIR_PILL
        * </pre>
        */
-      public String getAccountId() {
-        Object ref = accountId_;
-        if (!(ref instanceof String)) {
-          String s = ((com.google.protobuf.ByteString) ref)
+      public java.lang.String getAccountId() {
+        java.lang.Object ref = accountId_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           accountId_ = s;
           return s;
         } else {
-          return (String) ref;
+          return (java.lang.String) ref;
         }
       }
       /**
@@ -3935,11 +3935,11 @@ public final class SenseCommandProtos {
        */
       public com.google.protobuf.ByteString
           getAccountIdBytes() {
-        Object ref = accountId_;
+        java.lang.Object ref = accountId_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (String) ref);
+                  (java.lang.String) ref);
           accountId_ = b;
           return b;
         } else {
@@ -3954,7 +3954,7 @@ public final class SenseCommandProtos {
        * </pre>
        */
       public Builder setAccountId(
-          String value) {
+          java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -3995,7 +3995,7 @@ public final class SenseCommandProtos {
       }
 
       // optional .ErrorType error = 5;
-      private ErrorType error_ = ErrorType.TIME_OUT;
+      private com.hello.suripu.api.ble.SenseCommandProtos.ErrorType error_ = com.hello.suripu.api.ble.SenseCommandProtos.ErrorType.TIME_OUT;
       /**
        * <code>optional .ErrorType error = 5;</code>
        *
@@ -4013,7 +4013,7 @@ public final class SenseCommandProtos {
        * MORPHEUS_COMMAND_ERROR
        * </pre>
        */
-      public ErrorType getError() {
+      public com.hello.suripu.api.ble.SenseCommandProtos.ErrorType getError() {
         return error_;
       }
       /**
@@ -4023,7 +4023,7 @@ public final class SenseCommandProtos {
        * MORPHEUS_COMMAND_ERROR
        * </pre>
        */
-      public Builder setError(ErrorType value) {
+      public Builder setError(com.hello.suripu.api.ble.SenseCommandProtos.ErrorType value) {
         if (value == null) {
           throw new NullPointerException();
         }
@@ -4041,13 +4041,13 @@ public final class SenseCommandProtos {
        */
       public Builder clearError() {
         bitField0_ = (bitField0_ & ~0x00000010);
-        error_ = ErrorType.TIME_OUT;
+        error_ = com.hello.suripu.api.ble.SenseCommandProtos.ErrorType.TIME_OUT;
         onChanged();
         return this;
       }
 
       // optional string wifiName = 6;
-      private Object wifiName_ = "";
+      private java.lang.Object wifiName_ = "";
       /**
        * <code>optional string wifiName = 6;</code>
        */
@@ -4057,15 +4057,15 @@ public final class SenseCommandProtos {
       /**
        * <code>optional string wifiName = 6;</code>
        */
-      public String getWifiName() {
-        Object ref = wifiName_;
-        if (!(ref instanceof String)) {
-          String s = ((com.google.protobuf.ByteString) ref)
+      public java.lang.String getWifiName() {
+        java.lang.Object ref = wifiName_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           wifiName_ = s;
           return s;
         } else {
-          return (String) ref;
+          return (java.lang.String) ref;
         }
       }
       /**
@@ -4073,11 +4073,11 @@ public final class SenseCommandProtos {
        */
       public com.google.protobuf.ByteString
           getWifiNameBytes() {
-        Object ref = wifiName_;
+        java.lang.Object ref = wifiName_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (String) ref);
+                  (java.lang.String) ref);
           wifiName_ = b;
           return b;
         } else {
@@ -4088,7 +4088,7 @@ public final class SenseCommandProtos {
        * <code>optional string wifiName = 6;</code>
        */
       public Builder setWifiName(
-          String value) {
+          java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -4121,7 +4121,7 @@ public final class SenseCommandProtos {
       }
 
       // optional string wifiSSID = 7;
-      private Object wifiSSID_ = "";
+      private java.lang.Object wifiSSID_ = "";
       /**
        * <code>optional string wifiSSID = 7;</code>
        */
@@ -4131,15 +4131,15 @@ public final class SenseCommandProtos {
       /**
        * <code>optional string wifiSSID = 7;</code>
        */
-      public String getWifiSSID() {
-        Object ref = wifiSSID_;
-        if (!(ref instanceof String)) {
-          String s = ((com.google.protobuf.ByteString) ref)
+      public java.lang.String getWifiSSID() {
+        java.lang.Object ref = wifiSSID_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           wifiSSID_ = s;
           return s;
         } else {
-          return (String) ref;
+          return (java.lang.String) ref;
         }
       }
       /**
@@ -4147,11 +4147,11 @@ public final class SenseCommandProtos {
        */
       public com.google.protobuf.ByteString
           getWifiSSIDBytes() {
-        Object ref = wifiSSID_;
+        java.lang.Object ref = wifiSSID_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (String) ref);
+                  (java.lang.String) ref);
           wifiSSID_ = b;
           return b;
         } else {
@@ -4162,7 +4162,7 @@ public final class SenseCommandProtos {
        * <code>optional string wifiSSID = 7;</code>
        */
       public Builder setWifiSSID(
-          String value) {
+          java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -4195,7 +4195,7 @@ public final class SenseCommandProtos {
       }
 
       // optional string wifiPassword = 8;
-      private Object wifiPassword_ = "";
+      private java.lang.Object wifiPassword_ = "";
       /**
        * <code>optional string wifiPassword = 8;</code>
        */
@@ -4205,15 +4205,15 @@ public final class SenseCommandProtos {
       /**
        * <code>optional string wifiPassword = 8;</code>
        */
-      public String getWifiPassword() {
-        Object ref = wifiPassword_;
-        if (!(ref instanceof String)) {
-          String s = ((com.google.protobuf.ByteString) ref)
+      public java.lang.String getWifiPassword() {
+        java.lang.Object ref = wifiPassword_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           wifiPassword_ = s;
           return s;
         } else {
-          return (String) ref;
+          return (java.lang.String) ref;
         }
       }
       /**
@@ -4221,11 +4221,11 @@ public final class SenseCommandProtos {
        */
       public com.google.protobuf.ByteString
           getWifiPasswordBytes() {
-        Object ref = wifiPassword_;
+        java.lang.Object ref = wifiPassword_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (String) ref);
+                  (java.lang.String) ref);
           wifiPassword_ = b;
           return b;
         } else {
@@ -4236,7 +4236,7 @@ public final class SenseCommandProtos {
        * <code>optional string wifiPassword = 8;</code>
        */
       public Builder setWifiPassword(
-          String value) {
+          java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -4388,22 +4388,22 @@ public final class SenseCommandProtos {
       }
 
       // repeated .wifi_endpoint wifi_scan_result = 14;
-      private java.util.List<wifi_endpoint> wifiScanResult_ =
+      private java.util.List<com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint> wifiScanResult_ =
         java.util.Collections.emptyList();
       private void ensureWifiScanResultIsMutable() {
         if (!((bitField0_ & 0x00000800) == 0x00000800)) {
-          wifiScanResult_ = new java.util.ArrayList<wifi_endpoint>(wifiScanResult_);
+          wifiScanResult_ = new java.util.ArrayList<com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint>(wifiScanResult_);
           bitField0_ |= 0x00000800;
          }
       }
 
       private com.google.protobuf.RepeatedFieldBuilder<
-          wifi_endpoint, wifi_endpoint.Builder, wifi_endpointOrBuilder> wifiScanResultBuilder_;
+          com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint, com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.Builder, com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpointOrBuilder> wifiScanResultBuilder_;
 
       /**
        * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
        */
-      public java.util.List<wifi_endpoint> getWifiScanResultList() {
+      public java.util.List<com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint> getWifiScanResultList() {
         if (wifiScanResultBuilder_ == null) {
           return java.util.Collections.unmodifiableList(wifiScanResult_);
         } else {
@@ -4423,7 +4423,7 @@ public final class SenseCommandProtos {
       /**
        * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
        */
-      public wifi_endpoint getWifiScanResult(int index) {
+      public com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint getWifiScanResult(int index) {
         if (wifiScanResultBuilder_ == null) {
           return wifiScanResult_.get(index);
         } else {
@@ -4434,7 +4434,7 @@ public final class SenseCommandProtos {
        * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
        */
       public Builder setWifiScanResult(
-          int index, wifi_endpoint value) {
+          int index, com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint value) {
         if (wifiScanResultBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -4451,7 +4451,7 @@ public final class SenseCommandProtos {
        * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
        */
       public Builder setWifiScanResult(
-          int index, wifi_endpoint.Builder builderForValue) {
+          int index, com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.Builder builderForValue) {
         if (wifiScanResultBuilder_ == null) {
           ensureWifiScanResultIsMutable();
           wifiScanResult_.set(index, builderForValue.build());
@@ -4464,7 +4464,7 @@ public final class SenseCommandProtos {
       /**
        * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
        */
-      public Builder addWifiScanResult(wifi_endpoint value) {
+      public Builder addWifiScanResult(com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint value) {
         if (wifiScanResultBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -4481,7 +4481,7 @@ public final class SenseCommandProtos {
        * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
        */
       public Builder addWifiScanResult(
-          int index, wifi_endpoint value) {
+          int index, com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint value) {
         if (wifiScanResultBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -4498,7 +4498,7 @@ public final class SenseCommandProtos {
        * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
        */
       public Builder addWifiScanResult(
-          wifi_endpoint.Builder builderForValue) {
+          com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.Builder builderForValue) {
         if (wifiScanResultBuilder_ == null) {
           ensureWifiScanResultIsMutable();
           wifiScanResult_.add(builderForValue.build());
@@ -4512,7 +4512,7 @@ public final class SenseCommandProtos {
        * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
        */
       public Builder addWifiScanResult(
-          int index, wifi_endpoint.Builder builderForValue) {
+          int index, com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.Builder builderForValue) {
         if (wifiScanResultBuilder_ == null) {
           ensureWifiScanResultIsMutable();
           wifiScanResult_.add(index, builderForValue.build());
@@ -4526,7 +4526,7 @@ public final class SenseCommandProtos {
        * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
        */
       public Builder addAllWifiScanResult(
-          Iterable<? extends wifi_endpoint> values) {
+          java.lang.Iterable<? extends com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint> values) {
         if (wifiScanResultBuilder_ == null) {
           ensureWifiScanResultIsMutable();
           super.addAll(values, wifiScanResult_);
@@ -4565,14 +4565,14 @@ public final class SenseCommandProtos {
       /**
        * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
        */
-      public wifi_endpoint.Builder getWifiScanResultBuilder(
+      public com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.Builder getWifiScanResultBuilder(
           int index) {
         return getWifiScanResultFieldBuilder().getBuilder(index);
       }
       /**
        * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
        */
-      public wifi_endpointOrBuilder getWifiScanResultOrBuilder(
+      public com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpointOrBuilder getWifiScanResultOrBuilder(
           int index) {
         if (wifiScanResultBuilder_ == null) {
           return wifiScanResult_.get(index);  } else {
@@ -4582,7 +4582,7 @@ public final class SenseCommandProtos {
       /**
        * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
        */
-      public java.util.List<? extends wifi_endpointOrBuilder>
+      public java.util.List<? extends com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpointOrBuilder> 
            getWifiScanResultOrBuilderList() {
         if (wifiScanResultBuilder_ != null) {
           return wifiScanResultBuilder_.getMessageOrBuilderList();
@@ -4593,31 +4593,31 @@ public final class SenseCommandProtos {
       /**
        * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
        */
-      public wifi_endpoint.Builder addWifiScanResultBuilder() {
+      public com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.Builder addWifiScanResultBuilder() {
         return getWifiScanResultFieldBuilder().addBuilder(
-            wifi_endpoint.getDefaultInstance());
+            com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.getDefaultInstance());
       }
       /**
        * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
        */
-      public wifi_endpoint.Builder addWifiScanResultBuilder(
+      public com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.Builder addWifiScanResultBuilder(
           int index) {
         return getWifiScanResultFieldBuilder().addBuilder(
-            index, wifi_endpoint.getDefaultInstance());
+            index, com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.getDefaultInstance());
       }
       /**
        * <code>repeated .wifi_endpoint wifi_scan_result = 14;</code>
        */
-      public java.util.List<wifi_endpoint.Builder>
+      public java.util.List<com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.Builder> 
            getWifiScanResultBuilderList() {
         return getWifiScanResultFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilder<
-          wifi_endpoint, wifi_endpoint.Builder, wifi_endpointOrBuilder>
+          com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint, com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.Builder, com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpointOrBuilder> 
           getWifiScanResultFieldBuilder() {
         if (wifiScanResultBuilder_ == null) {
           wifiScanResultBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
-              wifi_endpoint, wifi_endpoint.Builder, wifi_endpointOrBuilder>(
+              com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint, com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.Builder, com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpointOrBuilder>(
                   wifiScanResult_,
                   ((bitField0_ & 0x00000800) == 0x00000800),
                   getParentForChildren(),
@@ -4628,7 +4628,7 @@ public final class SenseCommandProtos {
       }
 
       // optional .wifi_endpoint.sec_type security_type = 15;
-      private wifi_endpoint.sec_type securityType_ = wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
+      private com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type securityType_ = com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
       /**
        * <code>optional .wifi_endpoint.sec_type security_type = 15;</code>
        */
@@ -4638,13 +4638,13 @@ public final class SenseCommandProtos {
       /**
        * <code>optional .wifi_endpoint.sec_type security_type = 15;</code>
        */
-      public wifi_endpoint.sec_type getSecurityType() {
+      public com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type getSecurityType() {
         return securityType_;
       }
       /**
        * <code>optional .wifi_endpoint.sec_type security_type = 15;</code>
        */
-      public Builder setSecurityType(wifi_endpoint.sec_type value) {
+      public Builder setSecurityType(com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type value) {
         if (value == null) {
           throw new NullPointerException();
         }
@@ -4658,15 +4658,15 @@ public final class SenseCommandProtos {
        */
       public Builder clearSecurityType() {
         bitField0_ = (bitField0_ & ~0x00001000);
-        securityType_ = wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
+        securityType_ = com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
         onChanged();
         return this;
       }
 
       // optional .pill_data pill_data = 16;
-      private pill_data pillData_ = pill_data.getDefaultInstance();
+      private com.hello.suripu.api.ble.SenseCommandProtos.pill_data pillData_ = com.hello.suripu.api.ble.SenseCommandProtos.pill_data.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
-          pill_data, pill_data.Builder, pill_dataOrBuilder> pillDataBuilder_;
+          com.hello.suripu.api.ble.SenseCommandProtos.pill_data, com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder, com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder> pillDataBuilder_;
       /**
        * <code>optional .pill_data pill_data = 16;</code>
        */
@@ -4676,7 +4676,7 @@ public final class SenseCommandProtos {
       /**
        * <code>optional .pill_data pill_data = 16;</code>
        */
-      public pill_data getPillData() {
+      public com.hello.suripu.api.ble.SenseCommandProtos.pill_data getPillData() {
         if (pillDataBuilder_ == null) {
           return pillData_;
         } else {
@@ -4686,7 +4686,7 @@ public final class SenseCommandProtos {
       /**
        * <code>optional .pill_data pill_data = 16;</code>
        */
-      public Builder setPillData(pill_data value) {
+      public Builder setPillData(com.hello.suripu.api.ble.SenseCommandProtos.pill_data value) {
         if (pillDataBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -4703,7 +4703,7 @@ public final class SenseCommandProtos {
        * <code>optional .pill_data pill_data = 16;</code>
        */
       public Builder setPillData(
-          pill_data.Builder builderForValue) {
+          com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder builderForValue) {
         if (pillDataBuilder_ == null) {
           pillData_ = builderForValue.build();
           onChanged();
@@ -4716,12 +4716,12 @@ public final class SenseCommandProtos {
       /**
        * <code>optional .pill_data pill_data = 16;</code>
        */
-      public Builder mergePillData(pill_data value) {
+      public Builder mergePillData(com.hello.suripu.api.ble.SenseCommandProtos.pill_data value) {
         if (pillDataBuilder_ == null) {
           if (((bitField0_ & 0x00002000) == 0x00002000) &&
-              pillData_ != pill_data.getDefaultInstance()) {
+              pillData_ != com.hello.suripu.api.ble.SenseCommandProtos.pill_data.getDefaultInstance()) {
             pillData_ =
-              pill_data.newBuilder(pillData_).mergeFrom(value).buildPartial();
+              com.hello.suripu.api.ble.SenseCommandProtos.pill_data.newBuilder(pillData_).mergeFrom(value).buildPartial();
           } else {
             pillData_ = value;
           }
@@ -4737,7 +4737,7 @@ public final class SenseCommandProtos {
        */
       public Builder clearPillData() {
         if (pillDataBuilder_ == null) {
-          pillData_ = pill_data.getDefaultInstance();
+          pillData_ = com.hello.suripu.api.ble.SenseCommandProtos.pill_data.getDefaultInstance();
           onChanged();
         } else {
           pillDataBuilder_.clear();
@@ -4748,7 +4748,7 @@ public final class SenseCommandProtos {
       /**
        * <code>optional .pill_data pill_data = 16;</code>
        */
-      public pill_data.Builder getPillDataBuilder() {
+      public com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder getPillDataBuilder() {
         bitField0_ |= 0x00002000;
         onChanged();
         return getPillDataFieldBuilder().getBuilder();
@@ -4756,7 +4756,7 @@ public final class SenseCommandProtos {
       /**
        * <code>optional .pill_data pill_data = 16;</code>
        */
-      public pill_dataOrBuilder getPillDataOrBuilder() {
+      public com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder getPillDataOrBuilder() {
         if (pillDataBuilder_ != null) {
           return pillDataBuilder_.getMessageOrBuilder();
         } else {
@@ -4767,11 +4767,11 @@ public final class SenseCommandProtos {
        * <code>optional .pill_data pill_data = 16;</code>
        */
       private com.google.protobuf.SingleFieldBuilder<
-          pill_data, pill_data.Builder, pill_dataOrBuilder>
+          com.hello.suripu.api.ble.SenseCommandProtos.pill_data, com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder, com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder> 
           getPillDataFieldBuilder() {
         if (pillDataBuilder_ == null) {
           pillDataBuilder_ = new com.google.protobuf.SingleFieldBuilder<
-              pill_data, pill_data.Builder, pill_dataOrBuilder>(
+              com.hello.suripu.api.ble.SenseCommandProtos.pill_data, com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder, com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder>(
                   pillData_,
                   getParentForChildren(),
                   isClean());
@@ -4781,7 +4781,7 @@ public final class SenseCommandProtos {
       }
 
       // optional .wifi_connection_state wifi_connection_state = 17;
-      private wifi_connection_state wifiConnectionState_ = wifi_connection_state.NO_WLAN_CONNECTED;
+      private com.hello.suripu.api.ble.SenseCommandProtos.wifi_connection_state wifiConnectionState_ = com.hello.suripu.api.ble.SenseCommandProtos.wifi_connection_state.NO_WLAN_CONNECTED;
       /**
        * <code>optional .wifi_connection_state wifi_connection_state = 17;</code>
        */
@@ -4791,13 +4791,13 @@ public final class SenseCommandProtos {
       /**
        * <code>optional .wifi_connection_state wifi_connection_state = 17;</code>
        */
-      public wifi_connection_state getWifiConnectionState() {
+      public com.hello.suripu.api.ble.SenseCommandProtos.wifi_connection_state getWifiConnectionState() {
         return wifiConnectionState_;
       }
       /**
        * <code>optional .wifi_connection_state wifi_connection_state = 17;</code>
        */
-      public Builder setWifiConnectionState(wifi_connection_state value) {
+      public Builder setWifiConnectionState(com.hello.suripu.api.ble.SenseCommandProtos.wifi_connection_state value) {
         if (value == null) {
           throw new NullPointerException();
         }
@@ -4811,7 +4811,7 @@ public final class SenseCommandProtos {
        */
       public Builder clearWifiConnectionState() {
         bitField0_ = (bitField0_ & ~0x00004000);
-        wifiConnectionState_ = wifi_connection_state.NO_WLAN_CONNECTED;
+        wifiConnectionState_ = com.hello.suripu.api.ble.SenseCommandProtos.wifi_connection_state.NO_WLAN_CONNECTED;
         onChanged();
         return this;
       }
@@ -4834,12 +4834,12 @@ public final class SenseCommandProtos {
     /**
      * <code>repeated .pill_data pills = 1;</code>
      */
-    java.util.List<pill_data>
+    java.util.List<com.hello.suripu.api.ble.SenseCommandProtos.pill_data> 
         getPillsList();
     /**
      * <code>repeated .pill_data pills = 1;</code>
      */
-    pill_data getPills(int index);
+    com.hello.suripu.api.ble.SenseCommandProtos.pill_data getPills(int index);
     /**
      * <code>repeated .pill_data pills = 1;</code>
      */
@@ -4847,13 +4847,13 @@ public final class SenseCommandProtos {
     /**
      * <code>repeated .pill_data pills = 1;</code>
      */
-    java.util.List<? extends pill_dataOrBuilder>
+    java.util.List<? extends com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder> 
         getPillsOrBuilderList();
     /**
      * <code>repeated .pill_data pills = 1;</code>
      */
-    pill_dataOrBuilder getPillsOrBuilder(
-            int index);
+    com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder getPillsOrBuilder(
+        int index);
 
     // required string device_id = 2;
     /**
@@ -4863,7 +4863,7 @@ public final class SenseCommandProtos {
     /**
      * <code>required string device_id = 2;</code>
      */
-    String getDeviceId();
+    java.lang.String getDeviceId();
     /**
      * <code>required string device_id = 2;</code>
      */
@@ -4893,7 +4893,7 @@ public final class SenseCommandProtos {
     }
 
     private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @Override
+    @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
         getUnknownFields() {
       return this.unknownFields;
@@ -4923,10 +4923,10 @@ public final class SenseCommandProtos {
             }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                pills_ = new java.util.ArrayList<pill_data>();
+                pills_ = new java.util.ArrayList<com.hello.suripu.api.ble.SenseCommandProtos.pill_data>();
                 mutable_bitField0_ |= 0x00000001;
               }
-              pills_.add(input.readMessage(pill_data.PARSER, extensionRegistry));
+              pills_.add(input.readMessage(com.hello.suripu.api.ble.SenseCommandProtos.pill_data.PARSER, extensionRegistry));
               break;
             }
             case 18: {
@@ -4951,14 +4951,14 @@ public final class SenseCommandProtos {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return SenseCommandProtos.internal_static_batched_pill_data_descriptor;
+      return com.hello.suripu.api.ble.SenseCommandProtos.internal_static_batched_pill_data_descriptor;
     }
 
-    protected FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return SenseCommandProtos.internal_static_batched_pill_data_fieldAccessorTable
+      return com.hello.suripu.api.ble.SenseCommandProtos.internal_static_batched_pill_data_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              batched_pill_data.class, Builder.class);
+              com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data.class, com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data.Builder.class);
     }
 
     public static com.google.protobuf.Parser<batched_pill_data> PARSER =
@@ -4971,7 +4971,7 @@ public final class SenseCommandProtos {
       }
     };
 
-    @Override
+    @java.lang.Override
     public com.google.protobuf.Parser<batched_pill_data> getParserForType() {
       return PARSER;
     }
@@ -4979,17 +4979,17 @@ public final class SenseCommandProtos {
     private int bitField0_;
     // repeated .pill_data pills = 1;
     public static final int PILLS_FIELD_NUMBER = 1;
-    private java.util.List<pill_data> pills_;
+    private java.util.List<com.hello.suripu.api.ble.SenseCommandProtos.pill_data> pills_;
     /**
      * <code>repeated .pill_data pills = 1;</code>
      */
-    public java.util.List<pill_data> getPillsList() {
+    public java.util.List<com.hello.suripu.api.ble.SenseCommandProtos.pill_data> getPillsList() {
       return pills_;
     }
     /**
      * <code>repeated .pill_data pills = 1;</code>
      */
-    public java.util.List<? extends pill_dataOrBuilder>
+    public java.util.List<? extends com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder> 
         getPillsOrBuilderList() {
       return pills_;
     }
@@ -5002,20 +5002,20 @@ public final class SenseCommandProtos {
     /**
      * <code>repeated .pill_data pills = 1;</code>
      */
-    public pill_data getPills(int index) {
+    public com.hello.suripu.api.ble.SenseCommandProtos.pill_data getPills(int index) {
       return pills_.get(index);
     }
     /**
      * <code>repeated .pill_data pills = 1;</code>
      */
-    public pill_dataOrBuilder getPillsOrBuilder(
+    public com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder getPillsOrBuilder(
         int index) {
       return pills_.get(index);
     }
 
     // required string device_id = 2;
     public static final int DEVICE_ID_FIELD_NUMBER = 2;
-    private Object deviceId_;
+    private java.lang.Object deviceId_;
     /**
      * <code>required string device_id = 2;</code>
      */
@@ -5025,14 +5025,14 @@ public final class SenseCommandProtos {
     /**
      * <code>required string device_id = 2;</code>
      */
-    public String getDeviceId() {
-      Object ref = deviceId_;
-      if (ref instanceof String) {
-        return (String) ref;
+    public java.lang.String getDeviceId() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        String s = bs.toStringUtf8();
+        java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           deviceId_ = s;
         }
@@ -5044,11 +5044,11 @@ public final class SenseCommandProtos {
      */
     public com.google.protobuf.ByteString
         getDeviceIdBytes() {
-      Object ref = deviceId_;
-      if (ref instanceof String) {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (String) ref);
+                (java.lang.String) ref);
         deviceId_ = b;
         return b;
       } else {
@@ -5111,59 +5111,59 @@ public final class SenseCommandProtos {
     }
 
     private static final long serialVersionUID = 0L;
-    @Override
-    protected Object writeReplace()
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
         throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
 
-    public static batched_pill_data parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static batched_pill_data parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static batched_pill_data parseFrom(byte[] data)
+    public static com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static batched_pill_data parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static batched_pill_data parseFrom(java.io.InputStream input)
+    public static com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static batched_pill_data parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseFrom(input, extensionRegistry);
     }
-    public static batched_pill_data parseDelimitedFrom(java.io.InputStream input)
+    public static com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input);
     }
-    public static batched_pill_data parseDelimitedFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
-    public static batched_pill_data parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static batched_pill_data parseFrom(
+    public static com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -5172,14 +5172,14 @@ public final class SenseCommandProtos {
 
     public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(batched_pill_data prototype) {
+    public static Builder newBuilder(com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data prototype) {
       return newBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() { return newBuilder(this); }
 
-    @Override
+    @java.lang.Override
     protected Builder newBuilderForType(
-        BuilderParent parent) {
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -5188,17 +5188,17 @@ public final class SenseCommandProtos {
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements batched_pill_dataOrBuilder {
+       implements com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_dataOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return SenseCommandProtos.internal_static_batched_pill_data_descriptor;
+        return com.hello.suripu.api.ble.SenseCommandProtos.internal_static_batched_pill_data_descriptor;
       }
 
-      protected FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return SenseCommandProtos.internal_static_batched_pill_data_fieldAccessorTable
+        return com.hello.suripu.api.ble.SenseCommandProtos.internal_static_batched_pill_data_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                batched_pill_data.class, Builder.class);
+                com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data.class, com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data.Builder.class);
       }
 
       // Construct using com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data.newBuilder()
@@ -5207,7 +5207,7 @@ public final class SenseCommandProtos {
       }
 
       private Builder(
-          BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
@@ -5239,23 +5239,23 @@ public final class SenseCommandProtos {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return SenseCommandProtos.internal_static_batched_pill_data_descriptor;
+        return com.hello.suripu.api.ble.SenseCommandProtos.internal_static_batched_pill_data_descriptor;
       }
 
-      public batched_pill_data getDefaultInstanceForType() {
-        return batched_pill_data.getDefaultInstance();
+      public com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data getDefaultInstanceForType() {
+        return com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data.getDefaultInstance();
       }
 
-      public batched_pill_data build() {
-        batched_pill_data result = buildPartial();
+      public com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data build() {
+        com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public batched_pill_data buildPartial() {
-        batched_pill_data result = new batched_pill_data(this);
+      public com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data buildPartial() {
+        com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data result = new com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (pillsBuilder_ == null) {
@@ -5277,16 +5277,16 @@ public final class SenseCommandProtos {
       }
 
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof batched_pill_data) {
-          return mergeFrom((batched_pill_data)other);
+        if (other instanceof com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data) {
+          return mergeFrom((com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(batched_pill_data other) {
-        if (other == batched_pill_data.getDefaultInstance()) return this;
+      public Builder mergeFrom(com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data other) {
+        if (other == com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data.getDefaultInstance()) return this;
         if (pillsBuilder_ == null) {
           if (!other.pills_.isEmpty()) {
             if (pills_.isEmpty()) {
@@ -5340,11 +5340,11 @@ public final class SenseCommandProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        batched_pill_data parsedMessage = null;
+        com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (batched_pill_data) e.getUnfinishedMessage();
+          parsedMessage = (com.hello.suripu.api.ble.SenseCommandProtos.batched_pill_data) e.getUnfinishedMessage();
           throw e;
         } finally {
           if (parsedMessage != null) {
@@ -5356,22 +5356,22 @@ public final class SenseCommandProtos {
       private int bitField0_;
 
       // repeated .pill_data pills = 1;
-      private java.util.List<pill_data> pills_ =
+      private java.util.List<com.hello.suripu.api.ble.SenseCommandProtos.pill_data> pills_ =
         java.util.Collections.emptyList();
       private void ensurePillsIsMutable() {
         if (!((bitField0_ & 0x00000001) == 0x00000001)) {
-          pills_ = new java.util.ArrayList<pill_data>(pills_);
+          pills_ = new java.util.ArrayList<com.hello.suripu.api.ble.SenseCommandProtos.pill_data>(pills_);
           bitField0_ |= 0x00000001;
          }
       }
 
       private com.google.protobuf.RepeatedFieldBuilder<
-          pill_data, pill_data.Builder, pill_dataOrBuilder> pillsBuilder_;
+          com.hello.suripu.api.ble.SenseCommandProtos.pill_data, com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder, com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder> pillsBuilder_;
 
       /**
        * <code>repeated .pill_data pills = 1;</code>
        */
-      public java.util.List<pill_data> getPillsList() {
+      public java.util.List<com.hello.suripu.api.ble.SenseCommandProtos.pill_data> getPillsList() {
         if (pillsBuilder_ == null) {
           return java.util.Collections.unmodifiableList(pills_);
         } else {
@@ -5391,7 +5391,7 @@ public final class SenseCommandProtos {
       /**
        * <code>repeated .pill_data pills = 1;</code>
        */
-      public pill_data getPills(int index) {
+      public com.hello.suripu.api.ble.SenseCommandProtos.pill_data getPills(int index) {
         if (pillsBuilder_ == null) {
           return pills_.get(index);
         } else {
@@ -5402,7 +5402,7 @@ public final class SenseCommandProtos {
        * <code>repeated .pill_data pills = 1;</code>
        */
       public Builder setPills(
-          int index, pill_data value) {
+          int index, com.hello.suripu.api.ble.SenseCommandProtos.pill_data value) {
         if (pillsBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -5419,7 +5419,7 @@ public final class SenseCommandProtos {
        * <code>repeated .pill_data pills = 1;</code>
        */
       public Builder setPills(
-          int index, pill_data.Builder builderForValue) {
+          int index, com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder builderForValue) {
         if (pillsBuilder_ == null) {
           ensurePillsIsMutable();
           pills_.set(index, builderForValue.build());
@@ -5432,7 +5432,7 @@ public final class SenseCommandProtos {
       /**
        * <code>repeated .pill_data pills = 1;</code>
        */
-      public Builder addPills(pill_data value) {
+      public Builder addPills(com.hello.suripu.api.ble.SenseCommandProtos.pill_data value) {
         if (pillsBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -5449,7 +5449,7 @@ public final class SenseCommandProtos {
        * <code>repeated .pill_data pills = 1;</code>
        */
       public Builder addPills(
-          int index, pill_data value) {
+          int index, com.hello.suripu.api.ble.SenseCommandProtos.pill_data value) {
         if (pillsBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -5466,7 +5466,7 @@ public final class SenseCommandProtos {
        * <code>repeated .pill_data pills = 1;</code>
        */
       public Builder addPills(
-          pill_data.Builder builderForValue) {
+          com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder builderForValue) {
         if (pillsBuilder_ == null) {
           ensurePillsIsMutable();
           pills_.add(builderForValue.build());
@@ -5480,7 +5480,7 @@ public final class SenseCommandProtos {
        * <code>repeated .pill_data pills = 1;</code>
        */
       public Builder addPills(
-          int index, pill_data.Builder builderForValue) {
+          int index, com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder builderForValue) {
         if (pillsBuilder_ == null) {
           ensurePillsIsMutable();
           pills_.add(index, builderForValue.build());
@@ -5494,7 +5494,7 @@ public final class SenseCommandProtos {
        * <code>repeated .pill_data pills = 1;</code>
        */
       public Builder addAllPills(
-          Iterable<? extends pill_data> values) {
+          java.lang.Iterable<? extends com.hello.suripu.api.ble.SenseCommandProtos.pill_data> values) {
         if (pillsBuilder_ == null) {
           ensurePillsIsMutable();
           super.addAll(values, pills_);
@@ -5533,14 +5533,14 @@ public final class SenseCommandProtos {
       /**
        * <code>repeated .pill_data pills = 1;</code>
        */
-      public pill_data.Builder getPillsBuilder(
+      public com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder getPillsBuilder(
           int index) {
         return getPillsFieldBuilder().getBuilder(index);
       }
       /**
        * <code>repeated .pill_data pills = 1;</code>
        */
-      public pill_dataOrBuilder getPillsOrBuilder(
+      public com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder getPillsOrBuilder(
           int index) {
         if (pillsBuilder_ == null) {
           return pills_.get(index);  } else {
@@ -5550,7 +5550,7 @@ public final class SenseCommandProtos {
       /**
        * <code>repeated .pill_data pills = 1;</code>
        */
-      public java.util.List<? extends pill_dataOrBuilder>
+      public java.util.List<? extends com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder> 
            getPillsOrBuilderList() {
         if (pillsBuilder_ != null) {
           return pillsBuilder_.getMessageOrBuilderList();
@@ -5561,31 +5561,31 @@ public final class SenseCommandProtos {
       /**
        * <code>repeated .pill_data pills = 1;</code>
        */
-      public pill_data.Builder addPillsBuilder() {
+      public com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder addPillsBuilder() {
         return getPillsFieldBuilder().addBuilder(
-            pill_data.getDefaultInstance());
+            com.hello.suripu.api.ble.SenseCommandProtos.pill_data.getDefaultInstance());
       }
       /**
        * <code>repeated .pill_data pills = 1;</code>
        */
-      public pill_data.Builder addPillsBuilder(
+      public com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder addPillsBuilder(
           int index) {
         return getPillsFieldBuilder().addBuilder(
-            index, pill_data.getDefaultInstance());
+            index, com.hello.suripu.api.ble.SenseCommandProtos.pill_data.getDefaultInstance());
       }
       /**
        * <code>repeated .pill_data pills = 1;</code>
        */
-      public java.util.List<pill_data.Builder>
+      public java.util.List<com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder> 
            getPillsBuilderList() {
         return getPillsFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilder<
-          pill_data, pill_data.Builder, pill_dataOrBuilder>
+          com.hello.suripu.api.ble.SenseCommandProtos.pill_data, com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder, com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder> 
           getPillsFieldBuilder() {
         if (pillsBuilder_ == null) {
           pillsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
-              pill_data, pill_data.Builder, pill_dataOrBuilder>(
+              com.hello.suripu.api.ble.SenseCommandProtos.pill_data, com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder, com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder>(
                   pills_,
                   ((bitField0_ & 0x00000001) == 0x00000001),
                   getParentForChildren(),
@@ -5596,7 +5596,7 @@ public final class SenseCommandProtos {
       }
 
       // required string device_id = 2;
-      private Object deviceId_ = "";
+      private java.lang.Object deviceId_ = "";
       /**
        * <code>required string device_id = 2;</code>
        */
@@ -5606,15 +5606,15 @@ public final class SenseCommandProtos {
       /**
        * <code>required string device_id = 2;</code>
        */
-      public String getDeviceId() {
-        Object ref = deviceId_;
-        if (!(ref instanceof String)) {
-          String s = ((com.google.protobuf.ByteString) ref)
+      public java.lang.String getDeviceId() {
+        java.lang.Object ref = deviceId_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           deviceId_ = s;
           return s;
         } else {
-          return (String) ref;
+          return (java.lang.String) ref;
         }
       }
       /**
@@ -5622,11 +5622,11 @@ public final class SenseCommandProtos {
        */
       public com.google.protobuf.ByteString
           getDeviceIdBytes() {
-        Object ref = deviceId_;
+        java.lang.Object ref = deviceId_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (String) ref);
+                  (java.lang.String) ref);
           deviceId_ = b;
           return b;
         } else {
@@ -5637,7 +5637,7 @@ public final class SenseCommandProtos {
        * <code>required string device_id = 2;</code>
        */
       public Builder setDeviceId(
-          String value) {
+          java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -5708,7 +5708,7 @@ public final class SenseCommandProtos {
   private static com.google.protobuf.Descriptors.FileDescriptor
       descriptor;
   static {
-    String[] descriptorData = {
+    java.lang.String[] descriptorData = {
       "\n\022morpheus_ble.proto\"\340\001\n\rwifi_endpoint\022\014" +
       "\n\004ssid\030\001 \002(\t\022\r\n\005bssid\030\002 \001(\014\022\014\n\004rssi\030\004 \002(" +
       "\005\022.\n\rsecurity_type\030\005 \002(\0162\027.wifi_endpoint" +
@@ -5773,25 +5773,25 @@ public final class SenseCommandProtos {
           internal_static_wifi_endpoint_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_wifi_endpoint_descriptor,
-              new String[] { "Ssid", "Bssid", "Rssi", "SecurityType", });
+              new java.lang.String[] { "Ssid", "Bssid", "Rssi", "SecurityType", });
           internal_static_pill_data_descriptor =
             getDescriptor().getMessageTypes().get(1);
           internal_static_pill_data_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_pill_data_descriptor,
-              new String[] { "DeviceId", "BatteryLevel", "Uptime", "MotionDataEntrypted", "FirmwareVersion", "Timestamp", });
+              new java.lang.String[] { "DeviceId", "BatteryLevel", "Uptime", "MotionDataEntrypted", "FirmwareVersion", "Timestamp", });
           internal_static_MorpheusCommand_descriptor =
             getDescriptor().getMessageTypes().get(2);
           internal_static_MorpheusCommand_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_MorpheusCommand_descriptor,
-              new String[] { "Version", "Type", "DeviceId", "AccountId", "Error", "WifiName", "WifiSSID", "WifiPassword", "BatteryLevel", "Uptime", "FirmwareVersion", "WifiScanResult", "SecurityType", "PillData", "WifiConnectionState", });
+              new java.lang.String[] { "Version", "Type", "DeviceId", "AccountId", "Error", "WifiName", "WifiSSID", "WifiPassword", "BatteryLevel", "Uptime", "FirmwareVersion", "WifiScanResult", "SecurityType", "PillData", "WifiConnectionState", });
           internal_static_batched_pill_data_descriptor =
             getDescriptor().getMessageTypes().get(3);
           internal_static_batched_pill_data_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_batched_pill_data_descriptor,
-              new String[] { "Pills", "DeviceId", });
+              new java.lang.String[] { "Pills", "DeviceId", });
           return null;
         }
       };
