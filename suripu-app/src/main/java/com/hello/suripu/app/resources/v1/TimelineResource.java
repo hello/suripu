@@ -152,13 +152,15 @@ public class TimelineResource extends BaseResource {
         if(sunrise.isPresent()) {
             final String sunriseMessage = Event.getMessage(Event.Type.SUNRISE, sunrise.get());
 
-
-            final Date expiration = new java.util.Date();
-            long msec = expiration.getTime();
-            msec += 1000 * 60 * 60; // 1 hour.
-            expiration.setTime(msec);
-            final URL url = s3.generatePresignedUrl(bucketName, "mario.mp3", expiration, HttpMethod.GET);
-            final SleepSegment.SoundInfo soundInfo = new SleepSegment.SoundInfo(url.toExternalForm(), 2000);
+            SleepSegment.SoundInfo soundInfo = null;
+            if(feature.userFeatureActive(FeatureFlipper.SOUND_INFO_TIMELINE, accessToken.accountId, new ArrayList<String>())) {
+                final Date expiration = new java.util.Date();
+                long msec = expiration.getTime();
+                msec += 1000 * 60 * 60; // 1 hour.
+                expiration.setTime(msec);
+                final URL url = s3.generatePresignedUrl(bucketName, "mario.mp3", expiration, HttpMethod.GET);
+                soundInfo = new SleepSegment.SoundInfo(url.toExternalForm(), 2000);
+            }
 
             final SleepSegment sunriseSegment = new SleepSegment(1L, sunrise.get().getMillis(), 0, 60, -1, Event.Type.SUNRISE, sunriseMessage, new ArrayList<SensorReading>(), soundInfo);
 //            final SleepSegment audioSleepSegment = new SleepSegment(99L, sunrise.get().plusMinutes(5).getMillis(), 0, 60, -1, Event.Type.SNORING, "ZzZzZzZzZ", new ArrayList<SensorReading>(), soundInfo);
