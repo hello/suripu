@@ -137,7 +137,7 @@ public class AudioResource extends BaseResource {
         final String objectName = String.format("%s_%s", message.getDeviceId(), message.getUnixTime());
 
         final ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentLength(body.length);
+        metadata.setContentLength(message.toByteArray().length);
 
         s3Client.putObject(audioBucketName, objectName, byteArrayInputStream, metadata);
         try {
