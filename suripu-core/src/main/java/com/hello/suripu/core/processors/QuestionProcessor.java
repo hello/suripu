@@ -43,7 +43,7 @@ public class QuestionProcessor {
     private final QuestionResponseDAO questionResponseDAO;
     private final int checkSkipsNum;
 
-    private final ListMultimap<Question.FREQUENCY, Question> availableQuestions;
+    private final ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds;
     private final Map<Integer, Question> questionIdMap;
     private final Set<Integer> baseQuestionIds = new HashSet<>();
 
@@ -51,12 +51,12 @@ public class QuestionProcessor {
         this.questionResponseDAO = questionResponseDAO;
         this.checkSkipsNum = checkSkipsNum;
 
-        this.availableQuestions = ArrayListMultimap.create();
+        this.availableQuestionIds = ArrayListMultimap.create();
         this.questionIdMap = new HashMap<>();
 
         final ImmutableList<Question> allQuestions = this.questionResponseDAO.getAllQuestions();
         for (final Question question : allQuestions) {
-            this.availableQuestions.put(question.frequency, question);
+            this.availableQuestionIds.put(question.frequency, question.id);
             this.questionIdMap.put(question.id, question);
             if (question.frequency == Question.FREQUENCY.ONE_TIME) {
                 baseQuestionIds.add(question.id);
@@ -201,11 +201,11 @@ public class QuestionProcessor {
         addedIds.addAll(this.getUserAnsweredQuestionIds(accountId));
 
         // always include the ONE daily calibration question, most important Q has lower id
-        final Question question = this.availableQuestions.get(Question.FREQUENCY.DAILY).get(0);
-        addedIds.add(question.id);
-        final Long savedID = this.saveGeneratedQuestion(accountId, question.id, today);
+        final Integer questionId = this.availableQuestionIds.get(Question.FREQUENCY.DAILY).get(0);
+        addedIds.add(questionId);
+        final Long savedID = this.saveGeneratedQuestion(accountId, questionId, today);
         if (savedID > 0L) {
-            questions.add(Question.withAskTimeAccountQId(question, savedID, today));
+            questions.add(Question.withAskTimeAccountQId(this.questionIdMap.get(questionId), savedID, today));
         }
 
         // pick some base question, check if we already got responses from all
@@ -292,8 +292,11 @@ public class QuestionProcessor {
         final Set<Integer> addedIds = new HashSet<>();
         addedIds.addAll(seenIds);
 
-        List<Question> questionsPool = this.availableQuestions.get(questionType);
+        final List<Integer> questionsPool = new ArrayList<>();
+        questionsPool.addAll(this.availableQuestionIds.get(questionType));
+        questionsPool.removeAll(seenIds);
         int poolSize = questionsPool.size();
+        final int originalPoolSize = poolSize;
 
         int loop = 0;
 
@@ -301,18 +304,24 @@ public class QuestionProcessor {
 
         while (questions.size() < numQuestions) {
             final int qid = rnd.nextInt(poolSize); // next random question
-            final Question question = questionsPool.get(qid);
+            final Question question = this.questionIdMap.get(questionsPool.get(qid));
 
             if (!addedIds.contains(question.id)) {
                 addedIds.add(question.id);
                 final Long savedId = this.saveGeneratedQuestion(accountId, question.id, today);
                 if (savedId > 0L) {
                     questions.add(Question.withAskTimeAccountQId(question, savedId, today));
+                    questionsPool.remove(qid);
+                    poolSize--;
                 }
             }
 
+            if (poolSize == 0) {
+                break;
+            }
+
             loop++;
-            if (loop >= poolSize) {
+            if (loop >= originalPoolSize) {
                 break;
             }
         }

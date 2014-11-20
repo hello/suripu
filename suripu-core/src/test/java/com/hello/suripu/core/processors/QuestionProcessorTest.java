@@ -37,7 +37,7 @@ public class QuestionProcessorTest {
 
     @Before
     public void setUp() {
-        final List<Question> questions = this.getQuestions();
+        final List<Question> questions = this.getMockQuestions();
 
         final QuestionResponseDAO questionResponseDAO = mock(QuestionResponseDAO.class);
 
@@ -57,10 +57,19 @@ public class QuestionProcessorTest {
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10000, today, today.plusDays(1))).thenReturn(15L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10002, today, today.plusDays(1))).thenReturn(16L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10003, today, today.plusDays(1))).thenReturn(17L);
+
+        final List<Integer> answeredIds = new ArrayList<>();
+        answeredIds.add(5);
+        answeredIds.add(4);
+        answeredIds.add(1);
+        answeredIds.add(2);
+        final DateTime oneWeekAgo = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(7);
+        when(questionResponseDAO.getBaseAndRecentAnsweredQuestionIds(ACCOUNT_ID_PASS, 10000, oneWeekAgo)).thenReturn(answeredIds);
+
         questionProcessor = new QuestionProcessor(questionResponseDAO, CHECK_SKIP_NUM);
     }
 
-    private List<Question> getQuestions() {
+    private List<Question> getMockQuestions() {
         final List<Question> questions = new ArrayList<>();
 
         final DateTime now = DateTime.now(DateTimeZone.UTC);
@@ -171,7 +180,7 @@ public class QuestionProcessorTest {
     }
 
     @Test
-    public void getOnBoardingQuestions() {
+    public void testGetOnBoardingQuestions() {
         final int accountAge = 0; // zero-days
         final List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, 2);
 
@@ -184,7 +193,7 @@ public class QuestionProcessorTest {
     }
 
     @Test
-    public void getNewbieQuestions() {
+    public void testGetNewbieQuestions() {
         // expects one base and one calibration if asking for two
         final int accountAge = 2;
         int numQ = 2;
@@ -218,7 +227,7 @@ public class QuestionProcessorTest {
                 foundCalibrationQ = true;
             }
         }
-        assertThat(countBaseQ, is(2));
+        assertThat(countBaseQ, is(1));
         assertThat(foundCalibrationQ, is(true));
 
         // get 7, should include one ongoing question
@@ -243,7 +252,28 @@ public class QuestionProcessorTest {
     }
 
     @Test
-    public void testOnBoardingQuestion() {
+    public void testGetOldieQuestions() {
+        final int accountAge = 2;
+        int numQ = 2;
+        List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ);
+        assertThat(questions.size(), is(numQ));
+
+        boolean foundBaseQ = false;
+        boolean foundCalibrationQ = false;
+        for (int i = 0; i < questions.size(); i++) {
+            final Question.FREQUENCY qfreq = questions.get(i).frequency;
+            if (qfreq == Question.FREQUENCY.ONE_TIME) {
+                foundBaseQ = true;
+            } else if (qfreq == Question.FREQUENCY.DAILY) {
+                foundCalibrationQ = true;
+            }
+        }
+        assertThat(foundBaseQ, is(true));
+        assertThat(foundCalibrationQ, is(true));
+    }
+
+    @Test
+    public void testSkips() {
 
     }
 
