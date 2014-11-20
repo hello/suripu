@@ -132,7 +132,7 @@ public class TimelineResource extends BaseResource {
             extraSegments.add(sleepTimeSegment.get());
         }
 
-        if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION_PANG, accessToken.accountId, new ArrayList<String>())) {
+        if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION, accessToken.accountId, new ArrayList<String>())) {
             // A day starts with 8pm local time and ends with 4pm local time next day
             final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions, 20, 16);
             final int smoothWindowSize = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  //TODO: make it configable.
