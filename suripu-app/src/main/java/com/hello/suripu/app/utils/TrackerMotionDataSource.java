@@ -78,7 +78,10 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
                                        final int dataIntervalMillis, final double defaultValue,
                                        final int timezoneOffset) {
         final long gapInterval = gapEndTimestamp - gapStartTimestamp;
-        final int insertCount = (int)(gapInterval / dataIntervalMillis);
+        int insertCount = (int)(gapInterval / dataIntervalMillis);
+        if(gapInterval % dataIntervalMillis == 0){
+            insertCount--;
+        }
 
         final ArrayList<AmplitudeData> insertData = new ArrayList<>();
         for(int i = 0; i < insertCount; i++){
