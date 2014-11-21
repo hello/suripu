@@ -134,7 +134,7 @@ public class TimelineResource extends BaseResource {
 
 
         final ArrayList<SleepSegment> segmentsNotToMerge = new ArrayList<>();
-        if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION, accessToken.accountId, new ArrayList<String>())) {
+        if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION_FROM_AWAKE, accessToken.accountId, new ArrayList<String>())) {
             // A day starts with 8pm local time and ends with 4pm local time next day
             final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions, 20, 16);
             final int smoothWindowSize = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  //TODO: make it configable.
@@ -148,7 +148,7 @@ public class TimelineResource extends BaseResource {
                         segmentFromAwakeDetection.getOffsetMillis(),
                         60,
                         -1, Event.Type.SLEEP,
-                        "Sleep From Awake Detection Algorithm " +
+                        "Sleep(AD) " +
                                 new DateTime(segmentFromAwakeDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())),
                         new ArrayList<SensorReading>(), null);
 
@@ -157,13 +157,13 @@ public class TimelineResource extends BaseResource {
                         segmentFromAwakeDetection.getOffsetMillis(),
                         60,
                         -1, Event.Type.WAKE_UP,
-                        "Wakeup From Awake Detection Algorithm " +
+                        "Wake up(AD) " +
                                 new DateTime(segmentFromAwakeDetection.getEndTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())),
                         new ArrayList<SensorReading>(), null);
 
 
-                segmentsNotToMerge.add(sleepSegmentFromAwakeDetection);
-                segmentsNotToMerge.add(wakeupSegmentFromAwakeDetection);
+                extraSegments.add(sleepSegmentFromAwakeDetection);
+                extraSegments.add(wakeupSegmentFromAwakeDetection);
 
                 LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
                         new DateTime(segmentFromAwakeDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())),
@@ -171,6 +171,14 @@ public class TimelineResource extends BaseResource {
             }catch (Exception ex){
                 LOGGER.error("Generate sleep period from Awake Detection Algorithm failed: {}", ex.getMessage());
             }
+
+        }
+
+
+        if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION_FROM_QUIET, accessToken.accountId, new ArrayList<String>())) {
+            // A day starts with 8pm local time and ends with 4pm local time next day
+            final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions, 20, 16);
+            final int smoothWindowSize = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  //TODO: make it configable.
 
             final SleepDetectionAlgorithm quietPeriodDetectionAlgorithm = new QuietPeriodDetectionAlgorithm(dataSource, smoothWindowSize);
 
@@ -181,7 +189,7 @@ public class TimelineResource extends BaseResource {
                         segmentFromQuietPeriodDetection.getOffsetMillis(),
                         60,
                         -1, Event.Type.SLEEP,
-                        "Sleep From Quiet Period Detection Algorithm " +
+                        "Sleep(QPD) " +
                                 new DateTime(segmentFromQuietPeriodDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromQuietPeriodDetection.getOffsetMillis())),
                         new ArrayList<SensorReading>(), null);
 
@@ -190,13 +198,13 @@ public class TimelineResource extends BaseResource {
                         segmentFromQuietPeriodDetection.getOffsetMillis(),
                         60,
                         -1, Event.Type.WAKE_UP,
-                        "Wakeup From Quiet Period Detection Algorithm " +
+                        "Wake up(QPD) " +
                                 new DateTime(segmentFromQuietPeriodDetection.getEndTimestamp(), DateTimeZone.forOffsetMillis(segmentFromQuietPeriodDetection.getOffsetMillis())),
                         new ArrayList<SensorReading>(), null);
 
 
-                segmentsNotToMerge.add(sleepSegmentFromQuietPeriodDetection);
-                segmentsNotToMerge.add(wakeupSegmentFromQuietPeriodDetection);
+                extraSegments.add(sleepSegmentFromQuietPeriodDetection);
+                extraSegments.add(wakeupSegmentFromQuietPeriodDetection);
 
                 LOGGER.info("Sleep Time From Quiet Period Detection Algorithm: {} - {}",
                         new DateTime(segmentFromQuietPeriodDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromQuietPeriodDetection.getOffsetMillis())),
@@ -264,11 +272,6 @@ public class TimelineResource extends BaseResource {
         // merge similar segments (by motion & event-type), then categorize
 //        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(segments, mergeThreshold);
         final List<SleepSegment> mergedSegments = TimelineUtils.mergeByTimeBucket(segments, 15);
-
-        if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION, accessToken.accountId, new ArrayList<String>())) {
-            mergedSegments.addAll(segmentsNotToMerge);
-        }
-
         final SleepStats sleepStats = TimelineUtils.computeStats(mergedSegments);
         final List<SleepSegment> reversed = Lists.reverse(mergedSegments);
 
