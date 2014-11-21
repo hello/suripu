@@ -50,8 +50,38 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
             }
         }
 
+        // Pad an hour of empty data to front and rear.
+        final Map.Entry<List<AmplitudeData>, List<AmplitudeData>> pad = getPadData(this.dataAfterAutoInsert, 60,
+                DateTimeConstants.MILLIS_PER_MINUTE,
+                Math.sqrt(minAmplitude));
+        this.dataAfterAutoInsert.addAll(pad.getValue());
+        this.dataAfterAutoInsert.addAll(0, pad.getKey());
+
         this.startHourOfDay = startHourOfDay;
         this.endHourOfDay = endHourOfDay;
+    }
+
+    public static Map.Entry<List<AmplitudeData>, List<AmplitudeData>>
+        getPadData(final List<AmplitudeData> data, int padCount, int dataIntervalMS, double defaultValue){
+
+        final LinkedList<AmplitudeData> padFront = new LinkedList<>();
+        final LinkedList<AmplitudeData> padRear = new LinkedList<>();
+
+        if(data.size() > 0)
+        {
+            final AmplitudeData firstData = data.get(0);
+            final AmplitudeData lastData = data.get(data.size() - 1);
+
+            for(int i = 0; i < padCount; i++){
+                final AmplitudeData frontPad = new AmplitudeData(firstData.timestamp - dataIntervalMS * (i + 1), defaultValue, firstData.offsetMillis);
+                final AmplitudeData rearPad = new AmplitudeData(lastData.timestamp + dataIntervalMS * (i + 1), defaultValue, lastData.offsetMillis);
+                padFront.set(0, frontPad);
+                padRear.add(rearPad);
+            }
+        }
+
+        return new AbstractMap.SimpleEntry<List<AmplitudeData>, List<AmplitudeData>>(padFront, padRear);
+
     }
 
     public static long getMinAmplitude(final List<TrackerMotion> data){
