@@ -143,27 +143,30 @@ public class TimelineResource extends BaseResource {
 
             try {
                 final Segment segmentFromAwakeDetection = awakeDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay());
-                final SleepSegment sleepSegmentFromAwakeDetection = new SleepSegment(1L,
-                        segmentFromAwakeDetection.getStartTimestamp(),
-                        segmentFromAwakeDetection.getOffsetMillis(),
-                        60,
-                        -1, Event.Type.SLEEP,
-                        "Sleep(AD) " +
-                                new DateTime(segmentFromAwakeDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())),
-                        new ArrayList<SensorReading>(), null);
 
-                final SleepSegment wakeupSegmentFromAwakeDetection = new SleepSegment(1L,
-                        segmentFromAwakeDetection.getEndTimestamp(),
-                        segmentFromAwakeDetection.getOffsetMillis(),
-                        60,
-                        -1, Event.Type.WAKE_UP,
-                        "Wake up(AD) " +
-                                new DateTime(segmentFromAwakeDetection.getEndTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())),
-                        new ArrayList<SensorReading>(), null);
+                if(segmentFromAwakeDetection.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
+                    final SleepSegment sleepSegmentFromAwakeDetection = new SleepSegment(1L,
+                            segmentFromAwakeDetection.getStartTimestamp(),
+                            segmentFromAwakeDetection.getOffsetMillis(),
+                            60,
+                            -1, Event.Type.SLEEP,
+                            "Sleep(AD) " +
+                                    new DateTime(segmentFromAwakeDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())),
+                            new ArrayList<SensorReading>(), null);
+
+                    final SleepSegment wakeupSegmentFromAwakeDetection = new SleepSegment(1L,
+                            segmentFromAwakeDetection.getEndTimestamp(),
+                            segmentFromAwakeDetection.getOffsetMillis(),
+                            60,
+                            -1, Event.Type.WAKE_UP,
+                            "Wake up(AD) " +
+                                    new DateTime(segmentFromAwakeDetection.getEndTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())),
+                            new ArrayList<SensorReading>(), null);
 
 
-                extraSegments.add(sleepSegmentFromAwakeDetection);
-                extraSegments.add(wakeupSegmentFromAwakeDetection);
+                    extraSegments.add(sleepSegmentFromAwakeDetection);
+                    extraSegments.add(wakeupSegmentFromAwakeDetection);
+                }
 
                 LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
                         new DateTime(segmentFromAwakeDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())),
@@ -184,27 +187,30 @@ public class TimelineResource extends BaseResource {
 
             try {
                 final Segment segmentFromQuietPeriodDetection = quietPeriodDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay());
-                final SleepSegment sleepSegmentFromQuietPeriodDetection = new SleepSegment(1L,
-                        segmentFromQuietPeriodDetection.getStartTimestamp(),
-                        segmentFromQuietPeriodDetection.getOffsetMillis(),
-                        60,
-                        -1, Event.Type.SLEEP,
-                        "Sleep(QPD) " +
-                                new DateTime(segmentFromQuietPeriodDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromQuietPeriodDetection.getOffsetMillis())),
-                        new ArrayList<SensorReading>(), null);
 
-                final SleepSegment wakeupSegmentFromQuietPeriodDetection = new SleepSegment(1L,
-                        segmentFromQuietPeriodDetection.getEndTimestamp(),
-                        segmentFromQuietPeriodDetection.getOffsetMillis(),
-                        60,
-                        -1, Event.Type.WAKE_UP,
-                        "Wake up(QPD) " +
-                                new DateTime(segmentFromQuietPeriodDetection.getEndTimestamp(), DateTimeZone.forOffsetMillis(segmentFromQuietPeriodDetection.getOffsetMillis())),
-                        new ArrayList<SensorReading>(), null);
+                if(segmentFromQuietPeriodDetection.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
+                    final SleepSegment sleepSegmentFromQuietPeriodDetection = new SleepSegment(1L,
+                            segmentFromQuietPeriodDetection.getStartTimestamp(),
+                            segmentFromQuietPeriodDetection.getOffsetMillis(),
+                            60,
+                            -1, Event.Type.SLEEP,
+                            "Sleep(QPD) " +
+                                    new DateTime(segmentFromQuietPeriodDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromQuietPeriodDetection.getOffsetMillis())),
+                            new ArrayList<SensorReading>(), null);
+
+                    final SleepSegment wakeupSegmentFromQuietPeriodDetection = new SleepSegment(1L,
+                            segmentFromQuietPeriodDetection.getEndTimestamp(),
+                            segmentFromQuietPeriodDetection.getOffsetMillis(),
+                            60,
+                            -1, Event.Type.WAKE_UP,
+                            "Wake up(QPD) " +
+                                    new DateTime(segmentFromQuietPeriodDetection.getEndTimestamp(), DateTimeZone.forOffsetMillis(segmentFromQuietPeriodDetection.getOffsetMillis())),
+                            new ArrayList<SensorReading>(), null);
 
 
-                extraSegments.add(sleepSegmentFromQuietPeriodDetection);
-                extraSegments.add(wakeupSegmentFromQuietPeriodDetection);
+                    extraSegments.add(sleepSegmentFromQuietPeriodDetection);
+                    extraSegments.add(wakeupSegmentFromQuietPeriodDetection);
+                }
 
                 LOGGER.info("Sleep Time From Quiet Period Detection Algorithm: {} - {}",
                         new DateTime(segmentFromQuietPeriodDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromQuietPeriodDetection.getOffsetMillis())),

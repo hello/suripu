@@ -149,6 +149,9 @@ public class Event {
             case SLEEP:
                 eventMessage = "You fell asleep";
                 break;
+            case WAKE_UP:
+                eventMessage = "You woke up";
+                break;
             default:
                 return "";
         }
@@ -188,6 +191,9 @@ public class Event {
                 break;
             case SLEEP:
                 eventMessage = "You fell asleep";
+                break;
+            case WAKE_UP:
+                eventMessage = "You woke up";
                 break;
             default:
                 return "";
