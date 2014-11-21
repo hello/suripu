@@ -2,8 +2,11 @@ package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Objects;
+import com.hello.suripu.core.util.EventTypeSerializer;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 
 import java.util.Set;
@@ -71,6 +74,7 @@ public class Event {
     }
 
     @JsonProperty("event_type")
+    @JsonSerialize(using = EventTypeSerializer.class)
     public final Type type;
 
     @JsonProperty("start_timestamp")
@@ -80,22 +84,41 @@ public class Event {
     @JsonProperty("end_timestamp")
     public final long endTimestamp;
 
-    @JsonProperty("timezone_offset")
+    @JsonProperty("offset_millis")
     public final int timezoneOffset;
+
+    private String message = "";
 
     @JsonCreator
     public Event(
-
             @JsonProperty("event_type") final Type type,
             @JsonProperty("start_timestamp") final long startTimestamp,
             @JsonProperty("end_timestamp") final long endTimestamp,
-            @JsonProperty("timezone_offset") final int timezoneOffset
+            @JsonProperty("offset_millis") final int timezoneOffset
 
     ){
         this.type = type;
         this.startTimestamp = startTimestamp;
         this.endTimestamp = endTimestamp;
         this.timezoneOffset = timezoneOffset;
+        initDefaultMessage();
+    }
+
+
+    @JsonCreator
+    public Event(
+            @JsonProperty("event_type") final Type type,
+            @JsonProperty("start_timestamp") final long startTimestamp,
+            @JsonProperty("end_timestamp") final long endTimestamp,
+            @JsonProperty("message") final String message,
+            @JsonProperty("offset_millis") final int timezoneOffset
+
+    ){
+        this.type = type;
+        this.startTimestamp = startTimestamp;
+        this.endTimestamp = endTimestamp;
+        this.timezoneOffset = timezoneOffset;
+        this.message = message;
     }
 
     public static Type getHighPriorityEvents(final Set<Type> eventTypes) {
@@ -115,90 +138,79 @@ public class Event {
         return winner;
     }
 
-    public static String getMessage(final Type eventType, final DateTime dateTime) {
-        // TODO: words words words
-        final String eventMessage;
-        switch (eventType) {
-            case MOTION:
-                eventMessage = "We detected lots of movement";
-                break;
-            case SLEEP_MOTION:
-                eventMessage = "Movement detected";
-                break;
-            case PARTNER_MOTION:
-                eventMessage = "Your partner kicked you";
-                break;
-            case NOISE:
-                eventMessage = "Unusual sound detected";
-                break;
-            case SNORING:
-                eventMessage = "Snoring detected";
-                break;
-            case SLEEP_TALK:
-                eventMessage = "Sleep talking detected";
-                break;
-            case LIGHT:
-                eventMessage = "Unusual brightness detected";
-                break;
-            case SUNSET:
-                eventMessage = "The sun set";
-                break;
-            case SUNRISE:
-                eventMessage = "The sun rose";
-                break;
-            case SLEEP:
-                eventMessage = "You fell asleep";
-                break;
-            case WAKE_UP:
-                eventMessage = "You woke up";
-                break;
-            default:
-                return "";
-        }
-        return String.format("%s at %s", eventMessage, dateTime.toString(DateTimeFormat.forPattern("HH:mma")));
+    @JsonProperty("message")
+    public void setMessage(final String message) {
+        this.message = message;
     }
 
-    public static String getMessage(final Type eventType) {
+    @JsonProperty("message")
+    public String getMessage() {
+        return this.message;
+    }
+
+    private void initDefaultMessage() {
         // TODO: words words words
-        final String eventMessage;
-        switch (eventType) {
+
+        switch (this.type) {
             case MOTION:
-                eventMessage = "We detected lots of movement";
+                this.message = "We detected lots of movement";
                 break;
             case SLEEP_MOTION:
-                eventMessage = "Movement detected";
+                this.message = "Movement detected";
                 break;
             case PARTNER_MOTION:
-                eventMessage = "Your partner kicked you";
+                this.message = String.format("Your partner kicked you at %s",
+                        new DateTime(this.startTimestamp, DateTimeZone.forOffsetMillis(this.timezoneOffset))
+                                .toString(DateTimeFormat.forPattern("HH:mma")));
                 break;
             case NOISE:
-                eventMessage = "Unusual sound detected";
+                this.message = "Unusual sound detected";
                 break;
             case SNORING:
-                eventMessage = "Snoring detected";
+                this.message = "Snoring detected";
                 break;
             case SLEEP_TALK:
-                eventMessage = "Sleep talking detected";
+                this.message = "Sleep talking detected";
                 break;
             case LIGHT:
-                eventMessage = "Unusual brightness detected";
+                this.message = "Unusual brightness detected";
                 break;
             case SUNSET:
-                eventMessage = "The sun set";
+                this.message = String.format("The sun set at %s",
+                        new DateTime(this.startTimestamp, DateTimeZone.forOffsetMillis(this.timezoneOffset))
+                        .toString(DateTimeFormat.forPattern("HH:mma"))
+                );
                 break;
             case SUNRISE:
-                eventMessage = "The sun rose";
+                this.message = String.format("The sun rose at %s",
+                        new DateTime(this.startTimestamp, DateTimeZone.forOffsetMillis(this.timezoneOffset))
+                                .toString(DateTimeFormat.forPattern("HH:mma"))
+                );
                 break;
             case SLEEP:
-                eventMessage = "You fell asleep";
+                this.message = String.format("Fell asleep at %s",
+                        new DateTime(this.startTimestamp, DateTimeZone.forOffsetMillis(this.timezoneOffset))
+                                .toString(DateTimeFormat.forPattern("HH:mma"))
+                );
                 break;
             case WAKE_UP:
-                eventMessage = "You woke up";
+                this.message = String.format("Wake up at %s",
+                        new DateTime(this.startTimestamp, DateTimeZone.forOffsetMillis(this.timezoneOffset))
+                                .toString(DateTimeFormat.forPattern("HH:mma"))
+                );
                 break;
             default:
-                return "";
+                this.message = String.format("%s at %s",
+                        new DateTime(this.startTimestamp, DateTimeZone.forOffsetMillis(this.timezoneOffset))
+                                .toString(DateTimeFormat.forPattern("HH:mma")));
+                break;
         }
-        return eventMessage;
+
+    }
+
+    @Override
+    public String toString(){
+        return getMessage();
     }
 
 

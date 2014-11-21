@@ -149,16 +149,16 @@ public class TimelineResource extends BaseResource {
                             segmentFromAwakeDetection.getStartTimestamp(),
                             segmentFromAwakeDetection.getOffsetMillis(),
                             60,
-                            -1, Event.Type.SLEEP,
-                            Event.getMessage(Event.Type.SLEEP),
+                            -1,
+                            Event.Type.SLEEP,
                             new ArrayList<SensorReading>(), null);
 
                     final SleepSegment wakeupSegmentFromAwakeDetection = new SleepSegment(1L,
                             segmentFromAwakeDetection.getEndTimestamp(),
                             segmentFromAwakeDetection.getOffsetMillis(),
                             60,
-                            -1, Event.Type.WAKE_UP,
-                            Event.getMessage(Event.Type.WAKE_UP),
+                            -1,
+                            Event.Type.WAKE_UP,
                             new ArrayList<SensorReading>(), null);
 
 
@@ -191,16 +191,16 @@ public class TimelineResource extends BaseResource {
                             segmentFromQuietPeriodDetection.getStartTimestamp(),
                             segmentFromQuietPeriodDetection.getOffsetMillis(),
                             60,
-                            -1, Event.Type.SLEEP,
-                            Event.getMessage(Event.Type.SLEEP),
+                            -1,
+                            Event.Type.SLEEP,
                             new ArrayList<SensorReading>(), null);
 
                     final SleepSegment wakeupSegmentFromQuietPeriodDetection = new SleepSegment(1L,
                             segmentFromQuietPeriodDetection.getEndTimestamp(),
                             segmentFromQuietPeriodDetection.getOffsetMillis(),
                             60,
-                            -1, Event.Type.WAKE_UP,
-                            Event.getMessage(Event.Type.WAKE_UP),
+                            -1,
+                            Event.Type.WAKE_UP,
                             new ArrayList<SensorReading>(), null);
 
 
@@ -225,11 +225,11 @@ public class TimelineResource extends BaseResource {
             // get tracker motions for partner, query time is in UTC, not local_utc
             final DateTime startTime;
             if (sleepTimeSegment.isPresent()) {
-                startTime = new DateTime(sleepTimeSegment.get().timestamp, DateTimeZone.UTC);
+                startTime = new DateTime(sleepTimeSegment.get().getTimestamp(), DateTimeZone.UTC);
             } else {
-                startTime = new DateTime(segments.get(0).timestamp, DateTimeZone.UTC);
+                startTime = new DateTime(segments.get(0).getTimestamp(), DateTimeZone.UTC);
             }
-            final DateTime endTime = new DateTime(segments.get(segments.size() - 1).timestamp, DateTimeZone.UTC);
+            final DateTime endTime = new DateTime(segments.get(segments.size() - 1).getTimestamp(), DateTimeZone.UTC);
 
             final List<TrackerMotion> partnerMotions = this.trackerMotionDAO.getBetween(optionalPartnerAccountId.get(), startTime, endTime);
             if (partnerMotions.size() > 0) {
@@ -241,7 +241,6 @@ public class TimelineResource extends BaseResource {
         // add sunrise data
         final Optional<DateTime> sunrise = sunData.sunrise(targetDate.plusDays(1).toString(DateTimeFormat.forPattern("yyyy-MM-dd"))); // day + 1
         if(sunrise.isPresent()) {
-            final String sunriseMessage = Event.getMessage(Event.Type.SUNRISE, sunrise.get());
 
             SleepSegment.SoundInfo soundInfo = null;
             if(feature.userFeatureActive(FeatureFlipper.SOUND_INFO_TIMELINE, accessToken.accountId, new ArrayList<String>())) {
@@ -253,12 +252,12 @@ public class TimelineResource extends BaseResource {
                 soundInfo = new SleepSegment.SoundInfo(url.toExternalForm(), 2000);
             }
 
-            final SleepSegment sunriseSegment = new SleepSegment(1L, sunrise.get().getMillis(), 0, 60, -1, Event.Type.SUNRISE, sunriseMessage, new ArrayList<SensorReading>(), soundInfo);
+            final SleepSegment sunriseSegment = new SleepSegment(1L, sunrise.get().getMillis(), 0, 60, -1, Event.Type.SUNRISE, new ArrayList<SensorReading>(), soundInfo);
 //            final SleepSegment audioSleepSegment = new SleepSegment(99L, sunrise.get().plusMinutes(5).getMillis(), 0, 60, -1, Event.Type.SNORING, "ZzZzZzZzZ", new ArrayList<SensorReading>(), soundInfo);
             extraSegments.add(sunriseSegment);
 //            extraSegments.add(audioSleepSegment);
 
-            LOGGER.debug(sunriseMessage);
+            LOGGER.debug(sunriseSegment.getMessage());
         }
 
         // TODO: add sound
