@@ -50,13 +50,6 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
             }
         }
 
-        // Pad an hour of empty data to front and rear.
-        final Map.Entry<List<AmplitudeData>, List<AmplitudeData>> pad = getPadData(this.dataAfterAutoInsert, 60,
-                DateTimeConstants.MILLIS_PER_MINUTE,
-                Math.sqrt(minAmplitude));
-        this.dataAfterAutoInsert.addAll(pad.getValue());
-        this.dataAfterAutoInsert.addAll(0, pad.getKey());
-
         this.startHourOfDay = startHourOfDay;
         this.endHourOfDay = endHourOfDay;
     }
