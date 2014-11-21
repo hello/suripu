@@ -150,8 +150,7 @@ public class TimelineResource extends BaseResource {
                             segmentFromAwakeDetection.getOffsetMillis(),
                             60,
                             -1, Event.Type.SLEEP,
-                            "Sleep(AD) " +
-                                    new DateTime(segmentFromAwakeDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())),
+                            Event.getMessage(Event.Type.SLEEP),
                             new ArrayList<SensorReading>(), null);
 
                     final SleepSegment wakeupSegmentFromAwakeDetection = new SleepSegment(1L,
@@ -159,8 +158,7 @@ public class TimelineResource extends BaseResource {
                             segmentFromAwakeDetection.getOffsetMillis(),
                             60,
                             -1, Event.Type.WAKE_UP,
-                            "Wake up(AD) " +
-                                    new DateTime(segmentFromAwakeDetection.getEndTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())),
+                            Event.getMessage(Event.Type.WAKE_UP),
                             new ArrayList<SensorReading>(), null);
 
 
@@ -194,8 +192,7 @@ public class TimelineResource extends BaseResource {
                             segmentFromQuietPeriodDetection.getOffsetMillis(),
                             60,
                             -1, Event.Type.SLEEP,
-                            "Sleep(QPD) " +
-                                    new DateTime(segmentFromQuietPeriodDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromQuietPeriodDetection.getOffsetMillis())),
+                            Event.getMessage(Event.Type.SLEEP),
                             new ArrayList<SensorReading>(), null);
 
                     final SleepSegment wakeupSegmentFromQuietPeriodDetection = new SleepSegment(1L,
@@ -203,8 +200,7 @@ public class TimelineResource extends BaseResource {
                             segmentFromQuietPeriodDetection.getOffsetMillis(),
                             60,
                             -1, Event.Type.WAKE_UP,
-                            "Wake up(QPD) " +
-                                    new DateTime(segmentFromQuietPeriodDetection.getEndTimestamp(), DateTimeZone.forOffsetMillis(segmentFromQuietPeriodDetection.getOffsetMillis())),
+                            Event.getMessage(Event.Type.WAKE_UP),
                             new ArrayList<SensorReading>(), null);
 
 
