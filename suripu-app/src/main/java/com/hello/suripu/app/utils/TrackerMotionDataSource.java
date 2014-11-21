@@ -75,7 +75,7 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
             for(int i = 0; i < padCount; i++){
                 final AmplitudeData frontPad = new AmplitudeData(firstData.timestamp - dataIntervalMS * (i + 1), defaultValue, firstData.offsetMillis);
                 final AmplitudeData rearPad = new AmplitudeData(lastData.timestamp + dataIntervalMS * (i + 1), defaultValue, lastData.offsetMillis);
-                padFront.set(0, frontPad);
+                padFront.add(0, frontPad);
                 padRear.add(rearPad);
             }
         }
