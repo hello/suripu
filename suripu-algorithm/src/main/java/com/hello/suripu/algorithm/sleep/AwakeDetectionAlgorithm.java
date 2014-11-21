@@ -8,7 +8,6 @@ import com.hello.suripu.algorithm.core.DataSource;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.utils.DataCutter;
 import com.hello.suripu.algorithm.utils.MaxAmplitudeAggregator;
-import com.hello.suripu.algorithm.utils.NumericalUtils;
 import org.joda.time.DateTime;
 
 import java.util.Arrays;
@@ -59,8 +58,8 @@ public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
         final ImmutableList<AmplitudeData> wakeUpPeriodData = cutAfter4am.process(smoothedData);
 
         // Step 2.1: Make the data more contradictive.
-        final ImmutableList<AmplitudeData> sharpenFallAsleepPeriodData = NumericalUtils.zeroDataUnderAverage(fallAsleepPeriodData);
-        final ImmutableList<AmplitudeData> sharpenWakeUpPeriodData = NumericalUtils.zeroDataUnderAverage(wakeUpPeriodData);
+        final ImmutableList<AmplitudeData> sharpenFallAsleepPeriodData = fallAsleepPeriodData; //NumericalUtils.zeroDataUnderAverage(fallAsleepPeriodData);
+        final ImmutableList<AmplitudeData> sharpenWakeUpPeriodData = wakeUpPeriodData; //NumericalUtils.zeroDataUnderAverage(wakeUpPeriodData);
 
         // Step 3: Detect fall asleep period and wake up period.
         final ImmutableList<SleepThreshold> fallAsleepThresholds = SleepThreshold.generateEqualBinThresholds(sharpenFallAsleepPeriodData, 1000);
