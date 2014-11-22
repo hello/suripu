@@ -119,7 +119,7 @@ public class TimelineResource extends BaseResource {
         }
 
         // create sleep-motion segments
-        List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, threshold, true);
+        List<SleepSegment> segments = TimelineUtils.generateMotionSegments(trackerMotions);
 
         // detect sleep time
         final int sleepEventThreshold = 7; // minutes of no-movement to determine that user has fallen asleep

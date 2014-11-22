@@ -113,10 +113,31 @@ public class TimelineUtils {
 
         final Long trackerId = trackerMotions.get(0).trackerId;
 
+        Long lastTimestamp = trackerMotions.get(0).timestamp;
         for(final TrackerMotion trackerMotion : trackerMotions) {
             if (!trackerMotion.trackerId.equals(trackerId)) {
                 LOGGER.warn("User has multiple pills: {} and {}", trackerId, trackerMotion.trackerId);
                 break; // if user has multiple pill, only use data from the latest tracker_id
+            }
+
+            if (createMotionlessSegment && trackerMotion.timestamp != lastTimestamp) {
+                // pad with 1-min segments with no movement
+                final int durationInSeconds = (int) (trackerMotion.timestamp - lastTimestamp) / 1000;
+                final int segmentDuration = 60;
+                final int numSegments = durationInSeconds / 60;
+                for (int j = 0; j < numSegments; j++) {
+                    final SleepSegment sleepSegment = new SleepSegment(trackerMotion.id,
+                            lastTimestamp + (j * segmentDuration * 1000), // millis
+                            trackerMotion.offsetMillis,
+                            segmentDuration, // seconds
+                            100, // depth 100 => motionless
+                            Event.Type.NONE,
+                            Collections.<SensorReading>emptyList(),
+                            null);
+                    sleepSegments.add(sleepSegment);
+                }
+
+
             }
 
             int sleepDepth = normalizeSleepDepth(trackerMotion.value, maxSVM);
@@ -141,6 +162,51 @@ public class TimelineUtils {
                     DateTimeConstants.SECONDS_PER_MINUTE, // in 1 minute segment
                     sleepDepth,
                     eventType,
+                    readings,
+                    null);
+            sleepSegments.add(sleepSegment);
+            lastTimestamp = trackerMotion.timestamp + DateTimeConstants.MILLIS_PER_MINUTE;
+        }
+        LOGGER.debug("Generated {} segments from {} tracker motion samples", sleepSegments.size(), trackerMotions.size());
+
+        return sleepSegments;
+    }
+
+    public static List<SleepSegment> generateMotionSegments(final List<TrackerMotion> trackerMotions) {
+        final List<SleepSegment> sleepSegments = new ArrayList<>();
+
+
+        if(trackerMotions.isEmpty()) {
+            return sleepSegments;
+        }
+
+        Long maxSVM = 0L;
+        for(final TrackerMotion trackerMotion : trackerMotions) {
+            maxSVM = Math.max(maxSVM, UInt32.getValue(trackerMotion.value));
+        }
+
+        LOGGER.debug("Max SVM = {}", maxSVM);
+
+        final Long trackerId = trackerMotions.get(0).trackerId;
+        long motionAmplitude = 0;
+        for(final TrackerMotion trackerMotion : trackerMotions) {
+            if (!trackerMotion.trackerId.equals(trackerId)) {
+                LOGGER.warn("User has multiple pills: {} and {}", trackerId, trackerMotion.trackerId);
+                break; // if user has multiple pill, only use data from the latest tracker_id
+            }
+
+            motionAmplitude = UInt32.getValue(trackerMotion.value);
+            int sleepDepth = normalizeSleepDepth(motionAmplitude, maxSVM);
+
+            final List<SensorReading> readings = new ArrayList<>();
+
+            final SleepSegment sleepSegment = new SleepSegment(
+                    trackerMotion.id,
+                    trackerMotion.timestamp,
+                    trackerMotion.offsetMillis,
+                    DateTimeConstants.SECONDS_PER_MINUTE, // in 1 minute segment
+                    sleepDepth,
+                    Event.Type.MOTION,
                     readings,
                     null);
             sleepSegments.add(sleepSegment);
@@ -489,7 +555,12 @@ public class TimelineUtils {
                         finalSegment.type,
                         finalSegment.sensors,
                         finalSegment.soundInfo);
-                LOGGER.trace(mergedSegment.toString());
+
+                LOGGER.trace("slot: type {}, sleep depth {}, duration {}",
+                        mergedSegment.type,
+                        mergedSegment.sleepDepth,
+                        mergedSegment.getDurationInSeconds());
+
                 mergedSegment.setMessage(finalSegment.getMessage());
 
                 if(collapseNullSegments && mergedSegment.type == Event.Type.NONE){
@@ -523,7 +594,7 @@ public class TimelineUtils {
             }
         }
 
-        LOGGER.trace("Slots after merge {}", mergeSlots.size());
+        LOGGER.trace("Slots size after merge {}", mergeSlots.size());
 
         return ImmutableList.copyOf(mergeSlots);
 
@@ -568,13 +639,14 @@ public class TimelineUtils {
      * @param maxValue
      * @return
      */
-    public static Integer normalizeSleepDepth(final Integer value, final Long maxValue) {
+    public static Integer normalizeSleepDepth(final long value, final long maxValue) {
         int sleepDepth = 100;
         if(value == -1) {
             sleepDepth = 100;
         } else if(value > 0) {
-            sleepDepth = 100 - (int) (new Double(value) / maxValue * 100);
-            LOGGER.trace("Ratio = ({} / {}) = {}", value, maxValue, (new Double(value) / maxValue * 100));
+            int percentage = (int)(value * 100 / maxValue);
+            sleepDepth = 100 - percentage;
+            LOGGER.trace("Ratio = ({} / {}) = {}", value, maxValue, percentage);
             LOGGER.trace("Sleep Depth = {}", sleepDepth);
         }
         return sleepDepth;
