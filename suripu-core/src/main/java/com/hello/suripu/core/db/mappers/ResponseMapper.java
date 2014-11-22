@@ -43,7 +43,7 @@ public class ResponseMapper implements ResultSetMapper<Response> {
                 r.getLong("account_id"),
                 r.getInt("question_id"),
                 "", // empty response string for now
-                response_id,
+                Optional.fromNullable(response_id),
                 skip,
                 created,
                 r.getLong("account_question_id"),

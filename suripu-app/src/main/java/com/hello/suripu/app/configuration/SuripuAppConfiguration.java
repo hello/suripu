@@ -170,12 +170,21 @@ public class SuripuAppConfiguration extends Configuration {
         return this.sleepScoreVersion;
     }
 
+
     @Valid
     @NotNull
     @JsonProperty("question_configs")
     private QuestionConfiguration questionConfigs;
     public QuestionConfiguration getQuestionConfigs() {
         return this.questionConfigs;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("features_db")
+    private DynamoDBConfiguration featuresDynamoDBConfiguration;
+    public DynamoDBConfiguration getFeaturesDynamoDBConfiguration(){
+        return this.featuresDynamoDBConfiguration;
     }
 
 }

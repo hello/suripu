@@ -76,13 +76,14 @@ public class QuestionProcessorTest {
 
         final Optional<Boolean> skipTrue = Optional.fromNullable(true);
         final Optional<Boolean> skipFalse = Optional.fromNullable(false);
+        final Optional<Integer> responseId = Optional.fromNullable(0);
         final DateTime created = DateTime.now(DateTimeZone.UTC);
         final DateTime askTime = created.withTimeAtStartOfDay().minusDays(7);
-        responses.add(new Response(5L, ACCOUNT_ID_PASS, 5, "", 0, skipTrue, created, 14L, Optional.fromNullable(Question.FREQUENCY.ONE_TIME), askTime.plusDays(4)));
-        responses.add(new Response(4L, ACCOUNT_ID_PASS, 4, "", 10, skipFalse, created, 13L, Optional.fromNullable(Question.FREQUENCY.ONE_TIME), askTime.plusDays(3)));
-        responses.add(new Response(3L, ACCOUNT_ID_PASS, 3, "", 0, skipTrue, created, 12L, Optional.fromNullable(Question.FREQUENCY.ONE_TIME), askTime.plusDays(2)));
-        responses.add(new Response(2L, ACCOUNT_ID_PASS, 2, "", 0, skipTrue, created, 11L, Optional.fromNullable(Question.FREQUENCY.ONE_TIME), askTime.plusDays(1)));
-        responses.add(new Response(1L, ACCOUNT_ID_PASS, 1, "", 0, skipTrue, created, 10L, Optional.fromNullable(Question.FREQUENCY.ONE_TIME), askTime));
+        responses.add(new Response(5L, ACCOUNT_ID_PASS, 5, "", responseId, skipTrue, created, 14L, Optional.fromNullable(Question.FREQUENCY.ONE_TIME), askTime.plusDays(4)));
+        responses.add(new Response(4L, ACCOUNT_ID_PASS, 4, "", Optional.fromNullable(10), skipFalse, created, 13L, Optional.fromNullable(Question.FREQUENCY.ONE_TIME), askTime.plusDays(3)));
+        responses.add(new Response(3L, ACCOUNT_ID_PASS, 3, "", responseId, skipTrue, created, 12L, Optional.fromNullable(Question.FREQUENCY.ONE_TIME), askTime.plusDays(2)));
+        responses.add(new Response(2L, ACCOUNT_ID_PASS, 2, "", responseId, skipTrue, created, 11L, Optional.fromNullable(Question.FREQUENCY.ONE_TIME), askTime.plusDays(1)));
+        responses.add(new Response(1L, ACCOUNT_ID_PASS, 1, "", responseId, skipTrue, created, 10L, Optional.fromNullable(Question.FREQUENCY.ONE_TIME), askTime));
 
         return responses;
     }

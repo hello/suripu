@@ -35,7 +35,6 @@ public class QuestionProcessor {
     private static final Pattern PG_UNIQ_PATTERN = Pattern.compile("ERROR: duplicate key value violates unique constraint \"(\\w+)\"");
 
     private static final int MAX_SKIPS_ALLOWED = 8;
-    private static final int MAX_BASE_QUESTION_ID = 10000; // reserved ids for base, one-time questions in EN
     private static final int NEW_ACCOUNT_AGE = 1; // less than 1 day
     private static final int NEW_USER_NUM_Q = 3; // no. of on-boarding questions
     private static final int OLD_ACCOUNT_AGE = 7; // older accounts are more than this many days

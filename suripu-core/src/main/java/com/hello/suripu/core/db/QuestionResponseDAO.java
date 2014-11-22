@@ -4,7 +4,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.mappers.AccountQuestionMapper;
 import com.hello.suripu.core.db.mappers.QuestionMapper;
-import com.hello.suripu.core.db.mappers.ResponseMapper;
+import com.hello.suripu.core.db.mappers.RecentResponseMapper;
 import com.hello.suripu.core.models.AccountQuestion;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Response;
@@ -79,13 +79,12 @@ public interface QuestionResponseDAO {
 
 
     // TODO need to optimize and create index
-    @RegisterMapper(ResponseMapper.class)
+    @RegisterMapper(RecentResponseMapper.class)
     @SqlQuery("SELECT 0 AS id, Q.account_id AS account_id, " +
             "Q.question_id AS question_id, " +
             "Q.id AS account_question_id, " +
             "R.response_id AS response_id, " +
             "R.skip AS skip, " +
-            "R.created AS created, " +
             "Q.created_local_utc_ts AS ask_time, " +
             "R.question_freq AS question_freq " +
             "FROM account_questions Q " +

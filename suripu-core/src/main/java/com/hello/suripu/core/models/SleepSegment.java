@@ -1,16 +1,21 @@
 package com.hello.suripu.core.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Objects;
 import com.google.common.collect.ComparisonChain;
-import com.hello.suripu.core.util.EventTypeSerializer;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 
 import java.util.List;
 
-public class SleepSegment implements Comparable {
+
+@JsonIgnoreProperties({
+        "start_timestamp",
+        "end_timestamp"
+})
+public class SleepSegment extends Event implements Comparable {
 
     public static class SoundInfo {
 
@@ -27,26 +32,20 @@ public class SleepSegment implements Comparable {
     final public Long id;
 
     @JsonProperty("timestamp")
-    final public Long timestamp;
+    public long getTimestamp(){
+        return this.startTimestamp;
+    }
 
     @JsonProperty("duration")
-    final public Integer durationInSeconds;
+    public int getDurationInSeconds(){
+        return (int)(this.endTimestamp - this.startTimestamp) / DateTimeConstants.MILLIS_PER_SECOND;
+    }
 
     @JsonProperty("sleep_depth")
     final public Integer sleepDepth;
 
-    @JsonProperty("event_type")
-    @JsonSerialize(using = EventTypeSerializer.class)
-    final public Event.Type eventType;
-
-    @JsonProperty("message")
-    final public String message;
-
     @JsonProperty("sensors")
     final public List<SensorReading> sensors;
-
-    @JsonProperty("offset_millis")
-    final public Integer offsetMillis;
 
     @JsonProperty("sound")
     final public SoundInfo soundInfo;
@@ -58,39 +57,41 @@ public class SleepSegment implements Comparable {
      * @param durationInSeconds
      * @param sleepDepth
      * @param eventType
-     * @param message
      * @param sensors
      */
-    public SleepSegment(final Long id, final Long timestamp, final Integer offsetMillis, final Integer durationInSeconds,
-                        final Integer sleepDepth, final Event.Type eventType, final String message, final List<SensorReading> sensors, final SoundInfo soundInfo) {
+    public SleepSegment(final Long id,
+                        final Long timestamp, final Integer offsetMillis, final Integer durationInSeconds,
+                        final Integer sleepDepth, final Event.Type eventType,
+                        final List<SensorReading> sensors,
+                        final SoundInfo soundInfo) {
+        super(eventType, timestamp, timestamp + durationInSeconds * DateTimeConstants.MILLIS_PER_SECOND, offsetMillis);
         this.id = id;
-        this.timestamp = timestamp;
-        this.offsetMillis = offsetMillis;
-        this.durationInSeconds = durationInSeconds;
         this.sleepDepth = sleepDepth;
-        this.eventType = eventType;
-        this.message = message;
         this.soundInfo = soundInfo;
         this.sensors = sensors;
     }
 
 
     public static SleepSegment withSleepDepth(final SleepSegment segment, final Integer sleepDepth) {
-        return new SleepSegment(segment.id, segment.timestamp, segment.offsetMillis, segment.durationInSeconds, sleepDepth,
-                segment.eventType, segment.message, segment.sensors, segment.soundInfo);
+        return new SleepSegment(segment.id,
+                segment.getTimestamp(), segment.timezoneOffset, segment.getDurationInSeconds(),
+                sleepDepth,
+                segment.type, segment.sensors, segment.soundInfo);
     }
 
     public static SleepSegment withSleepDepthAndDuration(final SleepSegment segment, final Integer sleepDepth, final Integer durationInSeconds) {
-        return new SleepSegment(segment.id, segment.timestamp, segment.offsetMillis, durationInSeconds, sleepDepth,
-                segment.eventType, segment.message, segment.sensors, segment.soundInfo);
+        return new SleepSegment(segment.id,
+                segment.getTimestamp(), segment.timezoneOffset, durationInSeconds,
+                sleepDepth,
+                segment.type, segment.sensors, segment.soundInfo);
     }
 
     public static SleepSegment withEventType(final SleepSegment segment, final Event.Type eventType) {
         return new SleepSegment(
-                segment.id, segment.timestamp,
-                segment.offsetMillis, segment.durationInSeconds, segment.sleepDepth,
+                segment.id,
+                segment.getTimestamp(), segment.timezoneOffset, segment.getDurationInSeconds(),
+                segment.sleepDepth,
                 eventType,
-                Event.getMessage(eventType, new DateTime(segment.timestamp, DateTimeZone.UTC).plusMillis(segment.offsetMillis)),
                 segment.sensors, segment.soundInfo);
     }
 
@@ -98,24 +99,25 @@ public class SleepSegment implements Comparable {
     public String toString() {
         return Objects.toStringHelper(SleepSegment.class)
                 .add("id", id)
-                .add("timestamp", timestamp)
-                .add("offsetMillis", offsetMillis)
-                .add("durationInSeconds", durationInSeconds)
-                .add("sleepDepth", sleepDepth)
-                .add("eventType", eventType)
-                .add("message", message)
-                .add("sensors", sensors)
-                .add("soundInfo", soundInfo)
-                .add("$when", new DateTime(timestamp))
-                .add("$minutes", durationInSeconds/60)
+                .add("timestamp", this.getTimestamp())
+                .add("offsetMillis", this.timezoneOffset)
+                .add("durationInSeconds", this.getDurationInSeconds())
+                .add("sleepDepth", this.sleepDepth)
+                .add("eventType", this.type)
+                .add("message", this.getMessage())
+                .add("sensors", this.sensors)
+                .add("soundInfo", this.soundInfo)
+                .add("from", new DateTime(this.startTimestamp, DateTimeZone.forOffsetMillis(this.timezoneOffset)))
+                .add("to", new DateTime(this.endTimestamp, DateTimeZone.forOffsetMillis(this.timezoneOffset)))
+                .add("$minutes", this.getDurationInSeconds() / DateTimeConstants.SECONDS_PER_MINUTE)
                 .toString();
     }
 
     @Override
-    public int compareTo(Object o) {
+    public int compareTo(final Object o) {
         final SleepSegment that = (SleepSegment) o;
         return ComparisonChain.start()
-                .compare(timestamp, that.timestamp)
+                .compare(this.getTimestamp(), that.getTimestamp())
                 .result();
     }
 }
