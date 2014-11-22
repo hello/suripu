@@ -30,6 +30,7 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.RingProcessor;
+import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DeviceIdUtil;
 import com.hello.suripu.core.util.RoomConditionUtil;
 import com.hello.suripu.service.SignedMessage;
@@ -299,7 +300,9 @@ public class ReceiveResource extends BaseResource {
                     .withAmbientLightPeakiness(data.getLightTonality())
                     .withOffsetMillis(userTimeZone.getOffset(roundedDateTime))
                     .withDateTimeUTC(roundedDateTime)
-                    .withFirmwareVersion(data.getFirmwareVersion());
+                    .withFirmwareVersion(data.getFirmwareVersion())
+                    .withWaveCount(data.hasWaveCount() ? data.getWaveCount() : 0)
+                    .withHoldCount(data.hasHoldCount() ? data.getHoldCount() : 0);
 
             final DeviceData deviceData = builder.build();
             final CurrentRoomState currentRoomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), 2);
@@ -375,7 +378,7 @@ public class ReceiveResource extends BaseResource {
 
         if(!groups.isEmpty()) {
             LOGGER.debug("DeviceId {} belongs to groups: {}", data.getDeviceId(), groups);
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(groups.get(0));
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(data.getDeviceId(), groups.get(0), data.getFirmwareVersion());
             LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
             responseBuilder.addAllFiles(fileDownloadList);
         } else {

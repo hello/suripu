@@ -59,6 +59,12 @@ public class DeviceData {
     @JsonIgnore
     public final Integer firmwareVersion;
 
+    @JsonProperty("wave_count")
+    public final Integer waveCount;
+
+    @JsonProperty("hold_count")
+    public final Integer holdCount;
+
     public DeviceData(
             final Long accountId,
             final Long deviceId,
@@ -74,7 +80,9 @@ public class DeviceData {
             final int ambientLightPeakiness,
             final DateTime dateTimeUTC,
             final Integer offsetMillis,
-            final Integer firmwareVersion) {
+            final Integer firmwareVersion,
+            final Integer waveCount,
+            final Integer holdCount) {
         this.accountId = accountId;
         this.deviceId = deviceId;
         this.ambientTemperature = ambientTemperature;
@@ -90,6 +98,8 @@ public class DeviceData {
         this.ambientLightPeakiness = ambientLightPeakiness;
         this.offsetMillis = offsetMillis;
         this.firmwareVersion = firmwareVersion;
+        this.waveCount = waveCount;
+        this.holdCount = holdCount;
 
         checkNotNull(this.accountId);
         checkNotNull(this.deviceId);
@@ -140,6 +150,8 @@ public class DeviceData {
         private DateTime dateTimeUTC;
         private Integer offsetMillis;
         private Integer firmwareVersion;
+        private Integer waveCount;
+        private Integer holdCount;
 
         public Builder withAccountId(final Long accountId){
             this.accountId = accountId;
@@ -216,10 +228,21 @@ public class DeviceData {
             return this;
         }
 
+        public Builder withWaveCount(final Integer waveCount){
+            this.waveCount = waveCount;
+            return this;
+        }
+
+        public Builder withHoldCount(final Integer holdCount){
+            this.holdCount = holdCount;
+            return this;
+        }
+
         public DeviceData build(){
             return new DeviceData(this.accountId, this.deviceId, this.ambientTemperature, this.ambientHumidity,
                     this.ambientAirQuality, this.ambientAirQualityRaw, this.ambientDustVariance, this.ambientDustMin, this.ambientDustMax,
-                    this.ambientLight, this.ambientLightVariance, this.ambientLightPeakiness, this.dateTimeUTC, this.offsetMillis, firmwareVersion);
+                    this.ambientLight, this.ambientLightVariance, this.ambientLightPeakiness, this.dateTimeUTC, this.offsetMillis,
+                    this.firmwareVersion, this.waveCount, this.holdCount);
         }
 
 
@@ -242,6 +265,9 @@ public class DeviceData {
                 .add("ambient_dust_max", ambientDustMax)
                 .add("dateTimeUTC", dateTimeUTC)
                 .add("offset_millis", offsetMillis)
+                .add("firmware_version", firmwareVersion)
+                .add("wave_count", waveCount)
+                .add("hold_count", holdCount)
                 .toString();
     }
 }

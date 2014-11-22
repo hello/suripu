@@ -1,12 +1,20 @@
 package com.hello.suripu.app.resources.v1;
 
+import com.amazonaws.HttpMethod;
+import com.amazonaws.services.s3.AmazonS3;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.hello.suripu.algorithm.core.Segment;
+import com.hello.suripu.algorithm.sleep.AwakeDetectionAlgorithm;
+import com.hello.suripu.algorithm.sleep.QuietPeriodDetectionAlgorithm;
+import com.hello.suripu.algorithm.sleep.SleepDetectionAlgorithm;
+import com.hello.suripu.app.utils.TrackerMotionDataSource;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Insight;
@@ -19,26 +27,35 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.PartnerMotion;
+import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.SunData;
 import com.hello.suripu.core.util.TimelineUtils;
+import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Path("/v1/timeline")
-public class TimelineResource {
+public class TimelineResource extends BaseResource {
+
+    @Inject
+    RolloutClient feature;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineResource.class);
 
@@ -49,13 +66,18 @@ public class TimelineResource {
     private final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB;
     private final int dateBucketPeriod;
     private final SunData sunData;
+    private final AmazonS3 s3;
+    private final String bucketName;
+
     public TimelineResource(final TrackerMotionDAO trackerMotionDAO,
                             final DeviceDAO deviceDAO,
                             final SleepLabelDAO sleepLabelDAO,
                             final SleepScoreDAO sleepScoreDAO,
                             final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
                             final int dateBucketPeriod,
-                            final SunData sunData) {
+                            final SunData sunData,
+                            final AmazonS3 s3,
+                            final String bucketName) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
         this.sleepLabelDAO = sleepLabelDAO;
@@ -63,6 +85,8 @@ public class TimelineResource {
         this.aggregateSleepScoreDAODynamoDB = aggregateSleepScoreDAODynamoDB;
         this.dateBucketPeriod = dateBucketPeriod;
         this.sunData = sunData;
+        this.s3 = s3;
+        this.bucketName = bucketName;
     }
 
     @Timed
@@ -108,6 +132,93 @@ public class TimelineResource {
             extraSegments.add(sleepTimeSegment.get());
         }
 
+
+        final ArrayList<SleepSegment> segmentsNotToMerge = new ArrayList<>();
+        if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION_FROM_AWAKE, accessToken.accountId, new ArrayList<String>())) {
+            // A day starts with 8pm local time and ends with 4pm local time next day
+            final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions, 20, 16);
+            final int smoothWindowSize = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  //TODO: make it configable.
+
+            final SleepDetectionAlgorithm awakeDetectionAlgorithm = new AwakeDetectionAlgorithm(dataSource, smoothWindowSize);
+
+            try {
+                final Segment segmentFromAwakeDetection = awakeDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay());
+
+                if(segmentFromAwakeDetection.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
+                    final SleepSegment sleepSegmentFromAwakeDetection = new SleepSegment(1L,
+                            segmentFromAwakeDetection.getStartTimestamp(),
+                            segmentFromAwakeDetection.getOffsetMillis(),
+                            60,
+                            -1, Event.Type.SLEEP,
+                            Event.getMessage(Event.Type.SLEEP),
+                            new ArrayList<SensorReading>(), null);
+
+                    final SleepSegment wakeupSegmentFromAwakeDetection = new SleepSegment(1L,
+                            segmentFromAwakeDetection.getEndTimestamp(),
+                            segmentFromAwakeDetection.getOffsetMillis(),
+                            60,
+                            -1, Event.Type.WAKE_UP,
+                            Event.getMessage(Event.Type.WAKE_UP),
+                            new ArrayList<SensorReading>(), null);
+
+
+                    extraSegments.add(sleepSegmentFromAwakeDetection);
+                    extraSegments.add(wakeupSegmentFromAwakeDetection);
+                }
+
+                LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
+                        new DateTime(segmentFromAwakeDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())),
+                        new DateTime(segmentFromAwakeDetection.getEndTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())));
+            }catch (Exception ex){
+                LOGGER.error("Generate sleep period from Awake Detection Algorithm failed: {}", ex.getMessage());
+            }
+
+        }
+
+
+        if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION_FROM_QUIET, accessToken.accountId, new ArrayList<String>())) {
+            // A day starts with 8pm local time and ends with 4pm local time next day
+            final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions, 20, 16);
+            final int smoothWindowSize = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  //TODO: make it configable.
+
+            final SleepDetectionAlgorithm quietPeriodDetectionAlgorithm = new QuietPeriodDetectionAlgorithm(dataSource, smoothWindowSize);
+
+            try {
+                final Segment segmentFromQuietPeriodDetection = quietPeriodDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay());
+
+                if(segmentFromQuietPeriodDetection.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
+                    final SleepSegment sleepSegmentFromQuietPeriodDetection = new SleepSegment(1L,
+                            segmentFromQuietPeriodDetection.getStartTimestamp(),
+                            segmentFromQuietPeriodDetection.getOffsetMillis(),
+                            60,
+                            -1, Event.Type.SLEEP,
+                            Event.getMessage(Event.Type.SLEEP),
+                            new ArrayList<SensorReading>(), null);
+
+                    final SleepSegment wakeupSegmentFromQuietPeriodDetection = new SleepSegment(1L,
+                            segmentFromQuietPeriodDetection.getEndTimestamp(),
+                            segmentFromQuietPeriodDetection.getOffsetMillis(),
+                            60,
+                            -1, Event.Type.WAKE_UP,
+                            Event.getMessage(Event.Type.WAKE_UP),
+                            new ArrayList<SensorReading>(), null);
+
+
+                    extraSegments.add(sleepSegmentFromQuietPeriodDetection);
+                    extraSegments.add(wakeupSegmentFromQuietPeriodDetection);
+                }
+
+                LOGGER.info("Sleep Time From Quiet Period Detection Algorithm: {} - {}",
+                        new DateTime(segmentFromQuietPeriodDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromQuietPeriodDetection.getOffsetMillis())),
+                        new DateTime(segmentFromQuietPeriodDetection.getEndTimestamp(), DateTimeZone.forOffsetMillis(segmentFromQuietPeriodDetection.getOffsetMillis())));
+            }catch (Exception ex){
+                LOGGER.error("Generate sleep period from Quiet Period Detection Algorithm failed: {}", ex.getMessage());
+            }
+
+        }
+
+
+
         // add partner movement data, check if there's a partner
         final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accessToken.accountId);
         if (optionalPartnerAccountId.isPresent()) {
@@ -132,14 +243,25 @@ public class TimelineResource {
         if(sunrise.isPresent()) {
             final String sunriseMessage = Event.getMessage(Event.Type.SUNRISE, sunrise.get());
 
-            final SleepSegment sunriseSegment = new SleepSegment(1L, sunrise.get().getMillis(), 0, 60, -1, Event.Type.SUNRISE, sunriseMessage, new ArrayList<SensorReading>());
+            SleepSegment.SoundInfo soundInfo = null;
+            if(feature.userFeatureActive(FeatureFlipper.SOUND_INFO_TIMELINE, accessToken.accountId, new ArrayList<String>())) {
+                final Date expiration = new java.util.Date();
+                long msec = expiration.getTime();
+                msec += 1000 * 60 * 60; // 1 hour.
+                expiration.setTime(msec);
+                final URL url = s3.generatePresignedUrl(bucketName, "mario.mp3", expiration, HttpMethod.GET);
+                soundInfo = new SleepSegment.SoundInfo(url.toExternalForm(), 2000);
+            }
 
+            final SleepSegment sunriseSegment = new SleepSegment(1L, sunrise.get().getMillis(), 0, 60, -1, Event.Type.SUNRISE, sunriseMessage, new ArrayList<SensorReading>(), soundInfo);
+//            final SleepSegment audioSleepSegment = new SleepSegment(99L, sunrise.get().plusMinutes(5).getMillis(), 0, 60, -1, Event.Type.SNORING, "ZzZzZzZzZ", new ArrayList<SensorReading>(), soundInfo);
             extraSegments.add(sunriseSegment);
+//            extraSegments.add(audioSleepSegment);
 
             LOGGER.debug(sunriseMessage);
         }
 
-        // TODO: add sound, light, temperature event segments
+        // TODO: add sound
 
 
         // combine all segments
