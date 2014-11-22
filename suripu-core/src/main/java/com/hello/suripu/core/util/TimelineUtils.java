@@ -2,6 +2,7 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.DeviceData;
@@ -22,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -371,6 +374,159 @@ public class TimelineUtils {
         }
 
         return temp;
+    }
+
+
+    public static List<SleepSegment> generateAlignedSegmentsByTypeWeight(final List<SleepSegment> segmentList,
+                                                                         int slotDuration, int mergeSlotCount,
+                                                                         boolean collapseNullSegments){
+        // Step 1: Get the start and end time of the give segment list
+        long startTimestamp = Long.MIN_VALUE;
+        long endTimestamp = 0;
+        int startOffsetMillis = 0;
+        int endOffsetMillis = 0;
+
+        for(final SleepSegment sleepSegment:segmentList){
+            if(sleepSegment.getTimestamp() < startTimestamp){
+                startTimestamp = sleepSegment.getTimestamp();
+                startOffsetMillis = sleepSegment.timezoneOffset;
+            }
+
+            if(sleepSegment.getTimestamp() > endTimestamp){
+                endTimestamp = sleepSegment.getTimestamp();
+                endOffsetMillis = sleepSegment.timezoneOffset;
+            }
+        }
+
+        if(startTimestamp == 0 || endTimestamp == 0){
+            return Collections.EMPTY_LIST;
+        }
+
+        // Step 2: Generate one minute segment slots range from startTimestamp to endTimestamp
+        // Time: | min 1 | min 2 | min 3 | min 4 | ... | min N |
+        // Type: | none  | none  | none  | none  | ... | none  |
+        // These slots are set to type none and will be override later.
+        int interval = (int)(endTimestamp - startTimestamp);
+        int slotCount = interval / slotDuration;
+        if(interval % slotDuration > 0){
+            slotCount++;
+        }
+
+        final LinkedHashMap<Long, SleepSegment> slots = new LinkedHashMap<>();
+        for(int i = 0; i < slotCount; i++){
+            final long slotStartTimestamp = startTimestamp + i * slotDuration;
+            slots.put(slotStartTimestamp, new SleepSegment(0L,
+                    slotStartTimestamp, startOffsetMillis, slotDuration,
+                    100,
+                    Event.Type.NONE,
+                    null,
+                    null
+                    ));
+        }
+
+        // Step 3: Scan through segmentList, fill slots with highest weight event and their messages.
+        // Example:
+        // segmentList: | Sleep       |
+        //                     |    motion    | none | none | Wakeup |
+        // empty slots: | none | none | none  | none | none | none   |
+        // After scan:  |sleep | sleep| motion| none | none | Wakeup |
+        for(final SleepSegment sleepSegment:segmentList){
+            int startSlotIndex = (int)(sleepSegment.getTimestamp() - startTimestamp) / slotDuration;
+            long startSlotKey = startTimestamp + startSlotIndex * slotDuration;
+
+            int endSlotIndex = (int)(sleepSegment.getTimestamp() - endTimestamp) / slotDuration;
+            long endSlotKey = startTimestamp + endSlotIndex * slotDuration;
+
+            long slotKey = startSlotKey;
+            while(slotKey <= endSlotKey){
+                if(!slots.containsKey(slotKey)){
+                    LOGGER.warn("Cannot find key: {}", slotKey);
+                    slotKey += slotDuration;
+                    continue;
+                }
+
+                final SleepSegment currentSegment = slots.get(slotKey);
+                if(currentSegment.type.getValue() < sleepSegment.type.getValue()){
+                    // Replace the current segment in that slot with higher weight segment
+                    final SleepSegment replaceSegment = new SleepSegment(0L,
+                            slotKey, sleepSegment.timezoneOffset, currentSegment.getDurationInSeconds(),
+                            sleepSegment.sleepDepth,
+                            sleepSegment.type,
+                            sleepSegment.sensors,
+                            sleepSegment.soundInfo
+                            );
+                    slots.put(slotKey, replaceSegment);
+                }
+
+                slotKey += slotDuration;
+            }
+        }
+
+        // Step 4: merge slots by mergeSlotCount param
+        // Example:
+        // mergeSlotCount = 3
+        // slots:         | low | low | high | low | low | low | high | low | none | none | none |
+        // merged slots:  |       high       |       low       |       high        |    none     |
+        final LinkedList<SleepSegment> mergeSlots = new LinkedList<>();
+        int slotIndex = 0;
+        long startSlotKey = -1;
+        SleepSegment finalSegment = null;
+        SleepSegment currentSegment = null;
+
+        for(final long slotStartTimestamp:slots.keySet()){  // Iterate though a linkedHashMap will preserve the insert order
+            currentSegment = slots.get(slotStartTimestamp);
+            if(startSlotKey == -1){
+                startSlotKey = slotStartTimestamp;
+                finalSegment = currentSegment;
+            }
+
+
+            if(finalSegment.type.getValue() < currentSegment.type.getValue()){
+                finalSegment = currentSegment;
+            }
+
+            slotIndex++;
+
+            if(slotIndex % (mergeSlotCount - 1) == 0){
+                final SleepSegment mergedSegment = new SleepSegment(finalSegment.id,
+                        startSlotKey,
+                        finalSegment.timezoneOffset,
+                        (int)(currentSegment.getTimestamp() - startSlotKey) / DateTimeConstants.MILLIS_PER_SECOND,
+                        finalSegment.sleepDepth,
+                        finalSegment.type,
+                        finalSegment.sensors,
+                        finalSegment.soundInfo);
+                if(collapseNullSegments && mergedSegment.type == Event.Type.NONE){
+                    // Do nothing, collapse this event
+                }else {
+                    mergeSlots.add(mergedSegment);
+                }
+
+                // reset
+                startSlotKey = -1;
+                finalSegment = null;
+            }
+        }
+
+        // Handle the dangling case
+        if(startSlotKey != -1){
+            final SleepSegment mergedSegment = new SleepSegment(finalSegment.id,
+                    startSlotKey,
+                    finalSegment.timezoneOffset,
+                    (int)(currentSegment.getTimestamp() - startSlotKey) / DateTimeConstants.MILLIS_PER_SECOND,
+                    finalSegment.sleepDepth,
+                    finalSegment.type,
+                    finalSegment.sensors,
+                    finalSegment.soundInfo);
+            if(collapseNullSegments && mergedSegment.type == Event.Type.NONE){
+                // Do nothing, collapse this event
+            }else {
+                mergeSlots.add(mergedSegment);
+            }
+        }
+
+        return ImmutableList.copyOf(mergeSlots);
+
     }
 
     public static List<SleepSegment> insertSegmentsWithPriority(final List<SleepSegment> extraSegments, final List<SleepSegment> original) {
