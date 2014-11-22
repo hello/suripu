@@ -162,6 +162,8 @@ public class TimelineResource extends BaseResource {
                     if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION_FROM_AWAKE, accessToken.accountId, new ArrayList<String>())) {
                         segments.add(sleepSegmentFromAwakeDetection);
                         LOGGER.debug("Default algorithm and N shape algorithm both detected sleep.");
+                    }else{
+                        LOGGER.debug("Account {} not in N shape detection feature group.", accessToken.accountId);
                     }
                 }
                 segments.add(wakeupSegmentFromAwakeDetection);
