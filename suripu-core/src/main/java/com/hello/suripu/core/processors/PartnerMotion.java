@@ -1,8 +1,8 @@
 package com.hello.suripu.core.processors;
 
-import com.hello.suripu.core.models.Event;
-import com.hello.suripu.core.models.SensorReading;
-import com.hello.suripu.core.models.SleepSegment;
+import com.google.common.collect.ImmutableList;
+import com.hello.suripu.core.models.MotionEvent;
+import com.hello.suripu.core.models.ParterMotionEvent;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.yammer.metrics.annotation.Timed;
@@ -27,60 +27,59 @@ public class PartnerMotion {
     final private static int CHECK_PRECEDING_MINS = 2; // make sure user has no movement in the previous 2 mins
 
     @Timed
-    public static List<SleepSegment> getPartnerData(final List<SleepSegment> originalSegments, final List<TrackerMotion> partnerMotions, int threshold) {
+    public static List<ParterMotionEvent> getPartnerData(final List<MotionEvent> originalSegments, final List<TrackerMotion> partnerMotions, int threshold) {
 
         final boolean createMotionlessSegment = false;
-        final List<SleepSegment> partnerSegments = TimelineUtils.generateSleepSegments(partnerMotions, threshold, createMotionlessSegment);
+        final List<MotionEvent> partnerSegments = TimelineUtils.generateMotionEvents(partnerMotions);
 
         // convert list of TrackerMotion to hash map for easy lookup
-        final Map<Long, SleepSegment> originalMotionMap = new HashMap<>();
-        for (final SleepSegment segment : originalSegments) {
-            originalMotionMap.put(segment.getTimestamp(), segment);
+        final Map<Long, MotionEvent> originalMotionMap = new HashMap<>();
+        for (final MotionEvent segment : originalSegments) {
+            originalMotionMap.put(segment.startTimestamp, segment);
         }
 
-        final List<SleepSegment> affectedSegments = new ArrayList<>();
-        for (final SleepSegment partnerSegment : partnerSegments) {
-            if (!originalMotionMap.containsKey(partnerSegment.getTimestamp())) {
+        final List<ParterMotionEvent> affectedSegments = new ArrayList<>();
+        for (final MotionEvent partnerSegment : partnerSegments) {
+            if (!originalMotionMap.containsKey(partnerSegment.startTimestamp)) {
                 continue;
             }
 
-            final SleepSegment originalSegment = originalMotionMap.get(partnerSegment.getTimestamp());
-
-            if (originalSegment.sleepDepth >= ACCOUNT_DEPTH_THRESHOLD ||  // original user not moving much, not affected.
-                    partnerSegment.sleepDepth > PARTNER_DEPTH_THRESHOLD || // or, partner movement is not huge, no effects.
-                    originalSegment.sleepDepth < partnerSegment.sleepDepth) { // or, user movement is larger than partner's
+            final MotionEvent originalSegment = originalMotionMap.get(partnerSegment.startTimestamp);
+            final int mySleepDepth = TimelineUtils.normalizeSleepDepth(originalSegment.amplitude, originalSegment.maxAmplitude);
+            final int partnerSleepDepth = TimelineUtils.normalizeSleepDepth(partnerSegment.amplitude, partnerSegment.maxAmplitude);
+            if (mySleepDepth >= ACCOUNT_DEPTH_THRESHOLD ||  // original user not moving much, not affected.
+                    partnerSleepDepth > PARTNER_DEPTH_THRESHOLD || // or, partner movement is not huge, no effects.
+                    mySleepDepth < partnerSleepDepth) { // or, user movement is larger than partner's
                 continue;
             }
 
-            LOGGER.debug("user {}, partner {}", originalSegment.sleepDepth, partnerSegment.sleepDepth);
+            LOGGER.debug("user {}, partner {}", mySleepDepth, partnerSleepDepth);
 
             // check if there's any user movement in the preceding minutes
             boolean noPriorMovement = true;
             for (int i = 1; i <= CHECK_PRECEDING_MINS; i++) {
-                final SleepSegment priorSegment = originalMotionMap.get(partnerSegment.getTimestamp() - i * DateTimeConstants.MILLIS_PER_MINUTE);
-                if (priorSegment != null && priorSegment.sleepDepth < ACCOUNT_DEPTH_THRESHOLD) {
-                    LOGGER.debug("{} prior movement {} {}", partnerSegment.getTimestamp(), priorSegment.getTimestamp(), priorSegment.sleepDepth);
+                final MotionEvent priorSegment = originalMotionMap.get(partnerSegment.startTimestamp - i * DateTimeConstants.MILLIS_PER_MINUTE);
+                final int priorSleepDepth = TimelineUtils.normalizeSleepDepth(priorSegment.amplitude, priorSegment.maxAmplitude);
+                if (priorSegment != null && priorSleepDepth < ACCOUNT_DEPTH_THRESHOLD) {
+                    LOGGER.debug("{} prior movement {} {}", partnerSegment.startTimestamp, priorSegment.startTimestamp, priorSleepDepth);
                     noPriorMovement = false;
                     break;
                 }
             }
 
             if (noPriorMovement) {
-                affectedSegments.add(new SleepSegment(
-                                originalSegment.id,
-                                originalSegment.getTimestamp(),
+                affectedSegments.add(new ParterMotionEvent(
+                                originalSegment.startTimestamp,
+                                originalSegment.endTimestamp,
                                 originalSegment.timezoneOffset,
-                                60,
-                                originalSegment.sleepDepth,
-                                Event.Type.PARTNER_MOTION,
-                                new ArrayList<SensorReading>(),
-                                null //soundInfo
+                                originalSegment.amplitude,
+                                originalSegment.maxAmplitude
                 ));
             }
 
         }
 
         //return TimelineUtils.categorizeSleepDepth(affectedSegments);  // normalized
-        return affectedSegments;
+        return ImmutableList.copyOf(affectedSegments);
     }
 }
