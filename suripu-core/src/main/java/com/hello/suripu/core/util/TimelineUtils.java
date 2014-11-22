@@ -489,6 +489,8 @@ public class TimelineUtils {
                         finalSegment.sensors,
                         finalSegment.soundInfo);
                 LOGGER.trace(mergedSegment.toString());
+                mergedSegment.setMessage(finalSegment.getMessage());
+                
                 if(collapseNullSegments && mergedSegment.type == Event.Type.NONE){
                     // Do nothing, collapse this event
                     LOGGER.trace("None slot skipped {}", new DateTime(mergedSegment.startTimestamp,
@@ -500,6 +502,7 @@ public class TimelineUtils {
                 // reset
                 startSlotKey = -1;
                 finalSegment = null;
+                minSleepDepth = Integer.MAX_VALUE;
             }
         }
 
