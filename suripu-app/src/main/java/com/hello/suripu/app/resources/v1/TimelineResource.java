@@ -142,7 +142,7 @@ public class TimelineResource extends BaseResource {
                         segmentFromAwakeDetection.getStartTimestamp(),
                         segmentFromAwakeDetection.getOffsetMillis(),
                         60,
-                        -1,
+                        100,
                         Event.Type.SLEEP,
                         new ArrayList<SensorReading>(), null);
                 sleepSegmentFromAwakeDetection.setMessage("You fell asleep");
@@ -151,7 +151,7 @@ public class TimelineResource extends BaseResource {
                         segmentFromAwakeDetection.getEndTimestamp(),
                         segmentFromAwakeDetection.getOffsetMillis(),
                         60,
-                        -1,
+                        0,
                         Event.Type.WAKE_UP,
                         new ArrayList<SensorReading>(), null);
 

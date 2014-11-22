@@ -176,25 +176,19 @@ public class Event {
                 this.message = "Unusual brightness detected";
                 break;
             case SUNSET:
-                this.message = String.format("The sun set at %s",
-                        new DateTime(this.startTimestamp, DateTimeZone.forOffsetMillis(this.timezoneOffset))
-                        .toString(DateTimeFormat.forPattern("HH:mma"))
-                );
+                this.message ="Sun set";
                 break;
             case SUNRISE:
-                this.message = String.format("The sun rose at %s",
-                        new DateTime(this.startTimestamp, DateTimeZone.forOffsetMillis(this.timezoneOffset))
-                                .toString(DateTimeFormat.forPattern("HH:mma"))
-                );
+                this.message = "Sun rose";
                 break;
             case SLEEP:
                 this.message = String.format("Fell asleep at %s",
                         new DateTime(this.startTimestamp, DateTimeZone.forOffsetMillis(this.timezoneOffset))
-                                .toString(DateTimeFormat.forPattern("HH:mma"))
+                                .toString(DateTimeFormat.forPattern("HH:mm a"))
                 );
                 break;
             case WAKE_UP:
-                this.message = "You woke up";
+                this.message = "Woke up";
                 break;
             case NONE:
                 this.message = "";
