@@ -124,9 +124,9 @@ public class TimelineResource extends BaseResource {
         // detect sleep time
         final int sleepEventThreshold = 7; // minutes of no-movement to determine that user has fallen asleep
         final Optional<SleepSegment> sleepTimeSegment = TimelineUtils.computeSleepTime(segments, sleepEventThreshold);
-        if(sleepTimeSegment.isPresent()) {
+        /*if(sleepTimeSegment.isPresent()) {
             segments.add(sleepTimeSegment.get());
-        }
+        }*/
 
         // A day starts with 8pm local time and ends with 4pm local time next day
         final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions, 20, 16);
@@ -159,6 +159,8 @@ public class TimelineResource extends BaseResource {
                     segments.add(sleepSegmentFromAwakeDetection);
                 }else {
                     if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION_FROM_AWAKE, accessToken.accountId, new ArrayList<String>())) {
+                        segments.add(sleepSegmentFromAwakeDetection);
+                    }else{
                         segments.add(sleepSegmentFromAwakeDetection);
                     }
                 }
