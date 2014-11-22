@@ -106,7 +106,7 @@ public class TimelineUtils {
 
         Long maxSVM = 0L;
         for(final TrackerMotion trackerMotion : trackerMotions) {
-            maxSVM = Math.max(maxSVM, trackerMotion.value);
+            maxSVM = Math.max(maxSVM, UInt32.getValue(trackerMotion.value));
         }
 
         LOGGER.debug("Max SVM = {}", maxSVM);
@@ -140,12 +140,13 @@ public class TimelineUtils {
 
             }
 
-            int sleepDepth = normalizeSleepDepth(trackerMotion.value, maxSVM);
+            long amplitude = UInt32.getValue(trackerMotion.value);
+            int sleepDepth = normalizeSleepDepth(Math.sqrt(amplitude), Math.sqrt(maxSVM));
 
             Event.Type eventType = (sleepDepth <= threshold) ? Event.Type.MOTION : Event.Type.NONE; // TODO: put these in a config file or DB
 
             // TODO: make this work
-            if (trackerMotion.value == maxSVM) {
+            if (amplitude == maxSVM) {
                 eventType = Event.Type.MOTION;
 
             }
@@ -182,6 +183,11 @@ public class TimelineUtils {
 
         Long maxSVM = 0L;
         for(final TrackerMotion trackerMotion : trackerMotions) {
+            if(trackerMotion.value < 0){
+                LOGGER.trace("Invalid val {}", trackerMotion.value);
+                continue;
+            }
+
             maxSVM = Math.max(maxSVM, UInt32.getValue(trackerMotion.value));
         }
 
@@ -195,8 +201,12 @@ public class TimelineUtils {
                 break; // if user has multiple pill, only use data from the latest tracker_id
             }
 
+            if(trackerMotion.value < 0){
+                continue;
+            }
+
             motionAmplitude = UInt32.getValue(trackerMotion.value);
-            int sleepDepth = normalizeSleepDepth(motionAmplitude, maxSVM);
+            int sleepDepth = normalizeSleepDepth(Math.sqrt(motionAmplitude), Math.sqrt(Double.valueOf(maxSVM)));
 
             final List<SensorReading> readings = new ArrayList<>();
 
@@ -214,6 +224,24 @@ public class TimelineUtils {
         LOGGER.debug("Generated {} segments from {} tracker motion samples", sleepSegments.size(), trackerMotions.size());
 
         return sleepSegments;
+    }
+
+    public static List<SleepSegment> convertLightMotionToNone(final List<SleepSegment> sleepSegments, final int thresholdSleepDepth){
+        final LinkedList<SleepSegment> convertedSegments = new LinkedList<>();
+        for(final SleepSegment sleepSegment:sleepSegments){
+            if(sleepSegment.type == Event.Type.MOTION && sleepSegment.sleepDepth > thresholdSleepDepth){
+                convertedSegments.add(new SleepSegment(sleepSegment.id,
+                        sleepSegment.getTimestamp(), sleepSegment.timezoneOffset, sleepSegment.getDurationInSeconds(),
+                        sleepSegment.sleepDepth,
+                        Event.Type.NONE,
+                        sleepSegment.sensors,
+                        sleepSegment.soundInfo));
+            }else{
+                convertedSegments.add(sleepSegment);
+            }
+        }
+
+        return ImmutableList.copyOf(convertedSegments);
     }
 
 
@@ -639,12 +667,12 @@ public class TimelineUtils {
      * @param maxValue
      * @return
      */
-    public static Integer normalizeSleepDepth(final long value, final long maxValue) {
+    public static Integer normalizeSleepDepth(final double value, final double maxValue) {
         int sleepDepth = 100;
         if(value == -1) {
             sleepDepth = 100;
         } else if(value > 0) {
-            int percentage = (int)(value * 100 / maxValue);
+            int percentage = (int)(value / maxValue * 100);
             sleepDepth = 100 - percentage;
             LOGGER.trace("Ratio = ({} / {}) = {}", value, maxValue, percentage);
             LOGGER.trace("Sleep Depth = {}", sleepDepth);
