@@ -10,6 +10,7 @@ import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.TimelineUtils;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.junit.Test;
 
 import java.io.File;
@@ -32,7 +33,9 @@ public class TimelineUtilsTest {
         sleepSegments.add(new SleepSegment(3L, now.plusMinutes(2).getMillis(), 0, 60, 100, Event.Type.MOTION, new ArrayList<SensorReading>(), null));
         sleepSegments.add(new SleepSegment(33L, now.plusMinutes(3).getMillis(), 0, 60, 100, Event.Type.MOTION, new ArrayList<SensorReading>(), null));
 
-        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(sleepSegments, 5);
+        final List<SleepSegment> mergedSegments = TimelineUtils.generateAlignedSegmentsByTypeWeight(sleepSegments,
+                DateTimeConstants.MILLIS_PER_MINUTE,
+                5, true);
         assertThat(mergedSegments.size(), is(1));
     }
 
@@ -46,8 +49,10 @@ public class TimelineUtilsTest {
         sleepSegments.add(new SleepSegment(5L, now.plusMinutes(2).getMillis(), 0, 60, 0, Event.Type.MOTION, new ArrayList<SensorReading>(), null));
         sleepSegments.add(new SleepSegment(55L, now.plusMinutes(3).getMillis(), 0, 60, 10, Event.Type.MOTION, new ArrayList<SensorReading>(), null));
 
-        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(sleepSegments, 5);
-        assertThat(mergedSegments.size(), is(sleepSegments.size()));
+        final List<SleepSegment> mergedSegments = TimelineUtils.generateAlignedSegmentsByTypeWeight(sleepSegments,
+                DateTimeConstants.MILLIS_PER_MINUTE,
+                5, true);
+        assertThat(mergedSegments.size(), is(1));
     }
 
 
@@ -65,8 +70,11 @@ public class TimelineUtilsTest {
         List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, 5, true);
         assertThat(segments.size(), is(trackerMotions.size()));
 
-        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(segments, 5);
-        assertThat(mergedSegments.size(), is(trackerMotions.size()));
+        final List<SleepSegment> mergedSegments = TimelineUtils.generateAlignedSegmentsByTypeWeight(segments,
+                DateTimeConstants.MILLIS_PER_MINUTE,
+                5,
+                true);
+        assertThat(mergedSegments.size(), is(1));
     }
 
 
@@ -82,8 +90,10 @@ public class TimelineUtilsTest {
         trackerMotions.add(new TrackerMotion(9L,99L,123L, now.plusMinutes(2).getMillis(), 100, 0));
 
         List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, 5, true);
-        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(segments, 5);
-        assertThat(mergedSegments.size(), is(3));
+        final List<SleepSegment> mergedSegments = TimelineUtils.generateAlignedSegmentsByTypeWeight(segments,
+                DateTimeConstants.MILLIS_PER_MINUTE,
+                5, true);
+        assertThat(mergedSegments.size(), is(1));
     }
 
 
@@ -108,10 +118,11 @@ public class TimelineUtilsTest {
         assertThat(segments.size(), is(0));
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testEmptySleepSegments() {
         final List<SleepSegment> segments = new ArrayList<>();
-        TimelineUtils.mergeConsecutiveSleepSegments(segments, 5);
+        final List<SleepSegment> actual = TimelineUtils.generateAlignedSegmentsByTypeWeight(segments, DateTimeConstants.MILLIS_PER_MINUTE, 5, true);
+        assertThat(actual.size(), is(0));
     }
 
     @Test
@@ -126,6 +137,18 @@ public class TimelineUtilsTest {
 
         final SleepSegment mergedSegment = TimelineUtils.merge(sleepSegments, 5);
         assertThat(mergedSegment.getDurationInSeconds(), is(5 * 60));
+    }
+
+    @Test
+    public void testMergeSlot() {
+        final List<SleepSegment> sleepSegments = new ArrayList<>();
+        final DateTime now = DateTime.now();
+        sleepSegments.add(new SleepSegment(3L, now.getMillis(), 0, 60, 100, Event.Type.MOTION, new ArrayList<SensorReading>(), null));
+        sleepSegments.add(new SleepSegment(4L, now.plusMinutes(5).getMillis(), 0, 60, 50, Event.Type.MOTION, new ArrayList<SensorReading>(), null));
+        sleepSegments.add(new SleepSegment(5L, now.plusMinutes(6).getMillis(), 0, 60, 0, Event.Type.MOTION, new ArrayList<SensorReading>(), null));
+
+        final List<SleepSegment> mergedSegments = TimelineUtils.generateAlignedSegmentsByTypeWeight(sleepSegments, DateTimeConstants.MILLIS_PER_MINUTE, 5, true);
+        assertThat(mergedSegments.size(), is(2));
     }
 
     @Test
@@ -162,17 +185,10 @@ public class TimelineUtilsTest {
         final List<TrackerMotion> trackerMotions = objectMapper.readValue(content, new TypeReference<List<TrackerMotion>>() {});
         final List<SleepSegment> segments = TimelineUtils.generateSleepSegments(trackerMotions, 5, true);
 
-        final long timeDiffInMins = (trackerMotions.get(trackerMotions.size() - 1).timestamp - trackerMotions.get(0).timestamp) / 60000L + 1L;
+        final long timeDiffInMins = (trackerMotions.get(trackerMotions.size() - 1).timestamp - trackerMotions.get(0).timestamp) / DateTimeConstants.MILLIS_PER_MINUTE + 1L;
 
         assertThat(segments.size(), is((int)timeDiffInMins));
 
-        final List<SleepSegment> categorized = TimelineUtils.categorizeSleepDepth(segments);
-        final List<SleepSegment> merged = TimelineUtils.mergeConsecutiveSleepSegments(categorized, 5);
-//        assertThat(merged.size(), is(19));
-//        System.out.println("-----");
-//        for(SleepSegment segment : merged) {
-//            System.out.println(segment.toString());
-//        }
     }
 
     @Test
@@ -185,8 +201,8 @@ public class TimelineUtilsTest {
         sleepSegments.add(new SleepSegment(5L, millis, 0, 60, 71, Event.Type.MOTION, new ArrayList<SensorReading>(), null));
         sleepSegments.add(new SleepSegment(6L, millis, 0, 60, 50, Event.Type.MOTION, new ArrayList<SensorReading>(), null));
 
-        final List<SleepSegment> mergedSegments = TimelineUtils.mergeByTimeBucket(sleepSegments, 2);
-        assertThat(mergedSegments.size(), is(2));
+        final List<SleepSegment> mergedSegments = TimelineUtils.generateAlignedSegmentsByTypeWeight(sleepSegments, DateTimeConstants.MILLIS_PER_MINUTE, 2, true);
+        assertThat(mergedSegments.size(), is(1));
     }
 
 

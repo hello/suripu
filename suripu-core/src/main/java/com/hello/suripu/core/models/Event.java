@@ -199,8 +199,11 @@ public class Event {
                                 .toString(DateTimeFormat.forPattern("HH:mma"))
                 );
                 break;
+            case NONE:
+                this.message = "";
+                break;
             default:
-                this.message = String.format("%s at %s",
+                this.message = String.format("%s at %s", this.type.toString(),
                         new DateTime(this.startTimestamp, DateTimeZone.forOffsetMillis(this.timezoneOffset))
                                 .toString(DateTimeFormat.forPattern("HH:mma")));
                 break;

@@ -99,15 +99,16 @@ public class SleepSegment extends Event implements Comparable {
     public String toString() {
         return Objects.toStringHelper(SleepSegment.class)
                 .add("id", id)
-                .add("timestamp", this.getTimestamp())
-                .add("offsetMillis", this.timezoneOffset)
+                //.add("timestamp", this.getTimestamp())
+                //.add("offsetMillis", this.timezoneOffset)
                 .add("durationInSeconds", this.getDurationInSeconds())
                 .add("sleepDepth", this.sleepDepth)
                 .add("eventType", this.type)
-                .add("message", this.getMessage())
+                //.add("message", this.getMessage())
                 .add("sensors", this.sensors)
                 .add("soundInfo", this.soundInfo)
-                .add("$when", new DateTime(this.getTimestamp(), DateTimeZone.forOffsetMillis(this.timezoneOffset)))
+                .add("from", new DateTime(this.startTimestamp, DateTimeZone.forOffsetMillis(this.timezoneOffset)))
+                .add("to", new DateTime(this.endTimestamp, DateTimeZone.forOffsetMillis(this.timezoneOffset)))
                 .add("$minutes", this.getDurationInSeconds() / DateTimeConstants.SECONDS_PER_MINUTE)
                 .toString();
     }

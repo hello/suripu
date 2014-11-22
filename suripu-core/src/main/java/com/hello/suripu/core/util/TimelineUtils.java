@@ -16,6 +16,7 @@ import com.hello.suripu.core.models.TrackerMotion;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -356,22 +357,22 @@ public class TimelineUtils {
 
 
     public static List<SleepSegment> generateAlignedSegmentsByTypeWeight(final List<SleepSegment> segmentList,
-                                                                         int slotDuration, int mergeSlotCount,
+                                                                         int slotDurationMS, int mergeSlotCount,
                                                                          boolean collapseNullSegments){
         // Step 1: Get the start and end time of the give segment list
-        long startTimestamp = Long.MIN_VALUE;
+        long startTimestamp = Long.MAX_VALUE;
         long endTimestamp = 0;
         int startOffsetMillis = 0;
         int endOffsetMillis = 0;
 
         for(final SleepSegment sleepSegment:segmentList){
-            if(sleepSegment.getTimestamp() < startTimestamp){
-                startTimestamp = sleepSegment.getTimestamp();
+            if(sleepSegment.startTimestamp < startTimestamp){
+                startTimestamp = sleepSegment.startTimestamp;
                 startOffsetMillis = sleepSegment.timezoneOffset;
             }
 
-            if(sleepSegment.getTimestamp() > endTimestamp){
-                endTimestamp = sleepSegment.getTimestamp();
+            if(sleepSegment.endTimestamp > endTimestamp){
+                endTimestamp = sleepSegment.endTimestamp;
                 endOffsetMillis = sleepSegment.timezoneOffset;
             }
         }
@@ -385,16 +386,16 @@ public class TimelineUtils {
         // Type: | none  | none  | none  | none  | ... | none  |
         // These slots are set to type none and will be override later.
         int interval = (int)(endTimestamp - startTimestamp);
-        int slotCount = interval / slotDuration;
-        if(interval % slotDuration > 0){
+        int slotCount = interval / slotDurationMS;
+        if(interval % slotDurationMS > 0){
             slotCount++;
         }
 
-        final LinkedHashMap<Long, SleepSegment> slots = new LinkedHashMap<>();
+        final LinkedHashMap<DateTime, SleepSegment> slots = new LinkedHashMap<>();
         for(int i = 0; i < slotCount; i++){
-            final long slotStartTimestamp = startTimestamp + i * slotDuration;
-            slots.put(slotStartTimestamp, new SleepSegment(0L,
-                    slotStartTimestamp, startOffsetMillis, slotDuration,
+            final long slotStartTimestamp = startTimestamp + i * slotDurationMS;
+            slots.put(new DateTime(slotStartTimestamp, DateTimeZone.UTC), new SleepSegment(0L,
+                    slotStartTimestamp, startOffsetMillis, slotDurationMS / DateTimeConstants.MILLIS_PER_SECOND,
                     100,
                     Event.Type.NONE,
                     null,
@@ -405,38 +406,44 @@ public class TimelineUtils {
         // Step 3: Scan through segmentList, fill slots with highest weight event and their messages.
         // Example:
         // segmentList: | Sleep       |
-        //                     |    motion    | none | none | Wakeup |
+        //                     |    motion    |
+        //                                    |none  |
+        //                                           | none |
+        //                                                  | Wakeup |
+
         // empty slots: | none | none | none  | none | none | none   |
         // After scan:  |sleep | sleep| motion| none | none | Wakeup |
         for(final SleepSegment sleepSegment:segmentList){
-            int startSlotIndex = (int)(sleepSegment.getTimestamp() - startTimestamp) / slotDuration;
-            long startSlotKey = startTimestamp + startSlotIndex * slotDuration;
+            int startSlotIndex = (int)(sleepSegment.startTimestamp - startTimestamp) / slotDurationMS;
+            long startSlotKey = startTimestamp + startSlotIndex * slotDurationMS;
 
-            int endSlotIndex = (int)(sleepSegment.getTimestamp() - endTimestamp) / slotDuration;
-            long endSlotKey = startTimestamp + endSlotIndex * slotDuration;
+            int endSlotIndex = (int)(sleepSegment.endTimestamp - startTimestamp) / slotDurationMS;
+            if(endSlotIndex > 0){
+                endSlotIndex--;
+            }
 
-            long slotKey = startSlotKey;
-            while(slotKey <= endSlotKey){
-                if(!slots.containsKey(slotKey)){
-                    LOGGER.warn("Cannot find key: {}", slotKey);
-                    slotKey += slotDuration;
+
+            long endSlotKey = startTimestamp + endSlotIndex * slotDurationMS;
+
+            for(int i = 0; i < endSlotIndex - startSlotIndex + 1; i++){
+                final DateTime objectSlotKey = new DateTime(startSlotKey + i * slotDurationMS, DateTimeZone.UTC);
+                if(!slots.containsKey(objectSlotKey)){
+                    LOGGER.warn("Cannot find key: {}, end {}", objectSlotKey, new DateTime(endSlotKey, DateTimeZone.UTC));
                     continue;
                 }
 
-                final SleepSegment currentSegment = slots.get(slotKey);
-                if(currentSegment.type.getValue() < sleepSegment.type.getValue()){
+                final SleepSegment currentSlot = slots.get(objectSlotKey);
+                if(currentSlot.type.getValue() < sleepSegment.type.getValue()){
                     // Replace the current segment in that slot with higher weight segment
                     final SleepSegment replaceSegment = new SleepSegment(0L,
-                            slotKey, sleepSegment.timezoneOffset, currentSegment.getDurationInSeconds(),
+                            objectSlotKey.getMillis(), sleepSegment.timezoneOffset, currentSlot.getDurationInSeconds(),
                             sleepSegment.sleepDepth,
                             sleepSegment.type,
                             sleepSegment.sensors,
                             sleepSegment.soundInfo
                             );
-                    slots.put(slotKey, replaceSegment);
+                    slots.put(objectSlotKey, replaceSegment);
                 }
-
-                slotKey += slotDuration;
             }
         }
 
@@ -451,10 +458,10 @@ public class TimelineUtils {
         SleepSegment finalSegment = null;
         SleepSegment currentSegment = null;
 
-        for(final long slotStartTimestamp:slots.keySet()){  // Iterate though a linkedHashMap will preserve the insert order
+        for(final DateTime slotStartTimestamp:slots.keySet()){  // Iterate though a linkedHashMap will preserve the insert order
             currentSegment = slots.get(slotStartTimestamp);
             if(startSlotKey == -1){
-                startSlotKey = slotStartTimestamp;
+                startSlotKey = slotStartTimestamp.getMillis();
                 finalSegment = currentSegment;
             }
 
@@ -469,7 +476,7 @@ public class TimelineUtils {
                 final SleepSegment mergedSegment = new SleepSegment(finalSegment.id,
                         startSlotKey,
                         finalSegment.timezoneOffset,
-                        (int)(currentSegment.getTimestamp() - startSlotKey) / DateTimeConstants.MILLIS_PER_SECOND,
+                        (int)(currentSegment.startTimestamp - startSlotKey) / DateTimeConstants.MILLIS_PER_SECOND,
                         finalSegment.sleepDepth,
                         finalSegment.type,
                         finalSegment.sensors,
