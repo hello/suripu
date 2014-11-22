@@ -138,7 +138,7 @@ public class TimelineUtils {
                     trackerMotion.id,
                     trackerMotion.timestamp,
                     trackerMotion.offsetMillis,
-                    60, // in 1 minute segment
+                    DateTimeConstants.SECONDS_PER_MINUTE, // in 1 minute segment
                     sleepDepth,
                     eventType,
                     readings,
@@ -394,7 +394,7 @@ public class TimelineUtils {
         final LinkedHashMap<DateTime, SleepSegment> slots = new LinkedHashMap<>();
         for(int i = 0; i < slotCount; i++){
             final long slotStartTimestamp = startTimestamp + i * slotDurationMS;
-            slots.put(new DateTime(slotStartTimestamp, DateTimeZone.UTC), new SleepSegment(0L,
+            slots.put(new DateTime(slotStartTimestamp, DateTimeZone.UTC), new SleepSegment(slotStartTimestamp,
                     slotStartTimestamp, startOffsetMillis, slotDurationMS / DateTimeConstants.MILLIS_PER_SECOND,
                     100,
                     Event.Type.NONE,
@@ -435,7 +435,7 @@ public class TimelineUtils {
                 final SleepSegment currentSlot = slots.get(objectSlotKey);
                 if(currentSlot.type.getValue() < sleepSegment.type.getValue()){
                     // Replace the current segment in that slot with higher weight segment
-                    final SleepSegment replaceSegment = new SleepSegment(0L,
+                    final SleepSegment replaceSegment = new SleepSegment(objectSlotKey.getMillis(),
                             objectSlotKey.getMillis(), sleepSegment.timezoneOffset, currentSlot.getDurationInSeconds(),
                             sleepSegment.sleepDepth,
                             sleepSegment.type,
@@ -443,6 +443,7 @@ public class TimelineUtils {
                             sleepSegment.soundInfo
                             );
                     slots.put(objectSlotKey, replaceSegment);
+                    LOGGER.trace(slots.get(objectSlotKey).toString());
                 }
             }
         }
@@ -457,6 +458,7 @@ public class TimelineUtils {
         long startSlotKey = -1;
         SleepSegment finalSegment = null;
         SleepSegment currentSegment = null;
+        LOGGER.debug("Slots before merge {}", slots.size());
 
         for(final DateTime slotStartTimestamp:slots.keySet()){  // Iterate though a linkedHashMap will preserve the insert order
             currentSegment = slots.get(slotStartTimestamp);
@@ -483,6 +485,8 @@ public class TimelineUtils {
                         finalSegment.soundInfo);
                 if(collapseNullSegments && mergedSegment.type == Event.Type.NONE){
                     // Do nothing, collapse this event
+                    LOGGER.trace("None slot skipped {}", new DateTime(mergedSegment.startTimestamp,
+                            DateTimeZone.forOffsetMillis(mergedSegment.timezoneOffset)));
                 }else {
                     mergeSlots.add(mergedSegment);
                 }
@@ -509,6 +513,8 @@ public class TimelineUtils {
                 mergeSlots.add(mergedSegment);
             }
         }
+
+        LOGGER.trace("Slots after merge {}", mergeSlots.size());
 
         return ImmutableList.copyOf(mergeSlots);
 
