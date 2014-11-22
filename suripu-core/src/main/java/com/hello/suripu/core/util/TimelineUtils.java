@@ -112,31 +112,10 @@ public class TimelineUtils {
 
         final Long trackerId = trackerMotions.get(0).trackerId;
 
-        Long lastTimestamp = trackerMotions.get(0).timestamp;
         for(final TrackerMotion trackerMotion : trackerMotions) {
             if (!trackerMotion.trackerId.equals(trackerId)) {
                 LOGGER.warn("User has multiple pills: {} and {}", trackerId, trackerMotion.trackerId);
                 break; // if user has multiple pill, only use data from the latest tracker_id
-            }
-
-            if (createMotionlessSegment && trackerMotion.timestamp != lastTimestamp) {
-                // pad with 1-min segments with no movement
-                final int durationInSeconds = (int) (trackerMotion.timestamp - lastTimestamp) / DateTimeConstants.MILLIS_PER_SECOND;
-                final int segmentDuration = 60;
-                final int numSegments = durationInSeconds / 60;
-                for (int j = 0; j < numSegments; j++) {
-                    final SleepSegment sleepSegment = new SleepSegment(trackerMotion.id,
-                            lastTimestamp + (j * segmentDuration * DateTimeConstants.MILLIS_PER_SECOND), // millis
-                            trackerMotion.offsetMillis,
-                            segmentDuration, // seconds
-                            100, // depth 100 => motionless
-                            Event.Type.NONE,
-                            Collections.<SensorReading>emptyList(),
-                            null);
-                    sleepSegments.add(sleepSegment);
-                }
-
-
             }
 
             int sleepDepth = normalizeSleepDepth(trackerMotion.value, maxSVM);
@@ -164,7 +143,6 @@ public class TimelineUtils {
                     readings,
                     null);
             sleepSegments.add(sleepSegment);
-            lastTimestamp = trackerMotion.timestamp + DateTimeConstants.MILLIS_PER_MINUTE;
         }
         LOGGER.debug("Generated {} segments from {} tracker motion samples", sleepSegments.size(), trackerMotions.size());
 
