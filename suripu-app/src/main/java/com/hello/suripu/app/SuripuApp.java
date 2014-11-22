@@ -15,6 +15,7 @@ import com.hello.suripu.app.cli.CreateAlarmDynamoDBTableCommand;
 import com.hello.suripu.app.cli.CreateAlarmInfoDynamoDBTable;
 import com.hello.suripu.app.cli.CreateDynamoDBEventTableCommand;
 import com.hello.suripu.app.cli.CreateDynamoDBTimeZoneHistoryTableCommand;
+import com.hello.suripu.app.cli.CreateFeaturesDynamoDBTableCommand;
 import com.hello.suripu.app.cli.CreateRingTimeDynamoDBTable;
 import com.hello.suripu.app.cli.CreateSleepScoreDynamoDBTable;
 import com.hello.suripu.app.cli.RecreateEventsCommand;
@@ -112,6 +113,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         bootstrap.addCommand(new CreateRingTimeDynamoDBTable());
         bootstrap.addCommand(new CreateAlarmInfoDynamoDBTable());
         bootstrap.addCommand(new CreateSleepScoreDynamoDBTable());
+        bootstrap.addCommand(new CreateFeaturesDynamoDBTableCommand());
 
         bootstrap.addBundle(new KinesisLoggerBundle<SuripuAppConfiguration>() {
             @Override

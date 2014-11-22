@@ -108,13 +108,15 @@ public class Response {
             return this;
         }
 
-        public Builder withQuestionFreq(final Question.FREQUENCY frequency) {
-            this.questionFreq = Optional.fromNullable(frequency);
+        public Builder withQuestionFreq(final String frequency) {
+            if (frequency != null) {
+                this.questionFreq = Optional.fromNullable(Question.FREQUENCY.valueOf(frequency.toUpperCase()));
+            }
             return this;
         }
 
         public Builder withAskTime(final DateTime askTime) {
-            this.askTime = askTime;
+                this.askTime = askTime;
             return this;
         }
 

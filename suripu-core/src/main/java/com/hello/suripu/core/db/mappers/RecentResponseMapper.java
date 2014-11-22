@@ -1,6 +1,5 @@
 package com.hello.suripu.core.db.mappers;
 
-import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Response;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -24,8 +23,11 @@ public class RecentResponseMapper implements ResultSetMapper<Response> {
         builder.withResponseId(r.getInt("response_id"));
         builder.withSkip(r.getBoolean("skip"));
         builder.withAccountQuestionId(r.getLong("account_question_id"));
-        builder.withQuestionFreq(Question.FREQUENCY.valueOf(r.getString("question_freq").toUpperCase()));
-        builder.withAskTime(new DateTime(r.getTimestamp("ask_time"), DateTimeZone.UTC));
+        builder.withQuestionFreq(r.getString("question_freq"));
+
+        if (r.getTimestamp("ask_time") != null) {
+            builder.withAskTime(new DateTime(r.getTimestamp("ask_time"), DateTimeZone.UTC));
+        }
 
         final Response response = builder.build();
         return response;

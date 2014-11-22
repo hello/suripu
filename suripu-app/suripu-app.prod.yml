@@ -150,7 +150,7 @@ sleep_score_db:
 sleep_score_version: v_0_1
 
 features_db:
-    endpoint : http://localhost:7777
+    endpoint : http://dynamodb.us-east-1.amazonaws.com
     region: us-east-1
     table_name: features
 
