@@ -29,7 +29,8 @@ public class Event {
         SUNSET(7),
         SUNRISE(8),
         SLEEP(9),
-        WAKE_UP(10);
+        WAKE_UP(10),
+        FALL_ASLEEP(11);
 
         private int value;
 
@@ -67,6 +68,9 @@ public class Event {
                     return SLEEP;
                 case 10:
                     return WAKE_UP;
+                case 11:
+                    return FALL_ASLEEP;
+
                 default:
                     return NONE;
             }
@@ -193,11 +197,11 @@ public class Event {
                                 .toString(DateTimeFormat.forPattern("HH:mma"))
                 );
                 break;
+            case FALL_ASLEEP:
+                this.message = "Fall asleep";
+                break;
             case WAKE_UP:
-                this.message = String.format("Wake up at %s",
-                        new DateTime(this.startTimestamp, DateTimeZone.forOffsetMillis(this.timezoneOffset))
-                                .toString(DateTimeFormat.forPattern("HH:mma"))
-                );
+                this.message = "Wake up at";
                 break;
             case NONE:
                 this.message = "";

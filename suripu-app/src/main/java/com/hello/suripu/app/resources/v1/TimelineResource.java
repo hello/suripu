@@ -147,7 +147,7 @@ public class TimelineResource extends BaseResource {
                             segmentFromAwakeDetection.getOffsetMillis(),
                             60,
                             -1,
-                            Event.Type.SLEEP,
+                            Event.Type.FALL_ASLEEP,
                             new ArrayList<SensorReading>(), null);
 
                     final SleepSegment wakeupSegmentFromAwakeDetection = new SleepSegment(1L,
@@ -189,7 +189,7 @@ public class TimelineResource extends BaseResource {
                             segmentFromQuietPeriodDetection.getOffsetMillis(),
                             60,
                             -1,
-                            Event.Type.SLEEP,
+                            Event.Type.FALL_ASLEEP,
                             new ArrayList<SensorReading>(), null);
 
                     final SleepSegment wakeupSegmentFromQuietPeriodDetection = new SleepSegment(1L,
