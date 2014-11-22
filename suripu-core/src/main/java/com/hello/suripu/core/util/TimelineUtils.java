@@ -359,7 +359,7 @@ public class TimelineUtils {
     public static List<SleepSegment> generateAlignedSegmentsByTypeWeight(final List<SleepSegment> segmentList,
                                                                          int slotDurationMS, int mergeSlotCount,
                                                                          boolean collapseNullSegments){
-        // Step 1: Get the start and end time of the give segment list
+        // Step 1: Get the start and end time of the given segment list
         long startTimestamp = Long.MAX_VALUE;
         long endTimestamp = 0;
         int startOffsetMillis = 0;
