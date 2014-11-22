@@ -41,6 +41,8 @@ public class Question {
         public String toString() {
             return value;
         }
+
+        public String toSQLString() {return value.toLowerCase();}
     }
 
     public enum ASK_TIME {

@@ -29,19 +29,26 @@ public interface QuestionResponseDAO {
     ImmutableList<Question> getAllQuestions();
 
     @GetGeneratedKeys
-    @SqlUpdate("INSERT INTO responses (account_id, question_id, account_question_id, response_id) VALUES " +
-            "(:account_id, :question_id, :account_question_id, :response_id)")
+    @SqlUpdate("INSERT INTO responses (account_id, question_id, account_question_id, response_id, question_freq) VALUES " +
+            "(:account_id, :question_id, :account_question_id, :response_id, CAST(:frequency AS FREQUENCY_TYPE) )")
     Long insertResponse(@Bind("account_id") long accountId,
                         @Bind("question_id") Integer questionId,
                         @Bind("account_question_id") Long accountQuestionId,
-                        @Bind("response_id") Integer responseId);
+                        @Bind("response_id") Integer responseId,
+                        @Bind("frequency") String frequency);
 
     @GetGeneratedKeys
-    @SqlUpdate("INSERT INTO responses (account_id, question_id, account_question_id, skip) VALUES " +
-            "(:account_id, :question_id, :account_question_id, TRUE)")
-    Long insertSkippedQuestion(@Bind("account_id") long accountId,
-                               @Bind("question_id") Integer questionId,
-                               @Bind("account_question_id") Long accountQuestionId);
+    @SqlUpdate("INSERT INTO responses (account_id, question_id, account_question_id, question_freq, skip) " +
+            "SELECT :account_id AS account_id, :question_id AS question_id," +
+            ":account_question_id AS account_question_id, " +
+            "CAST(:frequency AS FREQUENCY_TYPE) AS question_freq, TRUE AS skip " +
+            "WHERE EXISTS (SELECT id FROM account_questions WHERE id = :account_question_id\n" +
+            "  AND account_id = :account_id)\n")
+    Long  insertSkippedQuestion(@Bind("account_id") long accountId,
+                                 @Bind("question_id") Integer questionId,
+                                 @Bind("account_question_id") Long accountQuestionId,
+                                 @Bind("frequency") String frequency);
+
 
     @GetGeneratedKeys
     @SqlUpdate("INSERT INTO account_questions " +
@@ -79,7 +86,8 @@ public interface QuestionResponseDAO {
             "R.response_id AS response_id, " +
             "R.skip AS skip, " +
             "R.created AS created, " +
-            "Q.created_local_utc_ts AS ask_time  " +
+            "Q.created_local_utc_ts AS ask_time, " +
+            "R.question_freq AS question_freq " +
             "FROM account_questions Q " +
             "LEFT OUTER JOIN responses R ON R.account_question_id = Q.id " +
             "WHERE Q.account_id = :account_id ORDER BY Q.id DESC LIMIT :limit")
@@ -92,6 +100,12 @@ public interface QuestionResponseDAO {
                                                        @Bind("max_base_id") int maxBaseId,
                                                        @Bind("one_week_ago") DateTime oneWeekAgo);
 
+    @SqlQuery("SELECT DISTINCT question_id FROM responses WHERE account_id = :account_id AND " +
+            "(question_freq = CAST(:frequency AS FREQUENCY_TYPE) OR created >= :one_week_ago)")
+    List<Integer> getBaseAndRecentAnsweredQuestionIds(@Bind("account_id") long accountId,
+                                                      @Bind("frequency") String frequency,
+                                                      @Bind("one_week_ago") DateTime oneWeekAgo);
+
     @SingleValueResult
     @SqlQuery("SELECT next_ask_time_local_utc FROM account_question_ask_time WHERE account_id = :account_id ORDER BY id DESC LIMIT 1")
     Optional<Timestamp> getNextAskTime(@Bind("account_id") long accountId);
@@ -101,4 +115,5 @@ public interface QuestionResponseDAO {
             "(:account_id, :next_ask_time)")
     Long setNextAskTime(@Bind("account_id") long accountId,
                         @Bind("next_ask_time") DateTime nextAskTime);
+
 }

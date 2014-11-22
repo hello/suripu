@@ -84,7 +84,7 @@ public class QuestionProcessor {
 
         // check if we have already generated a list of questions
         final Map<Integer, Question> preGeneratedQuestions = this.getPreGeneratedQuestions(accountId, today, numQuestions);
-        if (preGeneratedQuestions.size() >= numQuestions) {
+        if (preGeneratedQuestions.size() > 0) {
             return new ArrayList<>(preGeneratedQuestions.values());
         }
 
@@ -117,7 +117,7 @@ public class QuestionProcessor {
         for (final Choice choice : choices) {
             if (responseToQuestion.choiceList.contains(choice)) {
                 try {
-                    this.questionResponseDAO.insertResponse(accountId, questionId, accountQuestionId, choice.id);
+                    this.questionResponseDAO.insertResponse(accountId, questionId, accountQuestionId, choice.id, responseToQuestion.frequency.toSQLString());
                     saved++;
                 } catch (UnableToExecuteStatementException exception) {
                     LOGGER.warn("Fail to insert response {} to question {}", choice.id, accountQuestionId);
@@ -139,16 +139,19 @@ public class QuestionProcessor {
      */
     public void skipQuestion(final Long accountId, final Integer questionId, final Long accountQuestionId, final int tzOffsetMillis) {
 
-        // save skip
-        this.questionResponseDAO.insertSkippedQuestion(accountId, questionId, accountQuestionId);
+        // save skip if this is a question we've asked
+        final Question responseToQuestion = this.questionIdMap.get(questionId);
+        final Long insertId = this.questionResponseDAO.insertSkippedQuestion(accountId, questionId, accountQuestionId, responseToQuestion.frequency.toSQLString());
 
         // determine next time to ask
-        this.setNextAskDate(accountId, tzOffsetMillis);
+        if (insertId != null && insertId > 0L) {
+            this.setNextAskDate(accountId, tzOffsetMillis);
+        }
     }
 
     public int setNextAskDate (final Long accountId, final int tzOffsetMillis) {
         // find out how many the user has skipped
-        final List<Long> skippedIds = this.getConsecutiveSkipsCount(accountId);
+        final List<Long> skippedIds = this.getConsecutiveSkipsCount(accountId, tzOffsetMillis);
 
         // set a delay for next ask time, max days to skip is 55 days
         final int skipCount = Math.min(skippedIds.size(), MAX_SKIPS_ALLOWED);
@@ -162,13 +165,24 @@ public class QuestionProcessor {
         return skipDays;
     }
 
-    private List<Long> getConsecutiveSkipsCount(final Long accountId) {
+    private List<Long> getConsecutiveSkipsCount(final Long accountId, final int tzOffsetMillis) {
         // get last N questions, and check for consecutive skips
         final List<Long> skippedIds = new ArrayList<>();
 
+        final DateTime today = DateTime.now(DateTimeZone.UTC).plusMillis(tzOffsetMillis).withTimeAtStartOfDay();
+
         final List<Response> responses = this.questionResponseDAO.getLastFewResponses(accountId, this.checkSkipsNum);
         for (final Response response : responses) {
-            if (!response.skip) {
+            if (response.skip == null && response.askTime.isEqual(today)) {
+                continue;
+            }
+
+            Boolean skip = null;
+            if (response.skip != null) {
+                skip = response.skip.get();
+            }
+
+            if (skip != null && skip == false) {
                 // not a skip, bolt
                 break;
             }
@@ -212,10 +226,12 @@ public class QuestionProcessor {
 
         // always include the ONE daily calibration question, most important Q has lower id
         final Integer questionId = this.availableQuestionIds.get(Question.FREQUENCY.DAILY).get(0);
-        addedIds.add(questionId);
-        final Long savedID = this.saveGeneratedQuestion(accountId, questionId, today);
-        if (savedID > 0L) {
-            questions.add(Question.withAskTimeAccountQId(this.questionIdMap.get(questionId), savedID, today));
+        if (!addedIds.contains(questionId)) {
+            addedIds.add(questionId);
+            final Long savedID = this.saveGeneratedQuestion(accountId, questionId, today);
+            if (savedID > 0L) {
+                questions.add(Question.withAskTimeAccountQId(this.questionIdMap.get(questionId), savedID, today));
+            }
         }
 
         // pick some base question, check if we already got responses from all
@@ -265,8 +281,10 @@ public class QuestionProcessor {
         // always choose ONE random daily-question
         List<Question> selectedQs;
         selectedQs = this.randomlySelectFromQuestionPool(accountId, seenIds, Question.FREQUENCY.DAILY, today, 1);
-        addedIds.add(selectedQs.get(0).id);
-        questions.addAll(selectedQs);
+        if (selectedQs.size() > 0 && !addedIds.contains(selectedQs.get(0).id)) {
+            addedIds.add(selectedQs.get(0).id);
+            questions.addAll(selectedQs);
+        }
 
 
         // first dib for base-question, randomly choose ONE
@@ -275,8 +293,11 @@ public class QuestionProcessor {
             if (!answeredAll) {
                 selectedQs.clear();
                 selectedQs = this.randomlySelectFromQuestionPool(accountId, addedIds, Question.FREQUENCY.ONE_TIME, today, 1);
-                addedIds.add(selectedQs.get(0).id);
-                questions.addAll(selectedQs);
+                if (selectedQs.size() > 0) {
+                    addedIds.add(selectedQs.get(0).id);
+                    questions.addAll(selectedQs);
+                }
+
             }
         }
 
@@ -321,9 +342,9 @@ public class QuestionProcessor {
                 final Long savedId = this.saveGeneratedQuestion(accountId, question.id, today);
                 if (savedId > 0L) {
                     questions.add(Question.withAskTimeAccountQId(question, savedId, today));
-                    questionsPool.remove(qid);
-                    poolSize--;
                 }
+                questionsPool.remove(qid);
+                poolSize--;
             }
 
             if (poolSize == 0) {
@@ -358,7 +379,7 @@ public class QuestionProcessor {
      */
     private List<Integer> getUserAnsweredQuestionIds (final Long accountId) {
         final DateTime oneWeekAgo = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(7);
-        final List<Integer> baseIds = this.questionResponseDAO.getBaseAndRecentAnsweredQuestionIds(accountId, MAX_BASE_QUESTION_ID, oneWeekAgo);
+        final List<Integer> baseIds = this.questionResponseDAO.getBaseAndRecentAnsweredQuestionIds(accountId, Question.FREQUENCY.ONE_TIME.toSQLString(), oneWeekAgo);
         LOGGER.debug("User has seen {} base questions", baseIds.size());
         return baseIds;
     }

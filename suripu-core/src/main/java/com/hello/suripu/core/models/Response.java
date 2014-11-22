@@ -1,5 +1,6 @@
 package com.hello.suripu.core.models;
 
+import com.google.common.base.Optional;
 import org.joda.time.DateTime;
 
 /**
@@ -11,15 +12,17 @@ public class Response {
     final public Integer questionId;
     final public String response;
     final public Integer responseId;
-    final public boolean skip;
+    final public Optional<Boolean> skip;
     final public DateTime created;
     final public Long accountQuestionId;
+    final public Optional<Question.FREQUENCY> questionFreq;
     final public DateTime askTime; // ask time in user local-utc-ts
 
 
     public Response(final Long id, final Long accountId, final Integer questionId,
-                    final String response, final Integer responseId, final boolean skip,
-                    final DateTime created, final Long accountQuestionId, final DateTime askTime) {
+                    final String response, final Integer responseId, final Optional<Boolean> skip,
+                    final DateTime created, final Long accountQuestionId,
+                    final Optional<Question.FREQUENCY> frequency, final DateTime askTime) {
         this.id = id;
         this.accountId = accountId;
         this.questionId = questionId;
@@ -28,6 +31,7 @@ public class Response {
         this.skip = skip;
         this.created = created;
         this.accountQuestionId = accountQuestionId;
+        this.questionFreq = frequency;
         this.askTime = askTime;
     }
 }

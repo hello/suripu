@@ -60,11 +60,13 @@ CREATE TABLE account_questions(
   created TIMESTAMP default current_timestamp -- when the question was created
 );
 
-CREATE UNIQUE INDEX uniq_account_question_created_ts ON account_questions(account_id, question_id, created_local_utc_ts);
-CREATE INDEX account_id ON account_questions(account_id);
+CREATE UNIQUE INDEX uniq_aq_account_qid_created_ts ON account_questions(account_id, question_id, created_local_utc_ts);
+CREATE INDEX aq_account_id ON account_questions(account_id);
+CREATE INDEX aq_account_id_expires ON account_questions(account_id, expires_local_utc_ts);
 
 GRANT ALL PRIVILEGES ON account_questions TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE account_questions_id_seq TO ingress_user;
+
 
 -- user's responses to our questions
 CREATE TABLE responses (
@@ -74,6 +76,7 @@ CREATE TABLE responses (
     account_question_id BIGINT default 0,
     response_id INTEGER default 0,
     skip BOOLEAN default FALSE,
+    question_freq FREQUENCY_TYPE,
     created TIMESTAMP default current_timestamp
 );
 
@@ -94,6 +97,8 @@ CREATE TABLE account_question_ask_time (
     next_ask_time_local_utc TIMESTAMP, -- Date to start asking question again
     created TIMESTAMP default current_timestamp
 );
+
+CREATE INDEX aq_ask_time_account_id ON account_question_ask_time(account_id);
 
 GRANT ALL PRIVILEGES ON account_question_ask_time TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE account_question_ask_time_id_seq TO ingress_user;
@@ -138,6 +143,36 @@ VALUES (6, 'Do you take naps during the day?',
 'EN', 'one_time', 'choice',
 '{"Yes", "Sometimes", "No"}', null, 'anytime');
 
+--
+--Additional Questions
+--
+--"Do you fall asleep easily"
+--'{"Yes", "No", "Somewhat"}'
+
+--"Do you take any medication to help you fall asleep"
+--'{"Regularly", "Occasionally", "No"}'
+
+--"What activities do you usually undertake before going to bed?"
+--
+--"Do you experience an uncomfortable/restless sensation in your legs at night?"
+--"How often do you experience insomnia?"
+--"Have you been diagnose with any sleep disorders?"
+
+--"Have you ever wake up gasping for breath?"
+--
+--"Have you ever fallen asleep while driving?"
+--
+--"Do you feel that you get enough sleep?"
+--
+--"Are you quick to recover from jet-lag?"
+--
+--"Do you watch TV in your bedroom?"
+--
+--"Do you practice meditation?"
+
+-- Diet questions
+-- "Are you a vegetarian?"
+-- "Do you consume meat in every meal?"
 
 --
 -- 2. calibration type questions, asked often
@@ -147,19 +182,41 @@ VALUES (10000, 'How was your sleep last night?',
 'EN', 'daily', 'choice',
 '{"Great", "Okay", "Poor"}', null, 'morning');
 
+--"How generally well do you feel today?"
+--'{"Very well", "Fine", "OK", "Not well at all"}'
+--
+--"How energetic do you feel today?"
+--'{"Very energetic", "Somewhat energetic", "OK", "Lethargic"}'
+
 
 --
 -- 3. ongoing questions, asked occasionally
 --
 INSERT INTO questions (id, question_text, lang, frequency, response_type, responses, dependency, ask_time)
-VALUES (10001, 'How many caffeinated drinks have you taken today?',
+VALUES (10001, 'How many caffeine drinks did you have today BEFORE 5pm?',
 'EN', 'occasionally', 'choice',
 '{"5 and more", "2 to 4", "just 1", "None"}', 4, 'evening');
+
+'How many caffeine drinks did you have today AFTER 5pm?'
+
 
 INSERT INTO questions (id, question_text, lang, frequency, response_type, responses, dependency, ask_time)
 VALUES (10002, 'Did you workout today?',
 'EN', 'occasionally', 'choice',
 '{"Yes", "No"}', 6, 'evening');
+
+--"How intense was your workout today?"
+--"How long did you workout today?"
+--"What time of day did you exercise today?"
+--"How many alcoholic drinks did you have today?"
+--"Did you have any naps today?"
+--"Did you consume any of these within 3 hours of going to bed?"
+--"What time did you have dinner today?"
+--"Did you have a late, big dinner today?"
+--
+--
+
+
 
 INSERT INTO questions (id, question_text, lang, frequency, response_type, responses, dependency, ask_time)
 VALUES (10003, 'How are you feeling right now?',
