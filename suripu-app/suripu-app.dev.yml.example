@@ -118,6 +118,10 @@ sleep_score_db:
     table_name: sleep_score
 sleep_score_version: v_0_1
 
+features_db:
+    endpoint : http://localhost:7777
+    region: us-east-1
+    table_name: features
 
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
