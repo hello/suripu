@@ -156,12 +156,12 @@ public class TimelineResource extends BaseResource {
                         new ArrayList<SensorReading>(), null);
 
                 if(!sleepTimeSegment.isPresent()) {
+                    LOGGER.debug("Default algorithm failed to detect sleep time. Force to use N shape algorithm.");
                     segments.add(sleepSegmentFromAwakeDetection);
                 }else {
                     if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION_FROM_AWAKE, accessToken.accountId, new ArrayList<String>())) {
                         segments.add(sleepSegmentFromAwakeDetection);
-                    }else{
-                        segments.add(sleepSegmentFromAwakeDetection);
+                        LOGGER.debug("Default algorithm and N shape algorithm both detected sleep.");
                     }
                 }
                 segments.add(wakeupSegmentFromAwakeDetection);
