@@ -29,8 +29,7 @@ public class Event {
         SUNSET(7),
         SUNRISE(8),
         SLEEP(9),
-        WAKE_UP(10),
-        FALL_ASLEEP(11);
+        WAKE_UP(10);
 
         private int value;
 
@@ -68,9 +67,6 @@ public class Event {
                     return SLEEP;
                 case 10:
                     return WAKE_UP;
-                case 11:
-                    return FALL_ASLEEP;
-
                 default:
                     return NONE;
             }
@@ -197,11 +193,8 @@ public class Event {
                                 .toString(DateTimeFormat.forPattern("HH:mma"))
                 );
                 break;
-            case FALL_ASLEEP:
-                this.message = "Fall asleep";
-                break;
             case WAKE_UP:
-                this.message = "Wake up at";
+                this.message = "You woke up";
                 break;
             case NONE:
                 this.message = "";

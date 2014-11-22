@@ -443,7 +443,7 @@ public class TimelineUtils {
                             sleepSegment.soundInfo
                             );
                     slots.put(objectSlotKey, replaceSegment);
-                    LOGGER.trace(slots.get(objectSlotKey).toString());
+                    LOGGER.trace("{} replaced to {}", currentSlot.type, sleepSegment.type);
                 }
             }
         }
@@ -459,9 +459,10 @@ public class TimelineUtils {
         SleepSegment finalSegment = null;
         SleepSegment currentSegment = null;
         LOGGER.debug("Slots before merge {}", slots.size());
-
+        int minSleepDepth = Integer.MAX_VALUE;
         for(final DateTime slotStartTimestamp:slots.keySet()){  // Iterate though a linkedHashMap will preserve the insert order
             currentSegment = slots.get(slotStartTimestamp);
+            //LOGGER.trace(currentSegment.toString());
             if(startSlotKey == -1){
                 startSlotKey = slotStartTimestamp.getMillis();
                 finalSegment = currentSegment;
@@ -472,6 +473,10 @@ public class TimelineUtils {
                 finalSegment = currentSegment;
             }
 
+            if(currentSegment.sleepDepth < minSleepDepth){
+                minSleepDepth = currentSegment.sleepDepth;
+            }
+
             slotIndex++;
 
             if(slotIndex % (mergeSlotCount - 1) == 0){
@@ -479,10 +484,11 @@ public class TimelineUtils {
                         startSlotKey,
                         finalSegment.timezoneOffset,
                         (int)(currentSegment.startTimestamp - startSlotKey) / DateTimeConstants.MILLIS_PER_SECOND,
-                        finalSegment.sleepDepth,
+                        minSleepDepth,
                         finalSegment.type,
                         finalSegment.sensors,
                         finalSegment.soundInfo);
+                LOGGER.trace(mergedSegment.toString());
                 if(collapseNullSegments && mergedSegment.type == Event.Type.NONE){
                     // Do nothing, collapse this event
                     LOGGER.trace("None slot skipped {}", new DateTime(mergedSegment.startTimestamp,
@@ -507,6 +513,7 @@ public class TimelineUtils {
                     finalSegment.type,
                     finalSegment.sensors,
                     finalSegment.soundInfo);
+            LOGGER.trace(mergedSegment.toString());
             if(collapseNullSegments && mergedSegment.type == Event.Type.NONE){
                 // Do nothing, collapse this event
             }else {

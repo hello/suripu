@@ -6,7 +6,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.AwakeDetectionAlgorithm;
-import com.hello.suripu.algorithm.sleep.QuietPeriodDetectionAlgorithm;
 import com.hello.suripu.algorithm.sleep.SleepDetectionAlgorithm;
 import com.hello.suripu.app.utils.TrackerMotionDataSource;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
@@ -129,92 +128,49 @@ public class TimelineResource extends BaseResource {
             segments.add(sleepTimeSegment.get());
         }
 
+        // A day starts with 8pm local time and ends with 4pm local time next day
+        final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions, 20, 16);
+        final int smoothWindowSize = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  //TODO: make it configable.
 
-        final ArrayList<SleepSegment> segmentsNotToMerge = new ArrayList<>();
-        if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION_FROM_AWAKE, accessToken.accountId, new ArrayList<String>())) {
-            // A day starts with 8pm local time and ends with 4pm local time next day
-            final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions, 20, 16);
-            final int smoothWindowSize = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  //TODO: make it configable.
+        final SleepDetectionAlgorithm awakeDetectionAlgorithm = new AwakeDetectionAlgorithm(dataSource, smoothWindowSize);
 
-            final SleepDetectionAlgorithm awakeDetectionAlgorithm = new AwakeDetectionAlgorithm(dataSource, smoothWindowSize);
+        try {
+            final Segment segmentFromAwakeDetection = awakeDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay());
 
-            try {
-                final Segment segmentFromAwakeDetection = awakeDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay());
+            if(segmentFromAwakeDetection.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
+                final SleepSegment sleepSegmentFromAwakeDetection = new SleepSegment(1L,
+                        segmentFromAwakeDetection.getStartTimestamp(),
+                        segmentFromAwakeDetection.getOffsetMillis(),
+                        60,
+                        -1,
+                        Event.Type.SLEEP,
+                        new ArrayList<SensorReading>(), null);
+                sleepSegmentFromAwakeDetection.setMessage("You fell asleep");
 
-                if(segmentFromAwakeDetection.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
-                    final SleepSegment sleepSegmentFromAwakeDetection = new SleepSegment(1L,
-                            segmentFromAwakeDetection.getStartTimestamp(),
-                            segmentFromAwakeDetection.getOffsetMillis(),
-                            60,
-                            -1,
-                            Event.Type.FALL_ASLEEP,
-                            new ArrayList<SensorReading>(), null);
+                final SleepSegment wakeupSegmentFromAwakeDetection = new SleepSegment(1L,
+                        segmentFromAwakeDetection.getEndTimestamp(),
+                        segmentFromAwakeDetection.getOffsetMillis(),
+                        60,
+                        -1,
+                        Event.Type.WAKE_UP,
+                        new ArrayList<SensorReading>(), null);
 
-                    final SleepSegment wakeupSegmentFromAwakeDetection = new SleepSegment(1L,
-                            segmentFromAwakeDetection.getEndTimestamp(),
-                            segmentFromAwakeDetection.getOffsetMillis(),
-                            60,
-                            -1,
-                            Event.Type.WAKE_UP,
-                            new ArrayList<SensorReading>(), null);
-
-
+                if(!sleepTimeSegment.isPresent()) {
                     segments.add(sleepSegmentFromAwakeDetection);
-                    segments.add(wakeupSegmentFromAwakeDetection);
+                }else {
+                    if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION_FROM_AWAKE, accessToken.accountId, new ArrayList<String>())) {
+                        segments.add(sleepSegmentFromAwakeDetection);
+                    }
                 }
-
-                LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
-                        new DateTime(segmentFromAwakeDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())),
-                        new DateTime(segmentFromAwakeDetection.getEndTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())));
-            }catch (Exception ex){
-                LOGGER.error("Generate sleep period from Awake Detection Algorithm failed: {}", ex.getMessage());
+                segments.add(wakeupSegmentFromAwakeDetection);
             }
 
+            LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
+                    new DateTime(segmentFromAwakeDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())),
+                    new DateTime(segmentFromAwakeDetection.getEndTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())));
+        }catch (Exception ex){
+            LOGGER.error("Generate sleep period from Awake Detection Algorithm failed: {}", ex.getMessage());
         }
-
-
-        if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION_FROM_QUIET, accessToken.accountId, new ArrayList<String>())) {
-            // A day starts with 8pm local time and ends with 4pm local time next day
-            final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions, 20, 16);
-            final int smoothWindowSize = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  //TODO: make it configable.
-
-            final SleepDetectionAlgorithm quietPeriodDetectionAlgorithm = new QuietPeriodDetectionAlgorithm(dataSource, smoothWindowSize);
-
-            try {
-                final Segment segmentFromQuietPeriodDetection = quietPeriodDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay());
-
-                if(segmentFromQuietPeriodDetection.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
-                    final SleepSegment sleepSegmentFromQuietPeriodDetection = new SleepSegment(1L,
-                            segmentFromQuietPeriodDetection.getStartTimestamp(),
-                            segmentFromQuietPeriodDetection.getOffsetMillis(),
-                            60,
-                            -1,
-                            Event.Type.FALL_ASLEEP,
-                            new ArrayList<SensorReading>(), null);
-
-                    final SleepSegment wakeupSegmentFromQuietPeriodDetection = new SleepSegment(1L,
-                            segmentFromQuietPeriodDetection.getEndTimestamp(),
-                            segmentFromQuietPeriodDetection.getOffsetMillis(),
-                            60,
-                            -1,
-                            Event.Type.WAKE_UP,
-                            new ArrayList<SensorReading>(), null);
-
-
-                    segments.add(sleepSegmentFromQuietPeriodDetection);
-                    segments.add(wakeupSegmentFromQuietPeriodDetection);
-                }
-
-                LOGGER.info("Sleep Time From Quiet Period Detection Algorithm: {} - {}",
-                        new DateTime(segmentFromQuietPeriodDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromQuietPeriodDetection.getOffsetMillis())),
-                        new DateTime(segmentFromQuietPeriodDetection.getEndTimestamp(), DateTimeZone.forOffsetMillis(segmentFromQuietPeriodDetection.getOffsetMillis())));
-            }catch (Exception ex){
-                LOGGER.error("Generate sleep period from Quiet Period Detection Algorithm failed: {}", ex.getMessage());
-            }
-
-        }
-
-
 
         // add partner movement data, check if there's a partner
         final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accessToken.accountId);
