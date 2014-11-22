@@ -12,6 +12,6 @@ public class SunSetEvent extends  Event {
 
     @Override
     public String getDescription(){
-        return "Sun rise";
+        return "Sun set";
     }
 }
