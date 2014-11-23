@@ -1,6 +1,5 @@
 package com.hello.suripu.core.models;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.google.common.base.Objects;
 
 /**
@@ -96,8 +95,6 @@ public class Event {
         this.timezoneOffset = timezoneOffset;
     }
 
-
-    @JsonCreator
     public Event(
             final Type type,
             final long startTimestamp,

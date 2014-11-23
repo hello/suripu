@@ -121,18 +121,18 @@ public class TimelineResource extends BaseResource {
         }
 
         // create sleep-motion segments
-        final List<Event> segments = new LinkedList<>();
+        final List<Event> events = new LinkedList<>();
         final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);
 
-        segments.addAll(motionEvents);
+        events.addAll(motionEvents);
 
         // detect sleep time
         final int sleepEventThreshold = 7; // minutes of no-movement to determine that user has fallen asleep
-        final Optional<Event> sleepTimeSegment = TimelineUtils.computeSleepTime(motionEvents, sleepEventThreshold);
+        final Optional<Event> sleepTimeEvent = TimelineUtils.getSleepEvent(motionEvents, sleepEventThreshold);
         int wakeUpTimeZoneOffsetMillis = -1;
 
-        if(sleepTimeSegment.isPresent()) {
-            segments.add(sleepTimeSegment.get());
+        if(sleepTimeEvent.isPresent()) {
+            events.add(sleepTimeEvent.get());
         }
 
         // A day starts with 8pm local time and ends with 4pm local time next day
@@ -159,18 +159,18 @@ public class TimelineResource extends BaseResource {
                         segmentFromAwakeDetection.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                         segmentFromAwakeDetection.getOffsetMillis());
 
-                if(!sleepTimeSegment.isPresent()) {
+                if(!sleepTimeEvent.isPresent()) {
                     LOGGER.debug("Default algorithm failed to detect sleep time. Force to use N shape algorithm.");
-                    segments.add(sleepSegmentFromAwakeDetection);
+                    events.add(sleepSegmentFromAwakeDetection);
                 }else {
                     if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION_FROM_AWAKE, accessToken.accountId, new ArrayList<String>())) {
-                        segments.add(sleepSegmentFromAwakeDetection);
+                        events.add(sleepSegmentFromAwakeDetection);
                         LOGGER.debug("Default algorithm and N shape algorithm both detected sleep.");
                     }else{
                         LOGGER.debug("Account {} not in N shape detection feature group.", accessToken.accountId);
                     }
                 }
-                segments.add(wakeupSegmentFromAwakeDetection);
+                events.add(wakeupSegmentFromAwakeDetection);
                 wakeUpTimeZoneOffsetMillis = wakeupSegmentFromAwakeDetection.timezoneOffset;
             }
 
@@ -186,17 +186,17 @@ public class TimelineResource extends BaseResource {
         if (optionalPartnerAccountId.isPresent()) {
             // get tracker motions for partner, query time is in UTC, not local_utc
             final DateTime startTime;
-            if (sleepTimeSegment.isPresent()) {
-                startTime = new DateTime(sleepTimeSegment.get().startTimestamp, DateTimeZone.UTC);
+            if (sleepTimeEvent.isPresent()) {
+                startTime = new DateTime(sleepTimeEvent.get().startTimestamp, DateTimeZone.UTC);
             } else {
-                startTime = new DateTime(segments.get(0).startTimestamp, DateTimeZone.UTC);
+                startTime = new DateTime(events.get(0).startTimestamp, DateTimeZone.UTC);
             }
-            final DateTime endTime = new DateTime(segments.get(segments.size() - 1).startTimestamp, DateTimeZone.UTC);
+            final DateTime endTime = new DateTime(events.get(events.size() - 1).startTimestamp, DateTimeZone.UTC);
 
             final List<TrackerMotion> partnerMotions = this.trackerMotionDAO.getBetween(optionalPartnerAccountId.get(), startTime, endTime);
             if (partnerMotions.size() > 0) {
                 // use un-normalized data segments for comparison
-                segments.addAll(PartnerMotion.getPartnerData(motionEvents, partnerMotions, threshold));
+                events.addAll(PartnerMotion.getPartnerData(motionEvents, partnerMotions, threshold));
             }
         }
 
@@ -204,13 +204,13 @@ public class TimelineResource extends BaseResource {
         final Optional<DateTime> sunrise = sunData.sunrise(targetDate.plusDays(1).toString(DateTimeFormat.forPattern("yyyy-MM-dd"))); // day + 1
         if(sunrise.isPresent() && wakeUpTimeZoneOffsetMillis > -1) {
             final long sunRiseMillis = sunrise.get().getMillis();
-            final Event sunriseSegment = new SunRiseEvent(sunRiseMillis,
+            final Event sunriseEvent = new SunRiseEvent(sunRiseMillis,
                     wakeUpTimeZoneOffsetMillis);
 //            final SleepSegment audioSleepSegment = new SleepSegment(99L, sunrise.get().plusMinutes(5).getMillis(), 0, 60, -1, Event.Type.SNORING, "ZzZzZzZzZ", new ArrayList<SensorReading>(), soundInfo);
-            segments.add(sunriseSegment);
+            events.add(sunriseEvent);
 //            extraSegments.add(audioSleepSegment);
 
-            LOGGER.debug(sunriseSegment.getDescription());
+            LOGGER.debug(sunriseEvent.getDescription());
         }
 
         // TODO: add sound
@@ -218,7 +218,7 @@ public class TimelineResource extends BaseResource {
 
         // merge similar segments (by motion & event-type), then categorize
 //        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(segments, mergeThreshold);
-        List<Event> mergedEvents = TimelineUtils.generateAlignedSegmentsByTypeWeight(segments, DateTimeConstants.MILLIS_PER_MINUTE, 15, false);
+        List<Event> mergedEvents = TimelineUtils.generateAlignedSegmentsByTypeWeight(events, DateTimeConstants.MILLIS_PER_MINUTE, 15, false);
 
         SleepSegment.SoundInfo sunRiseSound = null;
         if(feature.userFeatureActive(FeatureFlipper.SOUND_INFO_TIMELINE, accessToken.accountId, new ArrayList<String>())) {

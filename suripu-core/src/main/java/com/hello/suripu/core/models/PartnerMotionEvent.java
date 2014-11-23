@@ -7,8 +7,8 @@ import org.joda.time.format.DateTimeFormat;
 /**
  * Created by pangwu on 11/22/14.
  */
-public class ParterMotionEvent extends MotionEvent {
-    public ParterMotionEvent(long startTimestamp, long endTimestamp, int offsetMillis, double amplitude, double maxAmplitude) {
+public class PartnerMotionEvent extends MotionEvent {
+    public PartnerMotionEvent(long startTimestamp, long endTimestamp, int offsetMillis, double amplitude, double maxAmplitude) {
         super(startTimestamp, endTimestamp, offsetMillis, amplitude, maxAmplitude);
         this.setType(Type.PARTNER_MOTION);
     }
