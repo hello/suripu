@@ -1,19 +1,16 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Multimap;
 import com.hello.suripu.core.models.CurrentRoomState;
-import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.MotionEvent;
 import com.hello.suripu.core.models.Sensor;
-import com.hello.suripu.core.models.SensorReading;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
+import com.hello.suripu.core.models.SunRiseEvent;
 import com.hello.suripu.core.models.TrackerMotion;
-import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -30,9 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.TreeSet;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class TimelineUtils {
 
@@ -44,269 +38,17 @@ public class TimelineUtils {
     public static final Integer LOW_SLEEP_DEPTH = 30;
     public static final Integer LOWEST_SLEEP_DEPTH = 10;
 
-
-    /**
-     * Merge a List<Segment> to a single segment
-     * The minimum duration is 60 seconds
-     * @param segments
-     * @param threshold defines the min. duration of a segment
-     * @return
-     */
-    @Timed
-    public static SleepSegment merge(final List<SleepSegment> segments, int threshold) {
-        checkNotNull(segments, "segments can not be null");
-        if(segments.isEmpty()) {
-            throw new RuntimeException("segments can not be empty");
-        }
-
-        final Long timestamp = segments.get(0).getTimestamp();
-        final Long id = segments.get(0).id;
-        float total = 0f;
-        for (final SleepSegment segment : segments) {
-            total += (float) segment.sleepDepth;
-        }
-        final Integer sleepDepth = TimelineUtils.categorizeSleepDepth((int) (total / segments.size()));
-        final Integer offsetMillis = segments.get(0).timezoneOffset;
-        final Event.Type eventType = segments.get(0).type;
-        final String message = segments.get(0).getMessage();
-        final List<SensorReading> sensors = segments.get(0).sensors;
-
-        Long durationInMillis = segments.get(segments.size() -1).getTimestamp() - segments.get(0).getTimestamp() +  segments.get(segments.size() -1).getDurationInSeconds() * DateTimeConstants.MILLIS_PER_SECOND;
-
-
-        if (durationInMillis < threshold * DateTimeConstants.MILLIS_PER_MINUTE) {
-            durationInMillis = (long)threshold * DateTimeConstants.MILLIS_PER_MINUTE;
-        }
-        final SleepSegment mergedSegment = new SleepSegment(id, timestamp, offsetMillis, Math.round(durationInMillis / DateTimeConstants.MILLIS_PER_SECOND), sleepDepth, eventType, sensors, null);
-        mergedSegment.setMessage(message);
-        return mergedSegment;
-    }
-
-
-    /**
-     * Generate Sleep Segments from the TrackerMotion data
-     * @param trackerMotions
-     * @param threshold
-     * @param createMotionlessSegment
-     * @return
-     */
-    @Timed
-    public static List<SleepSegment> generateSleepSegments(final List<TrackerMotion> trackerMotions, final int threshold, final boolean createMotionlessSegment) {
-
-        return generateSleepSegments(trackerMotions, threshold, createMotionlessSegment, Optional.<DeviceData>absent());
-    }
-
-    public static List<SleepSegment> generateSleepSegments(final List<TrackerMotion> trackerMotions, final int threshold, final boolean createMotionlessSegment, final Optional<DeviceData> deviceData) {
-        final List<SleepSegment> sleepSegments = new ArrayList<>();
-
-
-        if(trackerMotions.isEmpty()) {
-            return sleepSegments;
-        }
-
-        Long maxSVM = 0L;
-        for(final TrackerMotion trackerMotion : trackerMotions) {
-            maxSVM = Math.max(maxSVM, trackerMotion.value);
-        }
-
-        LOGGER.debug("Max SVM = {}", maxSVM);
-
-        final Long trackerId = trackerMotions.get(0).trackerId;
-
-        for(final TrackerMotion trackerMotion : trackerMotions) {
-            if (!trackerMotion.trackerId.equals(trackerId)) {
-                LOGGER.warn("User has multiple pills: {} and {}", trackerId, trackerMotion.trackerId);
-                break; // if user has multiple pill, only use data from the latest tracker_id
-            }
-
-            int sleepDepth = normalizeSleepDepth(trackerMotion.value, maxSVM);
-
-            Event.Type eventType = (sleepDepth <= threshold) ? Event.Type.MOTION : Event.Type.NONE; // TODO: put these in a config file or DB
-
-            // TODO: make this work
-            if (trackerMotion.value == maxSVM) {
-                eventType = Event.Type.MOTION;
-
-            }
-
-            final List<SensorReading> readings = new ArrayList<>();
-            if(deviceData.isPresent()) {
-                readings.addAll(SensorReading.fromDeviceData(deviceData.get()));
-            }
-
-            final SleepSegment sleepSegment = new SleepSegment(
-                    trackerMotion.id,
-                    trackerMotion.timestamp,
-                    trackerMotion.offsetMillis,
-                    DateTimeConstants.SECONDS_PER_MINUTE, // in 1 minute segment
-                    sleepDepth,
-                    eventType,
-                    readings,
-                    null);
-            sleepSegments.add(sleepSegment);
-        }
-        LOGGER.debug("Generated {} segments from {} tracker motion samples", sleepSegments.size(), trackerMotions.size());
-
-        return sleepSegments;
-    }
-
-
-    /**
-     * Merge consecutive Sleep Segments
-     * Naive implementation
-     * @param segments
-     * @return
-     */
-    @Timed
-    @Deprecated
-    public static List<SleepSegment> mergeConsecutiveSleepSegments(final List<SleepSegment> segments, int threshold) {
-        if(segments.isEmpty()) {
-            throw new RuntimeException("segments can not be empty");
-        }
-
-        final List<SleepSegment> mergedSegments = new ArrayList<>();
-        int previousSleepDepth = segments.get(0).sleepDepth;
-        Event.Type previousEventType = segments.get(0).type;
-
-        final List<SleepSegment> buffer = new ArrayList<>();
-        float trackAvgDepth = 0F;
-
-        for(final SleepSegment segment : segments) {
-            // if(segment.sleepDepth != previousSleepDepth || !previousEventType.equals(segment.eventType)) {
-            final float depthDiff = Math.abs((float) segment.sleepDepth - (trackAvgDepth / buffer.size()));
-            if (depthDiff > 0.25 *  (trackAvgDepth / buffer.size()) || !previousEventType.equals(segment.type)) {
-                SleepSegment seg = (buffer.isEmpty()) ? segment : TimelineUtils.merge(buffer, threshold);
-
-                if (mergedSegments.size() > 0) {
-                    final SleepSegment prevSegment = mergedSegments.get(mergedSegments.size() - 1);
-                    if (seg.type.equals(Event.Type.SUNRISE.toString())) {
-                        // inherit the sleep depth of previous segment for SUNRISE event
-                        int depth = prevSegment.sleepDepth;
-                        seg = SleepSegment.withSleepDepth(seg, depth);
-                    } else if (seg.sleepDepth == prevSegment.sleepDepth && seg.type == prevSegment.type) {
-                        // add this merged segment with the previous one
-                        buffer.clear();
-                        buffer.add(prevSegment);
-                        buffer.add(seg);
-                        mergedSegments.remove(prevSegment);
-                        seg = TimelineUtils.merge(buffer, threshold);
-                    }
-                }
-
-
-                mergedSegments.add(seg);
-                buffer.clear();
-                trackAvgDepth = 0F;
-            }
-
-            buffer.add(segment);
-            trackAvgDepth += (float) segment.sleepDepth;
-            previousSleepDepth = segment.sleepDepth;
-            previousEventType = segment.type;
-        }
-
-        if(!buffer.isEmpty()) {
-            SleepSegment seg = TimelineUtils.merge(buffer, threshold);
-            if (seg.type.equals(Event.Type.SUNRISE.toString())) {
-                seg = SleepSegment.withSleepDepth(seg, 0);
-            }
-            mergedSegments.add(seg);
-        }
-        LOGGER.debug("Original size = {}", segments.size());
-        LOGGER.debug("Merged size = {}", mergedSegments.size());
-        return mergedSegments;
-    }
-
-
-    /**
-     * Creates time buckets of $windowSize seconds
-     * @param segments
-     * @param windowSize
-     * @return
-     */
-    public static List<SleepSegment> mergeByTimeBucket(final List<SleepSegment> segments, int windowSize) {
-        final List<SleepSegment> sleepSegments = new ArrayList<>();
-        final List<SleepSegment> temp = new ArrayList<>();
-
-        for(int i = 0; i < segments.size(); i++) {
-            if(i > 0 && i % windowSize == 0) {
-                final SleepSegment merged = merge(temp);
-                sleepSegments.add(merged);
-                temp.clear();
-            } else {
-                temp.add(segments.get(i));
+    public static List<SleepSegment> convertLightMotionToNone(final List<SleepSegment> sleepSegments, final int thresholdSleepDepth){
+        final LinkedList<SleepSegment> convertedSegments = new LinkedList<>();
+        for(final SleepSegment sleepSegment:sleepSegments){
+            if(sleepSegment.getType() == Event.Type.MOTION && sleepSegment.sleepDepth > thresholdSleepDepth){
+                convertedSegments.add(SleepSegment.fromMotionEvent((MotionEvent) sleepSegment.getEvent()));
+            }else{
+                convertedSegments.add(sleepSegment);
             }
         }
 
-        if(!temp.isEmpty()) {
-            final SleepSegment remainder = merge(temp);
-            sleepSegments.add(remainder);
-        }
-
-        LOGGER.debug("Merged by bucket size = {}", sleepSegments.size());
-        return sleepSegments;
-    }
-
-
-    /**
-     * Merges all events into a single event with the most important event type
-     * and the timestamp of the first event.
-     * @param sleepSegments
-     * @return
-     */
-    public static SleepSegment merge(final List<SleepSegment> sleepSegments) {
-        if(sleepSegments.isEmpty()) {
-            throw new RuntimeException("Can not merge empty list");
-        }
-
-        int minSleepDepth = sleepSegments.get(0).sleepDepth;
-        String message = sleepSegments.get(0).getMessage();
-        SleepSegment.SoundInfo soundInfo = sleepSegments.get(0).soundInfo;
-        final Set<Event.Type> eventTypes = new HashSet<>();
-
-        for(final SleepSegment sleepSegment : sleepSegments) {
-            eventTypes.add(sleepSegment.type);
-            if(sleepSegment.sleepDepth < minSleepDepth) {
-                minSleepDepth = sleepSegment.sleepDepth;
-                message  = sleepSegment.getMessage();
-            }
-
-            if(sleepSegment.type.equals(Event.Type.SUNRISE)) {
-                soundInfo = sleepSegment.soundInfo;
-            }
-        }
-
-
-        final Event.Type finalEventType = Event.getHighPriorityEvents(eventTypes);
-        final SleepSegment sleepSegment = new SleepSegment(
-                sleepSegments.get(0).id,
-                sleepSegments.get(0).getTimestamp(),
-                sleepSegments.get(0).timezoneOffset,
-                sleepSegments.size() * 60, minSleepDepth,
-                finalEventType,
-                new ArrayList<SensorReading>(),
-                soundInfo
-        );
-
-        sleepSegment.setMessage(message);
-
-        return sleepSegment;
-    }
-
-    /**
-     * Categorize sleep depth (MOTION, LIGHT, MEDIUM, DEEP)
-     * @param sleepSegments
-     * @return
-     */
-    public static List<SleepSegment> categorizeSleepDepth(final List<SleepSegment> sleepSegments) {
-        LOGGER.debug("Attempting to categorize {} segments", sleepSegments.size());
-        final List<SleepSegment> normalizedSegments = new ArrayList<>();
-
-        for(final SleepSegment segment : sleepSegments) {
-            normalizedSegments.add(SleepSegment.withSleepDepth(segment, TimelineUtils.categorizeSleepDepth(segment.sleepDepth)));
-        }
-        LOGGER.debug("Categorized {} segments", normalizedSegments.size());
-        return normalizedSegments;
+        return ImmutableList.copyOf(convertedSegments);
     }
 
 
@@ -330,33 +72,86 @@ public class TimelineUtils {
         return LOWEST_SLEEP_DEPTH;
     }
 
-    /**
-     * Inserts Sunrise and Sunset segments into the timeline
-     * Could potentially work for any kind of event
-     * @param sunrise
-     * @param sunset
-     * @param original
-     * @return
-     */
-    public static List<SleepSegment> insertSegments(final SleepSegment sunrise, final SleepSegment sunset, final List<SleepSegment> original) {
 
-        // add higher-priority segments first
-        final Set<SleepSegment> sleepSegments = new TreeSet<>();
-        sleepSegments.add(sunrise);
-        sleepSegments.add(sunset);
-        sleepSegments.addAll(original);
+    public static List<MotionEvent> generateMotionEvents(final List<TrackerMotion> trackerMotions) {
+        final List<MotionEvent> motionEvents = new ArrayList<>();
 
-        final List<SleepSegment> temp = new ArrayList<>();
 
-        for(SleepSegment segment : sleepSegments) {
-            temp.add(segment);
+        if(trackerMotions.isEmpty()) {
+            return motionEvents;
         }
 
-        return temp;
+        Long maxSVM = 0L;
+        for(final TrackerMotion trackerMotion : trackerMotions) {
+            if(trackerMotion.value < 0){
+                LOGGER.trace("Invalid val {}", trackerMotion.value);
+                continue;
+            }
+
+            maxSVM = Math.max(maxSVM, UInt32.getValue(trackerMotion.value));
+        }
+
+        LOGGER.debug("Max SVM = {}", maxSVM);
+
+        final Long trackerId = trackerMotions.get(0).trackerId;
+        long motionAmplitude = 0;
+        for(final TrackerMotion trackerMotion : trackerMotions) {
+            if (!trackerMotion.trackerId.equals(trackerId)) {
+                LOGGER.warn("User has multiple pills: {} and {}", trackerId, trackerMotion.trackerId);
+                break; // if user has multiple pill, only use data from the latest tracker_id
+            }
+
+            if(trackerMotion.value < 0){
+                continue;
+            }
+
+            motionAmplitude = UInt32.getValue(trackerMotion.value);
+
+            final MotionEvent motionEvent = new MotionEvent(
+                    trackerMotion.timestamp,
+                    trackerMotion.timestamp + DateTimeConstants.MILLIS_PER_MINUTE,
+                    trackerMotion.offsetMillis,
+                    Math.sqrt(motionAmplitude),
+                    Math.sqrt(maxSVM));
+            motionEvents.add(motionEvent);
+        }
+        LOGGER.debug("Generated {} segments from {} tracker motion samples", motionEvents.size(), trackerMotions.size());
+
+        return motionEvents;
     }
 
+    public static List<SleepSegment> eventsToSegments(final List<Event> events, final SleepSegment.SoundInfo sunRiseSound){
+        final List<SleepSegment> segments = new LinkedList<>();
+        for(final Event event:events){
+            switch (event.getType()){
+                case MOTION:
+                    final MotionEvent motionEvent = (MotionEvent)event;
+                    segments.add(SleepSegment.fromMotionEvent(motionEvent));
+                    break;
+                case SLEEP:
+                    segments.add(SleepSegment.fromSleepEvent(event));
+                    break;
+                case WAKE_UP:
+                    segments.add(SleepSegment.fromWakeUpEvent(event));
+                    break;
+                case SUNRISE:
+                    final SunRiseEvent sunRiseEvent = (SunRiseEvent)event;
+                    segments.add(SleepSegment.fromSunRiseEvent(sunRiseEvent, sunRiseSound));
+                    break;
+                case NONE:
+                    segments.add(SleepSegment.fromNoneEvent(event));
+                    break;
+                default:
+                    segments.add(SleepSegment.fromNoneEvent(event));
+                    break;
+            }
+        }
 
-    public static List<SleepSegment> generateAlignedSegmentsByTypeWeight(final List<SleepSegment> segmentList,
+        return ImmutableList.copyOf(segments);
+
+    }
+
+    public static List<Event> generateAlignedSegmentsByTypeWeight(final List<Event> eventList,
                                                                          int slotDurationMS, int mergeSlotCount,
                                                                          boolean collapseNullSegments){
         // Step 1: Get the start and end time of the given segment list
@@ -365,15 +160,15 @@ public class TimelineUtils {
         int startOffsetMillis = 0;
         int endOffsetMillis = 0;
 
-        for(final SleepSegment sleepSegment:segmentList){
-            if(sleepSegment.startTimestamp < startTimestamp){
-                startTimestamp = sleepSegment.startTimestamp;
-                startOffsetMillis = sleepSegment.timezoneOffset;
+        for(final Event event:eventList){
+            if(event.startTimestamp < startTimestamp){
+                startTimestamp = event.startTimestamp;
+                startOffsetMillis = event.timezoneOffset;
             }
 
-            if(sleepSegment.endTimestamp > endTimestamp){
-                endTimestamp = sleepSegment.endTimestamp;
-                endOffsetMillis = sleepSegment.timezoneOffset;
+            if(event.endTimestamp > endTimestamp){
+                endTimestamp = event.endTimestamp;
+                endOffsetMillis = event.timezoneOffset;
             }
         }
 
@@ -382,8 +177,8 @@ public class TimelineUtils {
         }
 
         // Step 2: Generate one minute segment slots range from startTimestamp to endTimestamp
-        // Time: | min 1 | min 2 | min 3 | min 4 | ... | min N |
-        // Type: | none  | none  | none  | none  | ... | none  |
+        // Time:   min 1   min 2   min 3   min 4   ...   min N
+        // Slots: | none  | none  | none  | none  | ... | none  |
         // These slots are set to type none and will be override later.
         int interval = (int)(endTimestamp - startTimestamp);
         int slotCount = interval / slotDurationMS;
@@ -391,33 +186,32 @@ public class TimelineUtils {
             slotCount++;
         }
 
-        final LinkedHashMap<DateTime, SleepSegment> slots = new LinkedHashMap<>();
+        final LinkedHashMap<DateTime, Event> slots = new LinkedHashMap<>();
         for(int i = 0; i < slotCount; i++){
             final long slotStartTimestamp = startTimestamp + i * slotDurationMS;
-            slots.put(new DateTime(slotStartTimestamp, DateTimeZone.UTC), new SleepSegment(slotStartTimestamp,
-                    slotStartTimestamp, startOffsetMillis, slotDurationMS / DateTimeConstants.MILLIS_PER_SECOND,
-                    100,
-                    Event.Type.NONE,
-                    null,
-                    null
+            slots.put(new DateTime(slotStartTimestamp, DateTimeZone.UTC),
+                    new Event(Event.Type.NONE,
+                        slotStartTimestamp,
+                        slotStartTimestamp + slotDurationMS,
+                        startOffsetMillis
                     ));
         }
 
         // Step 3: Scan through segmentList, fill slots with highest weight event and their messages.
         // Example:
-        // segmentList: | Sleep       |
-        //                     |    motion    |
-        //                                    |none  |
-        //                                           | none |
-        //                                                  | Wakeup |
-
-        // empty slots: | none | none | none  | none | none | none   |
-        // After scan:  |sleep | sleep| motion| none | none | Wakeup |
-        for(final SleepSegment sleepSegment:segmentList){
-            int startSlotIndex = (int)(sleepSegment.startTimestamp - startTimestamp) / slotDurationMS;
+        // Time:         | min 1 | min2 | min3 | min4 | min5 |  min6  |
+        // segmentList:  |     Sleep    |
+        //                      |    motion    |
+        //                                     |none  |
+        //                                            | none |
+        //                                                   | Wakeup |
+        // slots before: | none | none | none  | none | none | none   |
+        // slots after:  |sleep | sleep| motion| none | none | Wakeup |
+        for(final Event event:eventList){
+            int startSlotIndex = (int)(event.startTimestamp - startTimestamp) / slotDurationMS;
             long startSlotKey = startTimestamp + startSlotIndex * slotDurationMS;
 
-            int endSlotIndex = (int)(sleepSegment.endTimestamp - startTimestamp) / slotDurationMS;
+            int endSlotIndex = (int)(event.endTimestamp - startTimestamp) / slotDurationMS;
             if(endSlotIndex > 0){
                 endSlotIndex--;
             }
@@ -432,18 +226,15 @@ public class TimelineUtils {
                     continue;
                 }
 
-                final SleepSegment currentSlot = slots.get(objectSlotKey);
-                if(currentSlot.type.getValue() < sleepSegment.type.getValue()){
+                final Event currentSlot = slots.get(objectSlotKey);
+                if(currentSlot.getType().getValue() < event.getType().getValue()){
                     // Replace the current segment in that slot with higher weight segment
-                    final SleepSegment replaceSegment = new SleepSegment(objectSlotKey.getMillis(),
-                            objectSlotKey.getMillis(), sleepSegment.timezoneOffset, currentSlot.getDurationInSeconds(),
-                            sleepSegment.sleepDepth,
-                            sleepSegment.type,
-                            sleepSegment.sensors,
-                            sleepSegment.soundInfo
-                            );
-                    slots.put(objectSlotKey, replaceSegment);
-                    LOGGER.trace(slots.get(objectSlotKey).toString());
+                    final Event replaceEvent = new Event(event.getType(),
+                            objectSlotKey.getMillis(),
+                            objectSlotKey.getMillis() + slotDurationMS,
+                            event.timezoneOffset);
+                    slots.put(objectSlotKey, replaceEvent);
+                    LOGGER.trace("{} replaced to {}", currentSlot.getType(), event.getType());
                 }
             }
         }
@@ -453,105 +244,68 @@ public class TimelineUtils {
         // mergeSlotCount = 3
         // slots:         | low | low | high | low | low | low | high | low | none | none | none |
         // merged slots:  |       high       |       low       |       high        |    none     |
-        final LinkedList<SleepSegment> mergeSlots = new LinkedList<>();
-        int slotIndex = 0;
-        long startSlotKey = -1;
-        SleepSegment finalSegment = null;
-        SleepSegment currentSegment = null;
+        final LinkedList<Event> mergeSlots = new LinkedList<>();
+        int count = 0;
+        long startSlotKey = 0;
+        Event finalEvent = null;
+        Event currentEvent = null;
         LOGGER.debug("Slots before merge {}", slots.size());
-
+        int minSleepDepth = 0;
         for(final DateTime slotStartTimestamp:slots.keySet()){  // Iterate though a linkedHashMap will preserve the insert order
-            currentSegment = slots.get(slotStartTimestamp);
-            if(startSlotKey == -1){
+            currentEvent = slots.get(slotStartTimestamp);
+            //LOGGER.trace(currentSegment.toString());
+            if(count == 0){
                 startSlotKey = slotStartTimestamp.getMillis();
-                finalSegment = currentSegment;
+                finalEvent = currentEvent;
             }
 
 
-            if(finalSegment.type.getValue() < currentSegment.type.getValue()){
-                finalSegment = currentSegment;
+            if(finalEvent.getType().getValue() < currentEvent.getType().getValue()){
+                finalEvent = currentEvent;
             }
+            count++;
 
-            slotIndex++;
-
-            if(slotIndex % (mergeSlotCount - 1) == 0){
-                final SleepSegment mergedSegment = new SleepSegment(finalSegment.id,
+            if(count == mergeSlotCount){
+                final Event mergedEvent = new Event(finalEvent.getType(),
                         startSlotKey,
-                        finalSegment.timezoneOffset,
-                        (int)(currentSegment.startTimestamp - startSlotKey) / DateTimeConstants.MILLIS_PER_SECOND,
-                        finalSegment.sleepDepth,
-                        finalSegment.type,
-                        finalSegment.sensors,
-                        finalSegment.soundInfo);
-                if(collapseNullSegments && mergedSegment.type == Event.Type.NONE){
+                        currentEvent.endTimestamp,
+                        finalEvent.timezoneOffset);
+
+                mergedEvent.setDescription(finalEvent.getDescription());
+
+                if(collapseNullSegments && mergedEvent.getType() == Event.Type.NONE){
                     // Do nothing, collapse this event
-                    LOGGER.trace("None slot skipped {}", new DateTime(mergedSegment.startTimestamp,
-                            DateTimeZone.forOffsetMillis(mergedSegment.timezoneOffset)));
+                    LOGGER.trace("None slot skipped {}", new DateTime(mergedEvent.startTimestamp,
+                            DateTimeZone.forOffsetMillis(mergedEvent.timezoneOffset)));
                 }else {
-                    mergeSlots.add(mergedSegment);
+                    mergeSlots.add(mergedEvent);
                 }
 
                 // reset
-                startSlotKey = -1;
-                finalSegment = null;
+                count = 0;
             }
         }
 
         // Handle the dangling case
-        if(startSlotKey != -1){
-            final SleepSegment mergedSegment = new SleepSegment(finalSegment.id,
+        if(count > 0){
+            final Event mergedSegment = new Event(finalEvent.getType(),
                     startSlotKey,
-                    finalSegment.timezoneOffset,
-                    (int)(currentSegment.getTimestamp() - startSlotKey) / DateTimeConstants.MILLIS_PER_SECOND,
-                    finalSegment.sleepDepth,
-                    finalSegment.type,
-                    finalSegment.sensors,
-                    finalSegment.soundInfo);
-            if(collapseNullSegments && mergedSegment.type == Event.Type.NONE){
+                    currentEvent.endTimestamp,
+                    finalEvent.timezoneOffset);
+            LOGGER.trace(mergedSegment.toString());
+            if(collapseNullSegments && mergedSegment.getType() == Event.Type.NONE){
                 // Do nothing, collapse this event
             }else {
                 mergeSlots.add(mergedSegment);
             }
         }
 
-        LOGGER.trace("Slots after merge {}", mergeSlots.size());
+        LOGGER.trace("Slots size after merge {}", mergeSlots.size());
 
         return ImmutableList.copyOf(mergeSlots);
 
     }
 
-    public static List<SleepSegment> insertSegmentsWithPriority(final List<SleepSegment> extraSegments, final List<SleepSegment> original) {
-
-        final long startTimestamp = original.get(0).getTimestamp();
-        final Multimap<Long, SleepSegment> extraSegmentMap = ArrayListMultimap.create();
-        final List<SleepSegment> temp = new ArrayList<>();
-
-        for (final SleepSegment segment : extraSegments) {
-            if (segment.getTimestamp() < startTimestamp) {
-                temp.add(segment);
-            } else {
-                extraSegmentMap.put(segment.getTimestamp(), segment);
-            }
-        }
-
-        for (final SleepSegment segment : original) {
-            if (extraSegmentMap.containsKey(segment.getTimestamp())) {
-                final Map<Event.Type, SleepSegment> eventsMap = new HashMap<>();
-                eventsMap.put(segment.type, segment);
-                for (final SleepSegment extraSegment: extraSegmentMap.get(segment.getTimestamp())) {
-                    eventsMap.put(extraSegment.type, extraSegment);
-                }
-
-                final Event.Type winningEvent = Event.getHighPriorityEvents(eventsMap.keySet());
-                temp.add(eventsMap.get(winningEvent));
-                // TODO: compose multiple messages for same segment if needed
-            }
-            else {
-                temp.add(segment);
-            }
-        }
-        return temp;
-    }
 
     /**
      * Normalize sleep depth based on max value seen.
@@ -559,13 +313,14 @@ public class TimelineUtils {
      * @param maxValue
      * @return
      */
-    public static Integer normalizeSleepDepth(final Integer value, final Long maxValue) {
+    public static Integer normalizeSleepDepth(final double value, final double maxValue) {
         int sleepDepth = 100;
         if(value == -1) {
             sleepDepth = 100;
         } else if(value > 0) {
-            sleepDepth = 100 - (int) (new Double(value) / maxValue * 100);
-            LOGGER.trace("Ratio = ({} / {}) = {}", value, maxValue, (new Double(value) / maxValue * 100));
+            int percentage = (int)(value / maxValue * 100);
+            sleepDepth = 100 - percentage;
+            LOGGER.trace("Ratio = ({} / {}) = {}", value, maxValue, percentage);
             LOGGER.trace("Sleep Depth = {}", sleepDepth);
         }
         return sleepDepth;
@@ -582,8 +337,20 @@ public class TimelineUtils {
         Integer lightSleepDuration = 0;
         Integer sleepDuration = 0;
         Integer numberOfMotionEvents = 0;
+        boolean sleepStarted = false;
 
         for(final SleepSegment segment : segments) {
+            if(segment.getType() == Event.Type.SLEEP && sleepStarted == false){
+                sleepStarted = true;
+            }
+
+            if(segment.getType() == Event.Type.WAKE_UP && sleepStarted == true){  //On purpose dangling case, if no wakeup present
+                sleepStarted = false;
+            }
+
+            if(!sleepStarted){
+                continue;
+            }
             if (segment.sleepDepth >= 70) {
                 soundSleepDuration += segment.getDurationInSeconds();
             } else if(segment.sleepDepth > 10 && segment.sleepDepth < 70) {
@@ -596,9 +363,9 @@ public class TimelineUtils {
         }
 
 
-        final Integer soundSleepDurationInMinutes = Math.round(new Float(soundSleepDuration)/60);
-        final Integer lightSleepDurationInMinutes = Math.round(new Float(lightSleepDuration)/60);
-        final Integer sleepDurationInMinutes = Math.round(new Float(sleepDuration) / 60);
+        final Integer soundSleepDurationInMinutes = Math.round(new Float(soundSleepDuration) / DateTimeConstants.SECONDS_PER_MINUTE);
+        final Integer lightSleepDurationInMinutes = Math.round(new Float(lightSleepDuration) / DateTimeConstants.SECONDS_PER_MINUTE);
+        final Integer sleepDurationInMinutes = Math.round(new Float(sleepDuration) / DateTimeConstants.SECONDS_PER_MINUTE);
 
         final SleepStats sleepStats = new SleepStats(soundSleepDurationInMinutes,lightSleepDurationInMinutes,sleepDurationInMinutes,numberOfMotionEvents);
         LOGGER.debug("Sleepstats = {}", sleepStats);
@@ -614,8 +381,8 @@ public class TimelineUtils {
      */
     public static String generateMessage(final SleepStats sleepStats) {
         final Integer percentageOfSoundSleep = Math.round(new Float(sleepStats.soundSleepDurationInMinutes) /sleepStats.sleepDurationInMinutes * 100);
-        final double sleepDurationInHours = sleepStats.sleepDurationInMinutes / 60.0;
-        final double soundDurationInHours = sleepStats.soundSleepDurationInMinutes / 60.0;
+        final double sleepDurationInHours = sleepStats.sleepDurationInMinutes / (double)DateTimeConstants.MILLIS_PER_HOUR;
+        final double soundDurationInHours = sleepStats.soundSleepDurationInMinutes / (double)DateTimeConstants.MILLIS_PER_HOUR;
         return String.format("You slept for a total of **%.1f hours**, soundly for %.1f hours, (%d%%) and moved %d times",
                 sleepDurationInHours, soundDurationInHours, percentageOfSoundSleep, sleepStats.numberOfMotionEvents);
     }
@@ -650,23 +417,22 @@ public class TimelineUtils {
 
     /**
      * Naive implementation of computing sleep time based on motion data only
-     * @param sleepSegments
+     * @param sleepMotions
      * @param thresholdInMinutes
      * @return
      */
-    public static Optional<SleepSegment> computeSleepTime(final List<SleepSegment> sleepSegments, int thresholdInMinutes) {
+    public static Optional<Event> getSleepEvent(final List<MotionEvent> sleepMotions, int thresholdInMinutes) {
 
-        if(sleepSegments.isEmpty()) {
+        if(sleepMotions.isEmpty()) {
             return Optional.absent();
         }
 
         final List<DateTime> dateTimes = new ArrayList<>();
-        final Map<Long, SleepSegment> map = new HashMap<>();
+        final Map<Long, MotionEvent> map = new HashMap<>();
 
-        for(final SleepSegment sleepSegment : sleepSegments) {
-            if(sleepSegment.sleepDepth < 70) {
-                dateTimes.add(new DateTime(sleepSegment.getTimestamp() + sleepSegment.timezoneOffset));
-                map.put(sleepSegment.getTimestamp() + sleepSegment.timezoneOffset, sleepSegment);
+        for(final MotionEvent sleepMotion : sleepMotions) {
+            if(normalizeSleepDepth(sleepMotion.amplitude, sleepMotion.maxAmplitude) < 70) {
+                dateTimes.add(new DateTime(sleepMotion.startTimestamp + sleepMotion.timezoneOffset));
             }
         }
 
@@ -676,8 +442,8 @@ public class TimelineUtils {
             final int diffInMinutes = next.getMinuteOfDay() - current.getMinuteOfDay();
             if (diffInMinutes > thresholdInMinutes) {
                 if(map.containsKey(current.getMillis())) {
-                    final SleepSegment s = map.get(current.getMillis());
-                    return Optional.of(SleepSegment.withEventType(s, Event.Type.SLEEP));
+                    final MotionEvent motion = map.get(current.getMillis());
+                    return Optional.of(new Event(Event.Type.SLEEP, motion.startTimestamp, motion.endTimestamp, motion.timezoneOffset));
 
                 }
                 break;
