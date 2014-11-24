@@ -11,6 +11,9 @@ public class Question {
     public enum Type {
         CHOICE("choice"),
         CHECKBOX("checkbox"),
+        QUANTITY("quantity"),
+        DURATION("duration"),
+        TIME("time"),
         TEXT("text");
 
         private String value;
