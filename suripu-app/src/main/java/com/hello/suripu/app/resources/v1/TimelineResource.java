@@ -17,9 +17,10 @@ import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Insight;
-import com.hello.suripu.core.models.SensorReading;
+import com.hello.suripu.core.models.MotionEvent;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
+import com.hello.suripu.core.models.SunRiseEvent;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -48,6 +49,7 @@ import javax.ws.rs.core.MediaType;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 @Path("/v1/timeline")
@@ -119,13 +121,18 @@ public class TimelineResource extends BaseResource {
         }
 
         // create sleep-motion segments
-        List<SleepSegment> segments = TimelineUtils.generateMotionSegments(trackerMotions);
+        final List<Event> events = new LinkedList<>();
+        final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);
+
+        events.addAll(motionEvents);
 
         // detect sleep time
         final int sleepEventThreshold = 7; // minutes of no-movement to determine that user has fallen asleep
-        final Optional<SleepSegment> sleepTimeSegment = TimelineUtils.computeSleepTime(segments, sleepEventThreshold);
-        if(sleepTimeSegment.isPresent()) {
-            segments.add(sleepTimeSegment.get());
+        final Optional<Event> sleepTimeEvent = TimelineUtils.getSleepEvent(motionEvents, sleepEventThreshold);
+        int wakeUpTimeZoneOffsetMillis = -1;
+
+        if(sleepTimeEvent.isPresent()) {
+            events.add(sleepTimeEvent.get());
         }
 
         // A day starts with 8pm local time and ends with 4pm local time next day
@@ -138,35 +145,33 @@ public class TimelineResource extends BaseResource {
             final Segment segmentFromAwakeDetection = awakeDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay());
 
             if(segmentFromAwakeDetection.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
-                final SleepSegment sleepSegmentFromAwakeDetection = new SleepSegment(1L,
-                        segmentFromAwakeDetection.getStartTimestamp(),
-                        segmentFromAwakeDetection.getOffsetMillis(),
-                        60,
-                        100,
+                final Event sleepSegmentFromAwakeDetection = new Event(
                         Event.Type.SLEEP,
-                        new ArrayList<SensorReading>(), null);
-                sleepSegmentFromAwakeDetection.setMessage("You fell asleep");
-
-                final SleepSegment wakeupSegmentFromAwakeDetection = new SleepSegment(1L,
                         segmentFromAwakeDetection.getEndTimestamp(),
-                        segmentFromAwakeDetection.getOffsetMillis(),
-                        60,
-                        0,
-                        Event.Type.WAKE_UP,
-                        new ArrayList<SensorReading>(), null);
+                        segmentFromAwakeDetection.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                        segmentFromAwakeDetection.getOffsetMillis()
+                        );
+                sleepSegmentFromAwakeDetection.setDescription("You fell asleep");
 
-                if(!sleepTimeSegment.isPresent()) {
+                final Event wakeupSegmentFromAwakeDetection = new Event(
+                        Event.Type.WAKE_UP,
+                        segmentFromAwakeDetection.getEndTimestamp(),
+                        segmentFromAwakeDetection.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                        segmentFromAwakeDetection.getOffsetMillis());
+
+                if(!sleepTimeEvent.isPresent()) {
                     LOGGER.debug("Default algorithm failed to detect sleep time. Force to use N shape algorithm.");
-                    segments.add(sleepSegmentFromAwakeDetection);
+                    events.add(sleepSegmentFromAwakeDetection);
                 }else {
                     if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION_FROM_AWAKE, accessToken.accountId, new ArrayList<String>())) {
-                        segments.add(sleepSegmentFromAwakeDetection);
+                        events.add(sleepSegmentFromAwakeDetection);
                         LOGGER.debug("Default algorithm and N shape algorithm both detected sleep.");
                     }else{
                         LOGGER.debug("Account {} not in N shape detection feature group.", accessToken.accountId);
                     }
                 }
-                segments.add(wakeupSegmentFromAwakeDetection);
+                events.add(wakeupSegmentFromAwakeDetection);
+                wakeUpTimeZoneOffsetMillis = wakeupSegmentFromAwakeDetection.timezoneOffset;
             }
 
             LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
@@ -181,45 +186,31 @@ public class TimelineResource extends BaseResource {
         if (optionalPartnerAccountId.isPresent()) {
             // get tracker motions for partner, query time is in UTC, not local_utc
             final DateTime startTime;
-            if (sleepTimeSegment.isPresent()) {
-                startTime = new DateTime(sleepTimeSegment.get().getTimestamp(), DateTimeZone.UTC);
+            if (sleepTimeEvent.isPresent()) {
+                startTime = new DateTime(sleepTimeEvent.get().startTimestamp, DateTimeZone.UTC);
             } else {
-                startTime = new DateTime(segments.get(0).getTimestamp(), DateTimeZone.UTC);
+                startTime = new DateTime(events.get(0).startTimestamp, DateTimeZone.UTC);
             }
-            final DateTime endTime = new DateTime(segments.get(segments.size() - 1).getTimestamp(), DateTimeZone.UTC);
+            final DateTime endTime = new DateTime(events.get(events.size() - 1).startTimestamp, DateTimeZone.UTC);
 
             final List<TrackerMotion> partnerMotions = this.trackerMotionDAO.getBetween(optionalPartnerAccountId.get(), startTime, endTime);
             if (partnerMotions.size() > 0) {
                 // use un-normalized data segments for comparison
-                segments.addAll(PartnerMotion.getPartnerData(segments, partnerMotions, threshold));
+                events.addAll(PartnerMotion.getPartnerData(motionEvents, partnerMotions, threshold));
             }
         }
 
         // add sunrise data
         final Optional<DateTime> sunrise = sunData.sunrise(targetDate.plusDays(1).toString(DateTimeFormat.forPattern("yyyy-MM-dd"))); // day + 1
-        if(sunrise.isPresent()) {
-
-            SleepSegment.SoundInfo soundInfo = null;
-            if(feature.userFeatureActive(FeatureFlipper.SOUND_INFO_TIMELINE, accessToken.accountId, new ArrayList<String>())) {
-                final Date expiration = new java.util.Date();
-                long msec = expiration.getTime();
-                msec += 1000 * 60 * 60; // 1 hour.
-                expiration.setTime(msec);
-                final URL url = s3.generatePresignedUrl(bucketName, "mario.mp3", expiration, HttpMethod.GET);
-                soundInfo = new SleepSegment.SoundInfo(url.toExternalForm(), 2000);
-            }
-
-            final SleepSegment sunriseSegment = new SleepSegment(1L,
-                    sunrise.get().getMillis(), 0, DateTimeConstants.SECONDS_PER_MINUTE,
-                    -1,
-                    Event.Type.SUNRISE,
-                    new ArrayList<SensorReading>(),
-                    soundInfo);
+        if(sunrise.isPresent() && wakeUpTimeZoneOffsetMillis > -1) {
+            final long sunRiseMillis = sunrise.get().getMillis();
+            final Event sunriseEvent = new SunRiseEvent(sunRiseMillis,
+                    wakeUpTimeZoneOffsetMillis);
 //            final SleepSegment audioSleepSegment = new SleepSegment(99L, sunrise.get().plusMinutes(5).getMillis(), 0, 60, -1, Event.Type.SNORING, "ZzZzZzZzZ", new ArrayList<SensorReading>(), soundInfo);
-            segments.add(sunriseSegment);
+            events.add(sunriseEvent);
 //            extraSegments.add(audioSleepSegment);
 
-            LOGGER.debug(sunriseSegment.getMessage());
+            LOGGER.debug(sunriseEvent.getDescription());
         }
 
         // TODO: add sound
@@ -227,11 +218,23 @@ public class TimelineResource extends BaseResource {
 
         // merge similar segments (by motion & event-type), then categorize
 //        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(segments, mergeThreshold);
-        List<SleepSegment> mergedSegments = TimelineUtils.generateAlignedSegmentsByTypeWeight(segments, DateTimeConstants.MILLIS_PER_MINUTE, 15, false);
-        mergedSegments = TimelineUtils.convertLightMotionToNone(mergedSegments, 10);
+        List<Event> mergedEvents = TimelineUtils.generateAlignedSegmentsByTypeWeight(events, DateTimeConstants.MILLIS_PER_MINUTE, 15, false);
 
-        final SleepStats sleepStats = TimelineUtils.computeStats(mergedSegments);
-        final List<SleepSegment> reversed = Lists.reverse(mergedSegments);
+        SleepSegment.SoundInfo sunRiseSound = null;
+        if(feature.userFeatureActive(FeatureFlipper.SOUND_INFO_TIMELINE, accessToken.accountId, new ArrayList<String>())) {
+            final Date expiration = new java.util.Date();
+            long msec = expiration.getTime();
+            msec += 1000 * 60 * 60; // 1 hour.
+            expiration.setTime(msec);
+            final URL url = s3.generatePresignedUrl(bucketName, "mario.mp3", expiration, HttpMethod.GET);
+            sunRiseSound = new SleepSegment.SoundInfo(url.toExternalForm(), 2000);
+        }
+
+        List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(mergedEvents, sunRiseSound);
+        sleepSegments = TimelineUtils.convertLightMotionToNone(sleepSegments, threshold);
+
+        final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments);
+        final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
         // get scores - check dynamoDB first
         final int userOffsetMillis = trackerMotions.get(0).offsetMillis;
