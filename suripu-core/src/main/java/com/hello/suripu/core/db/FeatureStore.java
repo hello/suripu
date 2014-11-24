@@ -1,13 +1,21 @@
 package com.hello.suripu.core.db;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
+import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
+import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
+import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
+import com.amazonaws.services.dynamodbv2.model.KeyType;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ReturnConsumedCapacity;
+import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.Feature;
 import org.slf4j.Logger;
@@ -88,4 +96,25 @@ public class FeatureStore {
     }
 
 
+    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
+        final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
+
+        request.withKeySchema(
+                new KeySchemaElement().withAttributeName(NAMESPACE_ATTRIBUTE_NAME).withKeyType(KeyType.HASH),
+                new KeySchemaElement().withAttributeName(NAME_ATTRIBUTE_NAME).withKeyType(KeyType.RANGE)
+        );
+
+        request.withAttributeDefinitions(
+                new AttributeDefinition().withAttributeName(NAMESPACE_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.S),
+                new AttributeDefinition().withAttributeName(NAME_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.S)
+        );
+
+
+        request.setProvisionedThroughput(new ProvisionedThroughput()
+                .withReadCapacityUnits(1L)
+                .withWriteCapacityUnits(1L));
+
+        final CreateTableResult result = dynamoDBClient.createTable(request);
+        return result;
+    }
 }
