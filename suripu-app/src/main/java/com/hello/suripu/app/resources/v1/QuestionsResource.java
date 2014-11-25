@@ -109,10 +109,12 @@ public class QuestionsResource {
 
         return this.questionProcessor.getQuestions(accessToken.accountId, accountAgeInDays, today, DEFAULT_NUM_MORE_QUESTIONS, false);
     }
+
     @Timed
     @POST
+    @Path("/save")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void saveAnswer(@Scope(OAuthScope.QUESTIONS_READ) final AccessToken accessToken,
+    public void saveAnswers(@Scope(OAuthScope.QUESTIONS_READ) final AccessToken accessToken,
                            @QueryParam("account_question_id") final Long accountQuestionId,
                            @Valid final List<Choice> choice) {
         LOGGER.debug("Saving answer for account id = {}", accessToken.accountId);
@@ -128,7 +130,7 @@ public class QuestionsResource {
 
     @Timed
     @PUT
-    @Path("/{question_id}/skip")
+    @Path("/{question_id}/skip_this")
     @Consumes(MediaType.APPLICATION_JSON)
     public void skipQuestion(@Scope(OAuthScope.QUESTIONS_READ) final AccessToken accessToken,
                              @PathParam("question_id") final Integer questionId,
@@ -142,6 +144,26 @@ public class QuestionsResource {
         }
 
         this.questionProcessor.skipQuestion(accessToken.accountId, questionId, accountQuestionId, timeZoneOffset);
+    }
+
+    // keeping these for backward compatibility
+    @Timed
+    @POST
+    @Deprecated
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void saveAnswer(@Scope(OAuthScope.QUESTIONS_WRITE) final AccessToken accessToken, @Valid final Choice choice) {
+        LOGGER.debug("Saving answer for account id = {}", accessToken.accountId);
+        LOGGER.debug("Choice was = {}", choice.id);
+    }
+
+    @Timed
+    @PUT
+    @Deprecated
+    @Path("/{question_id}/skip")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void skipQuestion(@Scope(OAuthScope.QUESTIONS_WRITE) final AccessToken accessToken,
+                             @PathParam("question_id") final Long questionId) {
+        LOGGER.debug("Skipping question {} for account id = {}", questionId, accessToken.accountId);
     }
 
 }
