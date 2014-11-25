@@ -221,6 +221,8 @@ public class TimelineResource extends BaseResource {
             }
 
             LOGGER.debug(sunriseEvent.getDescription());
+        }else{
+            LOGGER.warn("No sun rise data for date {}", targetDate.plusDays(1));
         }
 
         // TODO: add sound

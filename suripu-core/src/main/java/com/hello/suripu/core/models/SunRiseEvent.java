@@ -10,6 +10,7 @@ public class SunRiseEvent extends Event {
     public SunRiseEvent(final long startTimestamp, final long endTimestamp, final int offsetMillis, final int sleepDepth, final SleepSegment.SoundInfo soundInfo){
         super(Type.SUNRISE, startTimestamp, endTimestamp, offsetMillis);
         this.setSleepDepth(sleepDepth);
+        this.setSoundInfo(soundInfo);
     }
 
     @Override

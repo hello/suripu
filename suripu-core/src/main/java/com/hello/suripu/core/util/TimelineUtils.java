@@ -412,7 +412,7 @@ public class TimelineUtils {
         final Map<Long, MotionEvent> map = new HashMap<>();
 
         for(final MotionEvent sleepMotion : sleepMotions) {
-            if(sleepMotion.getSleepDepth() < 80) {
+            if(sleepMotion.getSleepDepth() < 70) {
                 dateTimes.add(new DateTime(sleepMotion.getStartTimestamp() + sleepMotion.getTimezoneOffset()));
             }
         }
