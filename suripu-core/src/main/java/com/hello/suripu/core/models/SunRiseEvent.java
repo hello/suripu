@@ -1,7 +1,5 @@
 package com.hello.suripu.core.models;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 /**
  * Created by pangwu on 11/22/14.
  */
@@ -12,11 +10,6 @@ public class SunRiseEvent extends Event {
     public SunRiseEvent(final long startTimestamp, final long endTimestamp, final int offsetMillis, final int sleepDepth, final SleepSegment.SoundInfo soundInfo){
         super(Type.SUNRISE, startTimestamp, endTimestamp, offsetMillis);
         this.setSleepDepth(sleepDepth);
-    }
-
-    @Override
-    public void setDescription(String message) {
-        throw new NotImplementedException();
     }
 
     @Override

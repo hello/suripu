@@ -14,11 +14,6 @@ public class SunSetEvent extends  Event {
     }
 
     @Override
-    public void setDescription(String message) {
-        throw new NotImplementedException();
-    }
-
-    @Override
     public String getDescription(){
         return "Sun set";
     }

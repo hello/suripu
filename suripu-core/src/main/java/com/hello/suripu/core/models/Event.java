@@ -147,8 +147,6 @@ public abstract class Event {
         }
     }
 
-
-    public abstract void setDescription(final String message);
     public abstract String getDescription();
 
     public abstract void setSoundInfo(final SleepSegment.SoundInfo soundInfo);

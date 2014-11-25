@@ -17,11 +17,6 @@ public class MotionEvent extends Event {
     }
 
     @Override
-    public void setDescription(final String message) {
-        throw new NotImplementedException();
-    }
-
-    @Override
     public String getDescription(){
         return "Motion detected";
     }

@@ -11,11 +11,6 @@ public class SleepEvent extends Event {
     }
 
     @Override
-    public void setDescription(String message) {
-        throw new NotImplementedException();
-    }
-
-    @Override
     public String getDescription() {
         return "Fell asleep";
     }
