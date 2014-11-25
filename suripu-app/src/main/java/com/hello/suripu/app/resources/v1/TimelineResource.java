@@ -229,8 +229,8 @@ public class TimelineResource extends BaseResource {
 
         // merge similar segments (by motion & event-type), then categorize
 //        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(segments, mergeThreshold);
-        List<Event> mergedEvents = TimelineUtils.generateAlignedSegmentsByTypeWeight(events, DateTimeConstants.MILLIS_PER_MINUTE, 15, false);
-        mergedEvents = TimelineUtils.convertLightMotionToNone(mergedEvents, threshold);
+        final List<Event> mergedEvents = TimelineUtils.generateAlignedSegmentsByTypeWeight(events, DateTimeConstants.MILLIS_PER_MINUTE, 15, false);
+        final List<Event> convertedEvents = TimelineUtils.convertLightMotionToNone(mergedEvents, threshold);
 
         List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(mergedEvents);
 
