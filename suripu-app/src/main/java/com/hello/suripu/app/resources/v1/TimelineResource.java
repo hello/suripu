@@ -148,13 +148,13 @@ public class TimelineResource extends BaseResource {
 
             if(segmentFromAwakeDetection.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
                 final SleepEvent sleepEventFromAwakeDetection = new SleepEvent(
-                        segmentFromAwakeDetection.getEndTimestamp(),
-                        segmentFromAwakeDetection.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                        segmentFromAwakeDetection.getStartTimestamp(),
+                        segmentFromAwakeDetection.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                         segmentFromAwakeDetection.getOffsetMillis()
                         );
 
                 final WakeupEvent wakeupSegmentFromAwakeDetection = new WakeupEvent(
-                        segmentFromAwakeDetection.getStartTimestamp(),
+                        segmentFromAwakeDetection.getEndTimestamp(),
                         segmentFromAwakeDetection.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                         segmentFromAwakeDetection.getOffsetMillis());
 
