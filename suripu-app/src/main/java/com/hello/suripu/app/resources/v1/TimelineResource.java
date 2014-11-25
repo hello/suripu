@@ -135,6 +135,7 @@ public class TimelineResource extends BaseResource {
 
         if(sleepTimeEvent.isPresent()) {
             events.add(sleepTimeEvent.get());
+            wakeUpTimeZoneOffsetMillis = sleepTimeEvent.get().getTimezoneOffset();
         }
 
         // A day starts with 8pm local time and ends with 4pm local time next day
