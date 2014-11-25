@@ -7,7 +7,6 @@ import com.hello.suripu.core.models.Team;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
-import com.sun.javafx.Logging;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
