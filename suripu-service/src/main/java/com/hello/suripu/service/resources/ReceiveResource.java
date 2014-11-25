@@ -300,9 +300,7 @@ public class ReceiveResource extends BaseResource {
                     .withAmbientLightPeakiness(data.getLightTonality())
                     .withOffsetMillis(userTimeZone.getOffset(roundedDateTime))
                     .withDateTimeUTC(roundedDateTime)
-                    .withFirmwareVersion(data.getFirmwareVersion())
-                    .withWaveCount(data.hasWaveCount() ? data.getWaveCount() : 0)
-                    .withHoldCount(data.hasHoldCount() ? data.getHoldCount() : 0);
+                    .withFirmwareVersion(data.getFirmwareVersion());
 
             final DeviceData deviceData = builder.build();
             final CurrentRoomState currentRoomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), 2);
