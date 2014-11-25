@@ -233,7 +233,7 @@ public class TimelineResource extends BaseResource {
 
         List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(convertedEvents);
 
-        final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments);
+        final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments, 70);
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
         // get scores - check dynamoDB first

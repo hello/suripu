@@ -313,7 +313,7 @@ public class TimelineUtils {
      * @param segments
      * @return
      */
-    public static SleepStats computeStats(final List<SleepSegment> segments) {
+    public static SleepStats computeStats(final List<SleepSegment> segments, final int lightSleepThreshold) {
         Integer soundSleepDuration = 0;
         Integer lightSleepDuration = 0;
         Integer sleepDuration = 0;
@@ -332,9 +332,9 @@ public class TimelineUtils {
             if(!sleepStarted){
                 continue;
             }
-            if (segment.getSleepDepth() >= 70) {
+            if (segment.getSleepDepth() >= lightSleepThreshold) {
                 soundSleepDuration += segment.getDurationInSeconds();
-            } else if(segment.getSleepDepth() > 10 && segment.getSleepDepth() < 70) {
+            } else if(segment.getSleepDepth() >= 0 && segment.getSleepDepth() < lightSleepThreshold) {
                 lightSleepDuration += segment.getDurationInSeconds();
             } else {
                 numberOfMotionEvents += 1;
@@ -362,8 +362,8 @@ public class TimelineUtils {
      */
     public static String generateMessage(final SleepStats sleepStats) {
         final Integer percentageOfSoundSleep = Math.round(new Float(sleepStats.soundSleepDurationInMinutes) /sleepStats.sleepDurationInMinutes * 100);
-        final double sleepDurationInHours = sleepStats.sleepDurationInMinutes / (double)DateTimeConstants.MILLIS_PER_HOUR;
-        final double soundDurationInHours = sleepStats.soundSleepDurationInMinutes / (double)DateTimeConstants.MILLIS_PER_HOUR;
+        final double sleepDurationInHours = sleepStats.sleepDurationInMinutes / (double)DateTimeConstants.MINUTES_PER_HOUR;
+        final double soundDurationInHours = sleepStats.soundSleepDurationInMinutes / (double)DateTimeConstants.MINUTES_PER_HOUR;
         return String.format("You slept for a total of **%.1f hours**, soundly for %.1f hours, (%d%%) and moved %d times",
                 sleepDurationInHours, soundDurationInHours, percentageOfSoundSleep, sleepStats.numberOfMotionEvents);
     }
@@ -412,7 +412,7 @@ public class TimelineUtils {
         final Map<Long, MotionEvent> map = new HashMap<>();
 
         for(final MotionEvent sleepMotion : sleepMotions) {
-            if(sleepMotion.getSleepDepth() < 70) {
+            if(sleepMotion.getSleepDepth() < 80) {
                 dateTimes.add(new DateTime(sleepMotion.getStartTimestamp() + sleepMotion.getTimezoneOffset()));
             }
         }
