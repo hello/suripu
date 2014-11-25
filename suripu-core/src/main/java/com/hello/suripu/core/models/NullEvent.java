@@ -1,7 +1,5 @@
 package com.hello.suripu.core.models;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 /**
  * Created by pangwu on 11/24/14.
  */
@@ -20,18 +18,8 @@ public class NullEvent extends Event {
     }
 
     @Override
-    public void setSoundInfo(SleepSegment.SoundInfo soundInfo) {
-        throw new NotImplementedException();
-    }
-
-    @Override
     public SleepSegment.SoundInfo getSoundInfo() {
         return null;
-    }
-
-    @Override
-    public void setSleepDepth(final int sleepDepth) {
-        this.sleepDepth = sleepDepth;
     }
 
     @Override

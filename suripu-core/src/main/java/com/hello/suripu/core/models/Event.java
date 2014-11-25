@@ -6,6 +6,7 @@ import com.google.common.base.Objects;
  * Created by pangwu on 5/8/14.
  */
 public abstract class Event {
+
     public enum Type { // in order of display priority
         NONE(-1) {
             public String toString() {return "";}
@@ -148,12 +149,7 @@ public abstract class Event {
     }
 
     public abstract String getDescription();
-
-    public abstract void setSoundInfo(final SleepSegment.SoundInfo soundInfo);
     public abstract SleepSegment.SoundInfo getSoundInfo();
-
-
-    public abstract void setSleepDepth(final int sleepDepth);
     public abstract int getSleepDepth();
 
 

@@ -9,8 +9,8 @@ public class SunRiseEvent extends Event {
 
     public SunRiseEvent(final long startTimestamp, final long endTimestamp, final int offsetMillis, final int sleepDepth, final SleepSegment.SoundInfo soundInfo){
         super(Type.SUNRISE, startTimestamp, endTimestamp, offsetMillis);
-        this.setSleepDepth(sleepDepth);
-        this.setSoundInfo(soundInfo);
+        this.sleepDepth = sleepDepth;
+        this.soundInfo = soundInfo;
     }
 
     @Override
@@ -18,19 +18,16 @@ public class SunRiseEvent extends Event {
         return "Sun rise";
     }
 
-    @Override
-    public void setSoundInfo(final SleepSegment.SoundInfo soundInfo) {
+    /*
+    * Let's don't put the setters in the base class, because not all events has those properties.
+     */
+    public void setSoundInfo(final SleepSegment.SoundInfo sunRiseSound) {
         this.soundInfo = soundInfo;
     }
 
     @Override
     public SleepSegment.SoundInfo getSoundInfo() {
         return this.soundInfo;
-    }
-
-    @Override
-    public void setSleepDepth(int sleepDepth) {
-        this.sleepDepth = sleepDepth;
     }
 
     @Override
