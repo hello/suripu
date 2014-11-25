@@ -7,6 +7,7 @@ import com.hello.suripu.core.models.Team;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.sun.javafx.Logging;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -127,11 +128,11 @@ public class TeamsResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public void removeFromDevicesTeam(
             @Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
-            @PathParam("team_name") final String team_name,
-            @PathParam("device_id") final String device_id){
+            @PathParam("team_name") final String teamName,
+            @PathParam("device_id") final String deviceId){
         final List<String> ids = new ArrayList<>();
-        ids.add(device_id);
-        teamStore.remove(team_name, TeamStore.Type.DEVICES, ids);
+        ids.add(deviceId);
+        teamStore.remove(teamName, TeamStore.Type.DEVICES, ids);
     }
 
     @DELETE
@@ -139,9 +140,9 @@ public class TeamsResource {
     public void removeFromUsersTeam(
             @Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
             @PathParam("team_name") final String teamName,
-            @PathParam("user_id") final Long user_id) {
+            @PathParam("user_id") final Long userId) {
         final List<String> ids = new ArrayList<>();
-        ids.add(String.valueOf(user_id));
-        teamStore.add(teamName, TeamStore.Type.USERS, ids);
+        ids.add(String.valueOf(userId));
+        teamStore.remove(teamName, TeamStore.Type.USERS, ids);
     }
 }
