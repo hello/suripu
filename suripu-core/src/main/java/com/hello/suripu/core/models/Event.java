@@ -115,8 +115,6 @@ public abstract class Event {
                 return new SunRiseEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth(), event.getSoundInfo());
             case SUNSET:
                 return new SunSetEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
-            case PARTNER_MOTION:
-                return new PartnerMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
             default:
                 return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
 
