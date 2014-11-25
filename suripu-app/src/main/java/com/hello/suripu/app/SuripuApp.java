@@ -17,6 +17,7 @@ import com.hello.suripu.app.cli.CreateDynamoDBEventTableCommand;
 import com.hello.suripu.app.cli.CreateDynamoDBTimeZoneHistoryTableCommand;
 import com.hello.suripu.app.cli.CreateRingTimeDynamoDBTable;
 import com.hello.suripu.app.cli.CreateSleepScoreDynamoDBTable;
+import com.hello.suripu.app.cli.CreateFeaturesDynamoDBTableCommand;
 import com.hello.suripu.app.cli.RecreateEventsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.modules.RolloutAppModule;
