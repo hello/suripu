@@ -214,7 +214,7 @@ public class TimelineUtils {
                     // Replace the current segment in that slot with higher weight segment
                     final Event replaceEvent = Event.extend(event, objectSlotKey.getMillis(), objectSlotKey.getMillis() + slotDurationMS);
                     slots.put(objectSlotKey, replaceEvent);
-                    LOGGER.trace("{} replaced to {}", currentSlot.getType(), event.getType());
+                    LOGGER.debug("{} replaced to {}", currentSlot.getType(), event.getType());
                 }
             }
         }
@@ -237,16 +237,22 @@ public class TimelineUtils {
             if(count == 0){
                 startSlotKey = slotStartTimestamp.getMillis();
                 finalEvent = currentEvent;
+                minSleepDepth = currentEvent.getSleepDepth();
             }
 
 
             if(finalEvent.getType().getValue() < currentEvent.getType().getValue()){
                 finalEvent = currentEvent;
             }
+
+            if(minSleepDepth > currentEvent.getSleepDepth()){
+                minSleepDepth = currentEvent.getSleepDepth();
+            }
+
             count++;
 
             if(count == mergeSlotCount){
-                final Event mergedEvent = Event.extend(finalEvent, startSlotKey, currentEvent.getEndTimestamp());
+                final Event mergedEvent = Event.extend(finalEvent, startSlotKey, currentEvent.getEndTimestamp(), minSleepDepth);
                 if(collapseNullSegments && mergedEvent.getType() == Event.Type.NONE){
                     // Do nothing, collapse this event
                     LOGGER.trace("None slot skipped {}", new DateTime(mergedEvent.getStartTimestamp(),
@@ -257,6 +263,7 @@ public class TimelineUtils {
 
                 // reset
                 count = 0;
+                minSleepDepth = 0;
             }
         }
 
@@ -264,7 +271,8 @@ public class TimelineUtils {
         if(count > 0){
             final Event mergedSegment = Event.extend(finalEvent,
                     startSlotKey,
-                    currentEvent.getEndTimestamp());
+                    currentEvent.getEndTimestamp(),
+                    minSleepDepth);
             LOGGER.trace(mergedSegment.toString());
             if(collapseNullSegments && mergedSegment.getType() == Event.Type.NONE){
                 // Do nothing, collapse this event
