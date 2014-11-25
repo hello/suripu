@@ -247,9 +247,6 @@ public class TimelineUtils {
 
             if(count == mergeSlotCount){
                 final Event mergedEvent = Event.extend(finalEvent, startSlotKey, currentEvent.getEndTimestamp());
-
-                mergedEvent.setDescription(finalEvent.getDescription());
-
                 if(collapseNullSegments && mergedEvent.getType() == Event.Type.NONE){
                     // Do nothing, collapse this event
                     LOGGER.trace("None slot skipped {}", new DateTime(mergedEvent.getStartTimestamp(),
