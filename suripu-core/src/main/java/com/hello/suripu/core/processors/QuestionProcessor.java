@@ -158,6 +158,10 @@ public class QuestionProcessor {
 
         // set a delay for next ask time, max days to skip is 55 days
         final int skipCount = Math.min(skippedIds.size(), MAX_SKIPS_ALLOWED);
+        if (skipCount < 2) {
+            return 0;
+        }
+
         final int skipDays = (int) Math.exp((double) skipCount / 2.0);
 
         LOGGER.debug("User has skipped {} consecutive questions, pause for {} days", skipCount, skipDays);

@@ -18,6 +18,7 @@ import com.hello.suripu.app.cli.CreateDynamoDBTimeZoneHistoryTableCommand;
 import com.hello.suripu.app.cli.CreateFeaturesDynamoDBTableCommand;
 import com.hello.suripu.app.cli.CreateRingTimeDynamoDBTable;
 import com.hello.suripu.app.cli.CreateSleepScoreDynamoDBTable;
+import com.hello.suripu.app.cli.CreateFeaturesDynamoDBTableCommand;
 import com.hello.suripu.app.cli.RecreateEventsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.modules.RolloutAppModule;
@@ -234,7 +235,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addProvider(new OAuthProvider(new OAuthAuthenticator(accessTokenStore), "protected-resources", activityLogger));
 
         final String namespace = (configuration.getDebug()) ? "dev" : "prod";
-
+        dynamoDBClient.setEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
         final FeatureStore featureStore = new FeatureStore(dynamoDBClient, "features", namespace);
 
 
