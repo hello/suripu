@@ -3,6 +3,7 @@ package com.hello.suripu.app.resources.v1;
 import com.google.common.io.Resources;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.MotionEvent;
+import com.hello.suripu.core.models.SleepEvent;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.TimelineUtils;
 import org.joda.time.DateTime;
@@ -23,10 +24,10 @@ public class TimelineUtilsTest {
     public void testMerge() {
         final List<Event> sleepSegments = new ArrayList<>();
         final DateTime now = DateTime.now();
-        sleepSegments.add(new Event(Event.Type.MOTION, now.getMillis(), now.getMillis() + DateTimeConstants.MILLIS_PER_MINUTE, 0));
-        sleepSegments.add(new Event(Event.Type.MOTION, now.plusMinutes(1).getMillis(), now.plusMinutes(1).getMillis() + DateTimeConstants.MILLIS_PER_MINUTE, 0));
-        sleepSegments.add(new Event(Event.Type.MOTION, now.plusMinutes(2).getMillis(), now.plusMinutes(2).getMillis() + DateTimeConstants.MILLIS_PER_MINUTE, 0));
-        sleepSegments.add(new Event(Event.Type.MOTION, now.plusMinutes(3).getMillis(), now.plusMinutes(3).getMillis() + DateTimeConstants.MILLIS_PER_MINUTE, 0));
+        sleepSegments.add(new SleepEvent(now.getMillis(), now.getMillis() + DateTimeConstants.MILLIS_PER_MINUTE, 0));
+        sleepSegments.add(new SleepEvent(now.plusMinutes(1).getMillis(), now.plusMinutes(1).getMillis() + DateTimeConstants.MILLIS_PER_MINUTE, 0));
+        sleepSegments.add(new SleepEvent(now.plusMinutes(2).getMillis(), now.plusMinutes(2).getMillis() + DateTimeConstants.MILLIS_PER_MINUTE, 0));
+        sleepSegments.add(new SleepEvent(now.plusMinutes(3).getMillis(), now.plusMinutes(3).getMillis() + DateTimeConstants.MILLIS_PER_MINUTE, 0));
 
         final List<Event> mergedSegments = TimelineUtils.generateAlignedSegmentsByTypeWeight(sleepSegments,
                 DateTimeConstants.MILLIS_PER_MINUTE,
@@ -94,9 +95,9 @@ public class TimelineUtilsTest {
         final List<Event> sleepSegments = new ArrayList<>();
         final DateTime now = DateTime.now();
         //sleepSegments.add(new MotionEvent(millis, millis + DateTimeConstants.MILLIS_PER_MINUTE, 0, 99, 100));
-        sleepSegments.add(new MotionEvent(now.getMillis(), now.getMillis() + DateTimeConstants.MILLIS_PER_MINUTE, 0, 100, 100));
-        sleepSegments.add(new MotionEvent(now.plusMinutes(5).getMillis(), now.plusMinutes(5).getMillis() + DateTimeConstants.MILLIS_PER_MINUTE, 0, 50, 100));
-        sleepSegments.add(new MotionEvent(now.plusMinutes(6).getMillis(), now.plusMinutes(6).getMillis() + DateTimeConstants.MILLIS_PER_MINUTE, 0, 0, 100));
+        sleepSegments.add(new MotionEvent(now.getMillis(), now.getMillis() + DateTimeConstants.MILLIS_PER_MINUTE, 0, 0));
+        sleepSegments.add(new MotionEvent(now.plusMinutes(5).getMillis(), now.plusMinutes(5).getMillis() + DateTimeConstants.MILLIS_PER_MINUTE, 0, 50));
+        sleepSegments.add(new MotionEvent(now.plusMinutes(6).getMillis(), now.plusMinutes(6).getMillis() + DateTimeConstants.MILLIS_PER_MINUTE, 0, 0));
 
         final List<Event> mergedSegments = TimelineUtils.generateAlignedSegmentsByTypeWeight(sleepSegments, DateTimeConstants.MILLIS_PER_MINUTE, 5, true);
         assertThat(mergedSegments.size(), is(2));
@@ -120,10 +121,10 @@ public class TimelineUtilsTest {
         List<Event> sleepSegments = new ArrayList<>();
         final DateTime now = DateTime.now();
         final Long millis = now.getMillis();
-        sleepSegments.add(new MotionEvent(millis, millis + DateTimeConstants.MILLIS_PER_MINUTE, 0, 99, 100));
-        sleepSegments.add(new MotionEvent(millis, millis + DateTimeConstants.MILLIS_PER_MINUTE, 0, 100, 100));
-        sleepSegments.add(new MotionEvent(millis, millis + DateTimeConstants.MILLIS_PER_MINUTE, 0, 71, 100));
-        sleepSegments.add(new MotionEvent(millis, millis + DateTimeConstants.MILLIS_PER_MINUTE, 0, 50, 100));
+        sleepSegments.add(new MotionEvent(millis, millis + DateTimeConstants.MILLIS_PER_MINUTE, 0, 99));
+        sleepSegments.add(new MotionEvent(millis, millis + DateTimeConstants.MILLIS_PER_MINUTE, 0, 100));
+        sleepSegments.add(new MotionEvent(millis, millis + DateTimeConstants.MILLIS_PER_MINUTE, 0, 71));
+        sleepSegments.add(new MotionEvent(millis, millis + DateTimeConstants.MILLIS_PER_MINUTE, 0, 50));
 
         final List<Event> mergedSegments = TimelineUtils.generateAlignedSegmentsByTypeWeight(sleepSegments, DateTimeConstants.MILLIS_PER_MINUTE, 2, true);
         assertThat(mergedSegments.size(), is(1));

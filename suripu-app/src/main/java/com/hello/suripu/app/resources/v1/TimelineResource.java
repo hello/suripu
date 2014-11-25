@@ -18,11 +18,13 @@ import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.MotionEvent;
+import com.hello.suripu.core.models.SleepEvent;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.SunRiseEvent;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.models.WakeupEvent;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -128,7 +130,7 @@ public class TimelineResource extends BaseResource {
 
         // detect sleep time
         final int sleepEventThreshold = 7; // minutes of no-movement to determine that user has fallen asleep
-        final Optional<Event> sleepTimeEvent = TimelineUtils.getSleepEvent(motionEvents, sleepEventThreshold);
+        final Optional<SleepEvent> sleepTimeEvent = TimelineUtils.getSleepEvent(motionEvents, sleepEventThreshold);
         int wakeUpTimeZoneOffsetMillis = -1;
 
         if(sleepTimeEvent.isPresent()) {
@@ -145,16 +147,14 @@ public class TimelineResource extends BaseResource {
             final Segment segmentFromAwakeDetection = awakeDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay());
 
             if(segmentFromAwakeDetection.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
-                final Event sleepSegmentFromAwakeDetection = new Event(
-                        Event.Type.SLEEP,
+                final SleepEvent sleepSegmentFromAwakeDetection = new SleepEvent(
                         segmentFromAwakeDetection.getEndTimestamp(),
                         segmentFromAwakeDetection.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                         segmentFromAwakeDetection.getOffsetMillis()
                         );
                 sleepSegmentFromAwakeDetection.setDescription("You fell asleep");
 
-                final Event wakeupSegmentFromAwakeDetection = new Event(
-                        Event.Type.WAKE_UP,
+                final WakeupEvent wakeupSegmentFromAwakeDetection = new WakeupEvent(
                         segmentFromAwakeDetection.getEndTimestamp(),
                         segmentFromAwakeDetection.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                         segmentFromAwakeDetection.getOffsetMillis());
@@ -171,7 +171,7 @@ public class TimelineResource extends BaseResource {
                     }
                 }
                 events.add(wakeupSegmentFromAwakeDetection);
-                wakeUpTimeZoneOffsetMillis = wakeupSegmentFromAwakeDetection.timezoneOffset;
+                wakeUpTimeZoneOffsetMillis = wakeupSegmentFromAwakeDetection.getTimezoneOffset();
             }
 
             LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
@@ -187,11 +187,11 @@ public class TimelineResource extends BaseResource {
             // get tracker motions for partner, query time is in UTC, not local_utc
             final DateTime startTime;
             if (sleepTimeEvent.isPresent()) {
-                startTime = new DateTime(sleepTimeEvent.get().startTimestamp, DateTimeZone.UTC);
+                startTime = new DateTime(sleepTimeEvent.get().getStartTimestamp(), DateTimeZone.UTC);
             } else {
-                startTime = new DateTime(events.get(0).startTimestamp, DateTimeZone.UTC);
+                startTime = new DateTime(events.get(0).getStartTimestamp(), DateTimeZone.UTC);
             }
-            final DateTime endTime = new DateTime(events.get(events.size() - 1).startTimestamp, DateTimeZone.UTC);
+            final DateTime endTime = new DateTime(events.get(events.size() - 1).getStartTimestamp(), DateTimeZone.UTC);
 
             final List<TrackerMotion> partnerMotions = this.trackerMotionDAO.getBetween(optionalPartnerAccountId.get(), startTime, endTime);
             if (partnerMotions.size() > 0) {
@@ -205,10 +205,21 @@ public class TimelineResource extends BaseResource {
         if(sunrise.isPresent() && wakeUpTimeZoneOffsetMillis > -1) {
             final long sunRiseMillis = sunrise.get().getMillis();
             final Event sunriseEvent = new SunRiseEvent(sunRiseMillis,
-                    wakeUpTimeZoneOffsetMillis);
+                    sunRiseMillis + DateTimeConstants.MILLIS_PER_MINUTE,
+                    wakeUpTimeZoneOffsetMillis, 0, null);
 //            final SleepSegment audioSleepSegment = new SleepSegment(99L, sunrise.get().plusMinutes(5).getMillis(), 0, 60, -1, Event.Type.SNORING, "ZzZzZzZzZ", new ArrayList<SensorReading>(), soundInfo);
             events.add(sunriseEvent);
 //            extraSegments.add(audioSleepSegment);
+
+            if(feature.userFeatureActive(FeatureFlipper.SOUND_INFO_TIMELINE, accessToken.accountId, new ArrayList<String>())) {
+                final Date expiration = new java.util.Date();
+                long msec = expiration.getTime();
+                msec += 1000 * 60 * 60; // 1 hour.
+                expiration.setTime(msec);
+                final URL url = s3.generatePresignedUrl(bucketName, "mario.mp3", expiration, HttpMethod.GET);
+                final SleepSegment.SoundInfo sunRiseSound = new SleepSegment.SoundInfo(url.toExternalForm(), 2000);
+                sunriseEvent.setSoundInfo(sunRiseSound);
+            }
 
             LOGGER.debug(sunriseEvent.getDescription());
         }
@@ -219,19 +230,9 @@ public class TimelineResource extends BaseResource {
         // merge similar segments (by motion & event-type), then categorize
 //        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(segments, mergeThreshold);
         List<Event> mergedEvents = TimelineUtils.generateAlignedSegmentsByTypeWeight(events, DateTimeConstants.MILLIS_PER_MINUTE, 15, false);
+        mergedEvents = TimelineUtils.convertLightMotionToNone(events, threshold);
 
-        SleepSegment.SoundInfo sunRiseSound = null;
-        if(feature.userFeatureActive(FeatureFlipper.SOUND_INFO_TIMELINE, accessToken.accountId, new ArrayList<String>())) {
-            final Date expiration = new java.util.Date();
-            long msec = expiration.getTime();
-            msec += 1000 * 60 * 60; // 1 hour.
-            expiration.setTime(msec);
-            final URL url = s3.generatePresignedUrl(bucketName, "mario.mp3", expiration, HttpMethod.GET);
-            sunRiseSound = new SleepSegment.SoundInfo(url.toExternalForm(), 2000);
-        }
-
-        List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(mergedEvents, sunRiseSound);
-        sleepSegments = TimelineUtils.convertLightMotionToNone(sleepSegments, threshold);
+        List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(mergedEvents);
 
         final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments);
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);

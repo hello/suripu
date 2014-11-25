@@ -7,16 +7,16 @@ import org.joda.time.format.DateTimeFormat;
 /**
  * Created by pangwu on 11/22/14.
  */
-public class PartnerMotionEvent extends MotionEvent {
-    public PartnerMotionEvent(long startTimestamp, long endTimestamp, int offsetMillis, double amplitude, double maxAmplitude) {
-        super(startTimestamp, endTimestamp, offsetMillis, amplitude, maxAmplitude);
+public class PartnerMotionEvent extends SleepMotionEvent {
+    public PartnerMotionEvent(long startTimestamp, long endTimestamp, int offsetMillis, int sleepDepth) {
+        super(startTimestamp, endTimestamp, offsetMillis, sleepDepth);
         this.setType(Type.PARTNER_MOTION);
     }
 
     @Override
     public String getDescription(){
         return String.format("Your partner kicked you at %s",
-                new DateTime(this.startTimestamp, DateTimeZone.forOffsetMillis(this.timezoneOffset))
+                new DateTime(this.getStartTimestamp(), DateTimeZone.forOffsetMillis(this.getTimezoneOffset()))
                         .toString(DateTimeFormat.forPattern("HH:mm a")));
     }
 }

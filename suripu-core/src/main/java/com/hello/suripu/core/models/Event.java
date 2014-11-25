@@ -5,7 +5,7 @@ import com.google.common.base.Objects;
 /**
  * Created by pangwu on 5/8/14.
  */
-public class Event {
+public abstract class Event {
     public enum Type { // in order of display priority
         NONE(-1) {
             public String toString() {return "";}
@@ -66,57 +66,72 @@ public class Event {
 
 
     private Type type;
+    private long startTimestamp;
+    private long endTimestamp;
+    private int timezoneOffset;
 
-    public final long startTimestamp;
+    public Event(final Type type, final long startTimestamp, final long endTimestamp, final int timezoneOffset){
+        setType(type);
+        this.startTimestamp = startTimestamp;
+        this.endTimestamp = endTimestamp;
+        this.timezoneOffset = timezoneOffset;
+    }
 
-    public final long endTimestamp;
+    public final long getStartTimestamp(){
+        return this.startTimestamp;
+    }
 
-    public final int timezoneOffset;
 
-    private String message = "";
+    public final long getEndTimestamp(){
+        return this.endTimestamp;
+    }
 
-    public Type getType(){
+
+    public final int getTimezoneOffset(){
+        return this.timezoneOffset;
+    }
+
+    public final Type getType(){
         return type;
     }
 
-    protected void setType(final Type type){
+    protected final void setType(final Type type){
         this.type = type;
     }
 
-    public Event(final Type type,
-                 final long startTimestamp,
-                 final long endTimestamp,
-                 final int timezoneOffset
+    public static Event extend(final Event event, final long startTimestamp, final long endTimestamp){
+        switch (event.getType()){
+            case MOTION:
+                return new MotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+            case SLEEP_MOTION:
+                return new SleepMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+            case SLEEP:
+                return new SleepEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+            case WAKE_UP:
+                return new WakeupEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+            case NONE:
+                return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+            case SUNRISE:
+                return new SunRiseEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth(), event.getSoundInfo());
+            case SUNSET:
+                return new SunSetEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+            default:
+                return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
 
-    ){
-        this.type = type;
-        this.startTimestamp = startTimestamp;
-        this.endTimestamp = endTimestamp;
-        this.timezoneOffset = timezoneOffset;
+        }
     }
 
-    public Event(
-            final Type type,
-            final long startTimestamp,
-            final long endTimestamp,
-            final String message,
-            final int timezoneOffset
 
-    ){
-        this.type = type;
-        this.startTimestamp = startTimestamp;
-        this.endTimestamp = endTimestamp;
-        this.timezoneOffset = timezoneOffset;
-        this.message = message;
-    }
+    public abstract void setDescription(final String message);
+    public abstract String getDescription();
 
-    public void setDescription(final String message) {
-        this.message = message;
-    }
+    public abstract void setSoundInfo(final SleepSegment.SoundInfo soundInfo);
+    public abstract SleepSegment.SoundInfo getSoundInfo();
 
-    public String getDescription() {
-        return this.message;
-    }
+
+    public abstract void setSleepDepth(final int sleepDepth);
+    public abstract int getSleepDepth();
+
 
 
     @Override

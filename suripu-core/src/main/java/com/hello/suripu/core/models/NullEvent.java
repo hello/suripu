@@ -3,17 +3,15 @@ package com.hello.suripu.core.models;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
- * Created by pangwu on 11/22/14.
+ * Created by pangwu on 11/24/14.
  */
-public class MotionEvent extends Event {
+public class NullEvent extends Event {
+
     private int sleepDepth = 0;
 
-    public MotionEvent(final long startTimestamp,
-                       final long endTimestamp,
-                       final int offsetMillis,
-                       final int sleepDepth){
-        super(Type.MOTION, startTimestamp, endTimestamp, offsetMillis);
-        setSleepDepth(sleepDepth);
+    public NullEvent(final long startTimestamp, final long endTimestamp, final int timezoneOffset, final int sleepDepth) {
+        super(Type.NONE, startTimestamp, endTimestamp, timezoneOffset);
+        this.sleepDepth = sleepDepth;
     }
 
     @Override
@@ -22,8 +20,8 @@ public class MotionEvent extends Event {
     }
 
     @Override
-    public String getDescription(){
-        return "Motion detected";
+    public String getDescription() {
+        return "";
     }
 
     @Override
@@ -45,5 +43,4 @@ public class MotionEvent extends Event {
     public int getSleepDepth() {
         return this.sleepDepth;
     }
-
 }
