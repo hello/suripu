@@ -152,7 +152,6 @@ public class TimelineResource extends BaseResource {
                         segmentFromAwakeDetection.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                         segmentFromAwakeDetection.getOffsetMillis()
                         );
-                sleepSegmentFromAwakeDetection.setDescription("You fell asleep");
 
                 final WakeupEvent wakeupSegmentFromAwakeDetection = new WakeupEvent(
                         segmentFromAwakeDetection.getEndTimestamp(),
@@ -204,7 +203,7 @@ public class TimelineResource extends BaseResource {
         final Optional<DateTime> sunrise = sunData.sunrise(targetDate.plusDays(1).toString(DateTimeFormat.forPattern("yyyy-MM-dd"))); // day + 1
         if(sunrise.isPresent() && wakeUpTimeZoneOffsetMillis > -1) {
             final long sunRiseMillis = sunrise.get().getMillis();
-            final Event sunriseEvent = new SunRiseEvent(sunRiseMillis,
+            final SunRiseEvent sunriseEvent = new SunRiseEvent(sunRiseMillis,
                     sunRiseMillis + DateTimeConstants.MILLIS_PER_MINUTE,
                     wakeUpTimeZoneOffsetMillis, 0, null);
 //            final SleepSegment audioSleepSegment = new SleepSegment(99L, sunrise.get().plusMinutes(5).getMillis(), 0, 60, -1, Event.Type.SNORING, "ZzZzZzZzZ", new ArrayList<SensorReading>(), soundInfo);

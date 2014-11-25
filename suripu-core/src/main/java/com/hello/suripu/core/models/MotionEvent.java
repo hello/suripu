@@ -1,7 +1,5 @@
 package com.hello.suripu.core.models;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 /**
  * Created by pangwu on 11/22/14.
  */
@@ -13,12 +11,7 @@ public class MotionEvent extends Event {
                        final int offsetMillis,
                        final int sleepDepth){
         super(Type.MOTION, startTimestamp, endTimestamp, offsetMillis);
-        setSleepDepth(sleepDepth);
-    }
-
-    @Override
-    public void setDescription(final String message) {
-        throw new NotImplementedException();
+        this.sleepDepth = sleepDepth;
     }
 
     @Override
@@ -27,18 +20,8 @@ public class MotionEvent extends Event {
     }
 
     @Override
-    public void setSoundInfo(SleepSegment.SoundInfo soundInfo) {
-        throw new NotImplementedException();
-    }
-
-    @Override
     public SleepSegment.SoundInfo getSoundInfo() {
         return null;
-    }
-
-    @Override
-    public void setSleepDepth(final int sleepDepth) {
-        this.sleepDepth = sleepDepth;
     }
 
     @Override
