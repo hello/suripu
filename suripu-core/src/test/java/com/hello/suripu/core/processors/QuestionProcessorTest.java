@@ -203,7 +203,7 @@ public class QuestionProcessorTest {
     @Test
     public void testGetOnBoardingQuestions() {
         final int accountAge = 0; // zero-days
-        final List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, 2);
+        final List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, 2, true);
 
         assertThat(questions.size(), is(3));
 
@@ -218,7 +218,7 @@ public class QuestionProcessorTest {
         // expects one base and one calibration if asking for two
         final int accountAge = 2;
         int numQ = 2;
-        List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ);
+        List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
         assertThat(questions.size(), is(numQ));
 
         boolean foundBaseQ = false;
@@ -236,7 +236,7 @@ public class QuestionProcessorTest {
 
         // try getting three questions
         numQ = 3;
-        questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ);
+        questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
         assertThat(questions.size(), is(numQ));
         int countBaseQ = 0;
         foundCalibrationQ = false;
@@ -253,7 +253,7 @@ public class QuestionProcessorTest {
 
         // get 7, should include one ongoing question
         numQ = 7;
-        questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ);
+        questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
         foundBaseQ = false;
         boolean foundOngoing = false;
         foundCalibrationQ = false;
@@ -276,7 +276,7 @@ public class QuestionProcessorTest {
     public void testGetOldieQuestions() {
         final int accountAge = 2;
         int numQ = 2;
-        List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ);
+        List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, numQ, true);
         assertThat(questions.size(), is(numQ));
 
         boolean foundBaseQ = false;
@@ -307,7 +307,7 @@ public class QuestionProcessorTest {
         final int numQ = 3;
         final int accountAge = 2;
 
-        final List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_FAIL, accountAge, this.today, numQ);
+        final List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_FAIL, accountAge, this.today, numQ, true);
 
         assertThat(questions.size(), is(0));
     }

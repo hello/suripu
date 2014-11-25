@@ -89,7 +89,7 @@ CREATE TABLE responses (
     created TIMESTAMP default current_timestamp
 );
 
-CREATE UNIQUE INDEX uniq_responses_account_id_question_id ON responses(account_id, account_question_id);
+CREATE UNIQUE INDEX uniq_responses_account_question_response_id ON responses(account_id, account_question_id, response_id);
 CREATE INDEX responses_account_id ON responses(account_id);
 CREATE INDEX responses_account_question_id ON responses(account_question_id);
 

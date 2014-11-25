@@ -37,6 +37,8 @@ public class QuestionsResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(QuestionsResource.class);
     private static final long DAY_IN_MILLIS = 86400000L;
+    private static final int DEFAULT_NUM_QUESTIONS = 2;
+    private static final int DEFAULT_NUM_MORE_QUESTIONS = 4;
 
     private final AccountDAO accountDAO;
     private final TimeZoneHistoryDAODynamoDB tzHistoryDAO;
@@ -74,12 +76,39 @@ public class QuestionsResource {
         }
 
         // get question
-        final int numToGet = 2;
         final int accountAgeInDays =  (int) ((DateTime.now(DateTimeZone.UTC).getMillis() - accountOptional.get().created.getMillis()) / DAY_IN_MILLIS);
 
-        return this.questionProcessor.getQuestions(accessToken.accountId, accountAgeInDays, today, numToGet);
+        return this.questionProcessor.getQuestions(accessToken.accountId, accountAgeInDays, today, DEFAULT_NUM_QUESTIONS, true);
     }
 
+    @Timed
+    @GET
+    @Path("/more")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Question> getMoreQuestions(
+            @Scope(OAuthScope.QUESTIONS_READ) final AccessToken accessToken) {
+
+        // user asked for more questions
+        LOGGER.debug("Returning list of questions for account id = {}", accessToken.accountId);
+        final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
+        if(!accountOptional.isPresent()) {
+            throw new WebApplicationException(404);
+        }
+
+        int timeZoneOffset = - 26200000;
+        final Optional<TimeZoneHistory> tzHistory = this.tzHistoryDAO.getCurrentTimeZone(accessToken.accountId);
+        if (tzHistory.isPresent()) {
+            timeZoneOffset = tzHistory.get().offsetMillis;
+        }
+
+        final DateTime today = DateTime.now(DateTimeZone.UTC).plusMillis(timeZoneOffset).withTimeAtStartOfDay();
+        LOGGER.debug("More questions for today = {}", today);
+
+        // get question
+        final int accountAgeInDays =  (int) ((DateTime.now(DateTimeZone.UTC).getMillis() - accountOptional.get().created.getMillis()) / DAY_IN_MILLIS);
+
+        return this.questionProcessor.getQuestions(accessToken.accountId, accountAgeInDays, today, DEFAULT_NUM_MORE_QUESTIONS, false);
+    }
     @Timed
     @POST
     @Consumes(MediaType.APPLICATION_JSON)

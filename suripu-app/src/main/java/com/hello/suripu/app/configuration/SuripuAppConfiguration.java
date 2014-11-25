@@ -35,6 +35,15 @@ public class SuripuAppConfiguration extends Configuration {
 
     @Valid
     @NotNull
+    @JsonProperty("insights_db")
+    private DatabaseConfiguration insightsDB = new DatabaseConfiguration();
+
+    public DatabaseConfiguration getInsightsDB() {
+        return insightsDB;
+    }
+
+    @Valid
+    @NotNull
     @JsonProperty("metrics_enabled")
     private Boolean metricsEnabled;
 

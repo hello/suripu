@@ -67,7 +67,7 @@ public class QuestionProcessor {
     /**
      * Get a list of questions for the user, or pre-generate one
      */
-    public List<Question> getQuestions(final Long accountId, final int accountAgeInDays, final DateTime today, final Integer numQuestions) {
+    public List<Question> getQuestions(final Long accountId, final int accountAgeInDays, final DateTime today, final Integer numQuestions, final Boolean checkPause) {
 
         // brand new user - get on-boarding questions
         if (accountAgeInDays < NEW_ACCOUNT_AGE) {
@@ -75,14 +75,18 @@ public class QuestionProcessor {
         }
 
         // check if user has skipped too many questions in the past.
-        final boolean pauseQuestion = this.pauseQuestions(accountId, today);
-        if (pauseQuestion) {
-            LOGGER.debug("Pause questions for user {}", accountId);
-            return Collections.emptyList();
+        if (checkPause) {
+            final boolean pauseQuestion = this.pauseQuestions(accountId, today);
+            if (pauseQuestion) {
+                LOGGER.debug("Pause questions for user {}", accountId);
+                return Collections.emptyList();
+            }
+        } else {
+            this.resetNextAsk(accountId, today);
         }
 
         // check if we have already generated a list of questions
-        final Map<Integer, Question> preGeneratedQuestions = this.getPreGeneratedQuestions(accountId, today, numQuestions);
+        final Map<Integer, Question> preGeneratedQuestions = this.getPreGeneratedQuestions(accountId, today);
         if (preGeneratedQuestions.size() > 0) {
             return new ArrayList<>(preGeneratedQuestions.values());
         }
@@ -193,7 +197,7 @@ public class QuestionProcessor {
     private List<Question> getOnBoardingQuestions(Long accountId, DateTime today) {
 
         // check if we have already generated a list of questions
-        final Map<Integer, Question> preGeneratedQuestions = this.getPreGeneratedQuestions(accountId, today, NEW_USER_NUM_Q);
+        final Map<Integer, Question> preGeneratedQuestions = this.getPreGeneratedQuestions(accountId, today);
         if (preGeneratedQuestions.size() >= NEW_USER_NUM_Q) {
             return new ArrayList<>(preGeneratedQuestions.values());
         }
@@ -383,9 +387,9 @@ public class QuestionProcessor {
         return baseIds;
     }
 
-    private Map<Integer, Question> getPreGeneratedQuestions(final Long accountId, final DateTime today, final int numQuestions) {
+    private Map<Integer, Question> getPreGeneratedQuestions(final Long accountId, final DateTime today) {
         final DateTime expiration = today.plusDays(1);
-        final ImmutableList<AccountQuestion> questionIds = this.questionResponseDAO.getAccountQuestions(accountId, expiration, numQuestions);
+        final ImmutableList<AccountQuestion> questionIds = this.questionResponseDAO.getAccountQuestions(accountId, expiration);
         if (questionIds == null || questionIds.size() == 0) {
             return Collections.emptyMap();
         }
@@ -415,6 +419,12 @@ public class QuestionProcessor {
             }
         }
         return false;
+    }
+
+    private void resetNextAsk(Long accountId, DateTime today) {
+        // set next ask into the past.
+        final DateTime nextAskDate = today.minusDays(1);
+        this.questionResponseDAO.setNextAskTime(accountId, nextAskDate);
     }
 
 }

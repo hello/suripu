@@ -43,6 +43,23 @@ common_db:
   properties:
     charSet: UTF-8
 
+insights_db:
+  # the name of your JDBC driver
+  driverClass: org.postgresql.Driver
+
+  # the username
+  user: tim
+
+  # the password
+  password: hello ingress user
+
+  # the JDBC URL
+  url: jdbc:postgresql://localhost:5432/bingo
+
+  # any properties specific to your JDBC driver:
+  properties:
+    charSet: UTF-8
+
 # to allow queries with clocks out of sync
 # 12 * 3600s = 43200 sec -> 12h window
 allowed_query_range_seconds: 43200

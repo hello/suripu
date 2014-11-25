@@ -71,11 +71,9 @@ public interface QuestionResponseDAO {
     @RegisterMapper(AccountQuestionMapper.class)
     @SqlQuery("SELECT * FROM account_questions AQ WHERE " +
             "account_id = :account_id AND expires_local_utc_ts >= :expiration AND AQ.id NOT IN " +
-            "(SELECT account_question_id FROM responses ORDER BY id DESC LIMIT :question_limit) " +
-            "ORDER BY id DESC")
+            "(SELECT account_question_id FROM responses) ORDER BY id DESC")
     ImmutableList<AccountQuestion> getAccountQuestions(@Bind("account_id") long accountId,
-                                                       @Bind("expiration") DateTime expiration,
-                                                       @Bind("question_limit") int questionLimit);
+                                                       @Bind("expiration") DateTime expiration);
 
 
     // TODO need to optimize and create index

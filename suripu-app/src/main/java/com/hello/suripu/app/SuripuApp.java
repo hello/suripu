@@ -129,6 +129,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final DBIFactory factory = new DBIFactory();
         final DBI sensorsDB = factory.build(environment, configuration.getSensorsDB(), "postgresql");
         final DBI commonDB = factory.build(environment, configuration.getCommonDB(), "postgresql");
+        final DBI insightsDB = factory.build(environment, configuration.getInsightsDB(), "postgresql");
 
         sensorsDB.registerArgumentFactory(new JodaArgumentFactory());
         sensorsDB.registerContainerFactory(new OptionalContainerFactory());
@@ -139,6 +140,10 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         commonDB.registerContainerFactory(new OptionalContainerFactory());
         commonDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
 
+        insightsDB.registerArgumentFactory(new JodaArgumentFactory());
+        insightsDB.registerContainerFactory(new OptionalContainerFactory());
+        insightsDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
+
         final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
         final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
         final AccessTokenDAO accessTokenDAO = commonDB.onDemand(AccessTokenDAO.class);
@@ -148,7 +153,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final SleepScoreDAO sleepScoreDAO = commonDB.onDemand(SleepScoreDAO.class);
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
-        final QuestionResponseDAO questionResponseDAO = commonDB.onDemand(QuestionResponseDAO.class);
+        final QuestionResponseDAO questionResponseDAO = insightsDB.onDemand(QuestionResponseDAO.class);
 
 
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
