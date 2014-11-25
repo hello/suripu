@@ -39,21 +39,21 @@ public class TimelineUtils {
     public static final Integer LOW_SLEEP_DEPTH = 30;
     public static final Integer LOWEST_SLEEP_DEPTH = 10;
 
-    public static List<SleepSegment> convertLightMotionToNone(final List<SleepSegment> sleepSegments, final int thresholdSleepDepth){
-        final LinkedList<SleepSegment> convertedSegments = new LinkedList<>();
-        for(final SleepSegment sleepSegment:sleepSegments){
-            if(sleepSegment.getType() == Event.Type.MOTION && sleepSegment.getSleepDepth() > thresholdSleepDepth){
-                final NullEvent nullEvent = new NullEvent(sleepSegment.getEvent().getStartTimestamp(),
-                        sleepSegment.getEvent().getEndTimestamp(),
-                        sleepSegment.getEvent().getTimezoneOffset(),
-                        sleepSegment.getEvent().getTimezoneOffset());
-                convertedSegments.add(new SleepSegment(sleepSegment.id, nullEvent, Collections.EMPTY_LIST));
+    public static List<Event> convertLightMotionToNone(final List<Event> eventList, final int thresholdSleepDepth){
+        final LinkedList<Event> convertedEvents = new LinkedList<>();
+        for(final Event event:eventList){
+            if(event.getType() == Event.Type.MOTION && event.getSleepDepth() > thresholdSleepDepth){
+                final NullEvent nullEvent = new NullEvent(event.getStartTimestamp(),
+                        event.getEndTimestamp(),
+                        event.getTimezoneOffset(),
+                        event.getTimezoneOffset());
+                convertedEvents.add(nullEvent);
             }else{
-                convertedSegments.add(sleepSegment);
+                convertedEvents.add(event);
             }
         }
 
-        return ImmutableList.copyOf(convertedSegments);
+        return ImmutableList.copyOf(convertedEvents);
     }
 
 
