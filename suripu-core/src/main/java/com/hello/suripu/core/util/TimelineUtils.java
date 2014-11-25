@@ -269,15 +269,15 @@ public class TimelineUtils {
 
         // Handle the dangling case
         if(count > 0){
-            final Event mergedSegment = Event.extend(finalEvent,
+            final Event mergedEvent = Event.extend(finalEvent,
                     startSlotKey,
                     currentEvent.getEndTimestamp(),
                     minSleepDepth);
-            LOGGER.trace(mergedSegment.toString());
-            if(collapseNullSegments && mergedSegment.getType() == Event.Type.NONE){
+            LOGGER.trace(mergedEvent.toString());
+            if(collapseNullSegments && mergedEvent.getType() == Event.Type.NONE){
                 // Do nothing, collapse this event
             }else {
-                mergeSlots.add(mergedSegment);
+                mergeSlots.add(mergedEvent);
             }
         }
 

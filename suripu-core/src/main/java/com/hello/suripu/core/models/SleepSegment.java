@@ -2,8 +2,10 @@ package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Objects;
 import com.google.common.collect.ComparisonChain;
+import com.hello.suripu.core.util.EventTypeSerializer;
 import com.hello.suripu.core.util.EventUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -67,8 +69,9 @@ public class SleepSegment implements Comparable {
     }
 
     @JsonProperty("event_type")
+    @JsonSerialize(using = EventTypeSerializer.class)
     public Event.Type getType(){
-        return event.getType();
+        return this.event.getType();
     }
 
     @JsonProperty("message")
