@@ -147,23 +147,23 @@ public class TimelineResource extends BaseResource {
             final Segment segmentFromAwakeDetection = awakeDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay());
 
             if(segmentFromAwakeDetection.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
-                final SleepEvent sleepSegmentFromAwakeDetection = new SleepEvent(
+                final SleepEvent sleepEventFromAwakeDetection = new SleepEvent(
                         segmentFromAwakeDetection.getEndTimestamp(),
-                        segmentFromAwakeDetection.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                        segmentFromAwakeDetection.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                         segmentFromAwakeDetection.getOffsetMillis()
                         );
 
                 final WakeupEvent wakeupSegmentFromAwakeDetection = new WakeupEvent(
-                        segmentFromAwakeDetection.getEndTimestamp(),
+                        segmentFromAwakeDetection.getStartTimestamp(),
                         segmentFromAwakeDetection.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                         segmentFromAwakeDetection.getOffsetMillis());
 
                 if(!sleepTimeEvent.isPresent()) {
                     LOGGER.debug("Default algorithm failed to detect sleep time. Force to use N shape algorithm.");
-                    events.add(sleepSegmentFromAwakeDetection);
+                    events.add(sleepEventFromAwakeDetection);
                 }else {
                     if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION_FROM_AWAKE, accessToken.accountId, new ArrayList<String>())) {
-                        events.add(sleepSegmentFromAwakeDetection);
+                        events.add(sleepEventFromAwakeDetection);
                         LOGGER.debug("Default algorithm and N shape algorithm both detected sleep.");
                     }else{
                         LOGGER.debug("Account {} not in N shape detection feature group.", accessToken.accountId);
