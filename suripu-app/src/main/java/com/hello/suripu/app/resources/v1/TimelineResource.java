@@ -201,7 +201,8 @@ public class TimelineResource extends BaseResource {
         }
 
         // add sunrise data
-        final Optional<DateTime> sunrise = sunData.sunrise(targetDate.plusDays(1).toString(DateTimeFormat.forPattern("yyyy-MM-dd"))); // day + 1
+        final String sunRiseQueryDateString = targetDate.plusDays(1).toString(DateTimeFormat.forPattern("yyyy-MM-dd"));
+        final Optional<DateTime> sunrise = sunData.sunrise(sunRiseQueryDateString); // day + 1
         if(sunrise.isPresent() && wakeUpTimeZoneOffsetMillis > -1) {
             final long sunRiseMillis = sunrise.get().getMillis();
             final SunRiseEvent sunriseEvent = new SunRiseEvent(sunRiseMillis,
@@ -223,7 +224,7 @@ public class TimelineResource extends BaseResource {
 
             LOGGER.debug(sunriseEvent.getDescription());
         }else{
-            LOGGER.warn("No sun rise data for date {}", targetDate.plusDays(1));
+            LOGGER.warn("No sun rise data for date {}", sunRiseQueryDateString);
         }
 
         // TODO: add sound
