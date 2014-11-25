@@ -1,5 +1,7 @@
 package com.hello.suripu.core.models;
 
+import javax.ws.rs.HEAD;
+
 /**
  * Created by pangwu on 11/22/14.
  */

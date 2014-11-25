@@ -46,7 +46,7 @@ public class TimelineUtils {
                 final NullEvent nullEvent = new NullEvent(event.getStartTimestamp(),
                         event.getEndTimestamp(),
                         event.getTimezoneOffset(),
-                        event.getTimezoneOffset());
+                        event.getSleepDepth());
                 convertedEvents.add(nullEvent);
             }else{
                 convertedEvents.add(event);
@@ -214,7 +214,7 @@ public class TimelineUtils {
                     // Replace the current segment in that slot with higher weight segment
                     final Event replaceEvent = Event.extend(event, objectSlotKey.getMillis(), objectSlotKey.getMillis() + slotDurationMS);
                     slots.put(objectSlotKey, replaceEvent);
-                    LOGGER.trace("{} replaced to {}", currentSlot.getType(), event.getType());
+                    LOGGER.debug("{} replaced to {}", currentSlot.getType(), event.getType());
                 }
             }
         }
@@ -237,17 +237,22 @@ public class TimelineUtils {
             if(count == 0){
                 startSlotKey = slotStartTimestamp.getMillis();
                 finalEvent = currentEvent;
+                minSleepDepth = currentEvent.getSleepDepth();
             }
 
 
             if(finalEvent.getType().getValue() < currentEvent.getType().getValue()){
                 finalEvent = currentEvent;
             }
+
+            if(minSleepDepth > currentEvent.getSleepDepth()){
+                minSleepDepth = currentEvent.getSleepDepth();
+            }
+
             count++;
 
             if(count == mergeSlotCount){
-                final Event mergedEvent = Event.extend(finalEvent, startSlotKey, currentEvent.getEndTimestamp());
-
+                final Event mergedEvent = Event.extend(finalEvent, startSlotKey, currentEvent.getEndTimestamp(), minSleepDepth);
                 if(collapseNullSegments && mergedEvent.getType() == Event.Type.NONE){
                     // Do nothing, collapse this event
                     LOGGER.trace("None slot skipped {}", new DateTime(mergedEvent.getStartTimestamp(),
@@ -258,19 +263,21 @@ public class TimelineUtils {
 
                 // reset
                 count = 0;
+                minSleepDepth = 0;
             }
         }
 
         // Handle the dangling case
         if(count > 0){
-            final Event mergedSegment = Event.extend(finalEvent,
+            final Event mergedEvent = Event.extend(finalEvent,
                     startSlotKey,
-                    currentEvent.getEndTimestamp());
-            LOGGER.trace(mergedSegment.toString());
-            if(collapseNullSegments && mergedSegment.getType() == Event.Type.NONE){
+                    currentEvent.getEndTimestamp(),
+                    minSleepDepth);
+            LOGGER.trace(mergedEvent.toString());
+            if(collapseNullSegments && mergedEvent.getType() == Event.Type.NONE){
                 // Do nothing, collapse this event
             }else {
-                mergeSlots.add(mergedSegment);
+                mergeSlots.add(mergedEvent);
             }
         }
 
@@ -306,7 +313,7 @@ public class TimelineUtils {
      * @param segments
      * @return
      */
-    public static SleepStats computeStats(final List<SleepSegment> segments) {
+    public static SleepStats computeStats(final List<SleepSegment> segments, final int lightSleepThreshold) {
         Integer soundSleepDuration = 0;
         Integer lightSleepDuration = 0;
         Integer sleepDuration = 0;
@@ -325,9 +332,9 @@ public class TimelineUtils {
             if(!sleepStarted){
                 continue;
             }
-            if (segment.getSleepDepth() >= 70) {
+            if (segment.getSleepDepth() >= lightSleepThreshold) {
                 soundSleepDuration += segment.getDurationInSeconds();
-            } else if(segment.getSleepDepth() > 10 && segment.getSleepDepth() < 70) {
+            } else if(segment.getSleepDepth() >= 0 && segment.getSleepDepth() < lightSleepThreshold) {
                 lightSleepDuration += segment.getDurationInSeconds();
             } else {
                 numberOfMotionEvents += 1;
@@ -355,8 +362,8 @@ public class TimelineUtils {
      */
     public static String generateMessage(final SleepStats sleepStats) {
         final Integer percentageOfSoundSleep = Math.round(new Float(sleepStats.soundSleepDurationInMinutes) /sleepStats.sleepDurationInMinutes * 100);
-        final double sleepDurationInHours = sleepStats.sleepDurationInMinutes / (double)DateTimeConstants.MILLIS_PER_HOUR;
-        final double soundDurationInHours = sleepStats.soundSleepDurationInMinutes / (double)DateTimeConstants.MILLIS_PER_HOUR;
+        final double sleepDurationInHours = sleepStats.sleepDurationInMinutes / (double)DateTimeConstants.MINUTES_PER_HOUR;
+        final double soundDurationInHours = sleepStats.soundSleepDurationInMinutes / (double)DateTimeConstants.MINUTES_PER_HOUR;
         return String.format("You slept for a total of **%.1f hours**, soundly for %.1f hours, (%d%%) and moved %d times",
                 sleepDurationInHours, soundDurationInHours, percentageOfSoundSleep, sleepStats.numberOfMotionEvents);
     }

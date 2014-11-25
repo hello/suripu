@@ -135,6 +135,7 @@ public class TimelineResource extends BaseResource {
 
         if(sleepTimeEvent.isPresent()) {
             events.add(sleepTimeEvent.get());
+            wakeUpTimeZoneOffsetMillis = sleepTimeEvent.get().getTimezoneOffset();
         }
 
         // A day starts with 8pm local time and ends with 4pm local time next day
@@ -147,8 +148,8 @@ public class TimelineResource extends BaseResource {
             final Segment segmentFromAwakeDetection = awakeDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay());
 
             if(segmentFromAwakeDetection.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
-                final SleepEvent sleepSegmentFromAwakeDetection = new SleepEvent(
-                        segmentFromAwakeDetection.getEndTimestamp(),
+                final SleepEvent sleepEventFromAwakeDetection = new SleepEvent(
+                        segmentFromAwakeDetection.getStartTimestamp(),
                         segmentFromAwakeDetection.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                         segmentFromAwakeDetection.getOffsetMillis()
                         );
@@ -160,10 +161,10 @@ public class TimelineResource extends BaseResource {
 
                 if(!sleepTimeEvent.isPresent()) {
                     LOGGER.debug("Default algorithm failed to detect sleep time. Force to use N shape algorithm.");
-                    events.add(sleepSegmentFromAwakeDetection);
+                    events.add(sleepEventFromAwakeDetection);
                 }else {
                     if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION_FROM_AWAKE, accessToken.accountId, new ArrayList<String>())) {
-                        events.add(sleepSegmentFromAwakeDetection);
+                        events.add(sleepEventFromAwakeDetection);
                         LOGGER.debug("Default algorithm and N shape algorithm both detected sleep.");
                     }else{
                         LOGGER.debug("Account {} not in N shape detection feature group.", accessToken.accountId);
@@ -221,6 +222,8 @@ public class TimelineResource extends BaseResource {
             }
 
             LOGGER.debug(sunriseEvent.getDescription());
+        }else{
+            LOGGER.warn("No sun rise data for date {}", targetDate.plusDays(1));
         }
 
         // TODO: add sound
@@ -228,12 +231,12 @@ public class TimelineResource extends BaseResource {
 
         // merge similar segments (by motion & event-type), then categorize
 //        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(segments, mergeThreshold);
-        List<Event> mergedEvents = TimelineUtils.generateAlignedSegmentsByTypeWeight(events, DateTimeConstants.MILLIS_PER_MINUTE, 15, false);
-        mergedEvents = TimelineUtils.convertLightMotionToNone(events, threshold);
+        final List<Event> mergedEvents = TimelineUtils.generateAlignedSegmentsByTypeWeight(events, DateTimeConstants.MILLIS_PER_MINUTE, 15, false);
+        final List<Event> convertedEvents = TimelineUtils.convertLightMotionToNone(mergedEvents, threshold);
 
-        List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(mergedEvents);
+        List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(convertedEvents);
 
-        final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments);
+        final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments, 70);
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
         // get scores - check dynamoDB first

@@ -116,8 +116,34 @@ public abstract class Event {
                 return new SunRiseEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth(), event.getSoundInfo());
             case SUNSET:
                 return new SunSetEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+            case PARTNER_MOTION:
+                return new PartnerMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
             default:
                 return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+
+        }
+    }
+
+    public static Event extend(final Event event, final long startTimestamp, final long endTimestamp, final int sleepDepth){
+        switch (event.getType()){
+            case MOTION:
+                return new MotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+            case SLEEP_MOTION:
+                return new SleepMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+            case SLEEP:
+                return new SleepEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+            case WAKE_UP:
+                return new WakeupEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+            case NONE:
+                return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+            case SUNRISE:
+                return new SunRiseEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth, event.getSoundInfo());
+            case SUNSET:
+                return new SunSetEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+            case PARTNER_MOTION:
+                return new PartnerMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+            default:
+                return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
 
         }
     }
