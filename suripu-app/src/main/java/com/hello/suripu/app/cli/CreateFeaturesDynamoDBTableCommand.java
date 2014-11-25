@@ -25,7 +25,7 @@ public class CreateFeaturesDynamoDBTableCommand extends ConfiguredCommand<Suripu
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
 
         client.setEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
-        final String tableName = configuration.getAlarmDBConfiguration().getTableName();
+        final String tableName = configuration.getFeaturesDynamoDBConfiguration().getTableName();
 
         final CreateTableResult result = FeatureStore.createTable(tableName, client);
         final TableDescription description = result.getTableDescription();

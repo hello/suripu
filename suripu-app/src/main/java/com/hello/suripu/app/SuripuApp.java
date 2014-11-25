@@ -111,7 +111,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         bootstrap.addCommand(new CreateRingTimeDynamoDBTable());
         bootstrap.addCommand(new CreateAlarmInfoDynamoDBTable());
         bootstrap.addCommand(new CreateSleepScoreDynamoDBTable());
-
+        bootstrap.addCommand(new CreateFeaturesDynamoDBTableCommand());
         bootstrap.addBundle(new KinesisLoggerBundle<SuripuAppConfiguration>() {
             @Override
             public KinesisLoggerConfiguration getConfiguration(final SuripuAppConfiguration configuration) {
@@ -224,7 +224,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addProvider(new OAuthProvider(new OAuthAuthenticator(accessTokenStore), "protected-resources", activityLogger));
 
         final String namespace = (configuration.getDebug()) ? "dev" : "prod";
-
+        dynamoDBClient.setEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
         final FeatureStore featureStore = new FeatureStore(dynamoDBClient, "features", namespace);
 
 
