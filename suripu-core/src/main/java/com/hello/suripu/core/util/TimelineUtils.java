@@ -46,7 +46,7 @@ public class TimelineUtils {
                 final NullEvent nullEvent = new NullEvent(event.getStartTimestamp(),
                         event.getEndTimestamp(),
                         event.getTimezoneOffset(),
-                        event.getTimezoneOffset());
+                        100);
                 convertedEvents.add(nullEvent);
             }else{
                 convertedEvents.add(event);

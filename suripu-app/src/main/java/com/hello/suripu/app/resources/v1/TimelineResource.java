@@ -232,7 +232,7 @@ public class TimelineResource extends BaseResource {
         final List<Event> mergedEvents = TimelineUtils.generateAlignedSegmentsByTypeWeight(events, DateTimeConstants.MILLIS_PER_MINUTE, 15, false);
         final List<Event> convertedEvents = TimelineUtils.convertLightMotionToNone(mergedEvents, threshold);
 
-        List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(mergedEvents);
+        List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(convertedEvents);
 
         final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments);
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
