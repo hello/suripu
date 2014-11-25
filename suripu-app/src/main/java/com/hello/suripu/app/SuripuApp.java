@@ -11,13 +11,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
-import com.hello.suripu.app.cli.CreateAlarmDynamoDBTableCommand;
-import com.hello.suripu.app.cli.CreateAlarmInfoDynamoDBTable;
-import com.hello.suripu.app.cli.CreateDynamoDBEventTableCommand;
-import com.hello.suripu.app.cli.CreateDynamoDBTimeZoneHistoryTableCommand;
-import com.hello.suripu.app.cli.CreateRingTimeDynamoDBTable;
-import com.hello.suripu.app.cli.CreateSleepScoreDynamoDBTable;
-import com.hello.suripu.app.cli.RecreateEventsCommand;
+import com.hello.suripu.app.cli.*;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.modules.RolloutAppModule;
 import com.hello.suripu.app.resources.v1.AccountResource;
@@ -111,7 +105,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         bootstrap.addCommand(new CreateRingTimeDynamoDBTable());
         bootstrap.addCommand(new CreateAlarmInfoDynamoDBTable());
         bootstrap.addCommand(new CreateSleepScoreDynamoDBTable());
-
+        bootstrap.addCommand(new CreateFeaturesDynamoDBTableCommand());
         bootstrap.addBundle(new KinesisLoggerBundle<SuripuAppConfiguration>() {
             @Override
             public KinesisLoggerConfiguration getConfiguration(final SuripuAppConfiguration configuration) {
@@ -224,7 +218,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addProvider(new OAuthProvider(new OAuthAuthenticator(accessTokenStore), "protected-resources", activityLogger));
 
         final String namespace = (configuration.getDebug()) ? "dev" : "prod";
-
+        dynamoDBClient.setEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
         final FeatureStore featureStore = new FeatureStore(dynamoDBClient, "features", namespace);
 
 
