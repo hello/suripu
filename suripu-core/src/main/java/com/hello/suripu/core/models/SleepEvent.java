@@ -3,14 +3,11 @@ package com.hello.suripu.core.models;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
- * Created by pangwu on 11/22/14.
+ * Created by pangwu on 11/24/14.
  */
-public class SunSetEvent extends  Event {
-    private int sleepDepth = 0;
-
-    public SunSetEvent(final long startTimestamp, final long endTimestamp, final int offsetMillis, final int sleepDepth){
-        super(Event.Type.SUNSET, startTimestamp, endTimestamp, offsetMillis);
-        this.setSleepDepth(sleepDepth);
+public class SleepEvent extends Event {
+    public SleepEvent(long startTimestamp, long endTimestamp, int timezoneOffset) {
+        super(Type.SLEEP, startTimestamp, endTimestamp, timezoneOffset);
     }
 
     @Override
@@ -19,8 +16,8 @@ public class SunSetEvent extends  Event {
     }
 
     @Override
-    public String getDescription(){
-        return "Sun set";
+    public String getDescription() {
+        return "Fell asleep";
     }
 
     @Override
@@ -35,11 +32,11 @@ public class SunSetEvent extends  Event {
 
     @Override
     public void setSleepDepth(int sleepDepth) {
-        this.sleepDepth = sleepDepth;
+        throw new NotImplementedException();
     }
 
     @Override
     public int getSleepDepth() {
-        return this.sleepDepth;
+        return 100;
     }
 }

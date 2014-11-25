@@ -8,11 +8,11 @@ import org.joda.time.DateTimeConstants;
  */
 public class EventUtil {
     public static int getEventDurationInSecond(final Event event){
-        if(event.endTimestamp < event.startTimestamp){
+        if(event.getEndTimestamp() < event.getStartTimestamp()){
             // Concern: Usually this is too deep in the call stack and make it hard to debug.
             throw new IllegalArgumentException(String.format("Event %s, end time %d larger than start time %d",
-                    event.getType(), event.startTimestamp, event.endTimestamp));
+                    event.getType(), event.getStartTimestamp(), event.getEndTimestamp()));
         }
-        return (int)(event.endTimestamp - event.startTimestamp) / DateTimeConstants.MILLIS_PER_SECOND;
+        return (int)(event.getEndTimestamp() - event.getStartTimestamp()) / DateTimeConstants.MILLIS_PER_SECOND;
     }
 }
