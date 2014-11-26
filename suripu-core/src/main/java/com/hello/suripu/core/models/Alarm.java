@@ -228,6 +228,7 @@ public class Alarm {
             for(final Alarm alarm:alarms){
                 if(alarm.isRepeated){
                     newAlarmList.add(alarm);
+                    continue;
                 }
 
                 final DateTime ringTime = new DateTime(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour, 0, timeZone);
