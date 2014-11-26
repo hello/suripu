@@ -3,6 +3,7 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -220,6 +221,30 @@ public class Alarm {
             }
 
             return true;
+        }
+
+        public static List<Alarm> disableExpiredNoneRepeatedAlarms(final List<Alarm> alarms, long currentTimestampUTC, final DateTimeZone timeZone){
+            final ArrayList<Alarm> newAlarmList = new ArrayList<>();
+            for(final Alarm alarm:alarms){
+                if(alarm.isRepeated){
+                    newAlarmList.add(alarm);
+                }
+
+                final DateTime ringTime = new DateTime(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour, 0, timeZone);
+                if(ringTime.isBefore(currentTimestampUTC)){
+                    final Alarm disabledAlarm = new Alarm(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour,
+                            new HashSet<Integer>(),
+                            false,
+                            false,
+                            alarm.isEditable,
+                            alarm.sound);
+                    newAlarmList.add(disabledAlarm);
+                }else{
+                    newAlarmList.add(alarm);
+                }
+            }
+
+            return ImmutableList.copyOf(newAlarmList);
         }
 
         /**
