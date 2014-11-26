@@ -141,9 +141,9 @@ public class CurrentRoomState {
         } else if (particulatesAQI <= 50.0) {
             particulatesState = new State(particulatesAQI, "", State.Condition.IDEAL, data.dateTimeUTC, State.Unit.AQI);
         } else if (particulatesAQI <= 300.0) {
-            particulatesState = new State(particulatesAQI, "AQI is at a moderately high level", State.Condition.WARNING, data.dateTimeUTC, State.Unit.AQI);
+            particulatesState = new State(particulatesAQI, "AQI is *moderately high*.", State.Condition.WARNING, data.dateTimeUTC, State.Unit.AQI);
         } else {
-            particulatesState = new State(particulatesAQI, "AQI is at the UNHEALTHY level.", State.Condition.ALERT, data.dateTimeUTC, State.Unit.MICRO_G_M3);
+            particulatesState = new State(particulatesAQI, "AQI is at an *UNHEALTHY* level.", State.Condition.ALERT, data.dateTimeUTC, State.Unit.AQI);
     }
 
         final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState);

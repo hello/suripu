@@ -2,12 +2,16 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.QuestionResponseDAO;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
+import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.processors.QuestionProcessor;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -25,20 +29,30 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.TimeZone;
 
 @Path("/v1/questions")
 public class QuestionsResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(QuestionsResource.class);
+    private static final long DAY_IN_MILLIS = 86400000L;
+    private static final int DEFAULT_NUM_QUESTIONS = 2;
+    private static final int DEFAULT_NUM_MORE_QUESTIONS = 4;
 
     private final AccountDAO accountDAO;
+    private final TimeZoneHistoryDAODynamoDB tzHistoryDAO;
+    private final QuestionProcessor questionProcessor;
 
-    public QuestionsResource(final AccountDAO accountDAO) {
+    public QuestionsResource(final AccountDAO accountDAO, final QuestionResponseDAO questionResponseDAO, final TimeZoneHistoryDAODynamoDB tzHistoryDAO, final int checkSkipsNum) {
         this.accountDAO = accountDAO;
+        this.tzHistoryDAO = tzHistoryDAO;
+
+        final QuestionProcessor.Builder builder = new QuestionProcessor.Builder()
+                .withQuestionResponseDAO(questionResponseDAO)
+                .withCheckSkipsNum(checkSkipsNum)
+                .withQuestions(questionResponseDAO);
+        this.questionProcessor = builder.build();
     }
 
     @Timed
@@ -49,34 +63,83 @@ public class QuestionsResource {
             @QueryParam("date") final String date) {
 
         LOGGER.debug("Returning list of questions for account id = {}", accessToken.accountId);
-        final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
-        if(!accountOptional.isPresent()) {
+        final int accountAgeInDays =  this.getAccountAgeInDays(accessToken.accountId);
+        if (accountAgeInDays == -1) {
+            LOGGER.warn("Fail to get account age for {}", accessToken.accountId);
             throw new WebApplicationException(404);
         }
 
-        // TODO: remove this once we hook up the database
-        final DateTime today = DateTime.now(DateTimeZone.forTimeZone(TimeZone.getTimeZone("America/Los_Angeles")));
+        final int timeZoneOffset = this.getTimeZoneOffsetMillis(accessToken.accountId);
+
+        final DateTime today = DateTime.now(DateTimeZone.UTC).plusMillis(timeZoneOffset).withTimeAtStartOfDay();
         LOGGER.debug("today = {}", today);
         if(date != null && !date.equals(today.toString("yyyy-MM-dd"))) {
             return Collections.EMPTY_LIST;
         }
 
-        final Long questionId = 123L;
-        final List<Choice> choices = new ArrayList<>();
-        final Choice hot = new Choice(123456789L, "HOT", questionId);
-        final Choice cold = new Choice(987654321L, "COLD", questionId);
-        choices.add(hot);
-        choices.add(cold);
+        // get question
+        return this.questionProcessor.getQuestions(accessToken.accountId, accountAgeInDays, today, DEFAULT_NUM_QUESTIONS, true);
+    }
 
-        final String questionText = String.format("%s, do you sleep better when it is hot or cold?", accountOptional.get().name);
-        final Question question = new Question(questionId, questionText, Question.Type.CHOICE, choices);
-        final List<Question> questions = new ArrayList<>();
-        questions.add(question);
-        return questions;
+    @Timed
+    @GET
+    @Path("/more")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Question> getMoreQuestions(
+            @Scope(OAuthScope.QUESTIONS_READ) final AccessToken accessToken) {
+
+        // user asked for more questions
+        LOGGER.debug("Returning list of questions for account id = {}", accessToken.accountId);
+        final int accountAgeInDays =  this.getAccountAgeInDays(accessToken.accountId);
+        if (accountAgeInDays == -1) {
+            LOGGER.warn("Fail to get account age for {}", accessToken.accountId);
+            throw new WebApplicationException(404);
+        }
+
+        final int timeZoneOffset = this.getTimeZoneOffsetMillis(accessToken.accountId);
+
+        final DateTime today = DateTime.now(DateTimeZone.UTC).plusMillis(timeZoneOffset).withTimeAtStartOfDay();
+        LOGGER.debug("More questions for today = {}", today);
+
+        // get question
+        return this.questionProcessor.getQuestions(accessToken.accountId, accountAgeInDays, today, DEFAULT_NUM_MORE_QUESTIONS, false);
     }
 
     @Timed
     @POST
+    @Path("/save")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void saveAnswers(@Scope(OAuthScope.QUESTIONS_READ) final AccessToken accessToken,
+                           @QueryParam("account_question_id") final Long accountQuestionId,
+                           @Valid final List<Choice> choice) {
+        LOGGER.debug("Saving answer for account id = {}", accessToken.accountId);
+
+        final Optional<Integer> questionIdOptional = choice.get(0).questionId;
+        Integer questionId = 0;
+        if (questionIdOptional.isPresent()) {
+            questionId = questionIdOptional.get();
+        }
+
+        this.questionProcessor.saveResponse(accessToken.accountId, questionId, accountQuestionId, choice);
+    }
+
+    @Timed
+    @PUT
+    @Path("/skip")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void skipQuestion(@Scope(OAuthScope.QUESTIONS_READ) final AccessToken accessToken,
+                             @QueryParam("id") final Integer questionId,
+                             @QueryParam("account_question_id") final Long accountQuestionId) {
+        LOGGER.debug("Skipping question {} for account id = {}", questionId, accessToken.accountId);
+
+        final int timeZoneOffset = this.getTimeZoneOffsetMillis(accessToken.accountId);
+        this.questionProcessor.skipQuestion(accessToken.accountId, questionId, accountQuestionId, timeZoneOffset);
+    }
+
+    // keeping these for backward compatibility
+    @Timed
+    @POST
+    @Deprecated
     @Consumes(MediaType.APPLICATION_JSON)
     public void saveAnswer(@Scope(OAuthScope.QUESTIONS_WRITE) final AccessToken accessToken, @Valid final Choice choice) {
         LOGGER.debug("Saving answer for account id = {}", accessToken.accountId);
@@ -85,12 +148,29 @@ public class QuestionsResource {
 
     @Timed
     @PUT
+    @Deprecated
     @Path("/{question_id}/skip")
     @Consumes(MediaType.APPLICATION_JSON)
     public void skipQuestion(@Scope(OAuthScope.QUESTIONS_WRITE) final AccessToken accessToken,
                              @PathParam("question_id") final Long questionId) {
-        // TODO: obviously, we will need to actually mark a question as skipped when the questions are hooked up to the database
         LOGGER.debug("Skipping question {} for account id = {}", questionId, accessToken.accountId);
     }
 
+    private int getTimeZoneOffsetMillis(final Long accountId) {
+        final Optional<TimeZoneHistory> tzHistory = this.tzHistoryDAO.getCurrentTimeZone(accountId);
+        if (tzHistory.isPresent()) {
+            return tzHistory.get().offsetMillis;
+        }
+
+        return -26200000; // PDT
+    }
+
+    private int getAccountAgeInDays(final Long accountId) {
+        final Optional<Account> accountOptional = this.accountDAO.getById(accountId);
+        if(!accountOptional.isPresent()) {
+            return -1;
+        }
+
+        return (int) ((DateTime.now(DateTimeZone.UTC).getMillis() - accountOptional.get().created.getMillis()) / DAY_IN_MILLIS);
+    }
 }

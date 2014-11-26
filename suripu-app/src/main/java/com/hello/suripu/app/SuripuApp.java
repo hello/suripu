@@ -15,6 +15,7 @@ import com.hello.suripu.app.cli.CreateAlarmDynamoDBTableCommand;
 import com.hello.suripu.app.cli.CreateAlarmInfoDynamoDBTable;
 import com.hello.suripu.app.cli.CreateDynamoDBEventTableCommand;
 import com.hello.suripu.app.cli.CreateDynamoDBTimeZoneHistoryTableCommand;
+import com.hello.suripu.app.cli.CreateFeaturesDynamoDBTableCommand;
 import com.hello.suripu.app.cli.CreateRingTimeDynamoDBTable;
 import com.hello.suripu.app.cli.CreateSleepScoreDynamoDBTable;
 import com.hello.suripu.app.cli.CreateFeaturesDynamoDBTableCommand;
@@ -54,6 +55,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.EventDAODynamoDB;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
+import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TeamStore;
@@ -129,6 +131,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final DBIFactory factory = new DBIFactory();
         final DBI sensorsDB = factory.build(environment, configuration.getSensorsDB(), "postgresql");
         final DBI commonDB = factory.build(environment, configuration.getCommonDB(), "postgresql");
+        final DBI insightsDB = factory.build(environment, configuration.getInsightsDB(), "postgresql");
 
         sensorsDB.registerArgumentFactory(new JodaArgumentFactory());
         sensorsDB.registerContainerFactory(new OptionalContainerFactory());
@@ -139,6 +142,10 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         commonDB.registerContainerFactory(new OptionalContainerFactory());
         commonDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
 
+        insightsDB.registerArgumentFactory(new JodaArgumentFactory());
+        insightsDB.registerContainerFactory(new OptionalContainerFactory());
+        insightsDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
+
         final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
         final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
         final AccessTokenDAO accessTokenDAO = commonDB.onDemand(AccessTokenDAO.class);
@@ -148,6 +155,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final SleepScoreDAO sleepScoreDAO = commonDB.onDemand(SleepScoreDAO.class);
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
+        final QuestionResponseDAO questionResponseDAO = insightsDB.onDemand(QuestionResponseDAO.class);
+
 
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
         final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
@@ -253,7 +262,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new MobilePushRegistrationResource(subscriptionDAO));
         environment.addResource(new FeaturesResource(featureStore));
 
-        environment.addResource(new QuestionsResource(accountDAO));
+        environment.addResource(new QuestionsResource(accountDAO, questionResponseDAO, timeZoneHistoryDAODynamoDB, configuration.getQuestionConfigs().getNumSkips()));
         environment.addResource(new InsightsResource(accountDAO));
         environment.addResource(new TeamsResource(teamStore));
 

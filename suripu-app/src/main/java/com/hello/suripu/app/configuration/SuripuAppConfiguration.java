@@ -6,6 +6,7 @@ import com.hello.suripu.core.configuration.GraphiteConfiguration;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.configuration.PushNotificationsConfiguration;
+import com.hello.suripu.core.configuration.QuestionConfiguration;
 import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
@@ -30,6 +31,15 @@ public class SuripuAppConfiguration extends Configuration {
 
     public DatabaseConfiguration getCommonDB() {
         return commonDB;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("insights_db")
+    private DatabaseConfiguration insightsDB = new DatabaseConfiguration();
+
+    public DatabaseConfiguration getInsightsDB() {
+        return insightsDB;
     }
 
     @Valid
@@ -169,6 +179,14 @@ public class SuripuAppConfiguration extends Configuration {
         return this.sleepScoreVersion;
     }
 
+
+    @Valid
+    @NotNull
+    @JsonProperty("question_configs")
+    private QuestionConfiguration questionConfigs;
+    public QuestionConfiguration getQuestionConfigs() {
+        return this.questionConfigs;
+    }
 
     @Valid
     @NotNull
