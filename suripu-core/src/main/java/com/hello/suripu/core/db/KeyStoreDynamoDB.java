@@ -1,5 +1,6 @@
 package com.hello.suripu.core.db;
 
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
@@ -17,6 +18,7 @@ import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
@@ -30,14 +32,13 @@ public class KeyStoreDynamoDB implements KeyStore {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(KeyStoreDynamoDB.class);
 
-    private final AmazonDynamoDBClient dynamoDBClient;
+    private final AmazonDynamoDB dynamoDBClient;
     private final String keyStoreTableName;
 
     private final static String DEVICE_ID_ATTRIBUTE_NAME = "device_id";
     private final static String AES_KEY_ATTRIBUTE_NAME = "aes_key";
 
-    //TODO : when transition is over, remove this
-    private final static byte[] DEFAULT_AES_KEY = "1234567891234567".getBytes();
+    private final byte[] DEFAULT_AES_KEY;
 
 
     final CacheLoader loader = new CacheLoader<String, Optional<byte[]>>() {
@@ -49,11 +50,13 @@ public class KeyStoreDynamoDB implements KeyStore {
     final LoadingCache<String, Optional<byte[]>> cache;
 
     public KeyStoreDynamoDB(
-            final AmazonDynamoDBClient dynamoDBClient,
-            final String keyStoreTableName) {
+            final AmazonDynamoDB dynamoDBClient,
+            final String keyStoreTableName,
+            final byte[] defaultAESKey) {
         this.dynamoDBClient = dynamoDBClient;
         this.keyStoreTableName = keyStoreTableName;
         this.cache = CacheBuilder.newBuilder().build(loader);
+        this.DEFAULT_AES_KEY = defaultAESKey;
     }
 
     @Override
@@ -63,6 +66,8 @@ public class KeyStoreDynamoDB implements KeyStore {
             return cache.get(deviceId);
         } catch (ExecutionException e) {
             LOGGER.error("Exception from cache {}", e.getMessage());
+        } catch(UncheckedExecutionException e) {
+            LOGGER.error("Unchecked Exception from cache {}", e.getMessage());
         }
 
         return Optional.absent();
@@ -91,7 +96,7 @@ public class KeyStoreDynamoDB implements KeyStore {
 
         final GetItemResult getItemResult = dynamoDBClient.getItem(getItemRequest);
 
-        LOGGER.warn(getItemResult.toString());
+        LOGGER.warn("getItemResult = {}", getItemResult.toString());
         if(getItemResult.getItem() == null || !getItemResult.getItem().containsKey(AES_KEY_ATTRIBUTE_NAME)) {
             LOGGER.warn("Did not find anything for device_id = {}", deviceId);
 

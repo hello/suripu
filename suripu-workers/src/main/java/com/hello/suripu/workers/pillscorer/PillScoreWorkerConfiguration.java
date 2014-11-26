@@ -1,20 +1,15 @@
 package com.hello.suripu.workers.pillscorer;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ImmutableMap;
-import com.hello.suripu.core.configuration.GraphiteConfiguration;
-import com.hello.suripu.core.configuration.KinesisConfiguration;
-import com.hello.suripu.core.configuration.QueueName;
-import com.yammer.dropwizard.config.Configuration;
+import com.hello.suripu.core.configuration.DynamoDBConfiguration;
+import com.hello.suripu.workers.framework.WorkerConfiguration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
-import java.util.HashMap;
-import java.util.Map;
 
-public class PillScoreWorkerConfiguration extends Configuration {
+public class PillScoreWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
@@ -27,45 +22,19 @@ public class PillScoreWorkerConfiguration extends Configuration {
 
     @Valid
     @NotNull
-    @JsonProperty("metrics_enabled")
-    private Boolean metricsEnabled;
-
-    public Boolean getMetricsEnabled() {
-        return metricsEnabled;
+    @JsonProperty("pill_key_store")
+    private DynamoDBConfiguration dynamoDBKeyStoreConfiguration;
+    public DynamoDBConfiguration getDynamoDBKeyStoreConfiguration() {
+        return dynamoDBKeyStoreConfiguration;
     }
 
     @Valid
     @NotNull
-    @JsonProperty("graphite")
-    private GraphiteConfiguration graphite;
-
-    public GraphiteConfiguration getGraphite() {
-        return graphite;
+    @JsonProperty("timezone_history_db")
+    private DynamoDBConfiguration timezoneHistoryConfiguration;
+    public DynamoDBConfiguration getTimezoneHistoryConfiguration() {
+        return timezoneHistoryConfiguration;
     }
-
-    @Valid
-    @NotNull
-    @JsonProperty("app_name")
-    private String appName;
-
-    public String getAppName() {
-        return appName;
-    }
-
-    @Valid
-    @NotNull
-    @JsonProperty("kinesis")
-    private KinesisConfiguration kinesisConfiguration;
-    private Map<QueueName,String> queues = new HashMap<QueueName, String>();
-
-    public String getKinesisEndpoint() {
-        return kinesisConfiguration.getEndpoint();
-    }
-
-    public ImmutableMap<QueueName,String> getQueues() {
-        return ImmutableMap.copyOf(kinesisConfiguration.getStreams());
-    }
-
 
     @Valid
     @NotNull
@@ -96,11 +65,5 @@ public class PillScoreWorkerConfiguration extends Configuration {
     public Integer getCheckpointThreshold() {
         return checkpointThreshold;
     }
-
-    @Valid
-    @JsonProperty("debug")
-    private Boolean debug = Boolean.FALSE;
-
-    public Boolean getDebug() { return debug; }
 
 }

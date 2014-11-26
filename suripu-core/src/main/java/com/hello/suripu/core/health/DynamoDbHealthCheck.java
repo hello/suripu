@@ -1,14 +1,14 @@
 package com.hello.suripu.core.health;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
 import com.yammer.metrics.core.HealthCheck;
 
 public class DynamoDbHealthCheck extends HealthCheck {
 
-    private final AmazonDynamoDBClient client;
+    private final AmazonDynamoDB client;
 
-    public DynamoDbHealthCheck(final AmazonDynamoDBClient client) {
+    public DynamoDbHealthCheck(final AmazonDynamoDB client) {
         super("dynamodb");
         this.client = client;
     }

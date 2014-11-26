@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.common.primitives.UnsignedInts;
+import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.api.input.InputProtos;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -158,6 +159,18 @@ public class TrackerMotion {
             this.withValue((int)amplitudeMilliG);
             this.withOffsetMillis(data.getOffsetMillis());
 
+            return this;
+        }
+
+        public Builder withEncryptedValue(final byte[] key, final SenseCommandProtos.pill_data pillData) {
+            long amplitudeMilliG = -1;
+            if(pillData.hasMotionDataEntrypted()){
+                final byte[] encryptedData = pillData.getMotionDataEntrypted().toByteArray();
+
+                final long raw = Utils.encryptedToRaw(key, encryptedData);
+                amplitudeMilliG = Utils.rawToMilliMS2(raw);
+            }
+            this.withValue((int) amplitudeMilliG);
             return this;
         }
 
