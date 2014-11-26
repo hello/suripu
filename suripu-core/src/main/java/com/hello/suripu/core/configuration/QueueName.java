@@ -9,7 +9,9 @@ public enum QueueName {
     AUDIO_FEATURES("audio_features"),
     ACTIVITY_STREAM("activity_stream"),
     REGISTRATIONS("registrations"),
-    ENCODE_AUDIO("encode_audio");
+    ENCODE_AUDIO("encode_audio"),
+    BATCH_PILL_DATA ("batch_pill_data"),
+    SENSE_SENSORS_DATA("sense_sensors_data");
 
     private String value;
 

@@ -116,6 +116,8 @@ kinesis:
     activity_stream : activity_stream
     registrations: registrations
     encode_audio: encode_audio
+    batch_pill_data : batch_pill_data
+    sense_sensors_data : sense_sensors_data
 
 
 audio_bucket_name : hello-data

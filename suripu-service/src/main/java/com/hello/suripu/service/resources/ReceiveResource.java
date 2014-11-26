@@ -16,6 +16,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.firmware.FirmwareUpdateStore;
+import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
@@ -206,6 +207,7 @@ public class ReceiveResource extends BaseResource {
             );
         }
 
+
         final String deviceName = deviceIdOptional.get();
         LOGGER.debug("Received valid protobuf {}", deviceName.toString());
         LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
@@ -225,6 +227,10 @@ public class ReceiveResource extends BaseResource {
                     .type(MediaType.TEXT_PLAIN_TYPE).build()
             );
         }
+
+        // Saving sense data to kinesis
+        final DataLogger senseSensorsDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
+        senseSensorsDataLogger.put(deviceName, signedMessage.body);
 
         // TODO: Warning, since we query dynamoDB based on user input, the user can generate a lot of
         // requests to break our bank(Assume that Dynamo DB never goes down).
@@ -393,6 +399,11 @@ public class ReceiveResource extends BaseResource {
                 .newBuilder()
                 .setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.OFF);
 
+        if(featureFlipper.deviceFeatureActive(FeatureFlipper.AUDIO_CAPTURE, data.getDeviceId(), groups)) {
+            LOGGER.debug("AUDIO_CAPTURE feature is active for device_id = {}", data.getDeviceId());
+            audioControl.setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
+        }
+
         responseBuilder.setAudioControl(audioControl);
 
         final OutputProtos.SyncResponse syncResponse = responseBuilder.build();
@@ -451,6 +462,14 @@ public class ReceiveResource extends BaseResource {
             );
         }
 
+        // Put raw pill data into Kinesis
+        final DataLogger batchDataLogger = kinesisLoggerFactory.get(QueueName.BATCH_PILL_DATA);
+        batchDataLogger.put(batchPilldata.getDeviceId(),  signedMessage.body);
+
+
+        // TODO: everything below this is kept for backward compatibility
+        // TODO: remove is shortly after we've migrated to new worker
+
         // This is the default timezone.
         DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
         final String senseId  = batchPilldata.getDeviceId();
@@ -461,9 +480,10 @@ public class ReceiveResource extends BaseResource {
             }
         }
 
+        // TODO: MOVE THIS TO THE WORKERS! SURIPU-SERVICE SHOULD NOT BE TALKING TO POSTGRESQL HAS MUCH AS POSSIBLE
         // ********************* Pill Data Storage ****************************
         if(batchPilldata.getPillsCount() > 0){
-            for(final SenseCommandProtos.pill_data pill:batchPilldata.getPillsList()){
+            for(final SenseCommandProtos.pill_data pill: batchPilldata.getPillsList()){
 
                 final String pillId = pill.getDeviceId();
                 final Optional<DeviceAccountPair> internalPillPairingMap = this.deviceDAO.getInternalPillId(pillId);
@@ -480,6 +500,7 @@ public class ReceiveResource extends BaseResource {
                         .withSecondOfMinute(0);
 
                 pillKinesisDataBuilder.setAccountIdLong(internalPillPairingMap.get().accountId)
+                        .setPillId(pillId)
                         .setPillIdLong(internalPillPairingMap.get().internalDeviceId)
                         .setTimestamp(roundedDateTime.getMillis())
                         .setOffsetMillis(userTimeZone.getOffset(roundedDateTime));
