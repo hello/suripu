@@ -400,7 +400,7 @@ public class ReceiveResource extends BaseResource {
                 .setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.OFF);
 
         if(featureFlipper.deviceFeatureActive(FeatureFlipper.AUDIO_CAPTURE, data.getDeviceId(), groups)) {
-            LOGGER.debug("AUDIO_CAPTURE feature is active for device_id = {}");
+            LOGGER.debug("AUDIO_CAPTURE feature is active for device_id = {}", data.getDeviceId());
             audioControl.setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
         }
 
