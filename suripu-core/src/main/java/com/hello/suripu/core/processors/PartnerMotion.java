@@ -67,9 +67,12 @@ public class PartnerMotion {
             boolean noPriorMovement = true;
             for (int i = 1; i <= CHECK_PRECEDING_MINS; i++) {
                 final MotionEvent myPriorMotionEvent = myMotionEventsMap.get(partnerMotionEvent.getStartTimestamp() - i * DateTimeConstants.MILLIS_PER_MINUTE);
-                final int priorSleepDepth = myPriorMotionEvent.getSleepDepth();
-                if (myPriorMotionEvent != null && priorSleepDepth < ACCOUNT_DEPTH_THRESHOLD) {
-                    LOGGER.debug("{} prior movement {} {}", partnerMotionEvent.getStartTimestamp(), myPriorMotionEvent.getStartTimestamp(), priorSleepDepth);
+                if(myPriorMotionEvent == null){
+                    continue;
+                }
+
+                if (myPriorMotionEvent.getSleepDepth() < ACCOUNT_DEPTH_THRESHOLD) {
+                    LOGGER.debug("{} prior movement {} {}", partnerMotionEvent.getStartTimestamp(), myPriorMotionEvent.getStartTimestamp(), myPriorMotionEvent.getSleepDepth());
                     noPriorMovement = false;
                     break;
                 }
