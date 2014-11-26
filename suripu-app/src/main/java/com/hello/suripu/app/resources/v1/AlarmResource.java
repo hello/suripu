@@ -15,6 +15,7 @@ import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,6 +67,7 @@ public class AlarmResource {
             LOGGER.debug("Before getting device account map from account_id");
             final Optional<AlarmInfo> alarmInfoOptional = this.mergedAlarmInfoDynamoDB.getInfo(deviceAccountMap.get(0).externalDeviceId, token.accountId);
             LOGGER.debug("Fetched alarm info optional");
+
             if(!alarmInfoOptional.isPresent()){
                 LOGGER.warn("Merge alarm info table doesn't have record for device {}, account {}.", deviceAccountMap.get(0).externalDeviceId, token.accountId);
 
@@ -75,8 +77,16 @@ public class AlarmResource {
 //                throw new WebApplicationException(Response.Status.BAD_REQUEST);
                 return Collections.emptyList();
             }
+
+
             final AlarmInfo alarmInfo = alarmInfoOptional.get();
-            return alarmInfo.alarmList;
+            if(!alarmInfo.timeZone.isPresent()){
+                LOGGER.error("User {} tries to get alarm without having a time zone.", token.accountId);
+                throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            }
+
+            final DateTimeZone userTimeZone = alarmInfo.timeZone.get();
+            return Alarm.Utils.disableExpiredNoneRepeatedAlarms(alarmInfo.alarmList, DateTime.now().getMillis(), userTimeZone);
         }catch (AmazonServiceException awsException){
             LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
