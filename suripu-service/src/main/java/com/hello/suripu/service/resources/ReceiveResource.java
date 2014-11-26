@@ -451,6 +451,14 @@ public class ReceiveResource extends BaseResource {
             );
         }
 
+        // Put raw pill data into Kinesis
+        final DataLogger batchDataLogger = kinesisLoggerFactory.get(QueueName.BATCH_PILL_DATA);
+        batchDataLogger.put(batchPilldata.getDeviceId(),  signedMessage.body);
+
+
+        // TODO: everything below this is kept for backward compatibility
+        // TODO: remove is shortly after we've migrated to new worker
+
         // This is the default timezone.
         DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
         final String senseId  = batchPilldata.getDeviceId();

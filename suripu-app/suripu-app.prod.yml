@@ -201,6 +201,8 @@ kinesis:
     activity_stream : activity_stream
     registrations: registrations
     encode_audio : encode_audio
+    batch_pill_data : batch_pill_data
+
 
 question_configs:
   num_skips : 5
