@@ -3,6 +3,7 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.hello.suripu.core.util.DataUtils;
 import org.joda.time.DateTime;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -10,8 +11,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class DeviceData {
 
     public static final float FLOAT_2_INT_MULTIPLIER = 100;
-    private static final float MAX_DUST_ANALOG_VALUE = 4096;
-    private static final float DUST_FLOAT_TO_INT_MULTIPLIER = 1000000;
 
 
     @JsonProperty("account_id")
@@ -115,24 +114,7 @@ public class DeviceData {
         return valueFromDB / FLOAT_2_INT_MULTIPLIER;
     }
 
-    public static float dbIntToFloatDust(final int valueFromDB) {return valueFromDB / DUST_FLOAT_TO_INT_MULTIPLIER; }
-
-    public static int convertDustAnalogToMicroGM3(final int AnalogValue, final int firmwareVersion) {
-        // convert raw counts to ppm for dust sensor
-        float voltage = (float) AnalogValue / MAX_DUST_ANALOG_VALUE * 4.0f;
-
-        // TODO: add checks for firmware version when we switch sensor
-        // SHARP GP2Y1010AU0F  PM2.5(see Fig. 3 of spec sheet)
-        final float coeff = 0.5f/2.9f;
-        final float intercept = 0.6f * coeff;
-        final float maxVoltage = 3.2f;
-        final float minVoltage = 0.6f;
-
-        voltage = Math.min(voltage, maxVoltage);
-        voltage = Math.max(voltage, minVoltage);
-        final float dustDensity = coeff * voltage - intercept; // micro-gram per m^3
-        return (int) (dustDensity * DUST_FLOAT_TO_INT_MULTIPLIER);
-    }
+    public static float dbIntToFloatDust(final int valueFromDB) {return valueFromDB / DataUtils.DUST_FLOAT_TO_INT_MULTIPLIER;}
 
     public static class Builder{
         private Long accountId;
@@ -174,7 +156,8 @@ public class DeviceData {
         }
 
         public Builder withAmbientAirQuality(final int ambientAirQuality, final int firmwareVersion){
-            this.ambientAirQuality = convertDustAnalogToMicroGM3(ambientAirQuality, firmwareVersion);
+            final float dustDensity = DataUtils.convertDustDataFromCountsToDensity(ambientAirQuality, firmwareVersion); // milligrams
+            this.ambientAirQuality = DataUtils.floatToDbIntDust(dustDensity); // multiplier to save as Int
             return this;
         }
 

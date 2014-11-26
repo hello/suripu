@@ -461,9 +461,10 @@ public class ReceiveResource extends BaseResource {
             }
         }
 
+        // TODO: MOVE THIS TO THE WORKERS! SURIPU-SERVICE SHOULD NOT BE TALKING TO POSTGRESQL HAS MUCH AS POSSIBLE
         // ********************* Pill Data Storage ****************************
         if(batchPilldata.getPillsCount() > 0){
-            for(final SenseCommandProtos.pill_data pill:batchPilldata.getPillsList()){
+            for(final SenseCommandProtos.pill_data pill: batchPilldata.getPillsList()){
 
                 final String pillId = pill.getDeviceId();
                 final Optional<DeviceAccountPair> internalPillPairingMap = this.deviceDAO.getInternalPillId(pillId);
@@ -480,6 +481,7 @@ public class ReceiveResource extends BaseResource {
                         .withSecondOfMinute(0);
 
                 pillKinesisDataBuilder.setAccountIdLong(internalPillPairingMap.get().accountId)
+                        .setPillId(pillId)
                         .setPillIdLong(internalPillPairingMap.get().internalDeviceId)
                         .setTimestamp(roundedDateTime.getMillis())
                         .setOffsetMillis(userTimeZone.getOffset(roundedDateTime));

@@ -1,22 +1,22 @@
 package com.hello.suripu.core.models;
 
 /**
- * Created by pangwu on 11/22/14.
+ * Created by pangwu on 11/24/14.
  */
-public class MotionEvent extends Event {
+public class SleepMotionEvent extends Event {
     private int sleepDepth = 0;
 
-    public MotionEvent(final long startTimestamp,
+    public SleepMotionEvent(final long startTimestamp,
                        final long endTimestamp,
                        final int offsetMillis,
                        final int sleepDepth){
-        super(Type.MOTION, startTimestamp, endTimestamp, offsetMillis);
+        super(Event.Type.SLEEP_MOTION, startTimestamp, endTimestamp, offsetMillis);
         this.sleepDepth = sleepDepth;
     }
 
     @Override
-    public String getDescription(){
-        return "Motion detected";
+    public String getDescription() {
+        return "Toss and turns";
     }
 
     @Override
@@ -28,5 +28,4 @@ public class MotionEvent extends Event {
     public int getSleepDepth() {
         return this.sleepDepth;
     }
-
 }

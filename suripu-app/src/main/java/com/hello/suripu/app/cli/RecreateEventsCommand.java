@@ -21,6 +21,8 @@ import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.MotionEvent;
+import com.hello.suripu.core.models.SleepMotionEvent;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -140,9 +142,9 @@ public class RecreateEventsCommand extends ConfiguredCommand<SuripuAppConfigurat
                 for(final Segment rawEvent:rawEvents){
 
                     if(rawEvent.getStartTimestamp() >= sleepPeriod.getStartTimestamp() && rawEvent.getEndTimestamp() <= sleepPeriod.getEndTimestamp()){
-                        events.add(new Event(Event.Type.SLEEP_MOTION, rawEvent.getStartTimestamp(), rawEvent.getEndTimestamp(), rawEvent.getOffsetMillis()));
+                        events.add(new SleepMotionEvent(rawEvent.getStartTimestamp(), rawEvent.getEndTimestamp(), rawEvent.getOffsetMillis(), 100));
                     }else {
-                        events.add(new Event(Event.Type.MOTION, rawEvent.getStartTimestamp(), rawEvent.getEndTimestamp(), rawEvent.getOffsetMillis()));
+                        events.add(new MotionEvent(rawEvent.getStartTimestamp(), rawEvent.getEndTimestamp(), rawEvent.getOffsetMillis(), 0));
                     }
 
                 }

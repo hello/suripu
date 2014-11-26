@@ -140,6 +140,11 @@ features_db:
     region: us-east-1
     table_name: features
 
+teams_db:
+    endpoint : http://localhost:7777
+    region: us-east-1
+    table_name: teams
+
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :

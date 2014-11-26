@@ -196,4 +196,12 @@ public class SuripuAppConfiguration extends Configuration {
         return this.featuresDynamoDBConfiguration;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty("teams_db")
+    private DynamoDBConfiguration teamsDynamoDBConfiguration;
+    public DynamoDBConfiguration getTeamsDynamoDBConfiguration(){
+        return this.teamsDynamoDBConfiguration;
+    }
+
 }

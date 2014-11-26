@@ -19,6 +19,7 @@ import com.hello.suripu.app.cli.CreateFeaturesDynamoDBTableCommand;
 import com.hello.suripu.app.cli.CreateRingTimeDynamoDBTable;
 import com.hello.suripu.app.cli.CreateSleepScoreDynamoDBTable;
 import com.hello.suripu.app.cli.CreateFeaturesDynamoDBTableCommand;
+import com.hello.suripu.app.cli.CreateTeamsDynamoDBTableCommand;
 import com.hello.suripu.app.cli.RecreateEventsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.modules.RolloutAppModule;
@@ -115,7 +116,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         bootstrap.addCommand(new CreateAlarmInfoDynamoDBTable());
         bootstrap.addCommand(new CreateSleepScoreDynamoDBTable());
         bootstrap.addCommand(new CreateFeaturesDynamoDBTableCommand());
-
+        bootstrap.addCommand(new CreateTeamsDynamoDBTableCommand());
         bootstrap.addBundle(new KinesisLoggerBundle<SuripuAppConfiguration>() {
             @Override
             public KinesisLoggerConfiguration getConfiguration(final SuripuAppConfiguration configuration) {
@@ -197,7 +198,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 snsClient,
                 arns
         );
-        dynamoDBClient.setEndpoint(configuration.getEventDBConfiguration().getEndpoint());
+        
         final TeamStore teamStore = new TeamStore(dynamoDBClient, "teams");
 
         final ImmutableMap<QueueName, String> streams = ImmutableMap.copyOf(configuration.getKinesisConfiguration().getStreams());

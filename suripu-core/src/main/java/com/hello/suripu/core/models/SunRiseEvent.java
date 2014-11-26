@@ -1,17 +1,37 @@
 package com.hello.suripu.core.models;
 
-import org.joda.time.DateTimeConstants;
-
 /**
  * Created by pangwu on 11/22/14.
  */
 public class SunRiseEvent extends Event {
-    public SunRiseEvent(final long startTimestamp, final int offsetMillis){
-        super(Type.SUNRISE, startTimestamp, startTimestamp + DateTimeConstants.MILLIS_PER_MINUTE, offsetMillis);
+    private int sleepDepth = 0;
+    private SleepSegment.SoundInfo soundInfo;
+
+    public SunRiseEvent(final long startTimestamp, final long endTimestamp, final int offsetMillis, final int sleepDepth, final SleepSegment.SoundInfo soundInfo){
+        super(Type.SUNRISE, startTimestamp, endTimestamp, offsetMillis);
+        this.sleepDepth = sleepDepth;
+        this.soundInfo = soundInfo;
     }
 
     @Override
     public String getDescription(){
         return "Sun rise";
+    }
+
+    /*
+    * Let's don't put the setters in the base class, because not all events has those properties.
+     */
+    public void setSoundInfo(final SleepSegment.SoundInfo sunRiseSound) {
+        this.soundInfo = soundInfo;
+    }
+
+    @Override
+    public SleepSegment.SoundInfo getSoundInfo() {
+        return this.soundInfo;
+    }
+
+    @Override
+    public int getSleepDepth() {
+        return this.sleepDepth;
     }
 }

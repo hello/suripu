@@ -82,13 +82,6 @@ public class Alarm {
                 throw new IllegalArgumentException("Invalid day of week.");
             }
         }
-
-        if(!isRepeated){
-            Integer dayOfWeekValue = dayOfWeek.toArray(new Integer[0])[0];
-            if(new DateTime(year, month, day, hourOfDay, minuteOfHour, DateTimeZone.UTC).getDayOfWeek() != dayOfWeekValue){
-                throw new IllegalArgumentException("Invalid day of week.");
-            }
-        }
     }
 
     @Override

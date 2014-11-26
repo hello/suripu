@@ -35,18 +35,18 @@ public class PartnerMotion {
         // convert list of TrackerMotion to hash map for easy lookup
         final Map<Long, MotionEvent> myMotionEventsMap = new HashMap<>();
         for (final MotionEvent myMotionEvent : myMotionEvents) {
-            myMotionEventsMap.put(myMotionEvent.startTimestamp, myMotionEvent);
+            myMotionEventsMap.put(myMotionEvent.getStartTimestamp(), myMotionEvent);
         }
 
         final List<PartnerMotionEvent> affectedEvents = new ArrayList<>();
         for (final MotionEvent partnerMotionEvent : partnerMotionEvents) {
-            if (!myMotionEventsMap.containsKey(partnerMotionEvent.startTimestamp)) {
+            if (!myMotionEventsMap.containsKey(partnerMotionEvent.getStartTimestamp())) {
                 continue;
             }
 
-            final MotionEvent myMotionEvent = myMotionEventsMap.get(partnerMotionEvent.startTimestamp);
-            final int mySleepDepth = TimelineUtils.normalizeSleepDepth(myMotionEvent.amplitude, myMotionEvent.maxAmplitude);
-            final int partnerSleepDepth = TimelineUtils.normalizeSleepDepth(partnerMotionEvent.amplitude, partnerMotionEvent.maxAmplitude);
+            final MotionEvent myMotionEvent = myMotionEventsMap.get(partnerMotionEvent.getStartTimestamp());
+            final int mySleepDepth = myMotionEvent.getSleepDepth();
+            final int partnerSleepDepth = partnerMotionEvent.getSleepDepth();
             if (mySleepDepth >= ACCOUNT_DEPTH_THRESHOLD ||  // original user not moving much, not affected.
                     partnerSleepDepth > PARTNER_DEPTH_THRESHOLD || // or, partner movement is not huge, no effects.
                     mySleepDepth < partnerSleepDepth) { // or, user movement is larger than partner's
@@ -58,10 +58,10 @@ public class PartnerMotion {
             // check if there's any user movement in the preceding minutes
             boolean noPriorMovement = true;
             for (int i = 1; i <= CHECK_PRECEDING_MINS; i++) {
-                final MotionEvent myPriorMotionEvent = myMotionEventsMap.get(partnerMotionEvent.startTimestamp - i * DateTimeConstants.MILLIS_PER_MINUTE);
-                final int priorSleepDepth = TimelineUtils.normalizeSleepDepth(myPriorMotionEvent.amplitude, myPriorMotionEvent.maxAmplitude);
+                final MotionEvent myPriorMotionEvent = myMotionEventsMap.get(partnerMotionEvent.getStartTimestamp() - i * DateTimeConstants.MILLIS_PER_MINUTE);
+                final int priorSleepDepth = myPriorMotionEvent.getSleepDepth();
                 if (myPriorMotionEvent != null && priorSleepDepth < ACCOUNT_DEPTH_THRESHOLD) {
-                    LOGGER.debug("{} prior movement {} {}", partnerMotionEvent.startTimestamp, myPriorMotionEvent.startTimestamp, priorSleepDepth);
+                    LOGGER.debug("{} prior movement {} {}", partnerMotionEvent.getStartTimestamp(), myPriorMotionEvent.getStartTimestamp(), priorSleepDepth);
                     noPriorMovement = false;
                     break;
                 }
@@ -69,11 +69,10 @@ public class PartnerMotion {
 
             if (noPriorMovement) {
                 affectedEvents.add(new PartnerMotionEvent(
-                        myMotionEvent.startTimestamp,
-                        myMotionEvent.endTimestamp,
-                        myMotionEvent.timezoneOffset,
-                        myMotionEvent.amplitude,
-                        myMotionEvent.maxAmplitude
+                        myMotionEvent.getStartTimestamp(),
+                        myMotionEvent.getEndTimestamp(),
+                        myMotionEvent.getTimezoneOffset(),
+                        myMotionEvent.getSleepDepth()
                 ));
             }
 
