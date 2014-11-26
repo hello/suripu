@@ -131,11 +131,11 @@ public class TimelineResource extends BaseResource {
         // detect sleep time
         final int sleepEventThreshold = 7; // minutes of no-movement to determine that user has fallen asleep
         final Optional<SleepEvent> sleepTimeEvent = TimelineUtils.getSleepEvent(motionEvents, sleepEventThreshold);
-        int wakeUpTimeZoneOffsetMillis = -1;
+        Optional<Integer> wakeUpTimeZoneOffsetMillis = Optional.absent();
 
         if(sleepTimeEvent.isPresent()) {
             events.add(sleepTimeEvent.get());
-            wakeUpTimeZoneOffsetMillis = sleepTimeEvent.get().getTimezoneOffset();
+            wakeUpTimeZoneOffsetMillis = Optional.of(sleepTimeEvent.get().getTimezoneOffset());
         }
 
         // A day starts with 8pm local time and ends with 4pm local time next day
@@ -171,7 +171,7 @@ public class TimelineResource extends BaseResource {
                     }
                 }
                 events.add(wakeupSegmentFromAwakeDetection);
-                wakeUpTimeZoneOffsetMillis = wakeupSegmentFromAwakeDetection.getTimezoneOffset();
+                wakeUpTimeZoneOffsetMillis = Optional.of(wakeupSegmentFromAwakeDetection.getTimezoneOffset());
             }
 
             LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
@@ -201,12 +201,13 @@ public class TimelineResource extends BaseResource {
         }
 
         // add sunrise data
-        final Optional<DateTime> sunrise = sunData.sunrise(targetDate.plusDays(1).toString(DateTimeFormat.forPattern("yyyy-MM-dd"))); // day + 1
-        if(sunrise.isPresent() && wakeUpTimeZoneOffsetMillis > -1) {
+        final String sunRiseQueryDateString = targetDate.plusDays(1).toString(DateTimeFormat.forPattern("yyyy-MM-dd"));
+        final Optional<DateTime> sunrise = sunData.sunrise(sunRiseQueryDateString); // day + 1
+        if(sunrise.isPresent() && wakeUpTimeZoneOffsetMillis.isPresent()) {
             final long sunRiseMillis = sunrise.get().getMillis();
             final SunRiseEvent sunriseEvent = new SunRiseEvent(sunRiseMillis,
                     sunRiseMillis + DateTimeConstants.MILLIS_PER_MINUTE,
-                    wakeUpTimeZoneOffsetMillis, 0, null);
+                    wakeUpTimeZoneOffsetMillis.get(), 0, null);
 //            final SleepSegment audioSleepSegment = new SleepSegment(99L, sunrise.get().plusMinutes(5).getMillis(), 0, 60, -1, Event.Type.SNORING, "ZzZzZzZzZ", new ArrayList<SensorReading>(), soundInfo);
             events.add(sunriseEvent);
 //            extraSegments.add(audioSleepSegment);
@@ -223,7 +224,7 @@ public class TimelineResource extends BaseResource {
 
             LOGGER.debug(sunriseEvent.getDescription());
         }else{
-            LOGGER.warn("No sun rise data for date {}", targetDate.plusDays(1));
+            LOGGER.warn("No sun rise data for date {}", sunRiseQueryDateString);
         }
 
         // TODO: add sound
