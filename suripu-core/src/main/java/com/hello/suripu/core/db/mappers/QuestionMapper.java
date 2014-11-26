@@ -29,10 +29,10 @@ public class QuestionMapper implements ResultSetMapper<Question> {
             choices.add(new Choice(response_ids[i], response_text[i], question_id));
         }
 
-        // TODO: doesn't look right
+        // TODO: refactor this at some point
         DateTime createdLocal;
         try {
-            int foundCreatedLocal = r.findColumn("nameOfColumn");
+            int foundCreatedLocal = r.findColumn("created_local_utc_ts");
             createdLocal = new DateTime(r.getTimestamp("created_local_utc_ts"), DateTimeZone.UTC);
         } catch (SQLException error) {
             createdLocal = DateTime.now(DateTimeZone.UTC);
