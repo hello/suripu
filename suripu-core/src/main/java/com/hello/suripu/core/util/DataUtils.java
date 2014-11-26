@@ -53,7 +53,7 @@ public class DataUtils{
 
     public static int convertDustDensityToAQI (final float value) {
         // note, value should be in milli-grams per m-3. do a simple lookup
-        final int roundValue = Math.round(value);
+        final int roundValue = Math.round(value * 1000.0f); // need to convert to micro-grams
         return DUST_DENSITY_TO_AQI[roundValue];
     }
 
