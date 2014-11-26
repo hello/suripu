@@ -67,26 +67,19 @@ public class SenseSaveProcessor implements IRecordProcessor {
             final String deviceName = deviceIdOptional.get();
 
             final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceName);
-            LOGGER.debug("Found {} pairs", deviceAccountPairs.size());
+
+            // We should not have too many accounts with more than two accounts paired to a sense
+            // warn if it is the case
+            if(deviceAccountPairs.size() > 2) {
+                LOGGER.warn("Found {} pairs for device = {}", deviceAccountPairs.size(), deviceName);
+            }
 
             long timestampMillis = periodicData.getUnixTime() * 1000L;
-            final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
+            final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
             // This is the default timezone.
             DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
 
-            // ********************* Morpheus Data and Alarm processing **************************
-            // Here comes to a discussion: Shall we loop over the device_id:account_id relation based on the
-            // DynamoDB "cache" or PostgresSQL accout_device_map table?
-            // Looping over DynamoDB can save a hit to the PostgresSQL every minute for every Morpheus,
-            // but may run into data consistency issue if the alarm_info table is not update correctly.
-            // Looping over the PostgresSQL table can avoid the issue of data consistency, since everything
-            // is checked on actual device:account pair. However, this might bring in availability concern.
-            //
-            // For now, I rely on the actual device_account_map table instead of the dynamo DB cache.
-            // Because I think it will make the implementation much simpler. If the PostgreSQL is down, sensor data
-            // will not be stored anyway.
-            //
-            // Pang, 09/26/2014
+
             for (final DeviceAccountPair pair : deviceAccountPairs) {
                 try {
                     // TODO: Get the timezone for current user.

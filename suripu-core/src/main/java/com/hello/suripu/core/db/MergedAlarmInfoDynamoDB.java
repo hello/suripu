@@ -9,6 +9,8 @@ import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
+import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
+import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
@@ -294,6 +296,20 @@ public class MergedAlarmInfoDynamoDB {
         return Optional.absent();
     }
 
+
+    // TODO : test this
+    public Optional<DateTimeZone> getTimezone(final String senseId, final Long accountId) {
+        final GetItemRequest getItemRequest = new GetItemRequest();
+        final Map<String, AttributeValue> keys = new HashMap<>();
+        keys.put(MORPHEUS_ID_ATTRIBUTE_NAME, new AttributeValue().withS(senseId));
+        keys.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(accountId.toString()));
+
+        getItemRequest.withTableName(tableName)
+                .withKey(keys);
+
+        final GetItemResult result = dynamoDBClient.getItem(getItemRequest);
+        return MergedAlarmInfoDynamoDB.getTimeZoneFromAttributes(senseId, accountId, result.getItem());
+    }
 
     public MergedAlarmInfoDynamoDB(final AmazonDynamoDBClient dynamoDBClient, final String tableName){
         this.dynamoDBClient = dynamoDBClient;
