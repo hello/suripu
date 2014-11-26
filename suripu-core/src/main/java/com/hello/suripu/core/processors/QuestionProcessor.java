@@ -5,6 +5,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
 import com.hello.suripu.core.db.QuestionResponseDAO;
+import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.AccountQuestion;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
@@ -25,14 +26,12 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Created by kingshy on 10/24/14.
  */
 public class QuestionProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(QuestionProcessor.class);
-    private static final Pattern PG_UNIQ_PATTERN = Pattern.compile("ERROR: duplicate key value violates unique constraint \"(\\w+)\"");
 
     private static final int MAX_SKIPS_ALLOWED = 8;
     private static final int NEW_ACCOUNT_AGE = 1; // less than 1 day
@@ -42,28 +41,59 @@ public class QuestionProcessor {
     private final QuestionResponseDAO questionResponseDAO;
     private final int checkSkipsNum;
 
-    private final ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds;
-    private final Map<Integer, Question> questionIdMap;
+    private final ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds = ArrayListMultimap.create();
+    private final Map<Integer, Question> questionIdMap = new HashMap<>();
     private final Set<Integer> baseQuestionIds = new HashSet<>();
 
+    public static class Builder {
+        private QuestionResponseDAO questionResponseDAO;
+        private int checkSkipsNum;
+        private ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds;
+        private Map<Integer, Question> questionIdMap;
+        private Set<Integer> baseQuestionIds;
 
-    public QuestionProcessor(final QuestionResponseDAO questionResponseDAO, final int checkSkipsNum) {
-        this.questionResponseDAO = questionResponseDAO;
-        this.checkSkipsNum = checkSkipsNum;
+        public Builder withQuestionResponseDAO(final QuestionResponseDAO questionResponseDAO) {
+            this.questionResponseDAO = questionResponseDAO;
+            return this;
+        }
 
-        this.availableQuestionIds = ArrayListMultimap.create();
-        this.questionIdMap = new HashMap<>();
+        public Builder withCheckSkipsNum(final int checkSkipsNum) {
+            this.checkSkipsNum = checkSkipsNum;
+            return this;
+        }
 
-        final ImmutableList<Question> allQuestions = this.questionResponseDAO.getAllQuestions();
-        for (final Question question : allQuestions) {
-            this.availableQuestionIds.put(question.frequency, question.id);
-            this.questionIdMap.put(question.id, question);
-            if (question.frequency == Question.FREQUENCY.ONE_TIME) {
-                baseQuestionIds.add(question.id);
+        public Builder withQuestions(final QuestionResponseDAO questionResponseDAO) {
+            this.availableQuestionIds = ArrayListMultimap.create();
+            this.questionIdMap = new HashMap<>();
+            this.baseQuestionIds = new HashSet<>();
+
+            final ImmutableList<Question> allQuestions = questionResponseDAO.getAllQuestions();
+            for (final Question question : allQuestions) {
+                this.availableQuestionIds.put(question.frequency, question.id);
+                this.questionIdMap.put(question.id, question);
+                if (question.frequency == Question.FREQUENCY.ONE_TIME) {
+                    baseQuestionIds.add(question.id);
+                }
             }
+            return this;
+        }
+
+        public QuestionProcessor build() {
+            return new QuestionProcessor(this.questionResponseDAO, this.checkSkipsNum,
+                    this.availableQuestionIds, this.questionIdMap, this.baseQuestionIds);
         }
     }
 
+    public QuestionProcessor(final QuestionResponseDAO questionResponseDAO, final int checkSkipsNum,
+                             final ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds,
+                             final Map<Integer, Question> questionIdMap,
+                             final Set<Integer> baseQuestionIds) {
+        this.questionResponseDAO = questionResponseDAO;
+        this.checkSkipsNum = checkSkipsNum;
+        this.availableQuestionIds.putAll(availableQuestionIds);
+        this.questionIdMap.putAll(questionIdMap);
+        this.baseQuestionIds.addAll(baseQuestionIds);
+    }
     /**
      * Get a list of questions for the user, or pre-generate one
      */
@@ -286,11 +316,10 @@ public class QuestionProcessor {
         addedIds.addAll(this.getUserAnsweredQuestionIds(accountId));
 
         // always choose ONE random daily-question
-        List<Question> selectedQs;
-        selectedQs = this.randomlySelectFromQuestionPool(accountId, seenIds, Question.FREQUENCY.DAILY, today, 1);
-        if (selectedQs.size() > 0 && !addedIds.contains(selectedQs.get(0).id)) {
-            addedIds.add(selectedQs.get(0).id);
-            questions.addAll(selectedQs);
+        List<Question> dailyQs = this.randomlySelectFromQuestionPool(accountId, seenIds, Question.FREQUENCY.DAILY, today, 1);
+        if (dailyQs.size() > 0 && !addedIds.contains(dailyQs.get(0).id)) {
+            addedIds.add(dailyQs.get(0).id);
+            questions.add(dailyQs.get(0));
         }
 
 
@@ -298,11 +327,10 @@ public class QuestionProcessor {
         if (questions.size() < numQuestions) {
             final Boolean answeredAll = addedIds.containsAll(this.baseQuestionIds);
             if (!answeredAll) {
-                selectedQs.clear();
-                selectedQs = this.randomlySelectFromQuestionPool(accountId, addedIds, Question.FREQUENCY.ONE_TIME, today, 1);
-                if (selectedQs.size() > 0) {
-                    addedIds.add(selectedQs.get(0).id);
-                    questions.addAll(selectedQs);
+                final List<Question> selectedBaseQs = this.randomlySelectFromQuestionPool(accountId, addedIds, Question.FREQUENCY.ONE_TIME, today, 1);
+                if (selectedBaseQs.size() > 0) {
+                    addedIds.add(selectedBaseQs.get(0).id);
+                    questions.add(selectedBaseQs.get(0));
                 }
 
             }
@@ -311,10 +339,9 @@ public class QuestionProcessor {
         // pick from ongoing-questions if we need more
         if (questions.size() < numQuestions) {
             final int numToGet = numQuestions - questions.size();
-            selectedQs.clear();
-            selectedQs= this.randomlySelectFromQuestionPool(accountId, addedIds, Question.FREQUENCY.OCCASIONALLY, today, numToGet);
-            if (selectedQs.size() > 0) {
-                questions.addAll(selectedQs);
+            final List<Question> moreQs= this.randomlySelectFromQuestionPool(accountId, addedIds, Question.FREQUENCY.OCCASIONALLY, today, numToGet);
+            if (moreQs.size() > 0) {
+                questions.addAll(moreQs);
             }
         }
 
@@ -373,7 +400,7 @@ public class QuestionProcessor {
             return this.questionResponseDAO.insertAccountQuestion(accountId, id, today, expiration);
 
         } catch (UnableToExecuteStatementException exception) {
-            final Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
+            final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
             if (matcher.find()) {
                 LOGGER.debug("Question already exist");
             }
@@ -391,6 +418,9 @@ public class QuestionProcessor {
         return baseIds;
     }
 
+    /**
+     * Get questions that were generated earlier and saved to DB
+     */
     private Map<Integer, Question> getPreGeneratedQuestions(final Long accountId, final DateTime today) {
         final DateTime expiration = today.plusDays(1);
         final ImmutableList<AccountQuestion> questionIds = this.questionResponseDAO.getAccountQuestions(accountId, expiration);
@@ -398,7 +428,7 @@ public class QuestionProcessor {
             return Collections.emptyMap();
         }
 
-        Map<Integer, Question> questions = new HashMap<>();
+        final Map<Integer, Question> questions = new HashMap<>();
 
         for (final AccountQuestion question : questionIds) {
             final Integer qid = question.questionId;

@@ -78,16 +78,17 @@ public interface QuestionResponseDAO {
 
     // TODO need to optimize and create index
     @RegisterMapper(RecentResponseMapper.class)
-    @SqlQuery("SELECT 0 AS id, Q.account_id AS account_id, " +
+    @SqlQuery("SELECT R.id AS id, " +
+            "Q.account_id AS account_id, " +
             "Q.question_id AS question_id, " +
             "Q.id AS account_question_id, " +
             "R.response_id AS response_id, " +
             "R.skip AS skip, " +
             "Q.created_local_utc_ts AS ask_time, " +
             "R.question_freq AS question_freq " +
-            "FROM account_questions Q " +
-            "LEFT OUTER JOIN responses R ON R.account_question_id = Q.id " +
-            "WHERE Q.account_id = :account_id ORDER BY Q.id DESC LIMIT :limit")
+            "FROM responses R " +
+            "LEFT OUTER JOIN account_questions Q ON R.account_question_id = Q.id " +
+            "WHERE Q.account_id = :account_id ORDER BY R.id DESC LIMIT :limit")
     ImmutableList<Response> getLastFewResponses(@Bind("account_id") long accountId,
                                                           @Bind("limit") int limit);
 

@@ -47,7 +47,12 @@ public class QuestionsResource {
     public QuestionsResource(final AccountDAO accountDAO, final QuestionResponseDAO questionResponseDAO, final TimeZoneHistoryDAODynamoDB tzHistoryDAO, final int checkSkipsNum) {
         this.accountDAO = accountDAO;
         this.tzHistoryDAO = tzHistoryDAO;
-        this.questionProcessor = new QuestionProcessor(questionResponseDAO, checkSkipsNum);
+
+        final QuestionProcessor.Builder builder = new QuestionProcessor.Builder()
+                .withQuestionResponseDAO(questionResponseDAO)
+                .withCheckSkipsNum(checkSkipsNum)
+                .withQuestions(questionResponseDAO);
+        this.questionProcessor = builder.build();
     }
 
     @Timed
@@ -58,16 +63,13 @@ public class QuestionsResource {
             @QueryParam("date") final String date) {
 
         LOGGER.debug("Returning list of questions for account id = {}", accessToken.accountId);
-        final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
-        if(!accountOptional.isPresent()) {
+        final int accountAgeInDays =  this.getAccountAgeInDays(accessToken.accountId);
+        if (accountAgeInDays == -1) {
+            LOGGER.warn("Fail to get account age for {}", accessToken.accountId);
             throw new WebApplicationException(404);
         }
 
-        int timeZoneOffset = - 26200000;
-        final Optional<TimeZoneHistory> tzHistory = this.tzHistoryDAO.getCurrentTimeZone(accessToken.accountId);
-        if (tzHistory.isPresent()) {
-            timeZoneOffset = tzHistory.get().offsetMillis;
-        }
+        final int timeZoneOffset = this.getTimeZoneOffsetMillis(accessToken.accountId);
 
         final DateTime today = DateTime.now(DateTimeZone.UTC).plusMillis(timeZoneOffset).withTimeAtStartOfDay();
         LOGGER.debug("today = {}", today);
@@ -76,8 +78,6 @@ public class QuestionsResource {
         }
 
         // get question
-        final int accountAgeInDays =  (int) ((DateTime.now(DateTimeZone.UTC).getMillis() - accountOptional.get().created.getMillis()) / DAY_IN_MILLIS);
-
         return this.questionProcessor.getQuestions(accessToken.accountId, accountAgeInDays, today, DEFAULT_NUM_QUESTIONS, true);
     }
 
@@ -90,23 +90,18 @@ public class QuestionsResource {
 
         // user asked for more questions
         LOGGER.debug("Returning list of questions for account id = {}", accessToken.accountId);
-        final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
-        if(!accountOptional.isPresent()) {
+        final int accountAgeInDays =  this.getAccountAgeInDays(accessToken.accountId);
+        if (accountAgeInDays == -1) {
+            LOGGER.warn("Fail to get account age for {}", accessToken.accountId);
             throw new WebApplicationException(404);
         }
 
-        int timeZoneOffset = - 26200000;
-        final Optional<TimeZoneHistory> tzHistory = this.tzHistoryDAO.getCurrentTimeZone(accessToken.accountId);
-        if (tzHistory.isPresent()) {
-            timeZoneOffset = tzHistory.get().offsetMillis;
-        }
+        final int timeZoneOffset = this.getTimeZoneOffsetMillis(accessToken.accountId);
 
         final DateTime today = DateTime.now(DateTimeZone.UTC).plusMillis(timeZoneOffset).withTimeAtStartOfDay();
         LOGGER.debug("More questions for today = {}", today);
 
         // get question
-        final int accountAgeInDays =  (int) ((DateTime.now(DateTimeZone.UTC).getMillis() - accountOptional.get().created.getMillis()) / DAY_IN_MILLIS);
-
         return this.questionProcessor.getQuestions(accessToken.accountId, accountAgeInDays, today, DEFAULT_NUM_MORE_QUESTIONS, false);
     }
 
@@ -119,7 +114,7 @@ public class QuestionsResource {
                            @Valid final List<Choice> choice) {
         LOGGER.debug("Saving answer for account id = {}", accessToken.accountId);
 
-        Optional<Integer> questionIdOptional = choice.get(0).questionId;
+        final Optional<Integer> questionIdOptional = choice.get(0).questionId;
         Integer questionId = 0;
         if (questionIdOptional.isPresent()) {
             questionId = questionIdOptional.get();
@@ -130,19 +125,14 @@ public class QuestionsResource {
 
     @Timed
     @PUT
-    @Path("/{question_id}/skip_this")
+    @Path("/skip")
     @Consumes(MediaType.APPLICATION_JSON)
     public void skipQuestion(@Scope(OAuthScope.QUESTIONS_READ) final AccessToken accessToken,
-                             @PathParam("question_id") final Integer questionId,
+                             @QueryParam("id") final Integer questionId,
                              @QueryParam("account_question_id") final Long accountQuestionId) {
         LOGGER.debug("Skipping question {} for account id = {}", questionId, accessToken.accountId);
 
-        final Optional<TimeZoneHistory> tzHistory = this.tzHistoryDAO.getCurrentTimeZone(accessToken.accountId);
-        int timeZoneOffset = - 26200000;
-        if (tzHistory.isPresent()) {
-            timeZoneOffset = tzHistory.get().offsetMillis;
-        }
-
+        final int timeZoneOffset = this.getTimeZoneOffsetMillis(accessToken.accountId);
         this.questionProcessor.skipQuestion(accessToken.accountId, questionId, accountQuestionId, timeZoneOffset);
     }
 
@@ -166,4 +156,21 @@ public class QuestionsResource {
         LOGGER.debug("Skipping question {} for account id = {}", questionId, accessToken.accountId);
     }
 
+    private int getTimeZoneOffsetMillis(final Long accountId) {
+        final Optional<TimeZoneHistory> tzHistory = this.tzHistoryDAO.getCurrentTimeZone(accountId);
+        if (tzHistory.isPresent()) {
+            return tzHistory.get().offsetMillis;
+        }
+
+        return -26200000; // PDT
+    }
+
+    private int getAccountAgeInDays(final Long accountId) {
+        final Optional<Account> accountOptional = this.accountDAO.getById(accountId);
+        if(!accountOptional.isPresent()) {
+            return -1;
+        }
+
+        return (int) ((DateTime.now(DateTimeZone.UTC).getMillis() - accountOptional.get().created.getMillis()) / DAY_IN_MILLIS);
+    }
 }

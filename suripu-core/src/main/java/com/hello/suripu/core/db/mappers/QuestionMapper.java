@@ -29,6 +29,7 @@ public class QuestionMapper implements ResultSetMapper<Question> {
             choices.add(new Choice(response_ids[i], response_text[i], question_id));
         }
 
+        // TODO: doesn't look right
         DateTime createdLocal;
         try {
             int foundCreatedLocal = r.findColumn("nameOfColumn");

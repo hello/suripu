@@ -68,7 +68,13 @@ public class QuestionProcessorTest {
         when(questionResponseDAO.getBaseAndRecentAnsweredQuestionIds(ACCOUNT_ID_PASS, 10000, oneWeekAgo)).thenReturn(answeredIds);
 
         when(questionResponseDAO.getLastFewResponses(ACCOUNT_ID_PASS, 5)).thenReturn(ImmutableList.<Response>of().copyOf(this.getSkippedResponses()));
-        questionProcessor = new QuestionProcessor(questionResponseDAO, CHECK_SKIP_NUM);
+
+        final QuestionProcessor.Builder builder = new QuestionProcessor.Builder()
+                .withQuestionResponseDAO(questionResponseDAO)
+                .withCheckSkipsNum(CHECK_SKIP_NUM)
+                .withQuestions(questionResponseDAO);
+
+        this.questionProcessor = builder.build();
     }
 
     private List<Response> getSkippedResponses() {
@@ -248,7 +254,7 @@ public class QuestionProcessorTest {
                 foundCalibrationQ = true;
             }
         }
-        assertThat(countBaseQ, is(1));
+        assertThat(countBaseQ, is(2));
         assertThat(foundCalibrationQ, is(true));
 
         // get 7, should include one ongoing question
@@ -299,7 +305,7 @@ public class QuestionProcessorTest {
         final int days = this.questionProcessor.setNextAskDate(ACCOUNT_ID_PASS, tzOffsetMillis);
 
         // 4 skips, but only 1 since the last response, so skip-days = 1
-        assertThat(days, is(1));
+        assertThat(days, is(0));
     }
 
     @Test
