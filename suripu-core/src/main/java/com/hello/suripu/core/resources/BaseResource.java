@@ -1,6 +1,6 @@
-package com.hello.suripu.service.resources;
+package com.hello.suripu.core.resources;
 
-import com.hello.suripu.service.ObjectGraphRoot;
+import com.hello.suripu.core.ObjectGraphRoot;
 
 public class BaseResource {
 

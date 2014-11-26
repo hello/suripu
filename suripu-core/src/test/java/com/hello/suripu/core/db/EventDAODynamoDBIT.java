@@ -8,6 +8,7 @@ import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.SleepEvent;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -78,13 +79,13 @@ public class EventDAODynamoDBIT {
         final DateTime startOfDay1 = DateTime.now().withTimeAtStartOfDay();
         final ArrayList<Event> eventsForDay1 = new ArrayList<Event>();
 
-        final Event eventForDay1 = new Event(Event.Type.MOTION, startOfDay1.getMillis(), startOfDay1.plusMinutes(1).getMillis(), DateTimeZone.getDefault().getOffset(startOfDay1));
+        final Event eventForDay1 = new SleepEvent(startOfDay1.getMillis(), startOfDay1.plusMinutes(1).getMillis(), DateTimeZone.getDefault().getOffset(startOfDay1));
         eventsForDay1.add(eventForDay1);
         long accountId = 1;
 
 
         final DateTime startOfDay2 = startOfDay1.plusDays(1);
-        final Event eventForDay2 = new Event(Event.Type.MOTION,
+        final Event eventForDay2 = new SleepEvent(
                 startOfDay1.plusDays(1).getMillis(),
                 startOfDay1.plusDays(1).plusMinutes(1).getMillis(),
                 DateTimeZone.getDefault().getOffset(startOfDay1.plusDays(1)));
@@ -113,7 +114,7 @@ public class EventDAODynamoDBIT {
         final DateTime startOfDay1 = DateTime.now().withTimeAtStartOfDay();
         final ArrayList<Event> events = new ArrayList<Event>();
 
-        final Event eventForDay1 = new Event(Event.Type.MOTION, startOfDay1.getMillis(), startOfDay1.plusMinutes(1).getMillis(), DateTimeZone.getDefault().getOffset(startOfDay1));
+        final Event eventForDay1 = new SleepEvent(startOfDay1.getMillis(), startOfDay1.plusMinutes(1).getMillis(), DateTimeZone.getDefault().getOffset(startOfDay1));
         events.add(eventForDay1);
         long accountId = 1;
         this.eventDAODynamoDB.setEventsForDate(accountId, startOfDay1, events);
@@ -121,7 +122,7 @@ public class EventDAODynamoDBIT {
 
         assertThat(events, containsInAnyOrder(actual.toArray()));
 
-        final Event eventForDay2 = new Event(Event.Type.MOTION,
+        final Event eventForDay2 = new SleepEvent(
                 startOfDay1.plusDays(1).getMillis(),
                 startOfDay1.plusDays(1).plusMinutes(1).getMillis(),
                 DateTimeZone.getDefault().getOffset(startOfDay1.plusDays(1)));
@@ -146,8 +147,7 @@ public class EventDAODynamoDBIT {
             final ArrayList<Event> eventListOfCertainType = new ArrayList<Event>();
             for (int i = 0; i < numberOfMinutesPerDay; i++) {
                 final DateTime eventStartTime = startOfDay1.plusMinutes(i);
-                final Event event = new Event(type,
-                        (eventStartTime.getMillis()),
+                final Event event = new SleepEvent((eventStartTime.getMillis()),
                         (eventStartTime.plusMinutes(1).getMillis()),
                         DateTimeZone.getDefault().getOffset(eventStartTime));
 

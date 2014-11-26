@@ -40,6 +40,8 @@ public @interface BindDeviceData {
                     q.bind("local_utc_ts", model.dateTimeUTC.plusMillis(model.offsetMillis));
                     q.bind("offset_millis", model.offsetMillis);
                     q.bind("firmware_version", model.firmwareVersion);
+                    q.bind("wave_count", model.waveCount);
+                    q.bind("hold_count", model.holdCount);
                 }
             };
         }

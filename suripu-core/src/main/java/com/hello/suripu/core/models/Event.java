@@ -1,17 +1,11 @@
 package com.hello.suripu.core.models;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-
-import java.util.Set;
 
 /**
  * Created by pangwu on 5/8/14.
  */
-public class Event {
+public abstract class Event {
     public enum Type { // in order of display priority
         NONE(-1) {
             public String toString() {return "";}
@@ -70,129 +64,103 @@ public class Event {
         }
     }
 
-    @JsonProperty("event_type")
-    public final Type type;
 
-    @JsonProperty("start_timestamp")
-    public final long startTimestamp;
+    private Type type;
+    private long startTimestamp;
+    private long endTimestamp;
+    private int timezoneOffset;
 
-
-    @JsonProperty("end_timestamp")
-    public final long endTimestamp;
-
-    @JsonProperty("timezone_offset")
-    public final int timezoneOffset;
-
-    @JsonCreator
-    public Event(
-
-            @JsonProperty("event_type") final Type type,
-            @JsonProperty("start_timestamp") final long startTimestamp,
-            @JsonProperty("end_timestamp") final long endTimestamp,
-            @JsonProperty("timezone_offset") final int timezoneOffset
-
-    ){
-        this.type = type;
+    public Event(final Type type, final long startTimestamp, final long endTimestamp, final int timezoneOffset){
+        setType(type);
         this.startTimestamp = startTimestamp;
         this.endTimestamp = endTimestamp;
         this.timezoneOffset = timezoneOffset;
     }
 
-    public static Type getHighPriorityEvents(final Set<Type> eventTypes) {
-        Type winner = Type.NONE;
-        Integer winnerScore = -100;
-
-        for (final Type eventType : eventTypes) {
-            Integer eventScore = -1;
-            if (eventType != eventType.NONE) {
-                eventScore = eventType.getValue();
-            }
-            if (eventScore > winnerScore) {
-                winner = eventType;
-                winnerScore = eventScore;
-            }
-        }
-        return winner;
+    public final long getStartTimestamp(){
+        return this.startTimestamp;
     }
 
-    public static String getMessage(final Type eventType, final DateTime dateTime) {
-        // TODO: words words words
-        final String eventMessage;
-        switch (eventType) {
-            case MOTION:
-                eventMessage = "We detected lots of movement";
-                break;
-            case SLEEP_MOTION:
-                eventMessage = "Movement detected";
-                break;
-            case PARTNER_MOTION:
-                eventMessage = "Your partner kicked you";
-                break;
-            case NOISE:
-                eventMessage = "Unusual sound detected";
-                break;
-            case SNORING:
-                eventMessage = "Snoring detected";
-                break;
-            case SLEEP_TALK:
-                eventMessage = "Sleep talking detected";
-                break;
-            case LIGHT:
-                eventMessage = "Unusual brightness detected";
-                break;
-            case SUNSET:
-                eventMessage = "The sun set";
-                break;
-            case SUNRISE:
-                eventMessage = "The sun rose";
-                break;
-            case SLEEP:
-                eventMessage = "You fell asleep";
-                break;
-            default:
-                return "";
-        }
-        return String.format("%s at %s", eventMessage, dateTime.toString(DateTimeFormat.forPattern("HH:mma")));
+
+    public final long getEndTimestamp(){
+        return this.endTimestamp;
     }
 
-    public static String getMessage(final Type eventType) {
-        // TODO: words words words
-        final String eventMessage;
-        switch (eventType) {
+
+    public final int getTimezoneOffset(){
+        return this.timezoneOffset;
+    }
+
+    public final Type getType(){
+        return type;
+    }
+
+    protected final void setType(final Type type){
+        this.type = type;
+    }
+
+    public static Event extend(final Event event, final long startTimestamp, final long endTimestamp){
+        switch (event.getType()){
             case MOTION:
-                eventMessage = "We detected lots of movement";
-                break;
+                return new MotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
             case SLEEP_MOTION:
-                eventMessage = "Movement detected";
-                break;
-            case PARTNER_MOTION:
-                eventMessage = "Your partner kicked you";
-                break;
-            case NOISE:
-                eventMessage = "Unusual sound detected";
-                break;
-            case SNORING:
-                eventMessage = "Snoring detected";
-                break;
-            case SLEEP_TALK:
-                eventMessage = "Sleep talking detected";
-                break;
-            case LIGHT:
-                eventMessage = "Unusual brightness detected";
-                break;
-            case SUNSET:
-                eventMessage = "The sun set";
-                break;
-            case SUNRISE:
-                eventMessage = "The sun rose";
-                break;
+                return new SleepMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
             case SLEEP:
-                eventMessage = "You fell asleep";
-                break;
+                return new SleepEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+            case WAKE_UP:
+                return new WakeupEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+            case NONE:
+                return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+            case SUNRISE:
+                return new SunRiseEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth(), event.getSoundInfo());
+            case SUNSET:
+                return new SunSetEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+            case PARTNER_MOTION:
+                return new PartnerMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
             default:
-                return "";
+                return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+
         }
-        return eventMessage;
+    }
+
+    public static Event extend(final Event event, final long startTimestamp, final long endTimestamp, final int sleepDepth){
+        switch (event.getType()){
+            case MOTION:
+                return new MotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+            case SLEEP_MOTION:
+                return new SleepMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+            case SLEEP:
+                return new SleepEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+            case WAKE_UP:
+                return new WakeupEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+            case NONE:
+                return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+            case SUNRISE:
+                return new SunRiseEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth, event.getSoundInfo());
+            case SUNSET:
+                return new SunSetEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+            case PARTNER_MOTION:
+                return new PartnerMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+            default:
+                return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+
+        }
+    }
+
+    public abstract String getDescription();
+
+    public abstract void setSoundInfo(final SleepSegment.SoundInfo soundInfo);
+    public abstract SleepSegment.SoundInfo getSoundInfo();
+
+
+    public abstract void setSleepDepth(final int sleepDepth);
+    public abstract int getSleepDepth();
+
+
+
+    @Override
+    public String toString(){
+        return getDescription();
     }
 
 

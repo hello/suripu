@@ -2,6 +2,7 @@ package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.hello.suripu.core.util.DataUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +17,8 @@ public class CurrentRoomState {
             CELCIUS("c"),
             PERCENT("%"),
             PPM("ppm"),
-            MICRO_G_M3("µg/m3");
+            MICRO_G_M3("µg/m3"),
+            AQI("AQI");
 
             private final String value;
             private Unit(final String value) {
@@ -91,57 +93,58 @@ public class CurrentRoomState {
         // BEWARE, MUTABLE STATE BELOW. SCAAAAAARY
         Float temp = DeviceData.dbIntToFloat(data.ambientTemperature);
         Float humidity = DeviceData.dbIntToFloat(data.ambientHumidity);
-        final int dustDensity = DeviceData.convertDustAnalogToMilliGM3(data.ambientDustMax, 0); // max values are raw counts
-        Float particulates = DeviceData.dbIntToFloatDust(dustDensity) * 1000.0f; // convert to micro-g
+        // max value is in raw counts, conversion needed
+        Float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(data.ambientDustMax, data.firmwareVersion));
+
         State temperatureState;
         State humidityState;
         State particulatesState;
 
-        LOGGER.debug("temp = {}, humidity = {}, particulates = {}", temp, humidity, particulates);
+        LOGGER.debug("temp = {}, humidity = {}, particulates = {}", temp, humidity, particulatesAQI);
 
         if(referenceTime.minusMinutes(thresholdInMinutes).getMillis() > data.dateTimeUTC.getMillis()) {
 
             LOGGER.warn("{} is too old, not returning anything", data.dateTimeUTC);
             temp = null;
             humidity = null;
-            particulates = null;
+            particulatesAQI = null;
         }
 
         // Global ideal range: 60 -- 72, less than 54 = too cold, above 75= too warm
 
         // Temp
         if(temp == null) {
-           temperatureState = new State(temp, "Could not retrieve recent temperature reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.CELCIUS);
+           temperatureState = new State(temp, "Could not retrieve a recent temperature reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.CELCIUS);
         } else if (temp  < 15.0) {
-            temperatureState = new State(temp, "It’s pretty cold in here.", State.Condition.ALERT, data.dateTimeUTC, State.Unit.CELCIUS);
+            temperatureState = new State(temp, "It’s *pretty cold* in here.", State.Condition.ALERT, data.dateTimeUTC, State.Unit.CELCIUS);
         } else if (temp > 30.0) {
-            temperatureState = new State(temp, "It’s pretty hot in here.", State.Condition.ALERT, data.dateTimeUTC, State.Unit.CELCIUS);
+            temperatureState = new State(temp, "It’s *pretty hot* in here.", State.Condition.ALERT, data.dateTimeUTC, State.Unit.CELCIUS);
         } else { // temp >= 60 && temp <= 72
             temperatureState = new State(temp, "", State.Condition.IDEAL, data.dateTimeUTC, State.Unit.CELCIUS);
         }
 
         // Humidity
         if(humidity == null) {
-            humidityState = new State(humidity, "Could not retrieve recent humidity reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.PERCENT);
+            humidityState = new State(humidity, "Could not retrieve a recent humidity reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.PERCENT);
         } else if (humidity  < 30.0) {
-            humidityState = new State(humidity, "It’s pretty dry in here.", State.Condition.WARNING, data.dateTimeUTC, State.Unit.PERCENT);
+            humidityState = new State(humidity, "It’s *pretty dry* in here.", State.Condition.WARNING, data.dateTimeUTC, State.Unit.PERCENT);
         } else if (humidity > 60.0) {
-            humidityState = new State(humidity, "It’s pretty humid in here.", State.Condition.WARNING, data.dateTimeUTC, State.Unit.PERCENT);
+            humidityState = new State(humidity, "It’s *pretty humid* in here.", State.Condition.WARNING, data.dateTimeUTC, State.Unit.PERCENT);
         } else { // humidity >= 30 && humidity<= 60
             humidityState = new State(humidity, "", State.Condition.IDEAL, data.dateTimeUTC, State.Unit.PERCENT);
         }
 
 
-        // Air Quality
-        if(particulates == null) {
-            particulatesState = new State(humidity, "Could not retrieve recent particulates reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.MICRO_G_M3);
-        } else if (particulates > 12.0) { // see http://www.sparetheair.com/publications/AQI_Lookup_Table-PM25.pdf
-            particulatesState = new State(particulates, "Air particulates level is higher than usual, do not let this condition persists for more than 24 hours", State.Condition.WARNING, data.dateTimeUTC, State.Unit.MICRO_G_M3);
-        } else if (particulates > 35.0) {
-            particulatesState = new State(particulates, "Air Particulates EPA standard: Daily: 35 µg/m3, AQI = 99", State.Condition.ALERT, data.dateTimeUTC, State.Unit.MICRO_G_M3);
-        } else{
-            particulatesState = new State(particulates, "", State.Condition.IDEAL, data.dateTimeUTC, State.Unit.MICRO_G_M3);
-        }
+        // Air Quality - see http://www.sparetheair.com/aqi.cfm
+        if(particulatesAQI == null) {
+            particulatesState = new State(humidity, "Could not retrieve recent particulates reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.AQI);
+        } else if (particulatesAQI <= 50.0) {
+            particulatesState = new State(particulatesAQI, "", State.Condition.IDEAL, data.dateTimeUTC, State.Unit.AQI);
+        } else if (particulatesAQI <= 300.0) {
+            particulatesState = new State(particulatesAQI, "AQI is at a moderately high level", State.Condition.WARNING, data.dateTimeUTC, State.Unit.AQI);
+        } else {
+            particulatesState = new State(particulatesAQI, "AQI is at the UNHEALTHY level.", State.Condition.ALERT, data.dateTimeUTC, State.Unit.MICRO_G_M3);
+    }
 
         final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState);
         return roomState;

@@ -9,6 +9,7 @@ import com.hello.suripu.api.audio.FileTransfer;
 import com.hello.suripu.api.audio.MatrixProtos;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.logging.DataLogger;
+import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DeviceIdUtil;
 import com.hello.suripu.service.SignedMessage;
 import com.librato.rollout.RolloutClient;
@@ -97,7 +98,7 @@ public class AudioResource extends BaseResource {
 
 
     @POST
-    @Path("/audio")
+    @Path("/raw")
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     public void getAudio(@Context HttpServletRequest request, byte[] body) {
 
@@ -136,7 +137,7 @@ public class AudioResource extends BaseResource {
         final String objectName = String.format("%s_%s", message.getDeviceId(), message.getUnixTime());
 
         final ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentLength(body.length);
+        metadata.setContentLength(message.toByteArray().length);
 
         s3Client.putObject(audioBucketName, objectName, byteArrayInputStream, metadata);
         try {

@@ -3,6 +3,7 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.hello.suripu.core.util.DataUtils;
 import org.joda.time.DateTime;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -10,8 +11,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class DeviceData {
 
     public static final float FLOAT_2_INT_MULTIPLIER = 100;
-    private static final float MAX_DUST_ANALOG_VALUE = 4096;
-    private static final float DUST_FLOAT_TO_INT_MULTIPLIER = 1000000;
 
 
     @JsonProperty("account_id")
@@ -59,6 +58,12 @@ public class DeviceData {
     @JsonIgnore
     public final Integer firmwareVersion;
 
+    @JsonProperty("wave_count")
+    public final Integer waveCount;
+
+    @JsonProperty("hold_count")
+    public final Integer holdCount;
+
     public DeviceData(
             final Long accountId,
             final Long deviceId,
@@ -74,7 +79,9 @@ public class DeviceData {
             final int ambientLightPeakiness,
             final DateTime dateTimeUTC,
             final Integer offsetMillis,
-            final Integer firmwareVersion) {
+            final Integer firmwareVersion,
+            final Integer waveCount,
+            final Integer holdCount) {
         this.accountId = accountId;
         this.deviceId = deviceId;
         this.ambientTemperature = ambientTemperature;
@@ -90,6 +97,8 @@ public class DeviceData {
         this.ambientLightPeakiness = ambientLightPeakiness;
         this.offsetMillis = offsetMillis;
         this.firmwareVersion = firmwareVersion;
+        this.waveCount = waveCount;
+        this.holdCount = holdCount;
 
         checkNotNull(this.accountId);
         checkNotNull(this.deviceId);
@@ -105,24 +114,7 @@ public class DeviceData {
         return valueFromDB / FLOAT_2_INT_MULTIPLIER;
     }
 
-    public static float dbIntToFloatDust(final int valueFromDB) {return valueFromDB / DUST_FLOAT_TO_INT_MULTIPLIER; }
-
-    public static int convertDustAnalogToMilliGM3(final int AnalogValue, final int firmwareVersion) {
-        // convert raw counts to ppm for dust sensor
-        float voltage = (float) AnalogValue / MAX_DUST_ANALOG_VALUE * 4.0f;
-
-        // TODO: add checks for firmware version when we switch sensor
-        // SHARP GP2Y1010AU0F  PM2.5(see Fig. 3 of spec sheet)
-        final float coeff = 0.5f/2.9f;
-        final float intercept = 0.6f * coeff;
-        final float maxVoltage = 3.2f;
-        final float minVoltage = 0.6f;
-
-        voltage = Math.min(voltage, maxVoltage);
-        voltage = Math.max(voltage, minVoltage);
-        final float dustDensity = coeff * voltage - intercept; // milli-gram per m^3
-        return (int) (dustDensity * DUST_FLOAT_TO_INT_MULTIPLIER);
-    }
+    public static float dbIntToFloatDust(final int valueFromDB) {return valueFromDB / DataUtils.DUST_FLOAT_TO_INT_MULTIPLIER;}
 
     public static class Builder{
         private Long accountId;
@@ -140,6 +132,8 @@ public class DeviceData {
         private DateTime dateTimeUTC;
         private Integer offsetMillis;
         private Integer firmwareVersion;
+        private Integer waveCount;
+        private Integer holdCount;
 
         public Builder withAccountId(final Long accountId){
             this.accountId = accountId;
@@ -162,7 +156,8 @@ public class DeviceData {
         }
 
         public Builder withAmbientAirQuality(final int ambientAirQuality, final int firmwareVersion){
-            this.ambientAirQuality = convertDustAnalogToMilliGM3(ambientAirQuality, firmwareVersion);
+            final float dustDensity = DataUtils.convertDustDataFromCountsToDensity(ambientAirQuality, firmwareVersion); // milligrams
+            this.ambientAirQuality = DataUtils.floatToDbIntDust(dustDensity); // multiplier to save as Int
             return this;
         }
 
@@ -216,10 +211,21 @@ public class DeviceData {
             return this;
         }
 
+        public Builder withWaveCount(final Integer waveCount){
+            this.waveCount = waveCount;
+            return this;
+        }
+
+        public Builder withHoldCount(final Integer holdCount){
+            this.holdCount = holdCount;
+            return this;
+        }
+
         public DeviceData build(){
             return new DeviceData(this.accountId, this.deviceId, this.ambientTemperature, this.ambientHumidity,
                     this.ambientAirQuality, this.ambientAirQualityRaw, this.ambientDustVariance, this.ambientDustMin, this.ambientDustMax,
-                    this.ambientLight, this.ambientLightVariance, this.ambientLightPeakiness, this.dateTimeUTC, this.offsetMillis, firmwareVersion);
+                    this.ambientLight, this.ambientLightVariance, this.ambientLightPeakiness, this.dateTimeUTC, this.offsetMillis,
+                    this.firmwareVersion, this.waveCount, this.holdCount);
         }
 
 
@@ -242,6 +248,9 @@ public class DeviceData {
                 .add("ambient_dust_max", ambientDustMax)
                 .add("dateTimeUTC", dateTimeUTC)
                 .add("offset_millis", offsetMillis)
+                .add("firmware_version", firmwareVersion)
+                .add("wave_count", waveCount)
+                .add("hold_count", holdCount)
                 .toString();
     }
 }

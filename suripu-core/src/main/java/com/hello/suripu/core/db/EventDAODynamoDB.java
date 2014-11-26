@@ -272,7 +272,7 @@ public class EventDAODynamoDB {
             Arrays.sort(rawEventsArrayWithAllTypes, new Comparator<Event>() {
                 @Override
                 public int compare(Event o1, Event o2) {
-                    return Long.compare(o1.startTimestamp, o2.startTimestamp);
+                    return Long.compare(o1.getStartTimestamp(), o2.getStartTimestamp());
                 }
             });
 
