@@ -183,7 +183,8 @@ public class TimelineResource extends BaseResource {
 
         // add partner movement data, check if there's a partner
         final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accessToken.accountId);
-        if (optionalPartnerAccountId.isPresent()) {
+        if (optionalPartnerAccountId.isPresent() && events.size() > 0) {
+            LOGGER.debug("partner account {}", optionalPartnerAccountId.get());
             // get tracker motions for partner, query time is in UTC, not local_utc
             final DateTime startTime;
             if (sleepTimeEvent.isPresent()) {
