@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
+import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceStatus;
@@ -27,6 +28,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -126,5 +128,34 @@ public class DeviceResources {
         if(numRows == 0) {
             LOGGER.warn("Did not find active sense to unregister");
         }
+    }
+
+
+    @Timed
+    @GET
+    @Path("/q")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> search(@Scope(OAuthScope.ADMINISTRATION_READ) AccessToken accessToken,
+                          @QueryParam("email") String email) {
+        LOGGER.debug("Searching devices for email = {}", email);
+        final Optional<Account> accountOptional = accountDAO.getByEmail(email);
+
+        if (!accountOptional.isPresent()) {
+            LOGGER.warn("Account not found");
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        final Account thisAccount = accountOptional.get();
+        if (!thisAccount.id.isPresent()){
+            LOGGER.warn("ID not found");
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        final Long thisId = thisAccount.id.get();
+        final List<DeviceAccountPair> devices = deviceDAO.getDeviceAccountMapFromAccountId(thisId);
+
+        final List<String> deviceIdList = new ArrayList<>();
+        for (DeviceAccountPair pair: devices) {
+            deviceIdList.add(pair.externalDeviceId);
+        }
+        return deviceIdList;
     }
 }
