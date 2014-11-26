@@ -2,6 +2,7 @@ package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.hello.suripu.core.util.DataUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +17,8 @@ public class CurrentRoomState {
             CELCIUS("c"),
             PERCENT("%"),
             PPM("ppm"),
-            MICRO_G_M3("µg/m3");
+            MICRO_G_M3("µg/m3"),
+            AQI("AQI");
 
             private final String value;
             private Unit(final String value) {
@@ -91,20 +93,21 @@ public class CurrentRoomState {
         // BEWARE, MUTABLE STATE BELOW. SCAAAAAARY
         Float temp = DeviceData.dbIntToFloat(data.ambientTemperature);
         Float humidity = DeviceData.dbIntToFloat(data.ambientHumidity);
-        final int dustDensity = DeviceData.convertDustAnalogToMicroGM3(data.ambientDustMax, 0); // max values are raw counts
-        Float particulates = DeviceData.dbIntToFloatDust(dustDensity);
+        // max value is in raw counts, conversion needed
+        Float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(data.ambientDustMax, data.firmwareVersion));
+
         State temperatureState;
         State humidityState;
         State particulatesState;
 
-        LOGGER.debug("temp = {}, humidity = {}, particulates = {}", temp, humidity, particulates);
+        LOGGER.debug("temp = {}, humidity = {}, particulates = {}", temp, humidity, particulatesAQI);
 
         if(referenceTime.minusMinutes(thresholdInMinutes).getMillis() > data.dateTimeUTC.getMillis()) {
 
             LOGGER.warn("{} is too old, not returning anything", data.dateTimeUTC);
             temp = null;
             humidity = null;
-            particulates = null;
+            particulatesAQI = null;
         }
 
         // Global ideal range: 60 -- 72, less than 54 = too cold, above 75= too warm
@@ -132,16 +135,16 @@ public class CurrentRoomState {
         }
 
 
-        // Air Quality
-        if(particulates == null) {
-            particulatesState = new State(humidity, "Could not retrieve a recent particulates reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.MICRO_G_M3);
-        } else if (particulates > 0.025) { // 35.0 divide by 1440 minutes
-            particulatesState = new State(particulates, "Air particulates level is *higher than usual*, do not let this condition persists for more than 24 hours", State.Condition.WARNING, data.dateTimeUTC, State.Unit.MICRO_G_M3);
-        } else if (particulates > 35.0) {
-            particulatesState = new State(particulates, "Air Particulates EPA standard: Daily: 35 µg/m3, AQI = 99", State.Condition.ALERT, data.dateTimeUTC, State.Unit.MICRO_G_M3);
-        } else{
-            particulatesState = new State(particulates, "", State.Condition.IDEAL, data.dateTimeUTC, State.Unit.MICRO_G_M3);
-        }
+        // Air Quality - see http://www.sparetheair.com/aqi.cfm
+        if(particulatesAQI == null) {
+            particulatesState = new State(humidity, "Could not retrieve recent particulates reading", State.Condition.UNKNOWN, data.dateTimeUTC, State.Unit.AQI);
+        } else if (particulatesAQI <= 50.0) {
+            particulatesState = new State(particulatesAQI, "", State.Condition.IDEAL, data.dateTimeUTC, State.Unit.AQI);
+        } else if (particulatesAQI <= 300.0) {
+            particulatesState = new State(particulatesAQI, "AQI is at a moderately high level", State.Condition.WARNING, data.dateTimeUTC, State.Unit.AQI);
+        } else {
+            particulatesState = new State(particulatesAQI, "AQI is at the UNHEALTHY level.", State.Condition.ALERT, data.dateTimeUTC, State.Unit.MICRO_G_M3);
+    }
 
         final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState);
         return roomState;
