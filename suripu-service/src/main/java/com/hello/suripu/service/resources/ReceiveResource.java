@@ -16,6 +16,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.firmware.FirmwareUpdateStore;
+import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
@@ -397,6 +398,11 @@ public class ReceiveResource extends BaseResource {
         final AudioControlProtos.AudioControl.Builder audioControl = AudioControlProtos.AudioControl
                 .newBuilder()
                 .setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.OFF);
+
+        if(featureFlipper.deviceFeatureActive(FeatureFlipper.AUDIO_CAPTURE, data.getDeviceId(), groups)) {
+            LOGGER.debug("AUDIO_CAPTURE feature is active for device_id = {}", data.getDeviceId());
+            audioControl.setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
+        }
 
         responseBuilder.setAudioControl(audioControl);
 
