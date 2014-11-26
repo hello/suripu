@@ -206,6 +206,7 @@ public class ReceiveResource extends BaseResource {
             );
         }
 
+
         final String deviceName = deviceIdOptional.get();
         LOGGER.debug("Received valid protobuf {}", deviceName.toString());
         LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
@@ -225,6 +226,10 @@ public class ReceiveResource extends BaseResource {
                     .type(MediaType.TEXT_PLAIN_TYPE).build()
             );
         }
+
+        // Saving sense data to kinesis
+        final DataLogger senseSensorsDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
+        senseSensorsDataLogger.put(deviceName, signedMessage.body);
 
         // TODO: Warning, since we query dynamoDB based on user input, the user can generate a lot of
         // requests to break our bank(Assume that Dynamo DB never goes down).
