@@ -135,18 +135,18 @@ public class DeviceResources {
     @GET
     @Path("/q")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<String> search(@Scope(OAuthScope.ADMINISTRATION_READ) AccessToken accessToken,
+    public List<String> search(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                           @QueryParam("email") String email) {
         LOGGER.debug("Searching devices for email = {}", email);
         final Optional<Account> accountOptional = accountDAO.getByEmail(email);
 
         if (!accountOptional.isPresent()) {
-            LOGGER.warn("Account not found");
+            LOGGER.warn("Account {} not found", email);
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
         final Account thisAccount = accountOptional.get();
         if (!thisAccount.id.isPresent()){
-            LOGGER.warn("ID not found");
+            LOGGER.warn("ID not found for account {}", email);
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
         final Long thisId = thisAccount.id.get();
