@@ -134,7 +134,7 @@ public class AudioResource extends BaseResource {
         }
 
         final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(message.toByteArray());
-        final String objectName = String.format("%s_%s", message.getDeviceId(), message.getUnixTime());
+        final String objectName = String.format("audio/%s/%s", message.getDeviceId(), message.getUnixTime());
 
         final ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentLength(message.toByteArray().length);
