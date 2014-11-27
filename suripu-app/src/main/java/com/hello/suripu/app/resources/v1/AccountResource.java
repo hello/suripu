@@ -144,7 +144,7 @@ public class AccountResource {
     @GET
     @Path("/q")
     @Produces(MediaType.APPLICATION_JSON)
-    public Account search(@Scope(OAuthScope.ADMINISTRATION_READ) AccessToken accessToken,
+    public Account getAccountByEmail(@Scope(OAuthScope.ADMINISTRATION_READ) AccessToken accessToken,
                           @QueryParam("email") String email) {
         LOGGER.debug("Search for email = {}", email);
         final Optional<Account> accountOptional = accountDAO.getByEmail(email);
