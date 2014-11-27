@@ -86,20 +86,20 @@ public class TimelineUtils {
             return motionEvents;
         }
 
-        Long maxSVM = 0L;
+        int maxSVM = 0;
         for(final TrackerMotion trackerMotion : trackerMotions) {
             if(trackerMotion.value < 0){
                 LOGGER.trace("Invalid val {}", trackerMotion.value);
                 continue;
             }
 
-            maxSVM = Math.max(maxSVM, UInt32.getValue(trackerMotion.value));
+            maxSVM = Math.max(maxSVM, trackerMotion.value);
         }
 
         LOGGER.debug("Max SVM = {}", maxSVM);
 
         final Long trackerId = trackerMotions.get(0).trackerId;
-        long motionAmplitude = 0;
+        int motionAmplitude = 0;
         for(final TrackerMotion trackerMotion : trackerMotions) {
             if (!trackerMotion.trackerId.equals(trackerId)) {
                 LOGGER.warn("User has multiple pills: {} and {}", trackerId, trackerMotion.trackerId);
@@ -110,13 +110,13 @@ public class TimelineUtils {
                 continue;
             }
 
-            motionAmplitude = UInt32.getValue(trackerMotion.value);
+            motionAmplitude = trackerMotion.value;
 
             final MotionEvent motionEvent = new MotionEvent(
                     trackerMotion.timestamp,
                     trackerMotion.timestamp + DateTimeConstants.MILLIS_PER_MINUTE,
                     trackerMotion.offsetMillis,
-                    normalizeSleepDepth(Math.sqrt(motionAmplitude), Math.sqrt(maxSVM)));
+                    normalizeSleepDepth(motionAmplitude, maxSVM));
             motionEvents.add(motionEvent);
         }
         LOGGER.debug("Generated {} segments from {} tracker motion samples", motionEvents.size(), trackerMotions.size());
