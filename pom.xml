@@ -5,7 +5,7 @@
     <groupId>com.hello.suripu</groupId>
     <artifactId>suripu-parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.1.191-SNAPSHOT</version>
+    <version>0.1.192-SNAPSHOT</version>
 
     <properties>
         <dropwizard.version>0.6.2</dropwizard.version>
