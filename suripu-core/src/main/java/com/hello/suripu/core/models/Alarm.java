@@ -68,8 +68,12 @@ public class Alarm {
         this.hourOfDay = hourOfDay;
         this.minuteOfHour = minuteOfHour;
         this.isRepeated = isRepeated;
-
-        this.sound = sound;
+        // TODO: find out why some alarms don't have a default sound
+        if(sound == null) {
+            this.sound = new AlarmSound(1, "Digital 3");
+        } else {
+            this.sound = sound;
+        }
 
         this.year = year;
         this.month = month;
