@@ -6,7 +6,9 @@ import com.hello.suripu.core.models.PartnerMotionEvent;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.yammer.metrics.annotation.Timed;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +31,6 @@ public class PartnerMotion {
     @Timed
     public static List<PartnerMotionEvent> getPartnerData(final List<MotionEvent> myMotionEvents, final List<TrackerMotion> partnerMotionsData, int threshold) {
 
-        final boolean createMotionlessSegment = false;
         final List<MotionEvent> partnerMotionEvents = TimelineUtils.generateMotionEvents(partnerMotionsData);
 
         // convert list of TrackerMotion to hash map for easy lookup
@@ -45,6 +46,13 @@ public class PartnerMotion {
             }
 
             final MotionEvent myMotionEvent = myMotionEventsMap.get(partnerMotionEvent.getStartTimestamp());
+            if(myMotionEvent == null){
+                LOGGER.debug("My motion not found at time {}",
+                        new DateTime(partnerMotionEvent.getStartTimestamp(),
+                                DateTimeZone.forOffsetMillis(partnerMotionEvent.getTimezoneOffset())));
+                continue;
+            }
+
             final int mySleepDepth = myMotionEvent.getSleepDepth();
             final int partnerSleepDepth = partnerMotionEvent.getSleepDepth();
             if (mySleepDepth >= ACCOUNT_DEPTH_THRESHOLD ||  // original user not moving much, not affected.
@@ -59,9 +67,12 @@ public class PartnerMotion {
             boolean noPriorMovement = true;
             for (int i = 1; i <= CHECK_PRECEDING_MINS; i++) {
                 final MotionEvent myPriorMotionEvent = myMotionEventsMap.get(partnerMotionEvent.getStartTimestamp() - i * DateTimeConstants.MILLIS_PER_MINUTE);
-                final int priorSleepDepth = myPriorMotionEvent.getSleepDepth();
-                if (myPriorMotionEvent != null && priorSleepDepth < ACCOUNT_DEPTH_THRESHOLD) {
-                    LOGGER.debug("{} prior movement {} {}", partnerMotionEvent.getStartTimestamp(), myPriorMotionEvent.getStartTimestamp(), priorSleepDepth);
+                if(myPriorMotionEvent == null){
+                    continue;
+                }
+
+                if (myPriorMotionEvent.getSleepDepth() < ACCOUNT_DEPTH_THRESHOLD) {
+                    LOGGER.debug("{} prior movement {} {}", partnerMotionEvent.getStartTimestamp(), myPriorMotionEvent.getStartTimestamp(), myPriorMotionEvent.getSleepDepth());
                     noPriorMovement = false;
                     break;
                 }
