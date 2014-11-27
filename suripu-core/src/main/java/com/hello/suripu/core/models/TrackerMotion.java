@@ -198,7 +198,7 @@ public class TrackerMotion {
         }
 
         public static long rawToMilliMS2(final Long rawMotionAmplitude){
-            final double trackerValueInMS2 = Math.sqrt(rawMotionAmplitude.doubleValue() * COUNTS_IN_G_SQUARE) - GRAVITY_IN_MS2;
+            final double trackerValueInMS2 = Math.sqrt(rawMotionAmplitude) * Math.sqrt(COUNTS_IN_G_SQUARE) - GRAVITY_IN_MS2;
             return (long)(trackerValueInMS2 * 1000);
         }
 
