@@ -76,34 +76,7 @@ public class DeviceResources {
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
     public List<Device> getDevices(@Scope(OAuthScope.DEVICE_INFORMATION_READ) final AccessToken accessToken) {
-
-        // TODO: make asynchronous calls to grab Pills + Senses if the following is too slow
-        final ImmutableList<DeviceAccountPair> senses = deviceDAO.getSensesForAccountId(accessToken.accountId);
-        final ImmutableList<DeviceAccountPair> pills = deviceDAO.getPillsForAccountId(accessToken.accountId);
-        final List<Device> devices = new ArrayList<Device>();
-
-        // TODO: device state will always be normal for now until more information is provided by the device
-        for (final DeviceAccountPair sense : senses) {
-            final Optional<DeviceStatus> senseStatusOptional = deviceDAO.senseStatus(sense.internalDeviceId);
-            if(senseStatusOptional.isPresent()) {
-                devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.NORMAL, senseStatusOptional.get().firmwareVersion, senseStatusOptional.get().lastSeen));
-            } else {
-                devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.UNKNOWN, senseStatusOptional.get().firmwareVersion, new DateTime(1970,1,1, 0,0,0)));
-            }
-        }
-
-        for (final DeviceAccountPair pill : pills) {
-            final Optional<DeviceStatus> pillStatusOptional = deviceDAO.pillStatus(pill.internalDeviceId);
-            if(!pillStatusOptional.isPresent()) {
-                LOGGER.warn("No pill status found for pill_id = {} ({}) for account: {}", pill.externalDeviceId, pill.internalDeviceId, pill.accountId);
-                devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, Device.State.UNKNOWN, null, null));
-            } else {
-                final DeviceStatus deviceStatus = pillStatusOptional.get();
-                devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, Device.State.NORMAL, deviceStatus.firmwareVersion, deviceStatus.lastSeen));
-            }
-        }
-
-        return devices;
+        return getDevicesByAccountId(accessToken.accountId);
     }
 
 
@@ -138,24 +111,74 @@ public class DeviceResources {
     public List<String> listDeviceIDsByEmail(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                           @QueryParam("email") String email) {
         LOGGER.debug("Searching devices for email = {}", email);
-        final Optional<Account> accountOptional = accountDAO.getByEmail(email);
-
-        if (!accountOptional.isPresent()) {
-            LOGGER.warn("Account {} not found", email);
+        Optional<Long> accountId = getAccountIdByEmail(email);
+        if (!accountId.isPresent()) {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
-        final Account thisAccount = accountOptional.get();
-        if (!thisAccount.id.isPresent()){
-            LOGGER.warn("ID not found for account {}", email);
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
-        }
-        final Long thisId = thisAccount.id.get();
-        final List<DeviceAccountPair> devices = deviceDAO.getDeviceAccountMapFromAccountId(thisId);
+        final List<DeviceAccountPair> devices = deviceDAO.getDeviceAccountMapFromAccountId(accountId.get());
 
         final List<String> deviceIdList = new ArrayList<>();
         for (DeviceAccountPair pair: devices) {
             deviceIdList.add(pair.externalDeviceId);
         }
         return deviceIdList;
+    }
+    @GET
+    @Timed
+    @Path("/specs")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Device> getDevicesForAdmin(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                           @QueryParam("email") String email) {
+        LOGGER.debug("Querying latest devices specs for email = {}", email);
+        final Optional<Long> accountId = getAccountIdByEmail(email);
+        if (!accountId.isPresent()) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        return getDevicesByAccountId(accountId.get());
+    }
+
+    private Optional<Long> getAccountIdByEmail(final String email) {
+        final Optional<Account> accountOptional = accountDAO.getByEmail(email);
+
+        if (!accountOptional.isPresent()) {
+            LOGGER.debug("Account {} not found", email);
+            return Optional.absent();
+        }
+        final Account account = accountOptional.get();
+        if (!account.id.isPresent()) {
+            LOGGER.debug("ID not found for account {}", email);
+            return Optional.absent();
+        }
+        return account.id;
+    }
+
+    private List<Device> getDevicesByAccountId(final Long accountId) {
+        // TODO: make asynchronous calls to grab Pills + Senses if the following is too slow
+        final ImmutableList<DeviceAccountPair> senses = deviceDAO.getSensesForAccountId(accountId);
+        final ImmutableList<DeviceAccountPair> pills = deviceDAO.getPillsForAccountId(accountId);
+        final List<Device> devices = new ArrayList<Device>();
+
+        // TODO: device state will always be normal for now until more information is provided by the device
+        for (final DeviceAccountPair sense : senses) {
+            final Optional<DeviceStatus> senseStatusOptional = deviceDAO.senseStatus(sense.internalDeviceId);
+            if(senseStatusOptional.isPresent()) {
+                devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.NORMAL, senseStatusOptional.get().firmwareVersion, senseStatusOptional.get().lastSeen));
+            } else {
+                devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.UNKNOWN, "-", new DateTime(1970,1,1, 0,0,0)));
+            }
+        }
+
+        for (final DeviceAccountPair pill : pills) {
+            final Optional<DeviceStatus> pillStatusOptional = deviceDAO.pillStatus(pill.internalDeviceId);
+            if(!pillStatusOptional.isPresent()) {
+                LOGGER.debug("No pill status found for pill_id = {} ({}) for account: {}", pill.externalDeviceId, pill.internalDeviceId, pill.accountId);
+                devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, Device.State.UNKNOWN, null, null));
+            } else {
+                final DeviceStatus deviceStatus = pillStatusOptional.get();
+                devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, Device.State.NORMAL, deviceStatus.firmwareVersion, deviceStatus.lastSeen));
+            }
+        }
+
+        return devices;
     }
 }
