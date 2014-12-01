@@ -18,7 +18,6 @@ import com.hello.suripu.app.cli.CreateDynamoDBTimeZoneHistoryTableCommand;
 import com.hello.suripu.app.cli.CreateFeaturesDynamoDBTableCommand;
 import com.hello.suripu.app.cli.CreateRingTimeDynamoDBTable;
 import com.hello.suripu.app.cli.CreateSleepScoreDynamoDBTable;
-import com.hello.suripu.app.cli.CreateFeaturesDynamoDBTableCommand;
 import com.hello.suripu.app.cli.CreateTeamsDynamoDBTableCommand;
 import com.hello.suripu.app.cli.RecreateEventsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
@@ -26,6 +25,7 @@ import com.hello.suripu.app.modules.RolloutAppModule;
 import com.hello.suripu.app.resources.v1.AccountResource;
 import com.hello.suripu.app.resources.v1.AlarmResource;
 import com.hello.suripu.app.resources.v1.ApplicationResource;
+import com.hello.suripu.app.resources.v1.DataScienceResource;
 import com.hello.suripu.app.resources.v1.DeviceResources;
 import com.hello.suripu.app.resources.v1.EventResource;
 import com.hello.suripu.app.resources.v1.FeaturesResource;
@@ -265,6 +265,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new QuestionsResource(accountDAO, questionResponseDAO, timeZoneHistoryDAODynamoDB, configuration.getQuestionConfigs().getNumSkips()));
         environment.addResource(new InsightsResource(accountDAO));
         environment.addResource(new TeamsResource(teamStore));
+
+        environment.addResource(new DataScienceResource(trackerMotionDAO));
 
         final FirmwareUpdateDAO firmwareUpdateDAO = commonDB.onDemand(FirmwareUpdateDAO.class);
         final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);
