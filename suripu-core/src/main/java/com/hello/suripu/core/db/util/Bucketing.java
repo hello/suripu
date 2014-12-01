@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.util.DataUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +82,7 @@ public class Bucketing {
             } else if(sensorName.equals("temperature")) {
                 sensorValue = DeviceData.dbIntToFloat(deviceData.ambientTemperature);
             } else if (sensorName.equals("particulates")) {
-                sensorValue = DeviceData.dbIntToFloatDust(deviceData.ambientDustMax);
+                sensorValue = (float) DataUtils.convertRawDustCountsToAQI(deviceData.ambientDustMax, deviceData.firmwareVersion);
             } else if (sensorName.equals("light")) {
                 sensorValue = (float) deviceData.ambientLight;
             } else {
