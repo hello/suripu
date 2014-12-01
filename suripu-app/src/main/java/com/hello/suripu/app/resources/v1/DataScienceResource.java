@@ -36,7 +36,7 @@ public class DataScienceResource {
     @Path("/pill/{query_date_local_utc}")
     @Produces(MediaType.APPLICATION_JSON)
     public List<TrackerMotion> registerPill(@Scope(OAuthScope.SENSORS_BASIC) final AccessToken accessToken,
-                             @PathParam("date") String date) {
+                             @PathParam("query_date_local_utc") String date) {
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withHourOfDay(20);
         final DateTime endDate = targetDate.plusHours(14);
