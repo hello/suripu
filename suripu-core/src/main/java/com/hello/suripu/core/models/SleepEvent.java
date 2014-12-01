@@ -4,13 +4,22 @@ package com.hello.suripu.core.models;
  * Created by pangwu on 11/24/14.
  */
 public class SleepEvent extends Event {
+
+    private String message;
+
     public SleepEvent(long startTimestamp, long endTimestamp, int timezoneOffset) {
         super(Type.SLEEP, startTimestamp, endTimestamp, timezoneOffset);
+        this.message = "You fell asleep";
+    }
+
+    public SleepEvent(long startTimestamp, long endTimestamp, int timezoneOffset, final String message) {
+        super(Type.SLEEP, startTimestamp, endTimestamp, timezoneOffset);
+        this.message = message;
     }
 
     @Override
     public String getDescription() {
-        return "You fell asleep";
+        return this.message;
     }
 
     @Override
