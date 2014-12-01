@@ -79,7 +79,6 @@ public class DeviceResources {
         return getDevicesByAccountId(accessToken.accountId);
     }
 
-
     @DELETE
     @Timed
     @Path("/pill/{pill_id}")
@@ -90,7 +89,6 @@ public class DeviceResources {
             LOGGER.warn("Did not find active pill to unregister");
         }
     }
-
 
     @DELETE
     @Timed
@@ -103,7 +101,6 @@ public class DeviceResources {
         }
     }
 
-
     @Timed
     @GET
     @Path("/q")
@@ -113,6 +110,7 @@ public class DeviceResources {
         LOGGER.debug("Searching devices for email = {}", email);
         Optional<Long> accountId = getAccountIdByEmail(email);
         if (!accountId.isPresent()) {
+            LOGGER.debug("ID not found for account {}", email);
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
         final List<DeviceAccountPair> devices = deviceDAO.getDeviceAccountMapFromAccountId(accountId.get());
@@ -123,6 +121,7 @@ public class DeviceResources {
         }
         return deviceIdList;
     }
+
     @GET
     @Timed
     @Path("/specs")
