@@ -151,7 +151,8 @@ public class TimelineResource extends BaseResource {
                 final SleepEvent sleepEventFromAwakeDetection = new SleepEvent(
                         segmentFromAwakeDetection.getStartTimestamp(),
                         segmentFromAwakeDetection.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                        segmentFromAwakeDetection.getOffsetMillis()
+                        segmentFromAwakeDetection.getOffsetMillis(),
+                        "You fell asleep (P)"
                         );
 
                 final WakeupEvent wakeupSegmentFromAwakeDetection = new WakeupEvent(
