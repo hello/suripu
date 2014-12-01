@@ -1820,11 +1820,946 @@ public final class DataInputProtos {
     // @@protoc_insertion_point(class_scope:periodic_data)
   }
 
+  public interface batched_periodic_dataOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // repeated .periodic_data data = 1;
+    /**
+     * <code>repeated .periodic_data data = 1;</code>
+     */
+    java.util.List<com.hello.suripu.api.input.DataInputProtos.periodic_data> 
+        getDataList();
+    /**
+     * <code>repeated .periodic_data data = 1;</code>
+     */
+    com.hello.suripu.api.input.DataInputProtos.periodic_data getData(int index);
+    /**
+     * <code>repeated .periodic_data data = 1;</code>
+     */
+    int getDataCount();
+    /**
+     * <code>repeated .periodic_data data = 1;</code>
+     */
+    java.util.List<? extends com.hello.suripu.api.input.DataInputProtos.periodic_dataOrBuilder> 
+        getDataOrBuilderList();
+    /**
+     * <code>repeated .periodic_data data = 1;</code>
+     */
+    com.hello.suripu.api.input.DataInputProtos.periodic_dataOrBuilder getDataOrBuilder(
+        int index);
+
+    // required string device_id = 2;
+    /**
+     * <code>required string device_id = 2;</code>
+     */
+    boolean hasDeviceId();
+    /**
+     * <code>required string device_id = 2;</code>
+     */
+    java.lang.String getDeviceId();
+    /**
+     * <code>required string device_id = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getDeviceIdBytes();
+
+    // required int32 firmware_version = 3;
+    /**
+     * <code>required int32 firmware_version = 3;</code>
+     */
+    boolean hasFirmwareVersion();
+    /**
+     * <code>required int32 firmware_version = 3;</code>
+     */
+    int getFirmwareVersion();
+  }
+  /**
+   * Protobuf type {@code batched_periodic_data}
+   */
+  public static final class batched_periodic_data extends
+      com.google.protobuf.GeneratedMessage
+      implements batched_periodic_dataOrBuilder {
+    // Use batched_periodic_data.newBuilder() to construct.
+    private batched_periodic_data(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private batched_periodic_data(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final batched_periodic_data defaultInstance;
+    public static batched_periodic_data getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public batched_periodic_data getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private batched_periodic_data(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                data_ = new java.util.ArrayList<com.hello.suripu.api.input.DataInputProtos.periodic_data>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              data_.add(input.readMessage(com.hello.suripu.api.input.DataInputProtos.periodic_data.PARSER, extensionRegistry));
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000001;
+              deviceId_ = input.readBytes();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000002;
+              firmwareVersion_ = input.readInt32();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          data_ = java.util.Collections.unmodifiableList(data_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.suripu.api.input.DataInputProtos.internal_static_batched_periodic_data_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.suripu.api.input.DataInputProtos.internal_static_batched_periodic_data_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.class, com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<batched_periodic_data> PARSER =
+        new com.google.protobuf.AbstractParser<batched_periodic_data>() {
+      public batched_periodic_data parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new batched_periodic_data(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<batched_periodic_data> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // repeated .periodic_data data = 1;
+    public static final int DATA_FIELD_NUMBER = 1;
+    private java.util.List<com.hello.suripu.api.input.DataInputProtos.periodic_data> data_;
+    /**
+     * <code>repeated .periodic_data data = 1;</code>
+     */
+    public java.util.List<com.hello.suripu.api.input.DataInputProtos.periodic_data> getDataList() {
+      return data_;
+    }
+    /**
+     * <code>repeated .periodic_data data = 1;</code>
+     */
+    public java.util.List<? extends com.hello.suripu.api.input.DataInputProtos.periodic_dataOrBuilder> 
+        getDataOrBuilderList() {
+      return data_;
+    }
+    /**
+     * <code>repeated .periodic_data data = 1;</code>
+     */
+    public int getDataCount() {
+      return data_.size();
+    }
+    /**
+     * <code>repeated .periodic_data data = 1;</code>
+     */
+    public com.hello.suripu.api.input.DataInputProtos.periodic_data getData(int index) {
+      return data_.get(index);
+    }
+    /**
+     * <code>repeated .periodic_data data = 1;</code>
+     */
+    public com.hello.suripu.api.input.DataInputProtos.periodic_dataOrBuilder getDataOrBuilder(
+        int index) {
+      return data_.get(index);
+    }
+
+    // required string device_id = 2;
+    public static final int DEVICE_ID_FIELD_NUMBER = 2;
+    private java.lang.Object deviceId_;
+    /**
+     * <code>required string device_id = 2;</code>
+     */
+    public boolean hasDeviceId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required string device_id = 2;</code>
+     */
+    public java.lang.String getDeviceId() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          deviceId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string device_id = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getDeviceIdBytes() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        deviceId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // required int32 firmware_version = 3;
+    public static final int FIRMWARE_VERSION_FIELD_NUMBER = 3;
+    private int firmwareVersion_;
+    /**
+     * <code>required int32 firmware_version = 3;</code>
+     */
+    public boolean hasFirmwareVersion() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required int32 firmware_version = 3;</code>
+     */
+    public int getFirmwareVersion() {
+      return firmwareVersion_;
+    }
+
+    private void initFields() {
+      data_ = java.util.Collections.emptyList();
+      deviceId_ = "";
+      firmwareVersion_ = 0;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      if (!hasDeviceId()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasFirmwareVersion()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      for (int i = 0; i < data_.size(); i++) {
+        output.writeMessage(1, data_.get(i));
+      }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(2, getDeviceIdBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeInt32(3, firmwareVersion_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (int i = 0; i < data_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, data_.get(i));
+      }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getDeviceIdBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(3, firmwareVersion_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.input.DataInputProtos.batched_periodic_data parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.suripu.api.input.DataInputProtos.batched_periodic_data prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code batched_periodic_data}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.input.DataInputProtos.batched_periodic_dataOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.input.DataInputProtos.internal_static_batched_periodic_data_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.input.DataInputProtos.internal_static_batched_periodic_data_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.class, com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.Builder.class);
+      }
+
+      // Construct using com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getDataFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        if (dataBuilder_ == null) {
+          data_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          dataBuilder_.clear();
+        }
+        deviceId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        firmwareVersion_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.suripu.api.input.DataInputProtos.internal_static_batched_periodic_data_descriptor;
+      }
+
+      public com.hello.suripu.api.input.DataInputProtos.batched_periodic_data getDefaultInstanceForType() {
+        return com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.getDefaultInstance();
+      }
+
+      public com.hello.suripu.api.input.DataInputProtos.batched_periodic_data build() {
+        com.hello.suripu.api.input.DataInputProtos.batched_periodic_data result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.suripu.api.input.DataInputProtos.batched_periodic_data buildPartial() {
+        com.hello.suripu.api.input.DataInputProtos.batched_periodic_data result = new com.hello.suripu.api.input.DataInputProtos.batched_periodic_data(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (dataBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+            data_ = java.util.Collections.unmodifiableList(data_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.data_ = data_;
+        } else {
+          result.data_ = dataBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.deviceId_ = deviceId_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.firmwareVersion_ = firmwareVersion_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.suripu.api.input.DataInputProtos.batched_periodic_data) {
+          return mergeFrom((com.hello.suripu.api.input.DataInputProtos.batched_periodic_data)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.suripu.api.input.DataInputProtos.batched_periodic_data other) {
+        if (other == com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.getDefaultInstance()) return this;
+        if (dataBuilder_ == null) {
+          if (!other.data_.isEmpty()) {
+            if (data_.isEmpty()) {
+              data_ = other.data_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureDataIsMutable();
+              data_.addAll(other.data_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.data_.isEmpty()) {
+            if (dataBuilder_.isEmpty()) {
+              dataBuilder_.dispose();
+              dataBuilder_ = null;
+              data_ = other.data_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              dataBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getDataFieldBuilder() : null;
+            } else {
+              dataBuilder_.addAllMessages(other.data_);
+            }
+          }
+        }
+        if (other.hasDeviceId()) {
+          bitField0_ |= 0x00000002;
+          deviceId_ = other.deviceId_;
+          onChanged();
+        }
+        if (other.hasFirmwareVersion()) {
+          setFirmwareVersion(other.getFirmwareVersion());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasDeviceId()) {
+          
+          return false;
+        }
+        if (!hasFirmwareVersion()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.suripu.api.input.DataInputProtos.batched_periodic_data parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.suripu.api.input.DataInputProtos.batched_periodic_data) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // repeated .periodic_data data = 1;
+      private java.util.List<com.hello.suripu.api.input.DataInputProtos.periodic_data> data_ =
+        java.util.Collections.emptyList();
+      private void ensureDataIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          data_ = new java.util.ArrayList<com.hello.suripu.api.input.DataInputProtos.periodic_data>(data_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.input.DataInputProtos.periodic_data, com.hello.suripu.api.input.DataInputProtos.periodic_data.Builder, com.hello.suripu.api.input.DataInputProtos.periodic_dataOrBuilder> dataBuilder_;
+
+      /**
+       * <code>repeated .periodic_data data = 1;</code>
+       */
+      public java.util.List<com.hello.suripu.api.input.DataInputProtos.periodic_data> getDataList() {
+        if (dataBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(data_);
+        } else {
+          return dataBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .periodic_data data = 1;</code>
+       */
+      public int getDataCount() {
+        if (dataBuilder_ == null) {
+          return data_.size();
+        } else {
+          return dataBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .periodic_data data = 1;</code>
+       */
+      public com.hello.suripu.api.input.DataInputProtos.periodic_data getData(int index) {
+        if (dataBuilder_ == null) {
+          return data_.get(index);
+        } else {
+          return dataBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .periodic_data data = 1;</code>
+       */
+      public Builder setData(
+          int index, com.hello.suripu.api.input.DataInputProtos.periodic_data value) {
+        if (dataBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureDataIsMutable();
+          data_.set(index, value);
+          onChanged();
+        } else {
+          dataBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .periodic_data data = 1;</code>
+       */
+      public Builder setData(
+          int index, com.hello.suripu.api.input.DataInputProtos.periodic_data.Builder builderForValue) {
+        if (dataBuilder_ == null) {
+          ensureDataIsMutable();
+          data_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          dataBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .periodic_data data = 1;</code>
+       */
+      public Builder addData(com.hello.suripu.api.input.DataInputProtos.periodic_data value) {
+        if (dataBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureDataIsMutable();
+          data_.add(value);
+          onChanged();
+        } else {
+          dataBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .periodic_data data = 1;</code>
+       */
+      public Builder addData(
+          int index, com.hello.suripu.api.input.DataInputProtos.periodic_data value) {
+        if (dataBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureDataIsMutable();
+          data_.add(index, value);
+          onChanged();
+        } else {
+          dataBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .periodic_data data = 1;</code>
+       */
+      public Builder addData(
+          com.hello.suripu.api.input.DataInputProtos.periodic_data.Builder builderForValue) {
+        if (dataBuilder_ == null) {
+          ensureDataIsMutable();
+          data_.add(builderForValue.build());
+          onChanged();
+        } else {
+          dataBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .periodic_data data = 1;</code>
+       */
+      public Builder addData(
+          int index, com.hello.suripu.api.input.DataInputProtos.periodic_data.Builder builderForValue) {
+        if (dataBuilder_ == null) {
+          ensureDataIsMutable();
+          data_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          dataBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .periodic_data data = 1;</code>
+       */
+      public Builder addAllData(
+          java.lang.Iterable<? extends com.hello.suripu.api.input.DataInputProtos.periodic_data> values) {
+        if (dataBuilder_ == null) {
+          ensureDataIsMutable();
+          super.addAll(values, data_);
+          onChanged();
+        } else {
+          dataBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .periodic_data data = 1;</code>
+       */
+      public Builder clearData() {
+        if (dataBuilder_ == null) {
+          data_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          dataBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .periodic_data data = 1;</code>
+       */
+      public Builder removeData(int index) {
+        if (dataBuilder_ == null) {
+          ensureDataIsMutable();
+          data_.remove(index);
+          onChanged();
+        } else {
+          dataBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .periodic_data data = 1;</code>
+       */
+      public com.hello.suripu.api.input.DataInputProtos.periodic_data.Builder getDataBuilder(
+          int index) {
+        return getDataFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .periodic_data data = 1;</code>
+       */
+      public com.hello.suripu.api.input.DataInputProtos.periodic_dataOrBuilder getDataOrBuilder(
+          int index) {
+        if (dataBuilder_ == null) {
+          return data_.get(index);  } else {
+          return dataBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .periodic_data data = 1;</code>
+       */
+      public java.util.List<? extends com.hello.suripu.api.input.DataInputProtos.periodic_dataOrBuilder> 
+           getDataOrBuilderList() {
+        if (dataBuilder_ != null) {
+          return dataBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(data_);
+        }
+      }
+      /**
+       * <code>repeated .periodic_data data = 1;</code>
+       */
+      public com.hello.suripu.api.input.DataInputProtos.periodic_data.Builder addDataBuilder() {
+        return getDataFieldBuilder().addBuilder(
+            com.hello.suripu.api.input.DataInputProtos.periodic_data.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .periodic_data data = 1;</code>
+       */
+      public com.hello.suripu.api.input.DataInputProtos.periodic_data.Builder addDataBuilder(
+          int index) {
+        return getDataFieldBuilder().addBuilder(
+            index, com.hello.suripu.api.input.DataInputProtos.periodic_data.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .periodic_data data = 1;</code>
+       */
+      public java.util.List<com.hello.suripu.api.input.DataInputProtos.periodic_data.Builder> 
+           getDataBuilderList() {
+        return getDataFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.input.DataInputProtos.periodic_data, com.hello.suripu.api.input.DataInputProtos.periodic_data.Builder, com.hello.suripu.api.input.DataInputProtos.periodic_dataOrBuilder> 
+          getDataFieldBuilder() {
+        if (dataBuilder_ == null) {
+          dataBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              com.hello.suripu.api.input.DataInputProtos.periodic_data, com.hello.suripu.api.input.DataInputProtos.periodic_data.Builder, com.hello.suripu.api.input.DataInputProtos.periodic_dataOrBuilder>(
+                  data_,
+                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  getParentForChildren(),
+                  isClean());
+          data_ = null;
+        }
+        return dataBuilder_;
+      }
+
+      // required string device_id = 2;
+      private java.lang.Object deviceId_ = "";
+      /**
+       * <code>required string device_id = 2;</code>
+       */
+      public boolean hasDeviceId() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required string device_id = 2;</code>
+       */
+      public java.lang.String getDeviceId() {
+        java.lang.Object ref = deviceId_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          deviceId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string device_id = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getDeviceIdBytes() {
+        java.lang.Object ref = deviceId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          deviceId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string device_id = 2;</code>
+       */
+      public Builder setDeviceId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        deviceId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string device_id = 2;</code>
+       */
+      public Builder clearDeviceId() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        deviceId_ = getDefaultInstance().getDeviceId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string device_id = 2;</code>
+       */
+      public Builder setDeviceIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        deviceId_ = value;
+        onChanged();
+        return this;
+      }
+
+      // required int32 firmware_version = 3;
+      private int firmwareVersion_ ;
+      /**
+       * <code>required int32 firmware_version = 3;</code>
+       */
+      public boolean hasFirmwareVersion() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>required int32 firmware_version = 3;</code>
+       */
+      public int getFirmwareVersion() {
+        return firmwareVersion_;
+      }
+      /**
+       * <code>required int32 firmware_version = 3;</code>
+       */
+      public Builder setFirmwareVersion(int value) {
+        bitField0_ |= 0x00000004;
+        firmwareVersion_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required int32 firmware_version = 3;</code>
+       */
+      public Builder clearFirmwareVersion() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        firmwareVersion_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:batched_periodic_data)
+    }
+
+    static {
+      defaultInstance = new batched_periodic_data(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:batched_periodic_data)
+  }
+
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_periodic_data_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_periodic_data_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_batched_periodic_data_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_batched_periodic_data_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -1842,8 +2777,11 @@ public final class DataInputProtos {
       "\030\n\020firmware_version\030\n \001(\005\022\021\n\tdevice_id\030\014" +
       " \001(\t\022\030\n\020dust_variability\030\r \001(\005\022\020\n\010dust_m" +
       "ax\030\016 \001(\005\022\020\n\010dust_min\030\017 \001(\005\022\022\n\nwave_count" +
-      "\030\020 \001(\005\022\022\n\nhold_count\030\021 \001(\005B-\n\032com.hello." +
-      "suripu.api.inputB\017DataInputProtos"
+      "\030\020 \001(\005\022\022\n\nhold_count\030\021 \001(\005\"b\n\025batched_pe" +
+      "riodic_data\022\034\n\004data\030\001 \003(\0132\016.periodic_dat",
+      "a\022\021\n\tdevice_id\030\002 \002(\t\022\030\n\020firmware_version" +
+      "\030\003 \002(\005B-\n\032com.hello.suripu.api.inputB\017Da" +
+      "taInputProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -1856,6 +2794,12 @@ public final class DataInputProtos {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_periodic_data_descriptor,
               new java.lang.String[] { "UnixTime", "Light", "Temperature", "Humidity", "Dust", "Name", "Mac", "LightVariability", "LightTonality", "FirmwareVersion", "DeviceId", "DustVariability", "DustMax", "DustMin", "WaveCount", "HoldCount", });
+          internal_static_batched_periodic_data_descriptor =
+            getDescriptor().getMessageTypes().get(1);
+          internal_static_batched_periodic_data_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_batched_periodic_data_descriptor,
+              new java.lang.String[] { "Data", "DeviceId", "FirmwareVersion", });
           return null;
         }
       };

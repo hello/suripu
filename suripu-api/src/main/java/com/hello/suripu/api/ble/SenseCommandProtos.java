@@ -2591,6 +2591,10 @@ public final class SenseCommandProtos {
        * <code>MORPHEUS_COMMAND_PILL_SHAKES = 21;</code>
        */
       MORPHEUS_COMMAND_PILL_SHAKES(21, 21),
+      /**
+       * <code>MORPHEUS_COMMAND_SYNC_DEVICE_ID = 22;</code>
+       */
+      MORPHEUS_COMMAND_SYNC_DEVICE_ID(22, 22),
       ;
 
       /**
@@ -2685,6 +2689,10 @@ public final class SenseCommandProtos {
        * <code>MORPHEUS_COMMAND_PILL_SHAKES = 21;</code>
        */
       public static final int MORPHEUS_COMMAND_PILL_SHAKES_VALUE = 21;
+      /**
+       * <code>MORPHEUS_COMMAND_SYNC_DEVICE_ID = 22;</code>
+       */
+      public static final int MORPHEUS_COMMAND_SYNC_DEVICE_ID_VALUE = 22;
 
 
       public final int getNumber() { return value; }
@@ -2713,6 +2721,7 @@ public final class SenseCommandProtos {
           case 19: return MORPHEUS_COMMAND_PILL_DFU_BEGIN;
           case 20: return MORPHEUS_COMMAND_FACTORY_RESET;
           case 21: return MORPHEUS_COMMAND_PILL_SHAKES;
+          case 22: return MORPHEUS_COMMAND_SYNC_DEVICE_ID;
           default: return null;
         }
       }
@@ -5718,7 +5727,7 @@ public final class SenseCommandProtos {
       "_WPA2\020\003\"\221\001\n\tpill_data\022\021\n\tdevice_id\030\001 \002(\t" +
       "\022\025\n\rbattery_level\030\002 \001(\005\022\016\n\006uptime\030\003 \001(\005\022" +
       "\035\n\025motion_data_entrypted\030\004 \001(\014\022\030\n\020firmwa" +
-      "re_version\030\005 \001(\005\022\021\n\ttimestamp\030\006 \002(\004\"\336\t\n\017",
+      "re_version\030\005 \001(\005\022\021\n\ttimestamp\030\006 \002(\004\"\203\n\n\017",
       "MorpheusCommand\022\017\n\007version\030\001 \002(\005\022*\n\004type" +
       "\030\002 \002(\0162\034.MorpheusCommand.CommandType\022\020\n\010" +
       "deviceId\030\003 \001(\t\022\021\n\taccountId\030\004 \001(\t\022\031\n\005err" +
@@ -5729,7 +5738,7 @@ public final class SenseCommandProtos {
       "t\030\016 \003(\0132\016.wifi_endpoint\022.\n\rsecurity_type" +
       "\030\017 \001(\0162\027.wifi_endpoint.sec_type\022\035\n\tpill_" +
       "data\030\020 \001(\0132\n.pill_data\0225\n\025wifi_connectio",
-      "n_state\030\021 \001(\0162\026.wifi_connection_state\"\244\006" +
+      "n_state\030\021 \001(\0162\026.wifi_connection_state\"\311\006" +
       "\n\013CommandType\022\035\n\031MORPHEUS_COMMAND_SET_TI" +
       "ME\020\000\022\035\n\031MORPHEUS_COMMAND_GET_TIME\020\001\022&\n\"M" +
       "ORPHEUS_COMMAND_SET_WIFI_ENDPOINT\020\002\022&\n\"M" +
@@ -5750,18 +5759,19 @@ public final class SenseCommandProtos {
       "_PILL_HEARTBEAT\020\022\022#\n\037MORPHEUS_COMMAND_PI" +
       "LL_DFU_BEGIN\020\023\022\"\n\036MORPHEUS_COMMAND_FACTO",
       "RY_RESET\020\024\022 \n\034MORPHEUS_COMMAND_PILL_SHAK" +
-      "ES\020\025\"A\n\021batched_pill_data\022\031\n\005pills\030\001 \003(\013" +
-      "2\n.pill_data\022\021\n\tdevice_id\030\002 \002(\t*\373\001\n\tErro" +
-      "rType\022\014\n\010TIME_OUT\020\000\022\021\n\rNETWORK_ERROR\020\001\022\031" +
-      "\n\025DEVICE_ALREADY_PAIRED\020\002\022\027\n\023INTERNAL_DA" +
-      "TA_ERROR\020\003\022\030\n\024DEVICE_DATABASE_FULL\020\004\022\024\n\020" +
-      "DEVICE_NO_MEMORY\020\005\022\035\n\031INTERNAL_OPERATION" +
-      "_FAILED\020\006\022\030\n\024NO_ENDPOINT_IN_RANGE\020\007\022\031\n\025W" +
-      "LAN_CONNECTION_ERROR\020\010\022\025\n\021FAIL_TO_OBTAIN" +
-      "_IP\020\t*i\n\025wifi_connection_state\022\025\n\021NO_WLA",
-      "N_CONNECTED\020\000\022\023\n\017WLAN_CONNECTING\020\001\022\022\n\016WL" +
-      "AN_CONNECTED\020\002\022\020\n\014IP_RETRIEVED\020\003B.\n\030com." +
-      "hello.suripu.api.bleB\022SenseCommandProtos"
+      "ES\020\025\022#\n\037MORPHEUS_COMMAND_SYNC_DEVICE_ID\020" +
+      "\026\"A\n\021batched_pill_data\022\031\n\005pills\030\001 \003(\0132\n." +
+      "pill_data\022\021\n\tdevice_id\030\002 \002(\t*\373\001\n\tErrorTy" +
+      "pe\022\014\n\010TIME_OUT\020\000\022\021\n\rNETWORK_ERROR\020\001\022\031\n\025D" +
+      "EVICE_ALREADY_PAIRED\020\002\022\027\n\023INTERNAL_DATA_" +
+      "ERROR\020\003\022\030\n\024DEVICE_DATABASE_FULL\020\004\022\024\n\020DEV" +
+      "ICE_NO_MEMORY\020\005\022\035\n\031INTERNAL_OPERATION_FA" +
+      "ILED\020\006\022\030\n\024NO_ENDPOINT_IN_RANGE\020\007\022\031\n\025WLAN" +
+      "_CONNECTION_ERROR\020\010\022\025\n\021FAIL_TO_OBTAIN_IP",
+      "\020\t*i\n\025wifi_connection_state\022\025\n\021NO_WLAN_C" +
+      "ONNECTED\020\000\022\023\n\017WLAN_CONNECTING\020\001\022\022\n\016WLAN_" +
+      "CONNECTED\020\002\022\020\n\014IP_RETRIEVED\020\003B.\n\030com.hel" +
+      "lo.suripu.api.bleB\022SenseCommandProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
