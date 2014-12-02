@@ -413,14 +413,19 @@ public class TimelineUtils {
 
         for(final MotionEvent sleepMotion : sleepMotions) {
             if(sleepMotion.getSleepDepth() < motionThreshold) {
-                dateTimes.add(new DateTime(sleepMotion.getStartTimestamp() + sleepMotion.getTimezoneOffset()));
+                dateTimes.add(new DateTime(sleepMotion.getStartTimestamp(), DateTimeZone.UTC));
+                map.put(sleepMotion.getStartTimestamp(), sleepMotion);
             }
+        }
+
+        if(dateTimes.size() < 2){
+            return Optional.absent();
         }
 
         for(int i =0; i < dateTimes.size() -1; i++) {
             final DateTime current = dateTimes.get(i);
             final DateTime next = dateTimes.get(i + 1);
-            final int diffInMinutes = next.getMinuteOfDay() - current.getMinuteOfDay();
+            final int diffInMinutes = (int)(next.getMillis() - current.getMillis()) / DateTimeConstants.MILLIS_PER_MINUTE;
             if (diffInMinutes > thresholdInMinutes) {
                 if(map.containsKey(current.getMillis())) {
                     final MotionEvent motion = map.get(current.getMillis());
