@@ -107,7 +107,7 @@ public abstract class Event {
             case SLEEP_MOTION:
                 return new SleepMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
             case SLEEP:
-                return new SleepEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+                return new SleepEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
             case WAKE_UP:
                 return new WakeupEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
             case NONE:
@@ -131,7 +131,7 @@ public abstract class Event {
             case SLEEP_MOTION:
                 return new SleepMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
             case SLEEP:
-                return new SleepEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+                return new SleepEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
             case WAKE_UP:
                 return new WakeupEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
             case NONE:
