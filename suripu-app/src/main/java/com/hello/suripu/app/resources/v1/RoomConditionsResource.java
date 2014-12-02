@@ -53,7 +53,7 @@ public class RoomConditionsResource {
             return CurrentRoomState.empty();
         }
 
-        final Optional<DeviceData> data = deviceDataDAO.getMostRecent(token.accountId, deviceId.get());
+        final Optional<DeviceData> data = deviceDataDAO.getMostRecent(token.accountId, deviceId.get(), DateTime.now(DateTimeZone.UTC).plusMinutes(2));
         if(!data.isPresent()) {
             return CurrentRoomState.empty();
         }
