@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.common.primitives.UnsignedInts;
+import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.api.input.InputProtos;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -161,6 +162,18 @@ public class TrackerMotion {
             return this;
         }
 
+        public Builder withEncryptedValue(final byte[] key, final SenseCommandProtos.pill_data pillData) {
+            long amplitudeMilliG = -1;
+            if(pillData.hasMotionDataEntrypted()){
+                final byte[] encryptedData = pillData.getMotionDataEntrypted().toByteArray();
+
+                final long raw = Utils.encryptedToRaw(key, encryptedData);
+                amplitudeMilliG = Utils.rawToMilliMS2(raw);
+            }
+            this.withValue((int) amplitudeMilliG);
+            return this;
+        }
+
         public TrackerMotion build(){
             return new TrackerMotion(this.id, this.accountId, this.trackerId, this.timestamp, this.valueInMilliMS2, this.offsetMillis);
         }
@@ -210,6 +223,13 @@ public class TrackerMotion {
             final byte[] encryptedRawMotion = Arrays.copyOfRange(encryptedMotionData, 8, encryptedMotionData.length);
 
             final byte[] decryptedRawMotion = counterModeDecrypt(key, nonce, encryptedRawMotion);
+
+            // check for magic bytes 5A5A added by the pill
+            // fail if they don't match
+            // Only pill DVT has magic bytes, so check length to ensure only pill DVT fails if we don't find magic bytes
+            if(decryptedRawMotion.length > 4 && decryptedRawMotion[decryptedRawMotion.length -1] != 90 && decryptedRawMotion[decryptedRawMotion.length -2] != 90) {
+                throw new IllegalArgumentException("Magic bytes don't match");
+            }
             final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion));
             Exception exception = null;
             long motionAmplitude = -1;

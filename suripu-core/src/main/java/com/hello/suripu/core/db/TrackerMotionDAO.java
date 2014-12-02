@@ -181,7 +181,7 @@ public abstract class TrackerMotionDAO {
                 final Integer id = this.insertTrackerMotion(trackerMotion);
 
                 if (id == null) {
-                    LOGGER.debug("id is null");
+                    LOGGER.warn("id is null");
                     continue;
                 }
             } catch (UnableToExecuteStatementException exception) {

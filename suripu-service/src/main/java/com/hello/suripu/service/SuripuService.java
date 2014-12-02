@@ -82,6 +82,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
     public void initialize(Bootstrap<SuripuConfiguration> bootstrap) {
         bootstrap.addBundle(new DBIExceptionsBundle());
         bootstrap.addCommand(new CreateKeyStoreDynamoDBTable());
+//        bootstrap.addCommand(new CreatePillKeyStoreDynamoDBTable());
     }
 
     @Override
@@ -137,7 +138,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
         final KeyStore keyStore = new KeyStoreDynamoDB(
                 dynamoDBClient,
-                configuration.getDynamoDBConfiguration().getTableName()
+                configuration.getDynamoDBConfiguration().getTableName(),
+                "1234567891234567".getBytes() // TODO: REMOVE THIS WHEN WE ARE NOT SUPPOSED TO HAVE A DEFAULT KEY
         );
 
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
