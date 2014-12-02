@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
-import com.yammer.dropwizard.config.Configuration;
+import com.hello.suripu.workers.framework.WorkerConfiguration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
 import javax.validation.Valid;
@@ -13,7 +13,7 @@ import javax.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PillWorkerConfiguration extends Configuration {
+public class PillWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
