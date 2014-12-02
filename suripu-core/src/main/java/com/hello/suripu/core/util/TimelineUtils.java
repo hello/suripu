@@ -402,7 +402,7 @@ public class TimelineUtils {
      * @param thresholdInMinutes
      * @return
      */
-    public static Optional<SleepEvent> getSleepEvent(final List<MotionEvent> sleepMotions, int thresholdInMinutes) {
+    public static Optional<SleepEvent> getSleepEvent(final List<MotionEvent> sleepMotions, int thresholdInMinutes, int motionThreshold) {
 
         if(sleepMotions.isEmpty()) {
             return Optional.absent();
@@ -412,22 +412,27 @@ public class TimelineUtils {
         final Map<Long, MotionEvent> map = new HashMap<>();
 
         for(final MotionEvent sleepMotion : sleepMotions) {
-            if(sleepMotion.getSleepDepth() < 70) {
-                dateTimes.add(new DateTime(sleepMotion.getStartTimestamp() + sleepMotion.getTimezoneOffset()));
+            if(sleepMotion.getSleepDepth() < motionThreshold) {
+                dateTimes.add(new DateTime(sleepMotion.getStartTimestamp(), DateTimeZone.UTC));
+                map.put(sleepMotion.getStartTimestamp(), sleepMotion);
             }
+        }
+
+        if(dateTimes.size() < 2){
+            return Optional.absent();
         }
 
         for(int i =0; i < dateTimes.size() -1; i++) {
             final DateTime current = dateTimes.get(i);
             final DateTime next = dateTimes.get(i + 1);
-            final int diffInMinutes = next.getMinuteOfDay() - current.getMinuteOfDay();
+            final int diffInMinutes = (int)(next.getMillis() - current.getMillis()) / DateTimeConstants.MILLIS_PER_MINUTE;
             if (diffInMinutes > thresholdInMinutes) {
                 if(map.containsKey(current.getMillis())) {
                     final MotionEvent motion = map.get(current.getMillis());
                     return Optional.of(new SleepEvent(motion.getStartTimestamp(), motion.getEndTimestamp(), motion.getTimezoneOffset()));
 
                 }
-                break;
+                break;  // Get the first event
             }
         }
 
