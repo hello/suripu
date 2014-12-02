@@ -91,6 +91,10 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
             }
         }
 
+        if(minAmplitude == Long.MAX_VALUE){
+            return 0;
+        }
+
         return minAmplitude;
     }
 
