@@ -220,7 +220,7 @@ public class ReceiveResource extends BaseResource {
 
         final DataLogger batchSenseDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
         batchSenseDataLogger.put(data.getDeviceId(), signedMessage.body);
-        return generateSyncResponse(data.getDeviceId(), data., data.getFirmwareVersion(), optionalKeyBytes.get(), data);
+        return generateSyncResponse(data.getDeviceId(), data.getFirmwareVersion(), optionalKeyBytes.get(), data);
     }
 
 
@@ -362,6 +362,13 @@ public class ReceiveResource extends BaseResource {
             for(DataInputProtos.periodic_data data : batch.getDataList()) {
                 final Long timestampMillis = data.getUnixTime() * 1000L;
                 final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
+                if(roundedDateTime.isAfter(roundedDateTime.plusHours(2)) || roundedDateTime.isAfter(roundedDateTime.minusHours(2))) {
+                    LOGGER.error("The clock for device {} is not within reasonable bounds (2h)", data.getDeviceId());
+                    LOGGER.error("Current time = {}, received time = {}", DateTime.now(), roundedDateTime);
+                    // TODO: throw exception?
+                    // throw new WebApplicationException(Response.Status.BAD_REQUEST);
+                    continue;
+                }
 
                 final DeviceData.Builder builder = new DeviceData.Builder()
                         .withAccountId(pair.accountId)
