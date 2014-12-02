@@ -1,27 +1,35 @@
-package com.hello.suripu.workers.pill;
+package com.hello.suripu.workers.framework;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
+import com.hello.suripu.core.configuration.GraphiteConfiguration;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
-import com.hello.suripu.workers.framework.WorkerConfiguration;
-import com.yammer.dropwizard.db.DatabaseConfiguration;
+import com.yammer.dropwizard.config.Configuration;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PillWorkerConfiguration extends WorkerConfiguration {
+public class WorkerConfiguration extends Configuration {
 
     @Valid
     @NotNull
-    @JsonProperty("sensors_db")
-    private DatabaseConfiguration sensorDB = new DatabaseConfiguration();
+    @JsonProperty("metrics_enabled")
+    private Boolean metricsEnabled;
 
-    public DatabaseConfiguration getSensorDB() {
-        return sensorDB;
+    public Boolean getMetricsEnabled() {
+        return metricsEnabled;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("graphite")
+    private GraphiteConfiguration graphite;
+
+    public GraphiteConfiguration getGraphite() {
+        return graphite;
     }
 
     @Valid
@@ -49,29 +57,8 @@ public class PillWorkerConfiguration extends WorkerConfiguration {
 
 
     @Valid
-    @NotNull
-    @Max(1000)
-    @JsonProperty("max_records")
-    private Integer maxRecords;
-
-    public Integer getMaxRecords() {
-        return maxRecords;
-    }
-
-    @Valid
-    @NotNull
-    @Max(100)
-    @JsonProperty("batch_size")
-    private Integer batchSize;
-
-    public Integer getBatchSize() {
-        return batchSize;
-    }
-
-    @Valid
     @JsonProperty("debug")
     private Boolean debug = Boolean.FALSE;
 
     public Boolean getDebug() { return debug; }
-
 }

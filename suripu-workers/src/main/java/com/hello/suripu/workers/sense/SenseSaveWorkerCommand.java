@@ -1,8 +1,7 @@
-package com.hello.suripu.workers.pillscorer;
+package com.hello.suripu.workers.sense;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream;
@@ -12,10 +11,8 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.KeyStore;
-import com.hello.suripu.core.db.KeyStoreDynamoDB;
-import com.hello.suripu.core.db.SleepScoreDAO;
-import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
+import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
@@ -37,18 +34,18 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public final class PillScoreWorkerCommand extends ConfiguredCommand<PillScoreWorkerConfiguration> {
+public final class SenseSaveWorkerCommand extends ConfiguredCommand<SenseSaveWorkerConfiguration> {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(PillScoreWorkerCommand.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(SenseSaveWorkerCommand.class);
 
-    public PillScoreWorkerCommand(String name, String description) {
+    public SenseSaveWorkerCommand(String name, String description) {
         super(name, description);
     }
 
     @Override
-    public final void run(Bootstrap<PillScoreWorkerConfiguration> bootstrap,
+    public final void run(Bootstrap<SenseSaveWorkerConfiguration> bootstrap,
                           Namespace namespace,
-                          PillScoreWorkerConfiguration configuration) throws Exception {
+                          SenseSaveWorkerConfiguration configuration) throws Exception {
 
         final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
         final ManagedDataSource dataSource = managedDataSourceFactory.build(configuration.getCommonDB());
@@ -60,7 +57,7 @@ public final class PillScoreWorkerCommand extends ConfiguredCommand<PillScoreWor
         jdbi.registerContainerFactory(new OptionalContainerFactory());
         jdbi.registerArgumentFactory(new JodaArgumentFactory());
 
-        final SleepScoreDAO sleepScoreDAO = jdbi.onDemand(SleepScoreDAO.class);
+        final DeviceDataDAO deviceDataDAO = jdbi.onDemand(DeviceDataDAO.class);
         final DeviceDAO deviceDAO = jdbi.onDemand(DeviceDAO.class);
 
         if(configuration.getMetricsEnabled()) {
@@ -87,7 +84,7 @@ public final class PillScoreWorkerCommand extends ConfiguredCommand<PillScoreWor
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
         LOGGER.debug("{}", queueNames);
-        final String queueName = queueNames.get(QueueName.PILL_DATA);
+        final String queueName = queueNames.get(QueueName.SENSE_SENSORS_DATA);
         LOGGER.info("\n\n\n!!! This worker is using the following queue: {} !!!\n\n\n", queueName);
 
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
@@ -101,30 +98,13 @@ public final class PillScoreWorkerCommand extends ConfiguredCommand<PillScoreWor
         kinesisConfig.withKinesisEndpoint(configuration.getKinesisEndpoint());
         kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
 
-        final AmazonDynamoDB dynamoDB = new AmazonDynamoDBClient(awsCredentialsProvider);
-        dynamoDB.setEndpoint(configuration.getDynamoDBKeyStoreConfiguration().getEndpoint());
+        final AmazonDynamoDBClient dynamoDB = new AmazonDynamoDBClient(awsCredentialsProvider);
+        dynamoDB.setEndpoint(configuration.getMergedInfoDB().getEndpoint());
 
-        final KeyStore keyStore = new KeyStoreDynamoDB(dynamoDB, configuration.getDynamoDBKeyStoreConfiguration().getTableName(), new byte[16]);
+        final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB = new MergedAlarmInfoDynamoDB(dynamoDB, configuration.getMergedInfoDB().getTableName());
 
-        final AmazonDynamoDB tzDynamoDB = new AmazonDynamoDBClient(awsCredentialsProvider);
-        dynamoDB.setEndpoint(configuration.getTimezoneHistoryConfiguration().getEndpoint());
-
-        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDB = new TimeZoneHistoryDAODynamoDB(
-                tzDynamoDB,
-                configuration.getTimezoneHistoryConfiguration().getTableName()
-        );
-
-        final IRecordProcessorFactory factory = new PillScoreProcessorFactory(
-                sleepScoreDAO,
-                configuration.getDateMinuteBucket(),
-                configuration.getCheckpointThreshold(),
-                kinesisConfig,
-                keyStore,
-                deviceDAO,
-                timeZoneHistoryDB
-        );
+        final IRecordProcessorFactory factory = new SenseSaveProcessorFactory(deviceDAO, mergedAlarmInfoDynamoDB, deviceDataDAO);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
-
     }
 }

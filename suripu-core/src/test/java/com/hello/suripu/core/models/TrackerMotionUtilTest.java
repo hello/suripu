@@ -2,6 +2,8 @@ package com.hello.suripu.core.models;
 
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.common.primitives.UnsignedInts;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,5 +91,31 @@ public class TrackerMotionUtilTest {
         }
 
         assertThat(actual, is(expectedLong));
+    }
+
+    // F4 A1 F4 34 0D BF 59 9A 91 C6 1F 72 40 64 E6 50
+
+    @Test
+    public void testDecryptEncryptedWithMagicBytesPillData() throws DecoderException {
+        // Nonce: C1 B7 32 6C 51 87 66 30
+        // Raw Payload:
+        // AES: F4 A1 F4 34 0D BF 59 9A 91 C6 1F 72 40 64 E6 50
+        // Encrypted Payload: CD BA FA B3 5B 3E
+
+
+        final byte[] encrypted = new byte[]{(byte) 0xC1, (byte) 0xB7, (byte) 0x32, (byte) 0x6C, (byte) 0x51, (byte) 0x87, (byte)0x66, (byte) 0x30,
+                (byte) 0xCD, (byte)0xBA, (byte) 0xFA, (byte) 0xB3,(byte)0x5B, (byte)0x3E};
+        final byte[] expectedBytes = new byte[]{0x67, 0x5B, (byte)0xB0, 0x69};
+        final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(expectedBytes));
+        long expectedLong = 0;
+        try {
+            expectedLong = UnsignedInts.toLong(littleEndianDataInputStream.readInt());
+            littleEndianDataInputStream.close();
+        } catch (IOException e) {
+            LOGGER.error(e.getMessage());
+        }
+
+        byte[] key = Hex.decodeHex("F4A1F4340DBF599A91C61F724064E650".toCharArray());
+        long   actual = TrackerMotion.Utils.encryptedToRaw(key, encrypted);
     }
 }

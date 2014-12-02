@@ -1,5 +1,6 @@
 package com.hello.suripu.core.db;
 
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
@@ -36,7 +37,7 @@ import java.util.Map;
 public class TimeZoneHistoryDAODynamoDB {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(TimeZoneHistoryDAODynamoDB.class);
-    private final AmazonDynamoDBClient dynamoDBClient;
+    private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
 
     public static final String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
@@ -48,7 +49,7 @@ public class TimeZoneHistoryDAODynamoDB {
     private static int MAX_CALL_COUNT = 3;
 
 
-    public TimeZoneHistoryDAODynamoDB(final AmazonDynamoDBClient dynamoDBClient, final String tableName){
+    public TimeZoneHistoryDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
     }
@@ -146,7 +147,6 @@ public class TimeZoneHistoryDAODynamoDB {
         return Optional.absent();
     }
 
-    @Deprecated
     @Timed
     public Optional<TimeZoneHistory> getCurrentTimeZone(final long accountId){
 

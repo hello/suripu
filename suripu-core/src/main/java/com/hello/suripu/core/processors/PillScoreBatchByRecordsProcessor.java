@@ -155,8 +155,9 @@ public class PillScoreBatchByRecordsProcessor {
     private int computeAndSaveScores() {
         int processed = 0;
         Set<String> successPillIDs = new HashSet<>();
-
+        LOGGER.debug("pill data = {}", pillData);
         for (final String pillID : this.pillData.keySet()) {
+            LOGGER.debug("ComputeAndSave for pill = {}", pillID);
             final Long accountID = this.pillAccountID.get(pillID);
             final SortedSet<PillSample> data = this.pillData.get(pillID);
 
@@ -178,7 +179,7 @@ public class PillScoreBatchByRecordsProcessor {
             this.insertRate.mark(stats.get("inserted"));
             this.updateRate.mark(stats.get("updated"));
             this.processRate.mark(data.size());
-
+            LOGGER.info("Save = {}", saved);
         }
 
         for (final String pillID: successPillIDs) {
@@ -187,6 +188,7 @@ public class PillScoreBatchByRecordsProcessor {
         }
 
         this.numPillRecordsProcessed += processed;
+
         return processed;
     }
 }

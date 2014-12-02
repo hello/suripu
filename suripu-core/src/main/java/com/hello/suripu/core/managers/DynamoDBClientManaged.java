@@ -1,6 +1,6 @@
 package com.hello.suripu.core.managers;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.yammer.dropwizard.lifecycle.Managed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,9 +9,9 @@ public class DynamoDBClientManaged implements Managed {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DynamoDBClientManaged.class);
 
-    private final AmazonDynamoDBClient client;
+    private final AmazonDynamoDB client;
 
-    public DynamoDBClientManaged(AmazonDynamoDBClient dynamoDBClient) {
+    public DynamoDBClientManaged(AmazonDynamoDB dynamoDBClient) {
         this.client = dynamoDBClient;
     }
 
