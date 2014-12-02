@@ -432,7 +432,7 @@ public class TimelineUtils {
                     return Optional.of(new SleepEvent(motion.getStartTimestamp(), motion.getEndTimestamp(), motion.getTimezoneOffset()));
 
                 }
-                break;
+                break;  // Get the first event
             }
         }
 
