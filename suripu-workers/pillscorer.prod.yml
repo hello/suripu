@@ -43,7 +43,8 @@ common_db:
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
-    pill_data : test-pill-suripu
+    pill_data : batch_pill_data
+    batch_pill_data : batch_pill_data
 
 app_name: PillScoreConsumer
 
@@ -68,3 +69,12 @@ logging:
     # Sets the level for 'com.example.app' to DEBUG.
     com.hello.suripu.workers: DEBUG
 
+pill_key_store:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: pill_key_store
+
+timezone_history_db:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: timezone_history

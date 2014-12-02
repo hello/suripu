@@ -282,7 +282,10 @@ public class ReceiveResource extends BaseResource {
         final DataLogger senseSensorsDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
         senseSensorsDataLogger.put(deviceName, signedMessage.body);
         final DataInputProtos.batched_periodic_data batch = DataInputProtos.batched_periodic_data.newBuilder()
-                .addData(data).build();
+                .addData(data)
+                .setDeviceId(data.getDeviceId())
+                .setFirmwareVersion(data.getFirmwareVersion())
+                .build();
         return generateSyncResponse(data.getDeviceId(), data.getFirmwareVersion(), optionalKeyBytes.get(), batch);
     }
 

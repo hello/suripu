@@ -56,6 +56,8 @@ def contains_same_keys(local_files, prod_files):
     prod = yaml.load(prod_f)
     loc_keys = set(loc.keys())
     prod_keys = set(prod.keys())
+    print prod_keys
+    print loc_keys
     diff = prod_keys.difference(loc_keys)
     if diff:
       print error("keys don't match for %s" % local_key)

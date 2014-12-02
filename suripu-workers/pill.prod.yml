@@ -56,4 +56,3 @@ logging:
 
     # Sets the level for 'com.example.app' to DEBUG.
     com.hello.suripu.workers: DEBUG
-
