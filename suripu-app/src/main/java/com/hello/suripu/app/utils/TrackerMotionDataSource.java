@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.DataSource;
 import com.hello.suripu.core.models.TrackerMotion;
-import com.hello.suripu.core.util.UInt32;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -84,11 +83,15 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
                 continue;
             }
 
-            long amplitude = UInt32.getValue(datum.value);
+            int amplitude = datum.value;
 
             if(amplitude < minAmplitude){
                 minAmplitude = amplitude;
             }
+        }
+
+        if(minAmplitude == Long.MAX_VALUE){
+            return 0;
         }
 
         return minAmplitude;
