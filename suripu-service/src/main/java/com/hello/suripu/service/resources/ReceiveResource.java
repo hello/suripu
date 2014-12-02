@@ -365,7 +365,7 @@ public class ReceiveResource extends BaseResource {
             for(DataInputProtos.periodic_data data : batch.getDataList()) {
                 final Long timestampMillis = data.getUnixTime() * 1000L;
                 final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
-                if(roundedDateTime.isAfter(roundedDateTime.plusHours(2)) || roundedDateTime.isAfter(roundedDateTime.minusHours(2))) {
+                if(roundedDateTime.isAfter(DateTime.now().plusHours(2)) || roundedDateTime.isAfter(DateTime.now().minusHours(2))) {
                     LOGGER.error("The clock for device {} is not within reasonable bounds (2h)", data.getDeviceId());
                     LOGGER.error("Current time = {}, received time = {}", DateTime.now(), roundedDateTime);
                     // TODO: throw exception?
