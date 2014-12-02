@@ -1,6 +1,5 @@
 package com.hello.suripu.service.resources;
 
-import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
 import com.google.common.cache.CacheLoader;
 import com.google.protobuf.TextFormat;
@@ -56,6 +55,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -236,7 +236,14 @@ public class ReceiveResource extends BaseResource {
         // requests to break our bank(Assume that Dynamo DB never goes down).
         // May be we should somehow cache these data to reduce load & cost.
         final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceName);
-        final List<AlarmInfo> alarmInfoList = this.mergedInfoDynamoDB.getInfo(deviceName);  // get alarm related info from DynamoDB "cache".
+        List<AlarmInfo> alarmInfoList = new ArrayList<>();
+
+        try {
+            alarmInfoList = this.mergedInfoDynamoDB.getInfo(deviceName);  // get alarm related info from DynamoDB "cache".
+        }catch (Exception ex){
+            LOGGER.error("Failed to retrieve info from merge info db for device {}: {}", deviceName, ex.getMessage());
+        }
+
         RingTime nextRingTimeFromWorker = RingTime.createEmpty();
 
         LOGGER.debug("Found {} pairs", deviceAccountPairs.size());
@@ -261,35 +268,31 @@ public class ReceiveResource extends BaseResource {
         //
         // Pang, 09/26/2014
         for (final DeviceAccountPair pair : deviceAccountPairs) {
-            try {
                 // Get the timezone for current user.
-                for(final AlarmInfo alarmInfo:alarmInfoList){
-                    if(alarmInfo.accountId == pair.accountId){
-                        if(alarmInfo.timeZone.isPresent()){
-                            userTimeZone = alarmInfo.timeZone.get();
-                        }else{
-                            LOGGER.warn("User {} on device {} time zone not set.", pair.accountId, alarmInfo.deviceId);
+            for(final AlarmInfo alarmInfo:alarmInfoList){
+                if(alarmInfo.accountId == pair.accountId){
+                    if(alarmInfo.timeZone.isPresent()){
+                        userTimeZone = alarmInfo.timeZone.get();
+                    }else{
+                        LOGGER.warn("User {} on device {} time zone not set.", pair.accountId, alarmInfo.deviceId);
+                    }
+
+                    if(alarmInfo.ringTime.isPresent()){
+                        if(alarmInfo.ringTime.get().isEmpty()){
+                            continue;
                         }
 
-                        if(alarmInfo.ringTime.isPresent()){
-                            if(alarmInfo.ringTime.get().isEmpty()){
-                                continue;
-                            }
-
-                            if(nextRingTimeFromWorker.isEmpty()){
+                        if(nextRingTimeFromWorker.isEmpty()){
+                            nextRingTimeFromWorker = alarmInfo.ringTime.get();
+                        }else{
+                            if(alarmInfo.ringTime.get().actualRingTimeUTC < nextRingTimeFromWorker.actualRingTimeUTC){
                                 nextRingTimeFromWorker = alarmInfo.ringTime.get();
-                            }else{
-                                if(alarmInfo.ringTime.get().actualRingTimeUTC < nextRingTimeFromWorker.actualRingTimeUTC){
-                                    nextRingTimeFromWorker = alarmInfo.ringTime.get();
-                                }
                             }
                         }
                     }
                 }
-            }catch (AmazonServiceException awsException){
-                // I guess this endpoint should never bail out?
-                LOGGER.error("AWS error when retrieving user timezone for account {}", pair.accountId);
             }
+
 
             final DeviceData.Builder builder = new DeviceData.Builder()
                     .withAccountId(pair.accountId)
@@ -342,25 +345,35 @@ public class ReceiveResource extends BaseResource {
         LOGGER.trace("Morpheus data saved to Kinesis with sequence number = {}", sequenceNumber);
 
 
-        final RingTime nextRegularRingTime = RingProcessor.getNextRegularRingTime(alarmInfoList,
-                deviceName,
-                DateTime.now());
-
-        RingTime replyRingTime = nextRegularRingTime;
-        // Now the ring time for different users is sorted, get the nearest one.
-        if(nextRegularRingTime.equals(nextRingTimeFromWorker)) {
-            replyRingTime = nextRingTimeFromWorker;
-        }
-
-        long nextRingTimestamp = replyRingTime.actualRingTimeUTC;
-
-        LOGGER.debug("Next ring time: {}", new DateTime(nextRingTimestamp, userTimeZone));
-        int ringDurationInMS = 30 * DateTimeConstants.MILLIS_PER_SECOND;  // TODO: make this flexible so we can adjust based on user preferences.
+        Optional<RingTime> nextRegularRingTime = Optional.absent();
         int ringOffsetFromNowInSecond = -1;
+        int ringDurationInMS = 30 * DateTimeConstants.MILLIS_PER_SECOND;  // TODO: make this flexible so we can adjust based on user preferences.
+        long nextRingTimestamp = 0;
 
-        if(nextRingTimestamp != 0) {
-            ringOffsetFromNowInSecond = (int) ((nextRingTimestamp - DateTime.now().getMillis()) / DateTimeConstants.MILLIS_PER_SECOND);
+        try {
+            nextRegularRingTime = Optional.of(RingProcessor.getNextRegularRingTime(alarmInfoList,
+                    deviceName,
+                    DateTime.now()));
+        }catch (Exception ex){
+            LOGGER.error("Get next regular ring time for device {} failed: {}", deviceName, ex.getMessage());
         }
+
+        if(nextRegularRingTime.isPresent()) {
+            RingTime replyRingTime = nextRegularRingTime.get();
+            // Now the ring time for different users is sorted, get the nearest one.
+            if (nextRegularRingTime.equals(nextRingTimeFromWorker)) {
+                replyRingTime = nextRingTimeFromWorker;
+            }
+
+            nextRingTimestamp = replyRingTime.actualRingTimeUTC;
+            LOGGER.debug("Next ring time: {}", new DateTime(nextRingTimestamp, userTimeZone));
+
+            if(nextRingTimestamp != 0) {
+                ringOffsetFromNowInSecond = (int) ((nextRingTimestamp - DateTime.now().getMillis()) / DateTimeConstants.MILLIS_PER_SECOND);
+            }
+        }
+
+
 
         final OutputProtos.SyncResponse.Alarm.Builder alarmBuilder = OutputProtos.SyncResponse.Alarm.newBuilder()
                 .setStartTime((int) (nextRingTimestamp / DateTimeConstants.MILLIS_PER_SECOND))
