@@ -44,7 +44,9 @@ public class SavePillDataProcessor implements IRecordProcessor {
                 //TODO: Get the actual decryption key.
                 final TrackerMotion trackerMotion = new TrackerMotion.Builder().withPillKinesisData(decryptionKey, data).build();
 
-                trackerData.add(trackerMotion);
+                if(trackerMotion.value != -1) {
+                    trackerData.add(trackerMotion);
+                }
 
                 if(data.hasBatteryLevel()){
                     //TODO: Deal with heartbeat
