@@ -223,6 +223,13 @@ public class TrackerMotion {
             final byte[] encryptedRawMotion = Arrays.copyOfRange(encryptedMotionData, 8, encryptedMotionData.length);
 
             final byte[] decryptedRawMotion = counterModeDecrypt(key, nonce, encryptedRawMotion);
+
+            // check for magic bytes 5A5A added by the pill
+            // fail if they don't match
+            // Only pill DVT has magic bytes, so check length to ensure only pill DVT fails if we don't find magic bytes
+            if(decryptedRawMotion.length > 4 && decryptedRawMotion[decryptedRawMotion.length -1] != 90 && decryptedRawMotion[decryptedRawMotion.length -2] != 90) {
+                throw new IllegalArgumentException("Magic bytes don't match");
+            }
             final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion));
             Exception exception = null;
             long motionAmplitude = -1;
