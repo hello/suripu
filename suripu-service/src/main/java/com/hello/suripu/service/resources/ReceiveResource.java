@@ -174,6 +174,56 @@ public class ReceiveResource extends BaseResource {
         }
     }
 
+
+
+    @POST
+    @Path("/sense/batch")
+    @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Timed
+    public byte[] receiveBatchSenseData(final byte[] body) {
+        final SignedMessage signedMessage = SignedMessage.parse(body);
+        DataInputProtos.batched_periodic_data data = null;
+
+        try {
+            data = DataInputProtos.batched_periodic_data.parseFrom(signedMessage.body);
+        } catch (IOException exception) {
+            final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
+            LOGGER.error(errorMessage);
+
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity((debug) ? errorMessage : "bad request")
+                    .type(MediaType.TEXT_PLAIN_TYPE).build()
+            );
+        }
+        LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
+
+
+        LOGGER.debug("Received valid protobuf {}", data.toString());
+        LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
+
+        final Optional<byte[]> optionalKeyBytes = keyStore.get(data.getDeviceId());
+        if(!optionalKeyBytes.isPresent()) {
+            LOGGER.error("Failed to get key from key store for device_id = {}", data.getDeviceId());
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(optionalKeyBytes.get());
+
+        if(error.isPresent()) {
+            LOGGER.error(error.get().message);
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+                    .entity((debug) ? error.get().message : "bad request")
+                    .type(MediaType.TEXT_PLAIN_TYPE).build()
+            );
+        }
+
+        final DataLogger batchSenseDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
+        batchSenseDataLogger.put(data.getDeviceId(), signedMessage.body);
+        return generateSyncResponse(data.getDeviceId(), data., data.getFirmwareVersion(), optionalKeyBytes.get(), data);
+    }
+
+
     @POST
     @Path("/morpheus/pb2")
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
@@ -231,15 +281,32 @@ public class ReceiveResource extends BaseResource {
         // Saving sense data to kinesis
         final DataLogger senseSensorsDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
         senseSensorsDataLogger.put(deviceName, signedMessage.body);
+        final DataInputProtos.batched_periodic_data batch = DataInputProtos.batched_periodic_data.newBuilder()
+                .addData(data).build();
+        return generateSyncResponse(data.getDeviceId(), data.getFirmwareVersion(), optionalKeyBytes.get(), batch);
+    }
 
+
+    /**
+     * Persists data and generates SyncResponse
+     * @param deviceName
+     * @param firmwareVersion
+     * @param encryptionKey
+     * @param batch
+     * @return
+     */
+    private byte[] generateSyncResponse(final String deviceName, final int firmwareVersion, final byte[] encryptionKey, final DataInputProtos.batched_periodic_data batch) {
         // TODO: Warning, since we query dynamoDB based on user input, the user can generate a lot of
         // requests to break our bank(Assume that Dynamo DB never goes down).
         // May be we should somehow cache these data to reduce load & cost.
+
+        // TODO: remove the dependency on deviceDAO
+        // The accounts should come from DynamoDB table
         final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceName);
-        List<AlarmInfo> alarmInfoList = new ArrayList<>();
+        final List<AlarmInfo> alarmInfoList = new ArrayList<>();
 
         try {
-            alarmInfoList = this.mergedInfoDynamoDB.getInfo(deviceName);  // get alarm related info from DynamoDB "cache".
+            alarmInfoList.addAll(this.mergedInfoDynamoDB.getInfo(deviceName));  // get alarm related info from DynamoDB "cache".
         }catch (Exception ex){
             LOGGER.error("Failed to retrieve info from merge info db for device {}: {}", deviceName, ex.getMessage());
         }
@@ -248,8 +315,6 @@ public class ReceiveResource extends BaseResource {
 
         LOGGER.debug("Found {} pairs", deviceAccountPairs.size());
 
-        long timestampMillis = data.getUnixTime() * 1000L;
-        final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
         // This is the default timezone.
         DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
         final OutputProtos.SyncResponse.Builder responseBuilder = OutputProtos.SyncResponse.newBuilder();
@@ -268,7 +333,7 @@ public class ReceiveResource extends BaseResource {
         //
         // Pang, 09/26/2014
         for (final DeviceAccountPair pair : deviceAccountPairs) {
-                // Get the timezone for current user.
+            // Get the timezone for current user.
             for(final AlarmInfo alarmInfo:alarmInfoList){
                 if(alarmInfo.accountId == pair.accountId){
                     if(alarmInfo.timeZone.isPresent()){
@@ -293,56 +358,62 @@ public class ReceiveResource extends BaseResource {
                 }
             }
 
+            // TODO: this should be done in the worker
+            for(DataInputProtos.periodic_data data : batch.getDataList()) {
+                final Long timestampMillis = data.getUnixTime() * 1000L;
+                final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
 
-            final DeviceData.Builder builder = new DeviceData.Builder()
-                    .withAccountId(pair.accountId)
-                    .withDeviceId(pair.internalDeviceId)
-                    .withAmbientTemperature(data.getTemperature())
-                    .withAmbientAirQuality(data.getDust(), data.getFirmwareVersion())
-                    .withAmbientAirQualityRaw(data.getDust())
-                    .withAmbientDustVariance(data.getDustVariability())
-                    .withAmbientDustMin(data.getDustMin())
-                    .withAmbientDustMax(data.getDustMax())
-                    .withAmbientHumidity(data.getHumidity())
-                    .withAmbientLight(data.getLight())
-                    .withAmbientLightVariance(data.getLightVariability())
-                    .withAmbientLightPeakiness(data.getLightTonality())
-                    .withOffsetMillis(userTimeZone.getOffset(roundedDateTime))
-                    .withDateTimeUTC(roundedDateTime)
-                    .withFirmwareVersion(data.getFirmwareVersion())
-                    .withWaveCount(data.hasWaveCount() ? data.getWaveCount() : 0)
-                    .withHoldCount(data.hasHoldCount() ? data.getHoldCount() : 0);
+                final DeviceData.Builder builder = new DeviceData.Builder()
+                        .withAccountId(pair.accountId)
+                        .withDeviceId(pair.internalDeviceId)
+                        .withAmbientTemperature(data.getTemperature())
+                        .withAmbientAirQuality(data.getDust(), data.getFirmwareVersion())
+                        .withAmbientAirQualityRaw(data.getDust())
+                        .withAmbientDustVariance(data.getDustVariability())
+                        .withAmbientDustMin(data.getDustMin())
+                        .withAmbientDustMax(data.getDustMax())
+                        .withAmbientHumidity(data.getHumidity())
+                        .withAmbientLight(data.getLight())
+                        .withAmbientLightVariance(data.getLightVariability())
+                        .withAmbientLightPeakiness(data.getLightTonality())
+                        .withOffsetMillis(userTimeZone.getOffset(roundedDateTime))
+                        .withDateTimeUTC(roundedDateTime)
+                        .withFirmwareVersion(data.getFirmwareVersion())
+                        .withWaveCount(data.hasWaveCount() ? data.getWaveCount() : 0)
+                        .withHoldCount(data.hasHoldCount() ? data.getHoldCount() : 0);
 
-            final DeviceData deviceData = builder.build();
-            final CurrentRoomState currentRoomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), 2);
-            responseBuilder.setRoomConditions(
-                    OutputProtos.SyncResponse.RoomConditions.valueOf(
-                            RoomConditionUtil.getGeneralRoomCondition(currentRoomState).ordinal()));
+                final DeviceData deviceData = builder.build();
+                final CurrentRoomState currentRoomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), 2);
+                responseBuilder.setRoomConditions(
+                        OutputProtos.SyncResponse.RoomConditions.valueOf(
+                                RoomConditionUtil.getGeneralRoomCondition(currentRoomState).ordinal()));
 
-            try {
-                deviceDataDAO.insert(deviceData);
-                LOGGER.trace("Data saved to DB: {}", TextFormat.shortDebugString(data));
-            } catch (UnableToExecuteStatementException exception) {
-                final Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
-                if (!matcher.find()) {
-                    LOGGER.error(exception.getMessage());
-                    throw new WebApplicationException(
-                            Response.status(Response.Status.BAD_REQUEST)
-                                    .entity(exception.getMessage())
-                                    .type(MediaType.TEXT_PLAIN_TYPE)
-                                    .build());
+                try {
+                    deviceDataDAO.insert(deviceData);
+                    LOGGER.trace("Data saved to DB: {}", TextFormat.shortDebugString(data));
+                } catch (UnableToExecuteStatementException exception) {
+                    final Matcher matcher = PG_UNIQ_PATTERN.matcher(exception.getMessage());
+                    if (!matcher.find()) {
+                        LOGGER.error(exception.getMessage());
+                        throw new WebApplicationException(
+                                Response.status(Response.Status.BAD_REQUEST)
+                                        .entity(exception.getMessage())
+                                        .type(MediaType.TEXT_PLAIN_TYPE)
+                                        .build());
+                    }
+
+                    LOGGER.warn("Duplicate device sensor value for account_id = {}, time: {}", pair.accountId, roundedDateTime);
                 }
-
-                LOGGER.warn("Duplicate device sensor value for account_id = {}, time: {}", pair.accountId, roundedDateTime);
             }
         }
 
-        final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.MORPHEUS_DATA);
-        final byte[] morpheusDataInBytes = data.toByteArray();
-        final String shardingKey = deviceName;
-
-        final String sequenceNumber = dataLogger.put(shardingKey, morpheusDataInBytes);
-        LOGGER.trace("Morpheus data saved to Kinesis with sequence number = {}", sequenceNumber);
+        // TODO: remove this once we are sure no worker consumes this stream
+//        final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.MORPHEUS_DATA);
+//        final byte[] morpheusDataInBytes = data.toByteArray();
+//        final String shardingKey = deviceName;
+//
+//        final String sequenceNumber = dataLogger.put(shardingKey, morpheusDataInBytes);
+//        LOGGER.trace("Morpheus data saved to Kinesis with sequence number = {}", sequenceNumber);
 
 
         Optional<RingTime> nextRegularRingTime = Optional.absent();
@@ -388,20 +459,20 @@ public class ReceiveResource extends BaseResource {
 
         responseBuilder.setAlarm(alarmBuilder.build());
 
-        final String firmwareFeature = String.format("firmware_release_%s", data.getFirmwareVersion());
-        final List<String> groups = groupFlipper.getGroups(data.getDeviceId());
-        if(featureFlipper.deviceFeatureActive(firmwareFeature, data.getDeviceId(), groups)) {
+        final String firmwareFeature = String.format("firmware_release_%s", firmwareVersion);
+        final List<String> groups = groupFlipper.getGroups(deviceName);
+        if(featureFlipper.deviceFeatureActive(firmwareFeature, deviceName, groups)) {
             LOGGER.debug("Feature is active!");
         }
 
 
         if(!groups.isEmpty()) {
-            LOGGER.debug("DeviceId {} belongs to groups: {}", data.getDeviceId(), groups);
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(data.getDeviceId(), groups.get(0), data.getFirmwareVersion());
+            LOGGER.debug("DeviceId {} belongs to groups: {}", deviceName, groups);
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName, groups.get(0), firmwareVersion);
             LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
             responseBuilder.addAllFiles(fileDownloadList);
         } else {
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdateContent(data.getDeviceId(), data.getFirmwareVersion());
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdateContent(deviceName, firmwareVersion);
             if(!fileDownloadList.isEmpty()) {
                 LOGGER.debug("Adding {} files to Files to Download list", fileDownloadList.size());
                 responseBuilder.addAllFiles(fileDownloadList);
@@ -412,8 +483,8 @@ public class ReceiveResource extends BaseResource {
                 .newBuilder()
                 .setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.OFF);
 
-        if(featureFlipper.deviceFeatureActive(FeatureFlipper.AUDIO_CAPTURE, data.getDeviceId(), groups)) {
-            LOGGER.debug("AUDIO_CAPTURE feature is active for device_id = {}", data.getDeviceId());
+        if(featureFlipper.deviceFeatureActive(FeatureFlipper.AUDIO_CAPTURE, deviceName, groups)) {
+            LOGGER.debug("AUDIO_CAPTURE feature is active for device_id = {}", deviceName);
             audioControl.setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
         }
 
@@ -423,7 +494,7 @@ public class ReceiveResource extends BaseResource {
 
         LOGGER.debug("Len pb = {}", syncResponse.toByteArray().length);
 
-        final Optional<byte[]> signedResponse = SignedMessage.sign(syncResponse.toByteArray(), optionalKeyBytes.get());
+        final Optional<byte[]> signedResponse = SignedMessage.sign(syncResponse.toByteArray(), encryptionKey);
         if(!signedResponse.isPresent()) {
             LOGGER.error("Failed signing message");
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -434,7 +505,6 @@ public class ReceiveResource extends BaseResource {
 
         return signedResponse.get();
     }
-
 
 
     @POST
