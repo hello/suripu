@@ -402,7 +402,7 @@ public class TimelineUtils {
      * @param thresholdInMinutes
      * @return
      */
-    public static Optional<SleepEvent> getSleepEvent(final List<MotionEvent> sleepMotions, int thresholdInMinutes) {
+    public static Optional<SleepEvent> getSleepEvent(final List<MotionEvent> sleepMotions, int thresholdInMinutes, int motionThreshold) {
 
         if(sleepMotions.isEmpty()) {
             return Optional.absent();
@@ -412,7 +412,7 @@ public class TimelineUtils {
         final Map<Long, MotionEvent> map = new HashMap<>();
 
         for(final MotionEvent sleepMotion : sleepMotions) {
-            if(sleepMotion.getSleepDepth() < 70) {
+            if(sleepMotion.getSleepDepth() < motionThreshold) {
                 dateTimes.add(new DateTime(sleepMotion.getStartTimestamp() + sleepMotion.getTimezoneOffset()));
             }
         }
