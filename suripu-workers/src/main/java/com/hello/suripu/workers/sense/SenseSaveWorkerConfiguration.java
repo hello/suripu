@@ -6,6 +6,7 @@ import com.hello.suripu.workers.framework.WorkerConfiguration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
 
 public class SenseSaveWorkerConfiguration extends WorkerConfiguration {
@@ -34,5 +35,15 @@ public class SenseSaveWorkerConfiguration extends WorkerConfiguration {
     private DynamoDBConfiguration mergedInfoDB;
     public DynamoDBConfiguration getMergedInfoDB() {
         return mergedInfoDB;
+    }
+
+    @Valid
+    @NotNull
+    @Max(1000)
+    @JsonProperty("max_records")
+    private Integer maxRecords;
+
+    public Integer getMaxRecords() {
+        return maxRecords;
     }
 }

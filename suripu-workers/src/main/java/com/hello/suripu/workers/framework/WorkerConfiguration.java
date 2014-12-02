@@ -8,7 +8,6 @@ import com.hello.suripu.core.configuration.QueueName;
 import com.yammer.dropwizard.config.Configuration;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,17 +53,6 @@ public class WorkerConfiguration extends Configuration {
 
     public ImmutableMap<QueueName,String> getQueues() {
         return ImmutableMap.copyOf(kinesisConfiguration.getStreams());
-    }
-
-
-    @Valid
-    @NotNull
-    @Max(1000)
-    @JsonProperty("max_records")
-    private Integer maxRecords;
-
-    public Integer getMaxRecords() {
-        return maxRecords;
     }
 
 
