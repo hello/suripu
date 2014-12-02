@@ -24,7 +24,7 @@ public class TrackerMotionDataSourceTest {
         final DateTime now = DateTime.now();
         data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), -1, DateTimeZone.getDefault().getOffset(now)));  // this one should be skipped
         data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), -2, DateTimeZone.getDefault().getOffset(now)));  // -2 & 0xFFFFFFFF
-        assertThat(Long.valueOf(TrackerMotionDataSource.getMinAmplitude(data)), is(0L));
+        assertThat(Long.valueOf(TrackerMotionDataSource.getMinAmplitude(data)), is(-2L & 0xFFFFFFFFl));
 
         data.clear();
         data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), -2, DateTimeZone.getDefault().getOffset(now)));  // -2 & 0xFFFFFFFF
