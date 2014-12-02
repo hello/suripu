@@ -30,7 +30,7 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
 
         final long minAmplitude = getMinAmplitude(motionsFromDBShortedByTimestamp);
         for(final TrackerMotion motion: motionsFromDBShortedByTimestamp) {
-            if(motion.value == -1){
+            if(motion.value < 0){
                 continue;
             }
 
@@ -41,7 +41,7 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
                     final List<AmplitudeData> gapData = fillGap(this.dataAfterAutoInsert.getLast().timestamp,
                             motion.timestamp,
                             DATA_INTERVAL,
-                            Math.sqrt(minAmplitude),
+                            minAmplitude,
                             this.dataAfterAutoInsert.getLast().offsetMillis);
                     this.dataAfterAutoInsert.addAll(gapData);
                 }
@@ -80,7 +80,7 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
     public static long getMinAmplitude(final List<TrackerMotion> data){
         long minAmplitude = Long.MAX_VALUE;
         for(final TrackerMotion datum:data){
-            if(datum.value == -1){
+            if(datum.value < 0){
                 continue;
             }
 
@@ -119,9 +119,7 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
     * Convert the TrackerMotion to AmplitudeData which is used by algorithm.
      */
     public static AmplitudeData trackerMotionToAmplitude(final TrackerMotion trackerMotion){
-        long unsignedIntValue = UInt32.getValue(trackerMotion.value);
-        double amplitude = Math.sqrt(unsignedIntValue);
-        return new AmplitudeData(trackerMotion.timestamp, amplitude, trackerMotion.offsetMillis);
+        return new AmplitudeData(trackerMotion.timestamp, Double.valueOf(trackerMotion.value), trackerMotion.offsetMillis);
     }
 
     /*
