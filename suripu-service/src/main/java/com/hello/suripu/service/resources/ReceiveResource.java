@@ -355,7 +355,7 @@ public class ReceiveResource extends BaseResource {
                     deviceName,
                     DateTime.now()));
         }catch (Exception ex){
-            LOGGER.error("Get next ring time for device {} failed: {}", deviceName, ex.getMessage());
+            LOGGER.error("Get next regular ring time for device {} failed: {}", deviceName, ex.getMessage());
         }
 
         if(nextRegularRingTime.isPresent()) {
