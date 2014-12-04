@@ -12,13 +12,11 @@ import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
-import com.librato.rollout.RolloutClient;
 import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -34,9 +32,6 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
 
     private final TrackerMotionDAO trackerMotionDAO;
     private final AlarmWorkerConfiguration configuration;
-
-    @Inject
-    RolloutClient feature;
 
     public AlarmRecordProcessor(final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
                                 final RingTimeDAODynamoDB ringTimeDAODynamoDB,
