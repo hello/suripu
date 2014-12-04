@@ -111,10 +111,10 @@ public final class PillScoreWorkerCommand extends ConfiguredCommand<PillScoreWor
         final KeyStore keyStore = new KeyStoreDynamoDB(dynamoDB, configuration.getDynamoDBKeyStoreConfiguration().getTableName(), new byte[16]);
 
 
-        final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final AmazonDynamoDBClient featureDynamoDB = new AmazonDynamoDBClient(awsCredentialsProvider);
         final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
-        dynamoDBClient.setEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
-        final FeatureStore featureStore = new FeatureStore(dynamoDBClient, "features", featureNamespace);
+        featureDynamoDB.setEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
+        final FeatureStore featureStore = new FeatureStore(featureDynamoDB, "features", featureNamespace);
 
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
