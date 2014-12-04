@@ -1,5 +1,6 @@
 package com.hello.suripu.workers;
 
+import com.hello.suripu.workers.alarm.AlarmWorkerCommand;
 import com.hello.suripu.workers.framework.Worker;
 import com.hello.suripu.workers.pill.PillWorkerCommand;
 import com.hello.suripu.workers.pillscorer.PillScoreWorkerCommand;
@@ -20,6 +21,7 @@ public class HelloWorker extends Worker<HelloWorkerConfiguration> {
         bootstrap.addCommand(new PillWorkerCommand("pill", "all things about pill"));
         bootstrap.addCommand(new PillScoreWorkerCommand("pillscorer", "scoring sleep pill data"));
         bootstrap.addCommand(new SenseSaveWorkerCommand("sense_save", "saving sense sensor data"));
+        bootstrap.addCommand(new AlarmWorkerCommand("smart_alarm", "Start smart alarm worker"));
     }
 
 }

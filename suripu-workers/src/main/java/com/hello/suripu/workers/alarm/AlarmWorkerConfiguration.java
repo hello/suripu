@@ -1,50 +1,19 @@
 package com.hello.suripu.workers.alarm;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.configuration.DynamoDBConfiguration;
-import com.hello.suripu.core.configuration.KinesisConfiguration;
-import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.workers.framework.WorkerConfiguration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
-import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by pangwu on 9/23/14.
  */
 public class AlarmWorkerConfiguration extends WorkerConfiguration {
-    @Valid
-    @NotNull
-    @JsonProperty("app_name")
-    private String appName;
 
-    public String getAppName() {
-        return appName;
-    }
-
-    @Valid
-    @NotEmpty
-    @JsonProperty("queues")
-    private Map<QueueName,String> queues = new HashMap<QueueName, String>();
-
-    public ImmutableMap<QueueName,String> getQueues() {
-        return ImmutableMap.copyOf(queues);
-    }
-
-    @Valid
-    @NotNull
-    @JsonProperty("kinesis")
-    private KinesisConfiguration kinesisConfiguration;
-
-    public String getKinesisEndpoint() {
-        return kinesisConfiguration.getEndpoint();
-    }
 
     @Valid
     @NotNull

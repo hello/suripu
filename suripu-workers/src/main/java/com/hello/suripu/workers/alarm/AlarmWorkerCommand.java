@@ -16,7 +16,7 @@ import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
-import com.hello.suripu.workers.framework.WorkerRollOut;
+import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.db.ManagedDataSource;
@@ -71,8 +71,8 @@ public class AlarmWorkerCommand extends ConfiguredCommand<AlarmWorkerConfigurati
         dynamoDBClient.setEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
         final FeatureStore featureStore = new FeatureStore(dynamoDBClient, "features", featureNamespace);
 
-        final WorkerRollOut workerRollOut = new WorkerRollOut(featureStore, 30);
-        ObjectGraphRoot.getInstance().init(workerRollOut);
+        final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
+        ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 

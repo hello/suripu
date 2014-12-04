@@ -16,11 +16,11 @@ import javax.inject.Singleton;
 @Module(injects = {
         AlarmRecordProcessor.class,
 })
-public class WorkerRollOut {
+public class WorkerRolloutModule {
     private final FeatureStore featureStore;
     private final Integer pollingIntervalInSeconds;
 
-    public WorkerRollOut(final FeatureStore featureStore, final Integer pollingIntervalInSeconds) {
+    public WorkerRolloutModule(final FeatureStore featureStore, final Integer pollingIntervalInSeconds) {
         this.featureStore = featureStore;
         this.pollingIntervalInSeconds = pollingIntervalInSeconds;
     }
@@ -31,7 +31,8 @@ public class WorkerRollOut {
         return new DynamoDBAdapter(featureStore, pollingIntervalInSeconds);
     }
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     RolloutClient providesRolloutClient(RolloutAdapter adapter) {
         return new RolloutClient(adapter);
     }
