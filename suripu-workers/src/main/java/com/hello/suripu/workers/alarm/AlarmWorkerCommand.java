@@ -77,7 +77,7 @@ public class AlarmWorkerCommand extends ConfiguredCommand<AlarmWorkerConfigurati
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
         LOGGER.debug("{}", queueNames);
-        final String queueName = queueNames.get(QueueName.MORPHEUS_DATA);
+        final String queueName = queueNames.get(QueueName.SENSE_SENSORS_DATA);
         LOGGER.info("\n\n\n!!! This worker is using the following queue: {} !!!\n\n\n", queueName);
 
 

@@ -49,7 +49,7 @@ common_db:
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
-      morpheus_data : test-morpheus-suripu
+      sense_sensors_data : sense_sensors_data
 
 app_name: AlarmWorker
 
