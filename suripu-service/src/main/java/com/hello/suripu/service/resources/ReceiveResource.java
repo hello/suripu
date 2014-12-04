@@ -427,27 +427,42 @@ public class ReceiveResource extends BaseResource {
 //        LOGGER.trace("Morpheus data saved to Kinesis with sequence number = {}", sequenceNumber);
 
 
-        Optional<RingTime> nextRegularRingTime = Optional.absent();
+        Optional<RingTime> nextRegularRingTimeOptional = Optional.absent();
         int ringOffsetFromNowInSecond = -1;
         int ringDurationInMS = 30 * DateTimeConstants.MILLIS_PER_SECOND;  // TODO: make this flexible so we can adjust based on user preferences.
         long nextRingTimestamp = 0;
 
         try {
-            nextRegularRingTime = Optional.of(RingProcessor.getNextRegularRingTime(alarmInfoList,
+            nextRegularRingTimeOptional = Optional.of(RingProcessor.getNextRegularRingTime(alarmInfoList,
                     deviceName,
                     DateTime.now()));
         }catch (Exception ex){
             LOGGER.error("Get next regular ring time for device {} failed: {}", deviceName, ex.getMessage());
         }
 
-        if(nextRegularRingTime.isPresent()) {
-            RingTime replyRingTime = nextRegularRingTime.get();
-            // Now the ring time for different users is sorted, get the nearest one.
-            if (nextRegularRingTime.equals(nextRingTimeFromWorker)) {
-                replyRingTime = nextRingTimeFromWorker;
+        if(nextRegularRingTimeOptional.isPresent()) {
+            final RingTime nextRegularRingTime = nextRegularRingTimeOptional.get();
+
+            if(nextRegularRingTime.isEmpty()){
+                nextRingTimestamp = 0;
+            }else {
+                // Now the ring time for different users is sorted, get the nearest one.
+                if (nextRegularRingTime.expectedRingTimeUTC == nextRingTimeFromWorker.expectedRingTimeUTC) {
+                    nextRingTimestamp = nextRingTimeFromWorker.actualRingTimeUTC;
+                }
+
+                if (nextRegularRingTime.expectedRingTimeUTC > nextRingTimeFromWorker.expectedRingTimeUTC) {
+                    LOGGER.warn("Ring time in merge table for device {} needs to update.", deviceName);
+                    nextRingTimestamp = nextRegularRingTime.expectedRingTimeUTC;
+                }
+
+                if(nextRegularRingTime.expectedRingTimeUTC < nextRingTimeFromWorker.expectedRingTimeUTC){
+                    // This should never happen.
+                    LOGGER.error("Next ring time from template is smaller than that from worker, error! device id {}", deviceName);
+                    nextRingTimestamp = nextRingTimeFromWorker.actualRingTimeUTC;
+                }
             }
 
-            nextRingTimestamp = replyRingTime.actualRingTimeUTC;
             LOGGER.debug("Next ring time: {}", new DateTime(nextRingTimestamp, userTimeZone));
 
             if(nextRingTimestamp != 0) {
