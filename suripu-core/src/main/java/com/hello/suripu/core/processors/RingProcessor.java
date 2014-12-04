@@ -1,6 +1,7 @@
 package com.hello.suripu.core.processors;
 
 import com.amazonaws.AmazonServiceException;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.DataSource;
@@ -76,8 +77,17 @@ public class RingProcessor {
                                           final int slidingWindowSizeInMinutes,
                                           final float lightSleepThreshold){
 
-        final List<AlarmInfo> alarmInfoList = mergedAlarmInfoDynamoDB.getInfo(morpheusId);
+        Optional<List<AlarmInfo>> alarmInfoListOptional = Optional.absent();
 
+        try{
+            final List<AlarmInfo> alarmInfoList = mergedAlarmInfoDynamoDB.getInfo(morpheusId);
+            alarmInfoListOptional = Optional.of(alarmInfoList);
+        }catch (Exception ex){
+            LOGGER.error("Get alarm info list for device {} failed: {}, {}", morpheusId, ex.getMessage(), ex.getClass().toString());
+            return RingTime.createEmpty();
+        }
+
+        final List<AlarmInfo> alarmInfoList = alarmInfoListOptional.get();
         final List<RingTime> ringTimes = new ArrayList<RingTime>();
 
         for(final AlarmInfo alarmInfo:alarmInfoList){
