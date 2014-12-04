@@ -259,7 +259,7 @@ public class Alarm {
          * @param timeZone - time zone of the user's Sense
          * @return
          */
-        public static RingTime getNextRingTime(final List<Alarm> alarms, long currentTimestampUTC, final DateTimeZone timeZone){
+        public static RingTime generateNextRingTimeFromAlarmTemplates(final List<Alarm> alarms, long currentTimestampUTC, final DateTimeZone timeZone){
 
             if(!isValidSmartAlarms(alarms)){
                 throw new IllegalArgumentException("Invalid alarms.");

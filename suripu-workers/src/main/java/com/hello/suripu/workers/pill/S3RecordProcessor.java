@@ -2,7 +2,6 @@ package com.hello.suripu.workers.pill;
 
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.InvalidStateException;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException;
-import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
@@ -13,6 +12,7 @@ import com.google.common.base.Optional;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.InputProtos;
+import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class S3RecordProcessor implements IRecordProcessor {
+public class S3RecordProcessor extends HelloBaseRecordProcessor {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(S3RecordProcessor.class);
 

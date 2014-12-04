@@ -1,7 +1,6 @@
 package com.hello.suripu.workers.sense;
 
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
@@ -16,6 +15,7 @@ import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.util.DeviceIdUtil;
+import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.regex.Matcher;
 
-public class SenseSaveProcessor implements IRecordProcessor {
+public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseSaveProcessor.class);
 

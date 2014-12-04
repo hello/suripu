@@ -61,6 +61,17 @@
             <artifactId>dropwizard-jdbi</artifactId>
             <version>${dropwizard.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.squareup.dagger</groupId>
+            <artifactId>dagger</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.dagger</groupId>
+            <artifactId>dagger-compiler</artifactId>
+            <version>1.2.2</version>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

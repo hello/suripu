@@ -2,6 +2,7 @@ package com.hello.suripu.workers.framework;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
+import com.hello.suripu.core.configuration.DynamoDBConfiguration;
 import com.hello.suripu.core.configuration.GraphiteConfiguration;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
@@ -61,4 +62,12 @@ public class WorkerConfiguration extends Configuration {
     private Boolean debug = Boolean.FALSE;
 
     public Boolean getDebug() { return debug; }
+
+    @Valid
+    @NotNull
+    @JsonProperty("features_db")
+    private DynamoDBConfiguration featuresDynamoDBConfiguration;
+    public DynamoDBConfiguration getFeaturesDynamoDBConfiguration(){
+        return this.featuresDynamoDBConfiguration;
+    }
 }

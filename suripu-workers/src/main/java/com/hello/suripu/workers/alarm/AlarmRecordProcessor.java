@@ -2,7 +2,6 @@ package com.hello.suripu.workers.alarm;
 
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.InvalidStateException;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException;
-import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
@@ -12,11 +11,14 @@ import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.processors.RingProcessor;
+import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
+import com.librato.rollout.RolloutClient;
 import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -25,13 +27,16 @@ import java.util.Set;
 /**
  * Created by pangwu on 9/23/14.
  */
-public class AlarmRecordProcessor implements IRecordProcessor {
+public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
     private final static Logger LOGGER = LoggerFactory.getLogger(AlarmRecordProcessor.class);
     private final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
     private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
 
     private final TrackerMotionDAO trackerMotionDAO;
     private final AlarmWorkerConfiguration configuration;
+
+    @Inject
+    RolloutClient feature;
 
     public AlarmRecordProcessor(final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
                                 final RingTimeDAODynamoDB ringTimeDAODynamoDB,
@@ -43,6 +48,7 @@ public class AlarmRecordProcessor implements IRecordProcessor {
         this.trackerMotionDAO = trackerMotionDAO;
 
         this.configuration = configuration;
+
     }
 
     @Override
@@ -80,7 +86,8 @@ public class AlarmRecordProcessor implements IRecordProcessor {
                     currentTime,
                     this.configuration.getProcessAheadTimeInMinutes(),
                     this.configuration.getAggregateWindowSizeInMinute(),
-                    this.configuration.getLightSleepThreshold()
+                    this.configuration.getLightSleepThreshold(),
+                    feature
                     );
         }
 

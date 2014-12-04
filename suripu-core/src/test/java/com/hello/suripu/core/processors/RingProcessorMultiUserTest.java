@@ -104,7 +104,7 @@ public class RingProcessorMultiUserTest {
                 false, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
-        RingTime ringTime = Alarm.Utils.getNextRingTime(alarmList,
+        RingTime ringTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList,
                 new DateTime(2014, 9, 23, 8, 20, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
@@ -121,7 +121,7 @@ public class RingProcessorMultiUserTest {
                 false, true, true,
                 new AlarmSound(101, "God Save the Queen")));
 
-        final RingTime ringTime2 = Alarm.Utils.getNextRingTime(alarmList2,
+        final RingTime ringTime2 = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList2,
                 new DateTime(2014, 9, 23, 8, 30, 0, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
@@ -199,7 +199,8 @@ public class RingProcessorMultiUserTest {
                 new DateTime(2014, 9, 23, 7, 20, 0, 0, DateTimeZone.forID("America/Los_Angeles")),
                 20,
                 15,
-                0.2f);
+                0.2f,
+                null);
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -221,7 +222,8 @@ public class RingProcessorMultiUserTest {
                 dataCollectionTime,
                 20,
                 15,
-                0.2f);
+                0.2f,
+                null);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
@@ -245,7 +247,8 @@ public class RingProcessorMultiUserTest {
                 new DateTime(2014, 9, 23, 8, 21, 0, 0, DateTimeZone.forID("America/Los_Angeles")),
                 20,
                 15,
-                0.2f);
+                0.2f,
+                null);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -268,7 +271,8 @@ public class RingProcessorMultiUserTest {
                 new DateTime(2014, 9, 23, 8, 22, 0, 0, DateTimeZone.forID("America/Los_Angeles")),
                 20,
                 15,
-                0.2f);
+                0.2f,
+                null);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
@@ -291,7 +295,8 @@ public class RingProcessorMultiUserTest {
                 new DateTime(2014, 9, 24, 7, 20, 0, 0, DateTimeZone.forID("America/Los_Angeles")),
                 20,
                 15,
-                0.2f);
+                0.2f,
+                null);
 
 
         assertThat(ringTime.isEmpty(), is(true));  // the two alarms are non-repeated.
@@ -311,7 +316,7 @@ public class RingProcessorMultiUserTest {
                 true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
-        RingTime ringTime = Alarm.Utils.getNextRingTime(alarmList,
+        RingTime ringTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList,
                 new DateTime(2014, 9, 23, 8, 20, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
@@ -328,7 +333,7 @@ public class RingProcessorMultiUserTest {
                 true, true, true,
                 new AlarmSound(101, "God Save the Queen")));
 
-        final RingTime ringTime2 = Alarm.Utils.getNextRingTime(alarmList2,
+        final RingTime ringTime2 = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList2,
                 new DateTime(2014, 9, 23, 8, 30, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
@@ -407,7 +412,8 @@ public class RingProcessorMultiUserTest {
                 new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")),
                 20,
                 15,
-                0.2f);
+                0.2f,
+                null);
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -429,7 +435,8 @@ public class RingProcessorMultiUserTest {
                 dataCollectionTime,
                 20,
                 15,
-                0.2f);
+                0.2f,
+                null);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
@@ -451,7 +458,8 @@ public class RingProcessorMultiUserTest {
                 new DateTime(2014, 9, 23, 8, 21, DateTimeZone.forID("America/Los_Angeles")),
                 20,
                 15,
-                0.2f);
+                0.2f,
+                null);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -473,7 +481,8 @@ public class RingProcessorMultiUserTest {
                 new DateTime(2014, 9, 23, 8, 22, DateTimeZone.forID("America/Los_Angeles")),
                 20,
                 15,
-                0.2f);
+                0.2f,
+                null);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
@@ -497,7 +506,8 @@ public class RingProcessorMultiUserTest {
                 new DateTime(2014, 9, 24, 7, 20, DateTimeZone.forID("America/Los_Angeles")),
                 20,
                 15,
-                0.2f);
+                0.2f,
+                null);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -520,7 +530,7 @@ public class RingProcessorMultiUserTest {
                 true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
-        RingTime ringTime1 = Alarm.Utils.getNextRingTime(alarmList,
+        RingTime ringTime1 = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList,
                 new DateTime(2014, 9, 23, 8, 20, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
@@ -536,7 +546,7 @@ public class RingProcessorMultiUserTest {
                 true, true, true,
                 new AlarmSound(101, "God Save the Queen")));
 
-        RingTime ringTime2 = Alarm.Utils.getNextRingTime(alarmList2,
+        RingTime ringTime2 = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList2,
                 new DateTime(2014, 9, 23, 8, 20, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
