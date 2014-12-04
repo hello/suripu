@@ -82,13 +82,11 @@ public class Question {
     @JsonProperty("ask_local_date")
     final public DateTime askLocalDate;
 
-    @JsonIgnore
     final public Type type;
 
     @JsonIgnore
     final public FREQUENCY frequency;
 
-    @JsonIgnore
     final public ASK_TIME askTime;
 
     @JsonIgnore
