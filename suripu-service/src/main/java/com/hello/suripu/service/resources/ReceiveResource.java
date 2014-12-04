@@ -72,6 +72,7 @@ public class ReceiveResource extends BaseResource {
     private static final Pattern PG_UNIQ_PATTERN = Pattern.compile("ERROR: duplicate key value violates unique constraint \"(\\w+)\"");
     private static final Logger LOGGER = LoggerFactory.getLogger(ReceiveResource.class);
     private static final int OFFSET_MILLIS = -25200000;
+    private static final int CLOCK_SKEW_TOLERATED_IN_HOURS = 2;
 
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
@@ -365,7 +366,7 @@ public class ReceiveResource extends BaseResource {
             for(DataInputProtos.periodic_data data : batch.getDataList()) {
                 final Long timestampMillis = data.getUnixTime() * 1000L;
                 final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
-                if(roundedDateTime.isAfter(DateTime.now().plusHours(2)) || roundedDateTime.isBefore(DateTime.now().minusHours(2))) {
+                if(roundedDateTime.isAfter(DateTime.now().plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || roundedDateTime.isBefore(DateTime.now().minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
                     LOGGER.error("The clock for device {} is not within reasonable bounds (2h)", data.getDeviceId());
                     LOGGER.error("Current time = {}, received time = {}", DateTime.now(), roundedDateTime);
                     // TODO: throw exception?
@@ -555,9 +556,22 @@ public class ReceiveResource extends BaseResource {
             );
         }
 
+        final SenseCommandProtos.batched_pill_data.Builder cleanBatch = SenseCommandProtos.batched_pill_data.newBuilder();
+        cleanBatch.setDeviceId(batchPilldata.getDeviceId());
+
+        for(final SenseCommandProtos.pill_data pill : batchPilldata.getPillsList()) {
+            final DateTime now = DateTime.now();
+            final Long pillTimestamp = pill.getTimestamp() * 1000;
+            if(pillTimestamp > now.plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS).getMillis()) {
+                LOGGER.warn("Pill data timestamp is too much in the future. now = {}, timestamp = {}", now, pillTimestamp);
+                continue;
+            }
+            cleanBatch.addPills(pill);
+        }
+
         // Put raw pill data into Kinesis
         final DataLogger batchDataLogger = kinesisLoggerFactory.get(QueueName.BATCH_PILL_DATA);
-        batchDataLogger.put(batchPilldata.getDeviceId(),  signedMessage.body);
+        batchDataLogger.put(batchPilldata.getDeviceId(),  cleanBatch.build().toByteArray());
 
 
         // TODO: everything below this is kept for backward compatibility
@@ -573,10 +587,10 @@ public class ReceiveResource extends BaseResource {
             }
         }
 
-        // TODO: MOVE THIS TO THE WORKERS! SURIPU-SERVICE SHOULD NOT BE TALKING TO POSTGRESQL HAS MUCH AS POSSIBLE
+        // TODO: MOVE THIS TO THE WORKERS! SURIPU-SERVICE SHOULD NOT BE TALKING TO POSTGRESQL AS MUCH AS POSSIBLE
         // ********************* Pill Data Storage ****************************
-        if(batchPilldata.getPillsCount() > 0){
-            for(final SenseCommandProtos.pill_data pill: batchPilldata.getPillsList()){
+        if(cleanBatch.getPillsCount() > 0){
+            for(final SenseCommandProtos.pill_data pill: cleanBatch.getPillsList()){
 
                 final String pillId = pill.getDeviceId();
                 final Optional<DeviceAccountPair> internalPillPairingMap = this.deviceDAO.getInternalPillId(pillId);
