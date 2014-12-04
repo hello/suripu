@@ -39,12 +39,12 @@ import java.util.UUID;
 public class AlarmWorkerCommand extends ConfiguredCommand<AlarmWorkerConfiguration> {
     private final static Logger LOGGER = LoggerFactory.getLogger(AlarmWorkerCommand.class);
 
-    protected AlarmWorkerCommand(String name, String description) {
+    public AlarmWorkerCommand(String name, String description) {
         super(name, description);
     }
 
     @Override
-    protected void run(final Bootstrap<AlarmWorkerConfiguration> bootstrap, final Namespace namespace, final AlarmWorkerConfiguration configuration) throws Exception {
+    public void run(final Bootstrap<AlarmWorkerConfiguration> bootstrap, final Namespace namespace, final AlarmWorkerConfiguration configuration) throws Exception {
 
 
         final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();

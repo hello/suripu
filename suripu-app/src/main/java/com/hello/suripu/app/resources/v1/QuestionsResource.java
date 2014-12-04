@@ -109,7 +109,7 @@ public class QuestionsResource {
     @POST
     @Path("/save")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void saveAnswers(@Scope(OAuthScope.QUESTIONS_READ) final AccessToken accessToken,
+    public void saveAnswers(@Scope(OAuthScope.QUESTIONS_WRITE) final AccessToken accessToken,
                            @QueryParam("account_question_id") final Long accountQuestionId,
                            @Valid final List<Choice> choice) {
         LOGGER.debug("Saving answer for account id = {}", accessToken.accountId);
@@ -127,7 +127,7 @@ public class QuestionsResource {
     @PUT
     @Path("/skip")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void skipQuestion(@Scope(OAuthScope.QUESTIONS_READ) final AccessToken accessToken,
+    public void skipQuestion(@Scope(OAuthScope.QUESTIONS_WRITE) final AccessToken accessToken,
                              @QueryParam("id") final Integer questionId,
                              @QueryParam("account_question_id") final Long accountQuestionId) {
         LOGGER.debug("Skipping question {} for account id = {}", questionId, accessToken.accountId);

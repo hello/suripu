@@ -8,10 +8,10 @@ common_db:
   user: ingress_user
 
   # the password
-  password: your postgresql password
+  password: hello ingress user
 
   # the JDBC URL
-  url: jdbc:postgresql://localhost:5432/[your postgresql database name]
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
 
   # any properties specific to your JDBC driver:
   properties:
@@ -61,17 +61,17 @@ logging:
 
 
 ring_time_db:
-  endpoint : http://localhost:7777
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: ring_time
 
 timezone_history_db:
-  endpoint : http://localhost:7777
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: timezone_history
 
 alarm_db:
-  endpoint : http://localhost:7777
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: alarm
 
@@ -86,3 +86,10 @@ smart_alarm_process_ahead_in_minutes: 20
 
 light_sleep_init_threshold: 0.2
 
+alarm_info_db:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: alarm_info
+
+queues:
+  morpheus_data: sense_sensors_data
