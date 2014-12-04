@@ -96,50 +96,12 @@ public class RingProcessor {
                 continue;
             }
             final RingTime currentRingTime = getRingTimeFromAlarmInfo(alarmInfo);
-
-            // currentRingTime.equals(nextRingTime) && currentRingTime.isSmart == true // smart alarm generated, not yet ring
-            if (currentRingTime.equals(nextRegularRingTime) && currentRingTime.isSmart()) {
-                LOGGER.debug("Smart alarm already set to {} for device {}, account {}.",
-                        new DateTime(currentRingTime.actualRingTimeUTC, alarmInfo.timeZone.get()),
-                        alarmInfo.deviceId,
-                        alarmInfo.accountId);
-                ringTimes.add(currentRingTime);
-                continue;
-            }
-
-            // currentRingTime.equals(nextRingTime) && currentRingTime.isSmart == false // next regular alarm generated, no pill data and not yet ring
-            // currentRingTime.equals(nextRingTime) == false && currentRingTime.isSmart == false  // out-date last regular alarm due to no pill data
-            // currentRingTime.equals(nextRingTime) == false && currentRingTime.isSmart == true   // out-date last smart alarm
-
-            RingTime nextRingTime;
-            // let's see if it is time to trigger the smart alarm processing.
-
-
-            // Try to get smart alarm time.
-            // Check if the current time is N min before next ring.
-            final DateTime nextRegularRingTimeLocal = new DateTime(nextRegularRingTime.expectedRingTimeUTC, alarmInfo.timeZone.get());
-            if (shouldTriggerSmartAlarmProcessing(currentTime, nextRegularRingTimeLocal, smartAlarmProcessAheadInMinutes)) {
-                // It is time to compute sleep cycles.
-                nextRingTime = getNextSmartRingTime(alarmInfo.accountId,
-                        currentTime, alarmInfo.timeZone.get(),
-                        nextRegularRingTime,
-                        slidingWindowSizeInMinutes, lightSleepThreshold,
-                        trackerMotionDAO);
-
-                LOGGER.info("Device {} smart ring time updated to {}", morpheusId, new DateTime(nextRingTime.actualRingTimeUTC, alarmInfo.timeZone.get()));
-                mergedAlarmInfoDynamoDB.setRingTime(alarmInfo.deviceId, alarmInfo.accountId, nextRingTime);
-
-            } else {
-                // Too early to compute smart alarm time.
-                nextRingTime = nextRegularRingTime;
-                if(currentRingTime.expectedRingTimeUTC < nextRegularRingTime.expectedRingTimeUTC){
-                    LOGGER.info("Device {} regular ring time updated to {}", morpheusId, new DateTime(nextRingTime.actualRingTimeUTC, alarmInfo.timeZone.get()));
-                    mergedAlarmInfoDynamoDB.setRingTime(alarmInfo.deviceId, alarmInfo.accountId, nextRingTime);
-                }
-            }
-
+            final RingTime nextRingTime =  updateNextSmartRingTime(currentTime,
+                    slidingWindowSizeInMinutes, lightSleepThreshold, smartAlarmProcessAheadInMinutes,
+                    currentRingTime, nextRegularRingTime,
+                    alarmInfo,
+                    trackerMotionDAO, mergedAlarmInfoDynamoDB);
             ringTimes.add(nextRingTime);
-
 
         }
 
@@ -148,6 +110,60 @@ public class RingProcessor {
         // Optional, just for backup
         appendNextRingTimeToRingTimeHistory(morpheusId, mostRecentRingTime, ringTimeDAODynamoDB);
         return mostRecentRingTime;
+    }
+
+
+    public static RingTime updateNextSmartRingTime(final DateTime currentTime,
+                                                   final int slidingWindowSizeInMinutes,
+                                                   final float lightSleepThreshold,
+                                                   final int smartAlarmProcessAheadInMinutes,
+                                                   final RingTime currentRingTime, final RingTime nextRegularRingTime,
+                                                   final AlarmInfo alarmInfo,
+                                                   final TrackerMotionDAO trackerMotionDAO,
+                                                   final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB){
+
+        if (currentRingTime.equals(nextRegularRingTime) && currentRingTime.isSmart()) {
+            LOGGER.debug("Smart alarm already set to {} for device {}, account {}.",
+                    new DateTime(currentRingTime.actualRingTimeUTC, alarmInfo.timeZone.get()),
+                    alarmInfo.deviceId,
+                    alarmInfo.accountId);
+            return currentRingTime;
+        }
+
+        // currentRingTime.equals(nextRingTime) && currentRingTime.isSmart == false // next regular alarm generated, no pill data and not yet ring
+        // currentRingTime.equals(nextRingTime) == false && currentRingTime.isSmart == false  // out-date last regular alarm due to no pill data
+        // currentRingTime.equals(nextRingTime) == false && currentRingTime.isSmart == true   // out-date last smart alarm
+
+        RingTime nextRingTime;
+        // let's see if it is time to trigger the smart alarm processing.
+
+
+        // Try to get smart alarm time.
+        // Check if the current time is N min before next ring.
+        final DateTime nextRegularRingTimeLocal = new DateTime(nextRegularRingTime.expectedRingTimeUTC, alarmInfo.timeZone.get());
+        if (shouldTriggerSmartAlarmProcessing(currentTime, nextRegularRingTimeLocal, smartAlarmProcessAheadInMinutes)) {
+            // It is time to compute sleep cycles.
+            nextRingTime = getNextSmartRingTime(alarmInfo.accountId,
+                    currentTime, alarmInfo.timeZone.get(),
+                    nextRegularRingTime,
+                    slidingWindowSizeInMinutes, lightSleepThreshold,
+                    trackerMotionDAO);
+
+            LOGGER.info("Device {} smart ring time updated to {}", alarmInfo.deviceId, new DateTime(nextRingTime.actualRingTimeUTC, alarmInfo.timeZone.get()));
+            mergedAlarmInfoDynamoDB.setRingTime(alarmInfo.deviceId, alarmInfo.accountId, nextRingTime);
+
+        } else {
+            // Too early to compute smart alarm time.
+            nextRingTime = nextRegularRingTime;
+            if(currentRingTime.expectedRingTimeUTC < nextRegularRingTime.expectedRingTimeUTC){
+                LOGGER.info("Device {} regular ring time updated to {}", alarmInfo.deviceId, new DateTime(nextRingTime.actualRingTimeUTC, alarmInfo.timeZone.get()));
+                mergedAlarmInfoDynamoDB.setRingTime(alarmInfo.deviceId, alarmInfo.accountId, nextRingTime);
+            }else if(currentRingTime.expectedRingTimeUTC > nextRegularRingTime.expectedRingTimeUTC){
+                LOGGER.warn("Invalid current ring time for device {} and account {}", alarmInfo.deviceId, alarmInfo.accountId);
+            }
+        }
+
+        return nextRingTime;
     }
 
     public static RingTime getMostRecentRingTimeFromList(final List<RingTime> ringTimes){
