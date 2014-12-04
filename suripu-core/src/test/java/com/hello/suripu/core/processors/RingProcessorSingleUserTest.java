@@ -66,7 +66,7 @@ public class RingProcessorSingleUserTest {
                 true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
-        final RingTime ringTime = Alarm.Utils.getNextRingTime(alarmList,
+        final RingTime ringTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList,
                 new DateTime(2014, 9, 23, 8, 0, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
@@ -100,6 +100,9 @@ public class RingProcessorSingleUserTest {
 
         when(this.trackerMotionDAO.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
                 .thenReturn(ImmutableList.copyOf(motions));
+
+        when(this.ringTimeDAODynamoDB.getNextRingTime(testDeviceId))
+                .thenReturn(RingTime.createEmpty());
 
     }
 
