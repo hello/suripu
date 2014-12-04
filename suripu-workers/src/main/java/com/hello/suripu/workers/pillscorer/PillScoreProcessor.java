@@ -99,6 +99,11 @@ public class PillScoreProcessor implements IRecordProcessor {
                         .withSecondOfMinute(0)
                         .withMillisOfSecond(0);
 
+                if (roundedDateTime.isAfter(DateTime.now().plusDays(2))) {
+                    LOGGER.warn("Pill timestamp is in the future {}", internalPillPairingMap.get().internalDeviceId);
+                    continue;
+                }
+
                 final TrackerMotion.Builder trackerMotionBuilder = new TrackerMotion.Builder();
                 trackerMotionBuilder.withAccountId(internalPillPairingMap.get().accountId);
                 trackerMotionBuilder.withTrackerId(internalPillPairingMap.get().internalDeviceId);
