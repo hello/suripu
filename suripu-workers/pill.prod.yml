@@ -56,3 +56,8 @@ logging:
 
     # Sets the level for 'com.example.app' to DEBUG.
     com.hello.suripu.workers: DEBUG
+
+features_db:
+    endpoint : http://dynamodb.us-east-1.amazonaws.com
+    region: us-east-1
+    table_name: features

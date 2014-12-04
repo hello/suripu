@@ -12,11 +12,13 @@ import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.processors.RingProcessor;
+import com.librato.rollout.RolloutClient;
 import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +34,9 @@ public class AlarmRecordProcessor implements IRecordProcessor {
 
     private final TrackerMotionDAO trackerMotionDAO;
     private final AlarmWorkerConfiguration configuration;
+
+    @Inject
+    RolloutClient feature;
 
     public AlarmRecordProcessor(final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
                                 final RingTimeDAODynamoDB ringTimeDAODynamoDB,
@@ -80,7 +85,8 @@ public class AlarmRecordProcessor implements IRecordProcessor {
                     currentTime,
                     this.configuration.getProcessAheadTimeInMinutes(),
                     this.configuration.getAggregateWindowSizeInMinute(),
-                    this.configuration.getLightSleepThreshold()
+                    this.configuration.getLightSleepThreshold(),
+                    feature
                     );
         }
 

@@ -67,3 +67,8 @@ logging:
     # Sets the level for 'com.example.app' to DEBUG.
     com.hello.suripu.workers: DEBUG
 
+features_db:
+    endpoint : http://localhost:7777
+    region: us-east-1
+    table_name: features
+

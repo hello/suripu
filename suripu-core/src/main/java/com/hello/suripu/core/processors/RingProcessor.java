@@ -10,10 +10,12 @@ import com.hello.suripu.algorithm.event.SleepCycleAlgorithm;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmInfo;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -23,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,6 +36,7 @@ import java.util.List;
  * Created by pangwu on 9/24/14.
  */
 public class RingProcessor {
+
     private final static Logger LOGGER = LoggerFactory.getLogger(RingProcessor.class);
 
     public static class PipeDataSource implements DataSource<AmplitudeData> {
@@ -75,7 +79,8 @@ public class RingProcessor {
                                           final DateTime currentTime,
                                           final int smartAlarmProcessAheadInMinutes,
                                           final int slidingWindowSizeInMinutes,
-                                          final float lightSleepThreshold){
+                                          final float lightSleepThreshold,
+                                          final RolloutClient feature){
 
         Optional<List<AlarmInfo>> alarmInfoListOptional = Optional.absent();
 
@@ -106,12 +111,29 @@ public class RingProcessor {
                 continue;
             }
             final RingTime currentRingTime = getRingTimeFromAlarmInfo(alarmInfo);
-            final RingTime nextRingTime =  updateNextSmartRingTime(currentTime,
-                    slidingWindowSizeInMinutes, lightSleepThreshold, smartAlarmProcessAheadInMinutes,
-                    currentRingTime, nextRegularRingTime,
-                    alarmInfo,
-                    trackerMotionDAO, mergedAlarmInfoDynamoDB);
-            ringTimes.add(nextRingTime);
+
+            if(feature != null) {
+                if (feature.userFeatureActive(FeatureFlipper.SMART_ALARM, alarmInfo.accountId, Collections.<String>emptyList())) {
+                    final RingTime nextRingTime = updateNextSmartRingTime(currentTime,
+                            slidingWindowSizeInMinutes, lightSleepThreshold, smartAlarmProcessAheadInMinutes,
+                            currentRingTime, nextRegularRingTime,
+                            alarmInfo,
+                            trackerMotionDAO, mergedAlarmInfoDynamoDB);
+
+                    ringTimes.add(nextRingTime);
+                } else {
+                    LOGGER.debug("Account {} not in smart alarm group.", alarmInfo.accountId);
+                    ringTimes.add(nextRegularRingTime);
+                }
+            }else{
+                final RingTime nextRingTime = updateNextSmartRingTime(currentTime,
+                        slidingWindowSizeInMinutes, lightSleepThreshold, smartAlarmProcessAheadInMinutes,
+                        currentRingTime, nextRegularRingTime,
+                        alarmInfo,
+                        trackerMotionDAO, mergedAlarmInfoDynamoDB);
+
+                ringTimes.add(nextRingTime);
+            }
 
         }
 

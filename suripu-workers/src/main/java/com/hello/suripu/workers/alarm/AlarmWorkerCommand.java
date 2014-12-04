@@ -8,12 +8,15 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionIn
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibConfiguration;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker;
 import com.google.common.collect.ImmutableMap;
+import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
+import com.hello.suripu.workers.framework.WorkerRollOut;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.db.ManagedDataSource;
@@ -64,6 +67,12 @@ public class AlarmWorkerCommand extends ConfiguredCommand<AlarmWorkerConfigurati
                 configuration.getAlarmInfoDynamoDBConfiguration().getTableName());
         final RingTimeDAODynamoDB ringTimeDAODynamoDB = new RingTimeDAODynamoDB(dynamoDBClient, configuration.getRingTimeDBConfiguration().getTableName());
 
+        final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
+        dynamoDBClient.setEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
+        final FeatureStore featureStore = new FeatureStore(dynamoDBClient, "features", featureNamespace);
+
+        final WorkerRollOut workerRollOut = new WorkerRollOut(featureStore, 30);
+        ObjectGraphRoot.getInstance().init(workerRollOut);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 

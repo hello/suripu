@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.configuration.DynamoDBConfiguration;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
-import com.yammer.dropwizard.config.Configuration;
+import com.hello.suripu.workers.framework.WorkerConfiguration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -18,7 +18,7 @@ import java.util.Map;
 /**
  * Created by pangwu on 9/23/14.
  */
-public class AlarmWorkerConfiguration extends Configuration {
+public class AlarmWorkerConfiguration extends WorkerConfiguration {
     @Valid
     @NotNull
     @JsonProperty("app_name")
@@ -125,4 +125,5 @@ public class AlarmWorkerConfiguration extends Configuration {
     public DynamoDBConfiguration getAlarmInfoDynamoDBConfiguration(){
         return this.alarmInfoDynamoDBConfiguration;
     }
+
 }

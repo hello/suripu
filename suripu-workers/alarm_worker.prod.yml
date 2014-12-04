@@ -75,6 +75,11 @@ alarm_db:
   region: us-east-1
   table_name: alarm
 
+features_db:
+    endpoint : http://dynamodb.us-east-1.amazonaws.com
+    region: us-east-1
+    table_name: features
+
 aggregate_window_size_min: 15
 
 smart_alarm_process_ahead_in_minutes: 20
