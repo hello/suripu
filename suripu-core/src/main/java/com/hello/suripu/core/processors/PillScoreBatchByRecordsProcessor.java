@@ -73,7 +73,7 @@ public class PillScoreBatchByRecordsProcessor {
         // add records to memory store
         final long lastTimestampMillis = this.parsePillRecords(pillRecords);
 
-        LOGGER.debug("number of records in memory: {}", this.numRecordsInMemory);
+        LOGGER.info("number of records in memory: {}", this.numRecordsInMemory);
 
         if (this.numRecordsInMemory == 0) {
             // only heart-beat data is received. nothing to process. ok to checkpoint
@@ -87,12 +87,14 @@ public class PillScoreBatchByRecordsProcessor {
 
         final long timestampDiff = lastTimestampMillis - this.lastProcessedTimestampMillis;
 
+        LOGGER.info("timestampdiff = {}", timestampDiff);
+
         // process when we have stored a number of pill records, or the process time reached a threshold
         if (this.numRecordsInMemory >= this.checkpointThreshold || timestampDiff >= this.checkpointTimeThreshold) {
             final int numSavedScores = this.computeAndSaveScores();
 
-            LOGGER.debug("Checkpoint threshold met: {}", this.numRecordsInMemory >= this.checkpointThreshold);
-            LOGGER.debug("Time threshold: {}", timestampDiff >= this.checkpointTimeThreshold);
+            LOGGER.info("Checkpoint threshold met: {}", this.numRecordsInMemory >= this.checkpointThreshold);
+            LOGGER.info("Time threshold: {}", timestampDiff >= this.checkpointTimeThreshold);
 
             if (numSavedScores == this.numRecordsInMemory) {
                 this.numRecordsInMemory = 0;
