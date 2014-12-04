@@ -10,14 +10,17 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibC
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
+import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.db.ManagedDataSource;
@@ -63,6 +66,7 @@ public final class PillScoreWorkerCommand extends ConfiguredCommand<PillScoreWor
         final SleepScoreDAO sleepScoreDAO = jdbi.onDemand(SleepScoreDAO.class);
         final DeviceDAO deviceDAO = jdbi.onDemand(DeviceDAO.class);
 
+
         if(configuration.getMetricsEnabled()) {
             final String graphiteHostName = configuration.getGraphite().getHost();
             final String apiKey = configuration.getGraphite().getApiKey();
@@ -106,8 +110,17 @@ public final class PillScoreWorkerCommand extends ConfiguredCommand<PillScoreWor
 
         final KeyStore keyStore = new KeyStoreDynamoDB(dynamoDB, configuration.getDynamoDBKeyStoreConfiguration().getTableName(), new byte[16]);
 
+
+        final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
+        dynamoDBClient.setEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
+        final FeatureStore featureStore = new FeatureStore(dynamoDBClient, "features", featureNamespace);
+
+        final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
+        ObjectGraphRoot.getInstance().init(workerRolloutModule);
+
         final AmazonDynamoDB tzDynamoDB = new AmazonDynamoDBClient(awsCredentialsProvider);
-        dynamoDB.setEndpoint(configuration.getTimezoneHistoryConfiguration().getEndpoint());
+        tzDynamoDB.setEndpoint(configuration.getTimezoneHistoryConfiguration().getEndpoint());
 
         final TimeZoneHistoryDAODynamoDB timeZoneHistoryDB = new TimeZoneHistoryDAODynamoDB(
                 tzDynamoDB,

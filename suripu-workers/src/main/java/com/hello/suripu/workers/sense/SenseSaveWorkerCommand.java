@@ -9,12 +9,15 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibC
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
+import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.db.ManagedDataSource;
@@ -97,6 +100,14 @@ public final class SenseSaveWorkerCommand extends ConfiguredCommand<SenseSaveWor
         kinesisConfig.withMaxRecords(configuration.getMaxRecords());
         kinesisConfig.withKinesisEndpoint(configuration.getKinesisEndpoint());
         kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
+
+        final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
+        dynamoDBClient.setEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
+        final FeatureStore featureStore = new FeatureStore(dynamoDBClient, "features", featureNamespace);
+
+        final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
+        ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
         final AmazonDynamoDBClient dynamoDB = new AmazonDynamoDBClient(awsCredentialsProvider);
         dynamoDB.setEndpoint(configuration.getMergedInfoDB().getEndpoint());
