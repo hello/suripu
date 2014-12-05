@@ -46,7 +46,6 @@ public class WorkerConfiguration extends Configuration {
     @NotNull
     @JsonProperty("kinesis")
     private KinesisConfiguration kinesisConfiguration;
-    private Map<QueueName,String> queues = new HashMap<QueueName, String>();
 
     public String getKinesisEndpoint() {
         return kinesisConfiguration.getEndpoint();
