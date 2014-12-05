@@ -122,7 +122,7 @@ public class RingProcessor {
 
                     ringTimes.add(nextRingTime);
                 } else {
-                    LOGGER.debug("Account {} not in smart alarm group.", alarmInfo.accountId);
+                    LOGGER.info("Account {} not in smart alarm group.", alarmInfo.accountId);
                     ringTimes.add(nextRegularRingTime);
                 }
             }else{
@@ -154,6 +154,8 @@ public class RingProcessor {
                                                    final TrackerMotionDAO trackerMotionDAO,
                                                    final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB){
 
+        LOGGER.info("Updating smart alarm for device {}, account {}", alarmInfo.deviceId, alarmInfo.accountId);
+        
         if (currentRingTime.equals(nextRegularRingTime) && currentRingTime.isSmart()) {
             LOGGER.debug("Smart alarm already set to {} for device {}, account {}.",
                     new DateTime(currentRingTime.actualRingTimeUTC, alarmInfo.timeZone.get()),
