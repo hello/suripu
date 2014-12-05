@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.PasswordUpdate;
 import com.hello.suripu.core.models.Registration;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -16,7 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -126,18 +126,13 @@ public class AccountResource {
     @Timed
     @Path("/password")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
     public void password(
             @Scope({OAuthScope.USER_EXTENDED}) final AccessToken accessToken,
-            @FormParam("password") final String password) {
-
-        final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
-
-        if(!accountOptional.isPresent()) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
-        }
-
-        // TODO: update password
+            @Valid final PasswordUpdate passwordUpdate) {
+        if(!accountDAO.updatePassword(accessToken.accountId, passwordUpdate)) {
+            throw new WebApplicationException(Response.Status.CONFLICT);
+        };
+        // TODO: remove all tokens for this user
     }
 
     @Timed

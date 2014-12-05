@@ -5,6 +5,7 @@ import com.hello.suripu.core.db.binders.BindAccount;
 import com.hello.suripu.core.db.binders.BindRegistration;
 import com.hello.suripu.core.db.mappers.AccountMapper;
 import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.PasswordUpdate;
 import com.hello.suripu.core.models.Registration;
 import org.mindrot.jbcrypt.BCrypt;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -40,6 +41,10 @@ public abstract class AccountDAOImpl implements AccountDAO {
     @GetGeneratedKeys
     public abstract long insertAccount(@BindRegistration Registration registration, @Bind("last_modified") Long lastModified);
 
+    @SqlUpdate("UPDATE accounts SET password_hash = :new_password_hash WHERE password_hash = :current_password_hash AND id = :account_id;")
+    public abstract int updatePassword(@Bind("new_password_hash") final String newPasswordHash, @Bind("current_password_hash") final String currentPasswordHash, @Bind("account_id") final Long accountId);
+
+
 
     public Account register(final Registration registration) {
         long id = insertAccount(registration, registration.created.getMillis());
@@ -72,14 +77,15 @@ public abstract class AccountDAOImpl implements AccountDAO {
         }
 
 
-        final String passwordFromDB = accountOptional.get().password;
-        if(!BCrypt.checkpw(password, passwordFromDB)) {
+        final String passwordHashFromDB = accountOptional.get().password;
+        if(!BCrypt.checkpw(password, passwordHashFromDB)) {
             LOGGER.warn("exists: Passwords don't match");
             // TODO: Add metrics here
             return Optional.absent();
         }
         return accountOptional;
     }
+
 
     @SqlUpdate("UPDATE accounts SET name=:name, gender=:gender, dob=:dob, height=:height, weight=:weight, " +
             "tz_offset=:tz_offset, last_modified= extract(epoch from date_trunc('milliseconds', now())) * 1000 WHERE id=:account_id AND last_modified=:last_modified;")
@@ -98,5 +104,23 @@ public abstract class AccountDAOImpl implements AccountDAO {
 
         final Optional<Account> accountFromDB = getById(accountId);
         return accountFromDB;
+    }
+
+
+    public Boolean updatePassword(final Long accountId, final PasswordUpdate passwordUpdate) {
+        final Optional<Account> accountOptional = getById(accountId);
+        if(!accountOptional.isPresent()) {
+            LOGGER.warn("Account {} not found for password update");
+            return Boolean.FALSE;
+        }
+
+        final String passwordHashFromDB = accountOptional.get().password;
+        if(!BCrypt.checkpw(passwordUpdate.currentPassword, passwordHashFromDB)) {
+            return Boolean.FALSE;
+        }
+
+        int updated = updatePassword(passwordUpdate.newPassword, passwordHashFromDB, accountId);
+        LOGGER.warn("Updated {} rows during update password for user = {}", updated, accountId);
+        return updated > 0;
     }
 }

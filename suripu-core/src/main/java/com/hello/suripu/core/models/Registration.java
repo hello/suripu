@@ -3,9 +3,9 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hello.suripu.core.util.PasswordUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.mindrot.jbcrypt.BCrypt;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -123,7 +123,7 @@ public class Registration {
         return new Registration(
                 registration.name,
                 registration.email,
-                BCrypt.hashpw(registration.password, BCrypt.gensalt(12)),
+                PasswordUtil.encrypt(registration.password),
                 registration.age,
                 registration.gender,
                 registration.height,
