@@ -161,7 +161,7 @@ public class CurrentRoomState {
         final CurrentRoomState roomState = new CurrentRoomState(
                 new State(null, "Waiting for data.", State.Condition.UNKNOWN, DateTime.now(), State.Unit.CELCIUS),
                 new State(null, "Waiting for data.", State.Condition.UNKNOWN, DateTime.now(), State.Unit.PERCENT),
-                new State(null, "Waiting for data.", State.Condition.UNKNOWN, DateTime.now(), State.Unit.MICRO_G_M3)
+                new State(null, "Waiting for data.", State.Condition.UNKNOWN, DateTime.now(), State.Unit.AQI)
         );
 
         return roomState;

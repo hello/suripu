@@ -258,7 +258,7 @@ VALUES ('How intense was your workout today?',
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
 VALUES ('What time of day was your workout today?',
 'EN', 'occasionally', 'choice',
-'{"Yes", "No"}', 5, 'evening');
+'{"Morning", "Afternoon", "Evening", "Did not workout"}', 5, 'evening');
 
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
