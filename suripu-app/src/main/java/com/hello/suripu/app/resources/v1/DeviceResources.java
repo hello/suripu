@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.DeviceInactive;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.PillRegistration;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -179,5 +180,14 @@ public class DeviceResources {
         }
 
         return devices;
+    }
+
+    @GET
+    @Timed
+    @Path("/inactive/hours/{inactive_hours}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<DeviceInactive> getInactiveDevice(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken, @PathParam("inactive_hours") Integer inactiveHours) {
+        final DateTime startTime = DateTime.now().minusMonths(2);
+        return deviceDAO.getInactiveDevice(startTime, inactiveHours);
     }
 }
