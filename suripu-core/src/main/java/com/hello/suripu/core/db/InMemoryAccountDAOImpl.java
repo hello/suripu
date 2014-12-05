@@ -2,6 +2,7 @@ package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.PasswordUpdate;
 import com.hello.suripu.core.models.Registration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,5 +63,10 @@ public class InMemoryAccountDAOImpl implements AccountDAO{
     @Override
     public Optional<Account> update(Account account, Long accountId) {
         throw new RuntimeException("Not implemented");
+    }
+
+    @Override
+    public Boolean updatePassword(Long accountId, PasswordUpdate passwordUpdate) {
+        return Boolean.FALSE;
     }
 }
