@@ -87,6 +87,7 @@ public class Question {
     @JsonIgnore
     final public FREQUENCY frequency;
 
+    @JsonProperty("ask_time")
     final public ASK_TIME askTime;
 
     @JsonIgnore
