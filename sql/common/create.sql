@@ -168,3 +168,14 @@ GRANT ALL PRIVILEGES ON SEQUENCE sleep_score_id_seq TO ingress_user;
 --ON accounts
 --FOR EACH ROW
 --EXECUTE PROCEDURE update_modified_column();
+
+
+CREATE TABLE sleep_feedback(
+    id SERIAL PRIMARY KEY,
+    day VARCHAR (100),
+    hour VARCHAR (100),
+    good BOOLEAN
+);
+
+GRANT ALL PRIVILEGES ON sleep_feedback TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE sleep_feedback_id_seq TO ingress_user;
