@@ -72,7 +72,8 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
             }
         }
 
-        final DateTime currentTime = DateTime.now().minusMinutes(1);
+        final DateTime currentTime = DateTime.now();
+        LOGGER.info("Got {} records.", records.size());
         for(final String morpheusId:deviceIds) {
             RingProcessor.updateNextRingTime(this.mergedAlarmInfoDynamoDB,
                     this.ringTimeDAODynamoDB,
