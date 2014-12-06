@@ -505,18 +505,16 @@ public class ReceiveResource extends BaseResource {
                 LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
                 responseBuilder.addAllFiles(fileDownloadList);
             }
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdateContent(deviceName, firmwareVersion);
-            if(!fileDownloadList.isEmpty()) {
-                LOGGER.debug("Adding {} files to Files to Download list", fileDownloadList.size());
-                responseBuilder.addAllFiles(fileDownloadList);
-            }
         }
 
         final AudioControlProtos.AudioControl.Builder audioControl = AudioControlProtos.AudioControl
                 .newBuilder()
                 .setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.OFF);
 
-        if(featureFlipper.deviceFeatureActive(FeatureFlipper.AUDIO_CAPTURE, deviceName, groups)) {
+        final DateTime now = DateTime.now(DateTimeZone.forID("America/Los_Angeles"));
+        final Boolean audioRecordingWindow = now.getHourOfDay() > 0 && now.getHourOfDay() < 7;
+
+        if(featureFlipper.deviceFeatureActive(FeatureFlipper.AUDIO_CAPTURE, deviceName, groups) && audioRecordingWindow) {
             LOGGER.debug("AUDIO_CAPTURE feature is active for device_id = {}", deviceName);
             audioControl.setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
         }
