@@ -111,7 +111,7 @@ public interface DeviceDAO {
     @RegisterMapper(DeviceInactiveMapper.class)
     @SingleValueResult(DeviceInactive.class)
     @SqlQuery("SELECT sq.device_id, sq.id, sq.diff, sq.max_ts FROM (SELECT M.device_id AS device_id, MAX(M.id) AS id, MAX(D.ts) AS max_ts, now() - MAX(D.ts) AS diff FROM account_device_map M LEFT OUTER JOIN device_sensors_master D ON M.id = D.device_id WHERE D.ts > :start_time GROUP BY M.device_id) AS sq WHERE sq.diff >= :inactive_hours * interval '1 hour' LIMIT 100")
-            ImmutableList<DeviceInactive> getInactiveDevice(
+    ImmutableList<DeviceInactive> getInactiveDevice(
             @Bind("start_time") final DateTime startTime,
             @Bind("inactive_hours") final Integer inactiveHours
     );
