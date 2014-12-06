@@ -12,12 +12,10 @@ import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
-import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -59,12 +57,9 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
         for (final Record record : records) {
             try {
                 final DataInputProtos.periodic_data data = DataInputProtos.periodic_data.parseFrom(record.getData().array());
+                final String senseId = data.getDeviceId();
 
-                // get MAC address of morpheus
-                final byte[] mac = Arrays.copyOf(data.getMac().toByteArray(), 6);
-                final String morpheusId = new String(Hex.encodeHex(mac));
-
-                deviceIds.add(morpheusId);
+                deviceIds.add(senseId);
 
 
             } catch (InvalidProtocolBufferException e) {
@@ -74,11 +69,11 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
 
         final DateTime currentTime = DateTime.now();
         LOGGER.info("Got {} records.", records.size());
-        for(final String morpheusId:deviceIds) {
+        for(final String senseId:deviceIds) {
             RingProcessor.updateNextRingTime(this.mergedAlarmInfoDynamoDB,
                     this.ringTimeDAODynamoDB,
                     this.trackerMotionDAO,
-                    morpheusId,
+                    senseId,
                     currentTime,
                     this.configuration.getProcessAheadTimeInMinutes(),
                     this.configuration.getAggregateWindowSizeInMinute(),
