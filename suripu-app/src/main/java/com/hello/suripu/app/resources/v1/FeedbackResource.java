@@ -24,6 +24,6 @@ public class FeedbackResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public void saveFeedback(@Scope(OAuthScope.SLEEP_FEEDBACK) final AccessToken accessToken, final SleepFeedback feedback) {
         final SleepFeedback sleepFeedback = SleepFeedback.forAccount(feedback, accessToken.accountId);
-        feedbackDAO.insert(feedback);
+        feedbackDAO.insert(sleepFeedback);
     }
 }

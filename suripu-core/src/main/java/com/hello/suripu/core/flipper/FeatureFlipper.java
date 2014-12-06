@@ -9,4 +9,5 @@ public class FeatureFlipper {
     public final static String SLEEP_DETECTION_FROM_QUIET = "sleep_detection_quiet_period";
     public final static String SOUND_INFO_TIMELINE = "sound_info_timeline";
     public final static String SMART_ALARM = "smart_alarm";
+    public final static String OTA_RELEASE = "release";
 }

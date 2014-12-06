@@ -491,13 +491,20 @@ public class ReceiveResource extends BaseResource {
             LOGGER.debug("Feature is active!");
         }
 
-
+        // groups take precedence over feature
         if(!groups.isEmpty()) {
             LOGGER.debug("DeviceId {} belongs to groups: {}", deviceName, groups);
             final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName, groups.get(0), firmwareVersion);
             LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
             responseBuilder.addAllFiles(fileDownloadList);
         } else {
+
+            if(featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceName, groups)) {
+                LOGGER.debug("Feature release is active!");
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName, FeatureFlipper.OTA_RELEASE, firmwareVersion);
+                LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+                responseBuilder.addAllFiles(fileDownloadList);
+            }
             final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdateContent(deviceName, firmwareVersion);
             if(!fileDownloadList.isEmpty()) {
                 LOGGER.debug("Adding {} files to Files to Download list", fileDownloadList.size());
