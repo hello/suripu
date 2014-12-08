@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -87,6 +88,7 @@ public class TimelineUtils {
         }
 
         int maxSVM = 0;
+        List<Integer> svms = new ArrayList<>();
         for(final TrackerMotion trackerMotion : trackerMotions) {
             if(trackerMotion.value < 0){
                 LOGGER.trace("Invalid val {}", trackerMotion.value);
@@ -94,7 +96,11 @@ public class TimelineUtils {
             }
 
             maxSVM = Math.max(maxSVM, trackerMotion.value);
+            svms.add(trackerMotion.value);
         }
+
+        Integer[] sortedSVMs = svms.toArray(new Integer[0]);
+        Arrays.sort(sortedSVMs);
 
         LOGGER.debug("Max SVM = {}", maxSVM);
 
@@ -116,7 +122,7 @@ public class TimelineUtils {
                     trackerMotion.timestamp,
                     trackerMotion.timestamp + DateTimeConstants.MILLIS_PER_MINUTE,
                     trackerMotion.offsetMillis,
-                    normalizeSleepDepth(motionAmplitude, maxSVM));
+                    normalizeSleepDepth(motionAmplitude, sortedSVMs));
             motionEvents.add(motionEvent);
         }
         LOGGER.debug("Generated {} segments from {} tracker motion samples", motionEvents.size(), trackerMotions.size());
@@ -291,20 +297,47 @@ public class TimelineUtils {
     /**
      * Normalize sleep depth based on max value seen.
      * @param value
-     * @param maxValue
+     * @param sortedAmplitudes
      * @return
      */
-    public static Integer normalizeSleepDepth(final double value, final double maxValue) {
-        int sleepDepth = 100;
-        if(value == -1) {
-            sleepDepth = 100;
-        } else if(value > 0) {
-            int percentage = (int)(value / maxValue * 100);
-            sleepDepth = 100 - percentage;
-            LOGGER.trace("Ratio = ({} / {}) = {}", value, maxValue, percentage);
-            LOGGER.trace("Sleep Depth = {}", sleepDepth);
+    public static Integer normalizeSleepDepth(final int value, final Integer[] sortedAmplitudes) {
+        if(sortedAmplitudes == null){
+            return 100;
         }
+        if(sortedAmplitudes.length == 0){
+            return 100;
+        }
+
+        if(sortedAmplitudes.length > 0 && sortedAmplitudes.length < 5) {
+            int maxValue = sortedAmplitudes[sortedAmplitudes.length - 1];
+            int sleepDepth = 100;
+            if (value == -1) {
+                sleepDepth = 100;
+            } else if (value > 0) {
+                int percentage = value * 100 / maxValue;
+                sleepDepth = 100 - percentage;
+                LOGGER.trace("Ratio = ({} / {}) = {}", value, maxValue, percentage);
+                LOGGER.trace("Sleep Depth = {}", sleepDepth);
+            }
+            return sleepDepth;
+        }
+
+
+        int position = 0;
+        for(final Integer amplitude:sortedAmplitudes){
+            if(value > amplitude){
+                position++;
+            }else{
+                break;
+            }
+        }
+
+        int percentage = position * 100 / sortedAmplitudes.length;
+        int sleepDepth = 100 - percentage;
+        LOGGER.trace("Ratio = ({} / {}) = {}", value, position, percentage);
+        LOGGER.trace("Sleep Depth = {}", sleepDepth);
         return sleepDepth;
+
     }
 
 
