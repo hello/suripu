@@ -116,7 +116,7 @@ public class SleepCycleAlgorithm {
         final Random random = new Random();
 
         if(possibleSpanInMinutes > 0) {
-            LOGGER.debug("User still in light sleep. Next deep sleep moment: " + new DateTime(deepSleepMoment));
+            LOGGER.info("User still in light sleep. Next deep sleep moment: " + new DateTime(deepSleepMoment));
             smartAlarmTime = new DateTime(dataCollectionMoment, DateTimeZone.UTC).plusMinutes(random.nextInt(possibleSpanInMinutes) + 1);
         }else{
             // User already in deep sleep.
@@ -125,7 +125,7 @@ public class SleepCycleAlgorithm {
 
             // It is possible that cycleNumberInTheMiddle > 0. In that case we need to guess the cycle.
             long nextLightSleepMoment = lastCycle.getEndTimestamp() + cycleNumberInTheMiddle * sleepCycleLength;
-            LOGGER.debug("User already in deep sleep. Next light sleep moment: " + new DateTime(nextLightSleepMoment));
+            LOGGER.info("User already in deep sleep. Next light sleep moment: " + new DateTime(nextLightSleepMoment));
 
             if(nextLightSleepMoment > dataCollectionMoment && nextLightSleepMoment < alarmDeadlineUTC){
                 smartAlarmTime = new DateTime(nextLightSleepMoment, DateTimeZone.UTC);
