@@ -316,8 +316,8 @@ public class TimelineUtils {
             } else if (value > 0) {
                 int percentage = value * 100 / maxValue;
                 sleepDepth = 100 - percentage;
-                LOGGER.trace("Ratio = ({} / {}) = {}", value, maxValue, percentage);
-                LOGGER.trace("Sleep Depth = {}", sleepDepth);
+                LOGGER.trace("Absolute Ratio = ({} / {}) = {}", value, maxValue, percentage);
+                LOGGER.trace("Absolute Sleep Depth = {}", sleepDepth);
             }
             return sleepDepth;
         }
