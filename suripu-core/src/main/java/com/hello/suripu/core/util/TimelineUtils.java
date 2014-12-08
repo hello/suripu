@@ -87,47 +87,71 @@ public class TimelineUtils {
             return motionEvents;
         }
 
-        int maxSVM = 0;
-        List<Integer> svms = new ArrayList<>();
-        for(final TrackerMotion trackerMotion : trackerMotions) {
-            if(trackerMotion.value < 0){
-                LOGGER.trace("Invalid val {}", trackerMotion.value);
-                continue;
-            }
-
-            maxSVM = Math.max(maxSVM, trackerMotion.value);
-            svms.add(trackerMotion.value);
-        }
-
-        Integer[] sortedSVMs = svms.toArray(new Integer[0]);
-        Arrays.sort(sortedSVMs);
+        int maxSVM = getMaxSVM(trackerMotions);
+        final Map<Integer, Integer> positionMap = constructValuePositionMap(trackerMotions);
 
         LOGGER.debug("Max SVM = {}", maxSVM);
 
         final Long trackerId = trackerMotions.get(0).trackerId;
-        int motionAmplitude = 0;
         for(final TrackerMotion trackerMotion : trackerMotions) {
             if (!trackerMotion.trackerId.equals(trackerId)) {
                 LOGGER.warn("User has multiple pills: {} and {}", trackerId, trackerMotion.trackerId);
                 break; // if user has multiple pill, only use data from the latest tracker_id
             }
 
-            if(trackerMotion.value < 0){
-                continue;
-            }
-
-            motionAmplitude = trackerMotion.value;
-
             final MotionEvent motionEvent = new MotionEvent(
                     trackerMotion.timestamp,
                     trackerMotion.timestamp + DateTimeConstants.MILLIS_PER_MINUTE,
                     trackerMotion.offsetMillis,
-                    normalizeSleepDepth(motionAmplitude, sortedSVMs));
+                    getSleepDepth(trackerMotion.value, positionMap, maxSVM));
             motionEvents.add(motionEvent);
         }
         LOGGER.debug("Generated {} segments from {} tracker motion samples", motionEvents.size(), trackerMotions.size());
 
         return motionEvents;
+    }
+
+    public static Integer getSleepDepth(final Integer amplitude, final Map<Integer, Integer> positionMap, final Integer maxSVM){
+        if(positionMap.size() < 5){
+            return normalizeSleepDepth(amplitude, maxSVM);
+        }
+
+        if(positionMap.containsKey(amplitude)){
+            return positionMap.get(amplitude);
+        }
+
+        return normalizeSleepDepth(amplitude, maxSVM);
+    }
+
+    public static Integer getMaxSVM(final List<TrackerMotion> amplitudes){
+        int maxSVM = 0;
+        for(final TrackerMotion trackerMotion : amplitudes) {
+            maxSVM = Math.max(maxSVM, trackerMotion.value);
+        }
+
+        return maxSVM;
+    }
+
+    public static Map<Integer, Integer> constructValuePositionMap(final List<TrackerMotion> amplitudes){
+
+        final Integer[] sortedSVMs = new Integer[amplitudes.size()];
+
+        int index = 0;
+        for(final TrackerMotion trackerMotion:amplitudes){
+            sortedSVMs[index] = trackerMotion.value;
+            ++index;
+        }
+        Arrays.sort(sortedSVMs);
+
+        final Map<Integer, Integer> positionIndex = new HashMap<>();
+        int position = 1;
+
+        for(final Integer value : sortedSVMs) {
+            positionIndex.put(value, position * 100 / amplitudes.size());
+            position++;
+        }
+
+        return positionIndex;
     }
 
     public static List<SleepSegment> eventsToSegments(final List<Event> events){
@@ -297,46 +321,22 @@ public class TimelineUtils {
     /**
      * Normalize sleep depth based on max value seen.
      * @param value
-     * @param sortedAmplitudes
+     * @param maxValue
      * @return
      */
-    public static Integer normalizeSleepDepth(final int value, final Integer[] sortedAmplitudes) {
-        if(sortedAmplitudes == null){
-            return 100;
-        }
-        if(sortedAmplitudes.length == 0){
-            return 100;
-        }
+    public static Integer normalizeSleepDepth(final int value, int maxValue) {
 
-        if(sortedAmplitudes.length > 0 && sortedAmplitudes.length < 5) {
-            int maxValue = sortedAmplitudes[sortedAmplitudes.length - 1];
-            int sleepDepth = 100;
-            if (value == -1) {
-                sleepDepth = 100;
-            } else if (value > 0) {
-                int percentage = value * 100 / maxValue;
-                sleepDepth = 100 - percentage;
-                LOGGER.trace("Absolute Ratio = ({} / {}) = {}", value, maxValue, percentage);
-                LOGGER.trace("Absolute Sleep Depth = {}", sleepDepth);
-            }
-            return sleepDepth;
+        int sleepDepth = 100;
+        if (value < 0) {
+            sleepDepth = 100;
+        } else if (value > 0) {
+            int percentage = value * 100 / maxValue;
+            sleepDepth = 100 - percentage;
+            LOGGER.trace("Absolute Ratio = ({} / {}) = {}", value, maxValue, percentage);
+            LOGGER.trace("Absolute Sleep Depth = {}", sleepDepth);
         }
-
-
-        int position = 0;
-        for(final Integer amplitude:sortedAmplitudes){
-            if(value > amplitude){
-                position++;
-            }else{
-                break;
-            }
-        }
-
-        int percentage = position * 100 / sortedAmplitudes.length;
-        int sleepDepth = 100 - percentage;
-        LOGGER.trace("Ratio = ({} / {}) = {}", value, position, percentage);
-        LOGGER.trace("Sleep Depth = {}", sleepDepth);
         return sleepDepth;
+
 
     }
 
