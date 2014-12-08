@@ -29,7 +29,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -104,10 +103,10 @@ public class DeviceResources {
 
     @Timed
     @GET
-    @Path("/q")
+    @Path("/id/{email}")
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> listDeviceIDsByEmail(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                          @QueryParam("email") String email) {
+                          @PathParam("email") String email) {
         LOGGER.debug("Searching devices for email = {}", email);
         Optional<Long> accountId = getAccountIdByEmail(email);
         if (!accountId.isPresent()) {
@@ -125,10 +124,10 @@ public class DeviceResources {
 
     @GET
     @Timed
-    @Path("/specs")
+    @Path("/specs/{email}")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Device> getDevicesForAdmin(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                           @QueryParam("email") String email) {
+                                           @PathParam("email") String email) {
         LOGGER.debug("Querying latest devices specs for email = {}", email);
         final Optional<Long> accountId = getAccountIdByEmail(email);
         if (!accountId.isPresent()) {
