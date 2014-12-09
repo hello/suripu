@@ -147,7 +147,7 @@ public class TimelineUtils {
         int position = 1;
 
         for(final Integer value : sortedSVMs) {
-            positionIndex.put(value, position * 100 / amplitudes.size());
+            positionIndex.put(value, 100 - position * 100 / amplitudes.size());
             position++;
         }
 

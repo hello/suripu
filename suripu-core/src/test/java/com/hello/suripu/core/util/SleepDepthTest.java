@@ -42,7 +42,7 @@ public class SleepDepthTest {
             bufferedReader.close();
 
             final Map<Integer, Integer> valuePositions = TimelineUtils.constructValuePositionMap(trackerMotionList);
-            assertThat(valuePositions.get(2940), is(89));
+            assertThat(valuePositions.get(2940), is(100 - 89));
         }catch (Exception ex){
             ex.printStackTrace();
             throw new RuntimeException(ex);
