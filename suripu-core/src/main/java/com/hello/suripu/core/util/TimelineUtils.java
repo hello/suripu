@@ -369,8 +369,10 @@ public class TimelineUtils {
                 soundSleepDuration += segment.getDurationInSeconds();
             } else if(segment.getSleepDepth() >= 0 && segment.getSleepDepth() < lightSleepThreshold) {
                 lightSleepDuration += segment.getDurationInSeconds();
-            } else {
-                numberOfMotionEvents += 1;
+            }
+
+            if(segment.getType() == Event.Type.MOTION){
+                numberOfMotionEvents++;
             }
             LOGGER.trace("duration in seconds = {}", segment.getDurationInSeconds());
             sleepDuration += segment.getDurationInSeconds();
