@@ -39,7 +39,8 @@ public class ApplicationResource {
     public Response register(
             @Valid final ApplicationRegistration applicationRegistration,
             @Scope({OAuthScope.ADMINISTRATION_WRITE}) final AccessToken token) {
-        applicationStore.register(applicationRegistration);
+        final ApplicationRegistration applicationWithDevAccountId = ApplicationRegistration.addDevAccountId(applicationRegistration, token.accountId);
+        applicationStore.register(applicationWithDevAccountId);
         return Response.ok().build();
     }
 

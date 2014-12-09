@@ -66,6 +66,9 @@ public class Application {
     }
 
     public static Application fromApplicationRegistration(final ApplicationRegistration registration, Long id) {
+        if (!registration.developerAccountId.isPresent()) {
+            throw new IllegalArgumentException("Missing developer account id from application registration");
+        }
         return new Application(
                 id,
                 registration.name,
@@ -73,7 +76,7 @@ public class Application {
                 registration.clientSecret,
                 registration.redirectURI,
                 registration.scopes,
-                registration.developerAccountId,
+                registration.developerAccountId.get(),
                 registration.description,
                 Boolean.FALSE, // Application aren't published by default.
                 DateTime.now(),
