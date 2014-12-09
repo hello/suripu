@@ -34,7 +34,9 @@ import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.SunData;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.librato.rollout.RolloutClient;
+import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
+import com.yammer.metrics.core.Histogram;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -71,6 +73,7 @@ public class TimelineResource extends BaseResource {
     private final SunData sunData;
     private final AmazonS3 s3;
     private final String bucketName;
+    private final Histogram motionEventDistribution;
 
     public TimelineResource(final TrackerMotionDAO trackerMotionDAO,
                             final DeviceDAO deviceDAO,
@@ -90,6 +93,7 @@ public class TimelineResource extends BaseResource {
         this.sunData = sunData;
         this.s3 = s3;
         this.bucketName = bucketName;
+        this.motionEventDistribution = Metrics.defaultRegistry().newHistogram(TimelineResource.class, "motion_event_distribution");
     }
 
     @Timed
@@ -236,6 +240,7 @@ public class TimelineResource extends BaseResource {
 //        final List<SleepSegment> mergedSegments = TimelineUtils.mergeConsecutiveSleepSegments(segments, mergeThreshold);
         final List<Event> mergedEvents = TimelineUtils.generateAlignedSegmentsByTypeWeight(events, DateTimeConstants.MILLIS_PER_MINUTE, 15, false);
         final List<Event> convertedEvents = TimelineUtils.convertLightMotionToNone(mergedEvents, threshold);
+        writeMotionMetrics(this.motionEventDistribution, convertedEvents);
 
         List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(convertedEvents);
 
@@ -276,5 +281,16 @@ public class TimelineResource extends BaseResource {
         timelines.add(timeline);
 
         return timelines;
+    }
+
+    public static void writeMotionMetrics(final Histogram histogram, final List<Event> alignedAndConvertedEvents){
+        int count = 0;
+        for(final Event event:alignedAndConvertedEvents){
+            if(event.getType() == Event.Type.MOTION){
+                count++;
+            }
+        }
+
+        histogram.update(count);
     }
 }

@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -86,42 +87,71 @@ public class TimelineUtils {
             return motionEvents;
         }
 
-        int maxSVM = 0;
-        for(final TrackerMotion trackerMotion : trackerMotions) {
-            if(trackerMotion.value < 0){
-                LOGGER.trace("Invalid val {}", trackerMotion.value);
-                continue;
-            }
-
-            maxSVM = Math.max(maxSVM, trackerMotion.value);
-        }
+        int maxSVM = getMaxSVM(trackerMotions);
+        final Map<Integer, Integer> positionMap = constructValuePositionMap(trackerMotions);
 
         LOGGER.debug("Max SVM = {}", maxSVM);
 
         final Long trackerId = trackerMotions.get(0).trackerId;
-        int motionAmplitude = 0;
         for(final TrackerMotion trackerMotion : trackerMotions) {
             if (!trackerMotion.trackerId.equals(trackerId)) {
                 LOGGER.warn("User has multiple pills: {} and {}", trackerId, trackerMotion.trackerId);
                 break; // if user has multiple pill, only use data from the latest tracker_id
             }
 
-            if(trackerMotion.value < 0){
-                continue;
-            }
-
-            motionAmplitude = trackerMotion.value;
-
             final MotionEvent motionEvent = new MotionEvent(
                     trackerMotion.timestamp,
                     trackerMotion.timestamp + DateTimeConstants.MILLIS_PER_MINUTE,
                     trackerMotion.offsetMillis,
-                    normalizeSleepDepth(motionAmplitude, maxSVM));
+                    getSleepDepth(trackerMotion.value, positionMap, maxSVM));
             motionEvents.add(motionEvent);
         }
         LOGGER.debug("Generated {} segments from {} tracker motion samples", motionEvents.size(), trackerMotions.size());
 
         return motionEvents;
+    }
+
+    public static Integer getSleepDepth(final Integer amplitude, final Map<Integer, Integer> positionMap, final Integer maxSVM){
+        if(positionMap.size() < 5){
+            return normalizeSleepDepth(amplitude, maxSVM);
+        }
+
+        if(positionMap.containsKey(amplitude)){
+            return positionMap.get(amplitude);
+        }
+
+        return normalizeSleepDepth(amplitude, maxSVM);
+    }
+
+    public static Integer getMaxSVM(final List<TrackerMotion> amplitudes){
+        int maxSVM = 0;
+        for(final TrackerMotion trackerMotion : amplitudes) {
+            maxSVM = Math.max(maxSVM, trackerMotion.value);
+        }
+
+        return maxSVM;
+    }
+
+    public static Map<Integer, Integer> constructValuePositionMap(final List<TrackerMotion> amplitudes){
+
+        final Integer[] sortedSVMs = new Integer[amplitudes.size()];
+
+        int index = 0;
+        for(final TrackerMotion trackerMotion:amplitudes){
+            sortedSVMs[index] = trackerMotion.value;
+            ++index;
+        }
+        Arrays.sort(sortedSVMs);
+
+        final Map<Integer, Integer> positionIndex = new HashMap<>();
+        int position = 1;
+
+        for(final Integer value : sortedSVMs) {
+            positionIndex.put(value, 100 - position * 100 / amplitudes.size());
+            position++;
+        }
+
+        return positionIndex;
     }
 
     public static List<SleepSegment> eventsToSegments(final List<Event> events){
@@ -294,17 +324,20 @@ public class TimelineUtils {
      * @param maxValue
      * @return
      */
-    public static Integer normalizeSleepDepth(final double value, final double maxValue) {
+    public static Integer normalizeSleepDepth(final int value, int maxValue) {
+
         int sleepDepth = 100;
-        if(value == -1) {
+        if (value < 0) {
             sleepDepth = 100;
-        } else if(value > 0) {
-            int percentage = (int)(value / maxValue * 100);
+        } else if (value > 0) {
+            int percentage = value * 100 / maxValue;
             sleepDepth = 100 - percentage;
-            LOGGER.trace("Ratio = ({} / {}) = {}", value, maxValue, percentage);
-            LOGGER.trace("Sleep Depth = {}", sleepDepth);
+            LOGGER.trace("Absolute Ratio = ({} / {}) = {}", value, maxValue, percentage);
+            LOGGER.trace("Absolute Sleep Depth = {}", sleepDepth);
         }
         return sleepDepth;
+
+
     }
 
 
