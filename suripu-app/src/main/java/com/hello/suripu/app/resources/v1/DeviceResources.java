@@ -37,9 +37,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 
 @Path("/v1/devices")
@@ -211,7 +211,7 @@ public class DeviceResources {
         }
 
         final Jedis jedis = jedisPool.getResource();
-        final Set<Tuple> tuples = new HashSet<>();
+        final Set<Tuple> tuples = new TreeSet<>();
         try {
               tuples.addAll(jedis.zrangeByScoreWithScores("devices", 0, timestamp));
         } catch (Exception e) {
