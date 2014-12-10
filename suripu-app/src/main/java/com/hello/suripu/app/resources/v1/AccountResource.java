@@ -174,7 +174,7 @@ public class AccountResource {
     public List<String> getAccountByDeviceId(@Scope(OAuthScope.ADMINISTRATION_READ) AccessToken accessToken,
                                           @QueryParam("device_id") String deviceId) {
         LOGGER.debug("Searching accounts who have used device {}", deviceId);
-        final ImmutableList<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceId.trim());
+        final ImmutableList<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceId.trim()); // remove unwanted trailing white spaces
         final List<String> emailList = new ArrayList<>();
         for (DeviceAccountPair pair: deviceAccountPairs) {
             final Optional<Account> account = accountDAO.getById(pair.accountId);
