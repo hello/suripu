@@ -216,6 +216,8 @@ public class DeviceResources {
               tuples.addAll(jedis.zrangeByScoreWithScores("devices", 0, timestamp));
         } catch (Exception e) {
             LOGGER.error("Failed retrieving list of devices", e.getMessage());
+        } finally {
+            jedisPool.returnResource(jedis);
         }
         final List<DeviceInactive> inactiveDevices = new ArrayList<>();
         for(final Tuple tuple : tuples) {
