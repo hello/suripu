@@ -93,6 +93,7 @@ import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import redis.clients.jedis.JedisPool;
 
 import java.net.InetAddress;
 import java.util.List;
@@ -193,6 +194,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 configuration.getSleepScoreVersion()
         );
 
+        final JedisPool jedisPool = new JedisPool("localhost", 6379);
         final ImmutableMap<String, String> arns = ImmutableMap.copyOf(configuration.getPushNotificationsConfiguration().getArns());
         final NotificationSubscriptionsDAO subscriptionDAO = new DynamoDBNotificationSubscriptionDAO(
                 dynamoDBClient,
@@ -251,7 +253,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new SleepLabelResource(sleepLabelDAO));
         environment.addProvider(new RoomConditionsResource(deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
         environment.addResource(new EventResource(eventDAODynamoDB));
-        environment.addResource(new DeviceResources(deviceDAO, accountDAO));
+        environment.addResource(new DeviceResources(deviceDAO, accountDAO, jedisPool));
 
         environment.addResource(new ScoresResource(trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), configuration.getSleepScoreVersion()));
 

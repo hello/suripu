@@ -20,6 +20,9 @@ import org.joda.time.DateTime;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.Tuple;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -34,7 +37,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 
 @Path("/v1/devices")
@@ -44,11 +49,14 @@ public class DeviceResources {
 
     private final DeviceDAO deviceDAO;
     private final AccountDAO accountDAO;
+    private final JedisPool jedisPool;
 
     public DeviceResources(final DeviceDAO deviceDAO,
-                           final AccountDAO accountDAO) {
+                           final AccountDAO accountDAO,
+                           final JedisPool jedisPool) {
         this.deviceDAO = deviceDAO;
         this.accountDAO = accountDAO;
+        this.jedisPool = jedisPool;
     }
 
     @POST
@@ -189,5 +197,36 @@ public class DeviceResources {
     public List<DeviceInactive> getInactiveDevice(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken, @PathParam("inactive_hours") Integer inactiveHours) {
         final DateTime startTime = DateTime.now().minusMonths(2);
         return deviceDAO.getInactiveDevice(startTime, inactiveHours);
+    }
+
+
+    @GET
+    @Timed
+    @Path("/inactive")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<DeviceInactive> getInactiveDevices(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken, @QueryParam("since") final Long timestamp) {
+        if(timestamp == null) {
+            LOGGER.error("Missing since parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        final Jedis jedis = jedisPool.getResource();
+        final Set<Tuple> tuples = new HashSet<>();
+        try {
+              tuples.addAll(jedis.zrangeByScoreWithScores("devices", 0, timestamp));
+        } catch (Exception e) {
+            LOGGER.error("Failed retrieving list of devices", e.getMessage());
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
+        final List<DeviceInactive> inactiveDevices = new ArrayList<>();
+        for(final Tuple tuple : tuples) {
+            final Long millis = (long) tuple.getScore();
+            final DateTime diff = DateTime.now().minus(new DateTime(millis).getMillis());
+            final DeviceInactive deviceInactive = new DeviceInactive(tuple.getElement(), 0L, "", diff);
+            inactiveDevices.add(deviceInactive);
+        }
+
+        return inactiveDevices;
     }
 }

@@ -35,6 +35,7 @@ import net.sourceforge.argparse4j.inf.Namespace;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import redis.clients.jedis.JedisPool;
 
 import java.net.InetAddress;
 import java.util.List;
@@ -127,6 +128,7 @@ public final class PillScoreWorkerCommand extends ConfiguredCommand<PillScoreWor
                 configuration.getTimezoneHistoryConfiguration().getTableName()
         );
 
+        final JedisPool pool = new JedisPool("localhost", 6379);
         final IRecordProcessorFactory factory = new PillScoreProcessorFactory(
                 sleepScoreDAO,
                 configuration.getDateMinuteBucket(),
@@ -134,7 +136,8 @@ public final class PillScoreWorkerCommand extends ConfiguredCommand<PillScoreWor
                 kinesisConfig,
                 keyStore,
                 deviceDAO,
-                timeZoneHistoryDB
+                timeZoneHistoryDB,
+                pool
         );
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
