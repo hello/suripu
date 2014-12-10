@@ -1,9 +1,12 @@
 package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.PasswordUpdate;
 import com.hello.suripu.core.models.Registration;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -26,6 +29,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 
@@ -34,9 +38,11 @@ public class AccountResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountResource.class);
     private final AccountDAO accountDAO;
+    private final DeviceDAO deviceDAO;
 
-    public AccountResource(final AccountDAO accountDAO) {
+    public AccountResource(final AccountDAO accountDAO, final DeviceDAO deviceDAO) {
         this.accountDAO = accountDAO;
+        this.deviceDAO = deviceDAO;
     }
 
     @GET
@@ -159,5 +165,23 @@ public class AccountResource {
 
         final List<Account> accounts = accountDAO.getRecent();
         return accounts;
+    }
+
+    @Timed
+    @GET
+    @Path("/device")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> getAccountByDeviceId(@Scope(OAuthScope.ADMINISTRATION_READ) AccessToken accessToken,
+                                          @QueryParam("device_id") String deviceId) {
+        LOGGER.debug("Searching accounts who have used device {}", deviceId);
+        final ImmutableList<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceId.trim());
+        final List<String> emailList = new ArrayList<>();
+        for (DeviceAccountPair pair: deviceAccountPairs) {
+            final Optional<Account> account = accountDAO.getById(pair.accountId);
+            if (account.isPresent()) {
+                emailList.add(account.get().email);
+            }
+        }
+        return emailList;
     }
 }

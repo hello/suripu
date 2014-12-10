@@ -248,7 +248,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         ObjectGraphRoot.getInstance().init(module);
 
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, subscriptionDAO));
-        environment.addResource(new AccountResource(accountDAO));
+        environment.addResource(new AccountResource(accountDAO, deviceDAO));
         environment.addResource(new ApplicationResource(applicationStore));
         environment.addResource(new SleepLabelResource(sleepLabelDAO));
         environment.addProvider(new RoomConditionsResource(deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
