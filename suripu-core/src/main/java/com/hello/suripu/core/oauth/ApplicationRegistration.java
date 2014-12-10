@@ -1,7 +1,9 @@
 package com.hello.suripu.core.oauth;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -23,8 +25,8 @@ public class ApplicationRegistration {
     @JsonProperty("scopes")
     public final OAuthScope[] scopes;
 
-    @JsonProperty("dev_account_id")
-    public final Long developerAccountId;
+    @JsonIgnore
+    public final Optional<Long> developerAccountId;
 
     @JsonProperty("description")
     public final String description;
@@ -39,10 +41,9 @@ public class ApplicationRegistration {
             @JsonProperty("client_secret") final String clientSecret,
             @JsonProperty("redirect_uri") final String redirectURI,
             @JsonProperty("scopes") final OAuthScope[] scopes,
-            @JsonProperty("dev_account_id") final Long developerAccountId,
             @JsonProperty("description") final String description
     ) {
-        this(name, clientId, clientSecret, redirectURI, scopes, developerAccountId, description, DateTime.now(DateTimeZone.UTC));
+        this(name, clientId, clientSecret, redirectURI, scopes, null, description, DateTime.now(DateTimeZone.UTC));
     }
 
     /**
@@ -58,7 +59,7 @@ public class ApplicationRegistration {
      * @param description
      * @param created
      */
-    public ApplicationRegistration(
+    private ApplicationRegistration(
         final String name,
         final String clientId,
         final String clientSecret,
@@ -73,8 +74,20 @@ public class ApplicationRegistration {
         this.clientSecret = clientSecret;
         this.redirectURI = redirectURI;
         this.scopes = scopes;
-        this.developerAccountId = developerAccountId;
+        this.developerAccountId = Optional.fromNullable(developerAccountId);
         this.description = description;
         this.created = created;
+    }
+    public static ApplicationRegistration addDevAccountId(final ApplicationRegistration applicationRegistration, final Long devAccountId) {
+        return new ApplicationRegistration(
+                applicationRegistration.name,
+                applicationRegistration.clientId,
+                applicationRegistration.clientSecret,
+                applicationRegistration.redirectURI,
+                applicationRegistration.scopes,
+                devAccountId,
+                applicationRegistration.description,
+                applicationRegistration.created
+            );
     }
 }
