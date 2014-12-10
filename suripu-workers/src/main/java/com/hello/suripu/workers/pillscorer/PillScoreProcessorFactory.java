@@ -7,6 +7,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
+import redis.clients.jedis.JedisPool;
 
 public class PillScoreProcessorFactory implements IRecordProcessorFactory {
 
@@ -17,6 +18,7 @@ public class PillScoreProcessorFactory implements IRecordProcessorFactory {
     private final KeyStore keyStore;
     private final DeviceDAO deviceDAO;
     private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDB;
+    private final JedisPool jedisPool;
 
     public PillScoreProcessorFactory(
             final SleepScoreDAO sleepScoreDAO,
@@ -25,7 +27,8 @@ public class PillScoreProcessorFactory implements IRecordProcessorFactory {
             final KinesisClientLibConfiguration configuration,
             final KeyStore keyStore,
             final DeviceDAO deviceDAO,
-            final TimeZoneHistoryDAODynamoDB timeZoneHistoryDB) {
+            final TimeZoneHistoryDAODynamoDB timeZoneHistoryDB,
+            final JedisPool jedisPool) {
         this.sleepScoreDAO = sleepScoreDAO;
         this.dateMinuteBucket = dateMinuteBucket;
         this.checkpointThreshold = checkpointThreshold;
@@ -33,10 +36,11 @@ public class PillScoreProcessorFactory implements IRecordProcessorFactory {
         this.keyStore = keyStore;
         this.deviceDAO = deviceDAO;
         this.timeZoneHistoryDB = timeZoneHistoryDB;
+        this.jedisPool = jedisPool;
     }
 
     @Override
     public IRecordProcessor createProcessor() {
-        return new PillScoreProcessor(sleepScoreDAO, dateMinuteBucket, checkpointThreshold, keyStore, deviceDAO, timeZoneHistoryDB);
+        return new PillScoreProcessor(sleepScoreDAO, dateMinuteBucket, checkpointThreshold, keyStore, deviceDAO, timeZoneHistoryDB, jedisPool);
     }
 }
