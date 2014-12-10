@@ -52,7 +52,7 @@ public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
                 dateOfTheNightLocalUTC.withTimeAtStartOfDay().plusDays(1).plusHours(4));
 
         final AmplitudeDataPreprocessor cutAfter4am = new DataCutter(dateOfTheNightLocalUTC.withTimeAtStartOfDay().plusDays(1).plusHours(4),
-                dateOfTheNightLocalUTC.withTimeAtStartOfDay().plusDays(1));
+                dateOfTheNightLocalUTC.withTimeAtStartOfDay().plusDays(1).plusHours(12));
 
         final ImmutableList<AmplitudeData> fallAsleepPeriodData = cutBefore4am.process(smoothedData);
         final ImmutableList<AmplitudeData> wakeUpPeriodData = cutAfter4am.process(smoothedData);
