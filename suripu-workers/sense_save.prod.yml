@@ -42,7 +42,7 @@ common_db:
   # the maximum lifetime of an idle connection
   closeConnectionIfIdleFor: 1 minute
 
-sense_db:
+sensors_db:
   driverClass: org.postgresql.Driver
   user: ingress_user
   password: hello ingress user

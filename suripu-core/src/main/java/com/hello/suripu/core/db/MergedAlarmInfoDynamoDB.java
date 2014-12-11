@@ -281,7 +281,6 @@ public class MergedAlarmInfoDynamoDB {
     public static Optional<DateTimeZone> getTimeZoneFromAttributes(final String deviceId, final long accountId, final Map<String, AttributeValue> item){
         final HashSet<String> alarmAttributes = new HashSet<String>();
         Collections.addAll(alarmAttributes, TIMEZONE_ID_ATTRIBUTE_NAME);
-
         if(!item.keySet().containsAll(alarmAttributes)){
             return Optional.absent();
         }
@@ -297,7 +296,7 @@ public class MergedAlarmInfoDynamoDB {
     }
 
 
-    // TODO : test this
+
     public Optional<DateTimeZone> getTimezone(final String senseId, final Long accountId) {
         final GetItemRequest getItemRequest = new GetItemRequest();
         final Map<String, AttributeValue> keys = new HashMap<>();
@@ -308,6 +307,10 @@ public class MergedAlarmInfoDynamoDB {
                 .withKey(keys);
 
         final GetItemResult result = dynamoDBClient.getItem(getItemRequest);
+        if(result.getItem() == null) {
+            LOGGER.warn("Timezone item was null for sense {} and accountId {}", senseId, accountId);
+            return Optional.absent();
+        }
         return MergedAlarmInfoDynamoDB.getTimeZoneFromAttributes(senseId, accountId, result.getItem());
     }
 
