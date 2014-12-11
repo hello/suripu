@@ -200,7 +200,7 @@ public class DeviceResources {
                                                    @QueryParam("start") final Long startTimeStamp,
                                                    @QueryParam("since") final Long inactiveSince,
                                                    @QueryParam("threshold") final Long inactiveThreshold,
-                                                   @QueryParam("page") final Integer page) {
+                                                   @QueryParam("page") final Integer currentPage) {
         if(startTimeStamp == null) {
             LOGGER.error("Missing startTimestamp parameter");
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
@@ -216,18 +216,18 @@ public class DeviceResources {
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
-        if(page == null) {
+        if(currentPage == null) {
             LOGGER.error("Missing page parameter");
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
         final Integer maxDevicesPerPage = 40;
-        final Integer offset = Math.max(0, (page - 1) * maxDevicesPerPage);
+        final Integer offset = Math.max(0, (currentPage - 1) * maxDevicesPerPage);
         final Integer count = maxDevicesPerPage;
 
         final Jedis jedis = jedisPool.getResource();
         final Set<Tuple> tuples = new TreeSet<>();
-        Long pageCount = 0L;
+        Long totalPage = 0L;
 
         LOGGER.debug("{} {} {} {}", inactiveSince - inactiveThreshold, inactiveSince, offset, count);
         try {
@@ -235,7 +235,7 @@ public class DeviceResources {
           // for inactiveSince = 1418070001000 e.g for inactiveThreshold = 259200000, this function returns
           // devices which have been inactive for at least 3 days since Dec 4, 2014
             tuples.addAll(jedis.zrangeByScoreWithScores("devices", startTimeStamp, inactiveSince - inactiveThreshold, offset, count));
-            pageCount = (long) Math.ceil(jedis.zcount("devices", startTimeStamp, inactiveSince - inactiveThreshold) / (double) maxDevicesPerPage);
+            totalPage = (long) Math.ceil(jedis.zcount("devices", startTimeStamp, inactiveSince - inactiveThreshold) / (double) maxDevicesPerPage);
 
         } catch (Exception e) {
             LOGGER.error("Failed retrieving list of devices", e.getMessage());
@@ -250,7 +250,7 @@ public class DeviceResources {
             final DeviceInactive deviceInactive = new DeviceInactive(tuple.getElement(), inactivePeriod);
             inactiveDevices.add(deviceInactive);
         }
-        return new DeviceInactivePaginator((long)page, pageCount, inactiveDevices);
+        return new DeviceInactivePaginator((long)currentPage, totalPage, inactiveDevices);
     }
 
     @Timed
