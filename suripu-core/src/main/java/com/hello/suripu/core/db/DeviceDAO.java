@@ -2,9 +2,11 @@ package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.core.db.mappers.AccountMapper;
 import com.hello.suripu.core.db.mappers.DeviceAccountPairMapper;
 import com.hello.suripu.core.db.mappers.DeviceInactiveMapper;
 import com.hello.suripu.core.db.mappers.DeviceStatusMapper;
+import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceInactive;
 import com.hello.suripu.core.models.DeviceStatus;
@@ -114,5 +116,13 @@ public interface DeviceDAO {
     ImmutableList<DeviceInactive> getInactiveDevice(
             @Bind("start_time") final DateTime startTime,
             @Bind("inactive_hours") final Integer inactiveHours
+    );
+
+    @RegisterMapper(AccountMapper.class)
+    @SingleValueResult(Account.class)
+    @SqlQuery("SELECT * FROM account_device_map as m JOIN accounts as a ON (a.id = m.account_id) WHERE m.device_name = :device_id LIMIT :max_devices;")
+    ImmutableList<Account> getAccountsByDevices(
+            @Bind("device_id") final String deviceId,
+            @Bind("max_devices") final Long maxDevices
     );
 }

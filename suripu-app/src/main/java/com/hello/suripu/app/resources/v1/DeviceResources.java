@@ -229,4 +229,16 @@ public class DeviceResources {
 
         return inactiveDevices;
     }
+
+    @Timed
+    @GET
+    @Path("/{device_id}/accounts")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ImmutableList<Account> getAccountsByDeviceIDs(@Scope(OAuthScope.ADMINISTRATION_READ) AccessToken accessToken,
+                                                @QueryParam("max_devices") Long maxDevices,
+                                                @PathParam("device_id") String deviceId) {
+        LOGGER.debug("Searching accounts who have used device {}", deviceId);
+        final ImmutableList<Account> accounts = deviceDAO.getAccountsByDevices(deviceId, maxDevices);
+        return accounts;
+    }
 }
