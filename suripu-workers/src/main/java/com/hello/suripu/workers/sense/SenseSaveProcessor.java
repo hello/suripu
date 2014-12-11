@@ -77,18 +77,23 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             long timestampMillis = periodicData.getUnixTime() * 1000L;
             final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
             // This is the default timezone.
-            DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
 
 
             for (final DeviceAccountPair pair : deviceAccountPairs) {
+                Optional<DateTimeZone> timeZoneOptional;
                 try {
                     // TODO: Get the timezone for current user.
-
+                    timeZoneOptional = mergedInfoDynamoDB.getTimezone(pair.externalDeviceId, pair.accountId);
+                    if(!timeZoneOptional.isPresent()) {
+                        LOGGER.warn("Did not find Timezone for Sense {} and account: {}", pair.externalDeviceId, pair.internalDeviceId);
+                        continue;
+                    }
                 } catch (AmazonServiceException awsException) {
                     // I guess this endpoint should never bail out?
-                    LOGGER.error("AWS error when retrieving user timezone for account {}", pair.accountId);
+                    LOGGER.error("AWS error when retrieving user timezone for account {} and Sense", pair.accountId, pair.externalDeviceId);
                     continue;
                 }
+                final DateTimeZone userTimeZone = timeZoneOptional.get();
 
                 final DeviceData.Builder builder = new DeviceData.Builder()
                         .withAccountId(pair.accountId)
