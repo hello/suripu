@@ -227,7 +227,7 @@ public class DeviceResources {
 
         final Jedis jedis = jedisPool.getResource();
         final Set<Tuple> tuples = new TreeSet<>();
-        Long totalPage = 0L;
+        Integer totalPages = 0;
 
         LOGGER.debug("{} {} {} {}", inactiveSince - inactiveThreshold, inactiveSince, offset, count);
         try {
@@ -235,7 +235,7 @@ public class DeviceResources {
           // for inactiveSince = 1418070001000 e.g for inactiveThreshold = 259200000, this function returns
           // devices which have been inactive for at least 3 days since Dec 4, 2014
             tuples.addAll(jedis.zrangeByScoreWithScores("devices", startTimeStamp, inactiveSince - inactiveThreshold, offset, count));
-            totalPage = (long) Math.ceil(jedis.zcount("devices", startTimeStamp, inactiveSince - inactiveThreshold) / (double) maxDevicesPerPage);
+            totalPages = (int)Math.ceil(jedis.zcount("devices", startTimeStamp, inactiveSince - inactiveThreshold) / (double) maxDevicesPerPage);
 
         } catch (Exception e) {
             LOGGER.error("Failed retrieving list of devices", e.getMessage());
@@ -250,7 +250,7 @@ public class DeviceResources {
             final DeviceInactive deviceInactive = new DeviceInactive(tuple.getElement(), inactivePeriod);
             inactiveDevices.add(deviceInactive);
         }
-        return new DeviceInactivePaginator((long)currentPage, totalPage, inactiveDevices);
+        return new DeviceInactivePaginator(currentPage, totalPages, inactiveDevices);
     }
 
     @Timed
