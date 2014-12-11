@@ -12,13 +12,13 @@ public class DeviceInactivePaginator {
     @JsonProperty("current_page")
     public final Integer currentPage;
     @JsonProperty("total_pages")
-    public final Integer totalPage;
+    public final Integer totalPages;
     @JsonProperty("content")
     public final List<DeviceInactive> content;
 
-    public DeviceInactivePaginator(final Integer currentPage, final Integer totalPage, final List<DeviceInactive> content) {
+    public DeviceInactivePaginator(final Integer currentPage, final Integer totalPages, final List<DeviceInactive> content) {
         this.currentPage = currentPage;
-        this.totalPage = totalPage;
+        this.totalPages = totalPages;
         this.content = content;
     }
 }
