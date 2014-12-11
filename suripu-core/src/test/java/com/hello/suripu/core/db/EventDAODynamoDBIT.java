@@ -8,7 +8,7 @@ import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.Event;
-import com.hello.suripu.core.models.SleepEvent;
+import com.hello.suripu.core.models.Events.SleepEvent;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;

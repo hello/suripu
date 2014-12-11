@@ -1,8 +1,8 @@
 package com.hello.suripu.core.processors;
 
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.core.models.MotionEvent;
-import com.hello.suripu.core.models.PartnerMotionEvent;
+import com.hello.suripu.core.models.Events.MotionEvent;
+import com.hello.suripu.core.models.Events.PartnerMotionEvent;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.yammer.metrics.annotation.Timed;

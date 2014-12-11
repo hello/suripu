@@ -1,6 +1,13 @@
 package com.hello.suripu.core.models;
 
 import com.google.common.base.Objects;
+import com.hello.suripu.core.models.Events.MotionEvent;
+import com.hello.suripu.core.models.Events.PartnerMotionEvent;
+import com.hello.suripu.core.models.Events.SleepEvent;
+import com.hello.suripu.core.models.Events.SleepMotionEvent;
+import com.hello.suripu.core.models.Events.SunRiseEvent;
+import com.hello.suripu.core.models.Events.SunSetEvent;
+import com.hello.suripu.core.models.Events.WakeupEvent;
 
 /**
  * Created by pangwu on 5/8/14.

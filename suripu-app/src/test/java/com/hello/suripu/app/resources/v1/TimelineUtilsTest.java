@@ -2,8 +2,8 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.io.Resources;
 import com.hello.suripu.core.models.Event;
-import com.hello.suripu.core.models.MotionEvent;
-import com.hello.suripu.core.models.SleepEvent;
+import com.hello.suripu.core.models.Events.MotionEvent;
+import com.hello.suripu.core.models.Events.SleepEvent;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.TimelineUtils;
 import org.joda.time.DateTime;
