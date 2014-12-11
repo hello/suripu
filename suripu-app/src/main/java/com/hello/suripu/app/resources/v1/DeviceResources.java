@@ -10,6 +10,7 @@ import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceInactive;
 import com.hello.suripu.core.models.DeviceStatus;
+import com.hello.suripu.core.models.DeviceInactivePaginator;
 import com.hello.suripu.core.models.PillRegistration;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -190,44 +191,66 @@ public class DeviceResources {
         return devices;
     }
 
-    @GET
-    @Timed
-    @Path("/inactive/hours/{inactive_hours}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<DeviceInactive> getInactiveDevice(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken, @PathParam("inactive_hours") Integer inactiveHours) {
-        final DateTime startTime = DateTime.now().minusMonths(2);
-        return deviceDAO.getInactiveDevice(startTime, inactiveHours);
-    }
-
 
     @GET
     @Timed
     @Path("/inactive")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<DeviceInactive> getInactiveDevices(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken, @QueryParam("since") final Long timestamp) {
-        if(timestamp == null) {
-            LOGGER.error("Missing since parameter");
+    public DeviceInactivePaginator getInactiveDevices(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                   @QueryParam("start") final Long startTimeStamp,
+                                                   @QueryParam("since") final Long inactiveSince,
+                                                   @QueryParam("threshold") final Long inactiveThreshold,
+                                                   @QueryParam("page") final Integer currentPage) {
+        if(startTimeStamp == null) {
+            LOGGER.error("Missing startTimestamp parameter");
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
+        if(inactiveSince == null) {
+            LOGGER.error("Missing inactiveSince parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        if(inactiveThreshold == null) {
+            LOGGER.error("Missing inactiveThreshold parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        if(currentPage == null) {
+            LOGGER.error("Missing page parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        final Integer maxDevicesPerPage = 40;
+        final Integer offset = Math.max(0, (currentPage - 1) * maxDevicesPerPage);
+        final Integer count = maxDevicesPerPage;
+
         final Jedis jedis = jedisPool.getResource();
         final Set<Tuple> tuples = new TreeSet<>();
+        Integer totalPages = 0;
+
+        LOGGER.debug("{} {} {} {}", inactiveSince - inactiveThreshold, inactiveSince, offset, count);
         try {
-              tuples.addAll(jedis.zrangeByScoreWithScores("devices", 0, timestamp));
+          // e.g for startTimeStamp = 1417464883000: only care about devices last seen after Dec 1, 2014
+          // for inactiveSince = 1418070001000 e.g for inactiveThreshold = 259200000, this function returns
+          // devices which have been inactive for at least 3 days since Dec 4, 2014
+            tuples.addAll(jedis.zrangeByScoreWithScores("devices", startTimeStamp, inactiveSince - inactiveThreshold, offset, count));
+            totalPages = (int)Math.ceil(jedis.zcount("devices", startTimeStamp, inactiveSince - inactiveThreshold) / (double) maxDevicesPerPage);
+
         } catch (Exception e) {
             LOGGER.error("Failed retrieving list of devices", e.getMessage());
         } finally {
             jedisPool.returnResource(jedis);
         }
+
         final List<DeviceInactive> inactiveDevices = new ArrayList<>();
         for(final Tuple tuple : tuples) {
-            final Long millis = (long) tuple.getScore();
-            final DateTime diff = DateTime.now().minus(new DateTime(millis).getMillis());
-            final DeviceInactive deviceInactive = new DeviceInactive(tuple.getElement(), 0L, "", diff);
+            final Long lastSeenTimestamp = (long) tuple.getScore();
+            final Long inactivePeriod = inactiveSince - lastSeenTimestamp;
+            final DeviceInactive deviceInactive = new DeviceInactive(tuple.getElement(), inactivePeriod);
             inactiveDevices.add(deviceInactive);
         }
-
-        return inactiveDevices;
+        return new DeviceInactivePaginator(currentPage, totalPages, inactiveDevices);
     }
 
     @Timed
