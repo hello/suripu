@@ -114,5 +114,5 @@ features_db:
 merged_info_db:
   endpoint : http://localhost:7777
   region: us-east-1
-  table_name: timezone_history
+  table_name: alarm_info
 
