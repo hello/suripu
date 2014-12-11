@@ -226,7 +226,7 @@ public class DeviceResources {
             final DeviceInactive deviceInactive = new DeviceInactive(tuple.getElement(), 0L, "", diff);
             inactiveDevices.add(deviceInactive);
         }
-
         return inactiveDevices;
     }
+
 }

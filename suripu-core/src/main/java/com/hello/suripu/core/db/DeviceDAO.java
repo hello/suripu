@@ -40,8 +40,8 @@ public interface DeviceDAO {
     Optional<Long> getMostRecentSenseByAccountId(@Bind("account_id") Long accountId);
 
     @RegisterMapper(DeviceAccountPairMapper.class)
-    @SqlQuery("SELECT * FROM account_device_map WHERE device_name = :device_name;")
-    ImmutableList<DeviceAccountPair> getAccountIdsForDeviceId(@Bind("device_name") String deviceName);
+    @SqlQuery("SELECT * FROM account_device_map WHERE device_id = :device_id;")
+    ImmutableList<DeviceAccountPair> getAccountIdsForDeviceId(@Bind("device_id") final String deviceId);
 
     @SingleValueResult(Long.class)
     @SqlQuery("SELECT id FROM account_device_map WHERE account_id = :account_id AND device_name = :device_name;")
