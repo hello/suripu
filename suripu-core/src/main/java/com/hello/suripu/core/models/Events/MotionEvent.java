@@ -1,22 +1,25 @@
-package com.hello.suripu.core.models;
+package com.hello.suripu.core.models.Events;
+
+import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.SleepSegment;
 
 /**
- * Created by pangwu on 11/24/14.
+ * Created by pangwu on 11/22/14.
  */
-public class SleepMotionEvent extends Event {
+public class MotionEvent extends Event {
     private int sleepDepth = 0;
 
-    public SleepMotionEvent(final long startTimestamp,
+    public MotionEvent(final long startTimestamp,
                        final long endTimestamp,
                        final int offsetMillis,
                        final int sleepDepth){
-        super(Event.Type.SLEEP_MOTION, startTimestamp, endTimestamp, offsetMillis);
+        super(Type.MOTION, startTimestamp, endTimestamp, offsetMillis);
         this.sleepDepth = sleepDepth;
     }
 
     @Override
-    public String getDescription() {
-        return "Toss and turns";
+    public String getDescription(){
+        return "Motion detected";
     }
 
     @Override
@@ -28,4 +31,5 @@ public class SleepMotionEvent extends Event {
     public int getSleepDepth() {
         return this.sleepDepth;
     }
+
 }

@@ -1,4 +1,7 @@
-package com.hello.suripu.core.models;
+package com.hello.suripu.core.models.Events;
+
+import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.SleepSegment;
 
 /**
  * Created by pangwu on 11/22/14.

@@ -1,4 +1,4 @@
-package com.hello.suripu.core.models;
+package com.hello.suripu.core.models.Events;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;

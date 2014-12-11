@@ -58,7 +58,7 @@ public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
         final ImmutableList<AmplitudeData> wakeUpPeriodData = cutAfter4am.process(smoothedData);
 
         // Step 2.1: Make the data more contradictive.
-        final ImmutableList<AmplitudeData> sharpenFallAsleepPeriodData = fallAsleepPeriodData; //NumericalUtils.zeroDataUnderAverage(fallAsleepPeriodData);
+         final ImmutableList<AmplitudeData> sharpenFallAsleepPeriodData = fallAsleepPeriodData; //NumericalUtils.zeroDataUnderAverage(fallAsleepPeriodData);
         final ImmutableList<AmplitudeData> sharpenWakeUpPeriodData = wakeUpPeriodData; //NumericalUtils.zeroDataUnderAverage(wakeUpPeriodData);
 
         // Step 3: Detect fall asleep period and wake up period.
