@@ -160,7 +160,8 @@ public class TimelineResource extends BaseResource {
 
         // detect sleep time
         final int sleepTimeThresholdInMinutes = 7; // minutes of no-movement to determine that user has fallen asleep
-        final Optional<SleepEvent> sleepTimeEvent = TimelineUtils.getSleepEvent(motionEvents, sleepTimeThresholdInMinutes, 90);
+        final int sleepMotionThreshold = 90;
+        final Optional<SleepEvent> sleepTimeEvent = TimelineUtils.getSleepEvent(motionEvents, sleepTimeThresholdInMinutes, sleepMotionThreshold, sleepTimeThreshold);
         Optional<Integer> wakeUpTimeZoneOffsetMillis = Optional.absent();
 
         if(sleepTimeEvent.isPresent()) {

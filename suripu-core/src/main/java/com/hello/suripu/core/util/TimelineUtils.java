@@ -444,7 +444,7 @@ public class TimelineUtils {
      * @param thresholdInMinutes
      * @return
      */
-    public static Optional<SleepEvent> getSleepEvent(final List<MotionEvent> sleepMotions, int thresholdInMinutes, int motionThreshold) {
+    public static Optional<SleepEvent> getSleepEvent(final List<MotionEvent> sleepMotions, int thresholdInMinutes, int motionThreshold, final Optional<DateTime> sleepTimeThreshold) {
 
         if(sleepMotions.isEmpty()) {
             return Optional.absent();
@@ -453,10 +453,19 @@ public class TimelineUtils {
         final List<DateTime> dateTimes = new ArrayList<>();
         final Map<Long, MotionEvent> map = new HashMap<>();
 
+        // convert local_UTC to
+        DateTime sleepTimeThresholdUTC = new DateTime(sleepMotions.get(0).getStartTimestamp(), DateTimeZone.UTC).minusSeconds(1);
+        if (sleepTimeThreshold.isPresent()) {
+            sleepTimeThresholdUTC = sleepTimeThreshold.get().minusMillis(sleepMotions.get(0).getTimezoneOffset());
+        }
+
         for(final MotionEvent sleepMotion : sleepMotions) {
             if(sleepMotion.getSleepDepth() < motionThreshold) {
-                dateTimes.add(new DateTime(sleepMotion.getStartTimestamp(), DateTimeZone.UTC));
-                map.put(sleepMotion.getStartTimestamp(), sleepMotion);
+                final DateTime dateTime = new DateTime(sleepMotion.getStartTimestamp(), DateTimeZone.UTC);
+                if (dateTime.isAfter(sleepTimeThresholdUTC)) {
+                    dateTimes.add(dateTime);
+                    map.put(sleepMotion.getStartTimestamp(), sleepMotion);
+                }
             }
         }
 
@@ -464,7 +473,8 @@ public class TimelineUtils {
             return Optional.absent();
         }
 
-        for(int i =0; i < dateTimes.size() -1; i++) {
+
+        for(int i = 0; i < dateTimes.size() - 1; i++) {
             final DateTime current = dateTimes.get(i);
             final DateTime next = dateTimes.get(i + 1);
             final int diffInMinutes = (int)(next.getMillis() - current.getMillis()) / DateTimeConstants.MILLIS_PER_MINUTE;
@@ -528,9 +538,10 @@ public class TimelineUtils {
 
     public static Optional<DateTime> getLightsOutTime(final List<Event> lightEvents) {
         for (final Event event : lightEvents) {
-            if (event.getDescription().equals(LightSegment.Type.LIGHTS_OUT.toString())) {
+            if (event.getType() == Event.Type.LIGHTS_OUT) {
                 final DateTime lightsOutTime = new DateTime(event.getEndTimestamp(), DateTimeZone.UTC).plusMillis(event.getTimezoneOffset());
-                if (lightsOutTime.getHourOfDay() < 4) {
+                final int lightsOutHour = lightsOutTime.getHourOfDay();
+                if (lightsOutHour > 19  || lightsOutHour < 4) { // 7pm to 4am
                     // some people fall asleep before turning off the lights! (bryan, Q)
                     return Optional.of(lightsOutTime.minusMinutes(10));
                 }
