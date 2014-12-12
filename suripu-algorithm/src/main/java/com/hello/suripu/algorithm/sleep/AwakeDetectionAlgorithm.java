@@ -44,6 +44,7 @@ public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
         if(rawData.size() == 0){
             throw new AlgorithmException("No data available for date: " + dateOfTheNightLocalUTC);
         }
+        LOGGER.info("Raw data size {}", rawData.size());
 
         // Step 1: Aggregate the data based on a 10 minute interval.
         final AmplitudeDataPreprocessor smoother = new MaxAmplitudeAggregator(getSmoothWindow());
