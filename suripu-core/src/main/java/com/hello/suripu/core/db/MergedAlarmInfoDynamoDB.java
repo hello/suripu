@@ -1,5 +1,6 @@
 package com.hello.suripu.core.db;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeAction;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
@@ -9,6 +10,9 @@ import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
+import com.amazonaws.services.dynamodbv2.model.DeleteItemRequest;
+import com.amazonaws.services.dynamodbv2.model.DeleteItemResult;
+import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
@@ -183,6 +187,37 @@ public class MergedAlarmInfoDynamoDB {
         return Optional.absent();
     }
 
+    public Optional<AlarmInfo> unlinkAccountToDevice(final long accountId, final String deviceId){
+        try {
+            final Map<String, ExpectedAttributeValue> deleteConditions = new HashMap<String, ExpectedAttributeValue>();
+
+            deleteConditions.put(MORPHEUS_ID_ATTRIBUTE_NAME, new ExpectedAttributeValue(
+                    new AttributeValue().withS(deviceId)
+            ));
+            deleteConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, new ExpectedAttributeValue(
+                    new AttributeValue().withN(String.valueOf(accountId))
+            ));
+
+            HashMap<String, AttributeValue> keys = new HashMap<String, AttributeValue>();
+            keys.put(MORPHEUS_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
+            keys.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
+
+            final DeleteItemRequest deleteItemRequest = new DeleteItemRequest()
+                    .withTableName(tableName)
+                    .withKey(keys)
+                    .withExpected(deleteConditions)
+                    .withReturnValues(ReturnValue.ALL_OLD);
+
+            final DeleteItemResult result = this.dynamoDBClient.deleteItem(deleteItemRequest);
+
+            return attributeValuesToAlarmInfo(result.getAttributes());
+        }  catch (AmazonServiceException ase) {
+            LOGGER.error("Failed to get item after for device {} and account {}, error {}", deviceId, accountId, ase.getMessage());
+        }
+
+        return Optional.absent();
+    }
+
     public List<AlarmInfo> getInfo(final String deviceId){
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
         final Condition selectByDeviceId  = new Condition()
@@ -223,14 +258,32 @@ public class MergedAlarmInfoDynamoDB {
                 continue;
             }
 
-            final long accountId = Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN());
-            final List<Alarm> alarmListOptional = getAlarmListFromAttributes(deviceId, accountId, item);
-            final Optional<RingTime> ringTimeOptional = getRingTimeFromAttributes(deviceId, accountId, item);
-            final Optional<DateTimeZone> dateTimeZoneOptional = getTimeZoneFromAttributes(deviceId, accountId, item);
-            alarmInfos.add(new AlarmInfo(deviceId, accountId, alarmListOptional, ringTimeOptional, dateTimeZoneOptional));
+            final Optional<AlarmInfo> alarmInfoOptional = attributeValuesToAlarmInfo(item);
+            if(!alarmInfoOptional.isPresent()){
+                LOGGER.error("Get alarm info for device id {} failed.", deviceId);
+                continue;
+            }
+            alarmInfos.add(alarmInfoOptional.get());
         }
 
         return ImmutableList.copyOf(alarmInfos);
+    }
+
+
+    public static Optional<AlarmInfo> attributeValuesToAlarmInfo(final Map<String, AttributeValue> item){
+
+        try {
+            final long accountId = Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN());
+            final String deviceId = item.get(MORPHEUS_ID_ATTRIBUTE_NAME).getS();
+            final List<Alarm> alarmListOptional = getAlarmListFromAttributes(deviceId, accountId, item);
+            final Optional<RingTime> ringTimeOptional = getRingTimeFromAttributes(deviceId, accountId, item);
+            final Optional<DateTimeZone> dateTimeZoneOptional = getTimeZoneFromAttributes(deviceId, accountId, item);
+            return Optional.of(new AlarmInfo(deviceId, accountId, alarmListOptional, ringTimeOptional, dateTimeZoneOptional));
+        }catch (Exception ex){
+            LOGGER.error("attributeValuesToAlarmInfo error: {}", ex.getMessage());
+        }
+
+        return Optional.absent();
     }
 
     public static List<Alarm> getAlarmListFromAttributes(final String deviceId, final long accountId, final Map<String, AttributeValue> item){
