@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.DataSource;
 import com.hello.suripu.core.models.TrackerMotion;
-import com.hello.suripu.core.util.UInt32;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -30,14 +29,14 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
 
         final long minAmplitude = getMinAmplitude(motionsFromDBShortedByTimestamp);
         for(final TrackerMotion motion: motionsFromDBShortedByTimestamp) {
-            if(motion.value < 0){
+            if(motion.value <= 0){
                 continue;
             }
 
             if(this.dataAfterAutoInsert.size() == 0) {
                 this.dataAfterAutoInsert.add(trackerMotionToAmplitude(motion));
             }else{
-                if(motion.timestamp - this.dataAfterAutoInsert.getLast().timestamp >= 2 * DATA_INTERVAL) {
+                if(motion.timestamp - this.dataAfterAutoInsert.getLast().timestamp >= DATA_INTERVAL) {
                     final List<AmplitudeData> gapData = fillGap(this.dataAfterAutoInsert.getLast().timestamp,
                             motion.timestamp,
                             DATA_INTERVAL,
@@ -80,11 +79,11 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
     public static long getMinAmplitude(final List<TrackerMotion> data){
         long minAmplitude = Long.MAX_VALUE;
         for(final TrackerMotion datum:data){
-            if(datum.value < 0){
+            if(datum.value <= 0){
                 continue;
             }
 
-            long amplitude = UInt32.getValue(datum.value);
+            long amplitude = datum.value;
 
             if(amplitude < minAmplitude){
                 minAmplitude = amplitude;
@@ -106,8 +105,8 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
                                        final int timezoneOffset) {
         final long gapInterval = gapEndTimestamp - gapStartTimestamp;
         int insertCount = (int)(gapInterval / dataIntervalMillis);
-        if(gapInterval % dataIntervalMillis == 0){
-            insertCount--;
+        if(gapInterval % dataIntervalMillis > 0){
+            insertCount++;
         }
 
         final ArrayList<AmplitudeData> insertData = new ArrayList<>();
