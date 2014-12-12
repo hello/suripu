@@ -1,7 +1,6 @@
 package com.hello.suripu.service.resources;
 
 import com.google.common.base.Optional;
-import com.google.common.cache.CacheLoader;
 import com.google.protobuf.TextFormat;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.audio.AudioControlProtos;
@@ -50,7 +49,6 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 
 @Path("/in")
@@ -59,9 +57,8 @@ public class ReceiveResource extends BaseResource {
     @Inject
     RolloutClient featureFlipper;
 
-    private static final Pattern PG_UNIQ_PATTERN = Pattern.compile("ERROR: duplicate key value violates unique constraint \"(\\w+)\"");
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ReceiveResource.class);
-    private static final int OFFSET_MILLIS = -25200000;
     private static final int CLOCK_SKEW_TOLERATED_IN_HOURS = 2;
 
     private final DeviceDataDAO deviceDataDAO;
@@ -95,12 +92,6 @@ public class ReceiveResource extends BaseResource {
         this.mergedInfoDynamoDB = mergedInfoDynamoDB;
 
         this.debug = debug;
-
-        final CacheLoader<String, Optional<byte[]>> loader = new CacheLoader<String, Optional<byte[]>>() {
-            public Optional<byte[]> load(String key) {
-                return keyStore.get(key);
-            }
-        };
 
         this.firmwareUpdateStore = firmwareUpdateStore;
         this.groupFlipper = groupFlipper;

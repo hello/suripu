@@ -83,3 +83,7 @@ features_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
     region: us-east-1
     table_name: features
+
+redis:
+  host: localhost # redis is running locally for now
+  port: 6379
