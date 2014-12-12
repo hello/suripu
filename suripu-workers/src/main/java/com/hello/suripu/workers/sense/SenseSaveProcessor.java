@@ -18,7 +18,6 @@ import com.hello.suripu.core.util.DeviceIdUtil;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -145,18 +144,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
                 final DeviceData deviceData = builder.build();
                 dataForDevice.add(deviceData);
-
-                /*try {
-                    deviceDataDAO.insert(deviceData);
-                    LOGGER.trace("Data saved to DB: {}", TextFormat.shortDebugString(periodicData));
-                } catch (UnableToExecuteStatementException exception) {
-                    final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
-                    if (!matcher.find()) {
-                        LOGGER.error("Unknown error saving to DB: {}", exception.getMessage());
-                    }
-
-                    LOGGER.warn("Duplicate device sensor value for account_id = {}, time: {}", pair.accountId, roundedDateTime);
-                }*/
             }
         }
 
@@ -167,10 +154,15 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             }
 
             try {
-                deviceDataDAO.batchInsert(data.iterator());
-                LOGGER.info("{} Data saved to DB for device {}", data.size(), deviceId);
-            } catch (UnableToExecuteStatementException exception) {
-                LOGGER.error("Error sensor value for device {} from {} to {}, {} data discarded",
+                int inserted = deviceDataDAO.batchInsertWithFailureFallback(data);
+
+                if(inserted == data.size()) {
+                    LOGGER.info("Batch saved {} data to DB for device {}", data.size(), deviceId);
+                }else{
+                    LOGGER.info("Batch save failed, save {} data for device {} using itemize insert.", inserted, deviceId);
+                }
+            } catch (Exception exception) {
+                LOGGER.error("Error saving data for device {} from {} to {}, {} data discarded",
                         deviceId,
                         data.getFirst().dateTimeUTC,
                         data.getLast().dateTimeUTC,  // I love linkedlist
