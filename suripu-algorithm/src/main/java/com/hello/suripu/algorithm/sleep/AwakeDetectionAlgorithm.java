@@ -9,6 +9,8 @@ import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.utils.DataCutter;
 import com.hello.suripu.algorithm.utils.MaxAmplitudeAggregator;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -28,6 +30,7 @@ import java.util.List;
  *
  */
 public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
+    private final static Logger LOGGER = LoggerFactory.getLogger(AwakeDetectionAlgorithm.class);
 
     private enum PaddingMode { PAD_EARLY, PAD_LATE }
 
@@ -60,6 +63,8 @@ public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
         // Step 2.1: Make the data more contradictive.
         final ImmutableList<AmplitudeData> sharpenFallAsleepPeriodData = fallAsleepPeriodData; //NumericalUtils.zeroDataUnderAverage(fallAsleepPeriodData);
         final ImmutableList<AmplitudeData> sharpenWakeUpPeriodData = wakeUpPeriodData; //NumericalUtils.zeroDataUnderAverage(wakeUpPeriodData);
+        LOGGER.info("Data size before 4: {}", fallAsleepPeriodData.size());
+        LOGGER.info("Data size after 4: {}", wakeUpPeriodData.size());
 
         // Step 3: Detect fall asleep period and wake up period.
         final ImmutableList<SleepThreshold> fallAsleepThresholds = SleepThreshold.generateEqualBinThresholds(sharpenFallAsleepPeriodData, 1000);
@@ -77,6 +82,7 @@ public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
 
 
         if(fallAsleepThreshold != null) {
+            LOGGER.info("sleep threshold {}", fallAsleepThreshold.getValue());
             // Step 3.2: Generate fall asleep period based on selected threshold.
             final Segment beforeSleepAwakeSegment = getAwakeSegment(sharpenFallAsleepPeriodData, fallAsleepThreshold, PaddingMode.PAD_LATE);
             if(beforeSleepAwakeSegment != null) {
@@ -86,6 +92,7 @@ public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
         }
 
         if(wakeUpThreshold != null) {
+            LOGGER.info("wake up threshold {}", wakeUpThreshold.getValue());
             // Step 3.3: Generate wake-up period by selected threshold.
             final Segment wakeUpSegment = getAwakeSegment(sharpenWakeUpPeriodData, wakeUpThreshold, PaddingMode.PAD_EARLY);
             if(wakeUpSegment != null) {
