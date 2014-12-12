@@ -104,4 +104,23 @@ public class MergedAlarmInfoDynamoDBIT {
         assertThat(this.mergedAlarmInfoDynamoDB.getInfo("fitbit", 1L).isPresent(), is(false));
     }
 
+    @Test
+    public void testUnlinkAccountAndDeviceId(){
+        final String deviceId = "Pang's Morpheus";
+        this.mergedAlarmInfoDynamoDB.setAlarms(deviceId, 0L, Collections.EMPTY_LIST);
+        this.mergedAlarmInfoDynamoDB.setAlarms(deviceId, 1L, Collections.EMPTY_LIST);
+        final Optional<AlarmInfo> deleted = this.mergedAlarmInfoDynamoDB.unlinkAccountToDevice(0L, deviceId);
+        assertThat(deleted.isPresent(), is(true));
+        assertThat(deleted.get().deviceId, is(deviceId));
+
+
+        final List<AlarmInfo> existingPairs = this.mergedAlarmInfoDynamoDB.getInfo(deviceId);
+        assertThat(existingPairs.size(), is(1));
+        assertThat(existingPairs.get(0).deviceId, is(deviceId));
+        assertThat(existingPairs.get(0).accountId, is(1L));
+
+        final Optional<AlarmInfo> deleteNoExist = this.mergedAlarmInfoDynamoDB.unlinkAccountToDevice(911L, deviceId);
+        assertThat(deleteNoExist.isPresent(), is(false));
+    }
+
 }
