@@ -121,18 +121,18 @@ public class CurrentRoomState {
 
         // Temp
         if (temperature  < 15.0) {
-            temperatureState = new State(temperature, "It’s *pretty cold* in here.", State.Condition.ALERT, dataTimestampUTC, State.Unit.CELCIUS);
+            temperatureState = new State(temperature, "It’s **pretty cold** in here.", State.Condition.ALERT, dataTimestampUTC, State.Unit.CELCIUS);
         } else if (temperature > 30.0) {
-            temperatureState = new State(temperature, "It’s *pretty hot* in here.", State.Condition.ALERT, dataTimestampUTC, State.Unit.CELCIUS);
+            temperatureState = new State(temperature, "It’s **pretty hot** in here.", State.Condition.ALERT, dataTimestampUTC, State.Unit.CELCIUS);
         } else { // temp >= 60 && temp <= 72
             temperatureState = new State(temperature, "", State.Condition.IDEAL, dataTimestampUTC, State.Unit.CELCIUS);
         }
 
         // Humidity
         if (humidity  < 30.0) {
-            humidityState = new State(humidity, "It’s *pretty dry* in here.", State.Condition.WARNING, dataTimestampUTC, State.Unit.PERCENT);
+            humidityState = new State(humidity, "It’s **pretty dry** in here.", State.Condition.WARNING, dataTimestampUTC, State.Unit.PERCENT);
         } else if (humidity > 60.0) {
-            humidityState = new State(humidity, "It’s *pretty humid* in here.", State.Condition.WARNING, dataTimestampUTC, State.Unit.PERCENT);
+            humidityState = new State(humidity, "It’s **pretty humid** in here.", State.Condition.WARNING, dataTimestampUTC, State.Unit.PERCENT);
         } else { // humidity >= 30 && humidity<= 60
             humidityState = new State(humidity, "", State.Condition.IDEAL, dataTimestampUTC, State.Unit.PERCENT);
         }
@@ -142,9 +142,9 @@ public class CurrentRoomState {
         if (particulatesAQI <= 50.0) {
             particulatesState = new State(particulatesAQI, "", State.Condition.IDEAL, dataTimestampUTC, State.Unit.AQI);
         } else if (particulatesAQI <= 300.0) {
-            particulatesState = new State(particulatesAQI, "AQI is *moderately high*.", State.Condition.WARNING, dataTimestampUTC, State.Unit.AQI);
+            particulatesState = new State(particulatesAQI, "AQI is **moderately high**.", State.Condition.WARNING, dataTimestampUTC, State.Unit.AQI);
         } else {
-            particulatesState = new State(particulatesAQI, "AQI is at an *UNHEALTHY* level.", State.Condition.ALERT, dataTimestampUTC, State.Unit.AQI);
+            particulatesState = new State(particulatesAQI, "AQI is at an **UNHEALTHY** level.", State.Condition.ALERT, dataTimestampUTC, State.Unit.AQI);
         }
 
         final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState);
