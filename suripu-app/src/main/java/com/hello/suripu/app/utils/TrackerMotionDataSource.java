@@ -25,11 +25,11 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
     public TrackerMotionDataSource(final List<TrackerMotion> motionsFromDBShortedByTimestamp,
                                    final int startHourOfDay, final int endHourOfDay) {
 
-        final long minAmplitude = getMinAmplitude(motionsFromDBShortedByTimestamp);
+        final int minAmplitude = getMinAmplitude(motionsFromDBShortedByTimestamp);
         for(final TrackerMotion motion: motionsFromDBShortedByTimestamp) {
 
             if(this.dataAfterAutoInsert.size() == 0) {
-                this.dataAfterAutoInsert.add(trackerMotionToAmplitude(motion));
+                this.dataAfterAutoInsert.add(trackerMotionToAmplitude(motion, minAmplitude));
             }else{
                 if(motion.timestamp - this.dataAfterAutoInsert.getLast().timestamp > DATA_INTERVAL) {
                     final List<AmplitudeData> gapData = fillGap(this.dataAfterAutoInsert.getLast().timestamp,
@@ -40,21 +40,21 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
                     this.dataAfterAutoInsert.addAll(gapData);
                 }
 
-                this.dataAfterAutoInsert.add(trackerMotionToAmplitude(motion));
+                this.dataAfterAutoInsert.add(trackerMotionToAmplitude(motion, minAmplitude));
             }
         }
 
     }
 
 
-    public static long getMinAmplitude(final List<TrackerMotion> data){
-        long minAmplitude = Long.MAX_VALUE;
+    public static int getMinAmplitude(final List<TrackerMotion> data){
+        int minAmplitude = Integer.MAX_VALUE;
         for(final TrackerMotion datum:data){
             if(datum.value <= 0){
                 continue;
             }
 
-            long amplitude = datum.value;
+            int amplitude = datum.value;
 
             if(amplitude < minAmplitude){
                 minAmplitude = amplitude;
@@ -92,7 +92,10 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
     /*
     * Convert the TrackerMotion to AmplitudeData which is used by algorithm.
      */
-    public static AmplitudeData trackerMotionToAmplitude(final TrackerMotion trackerMotion){
+    public static AmplitudeData trackerMotionToAmplitude(final TrackerMotion trackerMotion, final int defaultValue){
+        if(trackerMotion.value < 0){
+            return new AmplitudeData(trackerMotion.timestamp, Double.valueOf(defaultValue), trackerMotion.offsetMillis);
+        }
         return new AmplitudeData(trackerMotion.timestamp, Double.valueOf(trackerMotion.value), trackerMotion.offsetMillis);
     }
 
