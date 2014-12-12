@@ -24,12 +24,12 @@ public class TrackerMotionDataSourceTest {
         final DateTime now = DateTime.now();
         data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), -1, DateTimeZone.getDefault().getOffset(now)));  // this one should be skipped
         data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), -2, DateTimeZone.getDefault().getOffset(now)));  // -2 & 0xFFFFFFFF
-        assertThat(Long.valueOf(TrackerMotionDataSource.getMinAmplitude(data)), is(0L));
+        assertThat(TrackerMotionDataSource.getMinAmplitude(data), is(0));
 
         data.clear();
         data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), -2, DateTimeZone.getDefault().getOffset(now)));  // -2 & 0xFFFFFFFF
         data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), 1, DateTimeZone.getDefault().getOffset(now)));  // -2 & 0xFFFFFFFF
-        assertThat(TrackerMotionDataSource.getMinAmplitude(data), is(1L));
+        assertThat(TrackerMotionDataSource.getMinAmplitude(data), is(1));
 
     }
 
@@ -59,6 +59,7 @@ public class TrackerMotionDataSourceTest {
         final List<AmplitudeData> insertedList = TrackerMotionDataSource.fillGap(now.getMillis(), now.plusMinutes(2).getMillis(), DateTimeConstants.MILLIS_PER_MINUTE, 0, DateTimeZone.getDefault().getOffset(now));
         assertThat(insertedList.size(), is(1));
         assertThat(insertedList.get(0).amplitude, is(0d));
+        assertThat(insertedList.get(0).timestamp, is(now.plusMinutes(1).getMillis()));
 
         final List<AmplitudeData> insertedList2 = TrackerMotionDataSource.fillGap(now.getMillis(), now.plusMinutes(2).plusSeconds(3).getMillis(), DateTimeConstants.MILLIS_PER_MINUTE, 0, DateTimeZone.getDefault().getOffset(now));
         assertThat(insertedList2.size(), is(2));

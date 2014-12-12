@@ -6,13 +6,16 @@ import com.hello.suripu.core.db.binders.BindDeviceData;
 import com.hello.suripu.core.db.mappers.DeviceDataBucketMapper;
 import com.hello.suripu.core.db.mappers.DeviceDataMapper;
 import com.hello.suripu.core.db.util.Bucketing;
+import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
+import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
@@ -22,8 +25,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 
 
 public abstract class DeviceDataDAO {
@@ -40,6 +45,16 @@ public abstract class DeviceDataDAO {
             ":ambient_air_quality, :ambient_air_quality_raw, :ambient_dust_variance, :ambient_dust_min, :ambient_dust_max, " +
             ":firmware_version, :wave_count, :hold_count)")
     public abstract void insert(@BindDeviceData final DeviceData deviceData);
+
+    @SqlBatch("INSERT INTO device_sensors_master (account_id, device_id, ts, local_utc_ts, offset_millis, " +
+            "ambient_temp, ambient_light, ambient_light_variance, ambient_light_peakiness, ambient_humidity, " +
+            "ambient_air_quality, ambient_air_quality_raw, ambient_dust_variance, ambient_dust_min, ambient_dust_max, " +
+            "firmware_version, wave_count, hold_count) VALUES " +
+            "(:account_id, :device_id, :ts, :local_utc_ts, :offset_millis, " +
+            ":ambient_temp, :ambient_light, :ambient_light_variance, :ambient_light_peakiness, :ambient_humidity, " +
+            ":ambient_air_quality, :ambient_air_quality_raw, :ambient_dust_variance, :ambient_dust_min, :ambient_dust_max, " +
+            ":firmware_version, :wave_count, :hold_count);")
+    public abstract void batchInsert(@BindDeviceData Iterator<DeviceData> deviceDataList);
 
     @RegisterMapper(DeviceDataMapper.class)
     @SqlQuery("SELECT * FROM device_sensors_master WHERE account_id = :account_id AND ts >= :start_timestamp AND ts <= :end_timestamp ORDER BY ts ASC")
@@ -129,6 +144,44 @@ public abstract class DeviceDataDAO {
     @SqlQuery("SELECT * FROM device_sensors_master WHERE account_id = :account_id AND device_id = :device_id AND ts < :utc_ts_limit ORDER BY ts DESC LIMIT 1;")
     public abstract Optional<DeviceData> getMostRecent(@Bind("account_id") final Long accountId, @Bind("device_id") Long deviceId, @Bind("utc_ts_limit") final DateTime tsLimit);
 
+
+
+    public int batchInsertWithFailureFallback(final List<DeviceData> data){
+        int inserted = 0;
+        try {
+            this.batchInsert(data.iterator());
+            return data.size();
+        } catch (UnableToExecuteStatementException exception) {
+
+        }
+
+        for(final DeviceData datum:data){
+            try {
+                this.insert(datum);
+                inserted++;
+            } catch (UnableToExecuteStatementException exception) {
+                final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
+                if(matcher.find())
+                {
+                    LOGGER.warn("Duplicate device sensor value for device {}, account {}, timestamp {}",
+                            datum.deviceId,
+                            datum.accountId,
+                            datum.dateTimeUTC.withZone(DateTimeZone.forOffsetMillis(datum.offsetMillis)));
+                }else{
+                    LOGGER.error("Cannot insert data for device {}, account {}, timestamp {}, error {}",
+                            datum.deviceId,
+                            datum.accountId,
+                            datum.dateTimeUTC.withZone(DateTimeZone.forOffsetMillis(datum.offsetMillis)),
+                            exception.getMessage());
+                }
+
+            }
+        }
+
+
+
+        return inserted;
+    }
 
     /**
      * Generate time serie for given sensor. Return empty list if no data

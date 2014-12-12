@@ -140,12 +140,21 @@ public class ReceiveResource extends BaseResource {
             );
         }
 
+        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? "" : request.getHeader("X-Forwarded-For");
+
+        final DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorkerMessage = DataInputProtos.BatchPeriodicDataWorker.newBuilder()
+                .setData(data)
+                .setReceivedAt(DateTime.now().getMillis())
+                .setIpAddress(ipAddress)
+                .build();
+
         final DataLogger batchSenseDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
-        batchSenseDataLogger.put(data.getDeviceId(), signedMessage.body);
+        batchSenseDataLogger.put(data.getDeviceId(), batchPeriodicDataWorkerMessage.toByteArray());
         return generateSyncResponse(data.getDeviceId(), data.getFirmwareVersion(), optionalKeyBytes.get(), data);
     }
 
 
+    @Deprecated
     @POST
     @Path("/morpheus/pb2")
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
@@ -200,14 +209,26 @@ public class ReceiveResource extends BaseResource {
             );
         }
 
-        // Saving sense data to kinesis
-        final DataLogger senseSensorsDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
-        senseSensorsDataLogger.put(deviceName, signedMessage.body);
+
         final DataInputProtos.batched_periodic_data batch = DataInputProtos.batched_periodic_data.newBuilder()
                 .addData(data)
                 .setDeviceId(data.getDeviceId())
                 .setFirmwareVersion(data.getFirmwareVersion())
                 .build();
+
+
+        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? "" : request.getHeader("X-Forwarded-For");
+
+        final DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorkerMessage = DataInputProtos.BatchPeriodicDataWorker.newBuilder()
+                .setData(batch)
+                .setReceivedAt(DateTime.now().getMillis())
+                .setIpAddress(ipAddress)
+                .build();
+
+        // Saving sense data to kinesis
+        final DataLogger senseSensorsDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
+        senseSensorsDataLogger.put(deviceName, batchPeriodicDataWorkerMessage.toByteArray());
+
         return generateSyncResponse(data.getDeviceId(), data.getFirmwareVersion(), optionalKeyBytes.get(), batch);
     }
 
@@ -353,32 +374,31 @@ public class ReceiveResource extends BaseResource {
         DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
         final OutputProtos.SyncResponse.Builder responseBuilder = OutputProtos.SyncResponse.newBuilder();
 
-        for (final AlarmInfo alarmInfo:alarmInfoList) {
 
-            for(DataInputProtos.periodic_data data : batch.getDataList()) {
-                final Long timestampMillis = data.getUnixTime() * 1000L;
-                final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
-                if(roundedDateTime.isAfter(DateTime.now().plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || roundedDateTime.isBefore(DateTime.now().minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
-                    LOGGER.error("The clock for device {} is not within reasonable bounds (2h)", data.getDeviceId());
-                    LOGGER.error("Current time = {}, received time = {}", DateTime.now(), roundedDateTime);
-                    // TODO: throw exception?
-                    // throw new WebApplicationException(Response.Status.BAD_REQUEST);
-                    continue;
-                }
-
-                final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(),
-                        roundedDateTime.getMillis(),
-                        data.getFirmwareVersion(),
-                        DateTime.now(),
-                        2);
-
-                responseBuilder.setRoomConditions(
-                        OutputProtos.SyncResponse.RoomConditions.valueOf(
-                                RoomConditionUtil.getGeneralRoomCondition(currentRoomState).ordinal()));
-
-
+        for(DataInputProtos.periodic_data data : batch.getDataList()) {
+            final Long timestampMillis = data.getUnixTime() * 1000L;
+            final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
+            if(roundedDateTime.isAfter(DateTime.now().plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || roundedDateTime.isBefore(DateTime.now().minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
+                LOGGER.error("The clock for device {} is not within reasonable bounds (2h)", data.getDeviceId());
+                LOGGER.error("Current time = {}, received time = {}", DateTime.now(), roundedDateTime);
+                // TODO: throw exception?
+                // throw new WebApplicationException(Response.Status.BAD_REQUEST);
+                continue;
             }
+
+            final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(),
+                    roundedDateTime.getMillis(),
+                    data.getFirmwareVersion(),
+                    DateTime.now(),
+                    2);
+
+            responseBuilder.setRoomConditions(
+                    OutputProtos.SyncResponse.RoomConditions.valueOf(
+                            RoomConditionUtil.getGeneralRoomCondition(currentRoomState).ordinal()));
+
+
         }
+
 
 
 
