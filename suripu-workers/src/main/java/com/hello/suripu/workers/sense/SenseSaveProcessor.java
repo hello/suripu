@@ -1,6 +1,7 @@
 package com.hello.suripu.workers.sense;
 
-import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.kinesis.clientlibrary.exceptions.InvalidStateException;
+import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
@@ -12,6 +13,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
+import com.hello.suripu.core.models.AlarmInfo;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.util.DeviceIdUtil;
@@ -77,18 +79,44 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             long timestampMillis = periodicData.getUnixTime() * 1000L;
             final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
             // This is the default timezone.
-            DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
-
+            final List<AlarmInfo> deviceAccountInfoFromMergeTable = this.mergedInfoDynamoDB.getInfo(deviceName);  // get everything by one hit
 
             for (final DeviceAccountPair pair : deviceAccountPairs) {
+                Optional<DateTimeZone> timeZoneOptional = Optional.absent();
+                for(final AlarmInfo alarmInfo:deviceAccountInfoFromMergeTable){
+                    if(alarmInfo.accountId == pair.accountId){
+                        if(alarmInfo.timeZone.isPresent()){
+                            timeZoneOptional = alarmInfo.timeZone;
+                        }else{
+                            LOGGER.warn("No timezone for device {} account {}", deviceName, alarmInfo.accountId);
+                        }
+                    }
+                }
+
+                /*
+                // This will kill the provision
                 try {
                     // TODO: Get the timezone for current user.
-
+                    timeZoneOptional = mergedInfoDynamoDB.getTimezone(pair.externalDeviceId, pair.accountId);
+                    if(!timeZoneOptional.isPresent()) {
+                        LOGGER.warn("Did not find Timezone for Sense {} and account: {}", pair.externalDeviceId, pair.internalDeviceId);
+                        continue;
+                    }
                 } catch (AmazonServiceException awsException) {
                     // I guess this endpoint should never bail out?
-                    LOGGER.error("AWS error when retrieving user timezone for account {}", pair.accountId);
+                    LOGGER.error("AWS error when retrieving user timezone for account {} and Sense", pair.accountId, pair.externalDeviceId);
                     continue;
                 }
+                */
+
+                if(!timeZoneOptional.isPresent()){
+                    LOGGER.warn("No timezone info for account {} paired with device {}, account may already unpaired with device but merge table not updated.",
+                            pair.accountId,
+                            deviceName);
+                    continue;
+                }
+                
+                final DateTimeZone userTimeZone = timeZoneOptional.get();
 
                 final DeviceData.Builder builder = new DeviceData.Builder()
                         .withAccountId(pair.accountId)
@@ -123,6 +151,14 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                     LOGGER.warn("Duplicate device sensor value for account_id = {}, time: {}", pair.accountId, roundedDateTime);
                 }
             }
+        }
+
+        try {
+            iRecordProcessorCheckpointer.checkpoint();
+        } catch (InvalidStateException e) {
+            LOGGER.error("checkpoint {}", e.getMessage());
+        } catch (ShutdownException e) {
+            LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
         }
 
     }

@@ -2,13 +2,12 @@ package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.core.db.mappers.AccountMapper;
 import com.hello.suripu.core.db.mappers.DeviceAccountPairMapper;
-import com.hello.suripu.core.db.mappers.DeviceInactiveMapper;
 import com.hello.suripu.core.db.mappers.DeviceStatusMapper;
+import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.DeviceAccountPair;
-import com.hello.suripu.core.models.DeviceInactive;
 import com.hello.suripu.core.models.DeviceStatus;
-import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -108,11 +107,11 @@ public interface DeviceDAO {
     @SqlQuery("SELECT id, device_id AS pill_id, firmware_version AS firmware_version, 100 AS battery_level, ts AS last_seen from device_sensors_master WHERE device_id = :sense_id ORDER BY id DESC LIMIT 1;")
     Optional<DeviceStatus> senseStatus(@Bind("sense_id") final Long senseId);
 
-    @RegisterMapper(DeviceInactiveMapper.class)
-    @SingleValueResult(DeviceInactive.class)
-    @SqlQuery("SELECT sq.device_id, sq.id, sq.diff, sq.max_ts FROM (SELECT M.device_id AS device_id, MAX(M.id) AS id, MAX(D.ts) AS max_ts, now() - MAX(D.ts) AS diff FROM account_device_map M LEFT OUTER JOIN device_sensors_master D ON M.id = D.device_id WHERE D.ts > :start_time GROUP BY M.device_id) AS sq WHERE sq.diff >= :inactive_hours * interval '1 hour' LIMIT 100")
-    ImmutableList<DeviceInactive> getInactiveDevice(
-            @Bind("start_time") final DateTime startTime,
-            @Bind("inactive_hours") final Integer inactiveHours
+    @RegisterMapper(AccountMapper.class)
+    @SingleValueResult(Account.class)
+    @SqlQuery("SELECT * FROM account_device_map as m JOIN accounts as a ON (a.id = m.account_id) WHERE m.device_name = :device_id LIMIT :max_devices;")
+    ImmutableList<Account> getAccountsByDevices(
+            @Bind("device_id") final String deviceId,
+            @Bind("max_devices") final Long maxDevices
     );
 }

@@ -20,6 +20,7 @@ import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.processors.PillScoreBatchByRecordsProcessor;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
+import com.hello.suripu.workers.utils.ActiveDevicesTracker;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Counter;
 import com.yammer.metrics.core.Meter;
@@ -27,10 +28,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.Pipeline;
-import redis.clients.jedis.exceptions.JedisDataException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -48,11 +45,11 @@ public class PillScoreProcessor extends HelloBaseRecordProcessor {
     private final KeyStore keyStore;
     private final DeviceDAO deviceDAO;
     private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDB;
-    private final JedisPool jedisPool;
+    private final ActiveDevicesTracker activeDevicesTracker;
 
     private int decodeErrors = 0; // mutable
 
-    public PillScoreProcessor(final SleepScoreDAO sleepScoreDAO, final int dateMinuteBucket, final int checkpointThreshold, final KeyStore keyStore, final DeviceDAO deviceDAO, final TimeZoneHistoryDAODynamoDB timeZoneHistoryDB, final JedisPool jedisPool) {
+    public PillScoreProcessor(final SleepScoreDAO sleepScoreDAO, final int dateMinuteBucket, final int checkpointThreshold, final KeyStore keyStore, final DeviceDAO deviceDAO, final TimeZoneHistoryDAODynamoDB timeZoneHistoryDB, final ActiveDevicesTracker activeDevicesTracker) {
         this.pillProcessor = new PillScoreBatchByRecordsProcessor(sleepScoreDAO, dateMinuteBucket, checkpointThreshold);
         this.messageCounter = Metrics.defaultRegistry().newCounter(PillScoreProcessor.class, "message_count");
         this.messageMeter = Metrics.defaultRegistry().newMeter(PillScoreProcessor.class, "get-requests", "requests", TimeUnit.SECONDS);
@@ -60,7 +57,7 @@ public class PillScoreProcessor extends HelloBaseRecordProcessor {
         this.keyStore = keyStore;
         this.deviceDAO = deviceDAO;
         this.timeZoneHistoryDB = timeZoneHistoryDB;
-        this.jedisPool = jedisPool;
+        this.activeDevicesTracker = activeDevicesTracker;
     }
 
     @Override
@@ -73,7 +70,7 @@ public class PillScoreProcessor extends HelloBaseRecordProcessor {
 
         // parse kinesis records
         final ListMultimap<Long, PillSample> samples = ArrayListMultimap.create();
-        final Map<String, Long> senseLastSeen = new HashMap<>(records.size());
+        final Map<String, Long> activePills = new HashMap<>(records.size());
         for (final Record record : records) {
             SenseCommandProtos.batched_pill_data batchPilldata;
 
@@ -125,7 +122,7 @@ public class PillScoreProcessor extends HelloBaseRecordProcessor {
 
                 final PillSample sample = new PillSample(pillID, roundedDateTime, trackerMotion.value, trackerMotion.offsetMillis);
                 samples.put(accountID, sample);
-                senseLastSeen.put(batchPilldata.getDeviceId(), roundedDateTime.getMillis());
+                activePills.put(pillData.getDeviceId(), roundedDateTime.getMillis());
             }
 
             this.messageCounter.inc();
@@ -148,25 +145,9 @@ public class PillScoreProcessor extends HelloBaseRecordProcessor {
                 }
             }
 
-            final Jedis jedis = jedisPool.getResource();
-            try {
-                final Pipeline pipe = jedis.pipelined();
-                pipe.multi();
-                for(Map.Entry<String, Long> entry : senseLastSeen.entrySet()) {
-                    pipe.zadd("devices", entry.getValue(), entry.getKey());
-                }
-                pipe.exec();
-            }catch (JedisDataException exception) {
-                LOGGER.error("Failed getting data out of redis: {}", exception.getMessage());
-                jedisPool.returnBrokenResource(jedis);
-            } catch(Exception exception) {
-                LOGGER.error("Unknown error connection to redis: {}", exception.getMessage());
-                jedisPool.returnBrokenResource(jedis);
-            }
-            finally {
-                jedisPool.returnResource(jedis);
-            }
         }
+
+        activeDevicesTracker.trackPills(activePills);
     }
 
     @Override

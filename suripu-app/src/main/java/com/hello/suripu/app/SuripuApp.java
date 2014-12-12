@@ -253,7 +253,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new SleepLabelResource(sleepLabelDAO));
         environment.addProvider(new RoomConditionsResource(deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
         environment.addResource(new EventResource(eventDAODynamoDB));
-        environment.addResource(new DeviceResources(deviceDAO, accountDAO, jedisPool));
+        environment.addResource(new DeviceResources(deviceDAO, accountDAO, mergedAlarmInfoDynamoDB, jedisPool));
 
         environment.addResource(new ScoresResource(trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), configuration.getSleepScoreVersion()));
 
