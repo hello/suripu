@@ -13,6 +13,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
@@ -40,6 +41,16 @@ public abstract class DeviceDataDAO {
             ":ambient_air_quality, :ambient_air_quality_raw, :ambient_dust_variance, :ambient_dust_min, :ambient_dust_max, " +
             ":firmware_version, :wave_count, :hold_count)")
     public abstract void insert(@BindDeviceData final DeviceData deviceData);
+
+    @SqlBatch("INSERT INTO device_sensors_master (account_id, device_id, ts, local_utc_ts, offset_millis, " +
+            "ambient_temp, ambient_light, ambient_light_variance, ambient_light_peakiness, ambient_humidity, " +
+            "ambient_air_quality, ambient_air_quality_raw, ambient_dust_variance, ambient_dust_min, ambient_dust_max, " +
+            "firmware_version, wave_count, hold_count) VALUES " +
+            "(:account_id, :device_id, :ts, :local_utc_ts, :offset_millis, " +
+            ":ambient_temp, :ambient_light, :ambient_light_variance, :ambient_light_peakiness, :ambient_humidity, " +
+            ":ambient_air_quality, :ambient_air_quality_raw, :ambient_dust_variance, :ambient_dust_min, :ambient_dust_max, " +
+            ":firmware_version, :wave_count, :hold_count);")
+    public abstract void batchInsert(@BindDeviceData List<DeviceData> deviceDataList);
 
     @RegisterMapper(DeviceDataMapper.class)
     @SqlQuery("SELECT * FROM device_sensors_master WHERE account_id = :account_id AND ts >= :start_timestamp AND ts <= :end_timestamp ORDER BY ts ASC")

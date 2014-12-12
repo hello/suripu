@@ -7,7 +7,6 @@ import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
 import com.google.common.base.Optional;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.TextFormat;
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -24,6 +23,8 @@ import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 
@@ -48,6 +49,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
     @Override
     public void processRecords(List<Record> records, IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
+        final LinkedHashMap<String, LinkedList<DeviceData>> deviceDataGroupedByDeviceId = new LinkedHashMap<>();
 
         for(final Record record : records) {
             DataInputProtos.periodic_data periodicData;
@@ -67,6 +69,12 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             }
 
             final String deviceName = deviceIdOptional.get();
+
+            if(!deviceDataGroupedByDeviceId.containsKey(deviceName)){
+                deviceDataGroupedByDeviceId.put(deviceName, new LinkedList<DeviceData>());
+            }
+
+            final LinkedList<DeviceData> dataForDevice = deviceDataGroupedByDeviceId.get(deviceName);
 
             final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceName);
 
@@ -138,8 +146,9 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                         .withHoldCount(periodicData.hasHoldCount() ? periodicData.getHoldCount() : 0);
 
                 final DeviceData deviceData = builder.build();
+                dataForDevice.add(deviceData);
 
-                try {
+                /*try {
                     deviceDataDAO.insert(deviceData);
                     LOGGER.trace("Data saved to DB: {}", TextFormat.shortDebugString(periodicData));
                 } catch (UnableToExecuteStatementException exception) {
@@ -149,7 +158,26 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                     }
 
                     LOGGER.warn("Duplicate device sensor value for account_id = {}, time: {}", pair.accountId, roundedDateTime);
+                }*/
+            }
+        }
+
+        for(final String deviceId: deviceDataGroupedByDeviceId.keySet()){
+            final LinkedList<DeviceData> data = deviceDataGroupedByDeviceId.get(deviceId);
+            if(data.size() == 0){
+                continue;
+            }
+
+            try {
+                deviceDataDAO.batchInsert(data);
+                LOGGER.info("{} Data saved to DB for device {}", data.size(), deviceId);
+            } catch (UnableToExecuteStatementException exception) {
+                final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
+                if (!matcher.find()) {
+                    LOGGER.error("Unknown error saving to DB: {}", exception.getMessage());
                 }
+
+                LOGGER.warn("Duplicate device sensor value for device {}, {} data discarded", deviceId, data.size());
             }
         }
 
