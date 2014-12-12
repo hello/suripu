@@ -21,7 +21,6 @@ import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.models.AlarmInfo;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.DeviceAccountPair;
-import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.core.resources.BaseResource;
@@ -367,27 +366,12 @@ public class ReceiveResource extends BaseResource {
                     continue;
                 }
 
-                final DeviceData.Builder builder = new DeviceData.Builder()
-                        .withAccountId(alarmInfo.accountId)
-                        .withDeviceId(0L) // TODO: really fix this
-                        .withAmbientTemperature(data.getTemperature())
-                        .withAmbientAirQuality(data.getDust(), data.getFirmwareVersion())
-                        .withAmbientAirQualityRaw(data.getDust())
-                        .withAmbientDustVariance(data.getDustVariability())
-                        .withAmbientDustMin(data.getDustMin())
-                        .withAmbientDustMax(data.getDustMax())
-                        .withAmbientHumidity(data.getHumidity())
-                        .withAmbientLight(data.getLight())
-                        .withAmbientLightVariance(data.getLightVariability())
-                        .withAmbientLightPeakiness(data.getLightTonality())
-                        .withOffsetMillis(userTimeZone.getOffset(roundedDateTime))
-                        .withDateTimeUTC(roundedDateTime)
-                        .withFirmwareVersion(data.getFirmwareVersion())
-                        .withWaveCount(data.hasWaveCount() ? data.getWaveCount() : 0)
-                        .withHoldCount(data.hasHoldCount() ? data.getHoldCount() : 0);
+                final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(),
+                        roundedDateTime.getMillis(),
+                        data.getFirmwareVersion(),
+                        DateTime.now(),
+                        2);
 
-                final DeviceData deviceData = builder.build();
-                final CurrentRoomState currentRoomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), 2);
                 responseBuilder.setRoomConditions(
                         OutputProtos.SyncResponse.RoomConditions.valueOf(
                                 RoomConditionUtil.getGeneralRoomCondition(currentRoomState).ordinal()));
