@@ -81,10 +81,13 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
             for (final DeviceAccountPair pair : deviceAccountPairs) {
                 Optional<DateTimeZone> timeZoneOptional = Optional.absent();
+                LOGGER.info("account from postgres {}", pair.accountId);
                 for(final AlarmInfo alarmInfo:deviceAccountInfoFromMergeTable){
                     if(alarmInfo.accountId == pair.accountId){
                         if(alarmInfo.timeZone.isPresent()){
                             timeZoneOptional = alarmInfo.timeZone;
+                        }else{
+                            LOGGER.info("No timezone for device {} account {}", deviceName, alarmInfo.accountId);
                         }
                     }
                 }
