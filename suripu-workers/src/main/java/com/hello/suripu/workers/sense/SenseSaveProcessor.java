@@ -85,7 +85,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                 LOGGER.warn("Found too many pairs ({}) for device = {}", deviceAccountPairs.size(), deviceName);
             }
 
-            final long timestampMillis = batchPeriodicDataWorker.getReceivedAt() * 1000L;
+            final long timestampMillis = batchPeriodicDataWorker.getReceivedAt();
             final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
             if(roundedDateTime.isAfter(DateTime.now().plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || roundedDateTime.isBefore(DateTime.now().minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
                 LOGGER.error("The clock for device {} is not within reasonable bounds (2h)", batchPeriodicDataWorker.getData().getDeviceId());
