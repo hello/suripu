@@ -1,6 +1,5 @@
 package com.hello.suripu.workers.sense;
 
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
@@ -12,6 +11,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
+import com.hello.suripu.core.models.AlarmInfo;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.util.DeviceIdUtil;
@@ -77,10 +77,20 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             long timestampMillis = periodicData.getUnixTime() * 1000L;
             final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
             // This is the default timezone.
-
+            final List<AlarmInfo> deviceAccountInfoFromMergeTable = this.mergedInfoDynamoDB.getInfo(deviceName);  // get everything by one hit
 
             for (final DeviceAccountPair pair : deviceAccountPairs) {
-                Optional<DateTimeZone> timeZoneOptional;
+                Optional<DateTimeZone> timeZoneOptional = Optional.absent();
+                for(final AlarmInfo alarmInfo:deviceAccountInfoFromMergeTable){
+                    if(alarmInfo.accountId == pair.accountId){
+                        if(alarmInfo.timeZone.isPresent()){
+                            timeZoneOptional = alarmInfo.timeZone;
+                        }
+                    }
+                }
+
+                /*
+                // This will kill the provision
                 try {
                     // TODO: Get the timezone for current user.
                     timeZoneOptional = mergedInfoDynamoDB.getTimezone(pair.externalDeviceId, pair.accountId);
@@ -93,6 +103,13 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                     LOGGER.error("AWS error when retrieving user timezone for account {} and Sense", pair.accountId, pair.externalDeviceId);
                     continue;
                 }
+                */
+
+                if(!timeZoneOptional.isPresent()){
+                    LOGGER.warn("No timezone info from all accounts paired with device {}", deviceName);
+                    continue;
+                }
+                
                 final DateTimeZone userTimeZone = timeZoneOptional.get();
 
                 final DeviceData.Builder builder = new DeviceData.Builder()
