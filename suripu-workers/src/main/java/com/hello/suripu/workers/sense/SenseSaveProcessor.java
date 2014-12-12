@@ -169,7 +169,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             }
 
             try {
-                deviceDataDAO.batchInsert(data);
+                deviceDataDAO.batchInsert(data.iterator());
                 LOGGER.info("{} Data saved to DB for device {}", data.size(), deviceId);
             } catch (UnableToExecuteStatementException exception) {
                 final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
