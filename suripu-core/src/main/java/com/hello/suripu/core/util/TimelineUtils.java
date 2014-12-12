@@ -501,14 +501,19 @@ public class TimelineUtils {
         final List<Event> events = new ArrayList<>();
         for (final Segment segment : lightSegments) {
             final String label = segment.getLabel();
+            if (label.equals(LightLabel.Type.NONE.toString()))
+                continue;
+
+            final long startTimestamp = segment.getStartTimestamp() + smoothingDegree * 60000;
             if (label.equals(LightLabel.Type.LIGHTS_OUT.toString()) ) {
                 // create light on and lights out event
-                final long startTimestamp = segment.getStartTimestamp() + smoothingDegree * 60000;
-                final LightEvent event = new LightEvent(startTimestamp, startTimestamp + 60000, segment.getOffsetMillis(),label);
+                final LightEvent event = new LightEvent(startTimestamp, startTimestamp + 60000, segment.getOffsetMillis(), label);
                 event.setDescription("Lights on");
                 events.add(event);
                 final long endTimestamp = segment.getEndTimestamp() - smoothingDegree * 60000;
                 events.add(new LightsOutEvent(endTimestamp, endTimestamp + 60000, segment.getOffsetMillis()));
+            } else if (label.equals(LightLabel.Type.LIGHT_SPIKE.toString())) {
+                events.add(new LightEvent(startTimestamp, startTimestamp + 60000, segment.getOffsetMillis(), label));
             }
             // TODO: daylight event
         }

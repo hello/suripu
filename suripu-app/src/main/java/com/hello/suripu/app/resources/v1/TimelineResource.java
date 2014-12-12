@@ -148,8 +148,8 @@ public class TimelineResource extends BaseResource {
                 final List<Event> lightEvents = TimelineUtils.getLightEvents(senseData);
                 if (lightEvents.size() > 0) {
                     events.addAll(lightEvents);
+                    sleepTimeThreshold = TimelineUtils.getLightsOutTime(lightEvents);
                 }
-                sleepTimeThreshold = TimelineUtils.getLightsOutTime(lightEvents);
             }
         }
 
@@ -198,7 +198,6 @@ public class TimelineResource extends BaseResource {
                         events.add(sleepEventFromAwakeDetection);
                         LOGGER.debug("Default algorithm and N shape algorithm both detected sleep.");
                     }else{
-                        events.add(sleepEventFromAwakeDetection);
                         LOGGER.debug("Account {} not in N shape detection feature group.", accessToken.accountId);
                     }
                 }

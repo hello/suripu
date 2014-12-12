@@ -54,11 +54,13 @@ public class LightEventsDetector {
         for (final AmplitudeData datum : smoothedData) {
             if (datum.amplitude < noLightThreshold) {
                 if (startTimestamp > 0) {
+                    // Lights off
                     final Segment segment = new Segment(startTimestamp, endTimestamp, offsetMillis);
                     final LightLabel.Type segmentLabel = getLabel(segment, buffer);
                     segment.setLabel(segmentLabel.toString());
 
                     if (segmentLabel == LightLabel.Type.LIGHTS_OUT && lightSegments.size() > 0) {
+                        // if previous label is LIGHTS_OUT, unset it
                         lightSegments.getLast().setLabel(LightLabel.Type.NONE.toString());
                     }
 
@@ -72,6 +74,7 @@ public class LightEventsDetector {
             }
 
             if (startTimestamp == 0) {
+                // Light value > 0 at this minute
                 startTimestamp = datum.timestamp;
             }
 
@@ -92,6 +95,7 @@ public class LightEventsDetector {
         if ((startHour < approxSunriseHour || startHour >= approxSunsetHour) && (endHour > approxSunsetHour || endHour < approxSunriseHour)) {
             // night-time
             if (segment.getDuration() < LIGHT_SPIKE_DURATION_THRESHOLD) {
+                // short light duration, consider it as an anomaly
                 label = LightLabel.Type.LIGHT_SPIKE;
             } else {
                 label = LightLabel.Type.LIGHTS_OUT;
@@ -104,10 +108,11 @@ public class LightEventsDetector {
             final double meanMedianDiff = Math.abs(stats.getMean() - stats.getPercentile(50.0));
 
             if (stats.getStandardDeviation() < meanMedianDiff && meanMedianDiff < stats.getStandardDeviation()) {
+                // not getting that huge n-shape for regular daylight
                 label = LightLabel.Type.LOW_DAYLIGHT;
             }
 
-            // TODO: get sudden daylight spike
+            // TODO: get sudden daylight spike when blinds/windows/doors are opened
         }
         return label;
     }
@@ -123,6 +128,5 @@ public class LightEventsDetector {
     private int getTimestampLocalHour(final long timestamp, final int offsetMillis) {
         return (new DateTime(timestamp, DateTimeZone.UTC).plusMillis(offsetMillis)).getHourOfDay();
     }
-
 
 }
