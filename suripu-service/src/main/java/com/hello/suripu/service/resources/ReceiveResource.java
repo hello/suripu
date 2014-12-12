@@ -140,12 +140,21 @@ public class ReceiveResource extends BaseResource {
             );
         }
 
+        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? "" : request.getHeader("X-Forwarded-For");
+
+        final DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorkerMessage = DataInputProtos.BatchPeriodicDataWorker.newBuilder()
+                .setData(data)
+                .setReceivedAt(DateTime.now().getMillis())
+                .setIpAddress(ipAddress)
+                .build();
+
         final DataLogger batchSenseDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
-        batchSenseDataLogger.put(data.getDeviceId(), signedMessage.body);
+        batchSenseDataLogger.put(data.getDeviceId(), batchPeriodicDataWorkerMessage.toByteArray());
         return generateSyncResponse(data.getDeviceId(), data.getFirmwareVersion(), optionalKeyBytes.get(), data);
     }
 
 
+    @Deprecated
     @POST
     @Path("/morpheus/pb2")
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
@@ -200,14 +209,26 @@ public class ReceiveResource extends BaseResource {
             );
         }
 
-        // Saving sense data to kinesis
-        final DataLogger senseSensorsDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
-        senseSensorsDataLogger.put(deviceName, signedMessage.body);
+
         final DataInputProtos.batched_periodic_data batch = DataInputProtos.batched_periodic_data.newBuilder()
                 .addData(data)
                 .setDeviceId(data.getDeviceId())
                 .setFirmwareVersion(data.getFirmwareVersion())
                 .build();
+
+
+        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? "" : request.getHeader("X-Forwarded-For");
+
+        final DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorkerMessage = DataInputProtos.BatchPeriodicDataWorker.newBuilder()
+                .setData(batch)
+                .setReceivedAt(DateTime.now().getMillis())
+                .setIpAddress(ipAddress)
+                .build();
+
+        // Saving sense data to kinesis
+        final DataLogger senseSensorsDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
+        senseSensorsDataLogger.put(deviceName, batchPeriodicDataWorkerMessage.toByteArray());
+
         return generateSyncResponse(data.getDeviceId(), data.getFirmwareVersion(), optionalKeyBytes.get(), batch);
     }
 

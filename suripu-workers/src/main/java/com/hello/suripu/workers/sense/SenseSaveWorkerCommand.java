@@ -32,6 +32,7 @@ import net.sourceforge.argparse4j.inf.Namespace;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import redis.clients.jedis.JedisPool;
 
 import java.net.InetAddress;
 import java.util.List;
@@ -114,7 +115,8 @@ public final class SenseSaveWorkerCommand extends ConfiguredCommand<SenseSaveWor
 
         final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB = new MergedAlarmInfoDynamoDB(dynamoDB, configuration.getMergedInfoDB().getTableName());
 
-        final IRecordProcessorFactory factory = new SenseSaveProcessorFactory(deviceDAO, mergedAlarmInfoDynamoDB, deviceDataDAO);
+        final JedisPool jedisPool = new JedisPool("localhost");
+        final IRecordProcessorFactory factory = new SenseSaveProcessorFactory(deviceDAO, mergedAlarmInfoDynamoDB, deviceDataDAO, jedisPool);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
     }
