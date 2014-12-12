@@ -11,7 +11,6 @@ import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
-import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.AlarmInfo;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
@@ -26,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.regex.Matcher;
 
 public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
@@ -172,12 +170,11 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                 deviceDataDAO.batchInsert(data.iterator());
                 LOGGER.info("{} Data saved to DB for device {}", data.size(), deviceId);
             } catch (UnableToExecuteStatementException exception) {
-                final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
-                if (!matcher.find()) {
-                    LOGGER.error("Unknown error saving to DB: {}", exception.getMessage());
-                }
-
-                LOGGER.warn("Duplicate device sensor value for device {}, {} data discarded", deviceId, data.size());
+                LOGGER.error("Error sensor value for device {} from {} to {}, {} data discarded",
+                        deviceId,
+                        data.getFirst().dateTimeUTC,
+                        data.getLast().dateTimeUTC,  // I love linkedlist
+                        data.size());
             }
         }
 
