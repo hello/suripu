@@ -159,7 +159,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                 if(inserted == data.size()) {
                     LOGGER.info("Batch saved {} data to DB for device {}", data.size(), deviceId);
                 }else{
-                    LOGGER.info("Batch save failed, save {} data for device {} using itemize insert.", inserted, deviceId);
+                    LOGGER.warn("Batch save failed, save {} data for device {} using itemize insert.", inserted, deviceId);
                 }
             } catch (Exception exception) {
                 LOGGER.error("Error saving data for device {} from {} to {}, {} data discarded",
