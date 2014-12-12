@@ -46,6 +46,9 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
     private final Meter messagesProcessed;
     private final Meter batchSaved;
+    private final Meter clockOutOfSync;
+    private final Meter emptyDynamoDB;
+
 
     public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedAlarmInfoDynamoDB mergedInfoDynamoDB, final DeviceDataDAO deviceDataDAO, final ActiveDevicesTracker activeDevicesTracker) {
         this.deviceDAO = deviceDAO;
@@ -54,6 +57,8 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
         this.activeDevicesTracker = activeDevicesTracker;
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
         this.batchSaved = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "batch", "batch-saved", TimeUnit.SECONDS);
+        this.clockOutOfSync = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "clock", "clock-out-of-sync", TimeUnit.SECONDS);
+        this.emptyDynamoDB = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "dynamo-db", "empty-dynamo-db", TimeUnit.SECONDS);
     }
 
     @Override
@@ -100,18 +105,33 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             if(roundedDateTime.isAfter(DateTime.now().plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || roundedDateTime.isBefore(DateTime.now().minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
                 LOGGER.error("The clock for device {} is not within reasonable bounds (2h)", batchPeriodicDataWorker.getData().getDeviceId());
                 LOGGER.error("Current time = {}, received time = {}", DateTime.now(), roundedDateTime);
+                clockOutOfSync.mark();
                 continue;
             }
 
 
             // This is the default timezone.
             final List<AlarmInfo> deviceAccountInfoFromMergeTable = new ArrayList<>();
+            int retries = 2;
+            for(int i = 0; i < retries; i++) {
+                try {
+                    deviceAccountInfoFromMergeTable.addAll(this.mergedInfoDynamoDB.getInfo(deviceName));  // get everything by one hit
+                    break;
+                } catch (AmazonClientException exception) {
+                    LOGGER.error("Failed getting info from DynamoDB for device = {}", deviceName);
+                }
 
-            try {
-                deviceAccountInfoFromMergeTable.addAll(this.mergedInfoDynamoDB.getInfo(deviceName));  // get everything by one hit
-            } catch (AmazonClientException exception) {
-                LOGGER.error("Failed getting info from DynamoDB for device = {}", deviceName);
-                continue;
+                try {
+                    LOGGER.warn("Sleeping for 1 sec");
+                    Thread.sleep(1000);
+                } catch (InterruptedException e1) {
+                    LOGGER.warn("Thread sleep interrupted");
+                }
+                retries++;
+            }
+
+            if(deviceAccountInfoFromMergeTable.isEmpty()) {
+                LOGGER.error("Device {} is not stored in DynamoDB or doesn’t have any accounts linked.", deviceName);
             }
 
 
