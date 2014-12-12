@@ -3,17 +3,16 @@ package com.hello.suripu.core.util;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.core.AmplitudeData;
-import com.hello.suripu.algorithm.core.LightLabel;
-import com.hello.suripu.algorithm.core.Segment;
+import com.hello.suripu.algorithm.core.LightSegment;
 import com.hello.suripu.algorithm.sensordata.LightEventsDetector;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.LightEvent;
 import com.hello.suripu.core.models.Events.LightsOutEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
+import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.SleepEvent;
 import com.hello.suripu.core.models.Insight;
-import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
@@ -46,6 +45,7 @@ public class TimelineUtils {
     public static final Integer MEDIUM_SLEEP_DEPTH = 60;
     public static final Integer LOW_SLEEP_DEPTH = 30;
     public static final Integer LOWEST_SLEEP_DEPTH = 10;
+    public static final long MINUTE_IN_MILLIS = 60000;
 
     public static List<Event> convertLightMotionToNone(final List<Event> eventList, final int thresholdSleepDepth){
         final LinkedList<Event> convertedEvents = new LinkedList<>();
@@ -495,25 +495,31 @@ public class TimelineUtils {
 
         final LightEventsDetector detector = new LightEventsDetector(approxSunriseHour, approxSunsetHour, darknessThreshold, smoothingDegree);
 
-        final LinkedList<Segment> lightSegments = detector.process(lightAmplitudeData);
+        final LinkedList<LightSegment> lightSegments = detector.process(lightAmplitudeData);
 
         // convert segments to Events
         final List<Event> events = new ArrayList<>();
-        for (final Segment segment : lightSegments) {
-            final String label = segment.getLabel();
-            if (label.equals(LightLabel.Type.NONE.toString()))
-                continue;
+        for (final LightSegment segment : lightSegments) {
+            final LightSegment.Type segmentType = segment.getType();
 
-            final long startTimestamp = segment.getStartTimestamp() + smoothingDegree * 60000;
-            if (label.equals(LightLabel.Type.LIGHTS_OUT.toString()) ) {
+            if (segmentType == LightSegment.Type.NONE) {
+                continue;
+            }
+
+            final long startTimestamp = segment.getStartTimestamp() + smoothingDegree * MINUTE_IN_MILLIS;
+            final int offsetMillis = segment.getOffsetMillis();
+
+            if (segmentType == LightSegment.Type.LIGHTS_OUT) {
                 // create light on and lights out event
-                final LightEvent event = new LightEvent(startTimestamp, startTimestamp + 60000, segment.getOffsetMillis(), label);
+                final LightEvent event = new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, segmentType.toString());
                 event.setDescription("Lights on");
                 events.add(event);
-                final long endTimestamp = segment.getEndTimestamp() - smoothingDegree * 60000;
-                events.add(new LightsOutEvent(endTimestamp, endTimestamp + 60000, segment.getOffsetMillis()));
-            } else if (label.equals(LightLabel.Type.LIGHT_SPIKE.toString())) {
-                events.add(new LightEvent(startTimestamp, startTimestamp + 60000, segment.getOffsetMillis(), label));
+
+                final long endTimestamp = segment.getEndTimestamp() - smoothingDegree * MINUTE_IN_MILLIS;
+                events.add(new LightsOutEvent(endTimestamp, endTimestamp + MINUTE_IN_MILLIS, offsetMillis));
+
+            } else if (segmentType == LightSegment.Type.LIGHT_SPIKE) {
+                events.add(new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, segmentType.toString()));
             }
             // TODO: daylight event
         }
@@ -522,11 +528,11 @@ public class TimelineUtils {
 
     public static Optional<DateTime> getLightsOutTime(final List<Event> lightEvents) {
         for (final Event event : lightEvents) {
-            if (event.getDescription().equals(LightLabel.Type.LIGHTS_OUT.toString())) {
+            if (event.getDescription().equals(LightSegment.Type.LIGHTS_OUT.toString())) {
                 final DateTime lightsOutTime = new DateTime(event.getEndTimestamp(), DateTimeZone.UTC).plusMillis(event.getTimezoneOffset());
                 if (lightsOutTime.getHourOfDay() < 4) {
                     // some people fall asleep before turning off the lights! (bryan, Q)
-                    return Optional.of(lightsOutTime.minusMinutes(20));
+                    return Optional.of(lightsOutTime.minusMinutes(10));
                 }
                 break;
             }

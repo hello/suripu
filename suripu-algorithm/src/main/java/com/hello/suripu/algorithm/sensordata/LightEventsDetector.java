@@ -2,8 +2,7 @@ package com.hello.suripu.algorithm.sensordata;
 
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.core.AmplitudeData;
-import com.hello.suripu.algorithm.core.LightLabel;
-import com.hello.suripu.algorithm.core.Segment;
+import com.hello.suripu.algorithm.core.LightSegment;
 import com.hello.suripu.algorithm.utils.GaussianSmoother;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
@@ -35,15 +34,16 @@ public class LightEventsDetector {
         this.smoothingDegree = smoothingDegree;
     }
 
-    public LinkedList<Segment> process(final LinkedList<AmplitudeData> rawDataMinutes) {
+    public LinkedList<LightSegment> process(final LinkedList<AmplitudeData> rawDataMinutes) {
 
         final GaussianSmoother smoother = new GaussianSmoother(smoothingDegree);
         final ImmutableList<AmplitudeData> smoothedData = smoother.process(rawDataMinutes);
 
         LOGGER.debug("Data Start time: {}", rawDataMinutes.get(0).timestamp);
         LOGGER.debug("Data End time: {}", rawDataMinutes.getLast().timestamp);
+
         // get windows of light, and assign a label
-        final LinkedList<Segment> lightSegments = new LinkedList<>();
+        final LinkedList<LightSegment> lightSegments = new LinkedList<>();
 
         long startTimestamp = 0;
         long endTimestamp = 0;
@@ -55,13 +55,13 @@ public class LightEventsDetector {
             if (datum.amplitude < noLightThreshold) {
                 if (startTimestamp > 0) {
                     // Lights off
-                    final Segment segment = new Segment(startTimestamp, endTimestamp, offsetMillis);
-                    final LightLabel.Type segmentLabel = getLabel(segment, buffer);
-                    segment.setLabel(segmentLabel.toString());
+                    final LightSegment segment = new LightSegment(startTimestamp, endTimestamp, offsetMillis);
+                    final LightSegment.Type segmentType = getLightSegmentType(segment, buffer);
+                    segment.setType(segmentType);
 
-                    if (segmentLabel == LightLabel.Type.LIGHTS_OUT && lightSegments.size() > 0) {
+                    if (segmentType == LightSegment.Type.LIGHTS_OUT && lightSegments.size() > 0) {
                         // if previous label is LIGHTS_OUT, unset it
-                        lightSegments.getLast().setLabel(LightLabel.Type.NONE.toString());
+                        lightSegments.getLast().setType(LightSegment.Type.NONE);
                     }
 
                     lightSegments.add(segment);
@@ -86,8 +86,10 @@ public class LightEventsDetector {
         return lightSegments;
     }
 
-    private LightLabel.Type getLabel(final Segment segment, final List<Double> segmentValues) {
-        LightLabel.Type label = LightLabel.Type.NONE;
+    private LightSegment.Type getLightSegmentType(final LightSegment segment, final List<Double> segmentValues) {
+
+        LightSegment.Type segmentType = LightSegment.Type.NONE;
+
         final int offsetMillis = segment.getOffsetMillis();
         final int startHour = getTimestampLocalHour(segment.getStartTimestamp(), offsetMillis);
         final int endHour = getTimestampLocalHour(segment.getEndTimestamp(), offsetMillis);
@@ -96,25 +98,25 @@ public class LightEventsDetector {
             // night-time
             if (segment.getDuration() < LIGHT_SPIKE_DURATION_THRESHOLD) {
                 // short light duration, consider it as an anomaly
-                label = LightLabel.Type.LIGHT_SPIKE;
+                segmentType = LightSegment.Type.LIGHT_SPIKE;
             } else {
-                label = LightLabel.Type.LIGHTS_OUT;
+                segmentType = LightSegment.Type.LIGHTS_OUT;
             }
         } else if (startHour >= approxSunriseHour && endHour > approxSunriseHour) {
             // daytime
-            label = LightLabel.Type.DAYLIGHT;
+            segmentType = LightSegment.Type.DAYLIGHT;
 
             final DescriptiveStatistics stats = this.getStats(segmentValues);
             final double meanMedianDiff = Math.abs(stats.getMean() - stats.getPercentile(50.0));
 
             if (stats.getStandardDeviation() < meanMedianDiff && meanMedianDiff < stats.getStandardDeviation()) {
                 // not getting that huge n-shape for regular daylight
-                label = LightLabel.Type.LOW_DAYLIGHT;
+                segmentType = LightSegment.Type.LOW_DAYLIGHT;
             }
 
             // TODO: get sudden daylight spike when blinds/windows/doors are opened
         }
-        return label;
+        return segmentType;
     }
 
     private DescriptiveStatistics getStats(List<Double> data) {
