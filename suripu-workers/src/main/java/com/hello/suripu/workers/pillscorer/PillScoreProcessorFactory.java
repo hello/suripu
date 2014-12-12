@@ -7,6 +7,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
+import com.hello.suripu.workers.utils.ActiveDevicesTracker;
 import redis.clients.jedis.JedisPool;
 
 public class PillScoreProcessorFactory implements IRecordProcessorFactory {
@@ -41,6 +42,7 @@ public class PillScoreProcessorFactory implements IRecordProcessorFactory {
 
     @Override
     public IRecordProcessor createProcessor() {
-        return new PillScoreProcessor(sleepScoreDAO, dateMinuteBucket, checkpointThreshold, keyStore, deviceDAO, timeZoneHistoryDB, jedisPool);
+        final ActiveDevicesTracker activeDevicesTracker = new ActiveDevicesTracker(jedisPool);
+        return new PillScoreProcessor(sleepScoreDAO, dateMinuteBucket, checkpointThreshold, keyStore, deviceDAO, timeZoneHistoryDB, activeDevicesTracker);
     }
 }
