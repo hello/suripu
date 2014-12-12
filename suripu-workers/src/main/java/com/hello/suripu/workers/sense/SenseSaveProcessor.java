@@ -1,5 +1,7 @@
 package com.hello.suripu.workers.sense;
 
+import com.amazonaws.services.kinesis.clientlibrary.exceptions.InvalidStateException;
+import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
@@ -149,6 +151,14 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                     LOGGER.warn("Duplicate device sensor value for account_id = {}, time: {}", pair.accountId, roundedDateTime);
                 }
             }
+        }
+
+        try {
+            iRecordProcessorCheckpointer.checkpoint();
+        } catch (InvalidStateException e) {
+            LOGGER.error("checkpoint {}", e.getMessage());
+        } catch (ShutdownException e) {
+            LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
         }
 
     }
