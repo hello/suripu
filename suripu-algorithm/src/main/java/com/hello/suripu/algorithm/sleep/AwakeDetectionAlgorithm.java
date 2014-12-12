@@ -193,16 +193,11 @@ public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
 
         for(int i = sleepSegments.length - 1; i >= 0; i--) {
             final Segment segment = sleepSegments[i];
-            if(getSmoothWindow() >= 20 * 60 * 1000){
-                if (segment.getDuration() >= 1 * getSmoothWindow()) {
-                    longEnoughSegments.add(segment);
-                }
-            }else {
-                if (segment.getDuration() >= 2 * getSmoothWindow()) {
-                    //return segment;
-                    longEnoughSegments.add(segment);
-                }
+            if (segment.getDuration() >= 2 * getSmoothWindow()) {
+                //return segment;
+                longEnoughSegments.add(segment);
             }
+
         }
 
         if(longEnoughSegments.size() == 0){
