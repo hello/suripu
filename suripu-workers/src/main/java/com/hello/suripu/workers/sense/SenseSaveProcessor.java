@@ -17,6 +17,9 @@ import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.hello.suripu.workers.utils.ActiveDevicesTracker;
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.annotation.Timed;
+import com.yammer.metrics.core.Meter;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -28,6 +31,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 
 public class SenseSaveProcessor extends HelloBaseRecordProcessor {
@@ -40,11 +44,16 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private final MergedAlarmInfoDynamoDB mergedInfoDynamoDB;
     private final ActiveDevicesTracker activeDevicesTracker;
 
+    private final Meter messagesProcessed;
+    private final Meter batchSaved;
+
     public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedAlarmInfoDynamoDB mergedInfoDynamoDB, final DeviceDataDAO deviceDataDAO, final ActiveDevicesTracker activeDevicesTracker) {
         this.deviceDAO = deviceDAO;
         this.mergedInfoDynamoDB = mergedInfoDynamoDB;
         this.deviceDataDAO = deviceDataDAO;
         this.activeDevicesTracker = activeDevicesTracker;
+        this.messagesProcessed = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
+        this.batchSaved = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "batch", "batch-saved", TimeUnit.SECONDS);
     }
 
     @Override
@@ -52,6 +61,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
     }
 
+    @Timed
     @Override
     public void processRecords(List<Record> records, IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
         final LinkedHashMap<String, LinkedList<DeviceData>> deviceDataGroupedByDeviceId = new LinkedHashMap<>();
@@ -171,6 +181,8 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                 }else{
                     LOGGER.warn("Batch save failed, save {} data for device {} using itemize insert.", inserted, deviceId);
                 }
+
+                batchSaved.mark(inserted);
             } catch (Exception exception) {
                 LOGGER.error("Error saving data for device {} from {} to {}, {} data discarded",
                         deviceId,
@@ -179,6 +191,9 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                         data.size());
             }
         }
+
+        messagesProcessed.mark(records.size());
+
 
         try {
             iRecordProcessorCheckpointer.checkpoint();
