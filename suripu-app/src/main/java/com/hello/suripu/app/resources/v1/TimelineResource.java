@@ -10,21 +10,23 @@ import com.hello.suripu.algorithm.sleep.SleepDetectionAlgorithm;
 import com.hello.suripu.app.utils.TrackerMotionDataSource;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.Event;
-import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.SleepEvent;
+import com.hello.suripu.core.models.Events.SunRiseEvent;
+import com.hello.suripu.core.models.Events.WakeupEvent;
+import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
-import com.hello.suripu.core.models.Events.SunRiseEvent;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TrackerMotion;
-import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -66,6 +68,7 @@ public class TimelineResource extends BaseResource {
 
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDAO deviceDAO;
+    private final DeviceDataDAO deviceDataDAO;
     private final SleepScoreDAO sleepScoreDAO;
     private final SleepLabelDAO sleepLabelDAO;
     private final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB;
@@ -77,6 +80,7 @@ public class TimelineResource extends BaseResource {
 
     public TimelineResource(final TrackerMotionDAO trackerMotionDAO,
                             final DeviceDAO deviceDAO,
+                            final DeviceDataDAO deviceDataDAO,
                             final SleepLabelDAO sleepLabelDAO,
                             final SleepScoreDAO sleepScoreDAO,
                             final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
@@ -86,6 +90,7 @@ public class TimelineResource extends BaseResource {
                             final String bucketName) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
+        this.deviceDataDAO = deviceDataDAO;
         this.sleepLabelDAO = sleepLabelDAO;
         this.sleepScoreDAO = sleepScoreDAO;
         this.aggregateSleepScoreDAODynamoDB = aggregateSleepScoreDAODynamoDB;
@@ -126,8 +131,29 @@ public class TimelineResource extends BaseResource {
             return timelines;
         }
 
-        // create sleep-motion segments
         final List<Event> events = new LinkedList<>();
+
+        //TODO: get light data by the minute, compute lights out
+        Optional<DateTime> sleepTimeThreshold = Optional.absent();
+        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
+        if (deviceId.isPresent()) {
+            final long queryEndTimeUTC = endDate.getMillis();
+            final long queryStartTimeUTC = endDate.minusHours(24).getMillis();
+            final int slotDurationMins = 1;
+
+            final List<Sample> senseData = deviceDataDAO.generateTimeSeriesByLocalTime(queryStartTimeUTC,
+                    queryEndTimeUTC, accessToken.accountId, deviceId.get(), slotDurationMins, "light");
+
+            if (senseData.size() > 0) {
+                final List<Event> lightEvents = TimelineUtils.getLightEvents(senseData);
+                if (lightEvents.size() > 0) {
+                    events.addAll(lightEvents);
+                }
+                sleepTimeThreshold = TimelineUtils.getLightsOutTime(lightEvents);
+            }
+        }
+
+        // create sleep-motion segments
         final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);
 
         events.addAll(motionEvents);
@@ -149,7 +175,7 @@ public class TimelineResource extends BaseResource {
         final SleepDetectionAlgorithm awakeDetectionAlgorithm = new AwakeDetectionAlgorithm(dataSource, smoothWindowSize);
 
         try {
-            final Segment segmentFromAwakeDetection = awakeDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay());
+            final Segment segmentFromAwakeDetection = awakeDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay(), sleepTimeThreshold);
 
             if(segmentFromAwakeDetection.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
                 final SleepEvent sleepEventFromAwakeDetection = new SleepEvent(
@@ -172,6 +198,7 @@ public class TimelineResource extends BaseResource {
                         events.add(sleepEventFromAwakeDetection);
                         LOGGER.debug("Default algorithm and N shape algorithm both detected sleep.");
                     }else{
+                        events.add(sleepEventFromAwakeDetection);
                         LOGGER.debug("Account {} not in N shape detection feature group.", accessToken.accountId);
                     }
                 }

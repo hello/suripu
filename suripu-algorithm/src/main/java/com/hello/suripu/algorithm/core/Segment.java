@@ -7,8 +7,15 @@ public class Segment {
     private long startTimestamp = 0;
     private long endTimestamp = 0;
     private int offsetMillis = 0;
+    private String label = "";
 
+    public Segment() {}
 
+    public Segment(final long startTimestamp, final long endTimestamp, final int offsetMillis) {
+        this.startTimestamp = startTimestamp;
+        this.endTimestamp = endTimestamp;
+        this.offsetMillis = offsetMillis;
+    }
 
     public long getStartTimestamp() {
         return startTimestamp;
@@ -37,5 +44,9 @@ public class Segment {
     public long getDuration(){
         return getEndTimestamp() - getStartTimestamp();
     }
+
+    public void setLabel(final String label) {this.label = label;}
+
+    public String getLabel() {return label;}
 
 }

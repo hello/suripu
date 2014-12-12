@@ -2,13 +2,20 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.algorithm.core.AmplitudeData;
+import com.hello.suripu.algorithm.core.LightLabel;
+import com.hello.suripu.algorithm.core.Segment;
+import com.hello.suripu.algorithm.sensordata.LightEventsDetector;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Event;
-import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.Events.LightEvent;
+import com.hello.suripu.core.models.Events.LightsOutEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
-import com.hello.suripu.core.models.NullEvent;
-import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.Events.SleepEvent;
+import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.Events.NullEvent;
+import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -468,6 +475,55 @@ public class TimelineUtils {
 
                 }
                 break;  // Get the first event
+            }
+        }
+
+        return Optional.absent();
+    }
+
+    public static List<Event> getLightEvents(final List<Sample> lightData) {
+
+        final LinkedList<AmplitudeData> lightAmplitudeData = new LinkedList<>();
+        for (final Sample sample : lightData) {
+            lightAmplitudeData.add(new AmplitudeData(sample.dateTime, (double) sample.value, sample.offsetMillis));
+        }
+
+        final double darknessThreshold = 0.0001;
+        final int approxSunsetHour = 17;
+        final int approxSunriseHour = 6;
+        final int smoothingDegree = 30; // think of it as minutes
+
+        final LightEventsDetector detector = new LightEventsDetector(approxSunriseHour, approxSunsetHour, darknessThreshold, smoothingDegree);
+
+        final LinkedList<Segment> lightSegments = detector.process(lightAmplitudeData);
+
+        // convert segments to Events
+        final List<Event> events = new ArrayList<>();
+        for (final Segment segment : lightSegments) {
+            final String label = segment.getLabel();
+            if (label.equals(LightLabel.Type.LIGHTS_OUT.toString()) ) {
+                // create light on and lights out event
+                final long startTimestamp = segment.getStartTimestamp() + smoothingDegree * 60000;
+                final LightEvent event = new LightEvent(startTimestamp, startTimestamp + 60000, segment.getOffsetMillis(),label);
+                event.setDescription("Lights on");
+                events.add(event);
+                final long endTimestamp = segment.getEndTimestamp() - smoothingDegree * 60000;
+                events.add(new LightsOutEvent(endTimestamp, endTimestamp + 60000, segment.getOffsetMillis()));
+            }
+            // TODO: daylight event
+        }
+        return events;
+    }
+
+    public static Optional<DateTime> getLightsOutTime(final List<Event> lightEvents) {
+        for (final Event event : lightEvents) {
+            if (event.getDescription().equals(LightLabel.Type.LIGHTS_OUT.toString())) {
+                final DateTime lightsOutTime = new DateTime(event.getEndTimestamp(), DateTimeZone.UTC).plusMillis(event.getTimezoneOffset());
+                if (lightsOutTime.getHourOfDay() < 4) {
+                    // some people fall asleep before turning off the lights! (bryan, Q)
+                    return Optional.of(lightsOutTime.minusMinutes(20));
+                }
+                break;
             }
         }
 
