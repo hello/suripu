@@ -20,8 +20,6 @@ import java.util.Map;
 public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
 
     private LinkedList<AmplitudeData> dataAfterAutoInsert = new LinkedList<>();
-    private int startHourOfDay = 0;
-    private int endHourOfDay = 0;
     public static final int DATA_INTERVAL = DateTimeConstants.MILLIS_PER_MINUTE;
 
     public TrackerMotionDataSource(final List<TrackerMotion> motionsFromDBShortedByTimestamp,
@@ -49,32 +47,8 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
             }
         }
 
-        this.startHourOfDay = startHourOfDay;
-        this.endHourOfDay = endHourOfDay;
     }
 
-    public static Map.Entry<List<AmplitudeData>, List<AmplitudeData>>
-        getPadData(final List<AmplitudeData> data, int padCount, int dataIntervalMS, double defaultValue){
-
-        final LinkedList<AmplitudeData> padFront = new LinkedList<>();
-        final LinkedList<AmplitudeData> padRear = new LinkedList<>();
-
-        if(data.size() > 0)
-        {
-            final AmplitudeData firstData = data.get(0);
-            final AmplitudeData lastData = data.get(data.size() - 1);
-
-            for(int i = 0; i < padCount; i++){
-                final AmplitudeData frontPad = new AmplitudeData(firstData.timestamp - dataIntervalMS * (i + 1), defaultValue, firstData.offsetMillis);
-                final AmplitudeData rearPad = new AmplitudeData(lastData.timestamp + dataIntervalMS * (i + 1), defaultValue, lastData.offsetMillis);
-                padFront.add(0, frontPad);
-                padRear.add(rearPad);
-            }
-        }
-
-        return new AbstractMap.SimpleEntry<List<AmplitudeData>, List<AmplitudeData>>(padFront, padRear);
-
-    }
 
     public static long getMinAmplitude(final List<TrackerMotion> data){
         long minAmplitude = Long.MAX_VALUE;
@@ -137,16 +111,10 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
         }
 
         final LinkedList<AmplitudeData> targetList = new LinkedList<>();
-        final Map.Entry<DateTime, DateTime> queryBoundary = getStartEndQueryTimeLocalUTC(localUTCDayOfNight, this.startHourOfDay, this.endHourOfDay);
 
         for(final AmplitudeData amplitudeData:this.dataAfterAutoInsert){
-            final DateTime timeFromData = new DateTime(amplitudeData.timestamp, DateTimeZone.forOffsetMillis(amplitudeData.offsetMillis));
-            final DateTime localUTCTimeFromData = new DateTime(timeFromData.getYear(), timeFromData.getMonthOfYear(),
-                    timeFromData.getDayOfMonth(), timeFromData.getHourOfDay(), timeFromData.getMinuteOfHour(), 0, DateTimeZone.UTC);
-            if(localUTCTimeFromData.getMillis() >= queryBoundary.getKey().getMillis() &&
-                    localUTCTimeFromData.getMillis() <= queryBoundary.getValue().getMillis()) {
-                targetList.add(amplitudeData);
-            }
+
+            targetList.add(amplitudeData);
         }
 
 
