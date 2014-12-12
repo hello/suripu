@@ -147,7 +147,6 @@ public abstract class DeviceDataDAO {
 
 
     public int batchInsertWithFailureFallback(final List<DeviceData> data){
-        int batchInserted = 0;
         int inserted = 0;
         try {
             this.batchInsert(data.iterator());
@@ -156,32 +155,31 @@ public abstract class DeviceDataDAO {
 
         }
 
-        if(batchInserted != data.size()){
-            for(final DeviceData datum:data){
-                try {
-                    this.insert(datum);
-                    inserted++;
-                } catch (UnableToExecuteStatementException exception) {
-                    final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
-                    if(matcher.find())
-                    {
-                        LOGGER.warn("Duplicate device sensor value for device {}, account {}, timestamp {}",
-                                datum.deviceId,
-                                datum.accountId,
-                                datum.dateTimeUTC.withZone(DateTimeZone.forOffsetMillis(datum.offsetMillis)));
-                    }else{
-                        LOGGER.error("Cannot insert data for device {}, account {}, timestamp {}, error {}",
-                                datum.deviceId,
-                                datum.accountId,
-                                datum.dateTimeUTC.withZone(DateTimeZone.forOffsetMillis(datum.offsetMillis)),
-                                exception.getMessage());
-                    }
-
+        for(final DeviceData datum:data){
+            try {
+                this.insert(datum);
+                inserted++;
+            } catch (UnableToExecuteStatementException exception) {
+                final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
+                if(matcher.find())
+                {
+                    LOGGER.warn("Duplicate device sensor value for device {}, account {}, timestamp {}",
+                            datum.deviceId,
+                            datum.accountId,
+                            datum.dateTimeUTC.withZone(DateTimeZone.forOffsetMillis(datum.offsetMillis)));
+                }else{
+                    LOGGER.error("Cannot insert data for device {}, account {}, timestamp {}, error {}",
+                            datum.deviceId,
+                            datum.accountId,
+                            datum.dateTimeUTC.withZone(DateTimeZone.forOffsetMillis(datum.offsetMillis)),
+                            exception.getMessage());
                 }
+
             }
-
-
         }
+
+
+
         return inserted;
     }
 
