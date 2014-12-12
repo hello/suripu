@@ -27,9 +27,6 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
 
         final long minAmplitude = getMinAmplitude(motionsFromDBShortedByTimestamp);
         for(final TrackerMotion motion: motionsFromDBShortedByTimestamp) {
-            if(motion.value <= 0){
-                continue;
-            }
 
             if(this.dataAfterAutoInsert.size() == 0) {
                 this.dataAfterAutoInsert.add(trackerMotionToAmplitude(motion));
