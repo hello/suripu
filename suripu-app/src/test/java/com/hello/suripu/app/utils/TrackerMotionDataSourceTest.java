@@ -59,6 +59,7 @@ public class TrackerMotionDataSourceTest {
         final List<AmplitudeData> insertedList = TrackerMotionDataSource.fillGap(now.getMillis(), now.plusMinutes(2).getMillis(), DateTimeConstants.MILLIS_PER_MINUTE, 0, DateTimeZone.getDefault().getOffset(now));
         assertThat(insertedList.size(), is(1));
         assertThat(insertedList.get(0).amplitude, is(0d));
+        assertThat(insertedList.get(0).timestamp, is(now.plusMinutes(1).getMillis()));
 
         final List<AmplitudeData> insertedList2 = TrackerMotionDataSource.fillGap(now.getMillis(), now.plusMinutes(2).plusSeconds(3).getMillis(), DateTimeConstants.MILLIS_PER_MINUTE, 0, DateTimeZone.getDefault().getOffset(now));
         assertThat(insertedList2.size(), is(2));

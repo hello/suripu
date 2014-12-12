@@ -36,7 +36,7 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
             if(this.dataAfterAutoInsert.size() == 0) {
                 this.dataAfterAutoInsert.add(trackerMotionToAmplitude(motion));
             }else{
-                if(motion.timestamp - this.dataAfterAutoInsert.getLast().timestamp >= DATA_INTERVAL) {
+                if(motion.timestamp - this.dataAfterAutoInsert.getLast().timestamp > DATA_INTERVAL) {
                     final List<AmplitudeData> gapData = fillGap(this.dataAfterAutoInsert.getLast().timestamp,
                             motion.timestamp,
                             DATA_INTERVAL,
@@ -105,8 +105,8 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
                                        final int timezoneOffset) {
         final long gapInterval = gapEndTimestamp - gapStartTimestamp;
         int insertCount = (int)(gapInterval / dataIntervalMillis);
-        if(gapInterval % dataIntervalMillis > 0){
-            insertCount++;
+        if(gapInterval % dataIntervalMillis == 0){
+            insertCount--;
         }
 
         final ArrayList<AmplitudeData> insertData = new ArrayList<>();
