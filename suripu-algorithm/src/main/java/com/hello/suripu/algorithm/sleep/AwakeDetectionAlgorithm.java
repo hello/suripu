@@ -48,7 +48,7 @@ public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
         // Step 1: Aggregate the data based on a 10 minute interval.
         final AmplitudeDataPreprocessor smoother = new MaxAmplitudeAggregator(getSmoothWindow());
         final ImmutableList<AmplitudeData> smoothedData = smoother.process(rawData);
-        LOGGER.info("Raw data size {}", rawData.size());
+        LOGGER.info("smoothed data size {}", smoothedData.size());
 
         // Step 2: Generate two folds of data, first fold for fall asleep detection
         // The second fold for wake up detection.
