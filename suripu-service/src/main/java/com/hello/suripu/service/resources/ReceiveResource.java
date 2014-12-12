@@ -369,6 +369,7 @@ public class ReceiveResource extends BaseResource {
 
                 final DeviceData.Builder builder = new DeviceData.Builder()
                         .withAccountId(alarmInfo.accountId)
+                        .withDeviceId(0L) // TODO: really fix this
                         .withAmbientTemperature(data.getTemperature())
                         .withAmbientAirQuality(data.getDust(), data.getFirmwareVersion())
                         .withAmbientAirQualityRaw(data.getDust())

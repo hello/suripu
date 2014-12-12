@@ -100,10 +100,10 @@ public class DeviceData {
         this.waveCount = waveCount;
         this.holdCount = holdCount;
 
-        checkNotNull(this.accountId);
-        checkNotNull(this.deviceId);
-        checkNotNull(this.dateTimeUTC);
-        checkNotNull(this.offsetMillis);
+        checkNotNull(this.accountId, "Account id can not be null");
+        checkNotNull(this.deviceId, "Device id can not be null");
+        checkNotNull(this.dateTimeUTC, "DateTimeUTC can not be null");
+        checkNotNull(this.offsetMillis,"Offset millis can not be null");
     }
 
     public static int floatToDBInt(final float value){
