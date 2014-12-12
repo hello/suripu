@@ -52,7 +52,7 @@ public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
                 dateOfTheNightLocalUTC.withTimeAtStartOfDay().plusDays(1).plusHours(4));
 
         final AmplitudeDataPreprocessor cutAfter4am = new DataCutter(dateOfTheNightLocalUTC.withTimeAtStartOfDay().plusDays(1).plusHours(4),
-                dateOfTheNightLocalUTC.withTimeAtStartOfDay().plusDays(1)/*.plusHours(12)*/);
+                dateOfTheNightLocalUTC.withTimeAtStartOfDay().plusDays(1).plusHours(12));
 
         final ImmutableList<AmplitudeData> fallAsleepPeriodData = cutBefore4am.process(smoothedData);
         final ImmutableList<AmplitudeData> wakeUpPeriodData = cutAfter4am.process(smoothedData);
@@ -89,8 +89,8 @@ public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
             // Step 3.3: Generate wake-up period by selected threshold.
             final Segment wakeUpSegment = getAwakeSegment(sharpenWakeUpPeriodData, wakeUpThreshold, PaddingMode.PAD_EARLY);
             if(wakeUpSegment != null) {
-                // Set teh end of sleeping period as the start of wake-up period.
-                sleepSegment.setEndTimestamp(wakeUpSegment.getStartTimestamp());
+                // Set the end of sleeping period as the end of wake-up period.
+                sleepSegment.setEndTimestamp(wakeUpSegment.getEndTimestamp());
             }
         }
 
