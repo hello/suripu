@@ -251,7 +251,7 @@ public class MergedAlarmInfoDynamoDB {
 
         for (final Map<String, AttributeValue> item:items) {
             final HashSet<String> accountDeviceIdAttributes = new HashSet<String>();
-            Collections.addAll(targetAttributes,
+            Collections.addAll(accountDeviceIdAttributes,
                     MORPHEUS_ID_ATTRIBUTE_NAME, ACCOUNT_ID_ATTRIBUTE_NAME);
             if(!item.keySet().containsAll(accountDeviceIdAttributes)){
                 LOGGER.warn("Corrupted row retrieved for device {}", deviceId);
@@ -308,10 +308,10 @@ public class MergedAlarmInfoDynamoDB {
 
 
     public static Optional<RingTime> getRingTimeFromAttributes(final String deviceId, final long accountId, final Map<String, AttributeValue> item){
-        final HashSet<String> alarmAttributes = new HashSet<String>();
-        Collections.addAll(alarmAttributes, ACTUAL_RING_TIME_ATTRIBUTE_NAME, EXPECTED_RING_TIME_ATTRIBUTE_NAME, SOUND_IDS_ATTRIBUTE_NAME);
+        final HashSet<String> ringTimeAttributes = new HashSet<String>();
+        Collections.addAll(ringTimeAttributes, ACTUAL_RING_TIME_ATTRIBUTE_NAME, EXPECTED_RING_TIME_ATTRIBUTE_NAME, SOUND_IDS_ATTRIBUTE_NAME);
 
-        if(!item.keySet().containsAll(alarmAttributes)){
+        if(!item.keySet().containsAll(ringTimeAttributes)){
             return Optional.absent();
         }
 
@@ -332,9 +332,9 @@ public class MergedAlarmInfoDynamoDB {
 
 
     public static Optional<DateTimeZone> getTimeZoneFromAttributes(final String deviceId, final long accountId, final Map<String, AttributeValue> item){
-        final HashSet<String> alarmAttributes = new HashSet<String>();
-        Collections.addAll(alarmAttributes, TIMEZONE_ID_ATTRIBUTE_NAME);
-        if(!item.keySet().containsAll(alarmAttributes)){
+        final HashSet<String> timezoneAttributes = new HashSet<String>();
+        Collections.addAll(timezoneAttributes, TIMEZONE_ID_ATTRIBUTE_NAME);
+        if(!item.keySet().containsAll(timezoneAttributes)){
             return Optional.absent();
         }
 

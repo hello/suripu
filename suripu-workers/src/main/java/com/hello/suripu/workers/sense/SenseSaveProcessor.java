@@ -106,7 +106,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                 */
 
                 if(!timeZoneOptional.isPresent()){
-                    LOGGER.warn("No timezone info from all accounts paired with device {}", deviceName);
+                    LOGGER.warn("No timezone info from {} accounts paired with device {}", deviceAccountInfoFromMergeTable.size(), deviceName);
                     continue;
                 }
                 
