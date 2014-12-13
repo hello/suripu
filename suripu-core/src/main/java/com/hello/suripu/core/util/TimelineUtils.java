@@ -49,6 +49,7 @@ public class TimelineUtils {
 
     private static final int LIGHTS_OUT_START_THRESHOLD = 19; // 7pm local time
     private static final int LIGHTS_OUT_END_THRESHOLD = 4; // 4am local time
+    private static final int LIGHTS_OUT_TOLERANCE = 10; // minutes, for cases when people might fall asleep before lights out
 
     public static List<Event> convertLightMotionToNone(final List<Event> eventList, final int thresholdSleepDepth){
         final LinkedList<Event> convertedEvents = new LinkedList<>();
@@ -501,6 +502,7 @@ public class TimelineUtils {
             lightAmplitudeData.add(new AmplitudeData(sample.dateTime, (double) sample.value, sample.offsetMillis));
         }
 
+        // TODO: could make this configurable.
         final double darknessThreshold = 0.0001;
         final int approxSunsetHour = 17;
         final int approxSunriseHour = 6;
@@ -534,7 +536,7 @@ public class TimelineUtils {
             } else if (segmentType == LightSegment.Type.LIGHT_SPIKE) {
                 events.add(new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, segmentType.toString()));
             }
-            // TODO: daylight event
+            // TODO: daylight spike event -- unsure what the value might be at this moment
         }
         return events;
     }
@@ -545,8 +547,9 @@ public class TimelineUtils {
                 final DateTime lightsOutTime = new DateTime(event.getEndTimestamp(), DateTimeZone.UTC).plusMillis(event.getTimezoneOffset());
                 final int lightsOutHour = lightsOutTime.getHourOfDay();
                 if (lightsOutHour > LIGHTS_OUT_START_THRESHOLD  || lightsOutHour < LIGHTS_OUT_END_THRESHOLD) { // 7pm to 4am
-                    // some people fall asleep before turning off the lights! (bryan, Q)
-                    return Optional.of(lightsOutTime.minusMinutes(10));
+                    // minus 10 mins to allow for some people falling asleep
+                    // before turning off the lights! (e.g. bryan, Q)
+                    return Optional.of(lightsOutTime.minusMinutes(LIGHTS_OUT_TOLERANCE));
                 }
                 break;
             }

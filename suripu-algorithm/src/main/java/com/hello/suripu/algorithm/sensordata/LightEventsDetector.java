@@ -124,7 +124,7 @@ public class LightEventsDetector {
             final double meanMedianDiff = Math.abs(stats.getMean() - stats.getPercentile(50.0)); // avg - median
 
             if (stats.getStandardDeviation() < meanMedianDiff && meanMedianDiff < stats.getStandardDeviation()) {
-                // not getting that huge n-shape for regular daylight
+                // not getting that huge n-shape for regular daylight, consider this a "dark" room
                 segmentType = LightSegment.Type.LOW_DAYLIGHT;
             }
 
