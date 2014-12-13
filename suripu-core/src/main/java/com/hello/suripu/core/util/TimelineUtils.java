@@ -2,13 +2,19 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.algorithm.core.AmplitudeData;
+import com.hello.suripu.algorithm.core.LightSegment;
+import com.hello.suripu.algorithm.sensordata.LightEventsDetector;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Event;
-import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.Events.LightEvent;
+import com.hello.suripu.core.models.Events.LightsOutEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
-import com.hello.suripu.core.models.NullEvent;
-import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.SleepEvent;
+import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -39,6 +45,11 @@ public class TimelineUtils {
     public static final Integer MEDIUM_SLEEP_DEPTH = 60;
     public static final Integer LOW_SLEEP_DEPTH = 30;
     public static final Integer LOWEST_SLEEP_DEPTH = 10;
+    public static final long MINUTE_IN_MILLIS = 60000;
+
+    private static final int LIGHTS_OUT_START_THRESHOLD = 19; // 7pm local time
+    private static final int LIGHTS_OUT_END_THRESHOLD = 4; // 4am local time
+    private static final int LIGHTS_OUT_TOLERANCE = 10; // minutes, for cases when people might fall asleep before lights out
 
     public static List<Event> convertLightMotionToNone(final List<Event> eventList, final int thresholdSleepDepth){
         final LinkedList<Event> convertedEvents = new LinkedList<>();
@@ -437,7 +448,7 @@ public class TimelineUtils {
      * @param thresholdInMinutes
      * @return
      */
-    public static Optional<SleepEvent> getSleepEvent(final List<MotionEvent> sleepMotions, int thresholdInMinutes, int motionThreshold) {
+    public static Optional<SleepEvent> getSleepEvent(final List<MotionEvent> sleepMotions, int thresholdInMinutes, int motionThreshold, final Optional<DateTime> sleepTimeThreshold) {
 
         if(sleepMotions.isEmpty()) {
             return Optional.absent();
@@ -446,10 +457,19 @@ public class TimelineUtils {
         final List<DateTime> dateTimes = new ArrayList<>();
         final Map<Long, MotionEvent> map = new HashMap<>();
 
+        // convert local_UTC to UTC
+        DateTime sleepTimeThresholdUTC = new DateTime(sleepMotions.get(0).getStartTimestamp(), DateTimeZone.UTC).minusSeconds(1);
+        if (sleepTimeThreshold.isPresent()) {
+            sleepTimeThresholdUTC = sleepTimeThreshold.get().minusMillis(sleepMotions.get(0).getTimezoneOffset());
+        }
+
         for(final MotionEvent sleepMotion : sleepMotions) {
             if(sleepMotion.getSleepDepth() < motionThreshold) {
-                dateTimes.add(new DateTime(sleepMotion.getStartTimestamp(), DateTimeZone.UTC));
-                map.put(sleepMotion.getStartTimestamp(), sleepMotion);
+                final DateTime dateTime = new DateTime(sleepMotion.getStartTimestamp(), DateTimeZone.UTC);
+                if (dateTime.isAfter(sleepTimeThresholdUTC)) {
+                    dateTimes.add(dateTime);
+                    map.put(sleepMotion.getStartTimestamp(), sleepMotion);
+                }
             }
         }
 
@@ -457,7 +477,8 @@ public class TimelineUtils {
             return Optional.absent();
         }
 
-        for(int i =0; i < dateTimes.size() -1; i++) {
+
+        for(int i = 0; i < dateTimes.size() - 1; i++) {
             final DateTime current = dateTimes.get(i);
             final DateTime next = dateTimes.get(i + 1);
             final int diffInMinutes = (int)(next.getMillis() - current.getMillis()) / DateTimeConstants.MILLIS_PER_MINUTE;
@@ -468,6 +489,69 @@ public class TimelineUtils {
 
                 }
                 break;  // Get the first event
+            }
+        }
+
+        return Optional.absent();
+    }
+
+    public static List<Event> getLightEvents(final List<Sample> lightData) {
+
+        final LinkedList<AmplitudeData> lightAmplitudeData = new LinkedList<>();
+        for (final Sample sample : lightData) {
+            lightAmplitudeData.add(new AmplitudeData(sample.dateTime, (double) sample.value, sample.offsetMillis));
+        }
+
+        // TODO: could make this configurable.
+        final double darknessThreshold = 0.0001;
+        final int approxSunsetHour = 17;
+        final int approxSunriseHour = 6;
+        final int smoothingDegree = 20; // think of it as minutes
+
+        final LightEventsDetector detector = new LightEventsDetector(approxSunriseHour, approxSunsetHour, darknessThreshold, smoothingDegree);
+
+        final LinkedList<LightSegment> lightSegments = detector.process(lightAmplitudeData);
+
+        // convert segments to Events
+        final List<Event> events = new ArrayList<>();
+        for (final LightSegment segment : lightSegments) {
+            final LightSegment.Type segmentType = segment.segmentType;
+
+            if (segmentType == LightSegment.Type.NONE) {
+                continue;
+            }
+
+            final long startTimestamp = segment.startTimestamp + smoothingDegree * MINUTE_IN_MILLIS;
+            final int offsetMillis = segment.offsetMillis;
+
+            if (segmentType == LightSegment.Type.LIGHTS_OUT) {
+                // create light on and lights out event
+                final LightEvent event = new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, segmentType.toString());
+                event.setDescription("Lights on");
+                events.add(event);
+
+                final long endTimestamp = segment.endTimestamp - smoothingDegree * MINUTE_IN_MILLIS;
+                events.add(new LightsOutEvent(endTimestamp, endTimestamp + MINUTE_IN_MILLIS, offsetMillis));
+
+            } else if (segmentType == LightSegment.Type.LIGHT_SPIKE) {
+                events.add(new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, segmentType.toString()));
+            }
+            // TODO: daylight spike event -- unsure what the value might be at this moment
+        }
+        return events;
+    }
+
+    public static Optional<DateTime> getLightsOutTime(final List<Event> lightEvents) {
+        for (final Event event : lightEvents) {
+            if (event.getType() == Event.Type.LIGHTS_OUT) {
+                final DateTime lightsOutTime = new DateTime(event.getEndTimestamp(), DateTimeZone.UTC).plusMillis(event.getTimezoneOffset());
+                final int lightsOutHour = lightsOutTime.getHourOfDay();
+                if (lightsOutHour > LIGHTS_OUT_START_THRESHOLD  || lightsOutHour < LIGHTS_OUT_END_THRESHOLD) { // 7pm to 4am
+                    // minus 10 mins to allow for some people falling asleep
+                    // before turning off the lights! (e.g. bryan, Q)
+                    return Optional.of(lightsOutTime.minusMinutes(LIGHTS_OUT_TOLERANCE));
+                }
+                break;
             }
         }
 

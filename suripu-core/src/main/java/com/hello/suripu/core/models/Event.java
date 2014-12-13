@@ -1,7 +1,10 @@
 package com.hello.suripu.core.models;
 
 import com.google.common.base.Objects;
+import com.hello.suripu.core.models.Events.LightEvent;
+import com.hello.suripu.core.models.Events.LightsOutEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
+import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.PartnerMotionEvent;
 import com.hello.suripu.core.models.Events.SleepEvent;
 import com.hello.suripu.core.models.Events.SleepMotionEvent;
@@ -25,10 +28,11 @@ public abstract class Event {
         SNORING(4),
         SLEEP_TALK(5),
         LIGHT(6),
-        SUNSET(7),
-        SUNRISE(8),
-        SLEEP(9),
-        WAKE_UP(10);
+        LIGHTS_OUT(7),
+        SUNSET(8),
+        SUNRISE(9),
+        SLEEP(10),
+        WAKE_UP(1);
 
         private int value;
 
@@ -59,12 +63,14 @@ public abstract class Event {
                 case 6:
                     return LIGHT;
                 case 7:
-                    return SUNSET;
+                    return LIGHTS_OUT;
                 case 8:
-                    return SUNRISE;
+                    return SUNSET;
                 case 9:
-                    return SLEEP;
+                    return SUNRISE;
                 case 10:
+                    return SLEEP;
+                case 11:
                     return WAKE_UP;
                 default:
                     return NONE;
@@ -125,6 +131,10 @@ public abstract class Event {
                 return new SunSetEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
             case PARTNER_MOTION:
                 return new PartnerMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+            case LIGHT:
+                return new LightEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
+            case LIGHTS_OUT:
+                return new LightsOutEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
             default:
                 return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
 
@@ -149,6 +159,10 @@ public abstract class Event {
                 return new SunSetEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
             case PARTNER_MOTION:
                 return new PartnerMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+            case LIGHT:
+                return new LightEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
+            case LIGHTS_OUT:
+                return new LightsOutEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
             default:
                 return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
 
