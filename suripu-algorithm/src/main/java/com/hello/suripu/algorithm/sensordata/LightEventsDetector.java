@@ -20,12 +20,12 @@ import java.util.List;
 public class LightEventsDetector {
     private static final Logger LOGGER = LoggerFactory.getLogger(LightEventsDetector.class);
 
-    private static long LIGHT_SPIKE_DURATION_THRESHOLD = 3 * 60000; // 3 minutes
+    private static final long LIGHT_SPIKE_DURATION_THRESHOLD = 3 * 60000; // 3 minutes
 
-    private int approxSunsetHour;
-    private int approxSunriseHour;
-    private double noLightThreshold;
-    private int smoothingDegree;
+    private final int approxSunsetHour;
+    private final int approxSunriseHour;
+    private final double noLightThreshold;
+    private final int smoothingDegree;
 
     public LightEventsDetector(final int approxSunriseHour, final int approxSunsetHour, final double noLightThreshold, final int smoothingDegree) {
         this.approxSunriseHour = approxSunriseHour;
@@ -34,6 +34,21 @@ public class LightEventsDetector {
         this.smoothingDegree = smoothingDegree;
     }
 
+    /**
+     *  This method detects periods of time when light value > some threshold.
+     *
+     *  Step 1: data is gaussian-smoothed with a window of 20 minutes, to reduce effects of light fluctuations
+     *  Step 2: scan data in chronological order, and detect periods of light
+     *  Step 3: annotate each period:
+     *    LIGHT_SPIKE if light is on for a short duration during the night,
+     *    LIGHTS_OUT if light is on for a long time and it's the last period betw sunset and sunrise,
+     *    DAYLIGHT if light is detected and hour of day is > sunrise hour
+     *    LOW_DAYLIGHT if daylight detected, but light level is low, probably a darker room
+     *    SUNLIGHT_SPIKE (not implemented yet)
+     *
+     * @param rawDataMinutes raw light data, one value per minute
+     * @return list of light segments
+     */
     public LinkedList<LightSegment> process(final LinkedList<AmplitudeData> rawDataMinutes) {
 
         final GaussianSmoother smoother = new GaussianSmoother(smoothingDegree);
@@ -50,18 +65,18 @@ public class LightEventsDetector {
         int offsetMillis = 0;
         List<Double> buffer = new ArrayList<>();
 
-
         for (final AmplitudeData datum : smoothedData) {
             if (datum.amplitude < noLightThreshold) {
                 if (startTimestamp > 0) {
                     // Lights off
-                    final LightSegment segment = new LightSegment(startTimestamp, endTimestamp, offsetMillis);
-                    final LightSegment.Type segmentType = getLightSegmentType(segment, buffer);
-                    segment.setType(segmentType);
+                    final LightSegment.Type segmentType = getLightSegmentType(startTimestamp, endTimestamp, offsetMillis, buffer);
+                    final LightSegment segment = new LightSegment(startTimestamp, endTimestamp, offsetMillis, segmentType);
 
                     if (segmentType == LightSegment.Type.LIGHTS_OUT && lightSegments.size() > 0) {
                         // if previous label is LIGHTS_OUT, unset it
-                        lightSegments.getLast().setType(LightSegment.Type.NONE);
+                        final LightSegment lastSegment = lightSegments.removeLast();
+                        final LightSegment updatedLastSegment = LightSegment.updateWithSegmentType(lastSegment, LightSegment.Type.NONE);
+                        lightSegments.add(updatedLastSegment);
                     }
 
                     lightSegments.add(segment);
@@ -86,17 +101,16 @@ public class LightEventsDetector {
         return lightSegments;
     }
 
-    private LightSegment.Type getLightSegmentType(final LightSegment segment, final List<Double> segmentValues) {
+    private LightSegment.Type getLightSegmentType(final long startTimestamp, final long endTimestamp, final int offsetMillis, final List<Double> segmentValues) {
 
         LightSegment.Type segmentType = LightSegment.Type.NONE;
 
-        final int offsetMillis = segment.getOffsetMillis();
-        final int startHour = getTimestampLocalHour(segment.getStartTimestamp(), offsetMillis);
-        final int endHour = getTimestampLocalHour(segment.getEndTimestamp(), offsetMillis);
+        final int startHour = getTimestampLocalHour(startTimestamp, offsetMillis);
+        final int endHour = getTimestampLocalHour(endTimestamp, offsetMillis);
 
         if ((startHour < approxSunriseHour || startHour >= approxSunsetHour) && (endHour > approxSunsetHour || endHour < approxSunriseHour)) {
             // night-time
-            if (segment.getDuration() < LIGHT_SPIKE_DURATION_THRESHOLD) {
+            if ((endTimestamp - startTimestamp) < LIGHT_SPIKE_DURATION_THRESHOLD) {
                 // short light duration, consider it as an anomaly
                 segmentType = LightSegment.Type.LIGHT_SPIKE;
             } else {
@@ -107,7 +121,7 @@ public class LightEventsDetector {
             segmentType = LightSegment.Type.DAYLIGHT;
 
             final DescriptiveStatistics stats = this.getStats(segmentValues);
-            final double meanMedianDiff = Math.abs(stats.getMean() - stats.getPercentile(50.0));
+            final double meanMedianDiff = Math.abs(stats.getMean() - stats.getPercentile(50.0)); // avg - median
 
             if (stats.getStandardDeviation() < meanMedianDiff && meanMedianDiff < stats.getStandardDeviation()) {
                 // not getting that huge n-shape for regular daylight

@@ -1,5 +1,7 @@
 package com.hello.suripu.algorithm.core;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class LightSegment {
     public enum Type {
         NONE {
@@ -22,49 +24,25 @@ public class LightSegment {
         };
     }
 
-    private long startTimestamp = 0;
-    private long endTimestamp = 0;
-    private int offsetMillis = 0;
-    private Type segmentType = Type.NONE;
+    public final long startTimestamp;
+    public final long endTimestamp;
+    public final int offsetMillis;
+    public final Type segmentType;
 
-    public LightSegment() {}
-
-    public LightSegment(final long startTimestamp, final long endTimestamp, final int offsetMillis) {
+    public LightSegment(final long startTimestamp, final long endTimestamp, final int offsetMillis, final Type segmentType) {
+        checkNotNull(startTimestamp, "startTimestamp cannot be null");
         this.startTimestamp = startTimestamp;
         this.endTimestamp = endTimestamp;
         this.offsetMillis = offsetMillis;
+        this.segmentType = segmentType;
     }
 
-    public long getStartTimestamp() {
-        return startTimestamp;
+    public static LightSegment updateWithSegmentType(final LightSegment lightSegment, final Type segmentType) {
+        return new LightSegment(lightSegment.startTimestamp,
+                lightSegment.endTimestamp,
+                lightSegment.offsetMillis,
+                segmentType);
+
     }
-
-    public void setStartTimestamp(long startTimestamp) {
-        this.startTimestamp = startTimestamp;
-    }
-
-    public long getEndTimestamp() {
-        return endTimestamp;
-    }
-
-    public void setEndTimestamp(long endTimestamp) {
-        this.endTimestamp = endTimestamp;
-    }
-
-    public int getOffsetMillis() {
-        return offsetMillis;
-    }
-
-    public void setOffsetMillis(int offsetMillis) {
-        this.offsetMillis = offsetMillis;
-    }
-
-    public long getDuration(){
-        return getEndTimestamp() - getStartTimestamp();
-    }
-
-    public void setType(final Type segmentType) {this.segmentType = segmentType;}
-
-    public Type getType() {return this.segmentType;}
 
 }

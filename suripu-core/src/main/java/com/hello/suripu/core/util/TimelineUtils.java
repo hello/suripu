@@ -47,6 +47,9 @@ public class TimelineUtils {
     public static final Integer LOWEST_SLEEP_DEPTH = 10;
     public static final long MINUTE_IN_MILLIS = 60000;
 
+    private static final int LIGHTS_OUT_START_THRESHOLD = 19; // 7pm local time
+    private static final int LIGHTS_OUT_END_THRESHOLD = 4; // 4am local time
+
     public static List<Event> convertLightMotionToNone(final List<Event> eventList, final int thresholdSleepDepth){
         final LinkedList<Event> convertedEvents = new LinkedList<>();
         for(final Event event:eventList){
@@ -453,7 +456,7 @@ public class TimelineUtils {
         final List<DateTime> dateTimes = new ArrayList<>();
         final Map<Long, MotionEvent> map = new HashMap<>();
 
-        // convert local_UTC to
+        // convert local_UTC to UTC
         DateTime sleepTimeThresholdUTC = new DateTime(sleepMotions.get(0).getStartTimestamp(), DateTimeZone.UTC).minusSeconds(1);
         if (sleepTimeThreshold.isPresent()) {
             sleepTimeThresholdUTC = sleepTimeThreshold.get().minusMillis(sleepMotions.get(0).getTimezoneOffset());
@@ -501,7 +504,7 @@ public class TimelineUtils {
         final double darknessThreshold = 0.0001;
         final int approxSunsetHour = 17;
         final int approxSunriseHour = 6;
-        final int smoothingDegree = 30; // think of it as minutes
+        final int smoothingDegree = 20; // think of it as minutes
 
         final LightEventsDetector detector = new LightEventsDetector(approxSunriseHour, approxSunsetHour, darknessThreshold, smoothingDegree);
 
@@ -510,14 +513,14 @@ public class TimelineUtils {
         // convert segments to Events
         final List<Event> events = new ArrayList<>();
         for (final LightSegment segment : lightSegments) {
-            final LightSegment.Type segmentType = segment.getType();
+            final LightSegment.Type segmentType = segment.segmentType;
 
             if (segmentType == LightSegment.Type.NONE) {
                 continue;
             }
 
-            final long startTimestamp = segment.getStartTimestamp() + smoothingDegree * MINUTE_IN_MILLIS;
-            final int offsetMillis = segment.getOffsetMillis();
+            final long startTimestamp = segment.startTimestamp + smoothingDegree * MINUTE_IN_MILLIS;
+            final int offsetMillis = segment.offsetMillis;
 
             if (segmentType == LightSegment.Type.LIGHTS_OUT) {
                 // create light on and lights out event
@@ -525,7 +528,7 @@ public class TimelineUtils {
                 event.setDescription("Lights on");
                 events.add(event);
 
-                final long endTimestamp = segment.getEndTimestamp() - smoothingDegree * MINUTE_IN_MILLIS;
+                final long endTimestamp = segment.endTimestamp - smoothingDegree * MINUTE_IN_MILLIS;
                 events.add(new LightsOutEvent(endTimestamp, endTimestamp + MINUTE_IN_MILLIS, offsetMillis));
 
             } else if (segmentType == LightSegment.Type.LIGHT_SPIKE) {
@@ -541,7 +544,7 @@ public class TimelineUtils {
             if (event.getType() == Event.Type.LIGHTS_OUT) {
                 final DateTime lightsOutTime = new DateTime(event.getEndTimestamp(), DateTimeZone.UTC).plusMillis(event.getTimezoneOffset());
                 final int lightsOutHour = lightsOutTime.getHourOfDay();
-                if (lightsOutHour > 19  || lightsOutHour < 4) { // 7pm to 4am
+                if (lightsOutHour > LIGHTS_OUT_START_THRESHOLD  || lightsOutHour < LIGHTS_OUT_END_THRESHOLD) { // 7pm to 4am
                     // some people fall asleep before turning off the lights! (bryan, Q)
                     return Optional.of(lightsOutTime.minusMinutes(10));
                 }
