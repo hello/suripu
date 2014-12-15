@@ -7,6 +7,7 @@ import com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -26,6 +27,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -44,6 +46,7 @@ public class RegisterResource {
     private final DeviceDAO deviceDAO;
     final OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore;
     private final KinesisLoggerFactory kinesisLoggerFactory;
+    private final KeyStore senseKeyStore;
 
     private final Boolean debug;
 
@@ -58,11 +61,13 @@ public class RegisterResource {
     public RegisterResource(final DeviceDAO deviceDAO,
                             final OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore,
                             final KinesisLoggerFactory kinesisLoggerFactory,
+                            final KeyStore senseKeyStore,
                             final Boolean debug){
         this.deviceDAO = deviceDAO;
         this.tokenStore = tokenStore;
         this.debug = debug;
         this.kinesisLoggerFactory = kinesisLoggerFactory;
+        this.senseKeyStore = senseKeyStore;
     }
 
     private boolean checkCommandType(final MorpheusCommand morpheusCommand, final PairAction action){
@@ -77,22 +82,12 @@ public class RegisterResource {
     }
 
 
-    private byte[] pair(final byte[] encryptedRequest, final byte[] keyBytes, final PairAction action) {
+    private MorpheusCommand.Builder pair(final byte[] encryptedRequest, final KeyStore keyStore, final PairAction action) {
 
         final MorpheusCommand.Builder builder = MorpheusCommand.newBuilder()
                 .setVersion(PROTOBUF_VERSION);
 
         final SignedMessage signedMessage = SignedMessage.parse(encryptedRequest);
-        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytes);
-
-
-        if(error.isPresent()) {
-            LOGGER.error("Fail to validate signature {}", error.get().message);
-            builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
-            builder.setError(SenseCommandProtos.ErrorType.INTERNAL_DATA_ERROR);
-            return builder.build().toByteArray();
-        }
-
         MorpheusCommand morpheusCommand;
         try {
             morpheusCommand = MorpheusCommand.parseFrom(signedMessage.body);
@@ -100,23 +95,37 @@ public class RegisterResource {
         } catch (IOException exception) {
             final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
             LOGGER.error(errorMessage);
-
-            builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
-            builder.setError(SenseCommandProtos.ErrorType.INTERNAL_OPERATION_FAILED);
-            return builder.build().toByteArray();
+            // We can't return a proper error because we can't decode the protobuf
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
 
+        final String deviceId = morpheusCommand.getDeviceId();
+        builder.setDeviceId(deviceId);
+
+        final Optional<byte[]> keyBytesOptional = keyStore.get(deviceId);
+        if(!keyBytesOptional.isPresent()) {
+            LOGGER.error("Missing AES key for device = {}", deviceId);
+            builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
+            builder.setError(SenseCommandProtos.ErrorType.INTERNAL_DATA_ERROR);
+        }
+
+        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytesOptional.get());
+
+        if(error.isPresent()) {
+            LOGGER.error("Fail to validate signature {}", error.get().message);
+            builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
+            builder.setError(SenseCommandProtos.ErrorType.INTERNAL_DATA_ERROR);
+            return builder;
+        }
         
         if(!checkCommandType(morpheusCommand, action)){
             builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
             builder.setError(SenseCommandProtos.ErrorType.INTERNAL_DATA_ERROR);
             LOGGER.error("Wrong request command type {}", morpheusCommand.getType());
-            return builder.build().toByteArray();
+            return builder;
         }
 
 
-
-        final String deviceId = morpheusCommand.getDeviceId();
         final String token = morpheusCommand.getAccountId();
         LOGGER.debug("deviceId = {}", deviceId);
         LOGGER.debug("token = {}", token);
@@ -129,7 +138,7 @@ public class RegisterResource {
             builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
             builder.setError(SenseCommandProtos.ErrorType.INTERNAL_OPERATION_FAILED);
             LOGGER.error("Token not found {} for device Id {}", token, deviceId);
-            return builder.build().toByteArray();
+            return builder;
         }
 
         final Long accountId = accessTokenOptional.get().accountId;
@@ -161,7 +170,7 @@ public class RegisterResource {
                 builder.setError(SenseCommandProtos.ErrorType.INTERNAL_OPERATION_FAILED);
             }else {
                 LOGGER.error(sqlExp.getMessage());
-                //TODO: enforce the constrain
+                //TODO: enforce the constraint
                 LOGGER.warn("Account {} tries to pair a paired device {} ",
                         accountId, deviceId);
                 builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
@@ -177,11 +186,26 @@ public class RegisterResource {
                 .setIpAddress(ip)
                 .build();
 
-
         final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.REGISTRATIONS);
-        final String sequenceNumber = dataLogger.put(accountId.toString(), registration.toByteArray());
+        dataLogger.put(accountId.toString(), registration.toByteArray());
 
-        return builder.build().toByteArray();
+        return builder;
+    }
+
+    private Response signAndSend(final MorpheusCommand.Builder morpheusCommandBuilder, final KeyStore keyStore) {
+        final Optional<byte[]> keyBytesOptional = keyStore.get(morpheusCommandBuilder.getDeviceId());
+        if(!keyBytesOptional.isPresent()) {
+            LOGGER.error("Missing AES key for deviceId = {}", morpheusCommandBuilder.getDeviceId());
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
+        final Optional<byte[]> signedResponse = SignedMessage.sign(morpheusCommandBuilder.build().toByteArray(), keyBytesOptional.get());
+        if(!signedResponse.isPresent()) {
+            LOGGER.error("Failed signing message for deviceId = {}", morpheusCommandBuilder.getDeviceId());
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
+        return Response.ok().entity(signedResponse.get()).build();
     }
 
     @POST
@@ -190,15 +214,8 @@ public class RegisterResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Timed
     public Response registerMorpheus(final byte[] body) {
-        // TODO: get key from DB
-        final byte[] keyBytes = "1234567891234567".getBytes();
-        final Optional<byte[]> signedResponse = SignedMessage.sign(pair(body, keyBytes, PairAction.PAIR_MORPHEUS), keyBytes);
-        if(!signedResponse.isPresent()) {
-            LOGGER.error("Failed signing message");
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new byte[0]).build();
-        }
-        return Response.ok().entity(signedResponse.get()).build();
-
+        final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_MORPHEUS);
+        return signAndSend(builder, senseKeyStore);
     }
 
     @POST
@@ -207,14 +224,7 @@ public class RegisterResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Timed
     public Response registerPill(final byte[] body) {
-        // TODO: get key from DB
-        final byte[] keyBytes = "1234567891234567".getBytes();
-        final Optional<byte[]> signedResponse = SignedMessage.sign(pair(body, keyBytes, PairAction.PAIR_PILL), keyBytes);
-        if(!signedResponse.isPresent()) {
-            LOGGER.error("Failed signing message");
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new byte[0]).build();
-        }
-
-        return Response.ok().entity(signedResponse.get()).build();
+        final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_PILL);
+        return signAndSend(builder, senseKeyStore);
     }
 }
