@@ -170,7 +170,7 @@ public class TimelineResource extends BaseResource {
         }
 
         // A day starts with 8pm local time and ends with 4pm local time next day
-        final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions, 20, 16);
+        final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions);
         final int smoothWindowSize = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  //TODO: make it configable.
 
         final SleepDetectionAlgorithm awakeDetectionAlgorithm = new AwakeDetectionAlgorithm(dataSource, smoothWindowSize);
