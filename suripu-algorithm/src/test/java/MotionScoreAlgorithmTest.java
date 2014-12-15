@@ -44,17 +44,17 @@ public class MotionScoreAlgorithmTest {
 
     @Test
     public void testGetHighestScore(){
-        final InternalScore[] scores = new InternalScore[3];
-        for(int i = 0; i < scores.length; i++){
-            scores[i] = new InternalScore(null, Double.valueOf(i));
+        final ArrayList<InternalScore> scores = new ArrayList<>();
+        for(int i = 0; i < 3; i++){
+            scores.add(new InternalScore(null, Double.valueOf(i)));
         }
 
         final Optional<InternalScore> highestScore = MotionScoreAlgorithm.getHighestScore(scores);
         assertThat(highestScore.isPresent(), is(true));
-        assertThat(highestScore.get().score, is(Double.valueOf(scores.length - 1)));
+        assertThat(highestScore.get().score, is(Double.valueOf(scores.size() - 1)));
 
 
-        final InternalScore[] emptyScores = new InternalScore[0];
+        final ArrayList<InternalScore> emptyScores = new ArrayList<>();
         assertThat(MotionScoreAlgorithm.getHighestScore(emptyScores).isPresent(), is(false));
     }
 

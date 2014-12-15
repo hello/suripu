@@ -1,6 +1,7 @@
 package com.hello.suripu.algorithm.sleep;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Ordering;
 import com.hello.suripu.algorithm.core.AlgorithmException;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.AmplitudeDataPreprocessor;
@@ -13,8 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,20 +29,15 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
     }
 
     public static Map<Comparable, Double> getRankingPositionMap(final List<Comparable> unsortedArray, final boolean orderByDescending){
-        final Comparable[] sorted = unsortedArray.toArray(new Comparable[0]);
-        Arrays.sort(sorted, new Comparator<Comparable>() {
-            @Override
-            public int compare(Comparable o1, Comparable o2) {
-                if(!orderByDescending){
-                    return o1.compareTo(o2);
-                }else{
-                    return -o1.compareTo(o2);
-                }
-            }
-        });
+
+        List<Comparable> sortedCopy = Ordering.natural().immutableSortedCopy(unsortedArray);
+        if(orderByDescending){
+            sortedCopy = Ordering.natural().reverse().immutableSortedCopy(unsortedArray);
+        }
+
         final LinkedHashMap<Comparable, Double> rankingPositions = new LinkedHashMap<>();
-        for(int i = 0; i < sorted.length; i++){
-            rankingPositions.put(sorted[i], Double.valueOf(i) / unsortedArray.size());
+        for(int i = 0; i < sortedCopy.size(); i++){
+            rankingPositions.put(sortedCopy.get(i), Double.valueOf(i) / unsortedArray.size());
         }
         return rankingPositions;
     }
@@ -64,20 +58,14 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
         return 0f;
     }
 
-    public static Optional<InternalScore> getHighestScore(final InternalScore[] scores){
-        final InternalScore[] copy = Arrays.copyOf(scores, scores.length);
-        Arrays.sort(copy, new Comparator<InternalScore>() {
-            @Override
-            public int compare(InternalScore o1, InternalScore o2) {
-                return -Double.compare(o1.score, o2.score);
-            }
-        });
+    public static Optional<InternalScore> getHighestScore(final List<InternalScore> scores){
+        final List<InternalScore> copy = Ordering.natural().reverse().immutableSortedCopy(scores);
 
-        if(scores.length == 0){
+        if(scores.size() == 0){
             return Optional.absent();
         }
 
-        return Optional.of(copy[0]);
+        return Optional.of(copy.get(0));
     }
 
     @Override
@@ -107,15 +95,15 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
         final Map<Comparable, Double> amplitudeRank = getRankingPositionMap(amplitudes, false);
 
         // Step 3: Get scores from ranking PDF function
-        final InternalScore[] fallAsleepScores = new InternalScore[smoothedData.size()];
-        final InternalScore[] wakeUpScores = new InternalScore[smoothedData.size()];
+        final ArrayList<InternalScore> fallAsleepScores = new ArrayList<>();
+        final ArrayList<InternalScore> wakeUpScores = new ArrayList<>();
         for(int i = 0; i < smoothedData.size(); i++){
             final AmplitudeData data = smoothedData.get(i);
             final double sleepScore = getScoreFromTimeLinearPDF(data.timestamp, sleepTimestampRank) * getScoreFromMotionPolyPDF(data.amplitude, amplitudeRank);
-            fallAsleepScores[i] = new InternalScore(data, sleepScore);
+            fallAsleepScores.add(new InternalScore(data, sleepScore));
 
             final double wakeUpScore = getScoreFromTimeLinearPDF(data.timestamp, wakeUpTimestampRank) * getScoreFromMotionPolyPDF(data.amplitude, amplitudeRank);
-            wakeUpScores[i] = new InternalScore(data, wakeUpScore);
+            wakeUpScores.add(new InternalScore(data, wakeUpScore));
             LOGGER.info("time {}, sleep_prob {}, wake up prob {}, amp {}",
                     new DateTime(data.timestamp, DateTimeZone.forOffsetMillis(data.offsetMillis)),
                     sleepScore,
