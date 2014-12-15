@@ -32,7 +32,7 @@ public abstract class Event {
         SUNSET(8),
         SUNRISE(9),
         SLEEP(10),
-        WAKE_UP(1);
+        WAKE_UP(11);
 
         private int value;
 
