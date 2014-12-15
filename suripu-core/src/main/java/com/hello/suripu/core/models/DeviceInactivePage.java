@@ -10,12 +10,23 @@ public class DeviceInactivePage {
     @JsonProperty("limit")
     public final Integer limit;
     @JsonProperty("content")
-    public final List<DeviceInactive> inactiveSense;
+    public final List<DeviceInactive> inactiveDevices;
 
-    public DeviceInactivePage(final String previousUrl, final String nextUrl, final Integer limit, final List<DeviceInactive> inactiveSense) {
+    public DeviceInactivePage(final String previousUrl, final String nextUrl, final Integer limit, final List<DeviceInactive> inactiveDevices) {
         this.previousUrl = previousUrl;
         this.nextUrl = nextUrl;
         this.limit = limit;
-        this.inactiveSense = inactiveSense;
+        this.inactiveDevices = inactiveDevices;
+    }
+    public static DeviceInactivePage getInactivePageByRawInput(List<DeviceInactive> inactiveDevices, Long afterTimestamp, Long beforeTimestamp, Integer maxItemsPerPage){
+        String previousUrl = String.format("?before=%d", afterTimestamp);
+        String nextUrl = String.format("?after=%d", beforeTimestamp);
+        if(!inactiveDevices.isEmpty())  {
+            final Long minTimestamp = beforeTimestamp - inactiveDevices.get(0).inactivePeriodInMilliseconds - 1;
+            final Long maxTimestamp = beforeTimestamp - inactiveDevices.get(inactiveDevices.size() - 1).inactivePeriodInMilliseconds + 1;
+            nextUrl = String.format("?after=%d", maxTimestamp);
+            previousUrl = String.format("?before=%d", minTimestamp);
+        }
+        return new DeviceInactivePage(previousUrl, nextUrl, maxItemsPerPage, inactiveDevices);
     }
 }

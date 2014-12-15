@@ -329,18 +329,6 @@ public class DeviceResources {
             final DeviceInactive inactiveSense = new DeviceInactive(sense.getElement(), inactivePeriod);
             inactiveDevices.add(inactiveSense);
         }
-        return getInactivePageContent(inactiveDevices, afterTimestamp, beforeTimestamp, maxItemsPerPage);
-    }
-
-    private DeviceInactivePage getInactivePageContent(List<DeviceInactive> inactiveDevices, Long afterTimestamp, Long beforeTimestamp, Integer maxItemsPerPage){
-        String previousUrl = String.format("?before=%d", afterTimestamp);
-        String nextUrl = String.format("?after=%d", beforeTimestamp);
-        if(!inactiveDevices.isEmpty())  {
-            final Long minTimestamp = beforeTimestamp - inactiveDevices.get(0).inactivePeriodInMilliseconds - 1;
-            final Long maxTimestamp = beforeTimestamp - inactiveDevices.get(inactiveDevices.size() - 1).inactivePeriodInMilliseconds + 1;
-            nextUrl = String.format("?after=%d", maxTimestamp);
-            previousUrl = String.format("?before=%d", minTimestamp);
-        }
-        return new DeviceInactivePage(previousUrl, nextUrl, maxItemsPerPage, inactiveDevices);
+        return DeviceInactivePage.getInactivePageByRawInput(inactiveDevices, afterTimestamp, beforeTimestamp, maxItemsPerPage);
     }
 }
