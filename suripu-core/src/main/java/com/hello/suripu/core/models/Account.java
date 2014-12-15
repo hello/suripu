@@ -73,6 +73,10 @@ public class Account {
         return DateTimeUtil.dateToYmdString(DOB);
     }
 
+    @JsonProperty("email_verified")
+    public final Boolean emailVerified;
+
+
     /**
      *
      * @param id
@@ -97,7 +101,8 @@ public class Account {
                     final Integer weight,
                     final DateTime created,
                     final Long lastModified,
-                    final DateTime DOB) {
+                    final DateTime DOB,
+                    final Boolean emailVerified) {
 
         this.id = id;
         this.email = email;
@@ -113,6 +118,7 @@ public class Account {
 
         this.lastModified = lastModified;
         this.DOB = DOB;
+        this.emailVerified = emailVerified;
     }
 
     /**
@@ -124,7 +130,7 @@ public class Account {
     public static Account fromRegistration(final Registration registration, final Long id) {
         return new Account(Optional.fromNullable(id), registration.email, registration.password, registration.tzOffsetMillis,
                 registration.name, registration.gender, registration.height, registration.weight, registration.created,
-                registration.created.getMillis(), registration.DOB);
+                registration.created.getMillis(), registration.DOB, Boolean.FALSE);
     }
 
 
@@ -140,6 +146,7 @@ public class Account {
         private DateTime created;
         private Long lastModified;
         private DateTime DOB;
+        private Boolean emailVerified;
 
         public Builder() {
             this.id = Optional.absent();
@@ -152,6 +159,7 @@ public class Account {
             this.created = DateTime.now(DateTimeZone.UTC);
             this.lastModified = new DateTime(1970, 1 ,1, 0, 0, DateTimeZone.UTC).getMillis();
             this.DOB = new DateTime(1900,1,1,0,0, DateTimeZone.UTC);
+            this.emailVerified = Boolean.FALSE;
         }
 
         @JsonProperty("name")
@@ -241,10 +249,16 @@ public class Account {
             return this;
         }
 
+        @JsonIgnore
+        public Builder withAccountVerified(final Boolean emailVerified) {
+            this.emailVerified = emailVerified;
+            return this;
+        }
+
         public Account build() throws MyAccountCreationException {
             checkNotNull(id, "ID can not be null");
             checkNotNull(email, "Email can not be null");
-            return new Account(id, email, password, tzOffsetMillis, name, gender, height, weight, created, lastModified, DOB);
+            return new Account(id, email, password, tzOffsetMillis, name, gender, height, weight, created, lastModified, DOB, emailVerified);
         }
     }
 
@@ -264,6 +278,7 @@ public class Account {
                 .add("created", created)
                 .add("last_modified", lastModified)
                 .add("DOB", DOB)
+                .add("email_verified", emailVerified)
                 .toString();
     }
 
