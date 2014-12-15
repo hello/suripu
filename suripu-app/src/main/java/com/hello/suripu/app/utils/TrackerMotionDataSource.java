@@ -22,11 +22,11 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
     private LinkedList<AmplitudeData> dataAfterAutoInsert = new LinkedList<>();
     public static final int DATA_INTERVAL = DateTimeConstants.MILLIS_PER_MINUTE;
 
-    public TrackerMotionDataSource(final List<TrackerMotion> motionsFromDBShortedByTimestamp,
-                                   final int startHourOfDay, final int endHourOfDay) {
+    public TrackerMotionDataSource(final List<TrackerMotion> motionsFromDBShortedByTimestamp) {
 
-        final int minAmplitude = getMinAmplitude(motionsFromDBShortedByTimestamp);
-        for(final TrackerMotion motion: motionsFromDBShortedByTimestamp) {
+        final List<TrackerMotion> positiveData = retainPositiveAmplitudes(motionsFromDBShortedByTimestamp);
+        final int minAmplitude = getMinAmplitude(positiveData);
+        for(final TrackerMotion motion: positiveData) {
 
             if(this.dataAfterAutoInsert.size() == 0) {
                 this.dataAfterAutoInsert.add(trackerMotionToAmplitude(motion, minAmplitude));
@@ -35,7 +35,7 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
                     final List<AmplitudeData> gapData = fillGap(this.dataAfterAutoInsert.getLast().timestamp,
                             motion.timestamp,
                             DATA_INTERVAL,
-                            minAmplitude,
+                            0,
                             this.dataAfterAutoInsert.getLast().offsetMillis);
                     this.dataAfterAutoInsert.addAll(gapData);
                 }
@@ -46,6 +46,16 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
 
     }
 
+    public static List<TrackerMotion> retainPositiveAmplitudes(final List<TrackerMotion> data){
+        final LinkedList<TrackerMotion> positiveItems = new LinkedList<>();
+        for(final TrackerMotion motion:data){
+            if(motion.value > 0){
+                positiveItems.add(motion);
+            }
+        }
+
+        return ImmutableList.copyOf(positiveItems);
+    }
 
     public static int getMinAmplitude(final List<TrackerMotion> data){
         int minAmplitude = Integer.MAX_VALUE;
