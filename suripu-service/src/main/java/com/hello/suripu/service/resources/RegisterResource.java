@@ -107,6 +107,7 @@ public class RegisterResource {
             LOGGER.error("Missing AES key for device = {}", deviceId);
             builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
             builder.setError(SenseCommandProtos.ErrorType.INTERNAL_DATA_ERROR);
+            return builder;
         }
 
         final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytesOptional.get());
