@@ -69,7 +69,7 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
     }
 
     @Override
-    public Segment getSleepPeriod(final DateTime dateOfTheNightLocalUTC, final Optional<DateTime> sleepTimeThreshold) throws AlgorithmException {
+    public Segment getSleepPeriod(final DateTime dateOfTheNightLocalUTC) throws AlgorithmException {
         final List<AmplitudeData> rawData = getDataSource().getDataForDate(dateOfTheNightLocalUTC);
         if(rawData.size() == 0){
             throw new AlgorithmException("No data available for date: " + dateOfTheNightLocalUTC);

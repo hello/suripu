@@ -112,7 +112,7 @@ public class MotionScoreAlgorithmTest {
         assertThat(dataSource.getDataForDate(new DateTime(2014, 12, 11, 0, 0, DateTimeZone.UTC)).size(), is(437));
 
         final SleepDetectionAlgorithm algorithm = new MotionScoreAlgorithm(dataSource, 10 * DateTimeConstants.MILLIS_PER_MINUTE);
-        final Segment sleepSegment = algorithm.getSleepPeriod(new DateTime(2014, 12, 11, 0, 0, DateTimeZone.UTC), Optional.<DateTime>absent());
+        final Segment sleepSegment = algorithm.getSleepPeriod(new DateTime(2014, 12, 11, 0, 0, DateTimeZone.UTC));
 
 
         // Out put from python script:

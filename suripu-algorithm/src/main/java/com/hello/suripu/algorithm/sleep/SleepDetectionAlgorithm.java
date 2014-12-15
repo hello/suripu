@@ -1,6 +1,5 @@
 package com.hello.suripu.algorithm.sleep;
 
-import com.google.common.base.Optional;
 import com.hello.suripu.algorithm.core.AlgorithmException;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.DataSource;
@@ -28,5 +27,5 @@ public abstract class SleepDetectionAlgorithm {
         return this.smoothWindow;
     }
 
-    public abstract Segment getSleepPeriod(final DateTime dateOfTheNightLocalUTC, final Optional<DateTime> sleepTimeThreshold) throws AlgorithmException;
+    public abstract Segment getSleepPeriod(final DateTime dateOfTheNightLocalUTC) throws AlgorithmException;
 }

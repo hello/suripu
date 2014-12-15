@@ -176,7 +176,7 @@ public class TimelineResource extends BaseResource {
         final SleepDetectionAlgorithm sleepDetectionAlgorithm = new MotionScoreAlgorithm(dataSource, smoothWindowSize);
 
         try {
-            final Segment segmentFromAwakeDetection = sleepDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay(), sleepTimeThreshold);
+            final Segment segmentFromAwakeDetection = sleepDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay());
 
             if(segmentFromAwakeDetection.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
                 final SleepEvent sleepEventFromAwakeDetection = new SleepEvent(
