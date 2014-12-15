@@ -11,8 +11,9 @@ import com.hello.suripu.core.models.AlarmInfo;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceInactive;
-import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.DeviceInactivePaginator;
+import com.hello.suripu.core.models.DeviceStatus;
+import com.hello.suripu.core.models.DeviceInactivePage;
 import com.hello.suripu.core.models.PillRegistration;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -275,5 +276,71 @@ public class DeviceResources {
         LOGGER.debug("Searching accounts who have used device {}", deviceId);
         final ImmutableList<Account> accounts = deviceDAO.getAccountsByDevices(deviceId, maxDevices);
         return accounts;
+    }
+
+    @GET
+    @Timed
+    @Path("/inactive/sense")
+    @Produces(MediaType.APPLICATION_JSON)
+    public DeviceInactivePage getInactiveSenses(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                    @QueryParam("after") Long afterTimestamp,
+                                                    @QueryParam("before") Long beforeTimestamp) {
+
+        final DeviceInactivePage inactiveSensesPage = paginateInactiveDevices(afterTimestamp, beforeTimestamp, "active_senses");
+        return inactiveSensesPage;
+    }
+
+    @GET
+    @Timed
+    @Path("/inactive/pill")
+    @Produces(MediaType.APPLICATION_JSON)
+    public DeviceInactivePage getInactivePills(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                @QueryParam("after") Long afterTimestamp,
+                                                @QueryParam("before") Long beforeTimestamp) {
+
+        final DeviceInactivePage inactivePillsPage = paginateInactiveDevices(afterTimestamp, beforeTimestamp, "active_pills");
+        return inactivePillsPage;
+    }
+
+    private DeviceInactivePage paginateInactiveDevices(Long afterTimestamp, Long beforeTimestamp, String deviceType) {
+        final List<DeviceInactive> inactiveDevices = new ArrayList<>();
+        final Jedis jedis = jedisPool.getResource();
+        final Set<Tuple> redisSenses = new TreeSet<>();
+        final Integer maxItemsPerPage = 40;
+
+        if(afterTimestamp == null) {
+            afterTimestamp = Long.MIN_VALUE;
+        }
+        if(beforeTimestamp == null) {
+            beforeTimestamp = Long.MAX_VALUE;
+        }
+
+        try {
+            redisSenses.addAll(jedis.zrangeByScoreWithScores(deviceType, afterTimestamp, beforeTimestamp, 0, maxItemsPerPage));
+        } catch (Exception e) {
+            LOGGER.error("Failed retrieving list of devices", e.getMessage());
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
+
+        for(final Tuple sense : redisSenses) {
+            final Long lastSeenTimestamp = (long) sense.getScore();
+            final Long inactivePeriod = beforeTimestamp - lastSeenTimestamp;
+            final DeviceInactive inactiveSense = new DeviceInactive(sense.getElement(), inactivePeriod);
+            inactiveDevices.add(inactiveSense);
+        }
+        return getInactivePageContent(inactiveDevices, afterTimestamp, beforeTimestamp, maxItemsPerPage);
+    }
+
+    private DeviceInactivePage getInactivePageContent(List<DeviceInactive> inactiveDevices, Long afterTimestamp, Long beforeTimestamp, Integer maxItemsPerPage){
+        String previousUrl = String.format("?before=%d", afterTimestamp);
+        String nextUrl = String.format("?after=%d", beforeTimestamp);
+        if(!inactiveDevices.isEmpty())  {
+            final Long minTimestamp = beforeTimestamp - inactiveDevices.get(0).inactivePeriodInMilliseconds - 1;
+            final Long maxTimestamp = beforeTimestamp - inactiveDevices.get(inactiveDevices.size() - 1).inactivePeriodInMilliseconds + 1;
+            nextUrl = String.format("?after=%d", maxTimestamp);
+            previousUrl = String.format("?before=%d", minTimestamp);
+        }
+        return new DeviceInactivePage(previousUrl, nextUrl, maxItemsPerPage, inactiveDevices);
     }
 }
