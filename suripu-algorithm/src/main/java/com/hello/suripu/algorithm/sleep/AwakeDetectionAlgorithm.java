@@ -1,6 +1,5 @@
 package com.hello.suripu.algorithm.sleep;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.core.AlgorithmException;
 import com.hello.suripu.algorithm.core.AmplitudeData;
@@ -40,7 +39,7 @@ public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
     }
 
     @Override
-    public Segment getSleepPeriod(final DateTime dateOfTheNightLocalUTC, final Optional<DateTime> sleepTimeThreshold) throws AlgorithmException {
+    public Segment getSleepPeriod(final DateTime dateOfTheNightLocalUTC) throws AlgorithmException {
         final ImmutableList<AmplitudeData> rawData = getDataSource().getDataForDate(dateOfTheNightLocalUTC);
         if(rawData.size() == 0){
             throw new AlgorithmException("No data available for date: " + dateOfTheNightLocalUTC);
@@ -54,12 +53,8 @@ public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
 
         // Step 2: Generate two folds of data, first fold for fall asleep detection
         // The second fold for wake up detection.
-        DateTime before4amStart;
-        if (sleepTimeThreshold.isPresent()) {
-            before4amStart = sleepTimeThreshold.get();
-        } else {
-            before4amStart = dateOfTheNightLocalUTC.withTimeAtStartOfDay();
-        }
+
+        final DateTime before4amStart = dateOfTheNightLocalUTC.withTimeAtStartOfDay();
 
         final AmplitudeDataPreprocessor cutBefore4am = new DataCutter(before4amStart,
                 dateOfTheNightLocalUTC.withTimeAtStartOfDay().plusDays(1).plusHours(4));

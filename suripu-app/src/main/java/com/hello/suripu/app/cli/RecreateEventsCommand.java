@@ -130,7 +130,7 @@ public class RecreateEventsCommand extends ConfiguredCommand<SuripuAppConfigurat
             Segment sleepPeriod = new Segment();
 
             try{
-                sleepPeriod = sleepDetectionAlgorithm.getSleepPeriod(targetDay, Optional.<DateTime>absent());
+                sleepPeriod = sleepDetectionAlgorithm.getSleepPeriod(targetDay);
             }catch (AlgorithmException alex){
                 LOGGER.warn("Sleep detection error: " + alex.getMessage());
             }
