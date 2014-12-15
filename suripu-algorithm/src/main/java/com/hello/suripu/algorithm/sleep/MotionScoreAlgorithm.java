@@ -116,7 +116,7 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
         final Optional<InternalScore> wakeUpScore = getHighestScore(wakeUpScores);
         final Optional<InternalScore> fallAsleepScore = getHighestScore(fallAsleepScores);
 
-        // We always has data, no need to check score.isPresent()
+        // We always have data, no need to check score.isPresent()
         LOGGER.info("Prob fall asleep time: {}, score {}, amp {}", new DateTime(fallAsleepScore.get().data.timestamp,
                 DateTimeZone.forOffsetMillis(fallAsleepScore.get().data.offsetMillis)),
                 fallAsleepScore.get().score,
