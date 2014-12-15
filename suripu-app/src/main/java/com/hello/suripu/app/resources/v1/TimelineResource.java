@@ -5,7 +5,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.core.Segment;
-import com.hello.suripu.algorithm.sleep.AwakeDetectionAlgorithm;
+import com.hello.suripu.algorithm.sleep.MotionScoreAlgorithm;
 import com.hello.suripu.algorithm.sleep.SleepDetectionAlgorithm;
 import com.hello.suripu.app.utils.TrackerMotionDataSource;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
@@ -173,10 +173,10 @@ public class TimelineResource extends BaseResource {
         final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions);
         final int smoothWindowSize = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  //TODO: make it configable.
 
-        final SleepDetectionAlgorithm awakeDetectionAlgorithm = new AwakeDetectionAlgorithm(dataSource, smoothWindowSize);
+        final SleepDetectionAlgorithm sleepDetectionAlgorithm = new MotionScoreAlgorithm(dataSource, smoothWindowSize);
 
         try {
-            final Segment segmentFromAwakeDetection = awakeDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay(), sleepTimeThreshold);
+            final Segment segmentFromAwakeDetection = sleepDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay(), sleepTimeThreshold);
 
             if(segmentFromAwakeDetection.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
                 final SleepEvent sleepEventFromAwakeDetection = new SleepEvent(
