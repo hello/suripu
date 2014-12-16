@@ -1,5 +1,7 @@
 package com.hello.suripu.core.processors;
 
+import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.Insights.AvailableGraph;
 import com.hello.suripu.core.models.Insights.GraphSample;
 import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.yammer.metrics.annotation.Timed;
@@ -15,6 +17,41 @@ import java.util.List;
  */
 public class TrendGraphProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(TrendGraphProcessor.class);
+    private static int TRENDS_AVAILABLE_AFTER_DAYS = 10; // no trends before collecting 10 days of data
+
+    private static boolean checkEligibility(final DateTime accountCreated) {
+        if (accountCreated.plusDays(TRENDS_AVAILABLE_AFTER_DAYS).isBeforeNow()) {
+            return true;
+        }
+        return false;
+    }
+
+    @Timed
+    public static List<AvailableGraph> getAvailableGraphs(final Account account) {
+        final List<AvailableGraph> graphlist = new ArrayList<>();
+        final boolean eligible = checkEligibility(account.created);
+        if (eligible) {
+            graphlist.add(new AvailableGraph(TrendGraph.DataType.SLEEP_DURATION.getValue(), TrendGraph.TimePeriodType.DAY_OF_WEEK.getValue()));
+
+            for (TrendGraph.TimePeriodType timePeriodType : TrendGraph.TimePeriodType.values()) {
+                graphlist.add(new AvailableGraph(TrendGraph.DataType.SLEEP_SCORE.getValue(), timePeriodType.getValue()));
+            }
+        }
+        return graphlist;
+    }
+
+    @Timed
+    public static List<TrendGraph> getAllGraphs(final Account account) {
+        final List<TrendGraph> graphs = new ArrayList<>();
+        final boolean eligible = checkEligibility(account.created);
+        if (eligible) {
+            final long accountId = account.id.get();
+            graphs.add(getTrendGraph(accountId, TrendGraph.DataType.SLEEP_SCORE, TrendGraph.GraphType.HISTOGRAM, TrendGraph.TimePeriodType.DAY_OF_WEEK));
+            graphs.add(getTrendGraph(accountId, TrendGraph.DataType.SLEEP_DURATION, TrendGraph.GraphType.HISTOGRAM, TrendGraph.TimePeriodType.DAY_OF_WEEK));
+            graphs.add(getTrendGraph(accountId, TrendGraph.DataType.SLEEP_SCORE, TrendGraph.GraphType.TIME_SERIES_LINE, TrendGraph.TimePeriodType.OVER_TIME_ALL));
+        }
+        return graphs;
+    }
 
     @Timed
     public static TrendGraph getTrendGraph(final long account_id, final TrendGraph.DataType dataType,

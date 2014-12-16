@@ -1,6 +1,9 @@
 package com.hello.suripu.app.resources.v1;
 
+import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.Insights.AvailableGraph;
 import com.hello.suripu.core.models.Insights.SleepInsight;
 import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -17,6 +20,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -43,9 +47,16 @@ public class InsightsResource {
         return InsightProcessor.getInsights(accessToken.accountId);
     }
 
+    /**
+     * get a specific graph
+     * @param accessToken
+     * @param dataType
+     * @param timePeriod
+     * @return
+     */
     @Timed
     @GET
-    @Path("/trends")
+    @Path("/trends/graph")
     @Produces(MediaType.APPLICATION_JSON)
     public TrendGraph getTrends(
             @Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken,
@@ -64,6 +75,44 @@ public class InsightsResource {
         final TrendGraph.DataType graphDataType = TrendGraph.DataType.fromString(dataType);
 
         return TrendGraphProcessor.getTrendGraph(accessToken.accountId, graphDataType, graphType, timePeriodType);
+    }
+
+    /**
+     * get a list of available trend graphs
+     * @param accessToken
+     * @return
+     */
+    @Timed
+    @GET
+    @Path("/trends/list")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<AvailableGraph> getTrendsList(
+            @Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
+        LOGGER.debug("Returning list of available graphs account id = {}", accessToken.accountId);
+
+        final Optional<Account> optionalAccount = accountDAO.getById(accessToken.accountId);
+        if (optionalAccount.isPresent()) {
+            return TrendGraphProcessor.getAvailableGraphs(optionalAccount.get());
+        }
+        return Collections.emptyList();
+    }
+
+    /**
+     * get all graphs
+     */
+    @Timed
+    @GET
+    @Path("/trends/all")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<TrendGraph> getAllTrends(
+            @Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
+        LOGGER.debug("Returning ALL available graphs account id = {}", accessToken.accountId);
+
+        final Optional<Account> optionalAccount = accountDAO.getById(accessToken.accountId);
+        if (optionalAccount.isPresent()) {
+            return TrendGraphProcessor.getAllGraphs(optionalAccount.get());
+        }
+        return Collections.emptyList();
     }
 
 }

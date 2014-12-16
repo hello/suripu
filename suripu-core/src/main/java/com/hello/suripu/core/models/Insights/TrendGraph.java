@@ -18,16 +18,13 @@ public class TrendGraph {
         },
         SLEEP_DURATION("sleep_duration") {
             public String toString() {return "SLEEP DURATION";}
-        },
-        TIME_TO_BED("time_to_bed") {
-            public String toString() {return "Time to Bed";}
         };
 
         private final String value;
 
         private DataType(final String value) {this.value = value;}
 
-        private String getValue() {return this.value;}
+        public String getValue() {return this.value;}
 
         public static DataType fromString(final String text) {
             if (text != null) {
@@ -56,7 +53,7 @@ public class TrendGraph {
 
         private String value;
         private TimePeriodType(final String value) {this.value = value;}
-        private String getValue() {return this.value;}
+        public String getValue() {return this.value;}
 
         public static TimePeriodType fromString(final String text) {
             if (text != null) {
@@ -128,4 +125,5 @@ public class TrendGraph {
         this.options = options;
         this.title = dataType.toString() + " " + timePeriod.getTitle();
     }
+
 }
