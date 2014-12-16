@@ -50,12 +50,24 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
         return 0f;
     }
 
+    public static double getScoreFromCutTimeLinearPDF(final Long timestamp, final Map<Comparable, Double> timestampRank, final int fullSize, final double cutPercentage){
+        final double cut = fullSize * cutPercentage;
+        if(timestampRank.containsKey(timestamp)){
+            double probability = (timestampRank.get(timestamp) - cut) / (fullSize - cut);  // It is linear distribution
+            if(probability > 0){
+                return probability;
+            }
+        }
+
+        return 0d;
+    }
+
     public static double getScoreFromMotionPolyPDF(final Double amplitude, final Map<Comparable, Double> amplitudeRank){
         if(amplitudeRank.containsKey(amplitude)){
             return Math.pow(amplitudeRank.get(amplitude), 10);  // polynominals distribution with max power of 10  // TODO: Research is this personalizable?
         }
 
-        return 0f;
+        return 0d;
     }
 
     public static Optional<InternalScore> getHighestScore(final List<InternalScore> scores){
@@ -102,7 +114,8 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
             final double sleepScore = getScoreFromTimeLinearPDF(data.timestamp, sleepTimestampRank) * getScoreFromMotionPolyPDF(data.amplitude, amplitudeRank);
             fallAsleepScores.add(new InternalScore(data, sleepScore));
 
-            final double wakeUpScore = getScoreFromTimeLinearPDF(data.timestamp, wakeUpTimestampRank) * getScoreFromMotionPolyPDF(data.amplitude, amplitudeRank);
+            final double wakeUpScore = getScoreFromCutTimeLinearPDF(data.timestamp, wakeUpTimestampRank, timestamps.size(), 0.5)
+                    * getScoreFromMotionPolyPDF(data.amplitude, amplitudeRank);
             wakeUpScores.add(new InternalScore(data, wakeUpScore));
             LOGGER.info("time {}, sleep_prob {}, wake up prob {}, amp {}",
                     new DateTime(data.timestamp, DateTimeZone.forOffsetMillis(data.offsetMillis)),
