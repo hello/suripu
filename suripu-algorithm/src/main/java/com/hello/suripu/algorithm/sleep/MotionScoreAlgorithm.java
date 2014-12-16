@@ -28,7 +28,7 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
         super(dataSource, smoothWindowMillis);
     }
 
-    public static Map<Comparable, Double> getRankingPositionMap(final List<Comparable> unsortedArray, final boolean orderByDescending){
+    public static Map<Comparable, Double> getLinearRankingPositionPDF(final List<Comparable> unsortedArray, final double cutPercentage, final boolean orderByDescending){
 
         List<Comparable> sortedCopy = Ordering.natural().immutableSortedCopy(unsortedArray);
         if(orderByDescending){
@@ -36,39 +36,32 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
         }
 
         final LinkedHashMap<Comparable, Double> rankingPositions = new LinkedHashMap<>();
+        final double cutBound = unsortedArray.size() * cutPercentage;
         for(int i = 0; i < sortedCopy.size(); i++){
-            rankingPositions.put(sortedCopy.get(i), Double.valueOf(i) / unsortedArray.size());
+            rankingPositions.put(sortedCopy.get(i), Double.valueOf(i - cutBound) / (unsortedArray.size() - cutBound));
         }
         return rankingPositions;
     }
 
-    public static double getScoreFromTimeLinearPDF(final Long timestamp, final Map<Comparable, Double> timestampRank){
-        if(timestampRank.containsKey(timestamp)){
-            return timestampRank.get(timestamp);  // It is linear distribution
+    public static Map<Comparable, Double> getPloyRankingPositionPDF(final List<Comparable> unsortedArray, final double maxPower){
+
+        final List<Comparable> sortedCopy = Ordering.natural().immutableSortedCopy(unsortedArray);
+
+        final LinkedHashMap<Comparable, Double> rankingPositions = new LinkedHashMap<>();
+        for(int i = 0; i < sortedCopy.size(); i++){
+            rankingPositions.put(sortedCopy.get(i), Math.pow(Double.valueOf(i) / unsortedArray.size(), maxPower));
+        }
+        return rankingPositions;
+    }
+
+    public static double getScoreFromPDF(final Comparable value, final Map<Comparable, Double> pdf){
+        if(pdf.containsKey(value)){
+            return pdf.get(value);  // It is linear distribution
         }
 
         return 0f;
     }
 
-    public static double getScoreFromCutTimeLinearPDF(final Long timestamp, final Map<Comparable, Double> timestampRank, final int fullSize, final double cutPercentage){
-        final double cut = fullSize * cutPercentage;
-        if(timestampRank.containsKey(timestamp)){
-            double probability = (timestampRank.get(timestamp) - cut) / (fullSize - cut);  // It is linear distribution
-            if(probability > 0){
-                return probability;
-            }
-        }
-
-        return 0d;
-    }
-
-    public static double getScoreFromMotionPolyPDF(final Double amplitude, final Map<Comparable, Double> amplitudeRank){
-        if(amplitudeRank.containsKey(amplitude)){
-            return Math.pow(amplitudeRank.get(amplitude), 10);  // polynominals distribution with max power of 10  // TODO: Research is this personalizable?
-        }
-
-        return 0d;
-    }
 
     public static Optional<InternalScore> getHighestScore(final List<InternalScore> scores){
         final List<InternalScore> copy = Ordering.natural().reverse().immutableSortedCopy(scores);
@@ -102,20 +95,19 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
             amplitudes.add(Double.valueOf(amplitudeData.amplitude));
         }
 
-        final Map<Comparable, Double> wakeUpTimestampRank = getRankingPositionMap(timestamps, false);
-        final Map<Comparable, Double> sleepTimestampRank = getRankingPositionMap(timestamps, true);  // sleep time should be desc
-        final Map<Comparable, Double> amplitudeRank = getRankingPositionMap(amplitudes, false);
+        final Map<Comparable, Double> wakeUpTimePDF = getLinearRankingPositionPDF(timestamps, 0.5, false);
+        final Map<Comparable, Double> sleepTimePDF = getLinearRankingPositionPDF(timestamps, 0, true);  // sleep time should be desc
+        final Map<Comparable, Double> amplitudePDF = getPloyRankingPositionPDF(amplitudes, 10);
 
         // Step 3: Get scores from ranking PDF function
         final ArrayList<InternalScore> fallAsleepScores = new ArrayList<>();
         final ArrayList<InternalScore> wakeUpScores = new ArrayList<>();
         for(int i = 0; i < smoothedData.size(); i++){
             final AmplitudeData data = smoothedData.get(i);
-            final double sleepScore = getScoreFromTimeLinearPDF(data.timestamp, sleepTimestampRank) * getScoreFromMotionPolyPDF(data.amplitude, amplitudeRank);
+            final double sleepScore = getScoreFromPDF(data.timestamp, sleepTimePDF) * getScoreFromPDF(data.amplitude, amplitudePDF);
             fallAsleepScores.add(new InternalScore(data, sleepScore));
 
-            final double wakeUpScore = getScoreFromCutTimeLinearPDF(data.timestamp, wakeUpTimestampRank, timestamps.size(), 0.5)
-                    * getScoreFromMotionPolyPDF(data.amplitude, amplitudeRank);
+            final double wakeUpScore = getScoreFromPDF(data.timestamp, wakeUpTimePDF) * getScoreFromPDF(data.amplitude, amplitudePDF);
             wakeUpScores.add(new InternalScore(data, wakeUpScore));
             LOGGER.info("time {}, sleep_prob {}, wake up prob {}, amp {}",
                     new DateTime(data.timestamp, DateTimeZone.forOffsetMillis(data.offsetMillis)),

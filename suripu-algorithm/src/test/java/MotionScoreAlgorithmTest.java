@@ -27,14 +27,14 @@ public class MotionScoreAlgorithmTest {
         tsArray.add(now.getMillis());
         tsArray.add(now.plusMinutes(1).getMillis());
         tsArray.add(now.plusMinutes(2).getMillis());
-        Map<Comparable, Double> rankingMap = MotionScoreAlgorithm.getRankingPositionMap(tsArray, false);
+        Map<Comparable, Double> rankingMap = MotionScoreAlgorithm.getLinearRankingPositionPDF(tsArray, 0, false);
         assertThat(rankingMap.size(), is(3));
         assertThat(rankingMap.get(now.getMillis()), is(0d));
         assertThat(rankingMap.get(now.plusMinutes(1).getMillis()), is(1d / tsArray.size()));
         assertThat(rankingMap.get(now.plusMinutes(2).getMillis()), is(2d / tsArray.size()));
 
         // Test order by DESC
-        rankingMap = MotionScoreAlgorithm.getRankingPositionMap(tsArray, true);
+        rankingMap = MotionScoreAlgorithm.getLinearRankingPositionPDF(tsArray, 0, true);
         assertThat(rankingMap.size(), is(3));
         assertThat(rankingMap.get(now.getMillis()), is(2d / tsArray.size()));
         assertThat(rankingMap.get(now.plusMinutes(1).getMillis()), is(1d / tsArray.size()));
@@ -65,19 +65,19 @@ public class MotionScoreAlgorithmTest {
         tsArray.add(now.getMillis());
         tsArray.add(now.plusMinutes(1).getMillis());
         tsArray.add(now.plusMinutes(2).getMillis());
-        Map<Comparable, Double> rankingMap = MotionScoreAlgorithm.getRankingPositionMap(tsArray, false);
+        Map<Comparable, Double> rankingMap = MotionScoreAlgorithm.getLinearRankingPositionPDF(tsArray, 0, false);
 
         // We should expect a linear result
-        assertThat(MotionScoreAlgorithm.getScoreFromTimeLinearPDF(now.getMillis(), rankingMap),
+        assertThat(MotionScoreAlgorithm.getScoreFromPDF(now.getMillis(), rankingMap),
                 is(rankingMap.get(now.getMillis())));
-        assertThat(MotionScoreAlgorithm.getScoreFromTimeLinearPDF(now.plusMinutes(1).getMillis(), rankingMap),
+        assertThat(MotionScoreAlgorithm.getScoreFromPDF(now.plusMinutes(1).getMillis(), rankingMap),
                 is(rankingMap.get(now.plusMinutes(1).getMillis())));
-        assertThat(MotionScoreAlgorithm.getScoreFromTimeLinearPDF(now.plusMinutes(2).getMillis(), rankingMap),
+        assertThat(MotionScoreAlgorithm.getScoreFromPDF(now.plusMinutes(2).getMillis(), rankingMap),
                 is(rankingMap.get(now.plusMinutes(2).getMillis())));
 
 
         // Test something not exists in the ranking map
-        assertThat(MotionScoreAlgorithm.getScoreFromTimeLinearPDF(0L, rankingMap), is(0d));
+        assertThat(MotionScoreAlgorithm.getScoreFromPDF(0L, rankingMap), is(0d));
     }
 
     @Test
@@ -87,19 +87,19 @@ public class MotionScoreAlgorithmTest {
         ampArray.add(startAmplitude);
         ampArray.add(startAmplitude + 1);
         ampArray.add(startAmplitude + 2);
-        Map<Comparable, Double> rankingMap = MotionScoreAlgorithm.getRankingPositionMap(ampArray, false);
+        Map<Comparable, Double> rankingMap = MotionScoreAlgorithm.getPloyRankingPositionPDF(ampArray, 10);
 
         // We should expect a linear result
-        assertThat(MotionScoreAlgorithm.getScoreFromMotionPolyPDF(startAmplitude, rankingMap),
-                is(Math.pow(rankingMap.get(startAmplitude), 10)));
-        assertThat(MotionScoreAlgorithm.getScoreFromMotionPolyPDF(startAmplitude + 1, rankingMap),
-                is(Math.pow(rankingMap.get(startAmplitude + 1), 10)));
-        assertThat(MotionScoreAlgorithm.getScoreFromMotionPolyPDF(startAmplitude + 2, rankingMap),
-                is(Math.pow(rankingMap.get(startAmplitude + 2), 10)));
+        assertThat(MotionScoreAlgorithm.getScoreFromPDF(startAmplitude, rankingMap),
+                is(Math.pow(0, 10)));
+        assertThat(MotionScoreAlgorithm.getScoreFromPDF(startAmplitude + 1, rankingMap),
+                is(Math.pow(1d / 3, 10)));
+        assertThat(MotionScoreAlgorithm.getScoreFromPDF(startAmplitude + 2, rankingMap),
+                is(Math.pow(2d / 3, 10)));
 
 
         // Test something not exists in the ranking map
-        assertThat(MotionScoreAlgorithm.getScoreFromMotionPolyPDF(0d, rankingMap), is(0d));
+        assertThat(MotionScoreAlgorithm.getScoreFromPDF(0d, rankingMap), is(0d));
     }
 
 
