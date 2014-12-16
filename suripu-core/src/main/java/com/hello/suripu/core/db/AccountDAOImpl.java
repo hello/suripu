@@ -74,6 +74,7 @@ public abstract class AccountDAOImpl implements AccountDAO {
             if (matcher.find()) {
                 LOGGER.error("Account with email = {} already exists", account.email);
             }
+            LOGGER.error("Unknown error: {}", exception.getMessage());
         }
 
         return Optional.absent();
