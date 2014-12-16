@@ -297,7 +297,24 @@ public class Account {
         return sb.toString();
     }
 
-    public static Account forApplication(final Long id, final Account account) {
+    public static Account withId(final Account account, final Long accountId) {
+        return new Account(
+                Optional.fromNullable(accountId),
+                account.email,
+                account.password,
+                account.tzOffsetMillis,
+                account.name,
+                account.gender,
+                account.height,
+                account.weight,
+                account.created,
+                account.lastModified,
+                account.DOB,
+                account.emailVerified
+        );
+    }
+
+    public static Account forApplication(final Long aaplicationId, final Account account) {
 //        return new Account();
         return null;
     }

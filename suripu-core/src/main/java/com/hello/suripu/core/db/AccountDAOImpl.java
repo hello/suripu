@@ -4,10 +4,13 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.db.binders.BindAccount;
 import com.hello.suripu.core.db.binders.BindRegistration;
 import com.hello.suripu.core.db.mappers.AccountMapper;
+import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.PasswordUpdate;
 import com.hello.suripu.core.models.Registration;
+import org.joda.time.DateTime;
 import org.mindrot.jbcrypt.BCrypt;
+import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -18,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.regex.Matcher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -44,11 +48,35 @@ public abstract class AccountDAOImpl implements AccountDAO {
     @SqlUpdate("UPDATE accounts SET password_hash = :new_password_hash WHERE password_hash = :current_password_hash AND id = :account_id;")
     public abstract int updatePassword(@Bind("new_password_hash") final String newPasswordHash, @Bind("current_password_hash") final String currentPasswordHash, @Bind("account_id") final Long accountId);
 
-
+    @SqlUpdate("UPDATE accounts SET email = :email, last_modified = :new_last_modified WHERE id = :account_id AND last_modified = :last_modified;")
+    protected abstract int updateEmail(@Bind("email") final String email, @Bind("account_id") final Long accountId, @Bind("last_modified") final Long lastModified, @Bind("new_last_modified") final Long newLastModified);
 
     public Account register(final Registration registration) {
         long id = insertAccount(registration, registration.created.getMillis());
         return Account.fromRegistration(registration, id);
+    }
+
+
+    public Optional<Account> updateEmail(final Account account) {
+        return updateEmail(account, DateTime.now().getMillis());
+    }
+
+    private Optional<Account> updateEmail(final Account account, final Long lastModified) {
+        try {
+            int rows = updateEmail(account.email, account.id.get(), account.lastModified, lastModified);
+            if (rows == 0) {
+                return Optional.absent();
+            }
+
+            return getById(account.id.get());
+        } catch (UnableToExecuteStatementException exception) {
+            final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
+            if (matcher.find()) {
+                LOGGER.error("Account with email = {} already exists", account.email);
+            }
+        }
+
+        return Optional.absent();
     }
 
     public Optional<Account> exists(final String email, final String password) {
