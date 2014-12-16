@@ -1,11 +1,13 @@
 package com.hello.suripu.app.resources.v1;
 
 import com.hello.suripu.core.db.AccountDAO;
-import com.hello.suripu.core.models.SleepInsight;
+import com.hello.suripu.core.models.Insights.SleepInsight;
+import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.InsightProcessor;
+import com.hello.suripu.core.processors.TrendGraphProcessor;
 import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
@@ -33,10 +36,34 @@ public class InsightsResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<SleepInsight> getInsights(
-            @Scope(OAuthScope.SLEEP_TIMELINE) final AccessToken accessToken) {
+            @Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
 
         LOGGER.debug("Returning list of insights for account id = {}", accessToken.accountId);
 
         return InsightProcessor.getInsights(accessToken.accountId);
     }
+
+    @Timed
+    @GET
+    @Path("/trends")
+    @Produces(MediaType.APPLICATION_JSON)
+    public TrendGraph getTrends(
+            @Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken,
+            @QueryParam("data_type") String dataType,
+            @QueryParam("time_period") String timePeriod) {
+
+        LOGGER.debug("Returning data to plot trends for account id = {}", accessToken.accountId);
+
+        final TrendGraph.TimePeriodType timePeriodType = TrendGraph.TimePeriodType.fromString(timePeriod);
+
+        TrendGraph.GraphType graphType = TrendGraph.GraphType.TIME_SERIES_LINE;
+        if (timePeriodType == TrendGraph.TimePeriodType.DAY_OF_WEEK) {
+            graphType = TrendGraph.GraphType.HISTOGRAM;
+        }
+
+        final TrendGraph.DataType graphDataType = TrendGraph.DataType.fromString(dataType);
+
+        return TrendGraphProcessor.getTrendGraph(accessToken.accountId, graphDataType, graphType, timePeriodType);
+    }
+
 }
