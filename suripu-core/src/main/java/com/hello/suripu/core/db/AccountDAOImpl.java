@@ -116,13 +116,13 @@ public abstract class AccountDAOImpl implements AccountDAO {
 
 
     @SqlUpdate("UPDATE accounts SET name=:name, gender=:gender, dob=:dob, height=:height, weight=:weight, " +
-            "tz_offset=:tz_offset, last_modified= extract(epoch from date_trunc('milliseconds', now())) * 1000 WHERE id=:account_id AND last_modified=:last_modified;")
-    protected abstract Integer updateAccount(@BindAccount Account account, @Bind("account_id") Long accountId);
+            "tz_offset=:tz_offset, last_modified= :new_last_modified WHERE id=:account_id AND last_modified=:last_modified;")
+    protected abstract Integer updateAccount(@BindAccount Account account, @Bind("account_id") Long accountId, @Bind("new_last_modified") final Long lastModified);
 
 
     public Optional<Account> update(final Account account, final Long accountId) {
         LOGGER.debug("attempting update with Last modified = {}", account.lastModified);
-        int updated = updateAccount(account, accountId);
+        int updated = updateAccount(account, accountId, DateTime.now().getMillis());
         LOGGER.debug("Update: {} row updated for account_id = {}", updated, accountId);
 
         if(updated == 0) {

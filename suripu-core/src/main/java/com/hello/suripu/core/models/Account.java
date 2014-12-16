@@ -162,6 +162,21 @@ public class Account {
             this.emailVerified = Boolean.FALSE;
         }
 
+        public Builder(final Account account) {
+            this.id = account.id;
+            this.email = account.email;
+            this.password = account.password;
+            this.tzOffsetMillis = account.tzOffsetMillis;
+            this.name = account.name;
+            this.gender = account.gender;
+            this.height = account.height;
+            this.weight = account.weight;
+            this.created = account.created;
+            this.lastModified = account.lastModified;
+            this.DOB = account.DOB;
+            this.emailVerified = account.emailVerified;
+        }
+
         @JsonProperty("name")
         public Builder withName(final String name) {
             this.name = name;
