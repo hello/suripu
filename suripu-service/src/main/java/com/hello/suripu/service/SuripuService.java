@@ -197,10 +197,13 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
         environment.addResource(receiveResource);
         environment.addResource(new RegisterResource(deviceDAO, tokenStore, kinesisLoggerFactory, senseKeyStore, configuration.getDebug()));
-        environment.addResource(new LogsResource(
+        final LogsResource logsResource = new LogsResource(
                 configuration.getIndexLogConfiguration().getPrivateUrl(),
-                configuration.getIndexLogConfiguration().getIndexName())
+                configuration.getIndexLogConfiguration().getIndexName(),
+                senseKeyStore
         );
+
+        environment.addResource(logsResource);
 
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());
