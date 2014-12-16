@@ -22,8 +22,8 @@ public class DeviceInactivePage {
         String previousUrl = String.format("?before=%d", afterTimestamp);
         String nextUrl = String.format("?after=%d", beforeTimestamp);
         if(!inactiveDevices.isEmpty())  {
-            final Long minTimestamp = beforeTimestamp - inactiveDevices.get(0).inactivePeriodInMilliseconds - 1;
-            final Long maxTimestamp = beforeTimestamp - inactiveDevices.get(inactiveDevices.size() - 1).inactivePeriodInMilliseconds + 1;
+            final Long minTimestamp = inactiveDevices.get(0).lastSeenTimestamp - 1;
+            final Long maxTimestamp = inactiveDevices.get(inactiveDevices.size() - 1).lastSeenTimestamp + 1;
             nextUrl = String.format("?after=%d", maxTimestamp);
             previousUrl = String.format("?before=%d", minTimestamp);
         }

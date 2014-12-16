@@ -325,8 +325,7 @@ public class DeviceResources {
 
         for(final Tuple sense : redisSenses) {
             final Long lastSeenTimestamp = (long) sense.getScore();
-            final Long inactivePeriod = beforeTimestamp - lastSeenTimestamp;
-            final DeviceInactive inactiveSense = new DeviceInactive(sense.getElement(), inactivePeriod);
+            final DeviceInactive inactiveSense = new DeviceInactive(sense.getElement(), lastSeenTimestamp);
             inactiveDevices.add(inactiveSense);
         }
         return DeviceInactivePage.getInactivePageByRawInput(inactiveDevices, afterTimestamp, beforeTimestamp, maxItemsPerPage);
