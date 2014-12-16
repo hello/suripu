@@ -69,4 +69,9 @@ public class InMemoryAccountDAOImpl implements AccountDAO{
     public Boolean updatePassword(Long accountId, PasswordUpdate passwordUpdate) {
         return Boolean.FALSE;
     }
+
+    @Override
+    public Optional<Account> updateEmail(Account account) {
+        return Optional.absent();
+    }
 }

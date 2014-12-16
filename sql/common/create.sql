@@ -46,6 +46,10 @@ ALTER TABLE accounts ADD COLUMN last_modified BIGINT;
 -- ALTER TABLE accounts DROP COLUMN tz;
 ALTER TABLE accounts ADD COLUMN dob TIMESTAMP;
 
+
+
+ALTER TABLE accounts ADD COLUMN gender VARCHAR(50);
+
 --
 -- OAUTH
 --
