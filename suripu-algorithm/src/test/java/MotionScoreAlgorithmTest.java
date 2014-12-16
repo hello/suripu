@@ -118,7 +118,7 @@ public class MotionScoreAlgorithmTest {
         // Out put from python script:
         /*
         sleep at 2014-12-12 03:03:00, prob: 0.55139287169, amp: 15103
-        wake up at 2014-12-12 07:23:00, prob: 0.548869568492, amp: 1547
+        wake up at 2014-12-12 07:23:00, prob: 0.479932601157, amp: 1547
         */
 
         final DateTime sleepTime = new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis()));
