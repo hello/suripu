@@ -22,8 +22,8 @@ public class AmplitudeDataScoringFunction implements SleepDataScoringFunction<Am
 
     @Override
     public Map<AmplitudeData, EventScores> getPDF(final Collection<AmplitudeData> data) {
-        final List<Long> timestamps = new ArrayList<>();
-        final List<Double> amplitudes = new ArrayList<>();
+        final List<Long> timestamps = new ArrayList<>(data.size());
+        final List<Double> amplitudes = new ArrayList<>(data.size());
         for(final AmplitudeData amplitudeData:data){
             timestamps.add(Long.valueOf(amplitudeData.timestamp));
             amplitudes.add(Double.valueOf(amplitudeData.amplitude));
