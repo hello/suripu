@@ -152,54 +152,32 @@ public class TimelineResource extends BaseResource {
 
         // create sleep-motion segments
         final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);
-
         events.addAll(motionEvents);
 
-        // detect sleep time
-        final int sleepTimeThresholdInMinutes = 7; // minutes of no-movement to determine that user has fallen asleep
-        final int sleepMotionThreshold = 90;
-        final Optional<SleepEvent> sleepTimeEvent = TimelineUtils.getSleepEvent(motionEvents, sleepTimeThresholdInMinutes, sleepMotionThreshold, sleepTimeThreshold);
-        Optional<Integer> wakeUpTimeZoneOffsetMillis = Optional.absent();
-
-        if(sleepTimeEvent.isPresent()) {
-            events.add(sleepTimeEvent.get());
-            wakeUpTimeZoneOffsetMillis = Optional.of(sleepTimeEvent.get().getTimezoneOffset());
-        }
-
         // A day starts with 8pm local time and ends with 4pm local time next day
-        final Segment sleepPeriod = TimelineUtils.getSleepPeriod(targetDate, trackerMotions);
-
+        Segment sleepSegment = null;
         try {
-            if(sleepPeriod.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
+            sleepSegment = TimelineUtils.getSleepPeriod(targetDate, trackerMotions);
+
+            if(sleepSegment.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
                 final SleepEvent sleepEventFromAwakeDetection = new SleepEvent(
-                        sleepPeriod.getStartTimestamp(),
-                        sleepPeriod.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                        sleepPeriod.getOffsetMillis(),
-                        "You fell asleep (P)");
+                        sleepSegment.getStartTimestamp(),
+                        sleepSegment.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                        sleepSegment.getOffsetMillis(),
+                        "You fell asleep");
 
                 final WakeupEvent wakeupSegmentFromAwakeDetection = new WakeupEvent(
-                        sleepPeriod.getEndTimestamp(),
-                        sleepPeriod.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                        sleepPeriod.getOffsetMillis());
+                        sleepSegment.getEndTimestamp(),
+                        sleepSegment.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                        sleepSegment.getOffsetMillis());
 
-                if(!sleepTimeEvent.isPresent()) {
-                    LOGGER.debug("Default algorithm failed to detect sleep time. Force to use N shape algorithm.");
-                    events.add(sleepEventFromAwakeDetection);
-                }else {
-                    if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION_FROM_AWAKE, accessToken.accountId, new ArrayList<String>())) {
-                        events.add(sleepEventFromAwakeDetection);
-                        LOGGER.debug("Default algorithm and N shape algorithm both detected sleep.");
-                    }else{
-                        LOGGER.debug("Account {} not in N shape detection feature group.", accessToken.accountId);
-                    }
-                }
+                events.add(sleepEventFromAwakeDetection);
                 events.add(wakeupSegmentFromAwakeDetection);
-                wakeUpTimeZoneOffsetMillis = Optional.of(wakeupSegmentFromAwakeDetection.getTimezoneOffset());
             }
 
             LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
-                    new DateTime(sleepPeriod.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepPeriod.getOffsetMillis())),
-                    new DateTime(sleepPeriod.getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepPeriod.getOffsetMillis())));
+                    new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis())),
+                    new DateTime(sleepSegment.getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis())));
         }catch (Exception ex){
             LOGGER.error("Generate sleep period from Awake Detection Algorithm failed: {}", ex.getMessage());
         }
@@ -209,11 +187,9 @@ public class TimelineResource extends BaseResource {
         if (optionalPartnerAccountId.isPresent() && events.size() > 0) {
             LOGGER.debug("partner account {}", optionalPartnerAccountId.get());
             // get tracker motions for partner, query time is in UTC, not local_utc
-            final DateTime startTime;
-            if (sleepTimeEvent.isPresent()) {
-                startTime = new DateTime(sleepTimeEvent.get().getStartTimestamp(), DateTimeZone.UTC);
-            } else {
-                startTime = new DateTime(events.get(0).getStartTimestamp(), DateTimeZone.UTC);
+            DateTime startTime = new DateTime(events.get(0).getStartTimestamp(), DateTimeZone.UTC);
+            if(sleepSegment != null){
+                startTime = new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.UTC);
             }
             final DateTime endTime = new DateTime(events.get(events.size() - 1).getStartTimestamp(), DateTimeZone.UTC);
 
@@ -227,11 +203,11 @@ public class TimelineResource extends BaseResource {
         // add sunrise data
         final String sunRiseQueryDateString = targetDate.plusDays(1).toString(DateTimeFormat.forPattern("yyyy-MM-dd"));
         final Optional<DateTime> sunrise = sunData.sunrise(sunRiseQueryDateString); // day + 1
-        if(sunrise.isPresent() && wakeUpTimeZoneOffsetMillis.isPresent()) {
+        if(sunrise.isPresent() && sleepSegment != null) {
             final long sunRiseMillis = sunrise.get().getMillis();
             final SunRiseEvent sunriseEvent = new SunRiseEvent(sunRiseMillis,
                     sunRiseMillis + DateTimeConstants.MILLIS_PER_MINUTE,
-                    wakeUpTimeZoneOffsetMillis.get(), 0, null);
+                    sleepSegment.getOffsetMillis(), 0, null);
 //            final SleepSegment audioSleepSegment = new SleepSegment(99L, sunrise.get().plusMinutes(5).getMillis(), 0, 60, -1, Event.Type.SNORING, "ZzZzZzZzZ", new ArrayList<SensorReading>(), soundInfo);
             events.add(sunriseEvent);
 //            extraSegments.add(audioSleepSegment);
