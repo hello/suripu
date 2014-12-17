@@ -125,7 +125,7 @@ public class CurrentRoomState {
         } else if (temperature > 30.0) {
             temperatureState = new State(temperature, "It’s **pretty hot** in here.", State.Condition.ALERT, dataTimestampUTC, State.Unit.CELCIUS);
         } else { // temp >= 60 && temp <= 72
-            temperatureState = new State(temperature, "", State.Condition.IDEAL, dataTimestampUTC, State.Unit.CELCIUS);
+            temperatureState = new State(temperature, "Temperature is **just right**.", State.Condition.IDEAL, dataTimestampUTC, State.Unit.CELCIUS);
         }
 
         // Humidity
@@ -134,13 +134,13 @@ public class CurrentRoomState {
         } else if (humidity > 60.0) {
             humidityState = new State(humidity, "It’s **pretty humid** in here.", State.Condition.WARNING, dataTimestampUTC, State.Unit.PERCENT);
         } else { // humidity >= 30 && humidity<= 60
-            humidityState = new State(humidity, "", State.Condition.IDEAL, dataTimestampUTC, State.Unit.PERCENT);
+            humidityState = new State(humidity, "Humidity is **just right**.", State.Condition.IDEAL, dataTimestampUTC, State.Unit.PERCENT);
         }
 
 
         // Air Quality - see http://www.sparetheair.com/aqi.cfm
         if (particulatesAQI <= 50.0) {
-            particulatesState = new State(particulatesAQI, "", State.Condition.IDEAL, dataTimestampUTC, State.Unit.AQI);
+            particulatesState = new State(particulatesAQI, "Particulates level is **just right**.", State.Condition.IDEAL, dataTimestampUTC, State.Unit.AQI);
         } else if (particulatesAQI <= 300.0) {
             particulatesState = new State(particulatesAQI, "AQI is **moderately high**.", State.Condition.WARNING, dataTimestampUTC, State.Unit.AQI);
         } else {

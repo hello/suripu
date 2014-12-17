@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public class KeyStoreDynamoDB implements KeyStore {
 
@@ -55,7 +56,7 @@ public class KeyStoreDynamoDB implements KeyStore {
             final byte[] defaultAESKey) {
         this.dynamoDBClient = dynamoDBClient;
         this.keyStoreTableName = keyStoreTableName;
-        this.cache = CacheBuilder.newBuilder().build(loader);
+        this.cache = CacheBuilder.newBuilder().expireAfterAccess(60 * 5, TimeUnit.SECONDS).build(loader);
         this.DEFAULT_AES_KEY = defaultAESKey;
     }
 

@@ -1,6 +1,5 @@
 package com.hello.suripu.algorithm.sleep;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.core.AlgorithmException;
 import com.hello.suripu.algorithm.core.AmplitudeData;
@@ -38,7 +37,7 @@ public class QuietPeriodDetectionAlgorithm extends SleepDetectionAlgorithm {
     }
 
     @Override
-    public Segment getSleepPeriod(final DateTime dateOfTheNightLocalUTC, final Optional<DateTime> sleepTimeThreshold) throws AlgorithmException {
+    public Segment getSleepPeriod(final DateTime dateOfTheNightLocalUTC) throws AlgorithmException {
 
         final ImmutableList<AmplitudeData> rawData = getDataSource().getDataForDate(dateOfTheNightLocalUTC);
         if(rawData.size() == 0){

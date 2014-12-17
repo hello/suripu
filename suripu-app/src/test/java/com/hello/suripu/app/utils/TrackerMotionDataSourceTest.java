@@ -1,5 +1,7 @@
 package com.hello.suripu.app.utils;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTime;
@@ -7,7 +9,10 @@ import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -68,5 +73,48 @@ public class TrackerMotionDataSourceTest {
 
 
 
+    }
+
+
+    @Test
+    public void testJavaCodeWorksTheSameAsPythonPrototype(){
+        final URL fixtureDBCSVFile = Resources.getResource("raw_pang_motion_2014_12_11.csv");
+        final List<TrackerMotion> dataFromDB = new LinkedList<>();
+        try {
+            final String csvString = Resources.toString(fixtureDBCSVFile, Charsets.UTF_8);
+            final String[] lines = csvString.split("\\n");
+            for(int i = 1; i < lines.length; i++){
+                final String[] columns = lines[i].split(",");
+                dataFromDB.add(new TrackerMotion(i, 0L, 1L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2])));
+            }
+        }catch (IOException ex){
+            ex.printStackTrace();
+        }
+
+
+        final URL fixtureDataFromDataSourceCSVFile = Resources.getResource("pang_motion_2014_12_11_gap_filled.csv");
+        final List<AmplitudeData> expected = new LinkedList<>();
+        try {
+            final String csvString = Resources.toString(fixtureDataFromDataSourceCSVFile, Charsets.UTF_8);
+            final String[] lines = csvString.split("\\n");
+            for(int i = 1; i < lines.length; i++){
+                final String[] columns = lines[i].split(",");
+                expected.add(new AmplitudeData(Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2])));
+            }
+        }catch (IOException ex){
+            ex.printStackTrace();
+        }
+
+        final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(dataFromDB);
+        final List<AmplitudeData> actual = dataSource.getDataForDate(new DateTime(2014, 12, 11, 0, 0, DateTimeZone.UTC));
+        assertThat(expected.size(), is(actual.size()));
+
+        for(int i = 0; i < actual.size(); i++){
+            final AmplitudeData expectedItem = expected.get(i);
+            final AmplitudeData actualItem = actual.get(i);
+            assertThat(expectedItem.timestamp, is(actualItem.timestamp));
+            assertThat(expectedItem.amplitude, is(actualItem.amplitude));
+            assertThat(expectedItem.offsetMillis, is(actualItem.offsetMillis));
+        }
     }
 }
