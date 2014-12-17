@@ -36,6 +36,9 @@ public class InsightsResource {
         this.accountDAO = accountDAO;
     }
 
+    /**
+     * get insights
+     */
     @Timed
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -49,10 +52,6 @@ public class InsightsResource {
 
     /**
      * get a specific graph
-     * @param accessToken
-     * @param dataType
-     * @param timePeriod
-     * @return
      */
     @Timed
     @GET
@@ -79,8 +78,6 @@ public class InsightsResource {
 
     /**
      * get a list of available trend graphs
-     * @param accessToken
-     * @return
      */
     @Timed
     @GET
