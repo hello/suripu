@@ -7,11 +7,11 @@ public class DeviceInactive{
 
     @JsonProperty("device_id")
     public final String deviceId;
-    @JsonProperty("inactive_period")
-    public final Long inactivePeriodInMilliseconds;
+    @JsonProperty("last_seen_timestamp")
+    public final Long lastSeenTimestamp;
 
-    public DeviceInactive(final String deviceId, final Long inactivePeriodInMilliseconds) {
+    public DeviceInactive(final String deviceId, final Long lastSeenTimestamp) {
         this.deviceId = deviceId;
-        this.inactivePeriodInMilliseconds = inactivePeriodInMilliseconds;
+        this.lastSeenTimestamp = lastSeenTimestamp;
     }
 }
