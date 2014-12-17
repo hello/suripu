@@ -1,8 +1,16 @@
 import com.google.common.base.Optional;
+import com.hello.suripu.algorithm.core.AmplitudeData;
+import com.hello.suripu.algorithm.core.AmplitudeDataPreprocessor;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.InternalScore;
 import com.hello.suripu.algorithm.sleep.MotionScoreAlgorithm;
 import com.hello.suripu.algorithm.sleep.SleepDetectionAlgorithm;
+import com.hello.suripu.algorithm.sleep.scores.AmplitudeDataScoringFunction;
+import com.hello.suripu.algorithm.sleep.scores.MotionScoringFunction;
+import com.hello.suripu.algorithm.sleep.scores.SleepDataScoringFunction;
+import com.hello.suripu.algorithm.sleep.scores.SleepTimeScoringFunction;
+import com.hello.suripu.algorithm.sleep.scores.WakeUpTimeScoringFunction;
+import com.hello.suripu.algorithm.utils.MaxAmplitudeAggregator;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -21,24 +29,30 @@ import static org.hamcrest.Matchers.is;
 public class MotionScoreAlgorithmTest {
 
     @Test
-    public void testGetRankingPositionMap(){
-        final List<Comparable> tsArray = new ArrayList<>();
+    public void testLinearScoringFunction(){
+        final List<Long> tsArray = new ArrayList<>();
         final DateTime now = DateTime.now();
         tsArray.add(now.getMillis());
         tsArray.add(now.plusMinutes(1).getMillis());
         tsArray.add(now.plusMinutes(2).getMillis());
-        Map<Comparable, Double> rankingMap = MotionScoreAlgorithm.getRankingPositionMap(tsArray, false);
+        final WakeUpTimeScoringFunction wakeUpTimeScoringFunction = new WakeUpTimeScoringFunction(0);
+
+        Map<Long, Double> rankingMap = wakeUpTimeScoringFunction.getPDF(tsArray);
         assertThat(rankingMap.size(), is(3));
         assertThat(rankingMap.get(now.getMillis()), is(0d));
         assertThat(rankingMap.get(now.plusMinutes(1).getMillis()), is(1d / tsArray.size()));
         assertThat(rankingMap.get(now.plusMinutes(2).getMillis()), is(2d / tsArray.size()));
+        assertThat(wakeUpTimeScoringFunction.getScore(0L, rankingMap), is(0d));
 
         // Test order by DESC
-        rankingMap = MotionScoreAlgorithm.getRankingPositionMap(tsArray, true);
+        final SleepTimeScoringFunction sleepTimeScoringFunction = new SleepTimeScoringFunction();
+        rankingMap = sleepTimeScoringFunction.getPDF(tsArray);
         assertThat(rankingMap.size(), is(3));
         assertThat(rankingMap.get(now.getMillis()), is(2d / tsArray.size()));
         assertThat(rankingMap.get(now.plusMinutes(1).getMillis()), is(1d / tsArray.size()));
         assertThat(rankingMap.get(now.plusMinutes(2).getMillis()), is(0d / tsArray.size()));
+
+        assertThat(sleepTimeScoringFunction.getScore(0L, rankingMap), is(0d));
 
     }
 
@@ -46,7 +60,7 @@ public class MotionScoreAlgorithmTest {
     public void testGetHighestScore(){
         final ArrayList<InternalScore> scores = new ArrayList<>();
         for(int i = 0; i < 3; i++){
-            scores.add(new InternalScore(null, Double.valueOf(i)));
+            scores.add(new InternalScore(i, Double.valueOf(i)));
         }
 
         final Optional<InternalScore> highestScore = MotionScoreAlgorithm.getHighestScore(scores);
@@ -58,48 +72,29 @@ public class MotionScoreAlgorithmTest {
         assertThat(MotionScoreAlgorithm.getHighestScore(emptyScores).isPresent(), is(false));
     }
 
-    @Test
-    public void testGetScoreFromTimeLinearPDF(){
-        final List<Comparable> tsArray = new ArrayList<>();
-        final DateTime now = DateTime.now();
-        tsArray.add(now.getMillis());
-        tsArray.add(now.plusMinutes(1).getMillis());
-        tsArray.add(now.plusMinutes(2).getMillis());
-        Map<Comparable, Double> rankingMap = MotionScoreAlgorithm.getRankingPositionMap(tsArray, false);
-
-        // We should expect a linear result
-        assertThat(MotionScoreAlgorithm.getScoreFromTimeLinearPDF(now.getMillis(), rankingMap),
-                is(rankingMap.get(now.getMillis())));
-        assertThat(MotionScoreAlgorithm.getScoreFromTimeLinearPDF(now.plusMinutes(1).getMillis(), rankingMap),
-                is(rankingMap.get(now.plusMinutes(1).getMillis())));
-        assertThat(MotionScoreAlgorithm.getScoreFromTimeLinearPDF(now.plusMinutes(2).getMillis(), rankingMap),
-                is(rankingMap.get(now.plusMinutes(2).getMillis())));
-
-
-        // Test something not exists in the ranking map
-        assertThat(MotionScoreAlgorithm.getScoreFromTimeLinearPDF(0L, rankingMap), is(0d));
-    }
 
     @Test
     public void testGetScoreFromMotionPolyPDF(){
-        final List<Comparable> ampArray = new ArrayList<>();
+        final List<Double> ampArray = new ArrayList<>();
         final Double startAmplitude = 1d;
         ampArray.add(startAmplitude);
         ampArray.add(startAmplitude + 1);
         ampArray.add(startAmplitude + 2);
-        Map<Comparable, Double> rankingMap = MotionScoreAlgorithm.getRankingPositionMap(ampArray, false);
+
+        final MotionScoringFunction motionScoringFunction = new MotionScoringFunction(10);
+        Map<Double, Double> pdf = motionScoringFunction.getPDF(ampArray);
 
         // We should expect a linear result
-        assertThat(MotionScoreAlgorithm.getScoreFromMotionPolyPDF(startAmplitude, rankingMap),
-                is(Math.pow(rankingMap.get(startAmplitude), 10)));
-        assertThat(MotionScoreAlgorithm.getScoreFromMotionPolyPDF(startAmplitude + 1, rankingMap),
-                is(Math.pow(rankingMap.get(startAmplitude + 1), 10)));
-        assertThat(MotionScoreAlgorithm.getScoreFromMotionPolyPDF(startAmplitude + 2, rankingMap),
-                is(Math.pow(rankingMap.get(startAmplitude + 2), 10)));
+        assertThat(motionScoringFunction.getScore(startAmplitude, pdf),
+                is(Math.pow(0, 10)));
+        assertThat(motionScoringFunction.getScore(startAmplitude + 1, pdf),
+                is(Math.pow(1d / 3, 10)));
+        assertThat(motionScoringFunction.getScore(startAmplitude + 2, pdf),
+                is(Math.pow(2d / 3, 10)));
 
 
         // Test something not exists in the ranking map
-        assertThat(MotionScoreAlgorithm.getScoreFromMotionPolyPDF(0d, rankingMap), is(0d));
+        assertThat(motionScoringFunction.getScore(0d, pdf), is(0d));
     }
 
 
@@ -111,7 +106,13 @@ public class MotionScoreAlgorithmTest {
         final MotionFixtureCSVDataSource dataSource = new MotionFixtureCSVDataSource("pang_motion_2014_12_11_gap_filled.csv");
         assertThat(dataSource.getDataForDate(new DateTime(2014, 12, 11, 0, 0, DateTimeZone.UTC)).size(), is(437));
 
-        final SleepDetectionAlgorithm algorithm = new MotionScoreAlgorithm(dataSource, 10 * DateTimeConstants.MILLIS_PER_MINUTE);
+        final AmplitudeDataPreprocessor smoother = new MaxAmplitudeAggregator(10 * DateTimeConstants.MILLIS_PER_MINUTE);
+        final List<AmplitudeData> smoothedData = smoother.process(dataSource.getDataForDate(new DateTime(2014, 12, 11, 0, 0, DateTimeZone.UTC)));
+
+        final ArrayList<SleepDataScoringFunction> scoringFunctions = new ArrayList<>();
+        scoringFunctions.add(new AmplitudeDataScoringFunction(10, 0.5));
+
+        final SleepDetectionAlgorithm algorithm = new MotionScoreAlgorithm(MotionScoreAlgorithm.getMatrix(smoothedData), 1, smoothedData.size(), scoringFunctions);
         final Segment sleepSegment = algorithm.getSleepPeriod(new DateTime(2014, 12, 11, 0, 0, DateTimeZone.UTC));
 
 

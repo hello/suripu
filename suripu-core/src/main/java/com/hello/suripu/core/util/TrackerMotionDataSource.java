@@ -1,4 +1,4 @@
-package com.hello.suripu.app.utils;
+package com.hello.suripu.core.util;
 
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.core.AmplitudeData;

@@ -3,8 +3,15 @@ package com.hello.suripu.core.util;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.core.AmplitudeData;
+import com.hello.suripu.algorithm.core.AmplitudeDataPreprocessor;
 import com.hello.suripu.algorithm.core.LightSegment;
+import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sensordata.LightEventsDetector;
+import com.hello.suripu.algorithm.sleep.MotionScoreAlgorithm;
+import com.hello.suripu.algorithm.sleep.SleepDetectionAlgorithm;
+import com.hello.suripu.algorithm.sleep.scores.AmplitudeDataScoringFunction;
+import com.hello.suripu.algorithm.sleep.scores.SleepDataScoringFunction;
+import com.hello.suripu.algorithm.utils.MaxAmplitudeAggregator;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.LightEvent;
@@ -557,4 +564,22 @@ public class TimelineUtils {
 
         return Optional.absent();
     }
+
+    public static Segment getSleepPeriod(final DateTime targetDateLocalUTC, final List<TrackerMotion> trackerMotions){
+        final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions);
+        final int smoothWindowSize = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  //TODO: make it configable.
+
+        final AmplitudeDataPreprocessor smoother = new MaxAmplitudeAggregator(smoothWindowSize);
+        final List<AmplitudeData> smoothedData = smoother.process(dataSource.getDataForDate(targetDateLocalUTC.withTimeAtStartOfDay()));
+        LOGGER.info("smoothed data size {}", smoothedData.size());
+
+        final ArrayList<SleepDataScoringFunction> scoringFunctions = new ArrayList<>();
+        scoringFunctions.add(new AmplitudeDataScoringFunction(10, 0.5));
+
+        final Map<Long, List<AmplitudeData>> matrix = MotionScoreAlgorithm.getMatrix(smoothedData);
+        final SleepDetectionAlgorithm sleepDetectionAlgorithm = new MotionScoreAlgorithm(matrix, 1, smoothedData.size(), scoringFunctions);
+        return sleepDetectionAlgorithm.getSleepPeriod(targetDateLocalUTC.withTimeAtStartOfDay());
+    }
+
+
 }
