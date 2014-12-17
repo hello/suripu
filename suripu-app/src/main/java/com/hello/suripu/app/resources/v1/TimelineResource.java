@@ -163,7 +163,7 @@ public class TimelineResource extends BaseResource {
                         sleepPeriod.getStartTimestamp(),
                         sleepPeriod.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                         sleepPeriod.getOffsetMillis(),
-                        "You fell asleep (P)");
+                        "You fell asleep");
 
                 final WakeupEvent wakeupSegmentFromAwakeDetection = new WakeupEvent(
                         sleepPeriod.getEndTimestamp(),
