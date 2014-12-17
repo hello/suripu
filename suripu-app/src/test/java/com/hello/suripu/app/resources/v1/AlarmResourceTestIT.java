@@ -16,6 +16,7 @@ import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,6 +44,7 @@ public class AlarmResourceTestIT {
     private BasicAWSCredentials awsCredentials;
     private AmazonDynamoDBClient amazonDynamoDBClient;
     private AlarmDAODynamoDB alarmDAODynamoDB;
+    private MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
 
     private AlarmResource alarmResource;
     private final String tableName = "alarm_test";
@@ -84,7 +86,7 @@ public class AlarmResourceTestIT {
             );
 
             MergedAlarmInfoDynamoDB.createTable(this.alarmInfoTableName, this.amazonDynamoDBClient);
-            final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB = new MergedAlarmInfoDynamoDB(
+            this.mergedAlarmInfoDynamoDB = new MergedAlarmInfoDynamoDB(
                     this.amazonDynamoDBClient,
                     this.alarmInfoTableName
             );
@@ -199,8 +201,18 @@ public class AlarmResourceTestIT {
     }
 
 
+    @Test(expected = WebApplicationException.class)
+    public void testSetAndGetValidAlarmNoTimezone(){
+        this.alarmResource.setAlarms(this.token, DateTime.now().getMillis(), this.validList);
+        final List<Alarm> actual = this.alarmResource.getAlarms(this.token);
+        final List<Alarm> expected = this.validList;
+
+        assertThat(actual, containsInAnyOrder(expected.toArray()));
+    }
+
     @Test
     public void testSetAndGetValidAlarm(){
+        this.mergedAlarmInfoDynamoDB.setTimeZone("test morpheus", 1L, DateTimeZone.getDefault());
         this.alarmResource.setAlarms(this.token, DateTime.now().getMillis(), this.validList);
         final List<Alarm> actual = this.alarmResource.getAlarms(this.token);
         final List<Alarm> expected = this.validList;

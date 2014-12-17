@@ -50,7 +50,7 @@ public class TimelineUtilsTest {
         final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);
         final List<Event> segments = new LinkedList<>();
         segments.addAll(motionEvents);
-        assertThat(segments.size(), is(trackerMotions.size()));
+        assertThat(segments.size(), is(trackerMotions.size() - 1));
 
         final List<Event> mergedSegments = TimelineUtils.generateAlignedSegmentsByTypeWeight(segments,
                 DateTimeConstants.MILLIS_PER_MINUTE,
