@@ -155,30 +155,29 @@ public class TimelineResource extends BaseResource {
         events.addAll(motionEvents);
 
         // A day starts with 8pm local time and ends with 4pm local time next day
-
-        int wakeUpTimeZoneOffsetMillis = -1;
+        Segment sleepSegment = null;
         try {
-            final Segment sleepPeriod = TimelineUtils.getSleepPeriod(targetDate, trackerMotions);
-            wakeUpTimeZoneOffsetMillis = sleepPeriod.getOffsetMillis();
-            if(sleepPeriod.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
+            sleepSegment = TimelineUtils.getSleepPeriod(targetDate, trackerMotions);
+
+            if(sleepSegment.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
                 final SleepEvent sleepEventFromAwakeDetection = new SleepEvent(
-                        sleepPeriod.getStartTimestamp(),
-                        sleepPeriod.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                        sleepPeriod.getOffsetMillis(),
+                        sleepSegment.getStartTimestamp(),
+                        sleepSegment.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                        sleepSegment.getOffsetMillis(),
                         "You fell asleep");
 
                 final WakeupEvent wakeupSegmentFromAwakeDetection = new WakeupEvent(
-                        sleepPeriod.getEndTimestamp(),
-                        sleepPeriod.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                        sleepPeriod.getOffsetMillis());
+                        sleepSegment.getEndTimestamp(),
+                        sleepSegment.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                        sleepSegment.getOffsetMillis());
 
                 events.add(sleepEventFromAwakeDetection);
                 events.add(wakeupSegmentFromAwakeDetection);
             }
 
             LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
-                    new DateTime(sleepPeriod.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepPeriod.getOffsetMillis())),
-                    new DateTime(sleepPeriod.getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepPeriod.getOffsetMillis())));
+                    new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis())),
+                    new DateTime(sleepSegment.getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis())));
         }catch (Exception ex){
             LOGGER.error("Generate sleep period from Awake Detection Algorithm failed: {}", ex.getMessage());
         }
@@ -188,7 +187,10 @@ public class TimelineResource extends BaseResource {
         if (optionalPartnerAccountId.isPresent() && events.size() > 0) {
             LOGGER.debug("partner account {}", optionalPartnerAccountId.get());
             // get tracker motions for partner, query time is in UTC, not local_utc
-            final DateTime startTime = new DateTime(events.get(0).getStartTimestamp(), DateTimeZone.UTC);
+            DateTime startTime = new DateTime(events.get(0).getStartTimestamp(), DateTimeZone.UTC);
+            if(sleepSegment != null){
+                startTime = new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.UTC);
+            }
             final DateTime endTime = new DateTime(events.get(events.size() - 1).getStartTimestamp(), DateTimeZone.UTC);
 
             final List<TrackerMotion> partnerMotions = this.trackerMotionDAO.getBetween(optionalPartnerAccountId.get(), startTime, endTime);
@@ -201,11 +203,11 @@ public class TimelineResource extends BaseResource {
         // add sunrise data
         final String sunRiseQueryDateString = targetDate.plusDays(1).toString(DateTimeFormat.forPattern("yyyy-MM-dd"));
         final Optional<DateTime> sunrise = sunData.sunrise(sunRiseQueryDateString); // day + 1
-        if(sunrise.isPresent() && wakeUpTimeZoneOffsetMillis > -1) {
+        if(sunrise.isPresent() && sleepSegment != null) {
             final long sunRiseMillis = sunrise.get().getMillis();
             final SunRiseEvent sunriseEvent = new SunRiseEvent(sunRiseMillis,
                     sunRiseMillis + DateTimeConstants.MILLIS_PER_MINUTE,
-                    wakeUpTimeZoneOffsetMillis, 0, null);
+                    sleepSegment.getOffsetMillis(), 0, null);
 //            final SleepSegment audioSleepSegment = new SleepSegment(99L, sunrise.get().plusMinutes(5).getMillis(), 0, 60, -1, Event.Type.SNORING, "ZzZzZzZzZ", new ArrayList<SensorReading>(), soundInfo);
             events.add(sunriseEvent);
 //            extraSegments.add(audioSleepSegment);
