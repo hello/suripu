@@ -5,6 +5,7 @@ import com.flaptor.indextank.apiclient.IndexTankClient;
 import com.google.common.base.Optional;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.logging.LogProtos;
+import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.service.SignedMessage;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -26,10 +27,12 @@ public class LogsResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReceiveResource.class);
     private final IndexTankClient.Index index;
+    private final KeyStore senseKeyStore;
 
-    public LogsResource(final String privateSearchUrl, final String indexName) {
+    public LogsResource(final String privateSearchUrl, final String indexName, final KeyStore senseKeyStore) {
         final IndexTankClient client = new IndexTankClient(privateSearchUrl);
         index = client.getIndex(indexName);
+        this.senseKeyStore = senseKeyStore;
     }
 
     @Timed
@@ -63,8 +66,13 @@ public class LogsResource {
         }
 
         // TODO: Fetch key from Datastore
-        final byte[] keyBytes = "1234567891234567".getBytes();
-        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytes);
+        final Optional<byte[]> keyBytes = senseKeyStore.get(log.getDeviceId());
+        if(!keyBytes.isPresent()) {
+            LOGGER.warn("No AES key found for device = {}", log.getDeviceId());
+            return;
+        }
+
+        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytes.get());
 
         if(error.isPresent()) {
             LOGGER.error(error.get().message);
@@ -83,10 +91,16 @@ public class LogsResource {
         fields.put("text", log.getText());
         fields.put("ts", String.valueOf(log.getUnixTime()));
 
+        final Long hello_ts = DateTime.now().getMillis();
+
+
+        Map<Integer, Float> variables = new HashMap<Integer, Float>();
+        variables.put(0, new Float(hello_ts/1000));
+
         categories.put("device_id", log.getDeviceId());
 
         try {
-            index.addDocument(documentId, fields, null, categories);
+            index.addDocument(documentId, fields, variables, categories);
         } catch (IndexDoesNotExistException e) {
             LOGGER.error(e.getMessage());
         } catch (IOException e) {

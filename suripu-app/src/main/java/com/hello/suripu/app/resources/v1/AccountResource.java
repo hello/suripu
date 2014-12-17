@@ -135,6 +135,24 @@ public class AccountResource {
         // TODO: remove all tokens for this user
     }
 
+    @POST
+    @Timed
+    @Path("/email")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Account updateEmail(
+            @Scope({OAuthScope.USER_EXTENDED}) final AccessToken accessToken,
+            @Valid final Account account) {
+
+        final Account accountWithId = Account.withId(account, accessToken.accountId);
+        final Optional<Account> accountOptional = accountDAO.updateEmail(accountWithId);
+        if(!accountOptional.isPresent()) {
+            throw new WebApplicationException(Response.Status.CONFLICT);
+        }
+
+        return accountOptional.get();
+    }
+
     @Timed
     @GET
     @Path("/q")

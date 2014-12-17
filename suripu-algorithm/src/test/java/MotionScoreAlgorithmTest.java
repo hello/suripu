@@ -72,7 +72,6 @@ public class MotionScoreAlgorithmTest {
         assertThat(MotionScoreAlgorithm.getHighestScore(emptyScores).isPresent(), is(false));
     }
 
-
     @Test
     public void testGetScoreFromMotionPolyPDF(){
         final List<Double> ampArray = new ArrayList<>();

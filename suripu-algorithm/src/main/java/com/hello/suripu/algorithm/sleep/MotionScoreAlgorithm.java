@@ -42,6 +42,7 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
         this.rowCount = rowCount;
     }
 
+
     public static Optional<InternalScore> getHighestScore(final List<InternalScore> scores){
         final List<InternalScore> copy = Ordering.natural().reverse().immutableSortedCopy(scores);
 

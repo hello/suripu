@@ -29,6 +29,7 @@ public class AccountMapper implements ResultSetMapper<Account> {
         builder.withDOB(new DateTime(r.getTimestamp("dob"), DateTimeZone.UTC));
         builder.withLastModified(r.getLong("last_modified"));
         builder.withCreated(new DateTime(r.getTimestamp("created"), DateTimeZone.UTC));
+        builder.withAccountVerified(Boolean.FALSE);
         final Account account = builder.build();
 
         LOGGER.trace("last_modified from DB = {}", r.getLong("last_modified"));

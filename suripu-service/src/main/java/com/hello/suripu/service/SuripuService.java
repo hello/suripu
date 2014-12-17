@@ -136,7 +136,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         dynamoDBClient.setEndpoint(configuration.getDynamoDBConfiguration().getEndpoint());
         // TODO; set region here?
 
-        final KeyStore keyStore = new KeyStoreDynamoDB(
+        final KeyStore senseKeyStore = new KeyStoreDynamoDB(
                 dynamoDBClient,
                 configuration.getDynamoDBConfiguration().getTableName(),
                 "1234567891234567".getBytes() // TODO: REMOVE THIS WHEN WE ARE NOT SUPPOSED TO HAVE A DEFAULT KEY
@@ -182,7 +182,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         ObjectGraphRoot.getInstance().init(module);
 
         final ReceiveResource receiveResource = new ReceiveResource(deviceDataDAO, deviceDAO,
-                keyStore,
+                senseKeyStore,
                 kinesisLoggerFactory,
                 mergedAlarmInfoDynamoDB,
                 configuration.getDebug(),
@@ -194,12 +194,16 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
 
 
+
         environment.addResource(receiveResource);
-        environment.addResource(new RegisterResource(deviceDAO, tokenStore, kinesisLoggerFactory, configuration.getDebug()));
-        environment.addResource(new LogsResource(
+        environment.addResource(new RegisterResource(deviceDAO, tokenStore, kinesisLoggerFactory, senseKeyStore, configuration.getDebug()));
+        final LogsResource logsResource = new LogsResource(
                 configuration.getIndexLogConfiguration().getPrivateUrl(),
-                configuration.getIndexLogConfiguration().getIndexName())
+                configuration.getIndexLogConfiguration().getIndexName(),
+                senseKeyStore
         );
+
+        environment.addResource(logsResource);
 
         environment.addResource(new PingResource());
         environment.addResource(new VersionResource());
