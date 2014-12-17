@@ -22,7 +22,7 @@ public class RedisPaginatorTest {
     private static final Long AFTER_CURSOR = 1414956807000L;
     private static final Long MAX_TIMESTAMP = Long.MAX_VALUE;
     private static final Long MIN_TIMESTAMP = Long.MIN_VALUE;
-    private static final String DEVICE_TYPE = "test page LIMIT";
+    private static final String DEVICE_TYPE = "test device";
     private static final Integer LIMIT = 10;
     private static final JedisPool jedisPool = mock(JedisPool.class);
     private static final RedisPaginator redisPaginator = new RedisPaginator(jedisPool, 0L, 1L, DEVICE_TYPE, LIMIT);

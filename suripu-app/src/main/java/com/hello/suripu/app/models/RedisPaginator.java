@@ -50,7 +50,7 @@ public class RedisPaginator {
         try {
             redisSenses.addAll(jedis.zrangeByScoreWithScores(deviceType, afterCursor, beforeCursor, 0, maxItemsPerPage));
         } catch (Exception e) {
-            LOGGER.error("Failed to retrieve list of devices", e.getMessage());
+            LOGGER.error("Failed to retrieve list of devices {}", e.getMessage());
         } finally {
             jedisPool.returnResource(jedis);
         }
