@@ -8,13 +8,14 @@ public class LightEvent extends Event {
 
     public LightEvent(final long startTimestamp, final long endTimestamp, final int offsetMillis, final String description) {
         super(Type.LIGHT, startTimestamp, endTimestamp, offsetMillis);
+        setDescription(description);
     }
 
     @Override
     public String getDescription(){
         return this.description;
     }
-    public void setDescription(final String description) {
+    private void setDescription(final String description) {
         this.description = description;
     }
 
