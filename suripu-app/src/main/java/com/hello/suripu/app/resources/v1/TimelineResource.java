@@ -5,9 +5,6 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.core.Segment;
-import com.hello.suripu.algorithm.sleep.MotionScoreAlgorithm;
-import com.hello.suripu.algorithm.sleep.SleepDetectionAlgorithm;
-import com.hello.suripu.app.utils.TrackerMotionDataSource;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -170,26 +167,20 @@ public class TimelineResource extends BaseResource {
         }
 
         // A day starts with 8pm local time and ends with 4pm local time next day
-        final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions);
-        final int smoothWindowSize = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  //TODO: make it configable.
-
-        final SleepDetectionAlgorithm sleepDetectionAlgorithm = new MotionScoreAlgorithm(dataSource, smoothWindowSize);
+        final Segment sleepPeriod = TimelineUtils.getSleepPeriod(targetDate, trackerMotions);
 
         try {
-            final Segment segmentFromAwakeDetection = sleepDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay());
-
-            if(segmentFromAwakeDetection.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
+            if(sleepPeriod.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
                 final SleepEvent sleepEventFromAwakeDetection = new SleepEvent(
-                        segmentFromAwakeDetection.getStartTimestamp(),
-                        segmentFromAwakeDetection.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                        segmentFromAwakeDetection.getOffsetMillis(),
-                        "You fell asleep (P)"
-                        );
+                        sleepPeriod.getStartTimestamp(),
+                        sleepPeriod.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                        sleepPeriod.getOffsetMillis(),
+                        "You fell asleep (P)");
 
                 final WakeupEvent wakeupSegmentFromAwakeDetection = new WakeupEvent(
-                        segmentFromAwakeDetection.getEndTimestamp(),
-                        segmentFromAwakeDetection.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                        segmentFromAwakeDetection.getOffsetMillis());
+                        sleepPeriod.getEndTimestamp(),
+                        sleepPeriod.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                        sleepPeriod.getOffsetMillis());
 
                 if(!sleepTimeEvent.isPresent()) {
                     LOGGER.debug("Default algorithm failed to detect sleep time. Force to use N shape algorithm.");
@@ -207,8 +198,8 @@ public class TimelineResource extends BaseResource {
             }
 
             LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
-                    new DateTime(segmentFromAwakeDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())),
-                    new DateTime(segmentFromAwakeDetection.getEndTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())));
+                    new DateTime(sleepPeriod.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepPeriod.getOffsetMillis())),
+                    new DateTime(sleepPeriod.getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepPeriod.getOffsetMillis())));
         }catch (Exception ex){
             LOGGER.error("Generate sleep period from Awake Detection Algorithm failed: {}", ex.getMessage());
         }

@@ -1,4 +1,4 @@
-package com.hello.suripu.app.utils;
+package com.hello.suripu.core.util;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;

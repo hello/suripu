@@ -1,16 +1,14 @@
 package com.hello.suripu.algorithm.sleep;
 
-import com.hello.suripu.algorithm.core.AmplitudeData;
-
 /**
  * Created by pangwu on 12/14/14.
  */
 public class InternalScore implements Comparable<InternalScore> {
-    public final AmplitudeData data;
+    public final long timestamp;
     public final double score;
 
-    public InternalScore(final AmplitudeData data, final double score){
-        this.data = data;
+    public InternalScore(final long timestamp, final double score){
+        this.timestamp = timestamp;
         this.score = score;
     }
 
