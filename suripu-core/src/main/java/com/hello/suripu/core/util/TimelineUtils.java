@@ -565,15 +565,14 @@ public class TimelineUtils {
 
             if (segmentType == LightSegment.Type.LIGHTS_OUT) {
                 // create light on and lights out event
-                final LightEvent event = new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, segmentType.toString());
-                event.setDescription("Lights on");
+                final LightEvent event = new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, "Lights on");
                 events.add(event);
 
                 final long endTimestamp = segment.endTimestamp - smoothingDegree * MINUTE_IN_MILLIS;
                 events.add(new LightsOutEvent(endTimestamp, endTimestamp + MINUTE_IN_MILLIS, offsetMillis));
 
             } else if (segmentType == LightSegment.Type.LIGHT_SPIKE) {
-                events.add(new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, segmentType.toString()));
+                events.add(new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, "Light"));
             }
             // TODO: daylight spike event -- unsure what the value might be at this moment
         }
