@@ -4,29 +4,18 @@ import java.util.List;
 
 public class DeviceInactivePage {
     @JsonProperty("previous")
-    public final String previousUrl;
+    public final Long previousCursorTimestamp;
     @JsonProperty("next")
-    public final String nextUrl;
+    public final Long nextCursorTimestamp;
     @JsonProperty("limit")
     public final Integer limit;
     @JsonProperty("content")
     public final List<DeviceInactive> inactiveDevices;
 
-    public DeviceInactivePage(final String previousUrl, final String nextUrl, final Integer limit, final List<DeviceInactive> inactiveDevices) {
-        this.previousUrl = previousUrl;
-        this.nextUrl = nextUrl;
+    public DeviceInactivePage(final Long previousCursorTimestamp, final Long nextCursorTimestamp, final Integer limit, final List<DeviceInactive> inactiveDevices) {
+        this.previousCursorTimestamp = previousCursorTimestamp;
+        this.nextCursorTimestamp = nextCursorTimestamp;
         this.limit = limit;
         this.inactiveDevices = inactiveDevices;
-    }
-    public static DeviceInactivePage getInactivePageByRawInput(List<DeviceInactive> inactiveDevices, Long afterTimestamp, Long beforeTimestamp, Integer maxItemsPerPage){
-        String previousUrl = String.format("?before=%d", afterTimestamp);
-        String nextUrl = String.format("?after=%d", beforeTimestamp);
-        if(!inactiveDevices.isEmpty())  {
-            final Long minTimestamp = inactiveDevices.get(0).lastSeenTimestamp - 1;
-            final Long maxTimestamp = inactiveDevices.get(inactiveDevices.size() - 1).lastSeenTimestamp + 1;
-            nextUrl = String.format("?after=%d", maxTimestamp);
-            previousUrl = String.format("?before=%d", minTimestamp);
-        }
-        return new DeviceInactivePage(previousUrl, nextUrl, maxItemsPerPage, inactiveDevices);
     }
 }

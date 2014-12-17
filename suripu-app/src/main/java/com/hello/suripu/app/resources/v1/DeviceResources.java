@@ -2,6 +2,8 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.app.models.RedisPaginator;
+import com.hello.suripu.core.configuration.ActiveDevicesTrackerConfiguration;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
@@ -11,9 +13,9 @@ import com.hello.suripu.core.models.AlarmInfo;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceInactive;
+import com.hello.suripu.core.models.DeviceInactivePage;
 import com.hello.suripu.core.models.DeviceInactivePaginator;
 import com.hello.suripu.core.models.DeviceStatus;
-import com.hello.suripu.core.models.DeviceInactivePage;
 import com.hello.suripu.core.models.PillRegistration;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -270,9 +272,9 @@ public class DeviceResources {
     @GET
     @Path("/{device_id}/accounts")
     @Produces(MediaType.APPLICATION_JSON)
-    public ImmutableList<Account> getAccountsByDeviceIDs(@Scope(OAuthScope.ADMINISTRATION_READ) AccessToken accessToken,
-                                                @QueryParam("max_devices") Long maxDevices,
-                                                @PathParam("device_id") String deviceId) {
+    public ImmutableList<Account> getAccountsByDeviceIDs(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                         @QueryParam("max_devices") final Long maxDevices,
+                                                         @PathParam("device_id") final String deviceId) {
         LOGGER.debug("Searching accounts who have used device {}", deviceId);
         final ImmutableList<Account> accounts = deviceDAO.getAccountsByDevices(deviceId, maxDevices);
         return accounts;
@@ -283,10 +285,11 @@ public class DeviceResources {
     @Path("/inactive/sense")
     @Produces(MediaType.APPLICATION_JSON)
     public DeviceInactivePage getInactiveSenses(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                                    @QueryParam("after") Long afterTimestamp,
-                                                    @QueryParam("before") Long beforeTimestamp) {
+                                                @QueryParam("after") final Long afterTimestamp,
+                                                @QueryParam("before") final Long beforeTimestamp) {
 
-        final DeviceInactivePage inactiveSensesPage = paginateInactiveDevices(afterTimestamp, beforeTimestamp, "active_senses");
+        final RedisPaginator redisPaginator = new RedisPaginator(jedisPool, afterTimestamp, beforeTimestamp, ActiveDevicesTrackerConfiguration.SENSE_ACTIVE_SET_KEY);
+        final DeviceInactivePage inactiveSensesPage = redisPaginator.generatePage();
         return inactiveSensesPage;
     }
 
@@ -295,39 +298,11 @@ public class DeviceResources {
     @Path("/inactive/pill")
     @Produces(MediaType.APPLICATION_JSON)
     public DeviceInactivePage getInactivePills(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                                @QueryParam("after") Long afterTimestamp,
-                                                @QueryParam("before") Long beforeTimestamp) {
+                                               @QueryParam("after") final Long afterTimestamp,
+                                               @QueryParam("before") final Long beforeTimestamp) {
 
-        final DeviceInactivePage inactivePillsPage = paginateInactiveDevices(afterTimestamp, beforeTimestamp, "active_pills");
+        final RedisPaginator redisPaginator = new RedisPaginator(jedisPool, afterTimestamp, beforeTimestamp, ActiveDevicesTrackerConfiguration.PILL_ACTIVE_SET_KEY);
+        final DeviceInactivePage inactivePillsPage = redisPaginator.generatePage();
         return inactivePillsPage;
-    }
-
-    private DeviceInactivePage paginateInactiveDevices(Long afterTimestamp, Long beforeTimestamp, String deviceType) {
-        final List<DeviceInactive> inactiveDevices = new ArrayList<>();
-        final Jedis jedis = jedisPool.getResource();
-        final Set<Tuple> redisSenses = new TreeSet<>();
-        final Integer maxItemsPerPage = 40;
-
-        if(afterTimestamp == null) {
-            afterTimestamp = Long.MIN_VALUE;
-        }
-        if(beforeTimestamp == null) {
-            beforeTimestamp = Long.MAX_VALUE;
-        }
-
-        try {
-            redisSenses.addAll(jedis.zrangeByScoreWithScores(deviceType, afterTimestamp, beforeTimestamp, 0, maxItemsPerPage));
-        } catch (Exception e) {
-            LOGGER.error("Failed retrieving list of devices", e.getMessage());
-        } finally {
-            jedisPool.returnResource(jedis);
-        }
-
-        for(final Tuple sense : redisSenses) {
-            final Long lastSeenTimestamp = (long) sense.getScore();
-            final DeviceInactive inactiveSense = new DeviceInactive(sense.getElement(), lastSeenTimestamp);
-            inactiveDevices.add(inactiveSense);
-        }
-        return DeviceInactivePage.getInactivePageByRawInput(inactiveDevices, afterTimestamp, beforeTimestamp, maxItemsPerPage);
     }
 }
