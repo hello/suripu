@@ -96,22 +96,32 @@ public class TimelineUtils {
         return LOWEST_SLEEP_DEPTH;
     }
 
+    public static List<TrackerMotion> removeNegativeAmplitudes(final List<TrackerMotion> trackerMotions){
+        final List<TrackerMotion> positiveMotions = new LinkedList<>();
+        for(final TrackerMotion motion:trackerMotions){
+            if(motion.value > 0){
+                positiveMotions.add(motion);
+            }
+        }
+
+        return positiveMotions;
+    }
 
     public static List<MotionEvent> generateMotionEvents(final List<TrackerMotion> trackerMotions) {
         final List<MotionEvent> motionEvents = new ArrayList<>();
 
-
-        if(trackerMotions.isEmpty()) {
+        final List<TrackerMotion> positiveMotions = removeNegativeAmplitudes(trackerMotions);
+        if(positiveMotions.isEmpty()) {
             return motionEvents;
         }
 
-        int maxSVM = getMaxSVM(trackerMotions);
-        final Map<Integer, Integer> positionMap = constructValuePositionMap(trackerMotions);
+        int maxSVM = getMaxSVM(positiveMotions);
+        final Map<Integer, Integer> positionMap = constructValuePositionMap(positiveMotions);
 
         LOGGER.debug("Max SVM = {}", maxSVM);
 
-        final Long trackerId = trackerMotions.get(0).trackerId;
-        for(final TrackerMotion trackerMotion : trackerMotions) {
+        final Long trackerId = positiveMotions.get(0).trackerId;
+        for(final TrackerMotion trackerMotion : positiveMotions) {
             if (!trackerMotion.trackerId.equals(trackerId)) {
                 LOGGER.warn("User has multiple pills: {} and {}", trackerId, trackerMotion.trackerId);
                 break; // if user has multiple pill, only use data from the latest tracker_id
@@ -180,6 +190,28 @@ public class TimelineUtils {
 
         return ImmutableList.copyOf(segments);
 
+    }
+
+    public static List<Event> removeMotionEventsOutsideSleepPeriod(final List<Event> events){
+        boolean isSleeping = false;
+        final LinkedList<Event> newEventList = new LinkedList<>();
+        for(final Event event:events){
+            if(isSleeping == false && event.getType() == Event.Type.SLEEP){
+                isSleeping = true;
+            }
+
+            if(isSleeping && event.getType() == Event.Type.WAKE_UP){
+                isSleeping = false;
+            }
+
+            if(isSleeping == false && event.getType() == Event.Type.MOTION){
+                newEventList.add(new NullEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth()));
+            }else{
+                newEventList.add(event);
+            }
+        }
+
+        return newEventList;
     }
 
     public static List<Event> generateAlignedSegmentsByTypeWeight(final List<Event> eventList,
