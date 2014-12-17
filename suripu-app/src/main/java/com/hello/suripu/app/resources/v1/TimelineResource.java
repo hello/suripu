@@ -155,9 +155,11 @@ public class TimelineResource extends BaseResource {
         events.addAll(motionEvents);
 
         // A day starts with 8pm local time and ends with 4pm local time next day
-        final Segment sleepPeriod = TimelineUtils.getSleepPeriod(targetDate, trackerMotions);
-        int wakeUpTimeZoneOffsetMillis = sleepPeriod.getOffsetMillis();
+
+        int wakeUpTimeZoneOffsetMillis = -1;
         try {
+            final Segment sleepPeriod = TimelineUtils.getSleepPeriod(targetDate, trackerMotions);
+            wakeUpTimeZoneOffsetMillis = sleepPeriod.getOffsetMillis();
             if(sleepPeriod.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
                 final SleepEvent sleepEventFromAwakeDetection = new SleepEvent(
                         sleepPeriod.getStartTimestamp(),
@@ -186,7 +188,7 @@ public class TimelineResource extends BaseResource {
         if (optionalPartnerAccountId.isPresent() && events.size() > 0) {
             LOGGER.debug("partner account {}", optionalPartnerAccountId.get());
             // get tracker motions for partner, query time is in UTC, not local_utc
-            final DateTime startTime = new DateTime(sleepPeriod.getStartTimestamp(), DateTimeZone.UTC);
+            final DateTime startTime = new DateTime(events.get(0).getStartTimestamp(), DateTimeZone.UTC);
             final DateTime endTime = new DateTime(events.get(events.size() - 1).getStartTimestamp(), DateTimeZone.UTC);
 
             final List<TrackerMotion> partnerMotions = this.trackerMotionDAO.getBetween(optionalPartnerAccountId.get(), startTime, endTime);
@@ -199,7 +201,7 @@ public class TimelineResource extends BaseResource {
         // add sunrise data
         final String sunRiseQueryDateString = targetDate.plusDays(1).toString(DateTimeFormat.forPattern("yyyy-MM-dd"));
         final Optional<DateTime> sunrise = sunData.sunrise(sunRiseQueryDateString); // day + 1
-        if(sunrise.isPresent()) {
+        if(sunrise.isPresent() && wakeUpTimeZoneOffsetMillis > -1) {
             final long sunRiseMillis = sunrise.get().getMillis();
             final SunRiseEvent sunriseEvent = new SunRiseEvent(sunRiseMillis,
                     sunRiseMillis + DateTimeConstants.MILLIS_PER_MINUTE,
