@@ -32,7 +32,7 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
     public MotionScoreAlgorithm(final Map<Long, List<AmplitudeData>> dataMatrix, final int dimensionCount, final int rowCount, final List<SleepDataScoringFunction> scoringFunctions){
         super(null, 0);
 
-        checkNotNull(dataMatrix);
+        checkNotNull(dataMatrix, "dataMatrix cannot be null");
         if(scoringFunctions.size() != dimensionCount){
             throw new IllegalArgumentException("Number of scoring function must be the same with data dimension.");
         }
@@ -69,7 +69,7 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
                     throw new AlgorithmException("Data not aligned, expected timestamp :" + timestamp + ","
                      + " actual timestamp: " + sensorData.timestamp);
                 }
-                checkNotNull(sensorData);
+                checkNotNull(sensorData, "Unaligned data");
                 rawData.get(k).add(sensorData);
             }
         }
