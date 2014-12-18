@@ -18,8 +18,13 @@ public class SleepTimeScoringFunction implements ScoringFunction<Long, Double> {
         final List<Long> sortedCopy = Ordering.natural().reverse().immutableSortedCopy(data);
 
         final LinkedHashMap<Long, Double> rankingPositions = new LinkedHashMap<>();
+        final int dataSize = data.size();
         for(int i = 0; i < sortedCopy.size(); i++){
-            rankingPositions.put(sortedCopy.get(i), Double.valueOf(i) / data.size());
+            final Long value = sortedCopy.get(i);
+            if(rankingPositions.containsKey(value)){
+                continue;
+            }
+            rankingPositions.put(value, Double.valueOf(i) / dataSize);
         }
         return rankingPositions;
     }
