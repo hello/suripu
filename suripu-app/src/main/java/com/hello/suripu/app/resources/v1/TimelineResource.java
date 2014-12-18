@@ -209,7 +209,7 @@ public class TimelineResource extends BaseResource {
                     sunRiseMillis + DateTimeConstants.MILLIS_PER_MINUTE,
                     sleepSegment.getOffsetMillis(), 0, null);
 //            final SleepSegment audioSleepSegment = new SleepSegment(99L, sunrise.get().plusMinutes(5).getMillis(), 0, 60, -1, Event.Type.SNORING, "ZzZzZzZzZ", new ArrayList<SensorReading>(), soundInfo);
-            events.add(sunriseEvent);
+//            events.add(sunriseEvent);
 //            extraSegments.add(audioSleepSegment);
 
             if(feature.userFeatureActive(FeatureFlipper.SOUND_INFO_TIMELINE, accessToken.accountId, new ArrayList<String>())) {
@@ -221,7 +221,7 @@ public class TimelineResource extends BaseResource {
                 final SleepSegment.SoundInfo sunRiseSound = new SleepSegment.SoundInfo(url.toExternalForm(), 2000);
                 sunriseEvent.setSoundInfo(sunRiseSound);
             }
-
+            events.add(sunriseEvent);
             LOGGER.debug(sunriseEvent.getDescription());
         }else{
             LOGGER.warn("No sun rise data for date {}", sunRiseQueryDateString);
