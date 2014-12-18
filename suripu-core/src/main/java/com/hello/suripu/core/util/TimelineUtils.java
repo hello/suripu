@@ -57,7 +57,6 @@ public class TimelineUtils {
 
     private static final int LIGHTS_OUT_START_THRESHOLD = 19; // 7pm local time
     private static final int LIGHTS_OUT_END_THRESHOLD = 4; // 4am local time
-    private static final int LIGHTS_OUT_TOLERANCE = 10; // minutes, for cases when people might fall asleep before lights out
 
     public static List<Event> convertLightMotionToNone(final List<Event> eventList, final int thresholdSleepDepth){
         final LinkedList<Event> convertedEvents = new LinkedList<>();
@@ -588,7 +587,7 @@ public class TimelineUtils {
                 if (lightsOutHour > LIGHTS_OUT_START_THRESHOLD  || lightsOutHour < LIGHTS_OUT_END_THRESHOLD) { // 7pm to 4am
                     // minus 10 mins to allow for some people falling asleep
                     // before turning off the lights! (e.g. bryan, Q)
-                    return Optional.of(lightsOutTime.minusMinutes(LIGHTS_OUT_TOLERANCE));
+                    return Optional.of(lightsOutTime);
                 }
                 break;
             }
@@ -627,7 +626,7 @@ public class TimelineUtils {
                 }
             }
 
-            scoringFunctions.add(new LightOutScoringFunction());
+            scoringFunctions.add(new LightOutScoringFunction(lightOutTimeOptional.get(), 10d));
             sensorModality++;
         }
 

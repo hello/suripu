@@ -104,7 +104,7 @@ public class MotionScoreAlgorithmTest {
     @Test
     public void testJavaCodeWorksTheSameAsPythonPrototype(){
         // first light out: 1417598760000
-        final DateTime firstLightOutTime = new DateTime(1417598760000L, DateTimeZone.UTC).minusMinutes(10);
+        final DateTime firstLightOutTime = new DateTime(1417598760000L, DateTimeZone.UTC);
         final MotionFixtureCSVDataSource dataSource = new MotionFixtureCSVDataSource("pang_motion_2014_12_02_gap_filled.csv");
         // Raw data count 791
         assertThat(dataSource.getDataForDate(new DateTime(2014, 12, 02, 0, 0, DateTimeZone.UTC)).size(), is(791));
@@ -114,7 +114,7 @@ public class MotionScoreAlgorithmTest {
 
         final ArrayList<SleepDataScoringFunction> scoringFunctions = new ArrayList<>();
         scoringFunctions.add(new AmplitudeDataScoringFunction(10, 0.5));
-        scoringFunctions.add(new LightOutScoringFunction());
+        scoringFunctions.add(new LightOutScoringFunction(firstLightOutTime, 3d));
 
         final Map<Long, List<AmplitudeData>> matrix = MotionScoreAlgorithm.getMatrix(smoothedData);
         for(final Long timestamp:matrix.keySet()){
@@ -131,7 +131,7 @@ public class MotionScoreAlgorithmTest {
 
         // Out put from python script suripu_light_test.py:
         /*
-        sleep at 2014-12-03 01:39:00, prob: 0.395362751303, amp: 5471
+        sleep at 2014-12-03 01:39:00, prob: 1.06747942852, amp: 5471
         wake up at 2014-12-03 07:09:00, prob: 0.0924221378596, amp: 518
         */
 
