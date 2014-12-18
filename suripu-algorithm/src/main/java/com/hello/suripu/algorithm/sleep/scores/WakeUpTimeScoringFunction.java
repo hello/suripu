@@ -23,8 +23,18 @@ public class WakeUpTimeScoringFunction implements ScoringFunction<Long, Double> 
 
         final LinkedHashMap<Long, Double> rankingPositions = new LinkedHashMap<>();
         final double cutBound = data.size() * this.cutPercentage;
+        final int dataSize = data.size();
         for(int i = 0; i < sortedCopy.size(); i++){
-            rankingPositions.put(sortedCopy.get(i), Double.valueOf(i - cutBound) / (data.size() - cutBound));
+            double score = 0;
+            if(i >= cutBound){
+                score = Double.valueOf(i - cutBound) / (dataSize - cutBound);
+            }
+
+            final Long value = sortedCopy.get(i);
+            if(rankingPositions.containsKey(value)){
+                continue;
+            }
+            rankingPositions.put(value, score);
         }
         return rankingPositions;
     }

@@ -40,10 +40,11 @@ public class AmplitudeDataScoringFunction implements SleepDataScoringFunction<Am
         final HashMap<AmplitudeData, EventScores> pdf = new HashMap<>();
 
         for(final AmplitudeData datum:data){
-            final double sleepScore = sleepTimeScoreFunction.getScore(datum.timestamp, sleepTimePDF) * amplitudeScoringFunction.getScore(datum.amplitude, amplitudePDF);
-            final double wakeUpScore = wakeUpTimeScoreFunction.getScore(datum.timestamp, wakeUpTimePDF) * amplitudeScoringFunction.getScore(datum.amplitude, amplitudePDF);
+            final double motionScore = amplitudeScoringFunction.getScore(datum.amplitude, amplitudePDF);
+            final double sleepScore = sleepTimeScoreFunction.getScore(datum.timestamp, sleepTimePDF);
+            final double wakeUpScore = wakeUpTimeScoreFunction.getScore(datum.timestamp, wakeUpTimePDF);
 
-            pdf.put(datum, new EventScores(sleepScore, wakeUpScore));
+            pdf.put(datum, new EventScores(sleepScore * motionScore, wakeUpScore * motionScore));
         }
         return pdf;
     }

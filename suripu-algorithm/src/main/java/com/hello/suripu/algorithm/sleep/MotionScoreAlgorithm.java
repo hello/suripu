@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -95,6 +95,7 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
                 final SleepDataScoringFunction<AmplitudeData> scoringFunction = this.scoringFunctions.get(d);
                 sleepScore *= scoringFunction.getScore(datum, pdf).sleepEventScore;
                 wakeUpScore *= scoringFunction.getScore(datum, pdf).wakeUpEventScore;
+                //LOGGER.info("ds: {}, dw: {}", scoringFunction.getScore(datum, pdf).sleepEventScore, scoringFunction.getScore(datum, pdf).wakeUpEventScore);
             }
             fallAsleepScores.add(new InternalScore(timestamp, sleepScore));
             wakeUpScores.add(new InternalScore(timestamp, wakeUpScore));
@@ -126,7 +127,7 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
     }
 
     public static Map<Long, List<AmplitudeData>> getMatrix(final List<AmplitudeData> smoothedMotion){
-        final Map<Long, List<AmplitudeData>> matrix = new HashMap<>();
+        final Map<Long, List<AmplitudeData>> matrix = new LinkedHashMap<>();
         for(final AmplitudeData motion:smoothedMotion){
             if(!matrix.containsKey(motion.timestamp)){
                 matrix.put(motion.timestamp, new ArrayList<AmplitudeData>());
