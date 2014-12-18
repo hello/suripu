@@ -12,23 +12,6 @@ public class CurrentRoomState {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CurrentRoomState.class);
 
-    public static class IdealConditions {
-        @JsonProperty("min")
-        private final Float min;
-
-        @JsonProperty("max")
-        private final Float max;
-
-        public IdealConditions(final Float min, final Float max) {
-            this.min = min;
-            this.max = max;
-        }
-
-        public static IdealConditions empty() {
-            return new IdealConditions(null, null);
-        }
-    }
-
     public static class State {
 
         public enum Unit {
@@ -68,7 +51,7 @@ public class CurrentRoomState {
         public final String message;
 
         @JsonProperty("ideal_conditions")
-        public final IdealConditions idealConditions;
+        public final String idealConditions;
 
         @JsonProperty("condition")
         public final Condition condition;
@@ -79,7 +62,7 @@ public class CurrentRoomState {
         @JsonProperty("unit")
         public final Unit unit;
 
-        public State(final Float value, final String message, final IdealConditions idealConditions, final Condition condition, final DateTime lastUpdated, final Unit unit) {
+        public State(final Float value, final String message, final String idealConditions, final Condition condition, final DateTime lastUpdated, final Unit unit) {
             this.value = value;
             this.message = message;
             this.idealConditions = idealConditions;
@@ -129,9 +112,9 @@ public class CurrentRoomState {
         LOGGER.debug("temp = {}, humidity = {}, particulates = {}", temperature, humidity, particulatesAQI);
 
 
-        final IdealConditions idealTempConditions = new IdealConditions(temperature -1, temperature+1);
-        final IdealConditions idealHumidityConditions = new IdealConditions(humidity -1, humidity+1);
-        final IdealConditions idealParticulatesConditions = new IdealConditions(null, 50.0f);
+        final String idealTempConditions = "You sleep better when temperature is between **XX** and **YY**.";
+        final String idealHumidityConditions = "You sleep better when humidity is between **XX** and **YY**.";
+        final String idealParticulatesConditions = "You sleep better when particulates are below **XX**.";
 
         if(referenceTime.minusMinutes(thresholdInMinutes).getMillis() > dataTimestampUTC.getMillis()) {
 
@@ -204,9 +187,9 @@ public class CurrentRoomState {
      */
     public static CurrentRoomState empty() {
         final CurrentRoomState roomState = new CurrentRoomState(
-                new State(null, "Waiting for data.", IdealConditions.empty(), State.Condition.UNKNOWN, DateTime.now(), State.Unit.CELCIUS),
-                new State(null, "Waiting for data.", IdealConditions.empty(), State.Condition.UNKNOWN, DateTime.now(), State.Unit.PERCENT),
-                new State(null, "Waiting for data.", IdealConditions.empty(), State.Condition.UNKNOWN, DateTime.now(), State.Unit.AQI)
+                new State(null, "Waiting for data.", "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.CELCIUS),
+                new State(null, "Waiting for data.", "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.PERCENT),
+                new State(null, "Waiting for data.", "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.AQI)
         );
 
         return roomState;
