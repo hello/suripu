@@ -583,7 +583,7 @@ public class TimelineUtils {
     public static Optional<DateTime> getLightsOutTime(final List<Event> lightEvents) {
         for (final Event event : lightEvents) {
             if (event.getType() == Event.Type.LIGHTS_OUT) {
-                final DateTime lightsOutTime = new DateTime(event.getEndTimestamp(), DateTimeZone.UTC).plusMillis(event.getTimezoneOffset());
+                final DateTime lightsOutTime = new DateTime(event.getEndTimestamp(), DateTimeZone.forOffsetMillis(event.getTimezoneOffset()));
                 final int lightsOutHour = lightsOutTime.getHourOfDay();
                 if (lightsOutHour > LIGHTS_OUT_START_THRESHOLD  || lightsOutHour < LIGHTS_OUT_END_THRESHOLD) { // 7pm to 4am
                     // minus 10 mins to allow for some people falling asleep
