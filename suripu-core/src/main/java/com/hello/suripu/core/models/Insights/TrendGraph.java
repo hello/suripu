@@ -84,6 +84,39 @@ public class TrendGraph {
         }
     }
 
+    public enum DayOfWeekLabel {
+        MO(1),
+        TU(2),
+        WE(3),
+        TH(4),
+        FR(5),
+        SA(6),
+        SU(7);
+
+        private int value;
+        private DayOfWeekLabel(final int value) {this.value = value;}
+        public static String fromInt(final int value) {
+            if (value > 0) {
+                for (final DayOfWeekLabel label : DayOfWeekLabel.values()) {
+                    if (value == label.value) {
+                        return label.toString();
+                    }
+                }
+            }
+            throw new IllegalArgumentException();
+        }
+
+    }
+    public enum DataLabel {
+        BAD(0),
+        OK(1),
+        GOOD(2);
+
+        private final int value;
+
+        private DataLabel(final int value) {this.value = value;}
+    }
+
     @JsonProperty("title")
     public final String title;
 
@@ -124,6 +157,29 @@ public class TrendGraph {
         this.dataPoints = dataPoints;
         this.options = options;
         this.title = dataType.toString() + " " + timePeriod.getTitle();
+    }
+
+    public static DataLabel getDataLabel(final DataType dataType, final float value) {
+        if (dataType == DataType.SLEEP_SCORE) {
+            if (value > 80.0f) {
+                return DataLabel.GOOD;
+            } else if (value > 75.0f) {
+                return DataLabel.OK;
+            } else {
+                return DataLabel.BAD;
+            }
+        } else if (dataType == DataType.SLEEP_DURATION) {
+            // TODO: personalize later
+            if (value >= 450.0f && value <= 510.0f) {
+                return DataLabel.GOOD;
+            } else if (value > 420.0f && value < 540.0f) {
+                return DataLabel.OK;
+            } else {
+                return DataLabel.BAD;
+            }
+        } else {
+            return DataLabel.OK;
+        }
     }
 
 }

@@ -2,6 +2,8 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
+import com.hello.suripu.core.db.TrendsDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Insights.AvailableGraph;
 import com.hello.suripu.core.models.Insights.SleepInsight;
@@ -31,9 +33,13 @@ public class InsightsResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(InsightsResource.class);
 
     private final AccountDAO accountDAO;
+    private final TrendsDAO trendsDAO;
+    private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
 
-    public InsightsResource(final AccountDAO accountDAO) {
+    public InsightsResource(final AccountDAO accountDAO, final TrendsDAO trendsDAO, final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB) {
         this.accountDAO = accountDAO;
+        this.trendsDAO = trendsDAO;
+        this.scoreDAODynamoDB = scoreDAODynamoDB;
     }
 
     /**
@@ -73,7 +79,7 @@ public class InsightsResource {
 
         final TrendGraph.DataType graphDataType = TrendGraph.DataType.fromString(dataType);
 
-        return TrendGraphProcessor.getTrendGraph(accessToken.accountId, graphDataType, graphType, timePeriodType);
+        return TrendGraphProcessor.getTrendGraph(accessToken.accountId, graphDataType, graphType, timePeriodType, this.trendsDAO, this.scoreDAODynamoDB);
     }
 
     /**
@@ -107,7 +113,7 @@ public class InsightsResource {
 
         final Optional<Account> optionalAccount = accountDAO.getById(accessToken.accountId);
         if (optionalAccount.isPresent()) {
-            return TrendGraphProcessor.getAllGraphs(optionalAccount.get());
+            return TrendGraphProcessor.getAllGraphs(optionalAccount.get(), trendsDAO, this.scoreDAODynamoDB);
         }
         return Collections.emptyList();
     }

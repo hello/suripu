@@ -6,16 +6,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Created by kingshy on 12/15/14.
  */
 public class GraphSample {
-    public enum DataLabel {
-        BAD(0),
-        OK(1),
-        GOOD(2);
-
-        private final int value;
-
-        private DataLabel(final int value) {this.value = value;}
-    }
-
     @JsonProperty("datetime")
     public final long dateTime; // for time-series graph only
 
@@ -29,12 +19,12 @@ public class GraphSample {
     public final int offsetMillis;
 
     @JsonProperty("data_label")
-    public final DataLabel dataLabel;
+    public final TrendGraph.DataLabel dataLabel;
 
     /**
      * for time-series data, x = datetime, y = number
      */
-    public GraphSample(final long dateTime, final float value, final int offsetMillis, final DataLabel dataLabel) {
+    public GraphSample(final long dateTime, final float value, final int offsetMillis, final TrendGraph.DataLabel dataLabel) {
         this.dateTime = dateTime;
         this.yValue = value;
         this.offsetMillis = offsetMillis;
@@ -45,7 +35,7 @@ public class GraphSample {
     /**
      * for histogram data, x = label, y = number
 a     */
-    public GraphSample(final String xValue, final float value, final DataLabel dataLabel) {
+    public GraphSample(final String xValue, final float value, final TrendGraph.DataLabel dataLabel) {
         this.dateTime = 0;
         this.yValue = value;
         this.offsetMillis = 0;
