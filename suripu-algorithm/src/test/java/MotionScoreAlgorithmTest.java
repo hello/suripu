@@ -6,6 +6,7 @@ import com.hello.suripu.algorithm.sleep.InternalScore;
 import com.hello.suripu.algorithm.sleep.MotionScoreAlgorithm;
 import com.hello.suripu.algorithm.sleep.SleepDetectionAlgorithm;
 import com.hello.suripu.algorithm.sleep.scores.AmplitudeDataScoringFunction;
+import com.hello.suripu.algorithm.sleep.scores.LightOutScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.MotionScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.SleepDataScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.SleepTimeScoringFunction;
@@ -102,23 +103,36 @@ public class MotionScoreAlgorithmTest {
      */
     @Test
     public void testJavaCodeWorksTheSameAsPythonPrototype(){
-        final MotionFixtureCSVDataSource dataSource = new MotionFixtureCSVDataSource("pang_motion_2014_12_11_gap_filled.csv");
-        assertThat(dataSource.getDataForDate(new DateTime(2014, 12, 11, 0, 0, DateTimeZone.UTC)).size(), is(437));
+        // first light out: 1417598760000
+        final DateTime firstLightOutTime = new DateTime(1417598760000L, DateTimeZone.UTC).minusMinutes(10);
+        final MotionFixtureCSVDataSource dataSource = new MotionFixtureCSVDataSource("pang_motion_2014_12_02_gap_filled.csv");
+        // Raw data count 791
+        assertThat(dataSource.getDataForDate(new DateTime(2014, 12, 02, 0, 0, DateTimeZone.UTC)).size(), is(791));
 
         final AmplitudeDataPreprocessor smoother = new MaxAmplitudeAggregator(10 * DateTimeConstants.MILLIS_PER_MINUTE);
-        final List<AmplitudeData> smoothedData = smoother.process(dataSource.getDataForDate(new DateTime(2014, 12, 11, 0, 0, DateTimeZone.UTC)));
+        final List<AmplitudeData> smoothedData = smoother.process(dataSource.getDataForDate(new DateTime(2014, 12, 02, 0, 0, DateTimeZone.UTC)));
 
         final ArrayList<SleepDataScoringFunction> scoringFunctions = new ArrayList<>();
         scoringFunctions.add(new AmplitudeDataScoringFunction(10, 0.5));
+        scoringFunctions.add(new LightOutScoringFunction());
 
-        final SleepDetectionAlgorithm algorithm = new MotionScoreAlgorithm(MotionScoreAlgorithm.getMatrix(smoothedData), 1, smoothedData.size(), scoringFunctions);
-        final Segment sleepSegment = algorithm.getSleepPeriod(new DateTime(2014, 12, 11, 0, 0, DateTimeZone.UTC));
+        final Map<Long, List<AmplitudeData>> matrix = MotionScoreAlgorithm.getMatrix(smoothedData);
+        for(final Long timestamp:matrix.keySet()){
+            final List<AmplitudeData> dataVector = matrix.get(timestamp);
+            if(timestamp < firstLightOutTime.getMillis()){
+                dataVector.add(new AmplitudeData(timestamp, 0d, dataVector.get(0).offsetMillis));
+            }else{
+                dataVector.add(new AmplitudeData(timestamp, 1d, dataVector.get(0).offsetMillis));
+            }
+        }
+        final SleepDetectionAlgorithm algorithm = new MotionScoreAlgorithm(matrix, 2, smoothedData.size(), scoringFunctions);
+        final Segment sleepSegment = algorithm.getSleepPeriod(new DateTime(2014, 12, 02, 0, 0, DateTimeZone.UTC));
 
 
-        // Out put from python script:
+        // Out put from python script suripu_light_test.py:
         /*
-        sleep at 2014-12-12 03:03:00, prob: 0.55139287169, amp: 15103
-        wake up at 2014-12-12 07:23:00, prob: 0.479932601157, amp: 1547
+        sleep at 2014-12-03 01:39:00, prob: 0.395362751303, amp: 5471
+        wake up at 2014-12-03 07:09:00, prob: 0.0924221378596, amp: 518
         */
 
         final DateTime sleepTime = new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis()));
@@ -126,7 +140,7 @@ public class MotionScoreAlgorithmTest {
         final DateTime sleepLocalUTC = new DateTime(sleepTime.getYear(), sleepTime.getMonthOfYear(), sleepTime.getDayOfMonth(), sleepTime.getHourOfDay(), sleepTime.getMinuteOfHour(), DateTimeZone.UTC);
         final DateTime wakeUpLocalUTC = new DateTime(wakeUpTime.getYear(), wakeUpTime.getMonthOfYear(), wakeUpTime.getDayOfMonth(), wakeUpTime.getHourOfDay(), wakeUpTime.getMinuteOfHour(), DateTimeZone.UTC);
 
-        assertThat(sleepLocalUTC, is(new DateTime(2014, 12, 12, 3, 3, DateTimeZone.UTC)));
-        assertThat(wakeUpLocalUTC, is(new DateTime(2014, 12, 12, 7, 23, DateTimeZone.UTC)));
+        assertThat(sleepLocalUTC, is(new DateTime(2014, 12, 03, 1, 39, DateTimeZone.UTC)));
+        assertThat(wakeUpLocalUTC, is(new DateTime(2014, 12, 03, 7, 9, DateTimeZone.UTC)));
     }
 }
