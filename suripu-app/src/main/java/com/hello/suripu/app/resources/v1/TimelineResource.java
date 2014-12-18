@@ -131,21 +131,19 @@ public class TimelineResource extends BaseResource {
         final List<Event> events = new LinkedList<>();
 
         //TODO: get light data by the minute, compute lights out
-        Optional<DateTime> sleepTimeThreshold = Optional.absent();
+        Optional<DateTime> lightOutTimeOptional = Optional.absent();
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
         if (deviceId.isPresent()) {
-            final long queryEndTimeUTC = endDate.getMillis();
-            final long queryStartTimeUTC = endDate.minusHours(24).getMillis();
             final int slotDurationMins = 1;
 
-            final List<Sample> senseData = deviceDataDAO.generateTimeSeriesByLocalTime(queryStartTimeUTC,
-                    queryEndTimeUTC, accessToken.accountId, deviceId.get(), slotDurationMins, "light");
+            final List<Sample> senseData = deviceDataDAO.generateTimeSeriesByLocalTime(targetDate.getMillis(),
+                    endDate.getMillis(), accessToken.accountId, deviceId.get(), slotDurationMins, "light");
 
             if (senseData.size() > 0) {
                 final List<Event> lightEvents = TimelineUtils.getLightEvents(senseData);
                 if (lightEvents.size() > 0) {
                     events.addAll(lightEvents);
-                    sleepTimeThreshold = TimelineUtils.getLightsOutTime(lightEvents);
+                    lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
                 }
             }
         }
@@ -157,7 +155,7 @@ public class TimelineResource extends BaseResource {
         // A day starts with 8pm local time and ends with 4pm local time next day
         Segment sleepSegment = null;
         try {
-            sleepSegment = TimelineUtils.getSleepPeriod(targetDate, trackerMotions);
+            sleepSegment = TimelineUtils.getSleepPeriod(targetDate, trackerMotions, lightOutTimeOptional);
 
             if(sleepSegment.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
                 final SleepEvent sleepEventFromAwakeDetection = new SleepEvent(
