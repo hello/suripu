@@ -85,16 +85,12 @@ public class TrendGraph {
     }
 
     public enum DayOfWeekLabel {
-        MO(1),
-        TU(2),
-        WE(3),
-        TH(4),
-        FR(5),
-        SA(6),
-        SU(7);
+        MO(1), TU(2), WE(3), TH(4), FR(5), SA(6), SU(7);
 
         private int value;
+
         private DayOfWeekLabel(final int value) {this.value = value;}
+
         public static String fromInt(final int value) {
             if (value > 0) {
                 for (final DayOfWeekLabel label : DayOfWeekLabel.values()) {
@@ -182,4 +178,17 @@ public class TrendGraph {
         }
     }
 
+    public static int getTimePeriodDays(final TimePeriodType timePeriodType) {
+        if (timePeriodType == TimePeriodType.OVER_TIME_1W) {
+            return 7;
+        } else if (timePeriodType == TimePeriodType.OVER_TIME_2W) {
+            return 14;
+        } else if (timePeriodType == TimePeriodType.OVER_TIME_1M) {
+            return 30;
+        } else if (timePeriodType == TimePeriodType.OVER_TIME_3M) {
+            return 90;
+        } else {
+            return 365; // ALL
+        }
+    }
 }
