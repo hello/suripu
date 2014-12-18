@@ -22,8 +22,13 @@ public class MotionScoringFunction implements ScoringFunction<Double, Double> {
         final List<Double> sortedCopy = Ordering.natural().immutableSortedCopy(data);
 
         final LinkedHashMap<Double, Double> rankingPositions = new LinkedHashMap<>();
+        final int dataSize = data.size();
         for(int i = 0; i < sortedCopy.size(); i++){
-            rankingPositions.put(sortedCopy.get(i), Math.pow(Double.valueOf(i) / data.size(), this.maxPower));
+            final Double value = sortedCopy.get(i);
+            if(rankingPositions.containsKey(value)){
+                continue;
+            }
+            rankingPositions.put(value, Math.pow(Double.valueOf(i) / dataSize, this.maxPower));
         }
         return rankingPositions;
     }
