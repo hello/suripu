@@ -25,7 +25,7 @@ public class SunRiseEvent extends Event {
     * Let's don't put the setters in the base class, because not all events has those properties.
      */
     public void setSoundInfo(final SleepSegment.SoundInfo sunRiseSound) {
-        this.soundInfo = soundInfo;
+        this.soundInfo = sunRiseSound;
     }
 
     @Override

@@ -131,25 +131,28 @@ public class TimelineResource extends BaseResource {
         final List<Event> events = new LinkedList<>();
 
         //TODO: get light data by the minute, compute lights out
-        Optional<DateTime> sleepTimeThreshold = Optional.absent();
+        Optional<DateTime> lightOutTimeOptional = Optional.absent();
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
         if (deviceId.isPresent()) {
-            final long queryEndTimeUTC = endDate.getMillis();
-            final long queryStartTimeUTC = endDate.minusHours(24).getMillis();
             final int slotDurationMins = 1;
 
-            final List<Sample> senseData = deviceDataDAO.generateTimeSeriesByLocalTime(queryStartTimeUTC,
-                    queryEndTimeUTC, accessToken.accountId, deviceId.get(), slotDurationMins, "light");
-
+            final List<Sample> senseData = deviceDataDAO.generateTimeSeriesByLocalTime(targetDate.getMillis(),
+                    endDate.getMillis(), accessToken.accountId, deviceId.get(), slotDurationMins, "light");
+            LOGGER.info("Light data size {}", senseData.size());
             if (senseData.size() > 0) {
                 final List<Event> lightEvents = TimelineUtils.getLightEvents(senseData);
                 if (lightEvents.size() > 0) {
                     events.addAll(lightEvents);
-                    sleepTimeThreshold = TimelineUtils.getLightsOutTime(lightEvents);
+                    lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
                 }
             }
         }
 
+        if(lightOutTimeOptional.isPresent()){
+            LOGGER.info("Light out at {}", lightOutTimeOptional.get());
+        }else{
+            LOGGER.info("No light out");
+        }
         // create sleep-motion segments
         final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);
         events.addAll(motionEvents);
@@ -157,7 +160,7 @@ public class TimelineResource extends BaseResource {
         // A day starts with 8pm local time and ends with 4pm local time next day
         Segment sleepSegment = null;
         try {
-            sleepSegment = TimelineUtils.getSleepPeriod(targetDate, trackerMotions);
+            sleepSegment = TimelineUtils.getSleepPeriod(targetDate, trackerMotions, lightOutTimeOptional);
 
             if(sleepSegment.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
                 final SleepEvent sleepEventFromAwakeDetection = new SleepEvent(
@@ -209,7 +212,7 @@ public class TimelineResource extends BaseResource {
                     sunRiseMillis + DateTimeConstants.MILLIS_PER_MINUTE,
                     sleepSegment.getOffsetMillis(), 0, null);
 //            final SleepSegment audioSleepSegment = new SleepSegment(99L, sunrise.get().plusMinutes(5).getMillis(), 0, 60, -1, Event.Type.SNORING, "ZzZzZzZzZ", new ArrayList<SensorReading>(), soundInfo);
-            events.add(sunriseEvent);
+//            events.add(sunriseEvent);
 //            extraSegments.add(audioSleepSegment);
 
             if(feature.userFeatureActive(FeatureFlipper.SOUND_INFO_TIMELINE, accessToken.accountId, new ArrayList<String>())) {
@@ -221,7 +224,7 @@ public class TimelineResource extends BaseResource {
                 final SleepSegment.SoundInfo sunRiseSound = new SleepSegment.SoundInfo(url.toExternalForm(), 2000);
                 sunriseEvent.setSoundInfo(sunRiseSound);
             }
-
+            events.add(sunriseEvent);
             LOGGER.debug(sunriseEvent.getDescription());
         }else{
             LOGGER.warn("No sun rise data for date {}", sunRiseQueryDateString);
