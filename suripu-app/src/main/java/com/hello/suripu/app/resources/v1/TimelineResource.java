@@ -5,9 +5,6 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.core.Segment;
-import com.hello.suripu.algorithm.sleep.MotionScoreAlgorithm;
-import com.hello.suripu.algorithm.sleep.SleepDetectionAlgorithm;
-import com.hello.suripu.app.utils.TrackerMotionDataSource;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -155,60 +152,32 @@ public class TimelineResource extends BaseResource {
 
         // create sleep-motion segments
         final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);
-
         events.addAll(motionEvents);
 
-        // detect sleep time
-        final int sleepTimeThresholdInMinutes = 7; // minutes of no-movement to determine that user has fallen asleep
-        final int sleepMotionThreshold = 90;
-        final Optional<SleepEvent> sleepTimeEvent = TimelineUtils.getSleepEvent(motionEvents, sleepTimeThresholdInMinutes, sleepMotionThreshold, sleepTimeThreshold);
-        Optional<Integer> wakeUpTimeZoneOffsetMillis = Optional.absent();
-
-        if(sleepTimeEvent.isPresent()) {
-            events.add(sleepTimeEvent.get());
-            wakeUpTimeZoneOffsetMillis = Optional.of(sleepTimeEvent.get().getTimezoneOffset());
-        }
-
         // A day starts with 8pm local time and ends with 4pm local time next day
-        final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions);
-        final int smoothWindowSize = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  //TODO: make it configable.
-
-        final SleepDetectionAlgorithm sleepDetectionAlgorithm = new MotionScoreAlgorithm(dataSource, smoothWindowSize);
-
+        Segment sleepSegment = null;
         try {
-            final Segment segmentFromAwakeDetection = sleepDetectionAlgorithm.getSleepPeriod(targetDate.withTimeAtStartOfDay());
+            sleepSegment = TimelineUtils.getSleepPeriod(targetDate, trackerMotions);
 
-            if(segmentFromAwakeDetection.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
+            if(sleepSegment.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
                 final SleepEvent sleepEventFromAwakeDetection = new SleepEvent(
-                        segmentFromAwakeDetection.getStartTimestamp(),
-                        segmentFromAwakeDetection.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                        segmentFromAwakeDetection.getOffsetMillis(),
-                        "You fell asleep (P)"
-                        );
+                        sleepSegment.getStartTimestamp(),
+                        sleepSegment.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                        sleepSegment.getOffsetMillis(),
+                        "You fell asleep");
 
                 final WakeupEvent wakeupSegmentFromAwakeDetection = new WakeupEvent(
-                        segmentFromAwakeDetection.getEndTimestamp(),
-                        segmentFromAwakeDetection.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                        segmentFromAwakeDetection.getOffsetMillis());
+                        sleepSegment.getEndTimestamp(),
+                        sleepSegment.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                        sleepSegment.getOffsetMillis());
 
-                if(!sleepTimeEvent.isPresent()) {
-                    LOGGER.debug("Default algorithm failed to detect sleep time. Force to use N shape algorithm.");
-                    events.add(sleepEventFromAwakeDetection);
-                }else {
-                    if(feature.userFeatureActive(FeatureFlipper.SLEEP_DETECTION_FROM_AWAKE, accessToken.accountId, new ArrayList<String>())) {
-                        events.add(sleepEventFromAwakeDetection);
-                        LOGGER.debug("Default algorithm and N shape algorithm both detected sleep.");
-                    }else{
-                        LOGGER.debug("Account {} not in N shape detection feature group.", accessToken.accountId);
-                    }
-                }
+                events.add(sleepEventFromAwakeDetection);
                 events.add(wakeupSegmentFromAwakeDetection);
-                wakeUpTimeZoneOffsetMillis = Optional.of(wakeupSegmentFromAwakeDetection.getTimezoneOffset());
             }
 
             LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
-                    new DateTime(segmentFromAwakeDetection.getStartTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())),
-                    new DateTime(segmentFromAwakeDetection.getEndTimestamp(), DateTimeZone.forOffsetMillis(segmentFromAwakeDetection.getOffsetMillis())));
+                    new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis())),
+                    new DateTime(sleepSegment.getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis())));
         }catch (Exception ex){
             LOGGER.error("Generate sleep period from Awake Detection Algorithm failed: {}", ex.getMessage());
         }
@@ -218,11 +187,9 @@ public class TimelineResource extends BaseResource {
         if (optionalPartnerAccountId.isPresent() && events.size() > 0) {
             LOGGER.debug("partner account {}", optionalPartnerAccountId.get());
             // get tracker motions for partner, query time is in UTC, not local_utc
-            final DateTime startTime;
-            if (sleepTimeEvent.isPresent()) {
-                startTime = new DateTime(sleepTimeEvent.get().getStartTimestamp(), DateTimeZone.UTC);
-            } else {
-                startTime = new DateTime(events.get(0).getStartTimestamp(), DateTimeZone.UTC);
+            DateTime startTime = new DateTime(events.get(0).getStartTimestamp(), DateTimeZone.UTC);
+            if(sleepSegment != null){
+                startTime = new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.UTC);
             }
             final DateTime endTime = new DateTime(events.get(events.size() - 1).getStartTimestamp(), DateTimeZone.UTC);
 
@@ -236,11 +203,11 @@ public class TimelineResource extends BaseResource {
         // add sunrise data
         final String sunRiseQueryDateString = targetDate.plusDays(1).toString(DateTimeFormat.forPattern("yyyy-MM-dd"));
         final Optional<DateTime> sunrise = sunData.sunrise(sunRiseQueryDateString); // day + 1
-        if(sunrise.isPresent() && wakeUpTimeZoneOffsetMillis.isPresent()) {
+        if(sunrise.isPresent() && sleepSegment != null) {
             final long sunRiseMillis = sunrise.get().getMillis();
             final SunRiseEvent sunriseEvent = new SunRiseEvent(sunRiseMillis,
                     sunRiseMillis + DateTimeConstants.MILLIS_PER_MINUTE,
-                    wakeUpTimeZoneOffsetMillis.get(), 0, null);
+                    sleepSegment.getOffsetMillis(), 0, null);
 //            final SleepSegment audioSleepSegment = new SleepSegment(99L, sunrise.get().plusMinutes(5).getMillis(), 0, 60, -1, Event.Type.SNORING, "ZzZzZzZzZ", new ArrayList<SensorReading>(), soundInfo);
             events.add(sunriseEvent);
 //            extraSegments.add(audioSleepSegment);
@@ -268,8 +235,9 @@ public class TimelineResource extends BaseResource {
         final List<Event> mergedEvents = TimelineUtils.generateAlignedSegmentsByTypeWeight(events, DateTimeConstants.MILLIS_PER_MINUTE, 15, false);
         final List<Event> convertedEvents = TimelineUtils.convertLightMotionToNone(mergedEvents, threshold);
         writeMotionMetrics(this.motionEventDistribution, convertedEvents);
+        final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideSleepPeriod(convertedEvents);
 
-        List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(convertedEvents);
+        List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(cleanedUpEvents);
 
         final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments, 70);
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);

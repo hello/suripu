@@ -1,6 +1,7 @@
 package com.hello.suripu.workers.utils;
 
 import com.google.common.collect.ImmutableMap;
+import com.hello.suripu.core.configuration.ActiveDevicesTrackerConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -14,10 +15,6 @@ import java.util.Map;
 public class ActiveDevicesTracker {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(ActiveDevicesTracker.class);
-
-    private static final String SENSE_ACTIVE_SET_KEY = "active_senses";
-    private static final String PILL_ACTIVE_SET_KEY = "active_pills";
-
     private final JedisPool jedisPool;
 
     public ActiveDevicesTracker(final JedisPool jedisPool) {
@@ -27,21 +24,21 @@ public class ActiveDevicesTracker {
     public void trackSense(final String senseId, final Long lastSeen) {
         final Map<String, Long> seenDevices = new HashMap<>(1);
         seenDevices.put(senseId, lastSeen);
-        trackDevices(SENSE_ACTIVE_SET_KEY, ImmutableMap.copyOf(seenDevices));
+        trackSenses(ImmutableMap.copyOf(seenDevices));
     }
 
     public void trackSenses(final Map<String, Long> activeSenses) {
-        trackDevices(SENSE_ACTIVE_SET_KEY, ImmutableMap.copyOf(activeSenses));
+        trackDevices(ActiveDevicesTrackerConfiguration.SENSE_ACTIVE_SET_KEY, ImmutableMap.copyOf(activeSenses));
     }
 
     public void trackPill(final String pillId, final Long lastSeen) {
         final Map<String, Long> seenDevices = new HashMap<>(1);
         seenDevices.put(pillId, lastSeen);
-        trackDevices(PILL_ACTIVE_SET_KEY, ImmutableMap.copyOf(seenDevices));
+        trackPills(ImmutableMap.copyOf(seenDevices));
     }
 
     public void trackPills(final Map<String, Long> activePills) {
-        trackDevices(PILL_ACTIVE_SET_KEY, ImmutableMap.copyOf(activePills));
+        trackDevices(ActiveDevicesTrackerConfiguration.PILL_ACTIVE_SET_KEY, ImmutableMap.copyOf(activePills));
     }
 
     private void trackDevices(final String redisKey, final Map<String, Long> devicesSeen) {

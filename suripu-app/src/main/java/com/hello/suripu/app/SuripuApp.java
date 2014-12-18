@@ -274,7 +274,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new TeamsResource(teamStore));
         environment.addResource(new FeedbackResource(feedbackDAO));
 
-        environment.addResource(new DataScienceResource(trackerMotionDAO));
+        environment.addResource(new DataScienceResource(trackerMotionDAO, deviceDataDAO, deviceDAO));
 
         final FirmwareUpdateDAO firmwareUpdateDAO = commonDB.onDemand(FirmwareUpdateDAO.class);
         final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);

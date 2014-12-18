@@ -3,8 +3,15 @@ package com.hello.suripu.core.util;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.core.AmplitudeData;
+import com.hello.suripu.algorithm.core.AmplitudeDataPreprocessor;
 import com.hello.suripu.algorithm.core.LightSegment;
+import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sensordata.LightEventsDetector;
+import com.hello.suripu.algorithm.sleep.MotionScoreAlgorithm;
+import com.hello.suripu.algorithm.sleep.SleepDetectionAlgorithm;
+import com.hello.suripu.algorithm.sleep.scores.AmplitudeDataScoringFunction;
+import com.hello.suripu.algorithm.sleep.scores.SleepDataScoringFunction;
+import com.hello.suripu.algorithm.utils.MaxAmplitudeAggregator;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.LightEvent;
@@ -89,22 +96,32 @@ public class TimelineUtils {
         return LOWEST_SLEEP_DEPTH;
     }
 
+    public static List<TrackerMotion> removeNegativeAmplitudes(final List<TrackerMotion> trackerMotions){
+        final List<TrackerMotion> positiveMotions = new LinkedList<>();
+        for(final TrackerMotion motion:trackerMotions){
+            if(motion.value > 0){
+                positiveMotions.add(motion);
+            }
+        }
+
+        return positiveMotions;
+    }
 
     public static List<MotionEvent> generateMotionEvents(final List<TrackerMotion> trackerMotions) {
         final List<MotionEvent> motionEvents = new ArrayList<>();
 
-
-        if(trackerMotions.isEmpty()) {
+        final List<TrackerMotion> positiveMotions = removeNegativeAmplitudes(trackerMotions);
+        if(positiveMotions.isEmpty()) {
             return motionEvents;
         }
 
-        int maxSVM = getMaxSVM(trackerMotions);
-        final Map<Integer, Integer> positionMap = constructValuePositionMap(trackerMotions);
+        int maxSVM = getMaxSVM(positiveMotions);
+        final Map<Integer, Integer> positionMap = constructValuePositionMap(positiveMotions);
 
         LOGGER.debug("Max SVM = {}", maxSVM);
 
-        final Long trackerId = trackerMotions.get(0).trackerId;
-        for(final TrackerMotion trackerMotion : trackerMotions) {
+        final Long trackerId = positiveMotions.get(0).trackerId;
+        for(final TrackerMotion trackerMotion : positiveMotions) {
             if (!trackerMotion.trackerId.equals(trackerId)) {
                 LOGGER.warn("User has multiple pills: {} and {}", trackerId, trackerMotion.trackerId);
                 break; // if user has multiple pill, only use data from the latest tracker_id
@@ -173,6 +190,28 @@ public class TimelineUtils {
 
         return ImmutableList.copyOf(segments);
 
+    }
+
+    public static List<Event> removeMotionEventsOutsideSleepPeriod(final List<Event> events){
+        boolean isSleeping = false;
+        final LinkedList<Event> newEventList = new LinkedList<>();
+        for(final Event event:events){
+            if(isSleeping == false && event.getType() == Event.Type.SLEEP){
+                isSleeping = true;
+            }
+
+            if(isSleeping && event.getType() == Event.Type.WAKE_UP){
+                isSleeping = false;
+            }
+
+            if(isSleeping == false && event.getType() == Event.Type.MOTION){
+                newEventList.add(new NullEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth()));
+            }else{
+                newEventList.add(event);
+            }
+        }
+
+        return newEventList;
     }
 
     public static List<Event> generateAlignedSegmentsByTypeWeight(final List<Event> eventList,
@@ -526,15 +565,14 @@ public class TimelineUtils {
 
             if (segmentType == LightSegment.Type.LIGHTS_OUT) {
                 // create light on and lights out event
-                final LightEvent event = new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, segmentType.toString());
-                event.setDescription("Lights on");
+                final LightEvent event = new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, "Lights on");
                 events.add(event);
 
                 final long endTimestamp = segment.endTimestamp - smoothingDegree * MINUTE_IN_MILLIS;
                 events.add(new LightsOutEvent(endTimestamp, endTimestamp + MINUTE_IN_MILLIS, offsetMillis));
 
             } else if (segmentType == LightSegment.Type.LIGHT_SPIKE) {
-                events.add(new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, segmentType.toString()));
+                events.add(new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, "Light"));
             }
             // TODO: daylight spike event -- unsure what the value might be at this moment
         }
@@ -557,4 +595,22 @@ public class TimelineUtils {
 
         return Optional.absent();
     }
+
+    public static Segment getSleepPeriod(final DateTime targetDateLocalUTC, final List<TrackerMotion> trackerMotions){
+        final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions);
+        final int smoothWindowSize = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  //TODO: make it configable.
+
+        final AmplitudeDataPreprocessor smoother = new MaxAmplitudeAggregator(smoothWindowSize);
+        final List<AmplitudeData> smoothedData = smoother.process(dataSource.getDataForDate(targetDateLocalUTC.withTimeAtStartOfDay()));
+        LOGGER.info("smoothed data size {}", smoothedData.size());
+
+        final ArrayList<SleepDataScoringFunction> scoringFunctions = new ArrayList<>();
+        scoringFunctions.add(new AmplitudeDataScoringFunction(10, 0.5));
+
+        final Map<Long, List<AmplitudeData>> matrix = MotionScoreAlgorithm.getMatrix(smoothedData);
+        final SleepDetectionAlgorithm sleepDetectionAlgorithm = new MotionScoreAlgorithm(matrix, 1, smoothedData.size(), scoringFunctions);
+        return sleepDetectionAlgorithm.getSleepPeriod(targetDateLocalUTC.withTimeAtStartOfDay());
+    }
+
+
 }

@@ -100,14 +100,32 @@ public class Alarm {
         }
 
         final Alarm convertedObject = (Alarm) other;
-        return Objects.equal(convertedObject.year, this.year) &&
-                Objects.equal(convertedObject.month, this.month) &&
-                Objects.equal(convertedObject.day, this.day) &&
-                Objects.equal(convertedObject.hourOfDay, this.hourOfDay) &&
-                Objects.equal(convertedObject.minuteOfHour, this.minuteOfHour) &&
-                Objects.equal(convertedObject.isRepeated, this.isRepeated) &&
-                Objects.equal(convertedObject.sound, this.sound) &&
-                Iterables.elementsEqual(convertedObject.dayOfWeek, this.dayOfWeek);
+
+        if(!this.isRepeated) {
+            return Objects.equal(convertedObject.year, this.year) &&
+                    Objects.equal(convertedObject.month, this.month) &&
+                    Objects.equal(convertedObject.day, this.day) &&
+                    Objects.equal(convertedObject.hourOfDay, this.hourOfDay) &&
+                    Objects.equal(convertedObject.minuteOfHour, this.minuteOfHour) &&
+                    Objects.equal(convertedObject.sound, this.sound);
+        }else{
+            return Objects.equal(convertedObject.hourOfDay, this.hourOfDay) &&
+                    Objects.equal(convertedObject.minuteOfHour, this.minuteOfHour) &&
+                    Iterables.elementsEqual(this.dayOfWeek, convertedObject.dayOfWeek) &&
+                    Objects.equal(convertedObject.sound, this.sound);
+        }
+    }
+
+    @Override
+    public String toString(){
+        final StringBuilder builder = new StringBuilder(100);
+        builder.append(this.year).append("-")
+                .append(this.month).append("-")
+                .append(this.day).append(" ")
+                .append(this.hourOfDay).append(":")
+                .append(this.minuteOfHour).append(":")
+                .append("00");
+        return builder.toString();
     }
 
 
