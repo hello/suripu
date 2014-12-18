@@ -596,6 +596,38 @@ public class TimelineUtils {
         return Optional.absent();
     }
 
+
+    public static List<Segment> getSleepPeriods(final DateTime targetDateLocalUTC,
+                                                final List<TrackerMotion> trackerMotions,
+                                                final Optional<DateTime> lightOutTimeOptional){
+
+        final ArrayList<Segment> sleepPeriods = new ArrayList<>();
+        Segment segment = getSleepPeriod(targetDateLocalUTC, trackerMotions, lightOutTimeOptional);
+        sleepPeriods.add(segment);
+
+        final TrackerMotion lastMotion = trackerMotions.get(trackerMotions.size() - 1);
+        List<TrackerMotion> subList = trackerMotions;
+        while(lastMotion.timestamp - segment.getEndTimestamp() > DateTimeConstants.MINUTES_PER_HOUR){
+            subList = getSubMotionList(segment.getEndTimestamp(), lastMotion.timestamp, subList);
+            final Segment nextSleepSegment = getSleepPeriod(targetDateLocalUTC, subList, lightOutTimeOptional);
+            sleepPeriods.add(nextSleepSegment);
+            segment = nextSleepSegment;
+        }
+
+        return sleepPeriods;
+    }
+
+    public static List<TrackerMotion> getSubMotionList(final long startTimestamp, final long endTimestamp, final List<TrackerMotion> originalList){
+        final ArrayList<TrackerMotion> subList = new ArrayList<>();
+        for(final TrackerMotion trackerMotion:originalList){
+            if(trackerMotion.timestamp > startTimestamp && trackerMotion.timestamp <= endTimestamp){
+                subList.add(trackerMotion);
+            }
+        }
+
+        return subList;
+    }
+
     public static Segment getSleepPeriod(final DateTime targetDateLocalUTC,
                                          final List<TrackerMotion> trackerMotions,
                                          final Optional<DateTime> lightOutTimeOptional){
