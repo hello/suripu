@@ -16,6 +16,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -45,7 +46,7 @@ public class RoomConditionsResource {
     @GET
     @Path("/current")
     @Produces(MediaType.APPLICATION_JSON)
-    public CurrentRoomState current(@Scope({OAuthScope.SENSORS_BASIC}) final AccessToken token) {
+    public CurrentRoomState current(@Scope({OAuthScope.SENSORS_BASIC}) final AccessToken token, @DefaultValue("c") @QueryParam("unit") final String unit) {
 
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(token.accountId);
         if(!deviceId.isPresent()) {
@@ -60,7 +61,7 @@ public class RoomConditionsResource {
 
         final DeviceData deviceData = data.get();
         LOGGER.debug("Last device data in db = {}", deviceData);
-        final CurrentRoomState roomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), 15);
+        final CurrentRoomState roomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), 15, unit);
         return roomState;
     }
 

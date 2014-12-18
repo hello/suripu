@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 
 public class CurrentRoomState {
 
+    private final static String DEFAULT_TEMP_UNIT = "c";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(CurrentRoomState.class);
 
     public static class State {
@@ -96,14 +98,15 @@ public class CurrentRoomState {
         final float humidity = DeviceData.dbIntToFloat(rawHumidity);
         final float temperature = DeviceData.dbIntToFloat(rawTemperature);
         final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(rawDustMax, firmwareVersion));
-        return fromTempHumidDust(temperature, humidity, particulatesAQI, new DateTime(timestamp, DateTimeZone.UTC), referenceTime, thresholdInMinutes);
+        return fromTempHumidDust(temperature, humidity, particulatesAQI, new DateTime(timestamp, DateTimeZone.UTC), referenceTime, thresholdInMinutes, DEFAULT_TEMP_UNIT);
 
     }
 
     public static CurrentRoomState fromTempHumidDust(final float temperature, final float humidity, final float particulatesAQI,
                                                      final DateTime dataTimestampUTC,
                                                      final DateTime referenceTime,
-                                                     final Integer thresholdInMinutes) {
+                                                     final Integer thresholdInMinutes,
+                                                     final String tempUnit) {
 
         State temperatureState;
         State humidityState;
@@ -112,7 +115,7 @@ public class CurrentRoomState {
         LOGGER.debug("temp = {}, humidity = {}, particulates = {}", temperature, humidity, particulatesAQI);
 
 
-        final String idealTempConditions = "You sleep better when temperature is between **XX** and **YY**.";
+        final String idealTempConditions = String.format("You sleep better when temperature is between **XX%s** and **YY%s**.", tempUnit, tempUnit);
         final String idealHumidityConditions = "You sleep better when humidity is between **XX** and **YY**.";
         final String idealParticulatesConditions = "You sleep better when particulates are below **XX**.";
 
@@ -168,13 +171,13 @@ public class CurrentRoomState {
      * @param data
      * @return
      */
-    public static CurrentRoomState fromDeviceData(final DeviceData data, final DateTime referenceTime, final Integer thresholdInMinutes) {
+    public static CurrentRoomState fromDeviceData(final DeviceData data, final DateTime referenceTime, final Integer thresholdInMinutes, final String tempUnit) {
 
         final float temp = DeviceData.dbIntToFloat(data.ambientTemperature);
         final float humidity = DeviceData.dbIntToFloat(data.ambientHumidity);
         // max value is in raw counts, conversion needed
         final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(data.ambientDustMax, data.firmwareVersion));
-        return fromTempHumidDust(temp, humidity, particulatesAQI, data.dateTimeUTC, referenceTime, thresholdInMinutes);
+        return fromTempHumidDust(temp, humidity, particulatesAQI, data.dateTimeUTC, referenceTime, thresholdInMinutes, tempUnit);
 
     }
 
