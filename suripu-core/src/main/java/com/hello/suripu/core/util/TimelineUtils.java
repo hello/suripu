@@ -626,7 +626,7 @@ public class TimelineUtils {
                 }
             }
 
-            scoringFunctions.add(new LightOutScoringFunction(lightOutTimeOptional.get(), 10d));
+            scoringFunctions.add(new LightOutScoringFunction(lightOutTimeOptional.get(), 3d));
             sensorModality++;
         }
 
