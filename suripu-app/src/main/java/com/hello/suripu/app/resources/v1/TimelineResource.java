@@ -138,7 +138,7 @@ public class TimelineResource extends BaseResource {
 
             final List<Sample> senseData = deviceDataDAO.generateTimeSeriesByLocalTime(targetDate.getMillis(),
                     endDate.getMillis(), accessToken.accountId, deviceId.get(), slotDurationMins, "light");
-
+            LOGGER.info("Light data size {}", senseData.size());
             if (senseData.size() > 0) {
                 final List<Event> lightEvents = TimelineUtils.getLightEvents(senseData);
                 if (lightEvents.size() > 0) {
@@ -148,6 +148,11 @@ public class TimelineResource extends BaseResource {
             }
         }
 
+        if(lightOutTimeOptional.isPresent()){
+            LOGGER.info("Light out at {}", lightOutTimeOptional.get());
+        }else{
+            LOGGER.info("No light out");
+        }
         // create sleep-motion segments
         final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);
         events.addAll(motionEvents);
