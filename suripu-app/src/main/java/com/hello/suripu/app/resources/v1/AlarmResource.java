@@ -1,7 +1,9 @@
 package com.hello.suripu.app.resources.v1;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.s3.AmazonS3;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
@@ -28,6 +30,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -42,14 +45,16 @@ public class AlarmResource {
     private final AlarmDAODynamoDB alarmDAODynamoDB;
     private final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
     private final DeviceDAO deviceDAO;
-
+    private final AmazonS3 amazonS3;
 
     public AlarmResource(final AlarmDAODynamoDB alarmDAODynamoDB,
                          final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
-                         final DeviceDAO deviceDAO){
+                         final DeviceDAO deviceDAO,
+                         final AmazonS3 amazonS3){
         this.alarmDAODynamoDB = alarmDAODynamoDB;
         this.mergedAlarmInfoDynamoDB = mergedAlarmInfoDynamoDB;
         this.deviceDAO = deviceDAO;
+        this.amazonS3 = amazonS3;
     }
 
     @Timed
@@ -137,9 +142,33 @@ public class AlarmResource {
     @Path("/sounds")
     @Produces(MediaType.APPLICATION_JSON)
     public List<AlarmSound> getAlarmSounds(@Scope(OAuthScope.ALARM_READ) final AccessToken accessToken) {
-        final ArrayList<AlarmSound> alarmSounds = new ArrayList<>();
-        final AlarmSound sound = new AlarmSound(1, "Digital 3");
-        alarmSounds.add(sound);
+        final List<AlarmSound> alarmSounds = new ArrayList<>();
+        final List<String> fileNames = Lists.newArrayList(
+                "102914_SENSE_DIGITAL_1.1",
+                "102914_SENSE_DIGITAL_2.1",
+                "102914_SENSE_DIGITAL_3.1",
+                "102914_SENSE_DIGITAL_4.1",
+                "102914_SENSE_DIGITAL_5.1",
+                "102914_SENSE_ORGANIC_2.1",
+                "102914_SENSE_ORGANIC_3.1",
+                "102914_SENSE_NEW_1",
+                "102914_SENSE_NEW_2",
+                "102914_SENSE_NEW_3",
+                "102914_SENSE_NEW_4",
+                "102914_SENSE_NEW_5",
+                "102914_SENSE_NEW_6",
+                "102914_SENSE_NEW_7",
+                "102914_SENSE_NEW_8",
+                "102914_SENSE_NEW_9"
+        );
+
+        int i = 1;
+        for(String fileName : fileNames) {
+            final URL url = amazonS3.generatePresignedUrl("hello-audio", String.format("ringtones/%s.mp3", fileName), DateTime.now().plusWeeks(1).toDate());
+            final AlarmSound sound = new AlarmSound(i, fileName, url.toExternalForm());
+            alarmSounds.add(sound);
+        }
+
         return alarmSounds;
     }
 }

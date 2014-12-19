@@ -6,6 +6,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
+import com.amazonaws.services.s3.AmazonS3;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -45,6 +46,7 @@ public class AlarmResourceTestIT {
     private AmazonDynamoDBClient amazonDynamoDBClient;
     private AlarmDAODynamoDB alarmDAODynamoDB;
     private MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
+    private final AmazonS3 amazonS3 = mock(AmazonS3.class);
 
     private AlarmResource alarmResource;
     private final String tableName = "alarm_test";
@@ -96,7 +98,7 @@ public class AlarmResourceTestIT {
             this.deviceAccountPairs.add(new DeviceAccountPair(1L, 1L, "test morpheus"));
             when(deviceDAO.getDeviceAccountMapFromAccountId(1L)).thenReturn(ImmutableList.copyOf(this.deviceAccountPairs));
 
-            this.alarmResource = new AlarmResource(this.alarmDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO);
+            this.alarmResource = new AlarmResource(this.alarmDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO, amazonS3);
 
 
         }catch (ResourceInUseException rie){
