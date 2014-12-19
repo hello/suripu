@@ -126,7 +126,7 @@ public class TrendGraphProcessor {
         final DateTime startDateTime = endDateTime.minusDays(numDays);
 
         // get timezone offsets for the required dates
-        final Map<DateTime, Integer> userOffsetMillis = this.getUserTimeZoneOffsets(accountId, startDateTime, endDateTime);
+        final Map<DateTime, Integer> userOffsetMillis = this.getUserTimeZoneOffsetsUTC(accountId, startDateTime, endDateTime);
 
         // get daily scores
         final ImmutableList<AggregateScore> scores = this.scoreDAODynamoDB.getBatchScores(accountId,
@@ -148,11 +148,12 @@ public class TrendGraphProcessor {
         return sampleData;
     }
 
-    private Map<DateTime, Integer> getUserTimeZoneOffsets(final long accountId, final DateTime startDate, final DateTime endDate) {
+    // map keys in UTC
+    private Map<DateTime, Integer> getUserTimeZoneOffsetsUTC(final long accountId, final DateTime startDate, final DateTime endDate) {
         final long daysDiff = (endDate.getMillis() - startDate.getMillis()) / DAY_IN_MILLIS;
         final List<DateTime> dates = new ArrayList<>();
         for (int i = 0; i < (int) daysDiff; i++) {
-            dates.add(startDate.plusDays(i));
+            dates.add(startDate.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().plusDays(i));
         }
         return this.trackerMotionDAO.getOffsetMillisForDates(accountId, dates);
     }

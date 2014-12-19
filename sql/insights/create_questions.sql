@@ -1,7 +1,7 @@
 
 
 --
--- Questions and Responses tables
+-- Questions and Responses tables, in insightsDB
 --
 
 -- tables created: questions, response_choices, account_questions, responses, account_question_ask_time

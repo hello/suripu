@@ -11,6 +11,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.TrendsDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.Event;
@@ -68,6 +69,7 @@ public class TimelineResource extends BaseResource {
     private final DeviceDataDAO deviceDataDAO;
     private final SleepScoreDAO sleepScoreDAO;
     private final SleepLabelDAO sleepLabelDAO;
+    private final TrendsDAO trendsDAO;
     private final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB;
     private final int dateBucketPeriod;
     private final SunData sunData;
@@ -80,6 +82,7 @@ public class TimelineResource extends BaseResource {
                             final DeviceDataDAO deviceDataDAO,
                             final SleepLabelDAO sleepLabelDAO,
                             final SleepScoreDAO sleepScoreDAO,
+                            final TrendsDAO trendsDAO,
                             final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
                             final int dateBucketPeriod,
                             final SunData sunData,
@@ -90,6 +93,7 @@ public class TimelineResource extends BaseResource {
         this.deviceDataDAO = deviceDataDAO;
         this.sleepLabelDAO = sleepLabelDAO;
         this.sleepScoreDAO = sleepScoreDAO;
+        this.trendsDAO = trendsDAO;
         this.aggregateSleepScoreDAODynamoDB = aggregateSleepScoreDAODynamoDB;
         this.dateBucketPeriod = dateBucketPeriod;
         this.sunData = sunData;
@@ -265,6 +269,10 @@ public class TimelineResource extends BaseResource {
                                 sleepScore,
                                 DateTimeUtil.dateToYmdString(targetDate.withTimeAtStartOfDay()),
                                 targetDateScore.scoreType, targetDateScore.version));
+
+                // add sleep-score and duration to day-of-week tracking table
+                this.trendsDAO.updateDayOfWeekScore(accessToken.accountId, sleepScore, userOffsetMillis);
+                this.trendsDAO.updateDayOfWeekDuration(accessToken.accountId, sleepStats.sleepDurationInMinutes, userOffsetMillis);
             }
         }
 

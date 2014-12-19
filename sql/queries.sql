@@ -152,22 +152,3 @@ AND ts > '2014-05-13'
 AND ts < '2014-06-20'
 AND extract(hour from ts) < 7
 GROUP BY light_day;
-
-
--- create default trends day-of-week tracking rows for existing users
-INSERT INTO sleep_score_dow (account_id, day_of_week, score_sum, score_count) SELECT id, 1, 0, 0 FROM accounts;
-INSERT INTO sleep_score_dow (account_id, day_of_week, score_sum, score_count) SELECT id, 2, 0, 0 FROM accounts;
-INSERT INTO sleep_score_dow (account_id, day_of_week, score_sum, score_count) SELECT id, 3, 0, 0 FROM accounts;
-INSERT INTO sleep_score_dow (account_id, day_of_week, score_sum, score_count) SELECT id, 4, 0, 0 FROM accounts;
-INSERT INTO sleep_score_dow (account_id, day_of_week, score_sum, score_count) SELECT id, 5, 0, 0 FROM accounts;
-INSERT INTO sleep_score_dow (account_id, day_of_week, score_sum, score_count) SELECT id, 6, 0, 0 FROM accounts;
-INSERT INTO sleep_score_dow (account_id, day_of_week, score_sum, score_count) SELECT id, 7, 0, 0 FROM accounts;
-
-INSERT INTO sleep_duration_dow (account_id, day_of_week, duration_sum, duration_count) SELECT id, 1, 0, 0 FROM accounts;
-INSERT INTO sleep_duration_dow (account_id, day_of_week, duration_sum, duration_count) SELECT id, 2, 0, 0 FROM accounts;
-INSERT INTO sleep_duration_dow (account_id, day_of_week, duration_sum, duration_count) SELECT id, 3, 0, 0 FROM accounts;
-INSERT INTO sleep_duration_dow (account_id, day_of_week, duration_sum, duration_count) SELECT id, 4, 0, 0 FROM accounts;
-INSERT INTO sleep_duration_dow (account_id, day_of_week, duration_sum, duration_count) SELECT id, 5, 0, 0 FROM accounts;
-INSERT INTO sleep_duration_dow (account_id, day_of_week, duration_sum, duration_count) SELECT id, 6, 0, 0 FROM accounts;
-INSERT INTO sleep_duration_dow (account_id, day_of_week, duration_sum, duration_count) SELECT id, 7, 0, 0 FROM accounts;
-

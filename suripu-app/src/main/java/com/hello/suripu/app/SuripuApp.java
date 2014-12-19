@@ -157,7 +157,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final SleepLabelDAO sleepLabelDAO = commonDB.onDemand(SleepLabelDAO.class);
         final SleepScoreDAO sleepScoreDAO = commonDB.onDemand(SleepScoreDAO.class);
-        final TrendsDAO trendsDAO = commonDB.onDemand(TrendsDAO.class);
+        final TrendsDAO trendsDAO = insightsDB.onDemand(TrendsDAO.class);
 
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
@@ -264,7 +264,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new ScoresResource(trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), configuration.getSleepScoreVersion()));
 
         final SunData sunData = new SunData();
-        environment.addResource(new TimelineResource(trackerMotionDAO, deviceDAO, deviceDataDAO, sleepLabelDAO, sleepScoreDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), sunData, amazonS3, "hello-audio"));
+        environment.addResource(new TimelineResource(trackerMotionDAO, deviceDAO, deviceDataDAO, sleepLabelDAO, sleepScoreDAO, trendsDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), sunData, amazonS3, "hello-audio"));
 
         environment.addResource(new TimeZoneResource(timeZoneHistoryDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO));
         environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO));
