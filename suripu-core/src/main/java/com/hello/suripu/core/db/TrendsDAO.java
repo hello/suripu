@@ -42,8 +42,9 @@ public abstract class TrendsDAO {
                                                @Bind("datetime") DateTime updated);
 
     @SqlUpdate("UPDATE sleep_score_dow SET score_sum = score_sum + :score, " +
-            "score_count = score_count + 1 WHERE account_id = :account_id AND " +
-            "day_of_week = :day_of_week AND local_utc_updated < :updated")
+            "score_count = score_count + 1, local_utc_updated = :updated " +
+            "WHERE account_id = :account_id AND day_of_week = :day_of_week AND " +
+            "local_utc_updated < :updated")
     public abstract long updateAccountScoreDayOfWeek(@Bind("account_id") Long accountId,
                                                      @Bind("score") Long score,
                                                      @Bind("day_of_week") int dayOfWeek,
@@ -74,8 +75,9 @@ public abstract class TrendsDAO {
                                                   @Bind("datetime") DateTime updated);
 
     @SqlUpdate("UPDATE sleep_duration_dow SET duration_sum = duration_sum + :duration, " +
-            "duration_count = duration_count + 1 WHERE account_id = :account_id AND " +
-            "day_of_week = :day_of_week AND local_utc_updated < :updated")
+            "duration_count = duration_count + 1, local_utc_updated = :updated " +
+            "WHERE account_id = :account_id AND day_of_week = :day_of_week AND " +
+            "local_utc_updated < :updated")
     public abstract long updateAccountDurationDayOfWeek(@Bind("account_id") Long accountId,
                                                         @Bind("duration") Long duration,
                                                         @Bind("day_of_week") int dayOfWeek,
