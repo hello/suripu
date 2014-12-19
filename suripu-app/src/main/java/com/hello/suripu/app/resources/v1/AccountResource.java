@@ -63,10 +63,14 @@ public class AccountResource {
             @Valid final Registration registration,
             @QueryParam("sig") final String signature) {
 
-
         LOGGER.info("Attempting to register account with email: {}", registration.email);
+        final Optional<Registration.RegistrationError> error = Registration.validate(registration);
+        if(error.isPresent()) {
+            throw new WebApplicationException(Response.status(400).entity(new JsonError(400, error.get().toString())).build());
+        }
 
         final Registration securedRegistration = Registration.encryptPassword(registration);
+
         LOGGER.debug("Lat: {}", securedRegistration.latitude);
         LOGGER.debug("Lon: {}", securedRegistration.longitude);
         // TODO: Persist location somewhere

@@ -3,6 +3,7 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 import com.hello.suripu.core.util.PasswordUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -10,6 +11,8 @@ import org.joda.time.DateTimeZone;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Registration {
+
+    public final static Integer MAX_NAME_LENGTH = 100;
 
     public final String name;
     public final String email;
@@ -134,5 +137,29 @@ public class Registration {
                 registration.latitude,
                 registration.longitude
         );
+    }
+
+    public enum RegistrationError {
+        NAME_TOO_LONG,
+        NAME_TOO_SHORT,
+        EMAIL_INVALID,
+        PASSWORD_INSECURE;
+    }
+
+    public static Optional<RegistrationError> validate(final Registration registration) {
+
+        if(registration.name.length() > MAX_NAME_LENGTH) {
+            return Optional.of(RegistrationError.NAME_TOO_LONG);
+        }
+
+        if(registration.name.isEmpty()) {
+            return Optional.of(RegistrationError.NAME_TOO_SHORT);
+        }
+
+        if(PasswordUtil.isNotSecure(registration.password)) {
+            return Optional.of(RegistrationError.PASSWORD_INSECURE);
+        }
+
+        return Optional.absent();
     }
 }
