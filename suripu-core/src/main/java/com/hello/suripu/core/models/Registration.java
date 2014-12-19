@@ -12,7 +12,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Registration {
 
+    public enum RegistrationError {
+        NAME_TOO_LONG,
+        NAME_TOO_SHORT,
+        EMAIL_INVALID,
+        PASSWORD_INSECURE,
+        PASSWORD_TOO_SHORT;
+    }
+
     public final static Integer MAX_NAME_LENGTH = 100;
+    public final static Integer MIN_PASSWORD_LENGTH = 6;
 
     public final String name;
     public final String email;
@@ -139,13 +148,12 @@ public class Registration {
         );
     }
 
-    public enum RegistrationError {
-        NAME_TOO_LONG,
-        NAME_TOO_SHORT,
-        EMAIL_INVALID,
-        PASSWORD_INSECURE;
-    }
 
+    /**
+     * Validates that registration matches validation constraints.
+     * @param registration
+     * @return
+     */
     public static Optional<RegistrationError> validate(final Registration registration) {
 
         if(registration.name.length() > MAX_NAME_LENGTH) {
@@ -156,7 +164,21 @@ public class Registration {
             return Optional.of(RegistrationError.NAME_TOO_SHORT);
         }
 
-        if(PasswordUtil.isNotSecure(registration.password)) {
+
+        return validatePassword(registration.password);
+    }
+
+    /**
+     * Validates that password matches validation constraints
+     * @param password
+     * @return
+     */
+    public static Optional<RegistrationError> validatePassword(final String password) {
+        if(password.length() < MIN_PASSWORD_LENGTH) {
+            return Optional.of(RegistrationError.PASSWORD_TOO_SHORT);
+        }
+
+        if(PasswordUtil.isNotSecure(password)) {
             return Optional.of(RegistrationError.PASSWORD_INSECURE);
         }
 
