@@ -191,8 +191,11 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 dynamoDBClient, configuration.getAlarmInfoDynamoDBConfiguration().getTableName()
         );
 
+        // for localhost debug, may need to point to prod to get data
+        final AmazonDynamoDBClient dynamoDBScoreClient = new AmazonDynamoDBClient(awsCredentialsProvider);
+        dynamoDBScoreClient.setEndpoint(configuration.getSleepScoreDBConfiguration().getEndpoint());
         final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB = new AggregateSleepScoreDAODynamoDB(
-                dynamoDBClient,
+                dynamoDBScoreClient,
                 configuration.getSleepScoreDBConfiguration().getTableName(),
                 configuration.getSleepScoreVersion()
         );
