@@ -167,6 +167,7 @@ public class AlarmResource {
             final URL url = amazonS3.generatePresignedUrl("hello-audio", String.format("ringtones/%s.mp3", fileName), DateTime.now().plusWeeks(1).toDate());
             final AlarmSound sound = new AlarmSound(i, fileName, url.toExternalForm());
             alarmSounds.add(sound);
+            i++;
         }
 
         return alarmSounds;
