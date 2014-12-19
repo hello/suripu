@@ -167,6 +167,7 @@ CREATE TABLE sleep_duration_dow (
 GRANT ALL PRIVILEGES ON sleep_duration_dow TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE sleep_duration_dow_id_seq TO ingress_user;
 
+CREATE UNIQUE INDEX unique_account_id_duration_dow on sleep_duration_dow(account_id, day_of_week);
 CREATE INDEX duration_dow_account_id on sleep_duration_dow(account_id);
 
 CREATE TABLE sleep_score_dow (
@@ -178,10 +179,11 @@ CREATE TABLE sleep_score_dow (
   updated TIMESTAMP default current_timestamp
 );
 
+CREATE UNIQUE INDEX unique_account_id_score_dow on sleep_score_dow(account_id, day_of_week);
+CREATE INDEX scores_dow_account_id on sleep_score_dow(account_id);
+
 GRANT ALL PRIVILEGES ON sleep_score_dow TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE sleep_score_dow_id_seq TO ingress_user;
-
-CREATE INDEX scores_dow_account_id on sleep_score_dow(account_id);
 
 
 --
