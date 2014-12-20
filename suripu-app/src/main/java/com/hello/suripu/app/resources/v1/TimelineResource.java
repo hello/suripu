@@ -257,7 +257,7 @@ public class TimelineResource extends BaseResource {
         final AggregateScore targetDateScore = this.aggregateSleepScoreDAODynamoDB.getSingleScore(accessToken.accountId, targetDateString);
         Integer sleepScore = targetDateScore.score;
 
-        if (sleepScore != 0) {
+        if (sleepScore == 0) {
             // score may not have been computed yet, recompute
             sleepScore = sleepScoreDAO.getSleepScoreForNight(accessToken.accountId, targetDate.withTimeAtStartOfDay(),
                     userOffsetMillis, this.dateBucketPeriod, sleepLabelDAO);
