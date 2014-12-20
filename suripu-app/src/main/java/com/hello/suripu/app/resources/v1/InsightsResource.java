@@ -34,11 +34,15 @@ public class InsightsResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(InsightsResource.class);
 
     private final AccountDAO accountDAO;
-    private final TrendGraphProcessor trendGraphProcessor;
+    private final TrendsDAO trendsDAO;
+    private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
+    private final TrackerMotionDAO trackerMotionDAO;
 
     public InsightsResource(final AccountDAO accountDAO, final TrendsDAO trendsDAO, final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB, final TrackerMotionDAO trackerMotionDAO) {
         this.accountDAO = accountDAO;
-        this.trendGraphProcessor = new TrendGraphProcessor(trendsDAO, scoreDAODynamoDB, trackerMotionDAO);
+        this.trendsDAO = trendsDAO;
+        this.scoreDAODynamoDB = scoreDAODynamoDB;
+        this.trackerMotionDAO = trackerMotionDAO;
     }
 
     /**
@@ -78,7 +82,7 @@ public class InsightsResource {
 
         final TrendGraph.DataType graphDataType = TrendGraph.DataType.fromString(dataType);
 
-        return this.trendGraphProcessor.getTrendGraph(accessToken.accountId, graphDataType, graphType, timePeriodType);
+        return TrendGraphProcessor.getTrendGraph(accessToken.accountId, graphDataType, graphType, timePeriodType, trendsDAO, scoreDAODynamoDB, trackerMotionDAO);
     }
 
     /**
@@ -94,7 +98,7 @@ public class InsightsResource {
 
         final Optional<Account> optionalAccount = accountDAO.getById(accessToken.accountId);
         if (optionalAccount.isPresent()) {
-            return this.trendGraphProcessor.getGraphList(optionalAccount.get());
+            return TrendGraphProcessor.getGraphList(optionalAccount.get());
         }
         return Collections.emptyList();
     }
@@ -112,7 +116,7 @@ public class InsightsResource {
 
         final Optional<Account> optionalAccount = accountDAO.getById(accessToken.accountId);
         if (optionalAccount.isPresent()) {
-            return this.trendGraphProcessor.getAllGraphs(optionalAccount.get());
+            return TrendGraphProcessor.getAllGraphs(optionalAccount.get(), trendsDAO, scoreDAODynamoDB, trackerMotionDAO);
         }
         return Collections.emptyList();
     }

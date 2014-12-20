@@ -1,15 +1,29 @@
 package com.hello.suripu.core.models.Insights;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableMap;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by kingshy on 12/15/14.
  */
 public class TrendGraph {
+    public final static Map<TimePeriodType, Integer> PERIOD_TYPE_DAYS;
+    static {
+       final Map<TimePeriodType, Integer> tmpMap = new HashMap<>();
+        tmpMap.put(TimePeriodType.OVER_TIME_1W, 7);
+        tmpMap.put(TimePeriodType.OVER_TIME_2W, 14);
+        tmpMap.put(TimePeriodType.OVER_TIME_1M, 30);
+        tmpMap.put(TimePeriodType.OVER_TIME_1M, 90);
+        tmpMap.put(TimePeriodType.OVER_TIME_ALL, 365);
+        PERIOD_TYPE_DAYS = ImmutableMap.copyOf(tmpMap);
+    }
+
     public enum DataType {
 
         NONE("none"),
@@ -179,16 +193,9 @@ public class TrendGraph {
     }
 
     public static int getTimePeriodDays(final TimePeriodType timePeriodType) {
-        if (timePeriodType == TimePeriodType.OVER_TIME_1W) {
-            return 7;
-        } else if (timePeriodType == TimePeriodType.OVER_TIME_2W) {
-            return 14;
-        } else if (timePeriodType == TimePeriodType.OVER_TIME_1M) {
-            return 30;
-        } else if (timePeriodType == TimePeriodType.OVER_TIME_3M) {
-            return 90;
-        } else {
-            return 365; // ALL
+        if (PERIOD_TYPE_DAYS.containsKey(timePeriodType)) {
+            return PERIOD_TYPE_DAYS.get(timePeriodType);
         }
+        return 365;
     }
 }

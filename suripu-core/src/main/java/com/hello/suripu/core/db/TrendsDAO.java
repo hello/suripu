@@ -7,6 +7,7 @@ import com.hello.suripu.core.db.mappers.SleepStatsSampleMapper;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Insights.DowSample;
 import com.hello.suripu.core.models.Insights.SleepStatsSample;
+import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.models.SleepStats;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -28,6 +29,8 @@ import java.util.regex.Matcher;
  */
 public abstract class TrendsDAO {
     private static final Logger LOGGER = LoggerFactory.getLogger(TrendsDAO.class);
+    private static final String SLEEP_DURATION_DOW_TABLE = "sleep_duration_dow";
+    private static final String SLEEP_SCORE_DOW_TABLE = "sleep_score_dow";
 
     // Sleep Score by Day of Week
     @RegisterMapper(DowSampleMapper.class)
@@ -123,12 +126,21 @@ public abstract class TrendsDAO {
                                           @Bind("offset_millis") int offsetMillis,
                                           @Bind("local_utc_date") DateTime localUTCDate);
 
-    public long updateDayOfWeekScore(final long accountId, final long score, final DateTime targetDate, final int offsetMillis) {
+
+    public long updateDayOfWeekData(final long accountId, final long dataValue, final DateTime targetDate, final int offsetMillis, final TrendGraph.DataType dataType) {
         final DateTime updated = new DateTime(DateTime.now(), DateTimeZone.UTC).plusMillis(offsetMillis).withTimeAtStartOfDay();
         final int dayOfWeek = targetDate.getDayOfWeek();
 
         // update row
-        long rowCount = this.updateAccountScoreDayOfWeek(accountId, score, dayOfWeek, updated);
+        long rowCount;
+        if (dataType == TrendGraph.DataType.SLEEP_SCORE) {
+            rowCount = this.updateAccountScoreDayOfWeek(accountId, dataValue, dayOfWeek, updated);
+        } else if (dataType == TrendGraph.DataType.SLEEP_DURATION) {
+            rowCount = this.updateAccountScoreDayOfWeek(accountId, dataValue, dayOfWeek, updated);
+        } else {
+            LOGGER.warn("Invalid DataType for Trends {}, account {}", dataType, accountId);
+            return 0L;
+        }
 
         if (rowCount > 0L) {
             return rowCount;
@@ -136,40 +148,24 @@ public abstract class TrendsDAO {
 
         // not updated, row may not exist
         try {
-            final long insertCount = this.insertAccountScoreRow(accountId, dayOfWeek, score, 1, updated);
+            long insertCount;
+            if (dataType == TrendGraph.DataType.SLEEP_SCORE) {
+                insertCount = this.insertAccountScoreRow(accountId, dayOfWeek, dataValue, 1, updated);
+            } else {
+                insertCount = this.insertAccountDurationRow(accountId, dayOfWeek, dataValue, 1, updated);
+            }
             return insertCount;
 
         } catch (UnableToExecuteStatementException exception) {
-            LOGGER.warn("Cannot insert score_dow for account {}, day of week {}", accountId, dayOfWeek);
+            LOGGER.warn("Cannot insert day of week {} for account {}, day of week {}", dataType.toString(), accountId, dayOfWeek);
             LOGGER.warn("sleep_score_dow insert fail: {}", exception.getMessage());
             return 0L;
         }
-    }
 
-    public long updateDayOfWeekDuration(final long accountId, final long duration, final DateTime targetDate, final int offsetMillis) {
-        final DateTime updated = new DateTime(DateTime.now(), DateTimeZone.UTC).plusMillis(offsetMillis).withTimeAtStartOfDay();
-        final int dayOfWeek = targetDate.getDayOfWeek();
-
-        // update row
-        long rowCount = this.updateAccountDurationDayOfWeek(accountId, duration, dayOfWeek, updated);
-        if (rowCount > 0L) {
-            return rowCount;
-        }
-
-        // not updated, row may not exist, try inserting
-        try {
-            final long insertCount = this.insertAccountDurationRow(accountId, dayOfWeek, duration, 1, updated);
-            return insertCount;
-
-        } catch (UnableToExecuteStatementException exception) {
-            LOGGER.warn("Cannot insert duration for account {}, day of week {}", accountId, dayOfWeek);
-            LOGGER.warn("sleep_duration_dow insert fail: {}", exception.getMessage());
-            return 0L;
-        }
     }
 
     public long updateSleepStats(final long accountId, final int offsetMillis, final DateTime targetDate, final SleepStats stats) {
-        long rowCount = 0;
+        long rowCount = 0L;
         try {
              rowCount += insertSleepStats(accountId,
                      stats.sleepDurationInMinutes,
@@ -177,7 +173,7 @@ public abstract class TrendsDAO {
                      stats.lightSleepDurationInMinutes,
                      stats.numberOfMotionEvents,
                      offsetMillis, targetDate);
-            rowCount += updateDayOfWeekDuration(accountId, stats.sleepDurationInMinutes, targetDate, offsetMillis);
+            rowCount += updateDayOfWeekData(accountId, stats.sleepDurationInMinutes, targetDate, offsetMillis, TrendGraph.DataType.SLEEP_DURATION);
         } catch (UnableToExecuteStatementException exception) {
             final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
             if (matcher.find()) {

@@ -26,9 +26,9 @@ public class SleepInsight {
     @JsonProperty("created_utc")
     public final DateTime created_utc;
 
-    public SleepInsight(final long id, final Optional<Long> accountId, final String title, final String message, final GenericInsightCards.Category category, final DateTime created_utc) {
+    public SleepInsight(final long id, final Long accountId, final String title, final String message, final GenericInsightCards.Category category, final DateTime created_utc) {
         this.id = id;
-        this.accountId = accountId;
+        this.accountId = Optional.fromNullable(accountId);
         this.title = title;
         this.message = message;
         this.category = category;

@@ -33,18 +33,9 @@ public class TrendGraphProcessor {
     private static int TRENDS_AVAILABLE_AFTER_DAYS = 10; // no trends before collecting 10 days of data
     private static long DAY_IN_MILLIS = 86400000;
 
-    private final TrendsDAO trendsDAO;
-    private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
-    private final TrackerMotionDAO trackerMotionDAO;
-
-    public TrendGraphProcessor(TrendsDAO trendsDAO, AggregateSleepScoreDAODynamoDB scoreDAODynamoDB, TrackerMotionDAO trackerMotionDAO) {
-        this.trendsDAO = trendsDAO;
-        this.scoreDAODynamoDB = scoreDAODynamoDB;
-        this.trackerMotionDAO = trackerMotionDAO;
-    }
 
     @Timed
-    public List<AvailableGraph> getGraphList(final Account account) {
+    public static List<AvailableGraph> getGraphList(final Account account) {
         final List<AvailableGraph> graphlist = new ArrayList<>();
         final boolean eligible = checkEligibility(account.created);
         if (eligible) {
@@ -58,45 +49,63 @@ public class TrendGraphProcessor {
     }
 
     @Timed
-    public List<TrendGraph> getAllGraphs(final Account account) {
+    public static List<TrendGraph> getAllGraphs(final Account account,
+                                                final TrendsDAO trendsDAO,
+                                                final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
+                                                final TrackerMotionDAO trackerMotionDAO) {
         final List<TrendGraph> graphs = new ArrayList<>();
         final boolean eligible = checkEligibility(account.created);
         if (eligible) {
+            // add all the default graphs
             final long accountId = account.id.get();
-            graphs.add(getTrendGraph(accountId, TrendGraph.DataType.SLEEP_SCORE, TrendGraph.GraphType.HISTOGRAM, TrendGraph.TimePeriodType.DAY_OF_WEEK));
-            graphs.add(getTrendGraph(accountId, TrendGraph.DataType.SLEEP_DURATION, TrendGraph.GraphType.HISTOGRAM, TrendGraph.TimePeriodType.DAY_OF_WEEK));
-            graphs.add(getTrendGraph(accountId, TrendGraph.DataType.SLEEP_SCORE, TrendGraph.GraphType.TIME_SERIES_LINE, TrendGraph.TimePeriodType.OVER_TIME_ALL));
+
+            final TrendGraph sleepScoreDayOfWeek = getTrendGraph(accountId, TrendGraph.DataType.SLEEP_SCORE, TrendGraph.GraphType.HISTOGRAM, TrendGraph.TimePeriodType.DAY_OF_WEEK, trendsDAO, scoreDAODynamoDB, trackerMotionDAO);
+            graphs.add(sleepScoreDayOfWeek);
+
+            final TrendGraph sleepDurationDayOfWeek = getTrendGraph(accountId, TrendGraph.DataType.SLEEP_DURATION, TrendGraph.GraphType.HISTOGRAM, TrendGraph.TimePeriodType.DAY_OF_WEEK, trendsDAO, scoreDAODynamoDB, trackerMotionDAO);
+            graphs.add(sleepDurationDayOfWeek);
+
+            final TrendGraph sleepScoreOverTime = getTrendGraph(accountId, TrendGraph.DataType.SLEEP_SCORE, TrendGraph.GraphType.TIME_SERIES_LINE, TrendGraph.TimePeriodType.OVER_TIME_ALL, trendsDAO, scoreDAODynamoDB, trackerMotionDAO);
+            graphs.add(sleepScoreOverTime);
         }
         return graphs;
     }
 
     @Timed
-    public TrendGraph getTrendGraph(final long accountId, final TrendGraph.DataType dataType,
+    public static TrendGraph getTrendGraph(final long accountId, final TrendGraph.DataType dataType,
                                            final TrendGraph.GraphType graphType,
-                                           final TrendGraph.TimePeriodType timePeriodType) {
-        final List<GraphSample> dataPoints = new ArrayList<>();
+                                           final TrendGraph.TimePeriodType timePeriodType,
+                                           final TrendsDAO trendsDAO,
+                                           final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
+                                           final TrackerMotionDAO trackerMotionDAO) {
+
+        List<GraphSample> dataPoints = new ArrayList<>();
 
         if (graphType == TrendGraph.GraphType.HISTOGRAM) {
-            dataPoints.addAll(getTrendsDowData(dataType, accountId));
+            dataPoints = getTrendsDowData(dataType, accountId, trendsDAO);
+            return new TrendGraph(dataType, graphType, timePeriodType, dataPoints);
 
         } else if (graphType == TrendGraph.GraphType.TIME_SERIES_LINE && timePeriodType != TrendGraph.TimePeriodType.DAY_OF_WEEK) {
+
             if (dataType == TrendGraph.DataType.SLEEP_SCORE) {
-                dataPoints.addAll(getScoreOverTimeData(accountId, timePeriodType));
+                dataPoints = getScoreOverTimeData(accountId, timePeriodType, scoreDAODynamoDB, trackerMotionDAO);
             } else if (dataType == TrendGraph.DataType.SLEEP_DURATION) {
-                dataPoints.addAll(getDurationOverTimeData(accountId, timePeriodType));
+                dataPoints = getDurationOverTimeData(accountId, timePeriodType, trendsDAO);
             }
+            return new TrendGraph(dataType, graphType, timePeriodType, TrendGraph.TimePeriodType.getTimeSeriesOptions(), dataPoints);
+
         }
         return new TrendGraph(dataType, graphType, timePeriodType, dataPoints);
     }
 
 
-    private List<GraphSample> getTrendsDowData(final TrendGraph.DataType dataType, final long accountId) {
+    private static List<GraphSample> getTrendsDowData(final TrendGraph.DataType dataType, final long accountId, final TrendsDAO trendsDAO) {
         // histogram data
-        ImmutableList<DowSample> dowSamples = ImmutableList.copyOf(new ArrayList<DowSample>());
+        List<DowSample> dowSamples = new ArrayList<>();
         if (dataType == TrendGraph.DataType.SLEEP_SCORE) {
-            dowSamples = this.trendsDAO.getSleepScoreDow(accountId);
+            dowSamples.addAll(trendsDAO.getSleepScoreDow(accountId));
         } else if (dataType == TrendGraph.DataType.SLEEP_DURATION) {
-            dowSamples = this.trendsDAO.getSleepDurationDow(accountId);
+            dowSamples.addAll(trendsDAO.getSleepDurationDow(accountId));
         }
 
         if (dowSamples.size() > 0) {
@@ -122,17 +131,19 @@ public class TrendGraphProcessor {
         return Collections.emptyList();
     }
 
-    private List<GraphSample> getScoreOverTimeData(final long accountId, TrendGraph.TimePeriodType timePeriodType) {
+    private static List<GraphSample> getScoreOverTimeData(final long accountId, TrendGraph.TimePeriodType timePeriodType,
+                                                          final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
+                                                          final TrackerMotionDAO trackerMotionDAO) {
         // over time graph is only available for sleep-score at this time
         final int numDays = TrendGraph.getTimePeriodDays(timePeriodType);
         final DateTime endDateTime = DateTime.now().withTimeAtStartOfDay();
         final DateTime startDateTime = endDateTime.minusDays(numDays);
 
         // get timezone offsets for the required dates
-        final Map<DateTime, Integer> userOffsetMillis = this.getUserTimeZoneOffsetsUTC(accountId, startDateTime, endDateTime);
+        final Map<DateTime, Integer> userOffsetMillis = getUserTimeZoneOffsetsUTC(accountId, startDateTime, endDateTime, trackerMotionDAO);
 
         // get daily scores
-        final ImmutableList<AggregateScore> scores = this.scoreDAODynamoDB.getBatchScores(accountId,
+        final ImmutableList<AggregateScore> scores = scoreDAODynamoDB.getBatchScores(accountId,
                 DateTimeUtil.dateToYmdString(startDateTime),
                 DateTimeUtil.dateToYmdString(endDateTime), numDays);
 
@@ -151,15 +162,15 @@ public class TrendGraphProcessor {
         return sampleData;
     }
 
-    private List<GraphSample> getDurationOverTimeData(final long accountId, TrendGraph.TimePeriodType timePeriodType) {
+    private static List<GraphSample> getDurationOverTimeData(final long accountId, TrendGraph.TimePeriodType timePeriodType, final TrendsDAO trendsDAO) {
         ImmutableList<SleepStatsSample> statsSamples;
         if (timePeriodType == TrendGraph.TimePeriodType.OVER_TIME_ALL) {
-            statsSamples = this.trendsDAO.getAccountSleepStatsAll(accountId);
+            statsSamples = trendsDAO.getAccountSleepStatsAll(accountId);
         } else {
             final int numDays = TrendGraph.getTimePeriodDays(timePeriodType);
             final DateTime endDateTime = DateTime.now().withTimeAtStartOfDay();
             final DateTime startDateTime = endDateTime.minusDays(numDays);
-            statsSamples = this.trendsDAO.getAccountSleepStatsBetweenDates(accountId, startDateTime, endDateTime);
+            statsSamples = trendsDAO.getAccountSleepStatsBetweenDates(accountId, startDateTime, endDateTime);
         }
 
         final List<GraphSample> sampleData = new ArrayList<>();
@@ -172,13 +183,13 @@ public class TrendGraphProcessor {
     }
 
     // map keys in UTC
-    private Map<DateTime, Integer> getUserTimeZoneOffsetsUTC(final long accountId, final DateTime startDate, final DateTime endDate) {
+    private static Map<DateTime, Integer> getUserTimeZoneOffsetsUTC(final long accountId, final DateTime startDate, final DateTime endDate, final TrackerMotionDAO trackerMotionDAO) {
         final long daysDiff = (endDate.getMillis() - startDate.getMillis()) / DAY_IN_MILLIS;
         final List<DateTime> dates = new ArrayList<>();
         for (int i = 0; i < (int) daysDiff; i++) {
             dates.add(startDate.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().plusDays(i));
         }
-        return this.trackerMotionDAO.getOffsetMillisForDates(accountId, dates);
+        return trackerMotionDAO.getOffsetMillisForDates(accountId, dates);
     }
 
     private static boolean checkEligibility(final DateTime accountCreated) {

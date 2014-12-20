@@ -20,6 +20,7 @@ import com.hello.suripu.core.models.Events.SleepEvent;
 import com.hello.suripu.core.models.Events.SunRiseEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
@@ -256,7 +257,7 @@ public class TimelineResource extends BaseResource {
         final AggregateScore targetDateScore = this.aggregateSleepScoreDAODynamoDB.getSingleScore(accessToken.accountId, targetDateString);
         Integer sleepScore = targetDateScore.score;
 
-        if (sleepScore == 0) {
+        if (sleepScore != 0) {
             // score may not have been computed yet, recompute
             sleepScore = sleepScoreDAO.getSleepScoreForNight(accessToken.accountId, targetDate.withTimeAtStartOfDay(),
                     userOffsetMillis, this.dateBucketPeriod, sleepLabelDAO);
@@ -271,7 +272,7 @@ public class TimelineResource extends BaseResource {
                                 targetDateScore.scoreType, targetDateScore.version));
 
                 // add sleep-score and duration to day-of-week, over time tracking table
-                this.trendsDAO.updateDayOfWeekScore(accessToken.accountId, sleepScore, targetDate.withTimeAtStartOfDay(), userOffsetMillis);
+                this.trendsDAO.updateDayOfWeekData(accessToken.accountId, sleepScore, targetDate.withTimeAtStartOfDay(), userOffsetMillis, TrendGraph.DataType.SLEEP_SCORE);
                 this.trendsDAO.updateSleepStats(accessToken.accountId, userOffsetMillis, targetDate.withTimeAtStartOfDay(), sleepStats);
             }
         }

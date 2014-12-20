@@ -35,7 +35,9 @@ public class AccountResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountResource.class);
     private final AccountDAO accountDAO;
 
-    public AccountResource(final AccountDAO accountDAO) {this.accountDAO = accountDAO;}
+    public AccountResource(final AccountDAO accountDAO) {
+        this.accountDAO = accountDAO;
+    }
 
     @GET
     @Timed
