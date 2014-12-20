@@ -1,10 +1,6 @@
 --
 -- Insights DB
 --
-CREATE ROLE ingress_user WITH LOGIN ENCRYPTED PASSWORD 'hello ingress user' CREATEDB;
-
-ALTER ROLE ingress_user REPLICATION;
-
 
 -- For Trends Graphs
 
@@ -15,7 +11,7 @@ CREATE TABLE sleep_duration_dow (
   day_of_week INTEGER,
   duration_sum BIGINT default 0, -- minutes
   duration_count INTEGER default 0,   -- number of nights
-  local_utc_updated TIMESTAMP;
+  local_utc_updated TIMESTAMP
 );
 
 CREATE UNIQUE INDEX unique_account_id_duration_dow on sleep_duration_dow(account_id, day_of_week);
