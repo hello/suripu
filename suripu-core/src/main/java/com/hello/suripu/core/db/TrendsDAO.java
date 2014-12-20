@@ -52,7 +52,7 @@ public abstract class TrendsDAO {
                                                @Bind("day_of_week") int dayOfWeek,
                                                @Bind("score") long score,
                                                @Bind("count") int count,
-                                               @Bind("datetime") DateTime updated);
+                                               @Bind("updated") DateTime updated);
 
     @SqlUpdate("UPDATE sleep_score_dow SET score_sum = score_sum + :score, " +
             "score_count = score_count + 1, local_utc_updated = :updated " +
@@ -85,7 +85,7 @@ public abstract class TrendsDAO {
                                                   @Bind("day_of_week") int dayOfWeek,
                                                   @Bind("duration") long duration,
                                                   @Bind("count") int count,
-                                                  @Bind("datetime") DateTime updated);
+                                                  @Bind("updated") DateTime updated);
 
     @SqlUpdate("UPDATE sleep_duration_dow SET duration_sum = duration_sum + :duration, " +
             "duration_count = duration_count + 1, local_utc_updated = :updated " +
