@@ -52,7 +52,7 @@ public class DataScienceResource {
                              @PathParam("query_date_local_utc") String date) {
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withHourOfDay(20);
-        final DateTime endDate = targetDate.plusHours(14);
+        final DateTime endDate = targetDate.plusHours(16);
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
 
