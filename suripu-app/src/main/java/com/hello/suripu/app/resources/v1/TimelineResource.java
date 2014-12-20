@@ -270,9 +270,9 @@ public class TimelineResource extends BaseResource {
                                 DateTimeUtil.dateToYmdString(targetDate.withTimeAtStartOfDay()),
                                 targetDateScore.scoreType, targetDateScore.version));
 
-                // add sleep-score and duration to day-of-week tracking table
-                this.trendsDAO.updateDayOfWeekScore(accessToken.accountId, sleepScore, userOffsetMillis);
-                this.trendsDAO.updateDayOfWeekDuration(accessToken.accountId, sleepStats.sleepDurationInMinutes, userOffsetMillis);
+                // add sleep-score and duration to day-of-week, over time tracking table
+                this.trendsDAO.updateDayOfWeekScore(accessToken.accountId, sleepScore, targetDate.withTimeAtStartOfDay(), userOffsetMillis);
+                this.trendsDAO.updateSleepStats(accessToken.accountId, userOffsetMillis, targetDate.withTimeAtStartOfDay(), sleepStats);
             }
         }
 

@@ -40,3 +40,19 @@ CREATE INDEX scores_dow_account_id on sleep_score_dow(account_id);
 GRANT ALL PRIVILEGES ON sleep_score_dow TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE sleep_score_dow_id_seq TO ingress_user;
 
+-- sleep duration over time
+
+CREATE TABLE sleep_stats_time(
+  id BIGSERIAL PRIMARY KEY,
+  account_id BIGINT,
+  duration INTEGER, -- minutes
+  sound_sleep INTEGER, -- mins
+  light_sleep INTEGER,
+  motion INTEGER, -- number of motion events
+  offset_millis INTEGER, -- timezone offset
+  local_utc_date TIMESTAMP -- yyyy-mm-dd
+);
+
+CREATE UNIQUE INDEX unique_account_date_duration on sleep_stats_time(account_id, local_utc_date);
+GRANT ALL PRIVILEGES ON sleep_stats_time TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE sleep_stats_time_id_seq TO ingress_user;

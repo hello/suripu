@@ -166,12 +166,12 @@ public class TrendGraph {
             }
         } else if (dataType == DataType.SLEEP_DURATION) {
             // TODO: personalize later
-            if (value >= 450.0f && value <= 510.0f) {
+            if (value >= 450.0f && value <= 510.0f) { // 7.5 to 8.5 hours
                 return DataLabel.GOOD;
-            } else if (value > 420.0f && value < 540.0f) {
+            } else if (value >= 390.0f && value <= 600.0f) { // 6.5 hours to 10 hours
                 return DataLabel.OK;
             } else {
-                return DataLabel.BAD;
+                return DataLabel.BAD; // less than 6.5 hours, or more than 10 hours
             }
         } else {
             return DataLabel.OK;

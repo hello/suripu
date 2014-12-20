@@ -1,8 +1,13 @@
 package com.hello.suripu.core.db;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.mappers.DowSampleMapper;
+import com.hello.suripu.core.db.mappers.SleepStatsSampleMapper;
+import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Insights.DowSample;
+import com.hello.suripu.core.models.Insights.SleepStatsSample;
+import com.hello.suripu.core.models.SleepStats;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
@@ -10,16 +15,21 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.regex.Matcher;
+
 /**
  * Created by kingshy on 12/17/14.
+ * Assumption:
+ * 1. sleep score and duration data are updated once a day, assume that it's always for the previous night
  */
 public abstract class TrendsDAO {
     private static final Logger LOGGER = LoggerFactory.getLogger(TrendsDAO.class);
 
-    // Sleep Score
+    // Sleep Score by Day of Week
     @RegisterMapper(DowSampleMapper.class)
     @SqlQuery("SELECT day_of_week, CAST(score_sum AS FLOAT)/ score_count AS value " +
             "FROM sleep_score_dow WHERE account_id = :account_id AND score_count > 0 ORDER BY day_of_week")
@@ -51,7 +61,7 @@ public abstract class TrendsDAO {
                                                      @Bind("updated") DateTime updated);
 
 
-    // Sleep Duration
+    // Sleep Duration by Day of Week
     @RegisterMapper(DowSampleMapper.class)
     @SqlQuery("SELECT day_of_week, CAST(duration_sum AS FLOAT)/ duration_count AS value " +
             "FROM sleep_duration_dow WHERE account_id = :account_id AND duration_count > 0 ORDER BY day_of_week")
@@ -83,10 +93,39 @@ public abstract class TrendsDAO {
                                                         @Bind("day_of_week") int dayOfWeek,
                                                         @Bind("updated") DateTime updated);
 
+    // Sleep Duration Over Time
 
-    public long updateDayOfWeekScore(final long accountId, final long score, final int offsetMillis) {
+    @RegisterMapper(SleepStatsSampleMapper.class)
+    @SqlQuery("SELECT * FROM sleep_stats_time WHERE account_id = :account_id ORDER BY local_utc_date")
+    public abstract ImmutableList<SleepStatsSample> getAccountSleepStatsAll(@Bind("account_id") Long accountId);
+
+    @RegisterMapper(SleepStatsSampleMapper.class)
+    @SingleValueResult(SleepStatsSample.class)
+    @SqlQuery("SELECT * FROM sleep_stats_time WHERE account_id = :account_id AND local_utc_date = :date")
+    public abstract Optional<SleepStatsSample> getAccountSleepStatsDate(@Bind("account_id") Long accountId,
+                                                                                   @Bind("date") DateTime date);
+
+    @RegisterMapper(SleepStatsSampleMapper.class)
+    @SqlQuery("SELECT * FROM sleep_stats_time WHERE account_id = :account_id AND " +
+            "local_utc_date >= :start_date AND local_utc_date < :end_date ORDER BY local_utc_date")
+    public abstract ImmutableList<SleepStatsSample> getAccountSleepStatsBetweenDates(@Bind("account_id") Long accountId,
+                                                                                   @Bind("start_date") DateTime startDate,
+                                                                                   @Bind("end_date") DateTime endDate);
+
+    @SqlUpdate("INSERT INTO sleep_stats_time (account_id, duration, sound_sleep, light_sleep, motion, " +
+            "offset_millis, local_utc_date) VALUES (:account_id, :duration, :sound_sleep, :light_sleep, " +
+            ":motion, :offset_millis, :local_utc_date)")
+    public abstract Long insertSleepStats(@Bind("account_id") Long accountId,
+                                          @Bind("duration") Integer duration,
+                                          @Bind("sound_sleep") Integer soundSleep,
+                                          @Bind("light_sleep") Integer lightSleep,
+                                          @Bind("motion") Integer motion,
+                                          @Bind("offset_millis") int offsetMillis,
+                                          @Bind("local_utc_date") DateTime localUTCDate);
+
+    public long updateDayOfWeekScore(final long accountId, final long score, final DateTime targetDate, final int offsetMillis) {
         final DateTime updated = new DateTime(DateTime.now(), DateTimeZone.UTC).plusMillis(offsetMillis).withTimeAtStartOfDay();
-        final int dayOfWeek = updated.getDayOfWeek();
+        final int dayOfWeek = targetDate.getDayOfWeek();
 
         // update row
         long rowCount = this.updateAccountScoreDayOfWeek(accountId, score, dayOfWeek, updated);
@@ -107,9 +146,9 @@ public abstract class TrendsDAO {
         }
     }
 
-    public long updateDayOfWeekDuration(final long accountId, final long duration, final int offsetMillis) {
+    public long updateDayOfWeekDuration(final long accountId, final long duration, final DateTime targetDate, final int offsetMillis) {
         final DateTime updated = new DateTime(DateTime.now(), DateTimeZone.UTC).plusMillis(offsetMillis).withTimeAtStartOfDay();
-        final int dayOfWeek = updated.getDayOfWeek();
+        final int dayOfWeek = targetDate.getDayOfWeek();
 
         // update row
         long rowCount = this.updateAccountDurationDayOfWeek(accountId, duration, dayOfWeek, updated);
@@ -129,4 +168,24 @@ public abstract class TrendsDAO {
         }
     }
 
+    public long updateSleepStats(final long accountId, final int offsetMillis, final DateTime targetDate, final SleepStats stats) {
+        long rowCount = 0;
+        try {
+             rowCount += insertSleepStats(accountId,
+                     stats.sleepDurationInMinutes,
+                     stats.soundSleepDurationInMinutes,
+                     stats.lightSleepDurationInMinutes,
+                     stats.numberOfMotionEvents,
+                     offsetMillis, targetDate);
+            rowCount += updateDayOfWeekDuration(accountId, stats.sleepDurationInMinutes, targetDate, offsetMillis);
+        } catch (UnableToExecuteStatementException exception) {
+            final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
+            if (matcher.find()) {
+                LOGGER.warn("Duplicate sleep stats for account {}, date {}", accountId, targetDate);
+            } else {
+                LOGGER.error("Cannot update sleep stats for account {}, date{}", accountId, targetDate);
+            }
+        }
+        return rowCount;
+    }
 }

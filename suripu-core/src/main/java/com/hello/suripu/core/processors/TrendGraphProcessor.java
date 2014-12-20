@@ -9,6 +9,7 @@ import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.Insights.AvailableGraph;
 import com.hello.suripu.core.models.Insights.DowSample;
 import com.hello.suripu.core.models.Insights.GraphSample;
+import com.hello.suripu.core.models.Insights.SleepStatsSample;
 import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.yammer.metrics.annotation.Timed;
@@ -81,6 +82,8 @@ public class TrendGraphProcessor {
         } else if (graphType == TrendGraph.GraphType.TIME_SERIES_LINE && timePeriodType != TrendGraph.TimePeriodType.DAY_OF_WEEK) {
             if (dataType == TrendGraph.DataType.SLEEP_SCORE) {
                 dataPoints.addAll(getScoreOverTimeData(accountId, timePeriodType));
+            } else if (dataType == TrendGraph.DataType.SLEEP_DURATION) {
+                dataPoints.addAll(getDurationOverTimeData(accountId, timePeriodType));
             }
         }
         return new TrendGraph(dataType, graphType, timePeriodType, dataPoints);
@@ -144,6 +147,26 @@ public class TrendGraphProcessor {
                 offsetMillis = userOffsetMillis.get(date);
             }
             sampleData.add(new GraphSample(date.getMillis(), value, offsetMillis, label));
+        }
+        return sampleData;
+    }
+
+    private List<GraphSample> getDurationOverTimeData(final long accountId, TrendGraph.TimePeriodType timePeriodType) {
+        ImmutableList<SleepStatsSample> statsSamples;
+        if (timePeriodType == TrendGraph.TimePeriodType.OVER_TIME_ALL) {
+            statsSamples = this.trendsDAO.getAccountSleepStatsAll(accountId);
+        } else {
+            final int numDays = TrendGraph.getTimePeriodDays(timePeriodType);
+            final DateTime endDateTime = DateTime.now().withTimeAtStartOfDay();
+            final DateTime startDateTime = endDateTime.minusDays(numDays);
+            statsSamples = this.trendsDAO.getAccountSleepStatsBetweenDates(accountId, startDateTime, endDateTime);
+        }
+
+        final List<GraphSample> sampleData = new ArrayList<>();
+        for (final SleepStatsSample sample : statsSamples) {
+            final Integer value = sample.stats.sleepDurationInMinutes;
+            final TrendGraph.DataLabel label = TrendGraph.getDataLabel(TrendGraph.DataType.SLEEP_DURATION, value);
+            sampleData.add(new GraphSample(sample.localUTCDate.getMillis(), value, sample.timeZoneOffset, label));
         }
         return sampleData;
     }
