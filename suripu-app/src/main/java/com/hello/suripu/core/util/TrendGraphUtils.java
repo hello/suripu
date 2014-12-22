@@ -86,6 +86,7 @@ public class TrendGraphUtils {
     }
 
     public static List<AvailableGraph> getGraphList(final Account account) {
+
         final List<AvailableGraph> graphlist = new ArrayList<>();
         final boolean eligible = checkEligibility(account.created);
         if (eligible) {

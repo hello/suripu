@@ -61,8 +61,7 @@ public class InsightsResource {
     @Timed
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<SleepInsight> getInsights(
-            @Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
+    public List<SleepInsight> getInsights(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
 
         LOGGER.debug("Returning list of insights for account id = {}", accessToken.accountId);
         // TODO: real insights
@@ -76,10 +75,9 @@ public class InsightsResource {
     @GET
     @Path("/trends/graph")
     @Produces(MediaType.APPLICATION_JSON)
-    public TrendGraph getTrends(
-            @Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken,
-            @QueryParam("data_type") String dataType,
-            @QueryParam("time_period") String timePeriod) {
+    public TrendGraph getTrends(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken,
+                                @QueryParam("data_type") String dataType,
+                                @QueryParam("time_period") String timePeriod) {
 
         LOGGER.debug("Returning data to plot trends for account id = {}", accessToken.accountId);
 
@@ -98,8 +96,8 @@ public class InsightsResource {
     @GET
     @Path("/trends/list")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<AvailableGraph> getTrendsList(
-            @Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
+    public List<AvailableGraph> getTrendsList(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
+
         LOGGER.debug("Returning list of available graphs account id = {}", accessToken.accountId);
 
         final Optional<Account> optionalAccount = accountDAO.getById(accessToken.accountId);
@@ -110,14 +108,14 @@ public class InsightsResource {
     }
 
     /**
-     * get all graphs
+     * get all default graphs
      */
     @Timed
     @GET
     @Path("/trends/all")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<TrendGraph> getAllTrends(
-            @Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
+    public List<TrendGraph> getAllTrends(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
+
         LOGGER.debug("Returning ALL available default graphs for account id = {}", accessToken.accountId);
 
         final Optional<Account> optionalAccount = accountDAO.getById(accessToken.accountId);
@@ -144,8 +142,11 @@ public class InsightsResource {
         return graphs;
     }
 
+    /**
+     * Get data from data-stores, aggregate, create graph
+     * @return TrendGraph
+     */
     private TrendGraph getGraph(final Long accountId, final TrendGraph.TimePeriodType timePeriod, final TrendGraph.DataType graphType) {
-        TrendGraph graph;
 
         if (timePeriod == TrendGraph.TimePeriodType.DAY_OF_WEEK) {
             // Histogram
@@ -155,8 +156,7 @@ public class InsightsResource {
             } else {
                 rawData = trendsDAO.getSleepDurationDow(accountId);
             }
-
-            graph = TrendGraphUtils.getDayOfWeekGraph(graphType, timePeriod, rawData);
+            return TrendGraphUtils.getDayOfWeekGraph(graphType, timePeriod, rawData);
 
         } else {
             // time series
@@ -175,17 +175,16 @@ public class InsightsResource {
                 // scores table has no offset, pull timezone offset from tracker-motion
                 final Map<DateTime, Integer> userOffsetMillis = getUserTimeZoneOffsetsUTC(accountId, startDate, endDate);
 
-                graph = TrendGraphUtils.getScoresOverTimeGraph(timePeriod, scores, userOffsetMillis);
+                return TrendGraphUtils.getScoresOverTimeGraph(timePeriod, scores, userOffsetMillis);
 
             } else {
                 // sleep duration over time, up to 365 days
                 ImmutableList<SleepStatsSample> statsSamples = trendsDAO.getAccountSleepStatsBetweenDates(accountId, startDate, endDate);
-                graph = TrendGraphUtils.getDurationOverTimeGraph(timePeriod, statsSamples);
+                return TrendGraphUtils.getDurationOverTimeGraph(timePeriod, statsSamples);
             }
 
         }
 
-        return graph;
     }
 
     // map keys in UTC
