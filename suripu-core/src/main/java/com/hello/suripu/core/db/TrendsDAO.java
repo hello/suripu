@@ -48,7 +48,7 @@ public abstract class TrendsDAO {
     @SqlUpdate("INSERT INTO sleep_score_dow " +
             "(account_id, day_of_week, score_sum, score_count, local_utc_updated) VALUES " +
             "(:account_id, :day_of_week, :score, :count, :updated)")
-    public abstract long insertAccountScoreRow(@Bind("account_id") Long accountId,
+    public abstract int insertAccountScoreRow(@Bind("account_id") Long accountId,
                                                @Bind("day_of_week") int dayOfWeek,
                                                @Bind("score") long score,
                                                @Bind("count") int count,
@@ -58,7 +58,7 @@ public abstract class TrendsDAO {
             "score_count = score_count + 1, local_utc_updated = :updated " +
             "WHERE account_id = :account_id AND day_of_week = :day_of_week AND " +
             "local_utc_updated < :updated")
-    public abstract long updateAccountScoreDayOfWeek(@Bind("account_id") Long accountId,
+    public abstract int updateAccountScoreDayOfWeek(@Bind("account_id") Long accountId,
                                                      @Bind("score") long score,
                                                      @Bind("day_of_week") int dayOfWeek,
                                                      @Bind("updated") DateTime updated);
@@ -81,7 +81,7 @@ public abstract class TrendsDAO {
     @SqlUpdate("INSERT INTO sleep_duration_dow " +
             "(account_id, day_of_week, duration_sum, duration_count, local_utc_updated) VALUES " +
             "(:account_id, :day_of_week, :duration, :count, :updated)")
-    public abstract long insertAccountDurationRow(@Bind("account_id") Long accountId,
+    public abstract int insertAccountDurationRow(@Bind("account_id") Long accountId,
                                                   @Bind("day_of_week") int dayOfWeek,
                                                   @Bind("duration") long duration,
                                                   @Bind("count") int count,
@@ -91,7 +91,7 @@ public abstract class TrendsDAO {
             "duration_count = duration_count + 1, local_utc_updated = :updated " +
             "WHERE account_id = :account_id AND day_of_week = :day_of_week AND " +
             "local_utc_updated < :updated")
-    public abstract long updateAccountDurationDayOfWeek(@Bind("account_id") Long accountId,
+    public abstract int updateAccountDurationDayOfWeek(@Bind("account_id") Long accountId,
                                                         @Bind("duration") long duration,
                                                         @Bind("day_of_week") int dayOfWeek,
                                                         @Bind("updated") DateTime updated);
@@ -118,7 +118,7 @@ public abstract class TrendsDAO {
     @SqlUpdate("INSERT INTO sleep_stats_time (account_id, duration, sound_sleep, light_sleep, motion, " +
             "offset_millis, local_utc_date) VALUES (:account_id, :duration, :sound_sleep, :light_sleep, " +
             ":motion, :offset_millis, :local_utc_date)")
-    public abstract long insertSleepStats(@Bind("account_id") Long accountId,
+    public abstract int insertSleepStats(@Bind("account_id") Long accountId,
                                           @Bind("duration") Integer duration,
                                           @Bind("sound_sleep") Integer soundSleep,
                                           @Bind("light_sleep") Integer lightSleep,
@@ -127,28 +127,28 @@ public abstract class TrendsDAO {
                                           @Bind("local_utc_date") DateTime localUTCDate);
 
 
-    public long updateDayOfWeekData(final long accountId, final long dataValue, final DateTime targetDate, final int offsetMillis, final TrendGraph.DataType dataType) {
+    public int updateDayOfWeekData(final long accountId, final long dataValue, final DateTime targetDate, final int offsetMillis, final TrendGraph.DataType dataType) {
         final DateTime updated = new DateTime(DateTime.now(), DateTimeZone.UTC).plusMillis(offsetMillis).withTimeAtStartOfDay();
         final int dayOfWeek = targetDate.getDayOfWeek();
 
         // update row
-        long rowCount;
+        int rowCount;
         if (dataType == TrendGraph.DataType.SLEEP_SCORE) {
             rowCount = this.updateAccountScoreDayOfWeek(accountId, dataValue, dayOfWeek, updated);
         } else if (dataType == TrendGraph.DataType.SLEEP_DURATION) {
             rowCount = this.updateAccountDurationDayOfWeek(accountId, dataValue, dayOfWeek, updated);
         } else {
             LOGGER.warn("Invalid DataType for Trends {}, account {}", dataType, accountId);
-            return 0L;
+            return 0;
         }
 
-        if (rowCount > 0L) {
+        if (rowCount > 0) {
             return rowCount;
         }
 
         // not updated, row may not exist
         try {
-            long insertCount;
+            int insertCount;
             if (dataType == TrendGraph.DataType.SLEEP_SCORE) {
                 insertCount = this.insertAccountScoreRow(accountId, dayOfWeek, dataValue, 1, updated);
             } else {
@@ -159,13 +159,13 @@ public abstract class TrendsDAO {
         } catch (UnableToExecuteStatementException exception) {
             LOGGER.warn("Cannot insert day of week {} for account {}, day of week {}", dataType.toString(), accountId, dayOfWeek);
             LOGGER.warn("sleep_score_dow insert fail: {}", exception.getMessage());
-            return 0L;
+            return 0;
         }
 
     }
 
-    public long updateSleepStats(final long accountId, final int offsetMillis, final DateTime targetDate, final SleepStats stats) {
-        long rowCount = 0L;
+    public int updateSleepStats(final long accountId, final int offsetMillis, final DateTime targetDate, final SleepStats stats) {
+        int rowCount = 0;
         try {
              rowCount += insertSleepStats(accountId,
                      stats.sleepDurationInMinutes,
