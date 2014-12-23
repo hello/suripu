@@ -59,7 +59,7 @@ public abstract class TrendsDAO {
             "WHERE account_id = :account_id AND day_of_week = :day_of_week AND " +
             "local_utc_updated < :updated")
     public abstract long updateAccountScoreDayOfWeek(@Bind("account_id") Long accountId,
-                                                     @Bind("score") Long score,
+                                                     @Bind("score") long score,
                                                      @Bind("day_of_week") int dayOfWeek,
                                                      @Bind("updated") DateTime updated);
 
@@ -92,7 +92,7 @@ public abstract class TrendsDAO {
             "WHERE account_id = :account_id AND day_of_week = :day_of_week AND " +
             "local_utc_updated < :updated")
     public abstract long updateAccountDurationDayOfWeek(@Bind("account_id") Long accountId,
-                                                        @Bind("duration") Long duration,
+                                                        @Bind("duration") long duration,
                                                         @Bind("day_of_week") int dayOfWeek,
                                                         @Bind("updated") DateTime updated);
 
@@ -118,7 +118,7 @@ public abstract class TrendsDAO {
     @SqlUpdate("INSERT INTO sleep_stats_time (account_id, duration, sound_sleep, light_sleep, motion, " +
             "offset_millis, local_utc_date) VALUES (:account_id, :duration, :sound_sleep, :light_sleep, " +
             ":motion, :offset_millis, :local_utc_date)")
-    public abstract Long insertSleepStats(@Bind("account_id") Long accountId,
+    public abstract long insertSleepStats(@Bind("account_id") Long accountId,
                                           @Bind("duration") Integer duration,
                                           @Bind("sound_sleep") Integer soundSleep,
                                           @Bind("light_sleep") Integer lightSleep,
@@ -136,7 +136,7 @@ public abstract class TrendsDAO {
         if (dataType == TrendGraph.DataType.SLEEP_SCORE) {
             rowCount = this.updateAccountScoreDayOfWeek(accountId, dataValue, dayOfWeek, updated);
         } else if (dataType == TrendGraph.DataType.SLEEP_DURATION) {
-            rowCount = this.updateAccountScoreDayOfWeek(accountId, dataValue, dayOfWeek, updated);
+            rowCount = this.updateAccountDurationDayOfWeek(accountId, dataValue, dayOfWeek, updated);
         } else {
             LOGGER.warn("Invalid DataType for Trends {}, account {}", dataType, accountId);
             return 0L;
