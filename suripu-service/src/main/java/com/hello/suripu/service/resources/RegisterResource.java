@@ -246,19 +246,22 @@ public class RegisterResource {
     public Response registerPill(final byte[] body) {
         final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_PILL);
 
+        // TODO: Remove this and get sense id from header after the firmware is fixed.
         final Optional<AccessToken> accessTokenOptional = this.tokenStore.getClientDetailsByToken(
                 new ClientCredentials(new OAuthScope[]{OAuthScope.AUTH}, builder.getAccountId()),
                 DateTime.now());
 
-        String senseId = "Unknown sense";
-        if(accessTokenOptional.isPresent()) {
-            final Long accountId = accessTokenOptional.get().accountId;
-            final List<DeviceAccountPair> deviceAccountPairs = this.deviceDAO.getSensesForAccountId(accountId);
-            if(deviceAccountPairs.size() > 0){
-                senseId = deviceAccountPairs.get(0).externalDeviceId;
-            }
+        if(!accessTokenOptional.isPresent()) {
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
+        final Long accountId = accessTokenOptional.get().accountId;
+        final List<DeviceAccountPair> deviceAccountPairs = this.deviceDAO.getSensesForAccountId(accountId);
+        if(deviceAccountPairs.size() == 0) {
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        final String senseId = deviceAccountPairs.get(0).externalDeviceId;
         return signAndSend(senseId, builder, senseKeyStore);
     }
 }
