@@ -1,6 +1,7 @@
 package com.hello.suripu.workers.pill;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hello.suripu.core.configuration.DynamoDBConfiguration;
 import com.hello.suripu.workers.framework.WorkerConfiguration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
@@ -37,6 +38,15 @@ public class PillWorkerConfiguration extends WorkerConfiguration {
 
     public Integer getBatchSize() {
         return batchSize;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("key_store")
+    private DynamoDBConfiguration keyStore;
+
+    public DynamoDBConfiguration getKeyStore() {
+        return keyStore;
     }
 
 }

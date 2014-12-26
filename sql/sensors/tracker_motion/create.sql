@@ -78,3 +78,5 @@ CREATE TABLE pill_status (
 GRANT ALL PRIVILEGES ON pill_status TO ingress_user;
 GRANT ALL PRIVILEGES ON pill_status_id_seq TO ingress_user;
 
+ALTER TABLE pill_status ADD COLUMN uptime BIGINT;
+ALTER TABLE pill_status ADD COLUMN fw_version INTEGER;
