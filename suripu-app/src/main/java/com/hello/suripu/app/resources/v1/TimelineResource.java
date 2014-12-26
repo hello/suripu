@@ -257,9 +257,6 @@ public class TimelineResource extends BaseResource {
             final SunRiseEvent sunriseEvent = new SunRiseEvent(sunRiseMillis,
                     sunRiseMillis + DateTimeConstants.MILLIS_PER_MINUTE,
                     sleepSegment.getOffsetMillis(), 0, null);
-//            final SleepSegment audioSleepSegment = new SleepSegment(99L, sunrise.get().plusMinutes(5).getMillis(), 0, 60, -1, Event.Type.SNORING, "ZzZzZzZzZ", new ArrayList<SensorReading>(), soundInfo);
-//            events.add(sunriseEvent);
-//            extraSegments.add(audioSleepSegment);
 
             if(feature.userFeatureActive(FeatureFlipper.SOUND_INFO_TIMELINE, accountId, new ArrayList<String>())) {
                 final Date expiration = new java.util.Date();
