@@ -17,7 +17,10 @@ public class SleepSegment implements Comparable {
 
     public static class SoundInfo {
 
+        @JsonProperty("url")
         public final String url;
+
+        @JsonProperty("duration_millis")
         public final Integer durationMillis;
 
         public SoundInfo(final String url, final Integer durationMillis) {
@@ -29,6 +32,7 @@ public class SleepSegment implements Comparable {
             return new SoundInfo("", 0);
         }
 
+        @JsonProperty("is_empty")
         public boolean isEmpty(){
             return this.url.equals("") && this.durationMillis == 0;
         }

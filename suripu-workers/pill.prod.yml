@@ -52,6 +52,11 @@ max_records: 1000
 # batch save to DB size
 batch_size: 80
 
+key_store:
+    endpoint: http://dynamodb.us-east-1.amazonaws.com
+    region: us-east-1
+    table_name : pill_key_store
+
 # Logging settings.
 logging:
 

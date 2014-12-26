@@ -91,7 +91,13 @@ public class AlarmResource {
             }
 
             final DateTimeZone userTimeZone = alarmInfo.timeZone.get();
-            return Alarm.Utils.disableExpiredNoneRepeatedAlarms(alarmInfo.alarmList, DateTime.now().getMillis(), userTimeZone);
+            final List<Alarm> smartAlarms = Alarm.Utils.disableExpiredNoneRepeatedAlarms(alarmInfo.alarmList, DateTime.now().getMillis(), userTimeZone);
+            if(!Alarm.Utils.isValidSmartAlarms(smartAlarms, DateTime.now(), userTimeZone)){
+                LOGGER.error("Invalid alarm for user {} device {}", token.accountId, alarmInfo.deviceId);
+                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+            }
+
+            return smartAlarms;
         }catch (AmazonServiceException awsException){
             LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
@@ -114,26 +120,39 @@ public class AlarmResource {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
-        if(!Alarm.Utils.isValidSmartAlarms(alarms)){
-            LOGGER.error("account id {} set alarm failed, two alarm in the same day.", token.accountId);
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
-        }
-
-        final List<DeviceAccountPair> deviceAccountMap = this.deviceDAO.getDeviceAccountMapFromAccountId(token.accountId);
+        final List<DeviceAccountPair> deviceAccountMap = this.deviceDAO.getSensesForAccountId(token.accountId);
         if(deviceAccountMap.size() == 0){
             LOGGER.error("User tries to set alarm without connected to a Morpheus.", token.accountId);
             throw new WebApplicationException(Response.Status.FORBIDDEN);
         }
 
-        for(final DeviceAccountPair deviceAccountPair:deviceAccountMap){
-            try {
-                this.mergedAlarmInfoDynamoDB.setAlarms(deviceAccountPair.externalDeviceId, token.accountId, alarms);
-                this.alarmDAODynamoDB.setAlarms(token.accountId, alarms);
-            }catch (AmazonServiceException awsException){
-                LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);
-                throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
+        // Only update alarms in the account that linked with the most recent sense.
+        final DeviceAccountPair deviceAccountPair = deviceAccountMap.get(0);
+        try {
+            final Optional<AlarmInfo> alarmInfoOptional = this.mergedAlarmInfoDynamoDB.getInfo(deviceAccountPair.externalDeviceId, token.accountId);
+            if(!alarmInfoOptional.isPresent()){
+                LOGGER.warn("No merge info for user {}, device {}", token.accountId, deviceAccountPair.externalDeviceId);
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
             }
+
+            if(!alarmInfoOptional.get().timeZone.isPresent()){
+                LOGGER.warn("No user timezone set for account {}, device {}, alarm set skipped.", deviceAccountPair.accountId, deviceAccountPair.externalDeviceId);
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+            }
+
+            final DateTimeZone timeZone = alarmInfoOptional.get().timeZone.get();
+            if(!Alarm.Utils.isValidSmartAlarms(alarms, DateTime.now(), timeZone)){
+                LOGGER.error("Invalid alarm for account {}, device {}, alarm set skipped", deviceAccountPair.accountId, deviceAccountPair.externalDeviceId);
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+            }
+
+            this.mergedAlarmInfoDynamoDB.setAlarms(deviceAccountPair.externalDeviceId, token.accountId, alarms);
+            this.alarmDAODynamoDB.setAlarms(token.accountId, alarms);
+        }catch (AmazonServiceException awsException){
+            LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
         }
+
     }
 
 
