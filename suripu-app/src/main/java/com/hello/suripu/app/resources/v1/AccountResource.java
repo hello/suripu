@@ -66,7 +66,8 @@ public class AccountResource {
         LOGGER.info("Attempting to register account with email: {}", registration.email);
         final Optional<Registration.RegistrationError> error = Registration.validate(registration);
         if(error.isPresent()) {
-            throw new WebApplicationException(Response.status(400).entity(new JsonError(400, error.get().toString())).build());
+            LOGGER.error("Registration should have failed because of: {}. Ignoring for now to avoid breaking API for mobile clients", error.get());
+//            throw new WebApplicationException(Response.status(400).entity(new JsonError(400, error.get().toString())).build());
         }
 
         final Registration securedRegistration = Registration.encryptPassword(registration);
