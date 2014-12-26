@@ -5,6 +5,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.core.Segment;
+import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -13,6 +14,7 @@ import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
+import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.MotionEvent;
@@ -50,7 +52,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
@@ -65,6 +69,7 @@ public class TimelineResource extends BaseResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineResource.class);
 
+    private final AccountDAO accountDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDAO deviceDAO;
     private final DeviceDataDAO deviceDataDAO;
@@ -79,6 +84,7 @@ public class TimelineResource extends BaseResource {
     private final Histogram motionEventDistribution;
 
     public TimelineResource(final TrackerMotionDAO trackerMotionDAO,
+                            final AccountDAO accountDAO,
                             final DeviceDAO deviceDAO,
                             final DeviceDataDAO deviceDataDAO,
                             final SleepLabelDAO sleepLabelDAO,
@@ -90,6 +96,7 @@ public class TimelineResource extends BaseResource {
                             final AmazonS3 s3,
                             final String bucketName) {
         this.trackerMotionDAO = trackerMotionDAO;
+        this.accountDAO = accountDAO;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAO = deviceDataDAO;
         this.sleepLabelDAO = sleepLabelDAO;
@@ -111,7 +118,41 @@ public class TimelineResource extends BaseResource {
             @Scope(OAuthScope.SLEEP_TIMELINE)final AccessToken accessToken,
             @PathParam("date") String date) {
 
+        return retrieveTimelines(accessToken.accountId, date);
 
+    }
+
+    @Timed
+    @Path("/admin/{emai}/{date}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @GET
+    public List<Timeline> getAdminTimelines(
+            @Scope(OAuthScope.SLEEP_TIMELINE)final AccessToken accessToken,
+            @PathParam("email") String email,
+            @PathParam("date") String date) {
+        final Optional<Long> accountId = getAccountIdByEmail(email);
+        if (!accountId.isPresent()) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        return retrieveTimelines(accountId.get(), date);
+    }
+
+    private Optional<Long> getAccountIdByEmail(final String email) {
+        final Optional<Account> accountOptional = accountDAO.getByEmail(email);
+
+        if (!accountOptional.isPresent()) {
+            LOGGER.debug("Account {} not found", email);
+            return Optional.absent();
+        }
+        final Account account = accountOptional.get();
+        if (!account.id.isPresent()) {
+            LOGGER.debug("ID not found for account {}", email);
+            return Optional.absent();
+        }
+        return account.id;
+    }
+
+    private List<Timeline> retrieveTimelines(Long accountId, String date) {
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withHourOfDay(20);
         final DateTime endDate = targetDate.plusHours(16);
@@ -122,11 +163,11 @@ public class TimelineResource extends BaseResource {
         final int threshold = 10; // events with scores < threshold will be considered motion events
         final int mergeThreshold = 1; // min segment size is 1 minute
 
-        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenLocalUTC(accessToken.accountId, targetDate, endDate);
+        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
         LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
 
         if(trackerMotions.isEmpty()) {
-            LOGGER.debug("No data for account_id = {} and day = {}", accessToken.accountId, targetDate);
+            LOGGER.debug("No data for account_id = {} and day = {}", accountId, targetDate);
             final Timeline timeline = new Timeline(0, "You haven't been sleeping!", date, new ArrayList<SleepSegment>(), new ArrayList<Insight>());
             final List<Timeline> timelines = new ArrayList<>();
             timelines.add(timeline);
@@ -137,12 +178,12 @@ public class TimelineResource extends BaseResource {
 
         //TODO: get light data by the minute, compute lights out
         Optional<DateTime> lightOutTimeOptional = Optional.absent();
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
+        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
         if (deviceId.isPresent()) {
             final int slotDurationMins = 1;
 
             final List<Sample> senseData = deviceDataDAO.generateTimeSeriesByLocalTime(targetDate.getMillis(),
-                    endDate.getMillis(), accessToken.accountId, deviceId.get(), slotDurationMins, "light");
+                    endDate.getMillis(), accountId, deviceId.get(), slotDurationMins, "light");
             LOGGER.info("Light data size {}", senseData.size());
             if (senseData.size() > 0) {
                 final List<Event> lightEvents = TimelineUtils.getLightEvents(senseData);
@@ -191,7 +232,7 @@ public class TimelineResource extends BaseResource {
         }
 
         // add partner movement data, check if there's a partner
-        final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accessToken.accountId);
+        final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accountId);
         if (optionalPartnerAccountId.isPresent() && events.size() > 0) {
             LOGGER.debug("partner account {}", optionalPartnerAccountId.get());
             // get tracker motions for partner, query time is in UTC, not local_utc
@@ -220,7 +261,7 @@ public class TimelineResource extends BaseResource {
 //            events.add(sunriseEvent);
 //            extraSegments.add(audioSleepSegment);
 
-            if(feature.userFeatureActive(FeatureFlipper.SOUND_INFO_TIMELINE, accessToken.accountId, new ArrayList<String>())) {
+            if(feature.userFeatureActive(FeatureFlipper.SOUND_INFO_TIMELINE, accountId, new ArrayList<String>())) {
                 final Date expiration = new java.util.Date();
                 long msec = expiration.getTime();
                 msec += 1000 * 60 * 60; // 1 hour.
@@ -254,32 +295,32 @@ public class TimelineResource extends BaseResource {
         final int userOffsetMillis = trackerMotions.get(0).offsetMillis;
         final String targetDateString = DateTimeUtil.dateToYmdString(targetDate);
 
-        final AggregateScore targetDateScore = this.aggregateSleepScoreDAODynamoDB.getSingleScore(accessToken.accountId, targetDateString);
+        final AggregateScore targetDateScore = this.aggregateSleepScoreDAODynamoDB.getSingleScore(accountId, targetDateString);
         Integer sleepScore = targetDateScore.score;
 
         if (sleepScore == 0) {
             // score may not have been computed yet, recompute
-            sleepScore = sleepScoreDAO.getSleepScoreForNight(accessToken.accountId, targetDate.withTimeAtStartOfDay(),
+            sleepScore = sleepScoreDAO.getSleepScoreForNight(accountId, targetDate.withTimeAtStartOfDay(),
                     userOffsetMillis, this.dateBucketPeriod, sleepLabelDAO);
 
             final DateTime lastNight = new DateTime(DateTime.now(), DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
             if (targetDate.isBefore(lastNight)) {
                 // write data to Dynamo if targetDate is old
                 this.aggregateSleepScoreDAODynamoDB.writeSingleScore(
-                        new AggregateScore(accessToken.accountId,
+                        new AggregateScore(accountId,
                                 sleepScore,
                                 DateTimeUtil.dateToYmdString(targetDate.withTimeAtStartOfDay()),
                                 targetDateScore.scoreType, targetDateScore.version));
 
                 // add sleep-score and duration to day-of-week, over time tracking table
-                this.trendsDAO.updateDayOfWeekData(accessToken.accountId, sleepScore, targetDate.withTimeAtStartOfDay(), userOffsetMillis, TrendGraph.DataType.SLEEP_SCORE);
-                this.trendsDAO.updateSleepStats(accessToken.accountId, userOffsetMillis, targetDate.withTimeAtStartOfDay(), sleepStats);
+                this.trendsDAO.updateDayOfWeekData(accountId, sleepScore, targetDate.withTimeAtStartOfDay(), userOffsetMillis, TrendGraph.DataType.SLEEP_SCORE);
+                this.trendsDAO.updateSleepStats(accountId, userOffsetMillis, targetDate.withTimeAtStartOfDay(), sleepStats);
             }
         }
 
         final String timeLineMessage = TimelineUtils.generateMessage(sleepStats);
 
-        LOGGER.debug("Score for account_id = {} is {}", accessToken.accountId, sleepScore);
+        LOGGER.debug("Score for account_id = {} is {}", accountId, sleepScore);
 
 
         final List<Insight> insights = TimelineUtils.generateRandomInsights(targetDate.getDayOfMonth());
