@@ -5,6 +5,7 @@ import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
+import com.google.common.base.Optional;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.core.db.KeyStore;
@@ -46,9 +47,13 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
         for (final Record record : records) {
             try {
                 final InputProtos.PillDataKinesis data = InputProtos.PillDataKinesis.parseFrom(record.getData().array());
-                final byte[] decryptionKey = new byte[16]; // Fake key
+                final Optional<byte[]> decryptionKey = pillKeyStore.get(data.getPillId());
                 //TODO: Get the actual decryption key.
-                final TrackerMotion trackerMotion = new TrackerMotion.Builder().withPillKinesisData(decryptionKey, data).build();
+                if(!decryptionKey.isPresent()) {
+                    LOGGER.error("Missing decryption key for pill: {}", data.getPillId());
+                    continue;
+                }
+                final TrackerMotion trackerMotion = new TrackerMotion.Builder().withPillKinesisData(decryptionKey.get(), data).build();
 
                 trackerData.add(trackerMotion);
 
@@ -82,10 +87,5 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
     @Override
     public void shutdown(final IRecordProcessorCheckpointer iRecordProcessorCheckpointer, final ShutdownReason shutdownReason) {
         LOGGER.warn("SHUTDOWN: {}", shutdownReason.toString());
-
     }
-
-
-
-
 }
