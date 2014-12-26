@@ -69,6 +69,7 @@ public class Registration {
         checkNotNull(email, "email cannot be null");
         checkNotNull(password, "password cannot be null");
         checkNotNull(name, "name cannot be null");
+        checkNotNull(tzOffsetMillis, "tz offset can not be null");
         this.name = name;
         this.email = email;
         this.password = password;
