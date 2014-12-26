@@ -25,7 +25,7 @@ public interface DeviceDAO {
 
     // account to morpheus device map
     @RegisterMapper(DeviceAccountPairMapper.class)
-    @SqlQuery("SELECT * FROM account_device_map WHERE account_id = :account_id AND active = true;")
+    @SqlQuery("SELECT * FROM account_device_map WHERE account_id = :account_id AND active = TRUE ORDER BY id DESC;")
     ImmutableList<DeviceAccountPair> getSensesForAccountId(@Bind("account_id") Long accountId);
 
 

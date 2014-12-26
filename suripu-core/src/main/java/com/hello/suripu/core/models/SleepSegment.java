@@ -32,6 +32,7 @@ public class SleepSegment implements Comparable {
             return new SoundInfo("", 0);
         }
 
+        @JsonProperty("is_empty")
         public boolean isEmpty(){
             return this.url.equals("") && this.durationMillis == 0;
         }

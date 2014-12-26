@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory;
 
 public class CurrentRoomState {
 
-    private final static String DEFAULT_TEMP_UNIT = "c";
 
+    private final static String DEFAULT_TEMP_UNIT = "c";
     private static final Logger LOGGER = LoggerFactory.getLogger(CurrentRoomState.class);
 
     public static class State {
@@ -122,25 +122,23 @@ public class CurrentRoomState {
         if(referenceTime.minusMinutes(thresholdInMinutes).getMillis() > dataTimestampUTC.getMillis()) {
 
             LOGGER.warn("{} is too old, not returning anything", dataTimestampUTC);
-            temperatureState = new State(temperature, "Could not retrieve a recent temperature reading", idealTempConditions, State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.CELCIUS);
-            humidityState = new State(humidity, "Could not retrieve a recent humidity reading", idealHumidityConditions, State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.PERCENT);
-            particulatesState = new State(humidity, "Could not retrieve recent particulates reading", idealParticulatesConditions, State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.AQI);
+            temperatureState = new State(temperature, "Could not retrieve a recent temperature reading", "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.CELCIUS);
+            humidityState = new State(humidity, "Could not retrieve a recent humidity reading", "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.PERCENT);
+            particulatesState = new State(humidity, "Could not retrieve recent particulates reading", "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.AQI);
             final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState);
             return roomState;
         }
 
-
-
         // Global ideal range: 60 -- 72, less than 54 = too cold, above 75= too warm
+
         // Temp
         if (temperature  < 15.0) {
-            temperatureState = new State(temperature, "It’s **pretty cold** in here.", idealTempConditions,State.Condition.ALERT, dataTimestampUTC, State.Unit.CELCIUS);
+            temperatureState = new State(temperature, "It’s **pretty cold** in here.", idealTempConditions, State.Condition.ALERT, dataTimestampUTC, State.Unit.CELCIUS);
         } else if (temperature > 30.0) {
             temperatureState = new State(temperature, "It’s **pretty hot** in here.", idealTempConditions, State.Condition.ALERT, dataTimestampUTC, State.Unit.CELCIUS);
         } else { // temp >= 60 && temp <= 72
             temperatureState = new State(temperature, "Temperature is **just right**.", idealTempConditions, State.Condition.IDEAL, dataTimestampUTC, State.Unit.CELCIUS);
         }
-
 
         // Humidity
         if (humidity  < 30.0) {
