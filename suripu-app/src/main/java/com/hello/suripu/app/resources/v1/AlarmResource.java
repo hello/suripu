@@ -121,6 +121,7 @@ public class AlarmResource {
             throw new WebApplicationException(Response.Status.FORBIDDEN);
         }
 
+        // Only update alarms in the account that linked with the most recent sense.
         final DeviceAccountPair deviceAccountPair = deviceAccountMap.get(0);
         try {
             final Optional<AlarmInfo> alarmInfoOptional = this.mergedAlarmInfoDynamoDB.getInfo(deviceAccountPair.externalDeviceId, token.accountId);

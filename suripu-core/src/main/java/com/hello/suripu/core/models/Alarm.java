@@ -281,20 +281,12 @@ public class Alarm {
             }
 
             final DateTime ringTime = new DateTime(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour, 0, timeZone);
-            if(ringTime.isBefore(currentTime)){
-                return true;
-            }
-
-            return false;
+            return ringTime.isBefore(currentTime);
         }
 
         public static List<Alarm> disableExpiredNoneRepeatedAlarms(final List<Alarm> alarms, long currentTimestampUTC, final DateTimeZone timeZone){
             final ArrayList<Alarm> newAlarmList = new ArrayList<>();
             for(final Alarm alarm:alarms){
-                if(alarm.isRepeated){
-                    newAlarmList.add(alarm);
-                    continue;
-                }
 
                 if(isAlarmExpired(alarm, new DateTime(currentTimestampUTC, DateTimeZone.UTC), timeZone)){
                     final Alarm disabledAlarm = new Alarm(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour,
