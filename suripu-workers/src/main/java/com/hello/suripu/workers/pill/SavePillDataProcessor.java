@@ -7,6 +7,8 @@ import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.InputProtos;
+import com.hello.suripu.core.db.KeyStore;
+import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
@@ -21,10 +23,14 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
 
     private final TrackerMotionDAO trackerMotionDAO;
     private final int batchSize;
+    private final PillHeartBeatDAO pillHeartBeatDAO;
+    private final KeyStore pillKeyStore;
 
-    public SavePillDataProcessor(final TrackerMotionDAO trackerMotionDAO, final int batchSize) {
+    public SavePillDataProcessor(final TrackerMotionDAO trackerMotionDAO, final int batchSize, final PillHeartBeatDAO pillHeartBeatDAO, final KeyStore pillKeyStore) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.batchSize = batchSize;
+        this.pillHeartBeatDAO = pillHeartBeatDAO;
+        this.pillKeyStore = pillKeyStore;
     }
 
     @Override
@@ -36,7 +42,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
         LOGGER.debug("Size = {}", records.size());
 
         // parse kinesis records
-        final ArrayList<TrackerMotion> trackerData = new ArrayList<>();
+        final ArrayList<TrackerMotion> trackerData = new ArrayList<>(records.size());
         for (final Record record : records) {
             try {
                 final InputProtos.PillDataKinesis data = InputProtos.PillDataKinesis.parseFrom(record.getData().array());
@@ -47,12 +53,10 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                 trackerData.add(trackerMotion);
 
                 if(data.hasBatteryLevel()){
-                    //TODO: Deal with heartbeat
                     final int batteryLevel = data.getBatteryLevel();
                     final int upTime = data.getUpTime();
                     final int firmwareVersion = data.getFirmwareVersion();
-
-                    // TODO: Save the heartbeat
+                    pillHeartBeatDAO.silentInsert(trackerMotion.trackerId, batteryLevel, upTime, firmwareVersion);
                 }
             } catch (InvalidProtocolBufferException e) {
                 LOGGER.error("Failed to decode protobuf: {}", e.getMessage());
@@ -78,6 +82,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
     @Override
     public void shutdown(final IRecordProcessorCheckpointer iRecordProcessorCheckpointer, final ShutdownReason shutdownReason) {
         LOGGER.warn("SHUTDOWN: {}", shutdownReason.toString());
+
     }
 
 
