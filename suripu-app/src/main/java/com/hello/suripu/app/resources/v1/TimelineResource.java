@@ -11,6 +11,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.TrendsDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.Event;
@@ -19,6 +20,7 @@ import com.hello.suripu.core.models.Events.SleepEvent;
 import com.hello.suripu.core.models.Events.SunRiseEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
@@ -68,6 +70,7 @@ public class TimelineResource extends BaseResource {
     private final DeviceDataDAO deviceDataDAO;
     private final SleepScoreDAO sleepScoreDAO;
     private final SleepLabelDAO sleepLabelDAO;
+    private final TrendsDAO trendsDAO;
     private final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB;
     private final int dateBucketPeriod;
     private final SunData sunData;
@@ -80,6 +83,7 @@ public class TimelineResource extends BaseResource {
                             final DeviceDataDAO deviceDataDAO,
                             final SleepLabelDAO sleepLabelDAO,
                             final SleepScoreDAO sleepScoreDAO,
+                            final TrendsDAO trendsDAO,
                             final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
                             final int dateBucketPeriod,
                             final SunData sunData,
@@ -90,6 +94,7 @@ public class TimelineResource extends BaseResource {
         this.deviceDataDAO = deviceDataDAO;
         this.sleepLabelDAO = sleepLabelDAO;
         this.sleepScoreDAO = sleepScoreDAO;
+        this.trendsDAO = trendsDAO;
         this.aggregateSleepScoreDAODynamoDB = aggregateSleepScoreDAODynamoDB;
         this.dateBucketPeriod = dateBucketPeriod;
         this.sunData = sunData;
@@ -109,7 +114,7 @@ public class TimelineResource extends BaseResource {
 
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withHourOfDay(20);
-        final DateTime endDate = targetDate.plusHours(14);
+        final DateTime endDate = targetDate.plusHours(16);
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
 
@@ -265,6 +270,10 @@ public class TimelineResource extends BaseResource {
                                 sleepScore,
                                 DateTimeUtil.dateToYmdString(targetDate.withTimeAtStartOfDay()),
                                 targetDateScore.scoreType, targetDateScore.version));
+
+                // add sleep-score and duration to day-of-week, over time tracking table
+                this.trendsDAO.updateDayOfWeekData(accessToken.accountId, sleepScore, targetDate.withTimeAtStartOfDay(), userOffsetMillis, TrendGraph.DataType.SLEEP_SCORE);
+                this.trendsDAO.updateSleepStats(accessToken.accountId, userOffsetMillis, targetDate.withTimeAtStartOfDay(), sleepStats);
             }
         }
 
