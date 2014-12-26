@@ -54,7 +54,29 @@ public class AlarmUtilTest {
 
         alarmList.add(builder.build());
 
-        assertThat(Alarm.Utils.isValidSmartAlarms(alarmList), is(true));
+        assertThat(Alarm.Utils.isValidSmartAlarms(alarmList, DateTime.now(), DateTimeZone.getDefault()), is(true));
+    }
+
+    @Test
+    public void testIsExpired(){
+        final HashSet<Integer> dayOfWeek =  new HashSet<>();
+        dayOfWeek.add(DateTime.now().getDayOfWeek());
+        final Alarm repeated = new Alarm(0,0,0,7,30,dayOfWeek,true, true, true, new AlarmSound(0, "god save the queen"));
+        assertThat(Alarm.Utils.isAlarmExpired(repeated, DateTime.now(), DateTimeZone.getDefault()), is(false));
+
+        final DateTime now = DateTime.now().withMillis(0);
+        Alarm nonRepeated = new Alarm(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), now.getHourOfDay(), now.getMinuteOfHour(), dayOfWeek, false, true, true, new AlarmSound(0, "god save the queen"));
+        assertThat(Alarm.Utils.isAlarmExpired(nonRepeated, now, DateTimeZone.getDefault()), is(false));
+
+        final DateTime future = now.plusHours(1);
+        nonRepeated = new Alarm(future.getYear(), future.getMonthOfYear(), future.getDayOfMonth(), future.getHourOfDay(), future.getMinuteOfHour(), dayOfWeek, false, true, true, new AlarmSound(0, "god save the queen"));
+        assertThat(Alarm.Utils.isAlarmExpired(nonRepeated, now, DateTimeZone.getDefault()), is(false));
+
+        final DateTime past = now.minusHours(1);
+        nonRepeated = new Alarm(past.getYear(), past.getMonthOfYear(), past.getDayOfMonth(), past.getHourOfDay(), past.getMinuteOfHour(), dayOfWeek, false, true, true, new AlarmSound(0, "god save the queen"));
+        assertThat(Alarm.Utils.isAlarmExpired(nonRepeated, now, DateTimeZone.getDefault()), is(true));
+
+
     }
 
     @Test
@@ -94,7 +116,44 @@ public class AlarmUtilTest {
 
         alarmList.add(builder.build());
 
-        assertThat(Alarm.Utils.isValidSmartAlarms(alarmList), is(false));
+        final DateTime now = new DateTime(2014,9,15,0,0,DateTimeZone.getDefault());
+
+        assertThat(Alarm.Utils.isValidSmartAlarms(alarmList, now, DateTimeZone.getDefault()), is(false));
+
+        alarmList.clear();
+        // Non repeated expired
+
+        builder.withYear(2014)
+                .withMonth(9)
+                .withDay(15)
+                .withDayOfWeek(dayOfWeek)
+                .withHour(0)
+                .withMinute(1)
+                .withIsRepeated(true)
+                .withIsEnabled(true)
+                .withIsEditable(true)
+                .withAlarmSound(new AlarmSound(1, "god save the queen"));
+
+        alarmList.add(builder.build());
+
+        dayOfWeek = new HashSet<Integer>();
+        dayOfWeek.add(DateTimeConstants.SUNDAY);
+
+        builder.withYear(2014)
+                .withMonth(9)
+                .withDay(14)
+                .withDayOfWeek(dayOfWeek)
+                .withHour(1)
+                .withMinute(1)
+                .withIsRepeated(false)
+                .withIsEnabled(true)
+                .withIsEditable(true)
+                .withAlarmSound(new AlarmSound(1, "god save the queen"));
+
+        alarmList.add(builder.build());
+
+        assertThat(Alarm.Utils.isValidSmartAlarms(alarmList, now, DateTimeZone.getDefault()), is(true));
+
     }
 
     @Test
