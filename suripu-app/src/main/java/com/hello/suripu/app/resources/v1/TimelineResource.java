@@ -123,7 +123,7 @@ public class TimelineResource extends BaseResource {
     }
 
     @Timed
-    @Path("/admin/{emai}/{date}")
+    @Path("/admin/{email}/{date}")
     @Produces(MediaType.APPLICATION_JSON)
     @GET
     public List<Timeline> getAdminTimelines(
