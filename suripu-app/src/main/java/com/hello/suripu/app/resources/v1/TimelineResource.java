@@ -127,7 +127,7 @@ public class TimelineResource extends BaseResource {
     @Produces(MediaType.APPLICATION_JSON)
     @GET
     public List<Timeline> getAdminTimelines(
-            @Scope(OAuthScope.SLEEP_TIMELINE)final AccessToken accessToken,
+            @Scope(OAuthScope.ADMINISTRATION_READ)final AccessToken accessToken,
             @PathParam("email") String email,
             @PathParam("date") String date) {
         final Optional<Long> accountId = getAccountIdByEmail(email);

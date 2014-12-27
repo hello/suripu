@@ -1,8 +1,10 @@
 package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
+import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
@@ -31,11 +33,13 @@ import java.util.List;
 public class RoomConditionsResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RoomConditionsResource.class);
+    private final AccountDAO accountDAO;
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
     private final long allowedRangeInSeconds;
 
-    public RoomConditionsResource(final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO, final long allowedRangeInSeconds) {
+    public RoomConditionsResource(final AccountDAO accountDAO, final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO, final long allowedRangeInSeconds) {
+        this.accountDAO = accountDAO;
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.allowedRangeInSeconds = allowedRangeInSeconds;
@@ -92,6 +96,26 @@ public class RoomConditionsResource {
         }
     }
 
+
+    @Timed
+    @GET
+    @Path("/admin/{email}/{sensor}/day")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Sample> getAdminLastDay(
+            @Scope({OAuthScope.ADMINISTRATION_READ}) AccessToken accessToken,
+            @PathParam("email") final String email,
+            @PathParam("sensor") final String sensor,
+            @QueryParam("from") Long queryEndTimestampInLocalUTC) {
+
+        final Optional<Long> accountId = getAccountIdByEmail(email);
+        if (!accountId.isPresent()) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        return retrieveDayData(accountId.get(), sensor, queryEndTimestampInLocalUTC);
+    }
+
+
     /*
     * WARNING: This implementation will not giving out the data of last 24 hours.
     * It gives the data of last DAY, which is from a certain local timestamp
@@ -109,36 +133,7 @@ public class RoomConditionsResource {
             // to make it explicit that the API is expecting a local time and not confuse
             // the user.
             @QueryParam("from") Long queryEndTimestampInLocalUTC) {
-
-        // From this line I guess this is a bug in the backend instead of the client provide a wrong timestamp..
-
-        // We should expect user provide a local UTC time instead of UTC time, thus
-        // the check implementation here is not valid.
-        // to fix this, we should expect the client provide its UTC time as well.
-        // To provide backward compatibility, I just comment it out for now.
-        //validateQueryRange(queryEndTimestampInLocalUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
-
-        final int slotDurationInMinutes = 5;
-        /*
-        * We have to minutes one day instead of 24 hours, for the same reason that we want one DAY's
-        * data, instead of 24 hours.
-         */
-        final long queryStartTimeInLocalUTC = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC).minusDays(1).getMillis();
-
-        validateLocalUTCQueryRange(new DateTime(queryStartTimeInLocalUTC, DateTimeZone.UTC),
-                new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC),
-                accessToken.accountId,
-                allowedRangeInSeconds);
-
-        // get latest device_id connected to this account
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
-        if(!deviceId.isPresent()) {
-            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
-        }
-
-        return deviceDataDAO.generateTimeSeriesByLocalTime(queryStartTimeInLocalUTC, queryEndTimestampInLocalUTC,
-                accessToken.accountId, deviceId.get(), slotDurationInMinutes,
-                sensor);
+        return retrieveDayData(accessToken.accountId, sensor, queryEndTimestampInLocalUTC);
     }
 
     /*
@@ -254,6 +249,24 @@ public class RoomConditionsResource {
 
     @Timed
     @GET
+    @Path("/admin/{email}/{sensor}/week")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Sample> getAdminLastWeek(
+            @Scope({OAuthScope.ADMINISTRATION_READ}) AccessToken accessToken,
+            @PathParam("email") final String email,
+            @PathParam("sensor") final String sensor,
+            @QueryParam("from") Long queryEndTimestampInLocalUTC) {
+
+        final Optional<Long> accountId = getAccountIdByEmail(email);
+        if (!accountId.isPresent()) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        return retrieveWeekData(accountId.get(), sensor, queryEndTimestampInLocalUTC);
+    }
+
+    @Timed
+    @GET
     @Path("/{sensor}/week")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Sample> getLastWeek(
@@ -261,34 +274,7 @@ public class RoomConditionsResource {
             @PathParam("sensor") final String sensor,
             @QueryParam("from") Long queryEndTimestampInLocalUTC) {
 
-        // We should expect user provide a local UTC time instead of UTC time, thus
-        // the check implementation here is not valid.
-        // to fix this, we should expect the client provide its UTC time as well.
-        // To provide backward compatibility, I just comment it out for now.
-        //validateQueryRange(queryEndTimestampInLocalUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
-
-        final int slotDurationInMinutes = 60;
-        //final int  queryDurationInHours = 24 * 7; // 7 days
-
-        /*
-        * Again, the same problem:
-        * We have to minutes one week instead of 7*24 hours, for the same reason that one week can be more/less than 7 * 24 hours
-         */
-        final long queryStartTimeInLocalUTC = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC).minusWeeks(1).getMillis();
-        validateLocalUTCQueryRange(new DateTime(queryStartTimeInLocalUTC, DateTimeZone.UTC),
-                new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC),
-                accessToken.accountId,
-                allowedRangeInSeconds);
-
-        // get latest device_id connected to this account
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
-        if(!deviceId.isPresent()) {
-            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
-        }
-
-        return deviceDataDAO.generateTimeSeriesByLocalTime(queryStartTimeInLocalUTC, queryEndTimestampInLocalUTC,
-                accessToken.accountId, deviceId.get(), slotDurationInMinutes,
-                sensor);
+        return retrieveWeekData(accessToken.accountId, sensor, queryEndTimestampInLocalUTC);
     }
 
 
@@ -386,4 +372,82 @@ public class RoomConditionsResource {
                 sensor);
     }
 
+    private Optional<Long> getAccountIdByEmail(final String email) {
+        final Optional<Account> accountOptional = accountDAO.getByEmail(email);
+
+        if (!accountOptional.isPresent()) {
+            LOGGER.debug("Account {} not found", email);
+            return Optional.absent();
+        }
+        final Account account = accountOptional.get();
+        if (!account.id.isPresent()) {
+            LOGGER.debug("ID not found for account {}", email);
+            return Optional.absent();
+        }
+        return account.id;
+    }
+
+    private List<Sample> retrieveDayData(Long accountId, String sensor, Long queryEndTimestampInLocalUTC) {
+        // From this line I guess this is a bug in the backend instead of the client provide a wrong timestamp..
+
+        // We should expect user provide a local UTC time instead of UTC time, thus
+        // the check implementation here is not valid.
+        // to fix this, we should expect the client provide its UTC time as well.
+        // To provide backward compatibility, I just comment it out for now.
+        //validateQueryRange(queryEndTimestampInLocalUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
+
+        final int slotDurationInMinutes = 5;
+        /*
+        * We have to minutes one day instead of 24 hours, for the same reason that we want one DAY's
+        * data, instead of 24 hours.
+         */
+        final long queryStartTimeInLocalUTC = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC).minusDays(1).getMillis();
+
+        validateLocalUTCQueryRange(new DateTime(queryStartTimeInLocalUTC, DateTimeZone.UTC),
+                new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC),
+                accountId,
+                allowedRangeInSeconds
+        );
+
+        // get latest device_id connected to this account
+        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
+        if(!deviceId.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
+
+        return deviceDataDAO.generateTimeSeriesByLocalTime(queryStartTimeInLocalUTC, queryEndTimestampInLocalUTC,
+                accountId, deviceId.get(), slotDurationInMinutes, sensor);
+
+    }
+
+    private List<Sample> retrieveWeekData(Long accountId, String sensor, Long queryEndTimestampInLocalUTC) {
+        // We should expect user provide a local UTC time instead of UTC time, thus
+        // the check implementation here is not valid.
+        // to fix this, we should expect the client provide its UTC time as well.
+        // To provide backward compatibility, I just comment it out for now.
+        //validateQueryRange(queryEndTimestampInLocalUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
+
+        final int slotDurationInMinutes = 60;
+        //final int  queryDurationInHours = 24 * 7; // 7 days
+
+        /*
+        * Again, the same problem:
+        * We have to minutes one week instead of 7*24 hours, for the same reason that one week can be more/less than 7 * 24 hours
+         */
+        final long queryStartTimeInLocalUTC = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC).minusWeeks(1).getMillis();
+        validateLocalUTCQueryRange(new DateTime(queryStartTimeInLocalUTC, DateTimeZone.UTC),
+                new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC),
+                accountId,
+                allowedRangeInSeconds);
+
+        // get latest device_id connected to this account
+        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
+        if(!deviceId.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
+
+        return deviceDataDAO.generateTimeSeriesByLocalTime(queryStartTimeInLocalUTC, queryEndTimestampInLocalUTC,
+                accountId, deviceId.get(), slotDurationInMinutes,
+                sensor);
+    }
 }
