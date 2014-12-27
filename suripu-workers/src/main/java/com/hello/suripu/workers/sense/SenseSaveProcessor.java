@@ -159,7 +159,9 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                     }
 
                     final DateTimeZone userTimeZone = timeZoneOptional.get();
-
+                    final DateTime roundedSample = new DateTime(periodicData.getUnixTime() * 1000, DateTimeZone.UTC)
+                            .withSecondOfMinute(0)
+                            .withMillisOfSecond(0);
                     final DeviceData.Builder builder = new DeviceData.Builder()
                             .withAccountId(pair.accountId)
                             .withDeviceId(pair.internalDeviceId)
@@ -174,7 +176,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                             .withAmbientLightVariance(periodicData.getLightVariability())
                             .withAmbientLightPeakiness(periodicData.getLightTonality())
                             .withOffsetMillis(userTimeZone.getOffset(roundedDateTime))
-                            .withDateTimeUTC(roundedDateTime)
+                            .withDateTimeUTC(roundedSample)
                             .withFirmwareVersion(periodicData.getFirmwareVersion())
                             .withWaveCount(periodicData.hasWaveCount() ? periodicData.getWaveCount() : 0)
                             .withHoldCount(periodicData.hasHoldCount() ? periodicData.getHoldCount() : 0);
