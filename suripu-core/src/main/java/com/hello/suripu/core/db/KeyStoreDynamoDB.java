@@ -53,10 +53,11 @@ public class KeyStoreDynamoDB implements KeyStore {
     public KeyStoreDynamoDB(
             final AmazonDynamoDB dynamoDBClient,
             final String keyStoreTableName,
-            final byte[] defaultAESKey) {
+            final byte[] defaultAESKey,
+            final Integer cacheExpireAfterInSeconds) {
         this.dynamoDBClient = dynamoDBClient;
         this.keyStoreTableName = keyStoreTableName;
-        this.cache = CacheBuilder.newBuilder().expireAfterAccess(60 * 5, TimeUnit.SECONDS).build(loader);
+        this.cache = CacheBuilder.newBuilder().expireAfterAccess(cacheExpireAfterInSeconds, TimeUnit.SECONDS).build(loader);
         this.DEFAULT_AES_KEY = defaultAESKey;
     }
 

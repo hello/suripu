@@ -80,7 +80,7 @@ public final class PillWorkerCommand extends ConfiguredCommand<PillWorkerConfigu
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
         final PillHeartBeatDAO heartBeatDAO = jdbiSensor.onDemand(PillHeartBeatDAO.class);
-        final KeyStore pillKeyStore = new KeyStoreDynamoDB(dynamoDBClient,configuration.getKeyStore().getTableName(), new byte[16]);
+        final KeyStore pillKeyStore = new KeyStoreDynamoDB(dynamoDBClient,configuration.getKeyStore().getTableName(), new byte[16], 120);
         final IRecordProcessorFactory factory = new SavePillDataProcessorFactory(trackerMotionDAO, configuration.getBatchSize(), kinesisConfig, heartBeatDAO, pillKeyStore);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();

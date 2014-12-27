@@ -109,7 +109,7 @@ public final class PillScoreWorkerCommand extends ConfiguredCommand<PillScoreWor
         final AmazonDynamoDB dynamoDB = new AmazonDynamoDBClient(awsCredentialsProvider);
         dynamoDB.setEndpoint(configuration.getDynamoDBKeyStoreConfiguration().getEndpoint());
 
-        final KeyStore keyStore = new KeyStoreDynamoDB(dynamoDB, configuration.getDynamoDBKeyStoreConfiguration().getTableName(), new byte[16]);
+        final KeyStore keyStore = new KeyStoreDynamoDB(dynamoDB, configuration.getDynamoDBKeyStoreConfiguration().getTableName(), new byte[16], 120);
 
 
         final AmazonDynamoDBClient featureDynamoDB = new AmazonDynamoDBClient(awsCredentialsProvider);

@@ -139,7 +139,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final KeyStore senseKeyStore = new KeyStoreDynamoDB(
                 dynamoDBClient,
                 configuration.getDynamoDBConfiguration().getTableName(),
-                "1234567891234567".getBytes() // TODO: REMOVE THIS WHEN WE ARE NOT SUPPOSED TO HAVE A DEFAULT KEY
+                "1234567891234567".getBytes(), // TODO: REMOVE THIS WHEN WE ARE NOT SUPPOSED TO HAVE A DEFAULT KEY
+                120 // 2 minutes for cache
         );
 
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
