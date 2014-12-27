@@ -267,7 +267,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new TimelineResource(trackerMotionDAO, accountDAO, deviceDAO, deviceDataDAO, sleepLabelDAO, sleepScoreDAO, trendsDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), sunData, amazonS3, "hello-audio"));
 
         environment.addResource(new TimeZoneResource(timeZoneHistoryDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO));
-        environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO));
+        environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO, amazonS3));
 
         environment.addResource(new MobilePushRegistrationResource(subscriptionDAO));
         environment.addResource(new FeaturesResource(featureStore));
