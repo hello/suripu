@@ -134,7 +134,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                 final DateTime createdAtRounded = new DateTime(createdAtTimestamp, DateTimeZone.UTC);
                 final DateTime periodicDataSampleDateTime = new DateTime(periodicData.getUnixTime() * 1000).withSecondOfMinute(0).withMillisOfSecond(0);
 
-                if(periodicDataSampleDateTime.isAfter(createdAtRounded.plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || periodicDataSampleDateTime.isBefore(createdAtTimestamp.minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
+                if(periodicDataSampleDateTime.isAfter(createdAtRounded.plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || periodicDataSampleDateTime.isBefore(createdAtRounded.minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
                     LOGGER.error("The clock for device {} is not within reasonable bounds (2h)", batchPeriodicDataWorker.getData().getDeviceId());
                     LOGGER.error("Created time = {}, sample time = {}, now = {}", createdAtRounded, periodicDataSampleDateTime, DateTime.now());
                     clockOutOfSync.mark();
