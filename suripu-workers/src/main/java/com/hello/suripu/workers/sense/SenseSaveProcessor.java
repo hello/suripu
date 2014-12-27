@@ -8,6 +8,7 @@ import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
 import com.google.common.base.Optional;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.TextFormat;
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -123,6 +124,8 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             if(deviceAccountInfoFromMergeTable.isEmpty()) {
                 LOGGER.error("Device {} is not stored in DynamoDB or doesn’t have any accounts linked.", deviceName);
             }
+
+            LOGGER.info("Protobuf message {}", TextFormat.shortDebugString(batchPeriodicDataWorker));
 
 
             for(final DataInputProtos.periodic_data periodicData : batchPeriodicDataWorker.getData().getDataList()) {

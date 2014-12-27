@@ -228,6 +228,7 @@ public class ReceiveResource extends BaseResource {
         // Saving sense data to kinesis
         final DataLogger senseSensorsDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
         senseSensorsDataLogger.put(deviceName, batchPeriodicDataWorkerMessage.toByteArray());
+        LOGGER.debug("Protobuf message to kenesis {}", TextFormat.shortDebugString(batchPeriodicDataWorkerMessage));
 
         return generateSyncResponse(data.getDeviceId(), data.getFirmwareVersion(), optionalKeyBytes.get(), batch);
     }
