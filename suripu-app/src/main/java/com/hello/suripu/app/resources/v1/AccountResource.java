@@ -104,13 +104,6 @@ public class AccountResource {
             @Scope({OAuthScope.USER_EXTENDED}) final AccessToken accessToken,
             @Valid final Account account) {
 
-//        // TODO: Remove this
-//        final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
-//
-//        if(!accountOptional.isPresent()) {
-//            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
-//        }
-
         LOGGER.warn("Last modified (modify) = {}", account.lastModified);
 
         final Optional<Account> optionalAccount = accountDAO.update(account, accessToken.accountId);

@@ -7,7 +7,7 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.util.PasswordUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-
+import org.apache.commons.validator.routines.EmailValidator;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Registration {
@@ -165,8 +165,12 @@ public class Registration {
             return Optional.of(RegistrationError.NAME_TOO_SHORT);
         }
 
+        final Optional<RegistrationError> passwordError = validatePassword(registration.password);
+        if(!passwordError.isPresent()) {
+            return validateEmail(registration.email);
+        }
 
-        return validatePassword(registration.password);
+        return passwordError;
     }
 
     /**
@@ -181,6 +185,15 @@ public class Registration {
 
         if(PasswordUtil.isNotSecure(password)) {
             return Optional.of(RegistrationError.PASSWORD_INSECURE);
+        }
+
+        return Optional.absent();
+    }
+
+    public static Optional<RegistrationError> validateEmail(final String email) {
+        final EmailValidator emailValidator = EmailValidator.getInstance();
+        if(!emailValidator.isValid(email) || !email.contains(".")) {
+            return Optional.of(RegistrationError.EMAIL_INVALID);
         }
 
         return Optional.absent();
