@@ -101,10 +101,10 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             }
 
             final long timestampMillis = batchPeriodicDataWorker.getReceivedAt();
-            final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
-            if(roundedDateTime.isAfter(DateTime.now().plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || roundedDateTime.isBefore(DateTime.now().minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
+            final DateTime roundedReceivedAt = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
+            if(roundedReceivedAt.isAfter(DateTime.now().plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || roundedReceivedAt.isBefore(DateTime.now().minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
                 LOGGER.error("The clock for device {} is not within reasonable bounds (2h)", batchPeriodicDataWorker.getData().getDeviceId());
-                LOGGER.error("Current time = {}, received time = {}", DateTime.now(), roundedDateTime);
+                LOGGER.error("Current time = {}, received time = {}", DateTime.now(), roundedReceivedAt);
                 clockOutOfSync.mark();
                 continue;
             }
