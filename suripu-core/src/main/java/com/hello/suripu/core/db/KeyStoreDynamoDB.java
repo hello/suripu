@@ -62,7 +62,7 @@ public class KeyStoreDynamoDB implements KeyStore {
 
     @Override
     public Optional<byte[]> get(final String deviceId) {
-        LOGGER.warn("Calling get with {}", deviceId);
+        LOGGER.info("Calling get with {}", deviceId);
         try {
             return cache.get(deviceId);
         } catch (ExecutionException e) {
@@ -97,7 +97,7 @@ public class KeyStoreDynamoDB implements KeyStore {
 
         final GetItemResult getItemResult = dynamoDBClient.getItem(getItemRequest);
 
-        LOGGER.warn("getItemResult = {}", getItemResult.toString());
+        LOGGER.info("getItemResult = {}", getItemResult.toString());
         if(getItemResult.getItem() == null || !getItemResult.getItem().containsKey(AES_KEY_ATTRIBUTE_NAME)) {
             LOGGER.warn("Did not find anything for device_id = {}", deviceId);
 
