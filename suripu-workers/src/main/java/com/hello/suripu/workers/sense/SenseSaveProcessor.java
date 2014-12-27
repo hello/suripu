@@ -127,13 +127,16 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
             for(final DataInputProtos.periodic_data periodicData : batchPeriodicDataWorker.getData().getDataList()) {
 
-                final long timestampMillis = periodicData.getUnixTime() * 1000;
-                final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC);
-                final DateTime now = DateTime.now();
+                // To validate that the firmware is sending a correct unix timestamp
+                // we need to compare it to something immutable, coming from a different clock (server)
+                // We can't compare to now because now changes, and if we want to reprocess old data it will be immediately discarded
+                final long createdAtTimestamp = batchPeriodicDataWorker.getReceivedAt();
+                final DateTime createdAtRounded = new DateTime(createdAtTimestamp, DateTimeZone.UTC);
+                final DateTime periodicDataSampleDateTime = new DateTime(periodicData.getUnixTime() * 1000).withSecondOfMinute(0).withMillisOfSecond(0);
 
-                if(roundedDateTime.isAfter(now.plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || roundedDateTime.isBefore(now.minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
+                if(periodicDataSampleDateTime.isAfter(createdAtRounded.plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || periodicDataSampleDateTime.isBefore(createdAtTimestamp.minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
                     LOGGER.error("The clock for device {} is not within reasonable bounds (2h)", batchPeriodicDataWorker.getData().getDeviceId());
-                    LOGGER.error("Current time = {}, received time = {}", DateTime.now(), roundedDateTime);
+                    LOGGER.error("Created time = {}, sample time = {}, now = {}", createdAtRounded, periodicDataSampleDateTime, DateTime.now());
                     clockOutOfSync.mark();
                     continue;
                 }
@@ -174,8 +177,8 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                             .withAmbientLight(periodicData.getLight())
                             .withAmbientLightVariance(periodicData.getLightVariability())
                             .withAmbientLightPeakiness(periodicData.getLightTonality())
-                            .withOffsetMillis(userTimeZone.getOffset(roundedDateTime))
-                            .withDateTimeUTC(roundedDateTime)
+                            .withOffsetMillis(userTimeZone.getOffset(periodicDataSampleDateTime))
+                            .withDateTimeUTC(periodicDataSampleDateTime)
                             .withFirmwareVersion(periodicData.getFirmwareVersion())
                             .withWaveCount(periodicData.hasWaveCount() ? periodicData.getWaveCount() : 0)
                             .withHoldCount(periodicData.hasHoldCount() ? periodicData.getHoldCount() : 0);
