@@ -121,7 +121,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             }
 
             if(deviceAccountInfoFromMergeTable.isEmpty()) {
-                LOGGER.error("Device {} is not stored in DynamoDB or doesn’t have any accounts linked.", deviceName);
+                LOGGER.error("Device {} is not stored in DynamoDB or doesn't have any accounts linked.", deviceName);
             }
 
 
@@ -132,7 +132,8 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                 // We can't compare to now because now changes, and if we want to reprocess old data it will be immediately discarded
                 final long createdAtTimestamp = batchPeriodicDataWorker.getReceivedAt();
                 final DateTime createdAtRounded = new DateTime(createdAtTimestamp, DateTimeZone.UTC);
-                final DateTime periodicDataSampleDateTime = new DateTime(periodicData.getUnixTime() * 1000).withSecondOfMinute(0).withMillisOfSecond(0);
+                final Long timestampMillis = periodicData.getUnixTime() * 1000L;
+                final DateTime periodicDataSampleDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
 
                 if(periodicDataSampleDateTime.isAfter(createdAtRounded.plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || periodicDataSampleDateTime.isBefore(createdAtRounded.minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
                     LOGGER.error("The clock for device {} is not within reasonable bounds (2h)", batchPeriodicDataWorker.getData().getDeviceId());
