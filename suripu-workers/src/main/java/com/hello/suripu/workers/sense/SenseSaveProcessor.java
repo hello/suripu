@@ -100,16 +100,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                 LOGGER.warn("Found too many pairs ({}) for device = {}", deviceAccountPairs.size(), deviceName);
             }
 
-            final long timestampMillis = batchPeriodicDataWorker.getReceivedAt();
-            final DateTime roundedReceivedAt = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
-            if(roundedReceivedAt.isAfter(DateTime.now().plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || roundedReceivedAt.isBefore(DateTime.now().minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
-                LOGGER.error("The clock for device {} is not within reasonable bounds (2h)", batchPeriodicDataWorker.getData().getDeviceId());
-                LOGGER.error("Current time = {}, received time = {}", DateTime.now(), roundedReceivedAt);
-                clockOutOfSync.mark();
-                continue;
-            }
-
-
             // This is the default timezone.
             final List<AlarmInfo> deviceAccountInfoFromMergeTable = new ArrayList<>();
             int retries = 2;
@@ -137,6 +127,17 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
             for(final DataInputProtos.periodic_data periodicData : batchPeriodicDataWorker.getData().getDataList()) {
 
+                final long timestampMillis = periodicData.getUnixTime() * 1000;
+                final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC);
+                final DateTime now = DateTime.now();
+
+                if(roundedDateTime.isAfter(now.plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || roundedDateTime.isBefore(now.minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
+                    LOGGER.error("The clock for device {} is not within reasonable bounds (2h)", batchPeriodicDataWorker.getData().getDeviceId());
+                    LOGGER.error("Current time = {}, received time = {}", DateTime.now(), roundedDateTime);
+                    clockOutOfSync.mark();
+                    continue;
+                }
+
                 for (final DeviceAccountPair pair : deviceAccountPairs) {
                     Optional<DateTimeZone> timeZoneOptional = Optional.absent();
                     for(final AlarmInfo alarmInfo:deviceAccountInfoFromMergeTable){
@@ -159,9 +160,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                     }
 
                     final DateTimeZone userTimeZone = timeZoneOptional.get();
-                    final DateTime roundedSample = new DateTime(periodicData.getUnixTime() * 1000, DateTimeZone.UTC)
-                            .withSecondOfMinute(0)
-                            .withMillisOfSecond(0);
+                    
                     final DeviceData.Builder builder = new DeviceData.Builder()
                             .withAccountId(pair.accountId)
                             .withDeviceId(pair.internalDeviceId)
@@ -175,8 +174,8 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                             .withAmbientLight(periodicData.getLight())
                             .withAmbientLightVariance(periodicData.getLightVariability())
                             .withAmbientLightPeakiness(periodicData.getLightTonality())
-                            .withOffsetMillis(userTimeZone.getOffset(roundedSample))
-                            .withDateTimeUTC(roundedSample)
+                            .withOffsetMillis(userTimeZone.getOffset(roundedDateTime))
+                            .withDateTimeUTC(roundedDateTime)
                             .withFirmwareVersion(periodicData.getFirmwareVersion())
                             .withWaveCount(periodicData.hasWaveCount() ? periodicData.getWaveCount() : 0)
                             .withHoldCount(periodicData.hasHoldCount() ? periodicData.getHoldCount() : 0);
