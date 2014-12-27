@@ -175,7 +175,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                             .withAmbientLight(periodicData.getLight())
                             .withAmbientLightVariance(periodicData.getLightVariability())
                             .withAmbientLightPeakiness(periodicData.getLightTonality())
-                            .withOffsetMillis(userTimeZone.getOffset(roundedDateTime))
+                            .withOffsetMillis(userTimeZone.getOffset(roundedSample))
                             .withDateTimeUTC(roundedSample)
                             .withFirmwareVersion(periodicData.getFirmwareVersion())
                             .withWaveCount(periodicData.hasWaveCount() ? periodicData.getWaveCount() : 0)
