@@ -238,6 +238,7 @@ public class RegisterResource {
         final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_MORPHEUS);
         final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
         if(senseIdFromHeader != null){
+            LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
             return signAndSend(senseIdFromHeader, builder, senseKeyStore);
         }
         return signAndSend(builder.getDeviceId(), builder, senseKeyStore);
@@ -252,6 +253,7 @@ public class RegisterResource {
         final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_PILL);
         final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
         if(senseIdFromHeader != null){
+            LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
             return signAndSend(senseIdFromHeader, builder, senseKeyStore);
         }
 
