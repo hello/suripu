@@ -16,6 +16,7 @@ import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
+import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.service.SignedMessage;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -235,6 +236,10 @@ public class RegisterResource {
     @Timed
     public Response registerMorpheus(final byte[] body) {
         final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_MORPHEUS);
+        final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
+        if(senseIdFromHeader != null){
+            return signAndSend(senseIdFromHeader, builder, senseKeyStore);
+        }
         return signAndSend(builder.getDeviceId(), builder, senseKeyStore);
     }
 
@@ -245,6 +250,10 @@ public class RegisterResource {
     @Timed
     public Response registerPill(final byte[] body) {
         final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_PILL);
+        final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
+        if(senseIdFromHeader != null){
+            return signAndSend(senseIdFromHeader, builder, senseKeyStore);
+        }
 
         // TODO: Remove this and get sense id from header after the firmware is fixed.
         final Optional<AccessToken> accessTokenOptional = this.tokenStore.getClientDetailsByToken(
