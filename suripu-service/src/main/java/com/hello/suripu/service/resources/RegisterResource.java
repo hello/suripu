@@ -235,10 +235,12 @@ public class RegisterResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Timed
     public Response registerMorpheus(final byte[] body) {
-        final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_MORPHEUS);
         final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
         if(senseIdFromHeader != null){
             LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
+        }
+        final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_MORPHEUS);
+        if(senseIdFromHeader != null){
             return signAndSend(senseIdFromHeader, builder, senseKeyStore);
         }
         return signAndSend(builder.getDeviceId(), builder, senseKeyStore);
