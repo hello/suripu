@@ -104,7 +104,6 @@ public class RegisterResource {
 
         final String deviceId = morpheusCommand.getDeviceId();
         builder.setDeviceId(deviceId);
-        builder.setAccountId(morpheusCommand.getAccountId());
 
         String senseId = deviceId;
 
@@ -179,9 +178,7 @@ public class RegisterResource {
                     builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_PILL);
                     break;
             }
-
-            builder.setAccountId(token);
-            builder.setDeviceId(deviceId);
+            builder.setAccountId(morpheusCommand.getAccountId());
 
         } catch (UnableToExecuteStatementException sqlExp){
             final Matcher matcher = PG_UNIQ_PATTERN.matcher(sqlExp.getMessage());
