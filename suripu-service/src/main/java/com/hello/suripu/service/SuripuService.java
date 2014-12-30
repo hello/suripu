@@ -48,6 +48,7 @@ import com.hello.suripu.service.cli.CreateKeyStoreDynamoDBTable;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
 import com.hello.suripu.service.modules.RolloutModule;
 import com.hello.suripu.service.resources.AudioResource;
+import com.hello.suripu.service.resources.CheckResource;
 import com.hello.suripu.service.resources.DownloadResource;
 import com.hello.suripu.service.resources.LogsResource;
 import com.hello.suripu.service.resources.ReceiveResource;
@@ -204,6 +205,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 senseKeyStore
         );
 
+        environment.addResource(new CheckResource(senseKeyStore));
         environment.addResource(logsResource);
 
         environment.addResource(new PingResource());
