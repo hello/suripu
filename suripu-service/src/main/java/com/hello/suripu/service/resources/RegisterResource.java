@@ -178,7 +178,7 @@ public class RegisterResource {
                     builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_PILL);
                     break;
             }
-            builder.setAccountId(morpheusCommand.getAccountId());
+            //builder.setAccountId(morpheusCommand.getAccountId());
 
         } catch (UnableToExecuteStatementException sqlExp){
             final Matcher matcher = PG_UNIQ_PATTERN.matcher(sqlExp.getMessage());
