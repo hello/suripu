@@ -380,8 +380,11 @@ public class ReceiveResource extends BaseResource {
             final Long timestampMillis = data.getUnixTime() * 1000L;
             final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
             if(roundedDateTime.isAfter(DateTime.now().plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || roundedDateTime.isBefore(DateTime.now().minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
-                LOGGER.error("The clock for device {} is not within reasonable bounds (2h)", data.getDeviceId());
-                LOGGER.error("Current time = {}, received time = {}", DateTime.now(), roundedDateTime);
+                LOGGER.error("The clock for device \"{}\" is not within reasonable bounds (2h), current time = {}, received time = {}",
+                        data.getDeviceId(),
+                        DateTime.now(),
+                        roundedDateTime
+                        );
                 // TODO: throw exception?
                 // throw new WebApplicationException(Response.Status.BAD_REQUEST);
                 continue;
@@ -509,7 +512,10 @@ public class ReceiveResource extends BaseResource {
             final DateTime now = DateTime.now();
             final Long pillTimestamp = pill.getTimestamp() * 1000L;
             if(pillTimestamp > now.plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS).getMillis()) {
-                LOGGER.warn("Pill data timestamp is too much in the future. now = {}, timestamp = {}", now, pillTimestamp);
+                LOGGER.warn("Pill data timestamp from {} is too much in the future. now = {}, timestamp = {}",
+                        pill.getDeviceId(),
+                        now,
+                        new DateTime(pillTimestamp, DateTimeZone.UTC));
                 continue;
             }
             cleanBatch.addPills(pill);
