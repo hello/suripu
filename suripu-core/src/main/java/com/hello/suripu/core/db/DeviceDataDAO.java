@@ -77,7 +77,7 @@ public abstract class DeviceDataDAO {
     @SqlQuery("SELECT " +
             "MAX(account_id) AS account_id," +
             "MAX(device_id) AS device_id," +
-            "ROUND(AVG(ambient_temp)) as ambient_temp," +
+            "ROUND(MIN(ambient_temp)) as ambient_temp," +
             "ROUND(AVG(ambient_light)) as ambient_light," +
             "ROUND(AVG(ambient_light_variance)) as ambient_light_variance," +
             "ROUND(AVG(ambient_light_peakiness)) as ambient_light_peakiness," +
@@ -109,7 +109,7 @@ public abstract class DeviceDataDAO {
     @SqlQuery("SELECT " +
             "MAX(account_id) AS account_id," +
             "MAX(device_id) AS device_id," +
-            "ROUND(AVG(ambient_temp)) as ambient_temp," +
+            "ROUND(MIN(ambient_temp)) as ambient_temp," +
             "ROUND(AVG(ambient_light)) as ambient_light," +
             "ROUND(AVG(ambient_light_variance)) as ambient_light_variance," +
             "ROUND(AVG(ambient_light_peakiness)) as ambient_light_peakiness," +
