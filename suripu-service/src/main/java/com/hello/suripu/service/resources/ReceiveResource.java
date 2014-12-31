@@ -507,7 +507,7 @@ public class ReceiveResource extends BaseResource {
 
         for(final SenseCommandProtos.pill_data pill : batchPilldata.getPillsList()) {
             final DateTime now = DateTime.now();
-            final Long pillTimestamp = pill.getTimestamp() * 1000;
+            final Long pillTimestamp = pill.getTimestamp() * 1000L;
             if(pillTimestamp > now.plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS).getMillis()) {
                 LOGGER.warn("Pill data timestamp is too much in the future. now = {}, timestamp = {}", now, pillTimestamp);
                 continue;
