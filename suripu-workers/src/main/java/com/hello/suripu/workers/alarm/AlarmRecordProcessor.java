@@ -52,14 +52,19 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
     @Override
     public void processRecords(final List<Record> records, final IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
 
-        final Set<String> deviceIds = new HashSet<String>();
+        final Set<String> senseIds = new HashSet<String>();
 
         for (final Record record : records) {
             try {
                 final DataInputProtos.periodic_data data = DataInputProtos.periodic_data.parseFrom(record.getData().array());
+                if(!data.hasDeviceId() || data.getDeviceId().isEmpty()) {
+                    LOGGER.warn("Found a periodic_data without a device_id {}");
+                    continue;
+                }
+
                 final String senseId = data.getDeviceId();
 
-                deviceIds.add(senseId);
+                senseIds.add(senseId);
 
 
             } catch (InvalidProtocolBufferException e) {
@@ -69,7 +74,7 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
 
         final DateTime currentTime = DateTime.now();
         LOGGER.info("Got {} records.", records.size());
-        for(final String senseId:deviceIds) {
+        for(final String senseId : senseIds) {
             RingProcessor.updateNextRingTime(this.mergedAlarmInfoDynamoDB,
                     this.ringTimeDAODynamoDB,
                     this.trackerMotionDAO,
