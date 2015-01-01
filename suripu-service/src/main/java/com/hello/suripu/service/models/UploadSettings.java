@@ -13,7 +13,7 @@ public class UploadSettings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UploadSettings.class);
     private static final SuripuConfiguration config = new SuripuConfiguration();
-    private static final SenseUploadConfiguration senseUploadConfiguration = config.getSenseUploadConfiguration();
+
 
     public final DateTimeZone userTimeZone;
 
@@ -26,7 +26,7 @@ public class UploadSettings {
     }
 
     public Integer getUploadInterval() {
-        return computeUploadIntervalPerUserPerSetting(getUserCurrentDateTime());
+        return computeUploadIntervalPerUserPerSetting(getUserCurrentDateTime(), config.getSenseUploadConfiguration());
     }
 
     private DateTime getUserCurrentDateTime() {
@@ -34,7 +34,10 @@ public class UploadSettings {
         return userCurrentDateTime;
     }
 
-    private Integer computeUploadIntervalPerUserPerSetting(DateTime userCurrentDateTime) {
+    private SenseUploadConfiguration getConfig() {
+        return config.getSenseUploadConfiguration();
+    }
+    private Integer computeUploadIntervalPerUserPerSetting(DateTime userCurrentDateTime, SenseUploadConfiguration senseUploadConfiguration) {
         final Integer hourOfDay = userCurrentDateTime.getHourOfDay();
 
         LOGGER.debug("{} ::: {}", userCurrentDateTime);
@@ -55,6 +58,6 @@ public class UploadSettings {
     }
 
     public Integer computeUploadIntervalForTests(DateTime dateTime) {
-        return computeUploadIntervalPerUserPerSetting(dateTime);
+        return computeUploadIntervalPerUserPerSetting(dateTime, new SenseUploadConfiguration());
     }
 }

@@ -144,7 +144,23 @@ public class SuripuConfiguration extends Configuration {
         return roomConditions;
     }
 
-    @JsonProperty("sense_upload_settings")
-    private SenseUploadConfiguration senseUploadConfiguration;
-    public SenseUploadConfiguration getSenseUploadConfiguration() { return new SenseUploadConfiguration(); }
+
+    @JsonProperty("non_peak_hour_lower_bound")
+    private Integer nonPeakHourLowerBound;
+
+    @JsonProperty("non_peak_hour_upper_bound")
+    private Integer nonPeakHourUpperBound;
+
+    @JsonProperty("week_days_only")
+    private Boolean weekDaysOnly;
+
+    @JsonProperty("long_interval")
+    private Integer longInterval;
+
+    @JsonProperty("short_interval")
+    private Integer shortInterval;
+
+    public SenseUploadConfiguration getSenseUploadConfiguration() { return new SenseUploadConfiguration(
+            this.nonPeakHourLowerBound, this.nonPeakHourUpperBound, this.weekDaysOnly, this.longInterval, this.shortInterval
+    ); }
 }
