@@ -433,7 +433,9 @@ public class ReceiveResource extends BaseResource {
         }
 
         // groups take precedence over feature
-        if(!groups.isEmpty()) {
+        if(!groups.isEmpty() && batch.getDataList().size() > 1) {
+            // TODO check for sense uptime instead and do not OTA if it was just plugged in
+
             LOGGER.debug("DeviceId {} belongs to groups: {}", deviceName, groups);
             final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName, groups.get(0), firmwareVersion);
             LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
