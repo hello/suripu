@@ -124,6 +124,11 @@ public class ReceiveResource extends BaseResource {
         LOGGER.debug("Received valid protobuf {}", data.toString());
         LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
 
+        if(data.getDeviceId().equals("") || data.getDeviceId() == null){
+            LOGGER.error("Empty device id");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
         final Optional<byte[]> optionalKeyBytes = keyStore.get(data.getDeviceId());
         if(!optionalKeyBytes.isPresent()) {
             LOGGER.error("Failed to get key from key store for device_id = {}", data.getDeviceId());
@@ -190,6 +195,11 @@ public class ReceiveResource extends BaseResource {
 
 
         final String deviceName = deviceIdOptional.get();
+        if(deviceName.equals("") || deviceName == null){
+            LOGGER.error("Empty device id");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
         LOGGER.debug("Received valid protobuf {}", deviceName.toString());
         LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
 
