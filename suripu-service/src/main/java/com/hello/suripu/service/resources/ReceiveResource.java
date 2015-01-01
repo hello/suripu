@@ -27,6 +27,7 @@ import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DeviceIdUtil;
 import com.hello.suripu.core.util.RoomConditionUtil;
 import com.hello.suripu.service.SignedMessage;
+import com.hello.suripu.service.models.UploadSettings;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -462,7 +463,18 @@ public class ReceiveResource extends BaseResource {
             audioControl.setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
         }
 
+        // Get user timezone and compute upload interval based on it
+        for(final AlarmInfo alarmInfo:alarmInfoList){
+            if(alarmInfo.timeZone.isPresent()){
+                userTimeZone = alarmInfo.timeZone.get();
+            }
+        }
+        final UploadSettings uploadSettings = new UploadSettings(userTimeZone);
+        final Integer uploadInterval = uploadSettings.getUploadInterval();
+        
+        responseBuilder.setUploadCycle(uploadInterval);
         responseBuilder.setAudioControl(audioControl);
+
 
         final OutputProtos.SyncResponse syncResponse = responseBuilder.build();
 
