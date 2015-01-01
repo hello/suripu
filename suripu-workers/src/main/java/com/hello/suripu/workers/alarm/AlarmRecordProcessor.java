@@ -56,13 +56,13 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
 
         for (final Record record : records) {
             try {
-                final DataInputProtos.periodic_data data = DataInputProtos.periodic_data.parseFrom(record.getData().array());
-                if(!data.hasDeviceId() || data.getDeviceId().isEmpty()) {
+                final DataInputProtos.BatchPeriodicDataWorker pb = DataInputProtos.BatchPeriodicDataWorker.parseFrom(record.getData().array());
+                if(!pb.getData().hasDeviceId() || pb.getData().getDeviceId().isEmpty()) {
                     LOGGER.warn("Found a periodic_data without a device_id {}");
                     continue;
                 }
 
-                final String senseId = data.getDeviceId();
+                final String senseId = pb.getData().getDeviceId();
 
                 senseIds.add(senseId);
 
