@@ -21,10 +21,6 @@ public class UploadSettings {
         this.userTimeZone = userTimeZone;
     }
 
-    public UploadSettings() {
-        this(DateTimeZone.forID("America/Los_Angeles"));
-    }
-
     public Integer getUploadInterval() {
         return computeUploadIntervalPerUserPerSetting(getUserCurrentDateTime(), config.getSenseUploadConfiguration());
     }

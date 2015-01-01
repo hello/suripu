@@ -2,6 +2,7 @@ package com.hello.suripu.service.models;
 
 import com.hello.suripu.service.configuration.SenseUploadConfiguration;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -9,7 +10,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 public class UploadSettingsTest {
 
-    private final static UploadSettings uploadSettings = new UploadSettings();
+    private final static UploadSettings uploadSettings = new UploadSettings(DateTimeZone.forID("America/Los_Angeles"));
     private final static SenseUploadConfiguration senseUploadConfiguration = new SenseUploadConfiguration();
 
     @Test
