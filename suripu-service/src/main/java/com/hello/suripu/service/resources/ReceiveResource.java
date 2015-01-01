@@ -124,7 +124,7 @@ public class ReceiveResource extends BaseResource {
         LOGGER.debug("Received valid protobuf {}", data.toString());
         LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
 
-        if(data.getDeviceId().isEmpty()){
+        if(data.getDeviceId() == null || data.getDeviceId().isEmpty()){
             LOGGER.error("Empty device id");
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
@@ -195,7 +195,7 @@ public class ReceiveResource extends BaseResource {
 
 
         final String deviceName = deviceIdOptional.get();
-        if(deviceName.isEmpty()){
+        if(data.getDeviceId() == null || deviceName.isEmpty()){
             LOGGER.error("Empty device id");
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
