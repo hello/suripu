@@ -53,17 +53,16 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
     public void processRecords(final List<Record> records, final IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
 
         final Set<String> senseIds = new HashSet<String>();
-
+        LOGGER.info("Got {} records.", records.size());
         for (final Record record : records) {
             try {
-                final DataInputProtos.periodic_data data = DataInputProtos.periodic_data.parseFrom(record.getData().array());
-                if(!data.hasDeviceId() || data.getDeviceId().isEmpty()) {
+                final DataInputProtos.BatchPeriodicDataWorker pb = DataInputProtos.BatchPeriodicDataWorker.parseFrom(record.getData().array());
+                if(!pb.getData().hasDeviceId() || pb.getData().getDeviceId().isEmpty()) {
                     LOGGER.warn("Found a periodic_data without a device_id {}");
                     continue;
                 }
 
-                final String senseId = data.getDeviceId();
-
+                final String senseId = pb.getData().getDeviceId();
                 senseIds.add(senseId);
 
 
@@ -72,8 +71,8 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
             }
         }
 
+        LOGGER.info("Processing {} unique senseIds.", senseIds.size());
         final DateTime currentTime = DateTime.now();
-        LOGGER.info("Got {} records.", records.size());
         for(final String senseId : senseIds) {
             RingProcessor.updateNextRingTime(this.mergedAlarmInfoDynamoDB,
                     this.ringTimeDAODynamoDB,
@@ -87,13 +86,22 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
                     );
         }
 
-
+        LOGGER.info("Successfully updated smart ring time for {} sense", senseIds.size());
         try {
             iRecordProcessorCheckpointer.checkpoint();
         } catch (InvalidStateException e) {
             LOGGER.error("checkpoint {}", e.getMessage());
         } catch (ShutdownException e) {
             LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
+        }
+
+        if(records.size() < 5) {
+            LOGGER.info("Batch size was small. Sleeping for 10s");
+            try {
+                Thread.sleep(10000L);
+            } catch (InterruptedException e) {
+                LOGGER.error("Interrupted Thread while sleeping: {}", e.getMessage());
+            }
         }
     }
 
