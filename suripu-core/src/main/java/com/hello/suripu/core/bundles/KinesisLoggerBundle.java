@@ -44,7 +44,7 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
             this.topic = loggerConfiguration.getStreamName();
             this.bufferSize = loggerConfiguration.bufferSize();
             this.origin = loggerConfiguration.origin();
-            buffer = new ArrayList<>(bufferSize);
+            this.buffer = new ArrayList<>(bufferSize);
         }
 
 
