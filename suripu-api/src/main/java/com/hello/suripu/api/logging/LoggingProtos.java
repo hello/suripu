@@ -60,6 +60,16 @@ public final class LoggingProtos {
      * <code>optional bool production = 4 [default = false];</code>
      */
     boolean getProduction();
+
+    // optional int32 level = 5;
+    /**
+     * <code>optional int32 level = 5;</code>
+     */
+    boolean hasLevel();
+    /**
+     * <code>optional int32 level = 5;</code>
+     */
+    int getLevel();
   }
   /**
    * Protobuf type {@code LogMessage}
@@ -130,6 +140,11 @@ public final class LoggingProtos {
             case 32: {
               bitField0_ |= 0x00000008;
               production_ = input.readBool();
+              break;
+            }
+            case 40: {
+              bitField0_ |= 0x00000010;
+              level_ = input.readInt32();
               break;
             }
           }
@@ -290,11 +305,28 @@ public final class LoggingProtos {
       return production_;
     }
 
+    // optional int32 level = 5;
+    public static final int LEVEL_FIELD_NUMBER = 5;
+    private int level_;
+    /**
+     * <code>optional int32 level = 5;</code>
+     */
+    public boolean hasLevel() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional int32 level = 5;</code>
+     */
+    public int getLevel() {
+      return level_;
+    }
+
     private void initFields() {
       origin_ = "";
       message_ = "";
       ts_ = 0L;
       production_ = false;
+      level_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -320,6 +352,9 @@ public final class LoggingProtos {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeBool(4, production_);
       }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeInt32(5, level_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -344,6 +379,10 @@ public final class LoggingProtos {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(4, production_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(5, level_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -469,6 +508,8 @@ public final class LoggingProtos {
         bitField0_ = (bitField0_ & ~0x00000004);
         production_ = false;
         bitField0_ = (bitField0_ & ~0x00000008);
+        level_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -513,6 +554,10 @@ public final class LoggingProtos {
           to_bitField0_ |= 0x00000008;
         }
         result.production_ = production_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.level_ = level_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -544,6 +589,9 @@ public final class LoggingProtos {
         }
         if (other.hasProduction()) {
           setProduction(other.getProduction());
+        }
+        if (other.hasLevel()) {
+          setLevel(other.getLevel());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -782,6 +830,39 @@ public final class LoggingProtos {
       public Builder clearProduction() {
         bitField0_ = (bitField0_ & ~0x00000008);
         production_ = false;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 level = 5;
+      private int level_ ;
+      /**
+       * <code>optional int32 level = 5;</code>
+       */
+      public boolean hasLevel() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional int32 level = 5;</code>
+       */
+      public int getLevel() {
+        return level_;
+      }
+      /**
+       * <code>optional int32 level = 5;</code>
+       */
+      public Builder setLevel(int value) {
+        bitField0_ |= 0x00000010;
+        level_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 level = 5;</code>
+       */
+      public Builder clearLevel() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        level_ = 0;
         onChanged();
         return this;
       }
@@ -4052,6 +4133,954 @@ public final class LoggingProtos {
     // @@protoc_insertion_point(class_scope:Registration)
   }
 
+  public interface DecryptionErrorOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional string device_id = 1;
+    /**
+     * <code>optional string device_id = 1;</code>
+     */
+    boolean hasDeviceId();
+    /**
+     * <code>optional string device_id = 1;</code>
+     */
+    java.lang.String getDeviceId();
+    /**
+     * <code>optional string device_id = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getDeviceIdBytes();
+
+    // optional string keyHex = 2;
+    /**
+     * <code>optional string keyHex = 2;</code>
+     */
+    boolean hasKeyHex();
+    /**
+     * <code>optional string keyHex = 2;</code>
+     */
+    java.lang.String getKeyHex();
+    /**
+     * <code>optional string keyHex = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getKeyHexBytes();
+
+    // optional int64 ts = 3;
+    /**
+     * <code>optional int64 ts = 3;</code>
+     */
+    boolean hasTs();
+    /**
+     * <code>optional int64 ts = 3;</code>
+     */
+    long getTs();
+
+    // optional bytes request_body = 4;
+    /**
+     * <code>optional bytes request_body = 4;</code>
+     */
+    boolean hasRequestBody();
+    /**
+     * <code>optional bytes request_body = 4;</code>
+     */
+    com.google.protobuf.ByteString getRequestBody();
+
+    // optional string other = 5;
+    /**
+     * <code>optional string other = 5;</code>
+     */
+    boolean hasOther();
+    /**
+     * <code>optional string other = 5;</code>
+     */
+    java.lang.String getOther();
+    /**
+     * <code>optional string other = 5;</code>
+     */
+    com.google.protobuf.ByteString
+        getOtherBytes();
+  }
+  /**
+   * Protobuf type {@code DecryptionError}
+   */
+  public static final class DecryptionError extends
+      com.google.protobuf.GeneratedMessage
+      implements DecryptionErrorOrBuilder {
+    // Use DecryptionError.newBuilder() to construct.
+    private DecryptionError(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private DecryptionError(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final DecryptionError defaultInstance;
+    public static DecryptionError getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public DecryptionError getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private DecryptionError(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              deviceId_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              keyHex_ = input.readBytes();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              ts_ = input.readInt64();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              requestBody_ = input.readBytes();
+              break;
+            }
+            case 42: {
+              bitField0_ |= 0x00000010;
+              other_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.suripu.api.logging.LoggingProtos.internal_static_DecryptionError_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.suripu.api.logging.LoggingProtos.internal_static_DecryptionError_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.suripu.api.logging.LoggingProtos.DecryptionError.class, com.hello.suripu.api.logging.LoggingProtos.DecryptionError.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<DecryptionError> PARSER =
+        new com.google.protobuf.AbstractParser<DecryptionError>() {
+      public DecryptionError parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new DecryptionError(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<DecryptionError> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional string device_id = 1;
+    public static final int DEVICE_ID_FIELD_NUMBER = 1;
+    private java.lang.Object deviceId_;
+    /**
+     * <code>optional string device_id = 1;</code>
+     */
+    public boolean hasDeviceId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string device_id = 1;</code>
+     */
+    public java.lang.String getDeviceId() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          deviceId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string device_id = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getDeviceIdBytes() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        deviceId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string keyHex = 2;
+    public static final int KEYHEX_FIELD_NUMBER = 2;
+    private java.lang.Object keyHex_;
+    /**
+     * <code>optional string keyHex = 2;</code>
+     */
+    public boolean hasKeyHex() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string keyHex = 2;</code>
+     */
+    public java.lang.String getKeyHex() {
+      java.lang.Object ref = keyHex_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          keyHex_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string keyHex = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getKeyHexBytes() {
+      java.lang.Object ref = keyHex_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        keyHex_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional int64 ts = 3;
+    public static final int TS_FIELD_NUMBER = 3;
+    private long ts_;
+    /**
+     * <code>optional int64 ts = 3;</code>
+     */
+    public boolean hasTs() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional int64 ts = 3;</code>
+     */
+    public long getTs() {
+      return ts_;
+    }
+
+    // optional bytes request_body = 4;
+    public static final int REQUEST_BODY_FIELD_NUMBER = 4;
+    private com.google.protobuf.ByteString requestBody_;
+    /**
+     * <code>optional bytes request_body = 4;</code>
+     */
+    public boolean hasRequestBody() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional bytes request_body = 4;</code>
+     */
+    public com.google.protobuf.ByteString getRequestBody() {
+      return requestBody_;
+    }
+
+    // optional string other = 5;
+    public static final int OTHER_FIELD_NUMBER = 5;
+    private java.lang.Object other_;
+    /**
+     * <code>optional string other = 5;</code>
+     */
+    public boolean hasOther() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional string other = 5;</code>
+     */
+    public java.lang.String getOther() {
+      java.lang.Object ref = other_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          other_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string other = 5;</code>
+     */
+    public com.google.protobuf.ByteString
+        getOtherBytes() {
+      java.lang.Object ref = other_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        other_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private void initFields() {
+      deviceId_ = "";
+      keyHex_ = "";
+      ts_ = 0L;
+      requestBody_ = com.google.protobuf.ByteString.EMPTY;
+      other_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getDeviceIdBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, getKeyHexBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeInt64(3, ts_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(4, requestBody_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeBytes(5, getOtherBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getDeviceIdBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getKeyHexBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(3, ts_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, requestBody_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(5, getOtherBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.suripu.api.logging.LoggingProtos.DecryptionError parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.DecryptionError parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.DecryptionError parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.DecryptionError parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.DecryptionError parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.DecryptionError parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.DecryptionError parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.DecryptionError parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.DecryptionError parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.DecryptionError parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.suripu.api.logging.LoggingProtos.DecryptionError prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code DecryptionError}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.logging.LoggingProtos.DecryptionErrorOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.logging.LoggingProtos.internal_static_DecryptionError_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.logging.LoggingProtos.internal_static_DecryptionError_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.logging.LoggingProtos.DecryptionError.class, com.hello.suripu.api.logging.LoggingProtos.DecryptionError.Builder.class);
+      }
+
+      // Construct using com.hello.suripu.api.logging.LoggingProtos.DecryptionError.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        deviceId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        keyHex_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        ts_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        requestBody_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        other_ = "";
+        bitField0_ = (bitField0_ & ~0x00000010);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.suripu.api.logging.LoggingProtos.internal_static_DecryptionError_descriptor;
+      }
+
+      public com.hello.suripu.api.logging.LoggingProtos.DecryptionError getDefaultInstanceForType() {
+        return com.hello.suripu.api.logging.LoggingProtos.DecryptionError.getDefaultInstance();
+      }
+
+      public com.hello.suripu.api.logging.LoggingProtos.DecryptionError build() {
+        com.hello.suripu.api.logging.LoggingProtos.DecryptionError result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.suripu.api.logging.LoggingProtos.DecryptionError buildPartial() {
+        com.hello.suripu.api.logging.LoggingProtos.DecryptionError result = new com.hello.suripu.api.logging.LoggingProtos.DecryptionError(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.deviceId_ = deviceId_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.keyHex_ = keyHex_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.ts_ = ts_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.requestBody_ = requestBody_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.other_ = other_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.suripu.api.logging.LoggingProtos.DecryptionError) {
+          return mergeFrom((com.hello.suripu.api.logging.LoggingProtos.DecryptionError)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.suripu.api.logging.LoggingProtos.DecryptionError other) {
+        if (other == com.hello.suripu.api.logging.LoggingProtos.DecryptionError.getDefaultInstance()) return this;
+        if (other.hasDeviceId()) {
+          bitField0_ |= 0x00000001;
+          deviceId_ = other.deviceId_;
+          onChanged();
+        }
+        if (other.hasKeyHex()) {
+          bitField0_ |= 0x00000002;
+          keyHex_ = other.keyHex_;
+          onChanged();
+        }
+        if (other.hasTs()) {
+          setTs(other.getTs());
+        }
+        if (other.hasRequestBody()) {
+          setRequestBody(other.getRequestBody());
+        }
+        if (other.hasOther()) {
+          bitField0_ |= 0x00000010;
+          other_ = other.other_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.suripu.api.logging.LoggingProtos.DecryptionError parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.suripu.api.logging.LoggingProtos.DecryptionError) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional string device_id = 1;
+      private java.lang.Object deviceId_ = "";
+      /**
+       * <code>optional string device_id = 1;</code>
+       */
+      public boolean hasDeviceId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string device_id = 1;</code>
+       */
+      public java.lang.String getDeviceId() {
+        java.lang.Object ref = deviceId_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          deviceId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string device_id = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getDeviceIdBytes() {
+        java.lang.Object ref = deviceId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          deviceId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string device_id = 1;</code>
+       */
+      public Builder setDeviceId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        deviceId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string device_id = 1;</code>
+       */
+      public Builder clearDeviceId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        deviceId_ = getDefaultInstance().getDeviceId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string device_id = 1;</code>
+       */
+      public Builder setDeviceIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        deviceId_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string keyHex = 2;
+      private java.lang.Object keyHex_ = "";
+      /**
+       * <code>optional string keyHex = 2;</code>
+       */
+      public boolean hasKeyHex() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string keyHex = 2;</code>
+       */
+      public java.lang.String getKeyHex() {
+        java.lang.Object ref = keyHex_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          keyHex_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string keyHex = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getKeyHexBytes() {
+        java.lang.Object ref = keyHex_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          keyHex_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string keyHex = 2;</code>
+       */
+      public Builder setKeyHex(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        keyHex_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string keyHex = 2;</code>
+       */
+      public Builder clearKeyHex() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        keyHex_ = getDefaultInstance().getKeyHex();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string keyHex = 2;</code>
+       */
+      public Builder setKeyHexBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        keyHex_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional int64 ts = 3;
+      private long ts_ ;
+      /**
+       * <code>optional int64 ts = 3;</code>
+       */
+      public boolean hasTs() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional int64 ts = 3;</code>
+       */
+      public long getTs() {
+        return ts_;
+      }
+      /**
+       * <code>optional int64 ts = 3;</code>
+       */
+      public Builder setTs(long value) {
+        bitField0_ |= 0x00000004;
+        ts_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 ts = 3;</code>
+       */
+      public Builder clearTs() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        ts_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional bytes request_body = 4;
+      private com.google.protobuf.ByteString requestBody_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes request_body = 4;</code>
+       */
+      public boolean hasRequestBody() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional bytes request_body = 4;</code>
+       */
+      public com.google.protobuf.ByteString getRequestBody() {
+        return requestBody_;
+      }
+      /**
+       * <code>optional bytes request_body = 4;</code>
+       */
+      public Builder setRequestBody(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        requestBody_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes request_body = 4;</code>
+       */
+      public Builder clearRequestBody() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        requestBody_ = getDefaultInstance().getRequestBody();
+        onChanged();
+        return this;
+      }
+
+      // optional string other = 5;
+      private java.lang.Object other_ = "";
+      /**
+       * <code>optional string other = 5;</code>
+       */
+      public boolean hasOther() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional string other = 5;</code>
+       */
+      public java.lang.String getOther() {
+        java.lang.Object ref = other_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          other_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string other = 5;</code>
+       */
+      public com.google.protobuf.ByteString
+          getOtherBytes() {
+        java.lang.Object ref = other_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          other_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string other = 5;</code>
+       */
+      public Builder setOther(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        other_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string other = 5;</code>
+       */
+      public Builder clearOther() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        other_ = getDefaultInstance().getOther();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string other = 5;</code>
+       */
+      public Builder setOtherBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        other_ = value;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:DecryptionError)
+    }
+
+    static {
+      defaultInstance = new DecryptionError(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:DecryptionError)
+  }
+
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_LogMessage_descriptor;
   private static
@@ -4072,6 +5101,11 @@ public final class LoggingProtos {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_Registration_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_DecryptionError_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_DecryptionError_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -4081,20 +5115,23 @@ public final class LoggingProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\024suripu_logging.proto\"T\n\nLogMessage\022\016\n\006" +
+      "\n\024suripu_logging.proto\"c\n\nLogMessage\022\016\n\006" +
       "origin\030\001 \001(\t\022\017\n\007message\030\002 \001(\t\022\n\n\002ts\030\003 \001(" +
-      "\003\022\031\n\nproduction\030\004 \001(\010:\005false\"\250\002\n\013HttpReq" +
-      "uest\022\014\n\004path\030\001 \001(\t\022\024\n\014access_token\030\002 \001(\t" +
-      "\022\022\n\naccount_id\030\003 \001(\003\022\026\n\016application_id\030\004" +
-      " \001(\003\022\025\n\rtimestamp_utc\030\005 \001(\003\022\027\n\017required_" +
-      "scopes\030\006 \003(\t\022\027\n\017provided_scopes\030\007 \003(\t\022\037\n" +
-      "\027access_token_created_at\030\010 \001(\003\022\022\n\nuser_a" +
-      "gent\030\t \001(\t\022$\n\007headers\030\n \003(\0132\023.HttpReques" +
-      "t.Header\032%\n\006Header\022\014\n\004name\030\001 \001(\t\022\r\n\005valu",
-      "e\030\002 \001(\t\"\\\n\014Registration\022\021\n\tdevice_id\030\001 \001" +
-      "(\t\022\021\n\ttimestamp\030\002 \001(\003\022\022\n\naccount_id\030\003 \001(" +
-      "\003\022\022\n\nip_address\030\004 \001(\tB-\n\034com.hello.surip" +
-      "u.api.loggingB\rLoggingProtos"
+      "\003\022\031\n\nproduction\030\004 \001(\010:\005false\022\r\n\005level\030\005 " +
+      "\001(\005\"\250\002\n\013HttpRequest\022\014\n\004path\030\001 \001(\t\022\024\n\014acc" +
+      "ess_token\030\002 \001(\t\022\022\n\naccount_id\030\003 \001(\003\022\026\n\016a" +
+      "pplication_id\030\004 \001(\003\022\025\n\rtimestamp_utc\030\005 \001" +
+      "(\003\022\027\n\017required_scopes\030\006 \003(\t\022\027\n\017provided_" +
+      "scopes\030\007 \003(\t\022\037\n\027access_token_created_at\030" +
+      "\010 \001(\003\022\022\n\nuser_agent\030\t \001(\t\022$\n\007headers\030\n \003" +
+      "(\0132\023.HttpRequest.Header\032%\n\006Header\022\014\n\004nam",
+      "e\030\001 \001(\t\022\r\n\005value\030\002 \001(\t\"\\\n\014Registration\022\021" +
+      "\n\tdevice_id\030\001 \001(\t\022\021\n\ttimestamp\030\002 \001(\003\022\022\n\n" +
+      "account_id\030\003 \001(\003\022\022\n\nip_address\030\004 \001(\t\"e\n\017" +
+      "DecryptionError\022\021\n\tdevice_id\030\001 \001(\t\022\016\n\006ke" +
+      "yHex\030\002 \001(\t\022\n\n\002ts\030\003 \001(\003\022\024\n\014request_body\030\004" +
+      " \001(\014\022\r\n\005other\030\005 \001(\tB-\n\034com.hello.suripu." +
+      "api.loggingB\rLoggingProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -4106,7 +5143,7 @@ public final class LoggingProtos {
           internal_static_LogMessage_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_LogMessage_descriptor,
-              new java.lang.String[] { "Origin", "Message", "Ts", "Production", });
+              new java.lang.String[] { "Origin", "Message", "Ts", "Production", "Level", });
           internal_static_HttpRequest_descriptor =
             getDescriptor().getMessageTypes().get(1);
           internal_static_HttpRequest_fieldAccessorTable = new
@@ -4125,6 +5162,12 @@ public final class LoggingProtos {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_Registration_descriptor,
               new java.lang.String[] { "DeviceId", "Timestamp", "AccountId", "IpAddress", });
+          internal_static_DecryptionError_descriptor =
+            getDescriptor().getMessageTypes().get(3);
+          internal_static_DecryptionError_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_DecryptionError_descriptor,
+              new java.lang.String[] { "DeviceId", "KeyHex", "Ts", "RequestBody", "Other", });
           return null;
         }
       };
