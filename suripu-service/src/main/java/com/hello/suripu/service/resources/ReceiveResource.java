@@ -124,6 +124,11 @@ public class ReceiveResource extends BaseResource {
         LOGGER.debug("Received valid protobuf {}", data.toString());
         LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
 
+        if(data.getDeviceId() == null || data.getDeviceId().isEmpty()){
+            LOGGER.error("Empty device id");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
         final Optional<byte[]> optionalKeyBytes = keyStore.get(data.getDeviceId());
         if(!optionalKeyBytes.isPresent()) {
             LOGGER.error("Failed to get key from key store for device_id = {}", data.getDeviceId());
@@ -190,6 +195,11 @@ public class ReceiveResource extends BaseResource {
 
 
         final String deviceName = deviceIdOptional.get();
+        if(data.getDeviceId() == null || deviceName.isEmpty()){
+            LOGGER.error("Empty device id");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
         LOGGER.debug("Received valid protobuf {}", deviceName.toString());
         LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
 
@@ -423,7 +433,9 @@ public class ReceiveResource extends BaseResource {
         }
 
         // groups take precedence over feature
-        if(!groups.isEmpty()) {
+        if(!groups.isEmpty() && batch.getDataList().size() > 1) {
+            // TODO check for sense uptime instead and do not OTA if it was just plugged in
+
             LOGGER.debug("DeviceId {} belongs to groups: {}", deviceName, groups);
             final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName, groups.get(0), firmwareVersion);
             LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
