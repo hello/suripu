@@ -148,3 +148,10 @@ sense_logs:
     index_name : sense-logs
 
 room_conditions: 1
+
+sense_upload_configuration:
+  non_peak_hour_lower_bound: 11
+  non_peak_hour_upper_bound: 22
+  week_days_only: true
+  long_interval: 6
+  short_interval: 2
