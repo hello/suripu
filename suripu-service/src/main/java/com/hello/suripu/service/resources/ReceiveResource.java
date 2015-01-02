@@ -433,7 +433,7 @@ public class ReceiveResource extends BaseResource {
         }
 
         // groups take precedence over feature
-        if(!groups.isEmpty() && batch.getDataList().size() > 1) {
+        if(!groups.isEmpty() && batch.getDataList().size() > 5) {
             // TODO check for sense uptime instead and do not OTA if it was just plugged in
 
             LOGGER.debug("DeviceId {} belongs to groups: {}", deviceName, groups);
