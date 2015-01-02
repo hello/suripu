@@ -1,13 +1,9 @@
 package com.hello.suripu.service.models;
 
-import com.hello.suripu.core.configuration.DynamoDBConfiguration;
 import com.hello.suripu.service.configuration.SenseUploadConfiguration;
-import com.hello.suripu.service.configuration.SuripuConfiguration;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -77,7 +73,7 @@ public class UploadSettingsTest {
         final UploadSettings uploadSettings = new UploadSettings(DateTimeZone.getDefault(), nextUserAlarmTimestamp);
         final Integer unadjustedUploadInteval = uploadSettings.computeUploadIntervalForTests(userDateTime);
         final Integer adjustedUploadInterval = uploadSettings.adjustUploadIntervalForTests(unadjustedUploadInteval, nextUserAlarmTimestamp);
-        final Boolean isUploadIntervalOverwritten = adjustedUploadInterval == uploadSettings.getOverrideUploadInterval();
+        final Boolean isUploadIntervalOverwritten = adjustedUploadInterval == uploadSettings.getFastestUploadInterval();
         assertThat(isUploadIntervalOverwritten, is(true));
     }
 
@@ -88,7 +84,7 @@ public class UploadSettingsTest {
         final UploadSettings uploadSettings = new UploadSettings(DateTimeZone.getDefault(), nextUserAlarmTimestamp);
         final Integer unadjustedUploadInterval = uploadSettings.computeUploadIntervalForTests(userDateTime);
         final Integer adjustedUploadInterval = uploadSettings.adjustUploadIntervalForTests(unadjustedUploadInterval, nextUserAlarmTimestamp);
-        final Boolean isUploadIntervalOverwritten = adjustedUploadInterval == uploadSettings.getOverrideUploadInterval();
+        final Boolean isUploadIntervalOverwritten = adjustedUploadInterval == uploadSettings.getFastestUploadInterval();
         assertThat(isUploadIntervalOverwritten, is(false));
     }
 }

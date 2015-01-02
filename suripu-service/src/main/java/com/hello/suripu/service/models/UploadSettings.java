@@ -16,7 +16,7 @@ public class UploadSettings {
 
     private static final Long ALLOWABLE_TIME_BETWEEN_NOW_AND_NEXT_ALARM = 20*60*1000L;  // milliseconds
     private static final Long SUSTAINED_TIME_BETWEEN_NOW_AND_NEXT_ALARM = 60*60*1000L;  // milliseconds
-    private static final Integer OVERRIDE_UPLOAD_INTERVAL = 1;
+    private static final Integer FASTEST_UPLOAD_INTERVAL = 1;
 
     public final DateTimeZone userTimeZone;
     public final Long userNextAlarmTimestamp;
@@ -59,12 +59,12 @@ public class UploadSettings {
     private Integer adjustUploadInterval(final Integer standardUploadInterval, final Long userNextAlarmTimestamp) {
         LOGGER.debug("diff in milliseconds {}", userNextAlarmTimestamp - DateTime.now(DateTimeZone.UTC).getMillis());
         if (userNextAlarmTimestamp - DateTime.now(DateTimeZone.UTC).getMillis() <= ALLOWABLE_TIME_BETWEEN_NOW_AND_NEXT_ALARM) {
-            return OVERRIDE_UPLOAD_INTERVAL;
+            return FASTEST_UPLOAD_INTERVAL;
         }
         if (userNextAlarmTimestamp - DateTime.now(DateTimeZone.UTC).getMillis() >= SUSTAINED_TIME_BETWEEN_NOW_AND_NEXT_ALARM) {
             return standardUploadInterval;
         }
-        return OVERRIDE_UPLOAD_INTERVAL;
+        return FASTEST_UPLOAD_INTERVAL;
     }
 
     public Integer computeUploadIntervalForTests(final DateTime dateTime) {
@@ -75,7 +75,7 @@ public class UploadSettings {
         return adjustUploadInterval(standardUploadInterval, userNextAlarmTimestamp);
     }
 
-    public Integer getOverrideUploadInterval() {
-        return OVERRIDE_UPLOAD_INTERVAL;
+    public Integer getFastestUploadInterval() {
+        return FASTEST_UPLOAD_INTERVAL;
     }
 }
