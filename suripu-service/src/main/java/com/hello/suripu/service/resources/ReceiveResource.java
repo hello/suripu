@@ -419,7 +419,8 @@ public class ReceiveResource extends BaseResource {
 //            alarmBuilder.setRingtoneIds(i, replyRingTime.soundIds[i]);
 //        }
 
-        responseBuilder.setAlarm(getAlarmBuilderFromNextRingTime(deviceName, alarmInfoList).build());
+        final OutputProtos.SyncResponse.Alarm.Builder alarmBuilder = getAlarmBuilderFromNextRingTime(deviceName, alarmInfoList);
+        responseBuilder.setAlarm(alarmBuilder.build());
 
         final String firmwareFeature = String.format("firmware_release_%s", firmwareVersion);
         final List<String> groups = groupFlipper.getGroups(deviceName);
@@ -458,7 +459,8 @@ public class ReceiveResource extends BaseResource {
         }
 
         final DateTimeZone userTimeZone = getUserTimeZone(alarmInfoList);
-        final Long userNextAlarmTimestamp = getUserNextAlarmTimeInMilliSeconds(deviceName, alarmInfoList);
+
+        final Long userNextAlarmTimestamp = alarmBuilder.getStartTime() * 1000L;
         final UploadSettings uploadSettings = new UploadSettings(userTimeZone, userNextAlarmTimestamp);
         final Integer uploadInterval = uploadSettings.getUploadInterval();
         
@@ -633,10 +635,5 @@ public class ReceiveResource extends BaseResource {
             }
         }
         return userTimeZone;
-    }
-
-    private Long getUserNextAlarmTimeInMilliSeconds(String deviceName, List<AlarmInfo> alarmInfoList) {
-        final OutputProtos.SyncResponse.Alarm.Builder alarmBuilder = getAlarmBuilderFromNextRingTime(deviceName, alarmInfoList);
-        return alarmBuilder.getStartTime() * 1000L;
     }
 }
