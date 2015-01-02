@@ -1,6 +1,6 @@
 import boto
 import time
-import Logging_pb2
+import suripu_logging_pb2
 import base64
 
 kinesis = boto.connect_kinesis()
@@ -24,7 +24,7 @@ while tries < 10:
 # Get ready to process some data from the stream
 
 print "Get shard iterator"
-response = kinesis.get_shard_iterator(stream_name, shard_id, 'LATEST')
+response = kinesis.get_shard_iterator(stream_name, shard_id, 'TRIM_HORIZON')
 shard_iterator = response['ShardIterator']
 print shard_iterator
 
@@ -35,15 +35,17 @@ while tries < 100:
   response = kinesis.get_records(shard_iterator, b64_decode=False)
   shard_iterator = response['NextShardIterator']
   for record in response['Records']:    
-    logger = Logging_pb2.LogMessage()
+    print "-->"
+    logger = suripu_logging_pb2.BatchLogMessage()
     try:
       data = record['Data']
       decoded = base64.b64decode(data)
       logger.ParseFromString(decoded)
-      print logger.message
+      for log_message in logger.messages:
+        print log_message.message
     except Exception, e:
       print e
   else:
     print "no record, sleeping for 5s..."
-    time.sleep(5)
+    time.sleep(1)
 

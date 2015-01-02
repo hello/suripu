@@ -10,8 +10,10 @@ import ch.qos.logback.core.filter.Filter;
 import ch.qos.logback.core.spi.FilterReply;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
+import com.amazonaws.handlers.AsyncHandler;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
 import com.amazonaws.services.kinesis.model.PutRecordRequest;
+import com.amazonaws.services.kinesis.model.PutRecordResult;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.yammer.dropwizard.ConfiguredBundle;
@@ -90,12 +92,25 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
         protected void append(ILoggingEvent eventObject) {
             this.appendAndConvert(eventObject);
 
-            if(batch.getMessagesCount() == bufferSize) {
+            if(batch.getMessagesCount() >= bufferSize) {
+                final LoggingProtos.BatchLogMessage tempBatch = batch.build();
                 final PutRecordRequest request = new PutRecordRequest()
-                        .withStreamName(topic);
-                request.withData(ByteBuffer.wrap(batch.build().toByteArray()));
-                kinesisAsyncClient.putRecord(request);
-                batch.clearMessages();
+                        .withStreamName(topic)
+                        .withData(ByteBuffer.wrap(tempBatch.toByteArray()))
+                        .withPartitionKey(origin);
+
+                kinesisAsyncClient.putRecordAsync(request, new AsyncHandler<PutRecordRequest, PutRecordResult>() {
+                    @Override
+                    public void onError(Exception e) {
+                        System.out.println(e.getMessage());
+                    }
+
+                    @Override
+                    public void onSuccess(PutRecordRequest request, PutRecordResult putRecordResult) {
+                        System.out.println(putRecordResult.getSequenceNumber());
+                    }
+                });
+                batch.clear();
             }
         }
     }
