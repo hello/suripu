@@ -11,8 +11,7 @@ import ch.qos.logback.core.spi.FilterReply;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
-import com.amazonaws.services.kinesis.model.PutRecordsRequest;
-import com.amazonaws.services.kinesis.model.PutRecordsRequestEntry;
+import com.amazonaws.services.kinesis.model.PutRecordRequest;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.yammer.dropwizard.ConfiguredBundle;
@@ -24,14 +23,12 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.MessageFormatter;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 
 
 public abstract class KinesisLoggerBundle<T extends Configuration> implements ConfiguredBundle<T> {
     private class KinesisAppender extends AppenderBase<ILoggingEvent> {
 
-        private final List<LoggingProtos.LogMessage> buffer;
+        private final LoggingProtos.BatchLogMessage.Builder batch;
         private final AmazonKinesisAsyncClient kinesisAsyncClient;
         private final String topic;
         private final Integer bufferSize;
@@ -44,7 +41,7 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
             this.topic = loggerConfiguration.getStreamName();
             this.bufferSize = loggerConfiguration.bufferSize();
             this.origin = loggerConfiguration.origin();
-            this.buffer = new ArrayList<>(bufferSize);
+            this.batch = LoggingProtos.BatchLogMessage.newBuilder();
         }
 
 
@@ -78,6 +75,7 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
         }
 
         private void appendAndConvert(final ILoggingEvent eventObject) {
+
             final LoggingProtos.LogMessage logMessage = LoggingProtos.LogMessage.newBuilder()
                     .setMessage(String.format("[%s] %s - %s", eventObject.getLevel().levelStr, eventObject.getLoggerName(), eventObject.getFormattedMessage()))
                     .setLevel(eventObject.getLevel().toInteger())
@@ -85,28 +83,19 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
                     .setTs(DateTime.now().getMillis())
                     .setProduction(false)  // TODO: configure this
                     .build();
-            buffer.add(logMessage);
+            batch.addMessages(logMessage);
         }
 
         @Override
         protected void append(ILoggingEvent eventObject) {
             this.appendAndConvert(eventObject);
 
-            if(buffer.size() == bufferSize) {
-                final PutRecordsRequest request = new PutRecordsRequest()
+            if(batch.getMessagesCount() == bufferSize) {
+                final PutRecordRequest request = new PutRecordRequest()
                         .withStreamName(topic);
-                final List<PutRecordsRequestEntry> entries = new ArrayList<>(bufferSize);
-                for(final LoggingProtos.LogMessage logMessage : buffer) {
-                    final ByteBuffer byteBuffer = ByteBuffer.wrap(logMessage.toByteArray());
-                    final PutRecordsRequestEntry recordsRequestEntry = new PutRecordsRequestEntry();
-                    recordsRequestEntry
-                            .withData(byteBuffer)
-                            .withPartitionKey("suripu-app");
-                    entries.add(recordsRequestEntry);
-                }
-                request.withRecords(entries);
-                kinesisAsyncClient.putRecords(request);
-                buffer.clear();
+                request.withData(ByteBuffer.wrap(batch.build().toByteArray()));
+                kinesisAsyncClient.putRecord(request);
+                batch.clearMessages();
             }
         }
     }
