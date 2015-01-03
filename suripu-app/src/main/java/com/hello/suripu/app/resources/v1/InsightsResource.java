@@ -10,7 +10,7 @@ import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.Insights.AvailableGraph;
 import com.hello.suripu.core.models.Insights.DowSample;
-import com.hello.suripu.core.models.Insights.SleepInsight;
+import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.SleepStatsSample;
 import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -61,7 +61,7 @@ public class InsightsResource {
     @Timed
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<SleepInsight> getInsights(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
+    public List<InsightCard> getInsights(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
 
         LOGGER.debug("Returning list of insights for account id = {}", accessToken.accountId);
         // TODO: real insights
@@ -88,6 +88,7 @@ public class InsightsResource {
         return graph;
 
     }
+
 
     /**
      * get a list of available trend graphs
