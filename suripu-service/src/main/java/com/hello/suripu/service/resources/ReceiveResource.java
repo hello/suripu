@@ -27,6 +27,7 @@ import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DeviceIdUtil;
 import com.hello.suripu.core.util.RoomConditionUtil;
 import com.hello.suripu.service.SignedMessage;
+import com.hello.suripu.service.models.UploadSettings;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -383,8 +384,6 @@ public class ReceiveResource extends BaseResource {
         }
         LOGGER.debug("Found {} pairs", alarmInfoList.size());
 
-        // This is the default timezone.
-        DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
         final OutputProtos.SyncResponse.Builder responseBuilder = OutputProtos.SyncResponse.newBuilder();
 
 
@@ -415,16 +414,13 @@ public class ReceiveResource extends BaseResource {
 
         }
 
-
-
-
-
         // TODO: Fix the IndexOutOfBoundException
 //        for(int i = 0; i < replyRingTime.soundIds.length; i++){
 //            alarmBuilder.setRingtoneIds(i, replyRingTime.soundIds[i]);
 //        }
 
-        responseBuilder.setAlarm(getAlarmBuilderFromNextRingTime(deviceName, alarmInfoList).build());
+        final OutputProtos.SyncResponse.Alarm.Builder alarmBuilder = getAlarmBuilderFromNextRingTime(deviceName, alarmInfoList);
+        responseBuilder.setAlarm(alarmBuilder.build());
 
         final String firmwareFeature = String.format("firmware_release_%s", firmwareVersion);
         final List<String> groups = groupFlipper.getGroups(deviceName);
@@ -462,7 +458,15 @@ public class ReceiveResource extends BaseResource {
             audioControl.setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
         }
 
+        final DateTimeZone userTimeZone = getUserTimeZone(alarmInfoList);
+
+        final Long userNextAlarmTimestamp = alarmBuilder.getStartTime() * 1000L;
+        final UploadSettings uploadSettings = new UploadSettings(userTimeZone, userNextAlarmTimestamp);
+        final Integer uploadInterval = uploadSettings.getUploadIntervalInMinutes();
+        
+        responseBuilder.setBatchSize(uploadInterval);
         responseBuilder.setAudioControl(audioControl);
+
 
         final OutputProtos.SyncResponse syncResponse = responseBuilder.build();
 
@@ -621,5 +625,15 @@ public class ReceiveResource extends BaseResource {
         }
 
         return signedResponse.get();
+    }
+
+    private DateTimeZone getUserTimeZone(List<AlarmInfo> alarmInfoList) {
+        DateTimeZone userTimeZone = DateTimeZone.getDefault();
+        for(final AlarmInfo info:alarmInfoList){
+            if(info.timeZone.isPresent()){
+                userTimeZone = info.timeZone.get();
+            }
+        }
+        return userTimeZone;
     }
 }

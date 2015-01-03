@@ -143,4 +143,10 @@ public class SuripuConfiguration extends Configuration {
     public Integer getRoomConditions() {
         return roomConditions;
     }
+
+
+
+    @JsonProperty("sense_upload_configuration")
+    private SenseUploadConfiguration senseUploadConfiguration;
+    public SenseUploadConfiguration getSenseUploadConfiguration() { return this.senseUploadConfiguration; }
 }
