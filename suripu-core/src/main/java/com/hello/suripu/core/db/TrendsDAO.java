@@ -116,13 +116,17 @@ public abstract class TrendsDAO {
                                                                                    @Bind("end_date") DateTime endDate);
 
     @SqlUpdate("INSERT INTO sleep_stats_time (account_id, duration, sound_sleep, light_sleep, motion, " +
+            "sleep_time_utc, wake_time_utc, fall_asleep_time, " +
             "offset_millis, local_utc_date) VALUES (:account_id, :duration, :sound_sleep, :light_sleep, " +
-            ":motion, :offset_millis, :local_utc_date)")
+            ":motion, :sleep_time, :wake_time, :asleep_time, :offset_millis, :local_utc_date)")
     public abstract int insertSleepStats(@Bind("account_id") Long accountId,
                                           @Bind("duration") Integer duration,
                                           @Bind("sound_sleep") Integer soundSleep,
                                           @Bind("light_sleep") Integer lightSleep,
                                           @Bind("motion") Integer motion,
+                                          @Bind("sleep_time") DateTime sleepTime,
+                                          @Bind("wake_time") DateTime wakeTime,
+                                          @Bind("asleep_time") Integer fallAsleepTime,
                                           @Bind("offset_millis") int offsetMillis,
                                           @Bind("local_utc_date") DateTime localUTCDate);
 
@@ -172,6 +176,9 @@ public abstract class TrendsDAO {
                      stats.soundSleepDurationInMinutes,
                      stats.lightSleepDurationInMinutes,
                      stats.numberOfMotionEvents,
+                     new DateTime(stats.sleepTime, DateTimeZone.UTC),
+                     new DateTime(stats.wakeTime, DateTimeZone.UTC),
+                     stats.fallAsleepTime,
                      offsetMillis, targetDate);
             rowCount += updateDayOfWeekData(accountId, stats.sleepDurationInMinutes, targetDate, offsetMillis, TrendGraph.DataType.SLEEP_DURATION);
         } catch (UnableToExecuteStatementException exception) {

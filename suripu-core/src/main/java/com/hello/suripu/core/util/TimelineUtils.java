@@ -401,15 +401,26 @@ public class TimelineUtils {
         Integer lightSleepDuration = 0;
         Integer sleepDuration = 0;
         Integer numberOfMotionEvents = 0;
+        Long sleepTime = 0L;
+        Long wakeTime = 0L;
+        Integer fallAsleepTime = 0;
+        Long inBedTime = 0L;
+
         boolean sleepStarted = false;
 
         for(final SleepSegment segment : segments) {
+            if (segment.getType() == Event.Type.MOTION && inBedTime == 0L && sleepTime == 0L) {
+                inBedTime = segment.getTimestamp();
+            }
+
             if(segment.getType() == Event.Type.SLEEP && sleepStarted == false){
                 sleepStarted = true;
+                sleepTime = segment.getTimestamp();
             }
 
             if(segment.getType() == Event.Type.WAKE_UP && sleepStarted == true){  //On purpose dangling case, if no wakeup present
                 sleepStarted = false;
+                wakeTime = segment.getTimestamp();
             }
 
             if(!sleepStarted){
@@ -433,7 +444,18 @@ public class TimelineUtils {
         final Integer lightSleepDurationInMinutes = Math.round(new Float(lightSleepDuration) / DateTimeConstants.SECONDS_PER_MINUTE);
         final Integer sleepDurationInMinutes = Math.round(new Float(sleepDuration) / DateTimeConstants.SECONDS_PER_MINUTE);
 
-        final SleepStats sleepStats = new SleepStats(soundSleepDurationInMinutes,lightSleepDurationInMinutes,sleepDurationInMinutes,numberOfMotionEvents);
+        if (inBedTime > 0 && inBedTime < sleepTime) {
+            fallAsleepTime = (int) (sleepTime - inBedTime);
+        }
+
+        final SleepStats sleepStats = new SleepStats(soundSleepDurationInMinutes,
+                lightSleepDurationInMinutes,
+                sleepDurationInMinutes,
+                numberOfMotionEvents,
+                sleepTime,
+                wakeTime,
+                fallAsleepTime
+        );
         LOGGER.debug("Sleepstats = {}", sleepStats);
 
         return sleepStats;
