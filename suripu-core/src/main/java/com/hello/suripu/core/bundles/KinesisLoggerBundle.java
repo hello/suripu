@@ -107,7 +107,7 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
 
                     @Override
                     public void onSuccess(PutRecordRequest request, PutRecordResult putRecordResult) {
-                        System.out.println(putRecordResult.getSequenceNumber());
+
                     }
                 });
                 batch.clear();

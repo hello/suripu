@@ -77,6 +77,11 @@
             <artifactId>jedis</artifactId>
             <version>2.6.1</version>
         </dependency>
+        <dependency>
+            <groupId>com.indextank</groupId>
+            <artifactId>indextank-java</artifactId>
+            <version>1.0.6</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

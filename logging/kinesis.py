@@ -24,7 +24,7 @@ while tries < 10:
 # Get ready to process some data from the stream
 
 print "Get shard iterator"
-response = kinesis.get_shard_iterator(stream_name, shard_id, 'TRIM_HORIZON')
+response = kinesis.get_shard_iterator(stream_name, shard_id, 'LATEST')
 shard_iterator = response['ShardIterator']
 print shard_iterator
 
@@ -47,5 +47,5 @@ while tries < 100:
       print e
   else:
     print "no record, sleeping for 5s..."
-    time.sleep(1)
+    time.sleep(10)
 

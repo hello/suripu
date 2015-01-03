@@ -27,6 +27,7 @@ import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DeviceIdUtil;
 import com.hello.suripu.core.util.RoomConditionUtil;
 import com.hello.suripu.service.SignedMessage;
+import com.hello.suripu.service.configuration.SenseUploadConfiguration;
 import com.hello.suripu.service.models.UploadSettings;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
@@ -71,6 +72,7 @@ public class ReceiveResource extends BaseResource {
 
     private final FirmwareUpdateStore firmwareUpdateStore;
     private final GroupFlipper groupFlipper;
+    private final SenseUploadConfiguration senseUploadConfiguration;
 
     @Context
     HttpServletRequest request;
@@ -82,7 +84,8 @@ public class ReceiveResource extends BaseResource {
                            final MergedAlarmInfoDynamoDB mergedInfoDynamoDB,
                            final Boolean debug,
                            final FirmwareUpdateStore firmwareUpdateStore,
-                           final GroupFlipper groupFlipper) {
+                           final GroupFlipper groupFlipper,
+                           final SenseUploadConfiguration senseUploadConfiguration) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
 
@@ -95,6 +98,7 @@ public class ReceiveResource extends BaseResource {
 
         this.firmwareUpdateStore = firmwareUpdateStore;
         this.groupFlipper = groupFlipper;
+        this.senseUploadConfiguration = senseUploadConfiguration;
     }
 
 
@@ -461,7 +465,7 @@ public class ReceiveResource extends BaseResource {
         final DateTimeZone userTimeZone = getUserTimeZone(alarmInfoList);
 
         final Long userNextAlarmTimestamp = alarmBuilder.getStartTime() * 1000L;
-        final UploadSettings uploadSettings = new UploadSettings(userTimeZone, userNextAlarmTimestamp);
+        final UploadSettings uploadSettings = new UploadSettings(senseUploadConfiguration, userTimeZone, userNextAlarmTimestamp);
         final Integer uploadInterval = uploadSettings.getUploadIntervalInMinutes();
         
         responseBuilder.setBatchSize(uploadInterval);

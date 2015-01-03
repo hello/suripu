@@ -1,18 +1,18 @@
 package com.hello.suripu.service.models;
 
 import com.hello.suripu.service.configuration.SenseUploadConfiguration;
-import com.hello.suripu.service.configuration.SuripuConfiguration;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 
 public class UploadSettings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UploadSettings.class);
-    private static final SuripuConfiguration config = new SuripuConfiguration();
 
     private static final Long ALLOWABLE_TIME_BETWEEN_NOW_AND_NEXT_ALARM = 20*60*1000L;  // milliseconds
     private static final Long SUSTAINED_TIME_BETWEEN_NOW_AND_NEXT_ALARM = 60*60*1000L;  // milliseconds
@@ -20,14 +20,19 @@ public class UploadSettings {
 
     public final DateTimeZone userTimeZone;
     public final Long userNextAlarmTimestamp;
+    public final SenseUploadConfiguration senseUploadConfiguration;
 
-    public UploadSettings(final DateTimeZone userTimeZone, final Long userNextAlarmTimestampMillis) {
+    public UploadSettings(final SenseUploadConfiguration senseUploadConfiguration, final DateTimeZone userTimeZone, final Long userNextAlarmTimestampMillis) {
+        checkNotNull(userTimeZone, "userTimezone can not be null");
+        checkNotNull(userNextAlarmTimestampMillis, "userNextAlarmTimestampMillis can not be null");
+        checkNotNull(senseUploadConfiguration, "senseUploadConfiguration can not be null");
         this.userTimeZone = userTimeZone;
         this.userNextAlarmTimestamp = userNextAlarmTimestampMillis;
+        this.senseUploadConfiguration = senseUploadConfiguration;
     }
 
     public Integer getUploadIntervalInMinutes() {
-        final Integer unadjustedUploadIntervalInMinutes =  computeUploadIntervalPerUserPerSetting(getUserCurrentDateTime(), config.getSenseUploadConfiguration());
+        final Integer unadjustedUploadIntervalInMinutes =  computeUploadIntervalPerUserPerSetting(getUserCurrentDateTime(), senseUploadConfiguration);
         final Integer adjustedUploadIntervalInMinutes = adjustUploadIntervalInMinutes(unadjustedUploadIntervalInMinutes, userNextAlarmTimestamp);
         return adjustedUploadIntervalInMinutes;
     }
@@ -70,13 +75,13 @@ public class UploadSettings {
         return FASTEST_UPLOAD_INTERVAL;
     }
 
-    public Integer computeUploadIntervalForTests(final DateTime dateTime) {
-        return computeUploadIntervalPerUserPerSetting(dateTime, new SenseUploadConfiguration());
-    }
-
-    public Integer adjustUploadIntervalForTests(final Integer standardUploadInterval, final Long userNextAlarmTimestamp) {
-        return adjustUploadIntervalInMinutes(standardUploadInterval, userNextAlarmTimestamp);
-    }
+//    public Integer computeUploadIntervalForTests(final DateTime dateTime) {
+//        return computeUploadIntervalPerUserPerSetting(dateTime, new SenseUploadConfiguration());
+//    }
+//
+//    public Integer adjustUploadIntervalForTests(final Integer standardUploadInterval, final Long userNextAlarmTimestamp) {
+//        return adjustUploadIntervalInMinutes(standardUploadInterval, userNextAlarmTimestamp);
+//    }
 
     public Integer getFastestUploadInterval() {
         return FASTEST_UPLOAD_INTERVAL;
