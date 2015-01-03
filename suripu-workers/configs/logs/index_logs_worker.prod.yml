@@ -1,0 +1,26 @@
+metrics_enabled: false
+debug: true
+graphite:
+  host: carbon.hostedgraphite.com
+  api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
+  reporting_interval_in_seconds: 15
+  include_metrics:
+    - com.hello
+
+max_records: 50
+searchify:
+  private_url : http://:G3KvEnaw2bDdQc@d7q83.api.searchify.com/
+  index_name : application-logs
+
+
+kinesis:
+  endpoint : https://kinesis.us-east-1.amazonaws.com
+  streams :
+    logs : logs
+
+app_name: LogIndexer
+
+features_db:
+    endpoint : http://dynamodb.us-east-1.amazonaws.com
+    region: us-east-1
+    table_name: features
