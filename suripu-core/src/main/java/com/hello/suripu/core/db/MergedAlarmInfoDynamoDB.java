@@ -74,6 +74,10 @@ public class MergedAlarmInfoDynamoDB {
     private static int MAX_CALL_COUNT = 3;
     public static final int MAX_ALARM_COUNT = 7;
 
+    public MergedAlarmInfoDynamoDB(final AmazonDynamoDBClient dynamoDBClient, final String tableName){
+        this.dynamoDBClient = dynamoDBClient;
+        this.tableName = tableName;
+    }
 
     private Map<String, AttributeValueUpdate> generateTimeZoneUpdateItem(final DateTimeZone timeZone){
         final Map<String, AttributeValueUpdate> items = new HashMap<>();
@@ -365,11 +369,6 @@ public class MergedAlarmInfoDynamoDB {
             return Optional.absent();
         }
         return MergedAlarmInfoDynamoDB.getTimeZoneFromAttributes(senseId, accountId, result.getItem());
-    }
-
-    public MergedAlarmInfoDynamoDB(final AmazonDynamoDBClient dynamoDBClient, final String tableName){
-        this.dynamoDBClient = dynamoDBClient;
-        this.tableName = tableName;
     }
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){

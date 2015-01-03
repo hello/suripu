@@ -11,14 +11,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
-import com.hello.suripu.app.cli.CreateAlarmDynamoDBTableCommand;
-import com.hello.suripu.app.cli.CreateAlarmInfoDynamoDBTable;
-import com.hello.suripu.app.cli.CreateDynamoDBEventTableCommand;
-import com.hello.suripu.app.cli.CreateDynamoDBTimeZoneHistoryTableCommand;
-import com.hello.suripu.app.cli.CreateFeaturesDynamoDBTableCommand;
-import com.hello.suripu.app.cli.CreateRingTimeDynamoDBTable;
-import com.hello.suripu.app.cli.CreateSleepScoreDynamoDBTable;
-import com.hello.suripu.app.cli.CreateTeamsDynamoDBTableCommand;
+import com.hello.suripu.app.cli.CreateDynamoDBTables;
 import com.hello.suripu.app.cli.RecreateEventsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.modules.RolloutAppModule;
@@ -113,14 +106,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
     public void initialize(final Bootstrap<SuripuAppConfiguration> bootstrap) {
         bootstrap.addBundle(new DBIExceptionsBundle());
         bootstrap.addCommand(new RecreateEventsCommand());
-        bootstrap.addCommand(new CreateDynamoDBEventTableCommand());
-        bootstrap.addCommand(new CreateDynamoDBTimeZoneHistoryTableCommand());
-        bootstrap.addCommand(new CreateAlarmDynamoDBTableCommand());
-        bootstrap.addCommand(new CreateRingTimeDynamoDBTable());
-        bootstrap.addCommand(new CreateAlarmInfoDynamoDBTable());
-        bootstrap.addCommand(new CreateSleepScoreDynamoDBTable());
-        bootstrap.addCommand(new CreateFeaturesDynamoDBTableCommand());
-        bootstrap.addCommand(new CreateTeamsDynamoDBTableCommand());
+        bootstrap.addCommand(new CreateDynamoDBTables());
         bootstrap.addBundle(new KinesisLoggerBundle<SuripuAppConfiguration>() {
             @Override
             public KinesisLoggerConfiguration getConfiguration(final SuripuAppConfiguration configuration) {

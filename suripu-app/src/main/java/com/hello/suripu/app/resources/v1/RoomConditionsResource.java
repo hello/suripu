@@ -13,7 +13,6 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,33 +69,6 @@ public class RoomConditionsResource {
     }
 
 
-    private void validateLocalUTCQueryRange(final DateTime startQueryTimestampLocalUTC, final DateTime endQueryTimestampLocalUTC,
-                                            final Long accountId, final long allowedRangeInSeconds) {
-        if (startQueryTimestampLocalUTC == null || endQueryTimestampLocalUTC == null) {
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        }
-
-        if(startQueryTimestampLocalUTC.getZone().equals(DateTimeZone.UTC) == false ||
-                endQueryTimestampLocalUTC.getZone().equals(DateTimeZone.UTC) == false) {
-            LOGGER.error("validateLocalUTCQueryRange: Query start/end timestamp is not set to local UTC. start: {}, end: {}",
-                    startQueryTimestampLocalUTC,
-                    endQueryTimestampLocalUTC);
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        }
-
-        /*
-        * A DAY can be 48 hours. A week can be 2 * 7 * 24 hours at most.
-         */
-        if(Math.abs(endQueryTimestampLocalUTC.getMillis() - DateTime.now().getMillis()) >
-                48 * 60 * DateTimeConstants.MILLIS_PER_MINUTE + allowedRangeInSeconds * 1000) {
-            LOGGER.warn("Invalid request, query clock offset {} to {} range is too big for account_id = {}",
-                    startQueryTimestampLocalUTC, endQueryTimestampLocalUTC,
-                    accountId);
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);   // This should be FORBIDDEN
-        }
-    }
-
-
     @Timed
     @GET
     @Path("/admin/{email}/{sensor}/day")
@@ -105,14 +77,14 @@ public class RoomConditionsResource {
             @Scope({OAuthScope.ADMINISTRATION_READ}) AccessToken accessToken,
             @PathParam("email") final String email,
             @PathParam("sensor") final String sensor,
-            @QueryParam("from") Long queryEndTimestampInLocalUTC) {
+            @QueryParam("from") Long queryEndTimestampInUTC) {
 
         final Optional<Long> accountId = getAccountIdByEmail(email);
         if (!accountId.isPresent()) {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
-        return retrieveDayData(accountId.get(), sensor, queryEndTimestampInLocalUTC);
+        return retrieveDayData(accountId.get(), sensor, queryEndTimestampInUTC);
     }
 
 
@@ -132,8 +104,8 @@ public class RoomConditionsResource {
             // The @QueryParam("from") should be named as @QueryParam("from_local_utc")
             // to make it explicit that the API is expecting a local time and not confuse
             // the user.
-            @QueryParam("from") Long queryEndTimestampInLocalUTC) {
-        return retrieveDayData(accessToken.accountId, sensor, queryEndTimestampInLocalUTC);
+            @QueryParam("from") Long queryEndTimestampInUTC) {
+        return retrieveDayData(accessToken.accountId, sensor, queryEndTimestampInUTC);
     }
 
     /*
@@ -153,15 +125,7 @@ public class RoomConditionsResource {
             // The @QueryParam("from") should be named as @QueryParam("from_local_utc")
             // to make it explicit that the API is expecting a local time and not confuse
             // the user.
-            @QueryParam("from") Long queryEndTimestampInLocalUTC) {
-
-        // From this line I guess this is a bug in the backend instead of the client provide a wrong timestamp..
-
-        // We should expect user provide a local UTC time instead of UTC time, thus
-        // the check implementation here is not valid.
-        // to fix this, we should expect the client provide its UTC time as well.
-        // To provide backward compatibility, I just comment it out for now.
-        //validateQueryRange(queryEndTimestampInLocalUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
+            @QueryParam("from") Long queryEndTimestampInUTC) {
 
         final int slotDurationInMinutes = 5;
 
@@ -169,12 +133,9 @@ public class RoomConditionsResource {
         * We have to minutes one day instead of 24 hours, for the same reason that we want one DAY's
         * data, instead of 24 hours.
          */
-        final long queryStartTimeInLocalUTC = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC).minusDays(1).getMillis();
+        final long queryStartTimeInUTC = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC).minusDays(1).getMillis();
 
-        validateLocalUTCQueryRange(new DateTime(queryStartTimeInLocalUTC, DateTimeZone.UTC),
-                new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC),
-                accessToken.accountId,
-                allowedRangeInSeconds);
+        validateQueryRange(queryEndTimestampInUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
 
         // check that accountId, deviceName pair exists
         final Optional<Long> deviceId = deviceDAO.getIdForAccountIdDeviceId(accessToken.accountId, deviceName);
@@ -182,7 +143,7 @@ public class RoomConditionsResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        return deviceDataDAO.generateTimeSeriesByLocalTime(queryStartTimeInLocalUTC, queryEndTimestampInLocalUTC,
+        return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accessToken.accountId, deviceId.get(), slotDurationInMinutes,
                 sensor);
     }
@@ -204,19 +165,16 @@ public class RoomConditionsResource {
             // The @QueryParam("from") should be named as @QueryParam("from_local_utc")
             // to make it explicit that the API is expecting a local time and not confuse
             // the user.
-            @QueryParam("from") Long queryEndTimestampInLocalUTC) {
+            @QueryParam("from") Long queryEndTimestampInUTC) {
 
         final int slotDurationInMinutes = 1;
          /*
         * We have to minutes one day instead of 24 hours, for the same reason that we want one DAY's
         * data, instead of 24 hours.
          */
-        final long queryStartTimeInLocalUTC = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC).minusDays(1).getMillis();
+        final long queryStartTimeInUTC = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC).minusDays(1).getMillis();
 
-        validateLocalUTCQueryRange(new DateTime(queryStartTimeInLocalUTC, DateTimeZone.UTC),
-                new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC),
-                accessToken.accountId,
-                allowedRangeInSeconds);
+        validateQueryRange(queryEndTimestampInUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
 
         // get latest device_id connected to this account
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
@@ -224,7 +182,7 @@ public class RoomConditionsResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        return deviceDataDAO.generateTimeSeriesByLocalTime(queryStartTimeInLocalUTC, queryEndTimestampInLocalUTC,
+        return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accountId, deviceId.get(), slotDurationInMinutes,
                 sensor);
     }
@@ -387,24 +345,17 @@ public class RoomConditionsResource {
         return account.id;
     }
 
-    private List<Sample> retrieveDayData(Long accountId, String sensor, Long queryEndTimestampInLocalUTC) {
-        // From this line I guess this is a bug in the backend instead of the client provide a wrong timestamp..
-
-        // We should expect user provide a local UTC time instead of UTC time, thus
-        // the check implementation here is not valid.
-        // to fix this, we should expect the client provide its UTC time as well.
-        // To provide backward compatibility, I just comment it out for now.
-        //validateQueryRange(queryEndTimestampInLocalUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
+    private List<Sample> retrieveDayData(final Long accountId, final String sensor, final Long queryEndTimestampInUTC) {
 
         final int slotDurationInMinutes = 5;
         /*
         * We have to minutes one day instead of 24 hours, for the same reason that we want one DAY's
         * data, instead of 24 hours.
          */
-        final long queryStartTimeInLocalUTC = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC).minusDays(1).getMillis();
+        final long queryStartTimeInUTC = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC).minusDays(1).getMillis();
 
-        validateLocalUTCQueryRange(new DateTime(queryStartTimeInLocalUTC, DateTimeZone.UTC),
-                new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC),
+        validateQueryRange(queryEndTimestampInUTC,
+                DateTime.now(),
                 accountId,
                 allowedRangeInSeconds
         );
@@ -415,17 +366,12 @@ public class RoomConditionsResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        return deviceDataDAO.generateTimeSeriesByLocalTime(queryStartTimeInLocalUTC, queryEndTimestampInLocalUTC,
+        return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accountId, deviceId.get(), slotDurationInMinutes, sensor);
 
     }
 
-    private List<Sample> retrieveWeekData(Long accountId, String sensor, Long queryEndTimestampInLocalUTC) {
-        // We should expect user provide a local UTC time instead of UTC time, thus
-        // the check implementation here is not valid.
-        // to fix this, we should expect the client provide its UTC time as well.
-        // To provide backward compatibility, I just comment it out for now.
-        //validateQueryRange(queryEndTimestampInLocalUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
+    private List<Sample> retrieveWeekData(final Long accountId, final String sensor, final Long queryEndTimestampInUTC) {
 
         final int slotDurationInMinutes = 60;
         //final int  queryDurationInHours = 24 * 7; // 7 days
@@ -434,9 +380,9 @@ public class RoomConditionsResource {
         * Again, the same problem:
         * We have to minutes one week instead of 7*24 hours, for the same reason that one week can be more/less than 7 * 24 hours
          */
-        final long queryStartTimeInLocalUTC = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC).minusWeeks(1).getMillis();
-        validateLocalUTCQueryRange(new DateTime(queryStartTimeInLocalUTC, DateTimeZone.UTC),
-                new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC),
+        final long queryStartTimeInUTC = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC).minusWeeks(1).getMillis();
+        validateQueryRange(queryEndTimestampInUTC,
+                DateTime.now(),
                 accountId,
                 allowedRangeInSeconds);
 
@@ -446,7 +392,7 @@ public class RoomConditionsResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        return deviceDataDAO.generateTimeSeriesByLocalTime(queryStartTimeInLocalUTC, queryEndTimestampInLocalUTC,
+        return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accountId, deviceId.get(), slotDurationInMinutes,
                 sensor);
     }
