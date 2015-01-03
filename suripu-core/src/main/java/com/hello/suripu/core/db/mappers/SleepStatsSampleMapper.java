@@ -21,7 +21,7 @@ public class SleepStatsSampleMapper implements ResultSetMapper<SleepStatsSample>
                 resultSet.getInt("motion"),
                 resultSet.getTimestamp("sleep_time_utc").getTime(),
                 resultSet.getTimestamp("wake_time_utc").getTime(),
-                resultSet.getInt("time_to_sleep")
+                resultSet.getInt("fall_asleep_time")
         );
 
         return new SleepStatsSample(stats,
