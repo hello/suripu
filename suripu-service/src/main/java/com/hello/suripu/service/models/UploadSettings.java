@@ -21,15 +21,15 @@ public class UploadSettings {
     public final DateTimeZone userTimeZone;
     public final Long userNextAlarmTimestamp;
 
-    public UploadSettings(final DateTimeZone userTimeZone, final Long userNextAlarmTimestamp) {
+    public UploadSettings(final DateTimeZone userTimeZone, final Long userNextAlarmTimestampMillis) {
         this.userTimeZone = userTimeZone;
-        this.userNextAlarmTimestamp = userNextAlarmTimestamp;
+        this.userNextAlarmTimestamp = userNextAlarmTimestampMillis;
     }
 
-    public Integer getUploadInterval() {
-        final Integer unadjustedUploadInterval =  computeUploadIntervalPerUserPerSetting(getUserCurrentDateTime(), config.getSenseUploadConfiguration());
-        final Integer adjustedUploadInterval = adjustUploadInterval(unadjustedUploadInterval, userNextAlarmTimestamp);
-        return adjustedUploadInterval;
+    public Integer getUploadIntervalInMinutes() {
+        final Integer unadjustedUploadIntervalInMinutes =  computeUploadIntervalPerUserPerSetting(getUserCurrentDateTime(), config.getSenseUploadConfiguration());
+        final Integer adjustedUploadIntervalInMinutes = adjustUploadIntervalInMinutes(unadjustedUploadIntervalInMinutes, userNextAlarmTimestamp);
+        return adjustedUploadIntervalInMinutes;
     }
 
     private DateTime getUserCurrentDateTime() {
@@ -59,13 +59,13 @@ public class UploadSettings {
         return senseUploadConfiguration.getShortInterval();
     }
 
-    private Integer adjustUploadInterval(final Integer standardUploadInterval, final Long userNextAlarmTimestamp) {
-        LOGGER.debug("diff in milliseconds {}", userNextAlarmTimestamp - DateTime.now(DateTimeZone.UTC).getMillis());
-        if (userNextAlarmTimestamp - DateTime.now(DateTimeZone.UTC).getMillis() <= ALLOWABLE_TIME_BETWEEN_NOW_AND_NEXT_ALARM) {
+    private Integer adjustUploadIntervalInMinutes(final Integer standardUploadIntervalInMinutes, final Long userNextAlarmTimestampMillis) {
+        LOGGER.debug("diff in milliseconds {}", userNextAlarmTimestampMillis - DateTime.now(DateTimeZone.UTC).getMillis());
+        if (userNextAlarmTimestampMillis - DateTime.now(DateTimeZone.UTC).getMillis() <= ALLOWABLE_TIME_BETWEEN_NOW_AND_NEXT_ALARM) {
             return FASTEST_UPLOAD_INTERVAL;
         }
-        if (userNextAlarmTimestamp - DateTime.now(DateTimeZone.UTC).getMillis() >= SUSTAINED_TIME_BETWEEN_NOW_AND_NEXT_ALARM) {
-            return standardUploadInterval;
+        if (userNextAlarmTimestampMillis - DateTime.now(DateTimeZone.UTC).getMillis() >= SUSTAINED_TIME_BETWEEN_NOW_AND_NEXT_ALARM) {
+            return standardUploadIntervalInMinutes;
         }
         return FASTEST_UPLOAD_INTERVAL;
     }
@@ -75,7 +75,7 @@ public class UploadSettings {
     }
 
     public Integer adjustUploadIntervalForTests(final Integer standardUploadInterval, final Long userNextAlarmTimestamp) {
-        return adjustUploadInterval(standardUploadInterval, userNextAlarmTimestamp);
+        return adjustUploadIntervalInMinutes(standardUploadInterval, userNextAlarmTimestamp);
     }
 
     public Integer getFastestUploadInterval() {

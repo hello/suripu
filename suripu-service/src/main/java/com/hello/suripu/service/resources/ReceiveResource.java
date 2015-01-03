@@ -462,9 +462,9 @@ public class ReceiveResource extends BaseResource {
 
         final Long userNextAlarmTimestamp = alarmBuilder.getStartTime() * 1000L;
         final UploadSettings uploadSettings = new UploadSettings(userTimeZone, userNextAlarmTimestamp);
-        final Integer uploadInterval = uploadSettings.getUploadInterval();
+        final Integer uploadInterval = uploadSettings.getUploadIntervalInMinutes();
         
-        responseBuilder.setUploadCycle(uploadInterval);
+        responseBuilder.setBatchSize(uploadInterval);
         responseBuilder.setAudioControl(audioControl);
 
 
