@@ -16,7 +16,7 @@ public class UploadSettings {
 
     private static final Long ALLOWABLE_TIME_BETWEEN_NOW_AND_NEXT_ALARM = 20*60*1000L;  // milliseconds
     private static final Long SUSTAINED_TIME_BETWEEN_NOW_AND_NEXT_ALARM = 60*60*1000L;  // milliseconds
-    private static final Integer FASTEST_UPLOAD_INTERVAL = 1;
+    private static final Integer FASTEST_UPLOAD_INTERVAL = 1; // minute(s)
 
     public final DateTimeZone userTimeZone;
     public final Long userNextAlarmTimestamp;
@@ -45,11 +45,14 @@ public class UploadSettings {
         // Non peak times are the times whose hours are within the range defined in configuration
         Boolean isNonPeak = hourOfDay >= senseUploadConfiguration.getNonPeakHourLowerbound() && hourOfDay <= senseUploadConfiguration.getNonPeakHourUpperBound();
 
+        // If weekDaysOnly == true, we assume that users could sleep any time during weekends
         if (senseUploadConfiguration.getWeekDaysOnly()) {
             final Integer dayOfWeek = userCurrentDateTime.getDayOfWeek();
             LOGGER.debug("User Current DateTime - Day of Week: {}", userCurrentDateTime.dayOfWeek().getAsText());
             isNonPeak = isNonPeak && (dayOfWeek != DateTimeConstants.SATURDAY && dayOfWeek != DateTimeConstants.SUNDAY);
         }
+
+        // Non peak hours trigger short upload interval, peak hours trigger long upload interval
         if (isNonPeak) {
             return senseUploadConfiguration.getLongInterval();
         }
