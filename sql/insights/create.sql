@@ -59,4 +59,4 @@ GRANT ALL PRIVILEGES ON SEQUENCE sleep_stats_time_id_seq TO ingress_user;
 -- to alter sleep_stats_time table (01/02/2015)
 ALTER TABLE sleep_stats_time ADD COLUMN sleep_time_utc TIMESTAMP;
 ALTER TABLE sleep_stats_time ADD COLUMN wake_time_utc TIMESTAMP;
-ALTER TABLE sleep_stats_time ADD COLUMN fall_asleep_time INTEGER;
+ALTER TABLE sleep_stats_time ADD COLUMN fall_asleep_time INTEGER default 0;

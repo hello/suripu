@@ -14,13 +14,15 @@ public class SleepStatsSampleMapper implements ResultSetMapper<SleepStatsSample>
 
     @Override
     public SleepStatsSample map(int i, ResultSet resultSet, StatementContext statementContext) throws SQLException {
+        final DateTime sleepTime = new DateTime(resultSet.getTimestamp("sleep_time_utc"), DateTimeZone.UTC);
+        final DateTime wakeTime = new DateTime(resultSet.getTimestamp("wake_time_utc"), DateTimeZone.UTC);
         final SleepStats stats = new SleepStats(
                 resultSet.getInt("sound_sleep"),
                 resultSet.getInt("light_sleep"),
                 resultSet.getInt("duration"),
                 resultSet.getInt("motion"),
-                resultSet.getTimestamp("sleep_time_utc").getTime(),
-                resultSet.getTimestamp("wake_time_utc").getTime(),
+                sleepTime.getMillis(),
+                wakeTime.getMillis(),
                 resultSet.getInt("fall_asleep_time")
         );
 
