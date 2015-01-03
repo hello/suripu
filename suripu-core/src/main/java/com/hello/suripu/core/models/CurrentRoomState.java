@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 
 public class CurrentRoomState {
 
+
+    private final static String DEFAULT_TEMP_UNIT = "c";
     private static final Logger LOGGER = LoggerFactory.getLogger(CurrentRoomState.class);
 
     public static class State {
@@ -50,6 +52,9 @@ public class CurrentRoomState {
         @JsonProperty("message")
         public final String message;
 
+        @JsonProperty("ideal_conditions")
+        public final String idealConditions;
+
         @JsonProperty("condition")
         public final Condition condition;
 
@@ -59,9 +64,10 @@ public class CurrentRoomState {
         @JsonProperty("unit")
         public final Unit unit;
 
-        public State(final Float value, final String message, final Condition condition, final DateTime lastUpdated, final Unit unit) {
+        public State(final Float value, final String message, final String idealConditions, final Condition condition, final DateTime lastUpdated, final Unit unit) {
             this.value = value;
             this.message = message;
+            this.idealConditions = idealConditions;
             this.condition = condition;
             this.lastUpdated = lastUpdated;
             this.unit = unit;
@@ -92,14 +98,15 @@ public class CurrentRoomState {
         final float humidity = DeviceData.dbIntToFloat(rawHumidity);
         final float temperature = DeviceData.dbIntToFloat(rawTemperature);
         final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(rawDustMax, firmwareVersion));
-        return fromTempHumidDust(temperature, humidity, particulatesAQI, new DateTime(timestamp, DateTimeZone.UTC), referenceTime, thresholdInMinutes);
+        return fromTempHumidDust(temperature, humidity, particulatesAQI, new DateTime(timestamp, DateTimeZone.UTC), referenceTime, thresholdInMinutes, DEFAULT_TEMP_UNIT);
 
     }
 
     public static CurrentRoomState fromTempHumidDust(final float temperature, final float humidity, final float particulatesAQI,
                                                      final DateTime dataTimestampUTC,
                                                      final DateTime referenceTime,
-                                                     final Integer thresholdInMinutes) {
+                                                     final Integer thresholdInMinutes,
+                                                     final String tempUnit) {
 
         State temperatureState;
         State humidityState;
@@ -107,12 +114,17 @@ public class CurrentRoomState {
 
         LOGGER.debug("temp = {}, humidity = {}, particulates = {}", temperature, humidity, particulatesAQI);
 
+
+        final String idealTempConditions = String.format("You sleep better when temperature is between **XX%s** and **YY%s**.", tempUnit, tempUnit);
+        final String idealHumidityConditions = "You sleep better when humidity is between **XX** and **YY**.";
+        final String idealParticulatesConditions = "You sleep better when particulates are below **XX**.";
+
         if(referenceTime.minusMinutes(thresholdInMinutes).getMillis() > dataTimestampUTC.getMillis()) {
 
             LOGGER.warn("{} is too old, not returning anything", dataTimestampUTC);
-            temperatureState = new State(temperature, "Could not retrieve a recent temperature reading", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.CELCIUS);
-            humidityState = new State(humidity, "Could not retrieve a recent humidity reading", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.PERCENT);
-            particulatesState = new State(humidity, "Could not retrieve recent particulates reading", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.AQI);
+            temperatureState = new State(temperature, "Could not retrieve a recent temperature reading", "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.CELCIUS);
+            humidityState = new State(humidity, "Could not retrieve a recent humidity reading", "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.PERCENT);
+            particulatesState = new State(humidity, "Could not retrieve recent particulates reading", "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.AQI);
             final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState);
             return roomState;
         }
@@ -121,30 +133,30 @@ public class CurrentRoomState {
 
         // Temp
         if (temperature  < 15.0) {
-            temperatureState = new State(temperature, "It’s **pretty cold** in here.", State.Condition.ALERT, dataTimestampUTC, State.Unit.CELCIUS);
+            temperatureState = new State(temperature, "It’s **pretty cold** in here.", idealTempConditions, State.Condition.ALERT, dataTimestampUTC, State.Unit.CELCIUS);
         } else if (temperature > 30.0) {
-            temperatureState = new State(temperature, "It’s **pretty hot** in here.", State.Condition.ALERT, dataTimestampUTC, State.Unit.CELCIUS);
+            temperatureState = new State(temperature, "It’s **pretty hot** in here.", idealTempConditions, State.Condition.ALERT, dataTimestampUTC, State.Unit.CELCIUS);
         } else { // temp >= 60 && temp <= 72
-            temperatureState = new State(temperature, "Temperature is **just right**.", State.Condition.IDEAL, dataTimestampUTC, State.Unit.CELCIUS);
+            temperatureState = new State(temperature, "Temperature is **just right**.", idealTempConditions, State.Condition.IDEAL, dataTimestampUTC, State.Unit.CELCIUS);
         }
 
         // Humidity
         if (humidity  < 30.0) {
-            humidityState = new State(humidity, "It’s **pretty dry** in here.", State.Condition.WARNING, dataTimestampUTC, State.Unit.PERCENT);
+            humidityState = new State(humidity, "It’s **pretty dry** in here.", idealHumidityConditions, State.Condition.WARNING, dataTimestampUTC, State.Unit.PERCENT);
         } else if (humidity > 60.0) {
-            humidityState = new State(humidity, "It’s **pretty humid** in here.", State.Condition.WARNING, dataTimestampUTC, State.Unit.PERCENT);
+            humidityState = new State(humidity, "It’s **pretty humid** in here.", idealHumidityConditions, State.Condition.WARNING, dataTimestampUTC, State.Unit.PERCENT);
         } else { // humidity >= 30 && humidity<= 60
-            humidityState = new State(humidity, "Humidity is **just right**.", State.Condition.IDEAL, dataTimestampUTC, State.Unit.PERCENT);
+            humidityState = new State(humidity, "Humidity is **just right**.", idealHumidityConditions, State.Condition.IDEAL, dataTimestampUTC, State.Unit.PERCENT);
         }
 
 
         // Air Quality - see http://www.sparetheair.com/aqi.cfm
         if (particulatesAQI <= 50.0) {
-            particulatesState = new State(particulatesAQI, "Particulates level is **just right**.", State.Condition.IDEAL, dataTimestampUTC, State.Unit.AQI);
+            particulatesState = new State(particulatesAQI, "Particulates level is **just right**.", idealParticulatesConditions, State.Condition.IDEAL, dataTimestampUTC, State.Unit.AQI);
         } else if (particulatesAQI <= 300.0) {
-            particulatesState = new State(particulatesAQI, "AQI is **moderately high**.", State.Condition.WARNING, dataTimestampUTC, State.Unit.AQI);
+            particulatesState = new State(particulatesAQI, "AQI is **moderately high**.", idealParticulatesConditions, State.Condition.WARNING, dataTimestampUTC, State.Unit.AQI);
         } else {
-            particulatesState = new State(particulatesAQI, "AQI is at an **UNHEALTHY** level.", State.Condition.ALERT, dataTimestampUTC, State.Unit.AQI);
+            particulatesState = new State(particulatesAQI, "AQI is at an **UNHEALTHY** level.", idealParticulatesConditions, State.Condition.ALERT, dataTimestampUTC, State.Unit.AQI);
         }
 
         final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState);
@@ -157,13 +169,13 @@ public class CurrentRoomState {
      * @param data
      * @return
      */
-    public static CurrentRoomState fromDeviceData(final DeviceData data, final DateTime referenceTime, final Integer thresholdInMinutes) {
+    public static CurrentRoomState fromDeviceData(final DeviceData data, final DateTime referenceTime, final Integer thresholdInMinutes, final String tempUnit) {
 
         final float temp = DeviceData.dbIntToFloat(data.ambientTemperature);
         final float humidity = DeviceData.dbIntToFloat(data.ambientHumidity);
         // max value is in raw counts, conversion needed
         final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(data.ambientDustMax, data.firmwareVersion));
-        return fromTempHumidDust(temp, humidity, particulatesAQI, data.dateTimeUTC, referenceTime, thresholdInMinutes);
+        return fromTempHumidDust(temp, humidity, particulatesAQI, data.dateTimeUTC, referenceTime, thresholdInMinutes, tempUnit);
 
     }
 
@@ -176,9 +188,9 @@ public class CurrentRoomState {
      */
     public static CurrentRoomState empty() {
         final CurrentRoomState roomState = new CurrentRoomState(
-                new State(null, "Waiting for data.", State.Condition.UNKNOWN, DateTime.now(), State.Unit.CELCIUS),
-                new State(null, "Waiting for data.", State.Condition.UNKNOWN, DateTime.now(), State.Unit.PERCENT),
-                new State(null, "Waiting for data.", State.Condition.UNKNOWN, DateTime.now(), State.Unit.AQI)
+                new State(null, "Waiting for data.", "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.CELCIUS),
+                new State(null, "Waiting for data.", "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.PERCENT),
+                new State(null, "Waiting for data.", "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.AQI)
         );
 
         return roomState;

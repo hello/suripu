@@ -63,10 +63,15 @@ public class AccountResource {
             @Valid final Registration registration,
             @QueryParam("sig") final String signature) {
 
-
         LOGGER.info("Attempting to register account with email: {}", registration.email);
+        final Optional<Registration.RegistrationError> error = Registration.validate(registration);
+        if(error.isPresent()) {
+            LOGGER.error("Registration should have failed because of: {}. Ignoring for now to avoid breaking API for mobile clients", error.get());
+//            throw new WebApplicationException(Response.status(400).entity(new JsonError(400, error.get().toString())).build());
+        }
 
         final Registration securedRegistration = Registration.encryptPassword(registration);
+
         LOGGER.debug("Lat: {}", securedRegistration.latitude);
         LOGGER.debug("Lon: {}", securedRegistration.longitude);
         // TODO: Persist location somewhere
@@ -98,13 +103,6 @@ public class AccountResource {
     public Account modify(
             @Scope({OAuthScope.USER_EXTENDED}) final AccessToken accessToken,
             @Valid final Account account) {
-
-//        // TODO: Remove this
-//        final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
-//
-//        if(!accountOptional.isPresent()) {
-//            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
-//        }
 
         LOGGER.warn("Last modified (modify) = {}", account.lastModified);
 

@@ -1,7 +1,9 @@
 package com.hello.suripu.app.resources.v1;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.s3.AmazonS3;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
@@ -28,6 +30,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -42,14 +45,16 @@ public class AlarmResource {
     private final AlarmDAODynamoDB alarmDAODynamoDB;
     private final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
     private final DeviceDAO deviceDAO;
-
+    private final AmazonS3 amazonS3;
 
     public AlarmResource(final AlarmDAODynamoDB alarmDAODynamoDB,
                          final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
-                         final DeviceDAO deviceDAO){
+                         final DeviceDAO deviceDAO,
+                         final AmazonS3 amazonS3){
         this.alarmDAODynamoDB = alarmDAODynamoDB;
         this.mergedAlarmInfoDynamoDB = mergedAlarmInfoDynamoDB;
         this.deviceDAO = deviceDAO;
+        this.amazonS3 = amazonS3;
     }
 
     @Timed
@@ -86,7 +91,13 @@ public class AlarmResource {
             }
 
             final DateTimeZone userTimeZone = alarmInfo.timeZone.get();
-            return Alarm.Utils.disableExpiredNoneRepeatedAlarms(alarmInfo.alarmList, DateTime.now().getMillis(), userTimeZone);
+            final List<Alarm> smartAlarms = Alarm.Utils.disableExpiredNoneRepeatedAlarms(alarmInfo.alarmList, DateTime.now().getMillis(), userTimeZone);
+            if(!Alarm.Utils.isValidSmartAlarms(smartAlarms, DateTime.now(), userTimeZone)){
+                LOGGER.error("Invalid alarm for user {} device {}", token.accountId, alarmInfo.deviceId);
+                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+            }
+
+            return smartAlarms;
         }catch (AmazonServiceException awsException){
             LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
@@ -109,26 +120,39 @@ public class AlarmResource {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
-        if(!Alarm.Utils.isValidSmartAlarms(alarms)){
-            LOGGER.error("account id {} set alarm failed, two alarm in the same day.", token.accountId);
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
-        }
-
-        final List<DeviceAccountPair> deviceAccountMap = this.deviceDAO.getDeviceAccountMapFromAccountId(token.accountId);
+        final List<DeviceAccountPair> deviceAccountMap = this.deviceDAO.getSensesForAccountId(token.accountId);
         if(deviceAccountMap.size() == 0){
             LOGGER.error("User tries to set alarm without connected to a Morpheus.", token.accountId);
             throw new WebApplicationException(Response.Status.FORBIDDEN);
         }
 
-        for(final DeviceAccountPair deviceAccountPair:deviceAccountMap){
-            try {
-                this.mergedAlarmInfoDynamoDB.setAlarms(deviceAccountPair.externalDeviceId, token.accountId, alarms);
-                this.alarmDAODynamoDB.setAlarms(token.accountId, alarms);
-            }catch (AmazonServiceException awsException){
-                LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);
-                throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
+        // Only update alarms in the account that linked with the most recent sense.
+        final DeviceAccountPair deviceAccountPair = deviceAccountMap.get(0);
+        try {
+            final Optional<AlarmInfo> alarmInfoOptional = this.mergedAlarmInfoDynamoDB.getInfo(deviceAccountPair.externalDeviceId, token.accountId);
+            if(!alarmInfoOptional.isPresent()){
+                LOGGER.warn("No merge info for user {}, device {}", token.accountId, deviceAccountPair.externalDeviceId);
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
             }
+
+            if(!alarmInfoOptional.get().timeZone.isPresent()){
+                LOGGER.warn("No user timezone set for account {}, device {}, alarm set skipped.", deviceAccountPair.accountId, deviceAccountPair.externalDeviceId);
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+            }
+
+            final DateTimeZone timeZone = alarmInfoOptional.get().timeZone.get();
+            if(!Alarm.Utils.isValidSmartAlarms(alarms, DateTime.now(), timeZone)){
+                LOGGER.error("Invalid alarm for account {}, device {}, alarm set skipped", deviceAccountPair.accountId, deviceAccountPair.externalDeviceId);
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+            }
+
+            this.mergedAlarmInfoDynamoDB.setAlarms(deviceAccountPair.externalDeviceId, token.accountId, alarms);
+            this.alarmDAODynamoDB.setAlarms(token.accountId, alarms);
+        }catch (AmazonServiceException awsException){
+            LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
         }
+
     }
 
 
@@ -137,9 +161,34 @@ public class AlarmResource {
     @Path("/sounds")
     @Produces(MediaType.APPLICATION_JSON)
     public List<AlarmSound> getAlarmSounds(@Scope(OAuthScope.ALARM_READ) final AccessToken accessToken) {
-        final ArrayList<AlarmSound> alarmSounds = new ArrayList<>();
-        final AlarmSound sound = new AlarmSound(1, "Digital 3");
-        alarmSounds.add(sound);
+        final List<AlarmSound> alarmSounds = new ArrayList<>();
+        final List<String> fileNames = Lists.newArrayList(
+                "102914_SENSE_DIGITAL_1.1",
+                "102914_SENSE_DIGITAL_2.1",
+                "102914_SENSE_DIGITAL_3.1",
+                "102914_SENSE_DIGITAL_4.1",
+                "102914_SENSE_DIGITAL_5.1",
+                "102914_SENSE_ORGANIC_2.1",
+                "102914_SENSE_ORGANIC_3.1",
+                "102914_SENSE_NEW_1",
+                "102914_SENSE_NEW_2",
+                "102914_SENSE_NEW_3",
+                "102914_SENSE_NEW_4",
+                "102914_SENSE_NEW_5",
+                "102914_SENSE_NEW_6",
+                "102914_SENSE_NEW_7",
+                "102914_SENSE_NEW_8",
+                "102914_SENSE_NEW_9"
+        );
+
+        int i = 1;
+        for(String fileName : fileNames) {
+            final URL url = amazonS3.generatePresignedUrl("hello-audio", String.format("ringtones/%s.mp3", fileName), DateTime.now().plusWeeks(1).toDate());
+            final AlarmSound sound = new AlarmSound(i, fileName, url.toExternalForm());
+            alarmSounds.add(sound);
+            i++;
+        }
+
         return alarmSounds;
     }
 }

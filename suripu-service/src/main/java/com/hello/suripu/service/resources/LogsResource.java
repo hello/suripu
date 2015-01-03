@@ -94,7 +94,7 @@ public class LogsResource {
         final Long hello_ts = DateTime.now().getMillis();
 
 
-        Map<Integer, Float> variables = new HashMap<Integer, Float>();
+        final Map<Integer, Float> variables = new HashMap<Integer, Float>();
         variables.put(0, new Float(hello_ts/1000));
 
         categories.put("device_id", log.getDeviceId());

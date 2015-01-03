@@ -53,9 +53,9 @@ public class DynamoDBAdapter implements RolloutAdapter{
 
     public void stop() {
         scheduledFuture.cancel(true);
-        LOGGER.info("Stopped polling");
+        LOGGER.warn("Stopped polling");
         executorService.shutdown();
-        LOGGER.info("ThreadPool shutdown");
+        LOGGER.warn("ThreadPool shutdown");
     }
 
     @Override
@@ -85,7 +85,7 @@ public class DynamoDBAdapter implements RolloutAdapter{
 
         final Feature f = features.get().get(feature);
         if(f == null) {
-            LOGGER.error("Feature {} is null", feature);
+            LOGGER.warn("Feature {} is null", feature);
             return false;
         }
 

@@ -15,13 +15,22 @@ public class AlarmSound {
     @JsonProperty("name")
     public final String name;
 
+    @JsonProperty("url")
+    public final String url;
+
 
     @JsonCreator
     public AlarmSound(@JsonProperty("id") long id,
                       @JsonProperty("name") final String name){
+        this(id, name, "");
+    }
+
+    public AlarmSound(long id,
+                      final String name,
+                      final String url){
         this.id = id;
         this.name = name;
-
+        this.url = url;
     }
 
     @Override

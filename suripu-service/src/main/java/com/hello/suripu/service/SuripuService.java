@@ -48,6 +48,7 @@ import com.hello.suripu.service.cli.CreateKeyStoreDynamoDBTable;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
 import com.hello.suripu.service.modules.RolloutModule;
 import com.hello.suripu.service.resources.AudioResource;
+import com.hello.suripu.service.resources.CheckResource;
 import com.hello.suripu.service.resources.DownloadResource;
 import com.hello.suripu.service.resources.LogsResource;
 import com.hello.suripu.service.resources.ReceiveResource;
@@ -139,7 +140,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final KeyStore senseKeyStore = new KeyStoreDynamoDB(
                 dynamoDBClient,
                 configuration.getDynamoDBConfiguration().getTableName(),
-                "1234567891234567".getBytes() // TODO: REMOVE THIS WHEN WE ARE NOT SUPPOSED TO HAVE A DEFAULT KEY
+                "1234567891234567".getBytes(), // TODO: REMOVE THIS WHEN WE ARE NOT SUPPOSED TO HAVE A DEFAULT KEY
+                120 // 2 minutes for cache
         );
 
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
@@ -189,7 +191,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 // the room condition in config file is intentionally left there, just in case we figure out it is still useful.
                 // Let's remove it in the next next deploy.
                 firmwareUpdateStore,
-                groupFlipper
+                groupFlipper,
+                configuration.getSenseUploadConfiguration()
         );
 
 
@@ -203,6 +206,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 senseKeyStore
         );
 
+        environment.addResource(new CheckResource(senseKeyStore));
         environment.addResource(logsResource);
 
         environment.addResource(new PingResource());

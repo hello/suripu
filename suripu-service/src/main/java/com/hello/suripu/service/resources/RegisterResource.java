@@ -10,11 +10,13 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
+import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
+import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.service.SignedMessage;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -32,6 +34,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -102,9 +105,44 @@ public class RegisterResource {
         final String deviceId = morpheusCommand.getDeviceId();
         builder.setDeviceId(deviceId);
 
-        final Optional<byte[]> keyBytesOptional = keyStore.get(deviceId);
+        String senseId = deviceId;
+
+        final String token = morpheusCommand.getAccountId();
+        LOGGER.debug("deviceId = {}", deviceId);
+        LOGGER.debug("token = {}", token);
+
+        final Optional<AccessToken> accessTokenOptional = this.tokenStore.getClientDetailsByToken(
+                new ClientCredentials(new OAuthScope[]{OAuthScope.AUTH}, token),
+                DateTime.now());
+
+        if(!accessTokenOptional.isPresent()) {
+            builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
+            builder.setError(SenseCommandProtos.ErrorType.INTERNAL_OPERATION_FAILED);
+            LOGGER.error("Token not found {} for device Id {}", token, deviceId);
+            return builder;
+        }
+
+        final Long accountId = accessTokenOptional.get().accountId;
+        LOGGER.debug("accountId = {}", accountId);
+
+        switch (action) {
+            case PAIR_MORPHEUS:
+                senseId = deviceId;
+                break;
+            case PAIR_PILL:
+                final List<DeviceAccountPair> deviceAccountPairs = this.deviceDAO.getSensesForAccountId(accountId);
+                if(deviceAccountPairs.size() == 0){
+                    LOGGER.error("No sense paired with account {} when pill {} tries to register", accountId, deviceId);
+                    builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
+                    builder.setError(SenseCommandProtos.ErrorType.INTERNAL_DATA_ERROR);
+                    return builder;
+                }
+                senseId = deviceAccountPairs.get(0).externalDeviceId;
+        }
+
+        final Optional<byte[]> keyBytesOptional = keyStore.get(senseId);
         if(!keyBytesOptional.isPresent()) {
-            LOGGER.error("Missing AES key for device = {}", deviceId);
+            LOGGER.error("Missing AES key for device = {}", senseId);
             builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
             builder.setError(SenseCommandProtos.ErrorType.INTERNAL_DATA_ERROR);
             return builder;
@@ -126,25 +164,6 @@ public class RegisterResource {
             return builder;
         }
 
-
-        final String token = morpheusCommand.getAccountId();
-        LOGGER.debug("deviceId = {}", deviceId);
-        LOGGER.debug("token = {}", token);
-
-        final Optional<AccessToken> accessTokenOptional = this.tokenStore.getClientDetailsByToken(
-                new ClientCredentials(new OAuthScope[]{OAuthScope.AUTH}, token),
-                DateTime.now());
-
-        if(!accessTokenOptional.isPresent()) {
-            builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
-            builder.setError(SenseCommandProtos.ErrorType.INTERNAL_OPERATION_FAILED);
-            LOGGER.error("Token not found {} for device Id {}", token, deviceId);
-            return builder;
-        }
-
-        final Long accountId = accessTokenOptional.get().accountId;
-        LOGGER.debug("accountId = {}", accountId);
-
         try {
             switch (action){
                 case PAIR_MORPHEUS:
@@ -159,9 +178,7 @@ public class RegisterResource {
                     builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_PILL);
                     break;
             }
-
-            builder.setAccountId(token);
-            builder.setDeviceId(deviceId);
+            //builder.setAccountId(morpheusCommand.getAccountId());
 
         } catch (UnableToExecuteStatementException sqlExp){
             final Matcher matcher = PG_UNIQ_PATTERN.matcher(sqlExp.getMessage());
@@ -193,16 +210,16 @@ public class RegisterResource {
         return builder;
     }
 
-    private Response signAndSend(final MorpheusCommand.Builder morpheusCommandBuilder, final KeyStore keyStore) {
-        final Optional<byte[]> keyBytesOptional = keyStore.get(morpheusCommandBuilder.getDeviceId());
+    private Response signAndSend(final String senseId, final MorpheusCommand.Builder morpheusCommandBuilder, final KeyStore keyStore) {
+        final Optional<byte[]> keyBytesOptional = keyStore.get(senseId);
         if(!keyBytesOptional.isPresent()) {
-            LOGGER.error("Missing AES key for deviceId = {}", morpheusCommandBuilder.getDeviceId());
+            LOGGER.error("Missing AES key for deviceId = {}", senseId);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
 
         final Optional<byte[]> signedResponse = SignedMessage.sign(morpheusCommandBuilder.build().toByteArray(), keyBytesOptional.get());
         if(!signedResponse.isPresent()) {
-            LOGGER.error("Failed signing message for deviceId = {}", morpheusCommandBuilder.getDeviceId());
+            LOGGER.error("Failed signing message for deviceId = {}", senseId);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
 
@@ -215,8 +232,15 @@ public class RegisterResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Timed
     public Response registerMorpheus(final byte[] body) {
+        final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
+        if(senseIdFromHeader != null){
+            LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
+        }
         final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_MORPHEUS);
-        return signAndSend(builder, senseKeyStore);
+        if(senseIdFromHeader != null){
+            return signAndSend(senseIdFromHeader, builder, senseKeyStore);
+        }
+        return signAndSend(builder.getDeviceId(), builder, senseKeyStore);
     }
 
     @POST
@@ -226,6 +250,28 @@ public class RegisterResource {
     @Timed
     public Response registerPill(final byte[] body) {
         final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_PILL);
-        return signAndSend(builder, senseKeyStore);
+        final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
+        if(senseIdFromHeader != null){
+            LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
+            return signAndSend(senseIdFromHeader, builder, senseKeyStore);
+        }
+
+        // TODO: Remove this and get sense id from header after the firmware is fixed.
+        final Optional<AccessToken> accessTokenOptional = this.tokenStore.getClientDetailsByToken(
+                new ClientCredentials(new OAuthScope[]{OAuthScope.AUTH}, builder.getAccountId()),
+                DateTime.now());
+
+        if(!accessTokenOptional.isPresent()) {
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        final Long accountId = accessTokenOptional.get().accountId;
+        final List<DeviceAccountPair> deviceAccountPairs = this.deviceDAO.getSensesForAccountId(accountId);
+        if(deviceAccountPairs.size() == 0) {
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        final String senseId = deviceAccountPairs.get(0).externalDeviceId;
+        return signAndSend(senseId, builder, senseKeyStore);
     }
 }

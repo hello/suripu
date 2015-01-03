@@ -10,7 +10,8 @@ public enum QueueName {
     REGISTRATIONS("registrations"),
     ENCODE_AUDIO("encode_audio"),
     BATCH_PILL_DATA ("batch_pill_data"),
-    SENSE_SENSORS_DATA("sense_sensors_data");
+    SENSE_SENSORS_DATA("sense_sensors_data"),
+    LOGS("logs");
 
     private String value;
 

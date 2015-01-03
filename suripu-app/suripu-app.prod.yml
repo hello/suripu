@@ -154,7 +154,9 @@ alarm_db:
 
 kinesis_logger:
   stream_name: logs
-  enabled : false
+  enabled : true
+  buffer_size: 100
+  origin: suripu-app
 
 score_threshold : 15 # minutes bucket for sleep-scores
 

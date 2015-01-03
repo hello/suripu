@@ -11,14 +11,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
-import com.hello.suripu.app.cli.CreateAlarmDynamoDBTableCommand;
-import com.hello.suripu.app.cli.CreateAlarmInfoDynamoDBTable;
-import com.hello.suripu.app.cli.CreateDynamoDBEventTableCommand;
-import com.hello.suripu.app.cli.CreateDynamoDBTimeZoneHistoryTableCommand;
-import com.hello.suripu.app.cli.CreateFeaturesDynamoDBTableCommand;
-import com.hello.suripu.app.cli.CreateRingTimeDynamoDBTable;
-import com.hello.suripu.app.cli.CreateSleepScoreDynamoDBTable;
-import com.hello.suripu.app.cli.CreateTeamsDynamoDBTableCommand;
+import com.hello.suripu.app.cli.CreateDynamoDBTables;
 import com.hello.suripu.app.cli.RecreateEventsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.modules.RolloutAppModule;
@@ -113,14 +106,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
     public void initialize(final Bootstrap<SuripuAppConfiguration> bootstrap) {
         bootstrap.addBundle(new DBIExceptionsBundle());
         bootstrap.addCommand(new RecreateEventsCommand());
-        bootstrap.addCommand(new CreateDynamoDBEventTableCommand());
-        bootstrap.addCommand(new CreateDynamoDBTimeZoneHistoryTableCommand());
-        bootstrap.addCommand(new CreateAlarmDynamoDBTableCommand());
-        bootstrap.addCommand(new CreateRingTimeDynamoDBTable());
-        bootstrap.addCommand(new CreateAlarmInfoDynamoDBTable());
-        bootstrap.addCommand(new CreateSleepScoreDynamoDBTable());
-        bootstrap.addCommand(new CreateFeaturesDynamoDBTableCommand());
-        bootstrap.addCommand(new CreateTeamsDynamoDBTableCommand());
+        bootstrap.addCommand(new CreateDynamoDBTables());
         bootstrap.addBundle(new KinesisLoggerBundle<SuripuAppConfiguration>() {
             @Override
             public KinesisLoggerConfiguration getConfiguration(final SuripuAppConfiguration configuration) {
@@ -257,17 +243,17 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new AccountResource(accountDAO));
         environment.addResource(new ApplicationResource(applicationStore));
         environment.addResource(new SleepLabelResource(sleepLabelDAO));
-        environment.addProvider(new RoomConditionsResource(deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
+        environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
         environment.addResource(new EventResource(eventDAODynamoDB));
         environment.addResource(new DeviceResources(deviceDAO, accountDAO, mergedAlarmInfoDynamoDB, jedisPool));
 
         environment.addResource(new ScoresResource(trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), configuration.getSleepScoreVersion()));
 
         final SunData sunData = new SunData();
-        environment.addResource(new TimelineResource(trackerMotionDAO, deviceDAO, deviceDataDAO, sleepLabelDAO, sleepScoreDAO, trendsDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), sunData, amazonS3, "hello-audio"));
+        environment.addResource(new TimelineResource(trackerMotionDAO, accountDAO, deviceDAO, deviceDataDAO, sleepLabelDAO, sleepScoreDAO, trendsDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), sunData, amazonS3, "hello-audio"));
 
         environment.addResource(new TimeZoneResource(timeZoneHistoryDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO));
-        environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO));
+        environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO, amazonS3));
 
         environment.addResource(new MobilePushRegistrationResource(subscriptionDAO));
         environment.addResource(new FeaturesResource(featureStore));

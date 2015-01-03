@@ -230,14 +230,30 @@ public class Alarm {
          * @param alarms
          * @return
          */
-        public static boolean isValidSmartAlarms(final List<Alarm> alarms){
+        public static boolean isValidSmartAlarms(final List<Alarm> alarms, final DateTime now, final DateTimeZone timeZone){
             final Set<Integer> alarmDays = new HashSet<Integer>();
             for(final Alarm alarm: alarms){
-                for(final Integer dayOfWeek:alarm.dayOfWeek) {
-                    if (alarmDays.contains(dayOfWeek)) {
+                if(alarm.isRepeated) {
+                    for (final Integer dayOfWeek : alarm.dayOfWeek) {
+                        if (alarmDays.contains(dayOfWeek)) {
+                            return false;
+                        } else {
+                            alarmDays.add(dayOfWeek);
+                        }
+                    }
+                }else{
+                    if(!isValidNoneRepeatedAlarm(alarm)){
                         return false;
-                    } else {
-                        alarmDays.add(dayOfWeek);
+                    }
+
+                    if(!isAlarmExpired(alarm, now, timeZone)){
+                        final DateTime ringTime = new DateTime(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour, 0, timeZone);
+                        final int dayOfWeek = ringTime.getDayOfWeek();
+                        if (alarmDays.contains(dayOfWeek)) {
+                            return false;
+                        } else {
+                            alarmDays.add(dayOfWeek);
+                        }
                     }
                 }
             }
@@ -245,16 +261,34 @@ public class Alarm {
             return true;
         }
 
+        public static boolean isValidNoneRepeatedAlarm(final Alarm alarm){
+            if(alarm.isRepeated){
+                return true;
+            }
+
+            try{
+                final DateTime validDateTime = new DateTime(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour, DateTimeZone.UTC);
+            }catch (Exception ex){
+                return false;
+            }
+
+            return true;
+        }
+
+        public static boolean isAlarmExpired(final Alarm alarm, final DateTime currentTime, final DateTimeZone timeZone){
+            if(alarm.isRepeated){
+                return false;
+            }
+
+            final DateTime ringTime = new DateTime(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour, 0, timeZone);
+            return ringTime.isBefore(currentTime);
+        }
+
         public static List<Alarm> disableExpiredNoneRepeatedAlarms(final List<Alarm> alarms, long currentTimestampUTC, final DateTimeZone timeZone){
             final ArrayList<Alarm> newAlarmList = new ArrayList<>();
             for(final Alarm alarm:alarms){
-                if(alarm.isRepeated){
-                    newAlarmList.add(alarm);
-                    continue;
-                }
 
-                final DateTime ringTime = new DateTime(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour, 0, timeZone);
-                if(ringTime.isBefore(currentTimestampUTC)){
+                if(isAlarmExpired(alarm, new DateTime(currentTimestampUTC, DateTimeZone.UTC), timeZone)){
                     final Alarm disabledAlarm = new Alarm(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour,
                             new HashSet<Integer>(),
                             false,
@@ -279,7 +313,7 @@ public class Alarm {
          */
         public static RingTime generateNextRingTimeFromAlarmTemplates(final List<Alarm> alarms, long currentTimestampUTC, final DateTimeZone timeZone){
 
-            if(!isValidSmartAlarms(alarms)){
+            if(!isValidSmartAlarms(alarms, new DateTime(currentTimestampUTC, DateTimeZone.UTC), timeZone)){
                 throw new IllegalArgumentException("Invalid alarms.");
             }
 
