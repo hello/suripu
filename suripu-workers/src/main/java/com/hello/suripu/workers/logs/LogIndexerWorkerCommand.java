@@ -24,7 +24,7 @@ public class LogIndexerWorkerCommand extends ConfiguredCommand<LogIndexerWorkerC
 
     private final static Logger LOGGER = LoggerFactory.getLogger(LogIndexerWorkerCommand.class);
 
-    public LogIndexerWorkerCommand(String name, String description) {
+    public LogIndexerWorkerCommand(final String name, final String description) {
         super(name, description);
     }
 
