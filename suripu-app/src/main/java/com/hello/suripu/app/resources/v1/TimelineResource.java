@@ -310,8 +310,13 @@ public class TimelineResource extends BaseResource {
                                 targetDateScore.scoreType, targetDateScore.version));
 
                 // add sleep-score and duration to day-of-week, over time tracking table
-                this.trendsDAO.updateDayOfWeekData(accountId, sleepScore, targetDate.withTimeAtStartOfDay(), userOffsetMillis, TrendGraph.DataType.SLEEP_SCORE);
-                this.trendsDAO.updateSleepStats(accountId, userOffsetMillis, targetDate.withTimeAtStartOfDay(), sleepStats);
+                if (sleepScore > 0) {
+                    this.trendsDAO.updateDayOfWeekData(accountId, sleepScore, targetDate.withTimeAtStartOfDay(), userOffsetMillis, TrendGraph.DataType.SLEEP_SCORE);
+                }
+
+                if (sleepStats.sleepDurationInMinutes > 0) {
+                    this.trendsDAO.updateSleepStats(accountId, userOffsetMillis, targetDate.withTimeAtStartOfDay(), sleepStats);
+                }
             }
         }
 
