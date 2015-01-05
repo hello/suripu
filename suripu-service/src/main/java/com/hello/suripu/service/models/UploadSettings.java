@@ -65,6 +65,10 @@ public class UploadSettings {
     }
 
     private Integer adjustUploadIntervalInMinutes(final Integer standardUploadIntervalInMinutes, final Long userNextAlarmTimestampMillis) {
+        if(userNextAlarmTimestampMillis - DateTime.now(DateTimeZone.UTC).getMillis() < 0){
+            return standardUploadIntervalInMinutes;
+        }
+
         LOGGER.debug("diff in milliseconds {}", userNextAlarmTimestampMillis - DateTime.now(DateTimeZone.UTC).getMillis());
         if (userNextAlarmTimestampMillis - DateTime.now(DateTimeZone.UTC).getMillis() <= ALLOWABLE_TIME_BETWEEN_NOW_AND_NEXT_ALARM) {
             return FASTEST_UPLOAD_INTERVAL;
