@@ -17,11 +17,13 @@ public class UploadSettings {
     private static final Integer FASTEST_UPLOAD_INTERVAL = 1; // minute(s)
 
     public static Integer getUploadInterval(final DateTime userLocalDateTime, final SenseUploadConfiguration senseUploadConfiguration, final Long userNextAlarmTimestampMillis) {
-        return adjustUploadIntervalInMinutes(
+        final Integer adjustedUploadIntervalInMinutes = adjustUploadIntervalInMinutes(
             DateTime.now(DateTimeZone.UTC).getMillis(),
             computeUploadIntervalPerUserPerSetting(userLocalDateTime, senseUploadConfiguration),
             userNextAlarmTimestampMillis
         );
+        LOGGER.debug("Adjusted Upload Interval in Minutes: {}", adjustedUploadIntervalInMinutes);
+        return adjustedUploadIntervalInMinutes;
     }
 
     public static Integer computeUploadIntervalPerUserPerSetting(final DateTime userLocalDateTime, final SenseUploadConfiguration senseUploadConfiguration) {
