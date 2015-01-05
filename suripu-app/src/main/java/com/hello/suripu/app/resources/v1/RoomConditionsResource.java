@@ -49,7 +49,7 @@ public class RoomConditionsResource {
     @GET
     @Path("/current")
     @Produces(MediaType.APPLICATION_JSON)
-    public CurrentRoomState current(@Scope({OAuthScope.SENSORS_BASIC}) final AccessToken token, @DefaultValue("c") @QueryParam("unit") final String unit) {
+    public CurrentRoomState current(@Scope({OAuthScope.SENSORS_BASIC}) final AccessToken token, @DefaultValue("c") @QueryParam("temp_unit") final String unit) {
 
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(token.accountId);
         if(!deviceId.isPresent()) {
