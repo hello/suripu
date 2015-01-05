@@ -102,7 +102,7 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
                 kinesisAsyncClient.putRecordAsync(request, new AsyncHandler<PutRecordRequest, PutRecordResult>() {
                     @Override
                     public void onError(Exception e) {
-                        System.out.println(e.getMessage());
+                        System.out.println(e.getMessage()); // Can't log this because otherwise it would be an infinite loop
                     }
 
                     @Override
