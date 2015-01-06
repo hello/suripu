@@ -16,6 +16,7 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.InsightProcessor;
+import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.TimelineUtils;
 import org.joda.time.DateTime;
@@ -47,19 +48,22 @@ public class DataScienceResource {
     private final DeviceDAO deviceDAO;
     private final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
+    private final LightData lightData;
 
     public DataScienceResource(final AccountDAO accountDAO,
                                final TrackerMotionDAO trackerMotionDAO,
                                final DeviceDataDAO deviceDataDAO,
                                final DeviceDAO deviceDAO,
                                final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
-                               final InsightsDAODynamoDB insightsDAODynamoDB){
+                               final InsightsDAODynamoDB insightsDAODynamoDB,
+                               final LightData lightData){
         this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.aggregateSleepScoreDAODynamoDB = aggregateSleepScoreDAODynamoDB;
         this.insightsDAODynamoDB = insightsDAODynamoDB;
+        this.lightData = lightData;
     }
 
     @GET
@@ -113,7 +117,7 @@ public class DataScienceResource {
 
         final InsightCard.Category category = InsightCard.Category.fromInteger(value);
 
-        final InsightProcessor processor = new InsightProcessor(deviceDataDAO, deviceDAO, trackerMotionDAO, aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB);
+        final InsightProcessor processor = new InsightProcessor(deviceDataDAO, deviceDAO, trackerMotionDAO, aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, lightData);
         final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
         if (accountOptional.isPresent()) {
             processor.generateInsights(accountOptional.get(), category);

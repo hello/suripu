@@ -198,8 +198,8 @@ public class InsightsDAODynamoDB {
     }
 
     private InsightCard createInsightCard(Map<String, AttributeValue> item) {
-        InsightCard.Category category = InsightCard.Category.fromInteger(Integer.valueOf(item.get(CATEGORY_ATTRIBUTE_NAME).getN()));
-        InsightCard.TimePeriod timePeriod = InsightCard.TimePeriod.fromString(item.get(TIME_PERIOD_ATTRIBUTE_NAME).getS());
+        final InsightCard.Category category = InsightCard.Category.fromInteger(Integer.valueOf(item.get(CATEGORY_ATTRIBUTE_NAME).getN()));
+        final InsightCard.TimePeriod timePeriod = InsightCard.TimePeriod.fromString(item.get(TIME_PERIOD_ATTRIBUTE_NAME).getS());
 
         return new InsightCard(
                 Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN()),

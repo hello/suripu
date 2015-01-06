@@ -3,9 +3,11 @@ package com.hello.suripu.core.models.Insights;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableList;
 import org.joda.time.DateTime;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -100,7 +102,7 @@ public class InsightCard implements Comparable<InsightCard> {
     public final DateTime timestamp; // created timestamp in UTC
 
     @JsonProperty("insights_info")
-    public final List<GenericInsightCards> genericInsightCards;
+    public final List<GenericInsightCards> genericInsightCards = new ArrayList<>();
 
     public InsightCard(final Long accountId, final String title, final String message,
                        final Category category, final TimePeriod timePeriod, final DateTime timestamp) {
@@ -110,22 +112,16 @@ public class InsightCard implements Comparable<InsightCard> {
         this.category = category;
         this.timePeriod = timePeriod;
         this.timestamp = timestamp;
-        this.genericInsightCards = Collections.emptyList();
     }
 
     public InsightCard(final Long accountId, final String title, final String message,
                        final Category category, final TimePeriod timePeriod, final DateTime timestamp,
                        final List<GenericInsightCards> genericInsightCards) {
-        this.accountId = Optional.fromNullable(accountId);
-        this.title = title;
-        this.message = message;
-        this.category = category;
-        this.timePeriod = timePeriod;
-        this.timestamp = timestamp;
-        this.genericInsightCards = genericInsightCards;
+        this(accountId, title, message, category, timePeriod, timestamp);
+        this.genericInsightCards.addAll(genericInsightCards);
     }
 
-    public static InsightCard withGenericCards(final InsightCard insightCard, final List<GenericInsightCards> genericCards) {
+    public static InsightCard withGenericCards(final InsightCard insightCard, final ImmutableList<GenericInsightCards> genericCards) {
         return new InsightCard(insightCard.accountId.get(),
                 insightCard.title, insightCard.message, insightCard.category, insightCard.timePeriod,
                 insightCard.timestamp, genericCards);
@@ -133,10 +129,15 @@ public class InsightCard implements Comparable<InsightCard> {
 
     @Override
     public int compareTo(InsightCard o) {
+        // TODO: test this
         final InsightCard compareObject = (InsightCard) o;
-        final DateTime compareTimestamp = compareObject.timestamp;
-        final DateTime objectTimestamp = this.timestamp;
-        return (int) (objectTimestamp.getMillis() - compareTimestamp.getMillis()); // ascending
+        return ComparisonChain.start()
+                .compare(this.timestamp, compareObject.timestamp)
+                .result();
+//        final DateTime compareTimestamp = compareObject.timestamp;
+//        final DateTime objectTimestamp = this.timestamp;
+//        return (int) (objectTimestamp.getMillis() - compareTimestamp.getMillis()); // ascending
+
     }
 
 }

@@ -1,7 +1,6 @@
 package com.hello.suripu.core.processors.insights;
 
 import com.google.common.base.Optional;
-import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -19,19 +18,14 @@ public class Lights {
     private static final int NIGHT_START_HOUR = 18; // 6pm
     private static final int NIGHT_END_HOUR = 1; // 1am
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceDAO deviceDAO, final DeviceDataDAO deviceDataDAO, final LightData lightData) {
-
-        final Optional<Long> deviceIdOptional = deviceDAO.getMostRecentSenseByAccountId(accountId);
-        if (!deviceIdOptional.isPresent()) {
-            return Optional.absent();
-        }
+    public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final LightData lightData) {
 
         // get light data for last three days, filter by time
         final int slotDurationInMinutes = 1;
         final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withHourOfDay(NIGHT_START_HOUR).minusDays(15); // today 6pm TODO: rm debug minusDays
         final DateTime queryStartTime = queryEndTime.minusDays(3);
 
-        final List<DeviceData> rows = deviceDataDAO.getBetweenByLocalTimeAggregateBySlotDuration(accountId, deviceIdOptional.get(), queryStartTime, queryEndTime, slotDurationInMinutes);
+        final List<DeviceData> rows = deviceDataDAO.getBetweenByLocalTimeAggregateBySlotDuration(accountId, deviceId, queryStartTime, queryEndTime, slotDurationInMinutes);
 
         return processLightData(accountId, rows, lightData);
     }

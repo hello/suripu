@@ -11,10 +11,11 @@ import com.hello.suripu.core.models.Insights.GenericInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
-import com.hello.suripu.core.util.DateTimeUtil;
+import com.hello.suripu.core.processors.insights.TemperatureHumidity;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,13 +41,14 @@ public class InsightProcessor {
                             final DeviceDAO deviceDAO,
                             final TrackerMotionDAO trackerMotionDAO,
                             final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
-                            final InsightsDAODynamoDB insightsDAODynamoDB) {
+                            final InsightsDAODynamoDB insightsDAODynamoDB,
+                            final LightData lightData) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.scoreDAODynamoDB = scoreDAODynamoDB;
         this.insightsDAODynamoDB = insightsDAODynamoDB;
-        this.lightData = new LightData();
+        this.lightData = lightData;
     }
 
     @Timed
@@ -89,17 +91,35 @@ public class InsightProcessor {
         final int accountAge = this.getAccountAgeInDays(account.created);
         if (accountAge < 1) {
             return; // not slept one night yet
-        } else if (accountAge <= 10) {
-            generateNewUserInsights(account.id.get(), accountAge);
+        }
+
+        final Long accountId = account.id.get();
+        final Optional<Long> deviceIdOptional = deviceDAO.getMostRecentSenseByAccountId(accountId);
+        if (!deviceIdOptional.isPresent()) {
+            return;
+        }
+
+        final Long deviceId = deviceIdOptional.get();
+
+        if (accountAge <= 10) {
+            generateNewUserInsights(accountId, deviceId, accountAge);
         } else {
-            generateGeneralInsights(account.id.get());
+            generateGeneralInsights(accountId, deviceId);
         }
     }
 
     public void generateInsights(final Account account, final InsightCard.Category category) {
+        final Long accountId = account.id.get();
+        final Optional<Long> deviceIdOptional = deviceDAO.getMostRecentSenseByAccountId(accountId);
+        if (!deviceIdOptional.isPresent()) {
+            return;
+        }
+
+        final Long deviceId = deviceIdOptional.get();
+
         Optional<InsightCard> insightCardOptional = Optional.absent();
         if (category == InsightCard.Category.LIGHT) {
-            insightCardOptional = Lights.getInsights(account.id.get(), deviceDAO, deviceDataDAO, lightData);
+            insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
         }
 
         if (insightCardOptional.isPresent()) {
@@ -112,15 +132,18 @@ public class InsightProcessor {
      * @param accountId
      * @param accountAge
      */
-    private void generateNewUserInsights(final Long accountId, final int accountAge) {
+    private void generateNewUserInsights(final Long accountId, final Long deviceId, final int accountAge) {
 
         Optional<InsightCard> insightCardOptional = Optional.absent();
         switch (accountAge) {
             case 1:
-                insightCardOptional = Lights.getInsights(accountId, deviceDAO, deviceDataDAO, lightData);
+                insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
+                break;
+            case 2:
+                insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceDAO, deviceDataDAO);
                 break;
             default:
-                insightCardOptional = Lights.getInsights(accountId, deviceDAO, deviceDataDAO, lightData);
+                insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
                 break; // TODO: rm debug, lights insight is all we have
         }
 
@@ -134,12 +157,13 @@ public class InsightProcessor {
      * logic to determine what kind of insights to generate
      * @param accountId
      */
-    private void generateGeneralInsights(final Long accountId) {
+    private void generateGeneralInsights(final Long accountId, final Long deviceId) {
     // TODO
     }
 
     private int getAccountAgeInDays(final DateTime accountCreated) {
         final DateTime now = DateTime.now(DateTimeZone.UTC);
-        return (int) ((now.getMillis() - accountCreated.getMillis())/DateTimeUtil.DAY_IN_MILLIS);
+        final Duration duration = new Duration(now, accountCreated);
+        return duration.toStandardDays().getDays();
     }
 }

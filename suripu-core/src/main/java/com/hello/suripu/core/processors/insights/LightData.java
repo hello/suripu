@@ -9,6 +9,7 @@ import java.util.Map;
  * Created by kingshy on 1/5/15.
  */
 public class LightData {
+    // see https://s3.amazonaws.com/hello-data/insights-raw-data/light_distribution_2014_12_23.csv
     private static String DISTRIBUTION_DATA = "1,2.8\n" +
             "2,3.1\n" +
             "3,5.8\n" +
@@ -428,8 +429,9 @@ public class LightData {
     }
 
     public int getLightPercentile(final int lightValue) {
-        if (lightValue > MAX_LIGHT)
-            return MAX_LIGHT_PERCENTILE;
+        if (lightValue > MAX_LIGHT) {
+                return MAX_LIGHT_PERCENTILE;
+        }
         return this.distributionLookup.get(lightValue);
     }
 
