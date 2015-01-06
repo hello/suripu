@@ -14,7 +14,7 @@ public class UploadSettings {
 
     private static final Long ALLOWABLE_TIME_BETWEEN_NOW_AND_NEXT_ALARM = 20*60*1000L;  // milliseconds
     private static final Long SUSTAINED_TIME_BETWEEN_NOW_AND_NEXT_ALARM = 60*60*1000L;  // milliseconds
-    private static final Integer FASTEST_UPLOAD_INTERVAL = 1; // minute(s)
+    private static final Integer FASTEST_UPLOAD_INTERVAL = 2; // minute(s)
 
     public static Integer getUploadInterval(final DateTime userLocalDateTime, final SenseUploadConfiguration senseUploadConfiguration, final Long userNextAlarmTimestampMillis) {
         final Integer adjustedUploadIntervalInMinutes = adjustUploadIntervalInMinutes(
