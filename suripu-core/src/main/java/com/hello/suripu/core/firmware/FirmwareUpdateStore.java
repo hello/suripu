@@ -173,17 +173,8 @@ public class FirmwareUpdateStore {
 
             if(f.contains("kitsune.bin")) {
 
-
-                final S3Object s3Object = s3.getObject(bucketName, f);
-                final S3ObjectInputStream s3ObjectInputStream = s3Object.getObjectContent();
-
-                try {
-                    final byte[] sha1 = DigestUtils.sha1(s3ObjectInputStream);
-                    fileDownloadBuilder.setSha1(ByteString.copyFrom(sha1));
-                } catch (IOException e) {
-                    LOGGER.error("Failed computing sha1 for {}", f);
-                    throw new RuntimeException(e.getMessage());
-                }
+                final byte[] sha1 = computeSha1ForS3File(bucketName, f);
+                fileDownloadBuilder.setSha1(ByteString.copyFrom(sha1));
 
                 final boolean copyToSerialFlash = true;
                 final boolean resetApplicationProcessor = true;
@@ -202,8 +193,50 @@ public class FirmwareUpdateStore {
 
                 fileDownloadList.add(fileDownloadBuilder.build());
             }
+
+
+            if(f.contains("top.bin")) {
+
+                final byte[] sha1 = computeSha1ForS3File(bucketName, f);
+                fileDownloadBuilder.setSha1(ByteString.copyFrom(sha1));
+                final boolean copyToSerialFlash = true;
+                final boolean resetApplicationProcessor = false;
+                final String serialFlashFilename = "update.bin";
+                final String serialFlashPath = "/top/";
+                final String sdCardFilename = "top.update.bin";
+                final String sdCardPath = "/";
+
+                fileDownloadBuilder.setCopyToSerialFlash(copyToSerialFlash);
+                fileDownloadBuilder.setResetApplicationProcessor(resetApplicationProcessor);
+                fileDownloadBuilder.setSerialFlashFilename(serialFlashFilename);
+                fileDownloadBuilder.setSerialFlashPath(serialFlashPath);
+                fileDownloadBuilder.setSdCardFilename(sdCardFilename);
+                fileDownloadBuilder.setSdCardPath(sdCardPath);
+
+
+                fileDownloadList.add(fileDownloadBuilder.build());
+            }
         }
 
         return fileDownloadList;
+    }
+
+    private byte[] computeSha1ForS3File(final String bucketName, final String fileName) {
+        final S3Object s3Object = s3.getObject(bucketName, fileName);
+        final S3ObjectInputStream s3ObjectInputStream = s3Object.getObjectContent();
+
+        try {
+            return DigestUtils.sha1(s3ObjectInputStream);
+
+        } catch (IOException e) {
+            LOGGER.error("Failed computing sha1 for {}", fileName);
+            throw new RuntimeException(e.getMessage());
+        } finally {
+            try {
+                s3Object.close();
+            } catch (IOException e) {
+                LOGGER.error("Failed closing S3 stream");
+            }
+        }
     }
 }
