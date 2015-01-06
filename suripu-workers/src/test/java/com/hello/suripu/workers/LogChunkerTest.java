@@ -26,7 +26,7 @@ public class LogChunkerTest {
                 .setProduction(false)
                 .setTs(ts).build();
 
-        final IndexTankClient.Document doc = LogChunker.merge(Lists.newArrayList(message));
+        final IndexTankClient.Document doc = LogChunker.merge(Lists.newArrayList(message), "version");
         final Map<String, Object> docMap = doc.toDocumentMap();
         final Map<String, String> fields = (Map<String, String>) docMap.get("fields");
         final Map<String, String> categories = (Map<String, String>) docMap.get("categories");
