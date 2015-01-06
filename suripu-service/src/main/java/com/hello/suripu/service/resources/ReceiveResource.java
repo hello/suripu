@@ -464,10 +464,10 @@ public class ReceiveResource extends BaseResource {
 
         final DateTimeZone userTimeZone = getUserTimeZone(alarmInfoList);
 
-        final Long userNextAlarmTimestamp = alarmBuilder.getStartTime() * 1000L;
-        final UploadSettings uploadSettings = new UploadSettings(senseUploadConfiguration, userTimeZone, userNextAlarmTimestamp);
-        final Integer uploadInterval = uploadSettings.getUploadIntervalInMinutes();
-        
+        final Long userNextAlarmTimestamp = alarmBuilder.hasStartTime() ? alarmBuilder.getStartTime() * 1000L : 0;
+
+        final Integer uploadInterval = UploadSettings.getUploadInterval(DateTime.now(userTimeZone), senseUploadConfiguration, userNextAlarmTimestamp);
+
         responseBuilder.setBatchSize(uploadInterval);
         responseBuilder.setAudioControl(audioControl);
 
