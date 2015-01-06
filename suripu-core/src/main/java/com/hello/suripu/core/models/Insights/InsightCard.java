@@ -5,12 +5,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import org.joda.time.DateTime;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
  * Created by kingshy on 10/24/14.
  */
-public class InsightCard {
+public class InsightCard implements Comparable<InsightCard> {
     public enum Category {
         GENERIC(0),
         SLEEP_HYGIENE(1),
@@ -37,6 +38,18 @@ public class InsightCard {
         private Category(final int value) {this.value = value;}
 
         public int getValue() {return this.value;}
+
+        public String toCategoryString() {
+            return String.format("%03d", this.getValue());
+        }
+
+        public static Category fromInteger(final int value) {
+            for (final Category category : Category.values()) {
+                if (value == category.getValue())
+                    return category;
+            }
+            return Category.GENERIC;
+        }
     }
 
     public enum TimePeriod {
@@ -54,12 +67,19 @@ public class InsightCard {
 
         private TimePeriod(final int value) {this.value = value;}
 
-
         public int getValue() {return this.value;}
-    }
 
-    @JsonProperty("id")
-    public final Long id;
+        public static TimePeriod fromString(final String text) {
+            if (text != null) {
+                for (final TimePeriod period : TimePeriod.values()) {
+                    if (text.equalsIgnoreCase(period.toString()))
+                        return period;
+                }
+            }
+            throw new IllegalArgumentException();
+        }
+
+    }
 
     @JsonProperty("account_id")
     public final Optional<Long> accountId;
@@ -82,10 +102,20 @@ public class InsightCard {
     @JsonProperty("insights_info")
     public final List<GenericInsightCards> genericInsightCards;
 
-    public InsightCard(final Long id, final Long accountId, final String title, final String message,
+    public InsightCard(final Long accountId, final String title, final String message,
+                       final Category category, final TimePeriod timePeriod, final DateTime timestamp) {
+        this.accountId = Optional.fromNullable(accountId);
+        this.title = title;
+        this.message = message;
+        this.category = category;
+        this.timePeriod = timePeriod;
+        this.timestamp = timestamp;
+        this.genericInsightCards = Collections.emptyList();
+    }
+
+    public InsightCard(final Long accountId, final String title, final String message,
                        final Category category, final TimePeriod timePeriod, final DateTime timestamp,
                        final List<GenericInsightCards> genericInsightCards) {
-        this.id = id;
         this.accountId = Optional.fromNullable(accountId);
         this.title = title;
         this.message = message;
@@ -96,8 +126,17 @@ public class InsightCard {
     }
 
     public static InsightCard withGenericCards(final InsightCard insightCard, final List<GenericInsightCards> genericCards) {
-        return new InsightCard(insightCard.id, insightCard.accountId.get(),
+        return new InsightCard(insightCard.accountId.get(),
                 insightCard.title, insightCard.message, insightCard.category, insightCard.timePeriod,
                 insightCard.timestamp, genericCards);
     }
+
+    @Override
+    public int compareTo(InsightCard o) {
+        final InsightCard compareObject = (InsightCard) o;
+        final DateTime compareTimestamp = compareObject.timestamp;
+        final DateTime objectTimestamp = this.timestamp;
+        return (int) (objectTimestamp.getMillis() - compareTimestamp.getMillis()); // ascending
+    }
+
 }

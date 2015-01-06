@@ -147,6 +147,11 @@ teams_db:
     region: us-east-1
     table_name: teams
 
+insights_dynamo_db:
+    endpoint : http://localhost:7777
+    region: us-east-1
+    table_name: insights
+
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
