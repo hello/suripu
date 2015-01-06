@@ -36,16 +36,18 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
         private final Integer bufferSize;
         private final String origin;
 
+
         public KinesisAppender(
                 final AmazonKinesisAsyncClient kinesisAsyncClient,
-                final KinesisLoggerConfiguration loggerConfiguration) {
+                final KinesisLoggerConfiguration loggerConfiguration,
+                final String appVersion) {
             this.kinesisAsyncClient = kinesisAsyncClient;
             this.topic = loggerConfiguration.getStreamName();
             this.bufferSize = loggerConfiguration.bufferSize();
             this.origin = loggerConfiguration.origin();
             this.batch = LoggingProtos.BatchLogMessage.newBuilder();
+            this.batch.setAppVersion(appVersion);
         }
-
 
         private MessageFormatter formatter;
 
@@ -73,6 +75,9 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
         @Override
         public void stop() {
             super.stop();
+            if(batch.getMessagesCount() > 0) {
+                flush();
+            }
             this.kinesisAsyncClient.shutdown();
         }
 
@@ -93,25 +98,29 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
             this.appendAndConvert(eventObject);
 
             if(batch.getMessagesCount() >= bufferSize) {
-                final LoggingProtos.BatchLogMessage tempBatch = batch.build();
-                final PutRecordRequest request = new PutRecordRequest()
-                        .withStreamName(topic)
-                        .withData(ByteBuffer.wrap(tempBatch.toByteArray()))
-                        .withPartitionKey(origin);
-
-                kinesisAsyncClient.putRecordAsync(request, new AsyncHandler<PutRecordRequest, PutRecordResult>() {
-                    @Override
-                    public void onError(Exception e) {
-                        System.out.println(e.getMessage()); // Can't log this because otherwise it would be an infinite loop
-                    }
-
-                    @Override
-                    public void onSuccess(PutRecordRequest request, PutRecordResult putRecordResult) {
-
-                    }
-                });
-                batch.clear();
+                flush();
             }
+        }
+
+        private void flush() {
+            final LoggingProtos.BatchLogMessage tempBatch = batch.build();
+            final PutRecordRequest request = new PutRecordRequest()
+                    .withStreamName(topic)
+                    .withData(ByteBuffer.wrap(tempBatch.toByteArray()))
+                    .withPartitionKey(origin);
+
+            kinesisAsyncClient.putRecordAsync(request, new AsyncHandler<PutRecordRequest, PutRecordResult>() {
+                @Override
+                public void onError(Exception e) {
+                    System.out.println(e.getMessage()); // Can't log this because otherwise it would be an infinite loop
+                }
+
+                @Override
+                public void onSuccess(PutRecordRequest request, PutRecordResult putRecordResult) {
+
+                }
+            });
+            batch.clear();
         }
     }
 
@@ -127,7 +136,8 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
         if (kinesisLoggerConfiguration.isEnabled()) {
             final AWSCredentialsProvider awsCredentialsProvider = new EnvironmentVariableCredentialsProvider();
             final AmazonKinesisAsyncClient asyncClient = new AmazonKinesisAsyncClient(awsCredentialsProvider);
-            final Appender<ILoggingEvent> appender = new KinesisAppender(asyncClient, kinesisLoggerConfiguration);
+            final String appVersion = (getClass().getPackage().getImplementationVersion() == null) ? "0.0.0" : getClass().getPackage().getImplementationVersion();
+            final Appender<ILoggingEvent> appender = new KinesisAppender(asyncClient, kinesisLoggerConfiguration, appVersion);
             final Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
             final LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
             appender.setContext(lc);
