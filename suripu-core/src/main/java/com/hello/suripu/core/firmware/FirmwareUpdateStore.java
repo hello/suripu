@@ -10,6 +10,7 @@ import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Ordering;
 import com.google.common.io.CharStreams;
 import com.google.protobuf.ByteString;
 import com.hello.suripu.api.output.OutputProtos.SyncResponse;
@@ -221,7 +222,14 @@ public class FirmwareUpdateStore {
             }
         }
 
-        return fileDownloadList;
+        final Ordering<SyncResponse.FileDownload> byResetApplicationProcessor = new Ordering<SyncResponse.FileDownload>() {
+            public int compare(SyncResponse.FileDownload left, SyncResponse.FileDownload right) {
+                return Boolean.compare(left.getResetApplicationProcessor(), right.getResetApplicationProcessor());
+            }
+        };
+
+        final List<SyncResponse.FileDownload> sortedFiles = byResetApplicationProcessor.sortedCopy(fileDownloadList);
+        return sortedFiles;
     }
 
     private byte[] computeSha1ForS3File(final String bucketName, final String fileName) {
