@@ -199,6 +199,9 @@ public class FirmwareUpdateStore {
 
                 final byte[] sha1 = computeSha1ForS3File(bucketName, f);
                 fileDownloadBuilder.setSha1(ByteString.copyFrom(sha1));
+
+
+
                 final boolean copyToSerialFlash = true;
                 final boolean resetApplicationProcessor = false;
                 final String serialFlashFilename = "update.bin";

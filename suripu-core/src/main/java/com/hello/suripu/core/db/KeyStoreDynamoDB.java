@@ -18,7 +18,6 @@ import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
@@ -26,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class KeyStoreDynamoDB implements KeyStore {
@@ -63,16 +61,17 @@ public class KeyStoreDynamoDB implements KeyStore {
 
     @Override
     public Optional<byte[]> get(final String deviceId) {
-        LOGGER.info("Calling get with {}", deviceId);
-        try {
-            return cache.get(deviceId);
-        } catch (ExecutionException e) {
-            LOGGER.error("Exception from cache {}", e.getMessage());
-        } catch(UncheckedExecutionException e) {
-            LOGGER.error("Unchecked Exception from cache {}", e.getMessage());
-        }
-
-        return Optional.absent();
+//        LOGGER.info("Calling get with {}", deviceId);
+//        try {
+//            return cache.get(deviceId);
+//        } catch (ExecutionException e) {
+//            LOGGER.error("Exception from cache {}", e.getMessage());
+//        } catch(UncheckedExecutionException e) {
+//            LOGGER.error("Unchecked Exception from cache {}", e.getMessage());
+//        }
+//
+//        return Optional.absent();
+        return getRemotely(deviceId);
     }
 
     @Override
