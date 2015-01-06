@@ -101,6 +101,11 @@ public interface DeviceDAO {
     @SqlQuery("SELECT id, tracker_id AS pill_id, '1' AS firmware_version, 100 AS battery_level, ts AS last_seen from tracker_motion_master WHERE tracker_id = :pill_id ORDER BY id DESC LIMIT 1;")
     Optional<DeviceStatus> pillStatus(@Bind("pill_id") final Long pillId);
 
+    @RegisterMapper(DeviceStatusMapper.class)
+    @SingleValueResult(DeviceStatus.class)
+    @SqlQuery("SELECT id, pill_id, firmware_version, battery_level, last_updated as last_seen FROM pill_status WHERE pill_id = :pill_id ORDER BY id DESC LIMIT 1000;")
+    ImmutableList<DeviceStatus> pillStatusWithBatteryLevel(@Bind("pill_id") final Long pillId);
+
     //    @SqlQuery("SELECT * FROM pill_status WHERE pill_id = :pill_id;")
     @RegisterMapper(DeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
