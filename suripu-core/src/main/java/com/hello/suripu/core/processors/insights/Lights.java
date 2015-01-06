@@ -58,6 +58,7 @@ public class Lights {
         String title;
         String message;
         // see: http://en.wikipedia.org/wiki/Lux and http://www.greenbusinesslight.com/page/119/lux-lumens-and-watts
+        // todo: refine levels
         if (medianLight <= 1) {
             title = "Hello, Darkness";
             message = "Your bedroom light condition is perfect, " +

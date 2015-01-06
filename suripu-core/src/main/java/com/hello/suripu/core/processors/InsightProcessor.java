@@ -89,7 +89,7 @@ public class InsightProcessor {
         final int accountAge = this.getAccountAgeInDays(account.created);
         if (accountAge < 1) {
             return; // not slept one night yet
-        } else if (accountAge <= 1000) { // TODO: rm debug number
+        } else if (accountAge <= 10) {
             generateNewUserInsights(account.id.get(), accountAge);
         } else {
             generateGeneralInsights(account.id.get());
@@ -121,7 +121,7 @@ public class InsightProcessor {
                 break;
             default:
                 insightCardOptional = Lights.getInsights(accountId, deviceDAO, deviceDataDAO, lightData);
-                break; // TODO: rm debug
+                break; // TODO: rm debug, lights insight is all we have
         }
 
         if (insightCardOptional.isPresent()) {
