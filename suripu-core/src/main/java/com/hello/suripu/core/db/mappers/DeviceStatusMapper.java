@@ -24,12 +24,6 @@ public class DeviceStatusMapper implements ResultSetMapper<DeviceStatus> {
         final DateTime lastUpdated = new DateTime(r.getTimestamp("last_seen"));
         final Integer uptime = r.getInt("uptime");
 
-        LOGGER.debug("mapping id:  {}", id);
-        LOGGER.debug("mapping pillId:  {}", pillId);
-        LOGGER.debug("mapping firmwareVersion:  {}", firmwareVersion);
-        LOGGER.debug("mapping batterLevel:  {}", batteryLevel);
-        LOGGER.debug("mapping lastUpdated:  {}", uptime);
-
         return new DeviceStatus(id, pillId, firmwareVersion, batteryLevel, lastUpdated, uptime);
     }
 }
