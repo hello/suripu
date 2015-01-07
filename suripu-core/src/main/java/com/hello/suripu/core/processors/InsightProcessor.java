@@ -6,7 +6,6 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
-import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Insights.GenericInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.processors.insights.LightData;
@@ -87,13 +86,12 @@ public class InsightProcessor {
         return generated;
     }
 
-    public void generateInsights(final Account account) {
-        final int accountAge = this.getAccountAgeInDays(account.created);
+    public void generateInsights(final Long accountId, final DateTime accountCreated) {
+        final int accountAge = this.getAccountAgeInDays(accountCreated);
         if (accountAge < 1) {
             return; // not slept one night yet
         }
 
-        final Long accountId = account.id.get();
         final Optional<Long> deviceIdOptional = deviceDAO.getMostRecentSenseByAccountId(accountId);
         if (!deviceIdOptional.isPresent()) {
             return;
@@ -104,12 +102,11 @@ public class InsightProcessor {
         if (accountAge <= 10) {
             generateNewUserInsights(accountId, deviceId, accountAge);
         } else {
-            generateGeneralInsights(accountId, deviceId);
+            generateInsights(accountId, InsightCard.Category.LIGHT);
         }
     }
 
-    public void generateInsights(final Account account, final InsightCard.Category category) {
-        final Long accountId = account.id.get();
+    public void generateInsights(final Long accountId, final InsightCard.Category category) {
         final Optional<Long> deviceIdOptional = deviceDAO.getMostRecentSenseByAccountId(accountId);
         if (!deviceIdOptional.isPresent()) {
             return;

@@ -25,7 +25,8 @@ public class Lights {
         final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withHourOfDay(NIGHT_START_HOUR).minusDays(15); // today 6pm TODO: rm debug minusDays
         final DateTime queryStartTime = queryEndTime.minusDays(3);
 
-        final List<DeviceData> rows = deviceDataDAO.getBetweenByLocalTimeAggregateBySlotDuration(accountId, deviceId, queryStartTime, queryEndTime, slotDurationInMinutes);
+        // get light data > 0 between the hour of 6pm to 1am
+        final List<DeviceData> rows = deviceDataDAO.getLightByBetweenHourDate(accountId, deviceId, 0, queryStartTime, queryEndTime, NIGHT_START_HOUR, NIGHT_END_HOUR);
 
         return processLightData(accountId, rows, lightData);
     }
@@ -36,10 +37,7 @@ public class Lights {
         final DescriptiveStatistics stats = new DescriptiveStatistics();
         final int offsetMillis = data.get(0).offsetMillis;
         for (final DeviceData deviceData : data) {
-            final int hourOfDay = deviceData.dateTimeUTC.plusMillis(offsetMillis).getHourOfDay();
-            if (deviceData.ambientLight > 0 && (hourOfDay >= NIGHT_START_HOUR || hourOfDay < NIGHT_END_HOUR)) {
-                stats.addValue(deviceData.ambientLight);
-            }
+            stats.addValue(deviceData.ambientLight);
         }
 
         int medianLight = 0;
