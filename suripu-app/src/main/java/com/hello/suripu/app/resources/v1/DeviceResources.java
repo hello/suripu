@@ -314,7 +314,7 @@ public class DeviceResources {
     public List<DeviceStatus> getPillStatus(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                             @PathParam("email") final String email) {
         LOGGER.debug("Fetching pill status for user = {}", email);
-        Optional<Long> accountId = getAccountIdByEmail(email);
+        final Optional<Long> accountId = getAccountIdByEmail(email);
         final List<DeviceStatus> pillStatuses = new ArrayList<>();
         if (!accountId.isPresent()) {
             LOGGER.debug("ID not found for account {}", email);
