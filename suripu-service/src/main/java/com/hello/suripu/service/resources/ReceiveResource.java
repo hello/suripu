@@ -18,6 +18,7 @@ import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
+import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmInfo;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -431,6 +432,7 @@ public class ReceiveResource extends BaseResource {
                 .setEndTime((int) ((nextRingTime.actualRingTimeUTC + ringDurationInMS) / DateTimeConstants.MILLIS_PER_SECOND))
                 .setRingDurationInSecond(ringDurationInMS / DateTimeConstants.MILLIS_PER_SECOND)
                 .setRingtoneId(soundId)
+                .setRingtonePath(Alarm.Utils.getSoundPathFromSoundId(soundId))
                 .setRingOffsetFromNowInSecond(ringOffsetFromNowInSecond);
 
         return alarmBuilder;
