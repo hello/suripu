@@ -432,21 +432,28 @@ public class ReceiveResource extends BaseResource {
             LOGGER.debug("Feature is active!");
         }
 
-        // groups take precedence over feature
-        if(!groups.isEmpty() && batch.getDataList().size() > 1) {
-            // TODO check for sense uptime instead and do not OTA if it was just plugged in
-
-            LOGGER.debug("DeviceId {} belongs to groups: {}", deviceName, groups);
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName, groups.get(0), firmwareVersion);
-            LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+        if(featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceName, groups)) {
+            LOGGER.warn("Always OTA is on for device: ", deviceName);
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName, "jackson-dev", firmwareVersion);
+            LOGGER.warn("{} files added to syncResponse to be downloaded", fileDownloadList.size());
             responseBuilder.addAllFiles(fileDownloadList);
         } else {
+            // groups take precedence over feature
+            if (!groups.isEmpty() && batch.getDataList().size() > 1) {
+                // TODO check for sense uptime instead and do not OTA if it was just plugged in
 
-            if(featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceName, groups)) {
-                LOGGER.debug("Feature release is active!");
-                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName, FeatureFlipper.OTA_RELEASE, firmwareVersion);
+                LOGGER.debug("DeviceId {} belongs to groups: {}", deviceName, groups);
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName, groups.get(0), firmwareVersion);
                 LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
                 responseBuilder.addAllFiles(fileDownloadList);
+            } else {
+
+                if (featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceName, groups)) {
+                    LOGGER.debug("Feature release is active!");
+                    final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName, FeatureFlipper.OTA_RELEASE, firmwareVersion);
+                    LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+                    responseBuilder.addAllFiles(fileDownloadList);
+                }
             }
         }
 
@@ -462,13 +469,18 @@ public class ReceiveResource extends BaseResource {
             audioControl.setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
         }
 
-        final DateTimeZone userTimeZone = getUserTimeZone(alarmInfoList);
 
-        final Long userNextAlarmTimestamp = alarmBuilder.hasStartTime() ? alarmBuilder.getStartTime() * 1000L : 0;
 
-        final Integer uploadInterval = UploadSettings.getUploadInterval(DateTime.now(userTimeZone), senseUploadConfiguration, userNextAlarmTimestamp);
+        if(featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceName, groups)) {
+            responseBuilder.setBatchSize(1);
+        } else {
+            final DateTimeZone userTimeZone = getUserTimeZone(alarmInfoList);
 
-        responseBuilder.setBatchSize(uploadInterval);
+            final Long userNextAlarmTimestamp = alarmBuilder.hasStartTime() ? alarmBuilder.getStartTime() * 1000L : 0;
+
+            final Integer uploadInterval = UploadSettings.getUploadInterval(DateTime.now(userTimeZone), senseUploadConfiguration, userNextAlarmTimestamp);
+            responseBuilder.setBatchSize(uploadInterval);
+        }
         responseBuilder.setAudioControl(audioControl);
 
 
