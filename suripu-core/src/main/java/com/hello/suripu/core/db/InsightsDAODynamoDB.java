@@ -95,11 +95,11 @@ public class InsightsDAODynamoDB {
         queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectByAccountId);
         queryConditions.put(DATE_CATEGORY_ATTRIBUTE_NAME, selectByDate);
 
-        return this.getData(queryConditions);
+        return this.getData(queryConditions, limit);
     }
 
     @Timed
-    public ImmutableList<InsightCard> getInsightsByCategory(final Long accountId, final InsightCard.Category category) {
+    public ImmutableList<InsightCard> getInsightsByCategory(final Long accountId, final InsightCard.Category category, final int limit) {
 
         final Condition selectByAccountId = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
@@ -115,10 +115,10 @@ public class InsightsDAODynamoDB {
         queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectByAccountId);
         queryConditions.put(DATE_CATEGORY_ATTRIBUTE_NAME, selectByCategory);
 
-        return this.getData(queryConditions);
+        return this.getData(queryConditions, limit);
     }
 
-    private ImmutableList<InsightCard> getData(final Map<String, Condition> queryConditions) {
+    private ImmutableList<InsightCard> getData(final Map<String, Condition> queryConditions, final int limit) {
         final List<InsightCard> insightCards = new ArrayList<>();
         Map<String, AttributeValue> lastEvaluatedKey = null;
         int loopCount = 0;
@@ -128,6 +128,7 @@ public class InsightsDAODynamoDB {
                     .withTableName(this.tableName)
                     .withKeyConditions(queryConditions)
                     .withAttributesToGet(this.targetAttributes)
+                    .withLimit(limit)
                     .withExclusiveStartKey(lastEvaluatedKey);
 
             final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);

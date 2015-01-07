@@ -81,8 +81,9 @@ public class InsightsResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/light")
     public ImmutableList<InsightCard> getLightInsights(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
+        final int limit = 5;
         final ImmutableList<InsightCard> cards = insightsDAODynamoDB.getInsightsByCategory(accessToken.accountId,
-                InsightCard.Category.LIGHT);
+                InsightCard.Category.LIGHT, limit);
         // TODO: fetch generic cards.
         return cards;
     }
