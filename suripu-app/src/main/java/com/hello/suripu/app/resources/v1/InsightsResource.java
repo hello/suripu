@@ -17,7 +17,6 @@ import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
-import com.hello.suripu.core.processors.InsightProcessor;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.TrendGraphUtils;
 import com.yammer.metrics.annotation.Timed;
@@ -64,11 +63,17 @@ public class InsightsResource {
     @Timed
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<InsightCard> getInsights(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
+    public List<InsightCard> getInsights(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken,
+                                         @QueryParam("date") final String date) {
 
         LOGGER.debug("Returning list of insights for account id = {}", accessToken.accountId);
-        // TODO: real insights
-        return InsightProcessor.getInsights(accessToken.accountId);
+        final int limit = 5;
+        final Boolean ascending = false; // reverse chronological
+        final ImmutableList<InsightCard> cards = insightsDAODynamoDB.getInsightsByAfterDate(accessToken.accountId,
+                date, ascending, limit);
+        // TODO: fetch generic cards.
+
+        return cards;
     }
 
     @Timed

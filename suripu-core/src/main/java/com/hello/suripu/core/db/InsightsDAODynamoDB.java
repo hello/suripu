@@ -72,7 +72,7 @@ public class InsightsDAODynamoDB {
     }
 
     @Timed
-    public ImmutableList<InsightCard> getInsightsByAfterDate(final Long accountId, final String date, final Boolean ascending) {
+    public ImmutableList<InsightCard> getInsightsByAfterDate(final Long accountId, final String date, final Boolean ascending, final int limit) {
 
         final Condition selectByAccountId = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
@@ -80,13 +80,15 @@ public class InsightsDAODynamoDB {
 
         final Condition selectByDate;
         if (ascending) { // chronological
+            final String rangeKey = date + "_000";
             selectByDate = new Condition()
                     .withComparisonOperator(ComparisonOperator.GE.toString())
-                    .withAttributeValueList(new AttributeValue().withS(date));
+                    .withAttributeValueList(new AttributeValue().withS(rangeKey));
         } else { // reverse chrono
+            final String rangeKey = date + "_ZZZ";
             selectByDate = new Condition()
                     .withComparisonOperator(ComparisonOperator.LE.toString())
-                    .withAttributeValueList(new AttributeValue().withS(date));
+                    .withAttributeValueList(new AttributeValue().withS(rangeKey));
         }
 
         final Map<String, Condition> queryConditions = new HashMap<>();
