@@ -160,7 +160,7 @@ public class InsightProcessor {
 
     private int getAccountAgeInDays(final DateTime accountCreated) {
         final DateTime now = DateTime.now(DateTimeZone.UTC);
-        final Duration duration = new Duration(now, accountCreated);
+        final Duration duration = new Duration(accountCreated, now);
         return duration.toStandardDays().getDays();
     }
 }

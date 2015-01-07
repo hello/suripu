@@ -183,7 +183,7 @@ sleep_score_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
     region: us-east-1
     table_name: sleep_score
-sleep_score_version: v_0_2
+sleep_score_version: v_0_1
 
 features_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com

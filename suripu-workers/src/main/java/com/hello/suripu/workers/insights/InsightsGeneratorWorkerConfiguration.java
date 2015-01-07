@@ -18,9 +18,7 @@ public class InsightsGeneratorWorkerConfiguration extends WorkerConfiguration {
     @NotNull
     @JsonProperty("common_db")
     private DatabaseConfiguration commonDB = new DatabaseConfiguration();
-    public DatabaseConfiguration getCommonDB() {
-        return commonDB;
-    }
+    public DatabaseConfiguration getCommonDB() { return commonDB; }
 
     @Valid
     @NotNull

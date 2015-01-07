@@ -9,16 +9,20 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibC
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.processors.insights.LightData;
+import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.db.ManagedDataSource;
@@ -52,9 +56,11 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
     public final void run(Bootstrap<InsightsGeneratorWorkerConfiguration> bootstrap,
                           Namespace namespace,
                           InsightsGeneratorWorkerConfiguration configuration) throws Exception {
-        final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
 
+        // postgres setup
+        final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
         final ManagedDataSource dataSource = managedDataSourceFactory.build(configuration.getCommonDB());
+
         final DBI jdbi = new DBI(dataSource);
         jdbi.registerArgumentFactory(new OptionalArgumentFactory(configuration.getCommonDB().getDriverClass()));
         jdbi.registerContainerFactory(new ImmutableListContainerFactory());
@@ -62,20 +68,19 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
         jdbi.registerContainerFactory(new OptionalContainerFactory());
         jdbi.registerArgumentFactory(new JodaArgumentFactory());
 
-        final AccountDAO accountDAO = jdbi.onDemand(AccountDAO.class);
-
+        final AccountDAO accountDAO = jdbi.onDemand(AccountDAOImpl.class);
 
         final ManagedDataSource sensorDataSource = managedDataSourceFactory.build(configuration.getSensorsDB());
-        final DBI jdbiSensor = new DBI(sensorDataSource);
-        jdbiSensor.registerArgumentFactory(new OptionalArgumentFactory(configuration.getSensorsDB().getDriverClass()));
-        jdbiSensor.registerContainerFactory(new ImmutableListContainerFactory());
-        jdbiSensor.registerContainerFactory(new ImmutableSetContainerFactory());
-        jdbiSensor.registerContainerFactory(new OptionalContainerFactory());
-        jdbiSensor.registerArgumentFactory(new JodaArgumentFactory());
+        final DBI sensorDBI = new DBI(sensorDataSource);
+        sensorDBI.registerArgumentFactory(new OptionalArgumentFactory(configuration.getSensorsDB().getDriverClass()));
+        sensorDBI.registerContainerFactory(new ImmutableListContainerFactory());
+        sensorDBI.registerContainerFactory(new ImmutableSetContainerFactory());
+        sensorDBI.registerContainerFactory(new OptionalContainerFactory());
+        sensorDBI.registerArgumentFactory(new JodaArgumentFactory());
 
-        final DeviceDAO deviceDAO = jdbiSensor.onDemand(DeviceDAO.class);
-        final DeviceDataDAO deviceDataDAO = jdbiSensor.onDemand(DeviceDataDAO.class);
-        final TrackerMotionDAO trackerMotionDAO = jdbiSensor.onDemand(TrackerMotionDAO.class);
+        final DeviceDAO deviceDAO = sensorDBI.onDemand(DeviceDAO.class);
+        final DeviceDataDAO deviceDataDAO = sensorDBI.onDemand(DeviceDataDAO.class);
+        final TrackerMotionDAO trackerMotionDAO = sensorDBI.onDemand(TrackerMotionDAO.class);
 
         // metrics stuff
         if(configuration.getMetricsEnabled()) {
@@ -103,7 +108,7 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
         LOGGER.debug("{}", queueNames);
-        final String queueName = queueNames.get(QueueName.PILL_DATA);
+        final String queueName = queueNames.get(QueueName.BATCH_PILL_DATA);
         LOGGER.info("\n\n\n!!! This worker is using the following queue: {} !!!\n\n\n", queueName);
 
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
@@ -130,12 +135,27 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
                 configuration.getSleepScoreVersion()
         );
 
-        final LightData lightData = new LightData();
+        final AmazonDynamoDBClient featureDynamoDB = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
+        featureDynamoDB.setEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
+        final FeatureStore featureStore = new FeatureStore(featureDynamoDB, "features", featureNamespace);
 
-        final IRecordProcessorFactory factory = new InsightGeneratorFactory(accountDAO, deviceDataDAO, deviceDAO, trackerMotionDAO, aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, lightData);
+        final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
+        ObjectGraphRoot.getInstance().init(workerRolloutModule);
+
+        // external data for insights computation
+        final LightData lightData = new LightData(); // lights global distribution
+
+        final IRecordProcessorFactory factory = new InsightsGeneratorFactory(
+                accountDAO,
+                deviceDataDAO,
+                deviceDAO,
+                trackerMotionDAO,
+                aggregateSleepScoreDAODynamoDB,
+                insightsDAODynamoDB,
+                lightData);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
-
     }
 
 }

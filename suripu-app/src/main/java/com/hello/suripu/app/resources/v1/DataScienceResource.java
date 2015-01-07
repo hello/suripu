@@ -120,7 +120,8 @@ public class DataScienceResource {
         final InsightProcessor processor = new InsightProcessor(deviceDataDAO, deviceDAO, trackerMotionDAO, aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, lightData);
         final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
         if (accountOptional.isPresent()) {
-            processor.generateInsights(accountOptional.get(), category);
+            final Long accountId = accountOptional.get().id.get();
+            processor.generateInsights(accountId, category);
         }
     }
 }

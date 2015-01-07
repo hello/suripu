@@ -22,7 +22,7 @@ public class Lights {
 
         // get light data for last three days, filter by time
         final int slotDurationInMinutes = 1;
-        final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withHourOfDay(NIGHT_START_HOUR).minusDays(15); // today 6pm TODO: rm debug minusDays
+        final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withHourOfDay(NIGHT_START_HOUR); // today 6pm
         final DateTime queryStartTime = queryEndTime.minusDays(3);
 
         // get light data > 0 between the hour of 6pm to 1am
@@ -53,35 +53,35 @@ public class Lights {
         // todo: refine levels
         if (medianLight <= 1) {
             title = "Hello, Darkness";
-            message = "Your bedroom light condition is perfect, " +
+            message = String.format("Your bedroom light condition of %d lux is perfect, ", medianLight) +
                     String.format("it is **dimmer than** %d%% of all Sense users.", 100 - percentile);
 
         } else if (medianLight <= 4) {
             title = "Hello, Dark Room";
-            message = "Your bedroom light condition is close to ideal, " +
+            message = String.format("Your bedroom light condition of %d lux is close to ideal, ", medianLight) +
                     String.format("it is **dimmer than** %d%% of all Sense users.", 100 - percentile);
 
-        } else if (medianLight <= 10) {
-            title = "Hmm, It's a Litter Bright";
-            message = "Your bedroom is a little brighter than ideal, " +
+        } else if (medianLight <= 20) {
+            title = "Hmm, It's A Little Bright";
+            message = String.format("Your bedroom light of %d lux is a little brighter than ideal, ", medianLight) +
                     String.format("it is **brighter than** %d%% of all Sense users. ", percentile) +
                     "Try dimming the light a little before bedtime.";
 
         } else if (medianLight <= 40) {
             title = "Hello, Light";
-            message = "Your bedroom is too bright for ideal sleep conditions, " +
+            message = String.format("Your bedroom is too bright (%d lux) for ideal sleep conditions, ", medianLight) +
                     String.format("it is **brighter than** %d%% of all Sense users. ", percentile) +
                     "Try changing to a lower wattage light bulb, or turning off the light 15 minutes before bedtime.";
 
         } else if (medianLight <= 100) {
             title = "Time to Dim It Down";
-            message = "Your bedroom is as bright as a warehouse aisle, " +
-                    String.format("it is **brighter than** %d%% of all Sense users. ", percentile) +
+            message = String.format("Your bedroom light of %d lux is as bright as a warehouse aisle! ", medianLight) +
+                    String.format("It is **brighter than** %d%% of all Sense users. ", percentile) +
                     "Changing to a lower wattage light bulb might help improve your sleep";
         } else {
             title = "It's Way Too Bright";
-            message = "Your bedroom is as bright as an office room, " +
-                    String.format("it is **brighter than** %d%% of all Sense users. ", percentile) +
+            message = String.format("Your bedroom light of %d lux is as bright as an office room! ", medianLight) +
+                    String.format("It's **brighter than** %d%% of all Sense users. ", percentile) +
                     "Changing to a lower wattage light bulb might help improve your sleep";
         }
 

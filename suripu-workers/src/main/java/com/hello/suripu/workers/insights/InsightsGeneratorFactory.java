@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.processors.InsightProcessor;
 import com.hello.suripu.core.processors.insights.LightData;
 
 /**
@@ -20,6 +21,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
     private final TrackerMotionDAO trackerMotionDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
+
     private final LightData lightData;
 
     public InsightsGeneratorFactory(final AccountDAO accountDAO,
@@ -40,6 +42,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
 
     @Override
     public IRecordProcessor createProcessor() {
-        return new InsightsGenerator(accountDAO, deviceDataDAO, deviceDAO, trackerMotionDAO, scoreDAODynamoDB, insightsDAODynamoDB, lightData);
+        final InsightProcessor insightProcessor =  new InsightProcessor(deviceDataDAO, deviceDAO, trackerMotionDAO, scoreDAODynamoDB, insightsDAODynamoDB, lightData);
+        return new InsightsGenerator(accountDAO, deviceDAO, insightProcessor);
     }
 }
