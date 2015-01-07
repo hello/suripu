@@ -119,6 +119,7 @@ public class RegisterResource {
         }
 
         if(pairedAccounts.size() == 1 && pairedPills.size() == 1 && pairedPills.get(0).externalDeviceId.equals(pillId)){
+            // might be a firmware retry
             return PairState.PAIRED_WITH_CURRENT_ACCOUNT;
         }
 
