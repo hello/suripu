@@ -68,9 +68,9 @@ public class InsightsResource {
 
         LOGGER.debug("Returning list of insights for account id = {}", accessToken.accountId);
         final int limit = 1;
-        final Boolean ascending = false; // reverse chronological
-        final ImmutableList<InsightCard> cards = insightsDAODynamoDB.getInsightsByAfterDate(accessToken.accountId,
-                date, ascending, limit);
+        final Boolean chronological = false; // reverse chronological
+        final ImmutableList<InsightCard> cards = insightsDAODynamoDB.getInsightsByDate(accessToken.accountId,
+                date, chronological, limit);
         // TODO: fetch generic cards.
 
         return cards;

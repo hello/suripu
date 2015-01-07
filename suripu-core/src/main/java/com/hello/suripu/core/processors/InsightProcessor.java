@@ -10,17 +10,24 @@ import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
+import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 /**
  * Created by kingshy on 10/24/14.
  */
 public class InsightProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(InsightProcessor.class);
+
+    private static final int RECENT_DAYS = 10; // last 10 days
 
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
@@ -59,28 +66,10 @@ public class InsightProcessor {
         if (accountAge <= 10) {
             generateNewUserInsights(accountId, deviceId, accountAge);
         } else {
-            generateInsights(accountId, InsightCard.Category.LIGHT);
+            generateGeneralInsights(accountId, deviceId);
         }
     }
 
-    public void generateInsights(final Long accountId, final InsightCard.Category category) {
-        final Optional<Long> deviceIdOptional = deviceDAO.getMostRecentSenseByAccountId(accountId);
-        if (!deviceIdOptional.isPresent()) {
-            return;
-        }
-
-        final Long deviceId = deviceIdOptional.get();
-
-        Optional<InsightCard> insightCardOptional = Optional.absent();
-        if (category == InsightCard.Category.LIGHT) {
-            insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
-        }
-
-        if (insightCardOptional.isPresent()) {
-            // save to dynamo
-            this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
-        }
-    }
     /**
      * for new users, first 10 days
      * @param accountId
@@ -112,7 +101,43 @@ public class InsightProcessor {
      * @param accountId
      */
     private void generateGeneralInsights(final Long accountId, final Long deviceId) {
-    // TODO
+
+        final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
+
+        // TODO
+        if (recentCategories.contains(InsightCard.Category.LIGHT)) {
+            return;
+        }
+
+        this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.LIGHT);
+
+    }
+
+
+    public void generateInsightsByCategory(final Long accountId, final Long deviceId, final InsightCard.Category category) {
+
+        Optional<InsightCard> insightCardOptional = Optional.absent();
+        if (category == InsightCard.Category.LIGHT) {
+            insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
+        }
+
+        if (insightCardOptional.isPresent()) {
+            // save to dynamo
+            this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
+        }
+    }
+    private Set<InsightCard.Category> getRecentInsightsCategories(final Long accountId) {
+        // get all insights from the past week
+        final String ymd = DateTimeUtil.dateToYmdString(DateTime.now(DateTimeZone.UTC).minus(7));
+        final Boolean chronological = true;
+
+        final List<InsightCard> cards = this.insightsDAODynamoDB.getInsightsByDate(accountId, ymd, chronological, RECENT_DAYS);
+
+        final Set<InsightCard.Category> seenCategories = new HashSet<>();
+        for (InsightCard card : cards) {
+            seenCategories.add(card.category);
+        }
+        return seenCategories;
     }
 
     private int getAccountAgeInDays(final DateTime accountCreated) {

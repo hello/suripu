@@ -121,7 +121,13 @@ public class DataScienceResource {
         final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
         if (accountOptional.isPresent()) {
             final Long accountId = accountOptional.get().id.get();
-            processor.generateInsights(accountId, category);
+
+            final Optional<Long> deviceIdOptional = deviceDAO.getMostRecentSenseByAccountId(accountId);
+            if (!deviceIdOptional.isPresent()) {
+                return;
+            }
+
+            processor.generateInsightsByCategory(accountId, deviceIdOptional.get(), category);
         }
     }
 }

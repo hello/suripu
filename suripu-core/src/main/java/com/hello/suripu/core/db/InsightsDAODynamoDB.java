@@ -72,19 +72,19 @@ public class InsightsDAODynamoDB {
     }
 
     @Timed
-    public ImmutableList<InsightCard> getInsightsByAfterDate(final Long accountId, final String date, final Boolean ascending, final int limit) {
+    public ImmutableList<InsightCard> getInsightsByDate(final Long accountId, final String date, final Boolean chronological, final int limit) {
 
         final Condition selectByAccountId = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
                 .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
 
         final Condition selectByDate;
-        if (ascending) { // chronological
+        if (chronological) { // ascending date
             final String rangeKey = date + "_000";
             selectByDate = new Condition()
                     .withComparisonOperator(ComparisonOperator.GE.toString())
                     .withAttributeValueList(new AttributeValue().withS(rangeKey));
-        } else { // reverse chrono
+        } else { // reverse chronological
             final String rangeKey = date + "_ZZZ";
             selectByDate = new Condition()
                     .withComparisonOperator(ComparisonOperator.LE.toString())

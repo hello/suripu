@@ -28,10 +28,15 @@ public class Lights {
         // get light data > 0 between the hour of 6pm to 1am
         final List<DeviceData> rows = deviceDataDAO.getLightByBetweenHourDate(accountId, deviceId, 0, queryStartTime, queryEndTime, NIGHT_START_HOUR, NIGHT_END_HOUR);
 
-        return processLightData(accountId, rows, lightData);
+        final Optional<InsightCard> card = processLightData(accountId, rows, lightData);
+        return card;
     }
 
     public static Optional<InsightCard> processLightData(final Long accountId, final List<DeviceData> data, final LightData lightData) {
+
+        if (data.size() == 0) {
+            return Optional.absent();
+        }
 
         // compute median value TODO: check correct times are used
         final DescriptiveStatistics stats = new DescriptiveStatistics();
