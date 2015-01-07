@@ -169,7 +169,7 @@ public class ReceiveResource extends BaseResource {
     public static OutputProtos.SyncResponse.Builder setPillSettings(final String deviceId, final OutputProtos.SyncResponse.Builder syncResponseBuilder, final DeviceDAO deviceDAO){
         final List<DeviceAccountPair> accounts = deviceDAO.getAccountIdsForDeviceId(deviceId);
         final int red = 0x0000FEFF;  // BGRA
-        final int blue = 0xFF0000FF; // BGRA
+        final int blue = 0xFE0000FF; // BGRA
 
         if(accounts.size() > 2){
             LOGGER.warn("device {} has {} accounts, get the last 2 for pill settings.", deviceId, accounts.size());
