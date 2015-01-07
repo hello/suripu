@@ -214,21 +214,21 @@ public class ReceiveResource extends BaseResource {
                     .setPillId(accountsHasPill.get(accountsHasPill.size() - 1).getValue().externalDeviceId)
                     .setPillColor(red)
                     .build();
-            syncResponseBuilder.setPillSettings(0, pillSettings);
+            syncResponseBuilder.addPillSettings(pillSettings);
         }else{
             // Pill linked with 1st account is red.
             final OutputProtos.SyncResponse.PillSettings firstPillSettings = OutputProtos.SyncResponse.PillSettings.newBuilder()
                     .setPillId(accountsHasPill.get(accountsHasPill.size() - 2).getValue().externalDeviceId)
                     .setPillColor(red)
                     .build();
-            syncResponseBuilder.setPillSettings(0, firstPillSettings);
+            syncResponseBuilder.addPillSettings(firstPillSettings);
 
             // Pill linked with 2nd account is blue
             final OutputProtos.SyncResponse.PillSettings secondPillSettings = OutputProtos.SyncResponse.PillSettings.newBuilder()
                     .setPillId(accountsHasPill.get(accountsHasPill.size() - 1).getValue().externalDeviceId)
                     .setPillColor(blue)
                     .build();
-            syncResponseBuilder.setPillSettings(1, secondPillSettings);
+            syncResponseBuilder.addPillSettings(secondPillSettings);
         }
 
         return syncResponseBuilder;
