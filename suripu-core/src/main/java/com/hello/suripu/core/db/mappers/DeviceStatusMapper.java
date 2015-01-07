@@ -22,7 +22,8 @@ public class DeviceStatusMapper implements ResultSetMapper<DeviceStatus> {
         final String firmwareVersion = r.getString("firmware_version");
         final Integer batteryLevel = r.getInt("battery_level");
         final DateTime lastUpdated = new DateTime(r.getTimestamp("last_seen"));
+        final Integer uptime = r.getInt("uptime");
 
-        return new DeviceStatus(id, pillId, firmwareVersion, batteryLevel, lastUpdated);
+        return new DeviceStatus(id, pillId, firmwareVersion, batteryLevel, lastUpdated, uptime);
     }
 }
