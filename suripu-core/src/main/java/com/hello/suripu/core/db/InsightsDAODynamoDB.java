@@ -148,7 +148,7 @@ public class InsightsDAODynamoDB {
             lastEvaluatedKey = queryResult.getLastEvaluatedKey();
             loopCount++;
 
-        } while (lastEvaluatedKey != null && loopCount < MAX_CALL_COUNT);
+        } while (lastEvaluatedKey != null && loopCount < MAX_CALL_COUNT && insightCards.size() < limit);
 
         Collections.sort(insightCards);
         return ImmutableList.copyOf(insightCards);
