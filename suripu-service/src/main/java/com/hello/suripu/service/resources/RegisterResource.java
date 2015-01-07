@@ -53,6 +53,12 @@ public class RegisterResource {
 
     private final Boolean debug;
 
+    private enum PairState{
+        NOT_PAIRED,
+        PAIRED_WITH_CURRENT_ACCOUNT,
+        PAIRING_VIOLATION;
+    }
+
     @Context
     HttpServletRequest request;
 
@@ -82,6 +88,51 @@ public class RegisterResource {
             default:
                 return false;
         }
+    }
+
+    public static PairState getSensePairingState(final DeviceDAO deviceDAO, final String senseId, final long accountId){
+        final List<DeviceAccountPair> pairedSense = deviceDAO.getSensesForAccountId(accountId);
+        if(pairedSense.size() > 1){  // This account already paired with multiple senses
+            return PairState.PAIRING_VIOLATION;
+        }
+
+        if(pairedSense.size() == 0){
+            return PairState.NOT_PAIRED;
+        }
+
+        if(pairedSense.get(0).externalDeviceId.equals(senseId)){
+            return PairState.PAIRED_WITH_CURRENT_ACCOUNT;  // only one sense, and it is current sense, firmware retry request
+        }else{
+            return PairState.PAIRING_VIOLATION;  // already paired with another one.
+        }
+    }
+
+    public static PairState getPillPairingState(final DeviceDAO deviceDAO, final String pillId, final long accountId){
+        final List<DeviceAccountPair> pairedPills = deviceDAO.getPillsForAccountId(accountId);
+        final List<DeviceAccountPair> pairedAccounts = deviceDAO.getLinkedAccountFromPillId(pillId);
+        if(pairedPills.size() > 1 || pairedAccounts.size() > 1){  // This account already paired with multiple pills
+            return PairState.PAIRING_VIOLATION;
+        }
+
+        if(pairedAccounts.size() == 0 && pairedPills.size() == 0){
+            return PairState.NOT_PAIRED;
+        }
+
+        if(pairedAccounts.size() == 1 && pairedPills.size() == 1 && pairedPills.get(0).externalDeviceId.equals(pillId)){
+            return PairState.PAIRED_WITH_CURRENT_ACCOUNT;
+        }
+
+        // else:
+        if(pairedAccounts.size() == 1 && pairedPills.size() == 0){
+            // pill already paired with an account, but this account is new, stolen pill?
+            LOGGER.error("Pill {} might got stolen, account {} is a theft!", pillId, accountId);
+        }
+        if(pairedPills.size() == 1 && pairedAccounts.size() == 0){
+            // account already paired with a pill, only one pill is allowed
+            LOGGER.error("Account {} already paired with pill {}", accountId, pairedPills.get(0).externalDeviceId);
+        }
+        return PairState.PAIRING_VIOLATION;
+
     }
 
 
@@ -166,16 +217,34 @@ public class RegisterResource {
 
         try {
             switch (action){
-                case PAIR_MORPHEUS:
+                case PAIR_MORPHEUS: {
+                    final PairState pairState = getSensePairingState(this.deviceDAO, senseId, accountId);
+                    if (pairState == PairState.NOT_PAIRED) {
+                        this.deviceDAO.registerSense(accountId, senseId);
+                    }
 
-
-                    this.deviceDAO.registerSense(accountId, deviceId);
-                    builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE);
+                    if (pairState == PairState.NOT_PAIRED || pairState == PairState.PAIRED_WITH_CURRENT_ACCOUNT) {
+                        builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE);
+                    } else {
+                        LOGGER.error("Account {} tries to pair multiple senses", accountId);
+                        builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
+                        builder.setError(SenseCommandProtos.ErrorType.DEVICE_ALREADY_PAIRED);
+                    }
+                }
                     break;
-                case PAIR_PILL:
+                case PAIR_PILL: {
+                    final PairState pairState = getPillPairingState(this.deviceDAO, deviceId, accountId);
+                    if (pairState == PairState.NOT_PAIRED) {
+                        this.deviceDAO.registerTracker(accountId, deviceId);
+                    }
 
-                    this.deviceDAO.registerTracker(accountId, deviceId);
-                    builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_PILL);
+                    if (pairState == PairState.NOT_PAIRED || pairState == PairState.PAIRED_WITH_CURRENT_ACCOUNT) {
+                        builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_PILL);
+                    } else {
+                        builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
+                        builder.setError(SenseCommandProtos.ErrorType.DEVICE_ALREADY_PAIRED);
+                    }
+                }
                     break;
             }
             //builder.setAccountId(morpheusCommand.getAccountId());
