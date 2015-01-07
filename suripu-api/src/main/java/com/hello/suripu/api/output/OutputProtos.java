@@ -189,22 +189,62 @@ public final class OutputProtos {
     // optional int32 batch_size = 19;
     /**
      * <code>optional int32 batch_size = 19;</code>
-     *
-     * <pre>
-     * TODO: settings for snoring detection
-     * TODO: settings for firmware update
-     * </pre>
      */
     boolean hasBatchSize();
     /**
      * <code>optional int32 batch_size = 19;</code>
+     */
+    int getBatchSize();
+
+    // repeated .SyncResponse.PillSettings pill_settings = 20;
+    /**
+     * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
      *
      * <pre>
      * TODO: settings for snoring detection
      * TODO: settings for firmware update
      * </pre>
      */
-    int getBatchSize();
+    java.util.List<SyncResponse.PillSettings>
+        getPillSettingsList();
+    /**
+     * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+     *
+     * <pre>
+     * TODO: settings for snoring detection
+     * TODO: settings for firmware update
+     * </pre>
+     */
+    SyncResponse.PillSettings getPillSettings(int index);
+    /**
+     * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+     *
+     * <pre>
+     * TODO: settings for snoring detection
+     * TODO: settings for firmware update
+     * </pre>
+     */
+    int getPillSettingsCount();
+    /**
+     * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+     *
+     * <pre>
+     * TODO: settings for snoring detection
+     * TODO: settings for firmware update
+     * </pre>
+     */
+    java.util.List<? extends SyncResponse.PillSettingsOrBuilder>
+        getPillSettingsOrBuilderList();
+    /**
+     * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+     *
+     * <pre>
+     * TODO: settings for snoring detection
+     * TODO: settings for firmware update
+     * </pre>
+     */
+    SyncResponse.PillSettingsOrBuilder getPillSettingsOrBuilder(
+            int index);
   }
   /**
    * Protobuf type {@code SyncResponse}
@@ -353,6 +393,14 @@ public final class OutputProtos {
               batchSize_ = input.readInt32();
               break;
             }
+            case 162: {
+              if (!((mutable_bitField0_ & 0x00000800) == 0x00000800)) {
+                pillSettings_ = new java.util.ArrayList<PillSettings>();
+                mutable_bitField0_ |= 0x00000800;
+              }
+              pillSettings_.add(input.readMessage(PillSettings.PARSER, extensionRegistry));
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -363,6 +411,9 @@ public final class OutputProtos {
       } finally {
         if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
           files_ = java.util.Collections.unmodifiableList(files_);
+        }
+        if (((mutable_bitField0_ & 0x00000800) == 0x00000800)) {
+          pillSettings_ = java.util.Collections.unmodifiableList(pillSettings_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -2140,6 +2191,21 @@ public final class OutputProtos {
        * <code>optional int32 ring_duration_in_second = 5;</code>
        */
       int getRingDurationInSecond();
+
+      // optional string ringtone_path = 6;
+      /**
+       * <code>optional string ringtone_path = 6;</code>
+       */
+      boolean hasRingtonePath();
+      /**
+       * <code>optional string ringtone_path = 6;</code>
+       */
+      String getRingtonePath();
+      /**
+       * <code>optional string ringtone_path = 6;</code>
+       */
+      com.google.protobuf.ByteString
+          getRingtonePathBytes();
     }
     /**
      * Protobuf type {@code SyncResponse.Alarm}
@@ -2215,6 +2281,11 @@ public final class OutputProtos {
               case 40: {
                 bitField0_ |= 0x00000010;
                 ringDurationInSecond_ = input.readInt32();
+                break;
+              }
+              case 50: {
+                bitField0_ |= 0x00000020;
+                ringtonePath_ = input.readBytes();
                 break;
               }
             }
@@ -2361,12 +2432,56 @@ public final class OutputProtos {
         return ringDurationInSecond_;
       }
 
+      // optional string ringtone_path = 6;
+      public static final int RINGTONE_PATH_FIELD_NUMBER = 6;
+      private Object ringtonePath_;
+      /**
+       * <code>optional string ringtone_path = 6;</code>
+       */
+      public boolean hasRingtonePath() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional string ringtone_path = 6;</code>
+       */
+      public String getRingtonePath() {
+        Object ref = ringtonePath_;
+        if (ref instanceof String) {
+          return (String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
+          String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            ringtonePath_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       * <code>optional string ringtone_path = 6;</code>
+       */
+      public com.google.protobuf.ByteString
+          getRingtonePathBytes() {
+        Object ref = ringtonePath_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (String) ref);
+          ringtonePath_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
       private void initFields() {
         startTime_ = 0;
         endTime_ = 0;
         ringtoneId_ = 1;
         ringOffsetFromNowInSecond_ = 0;
         ringDurationInSecond_ = 0;
+        ringtonePath_ = "";
       }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
@@ -2394,6 +2509,9 @@ public final class OutputProtos {
         }
         if (((bitField0_ & 0x00000010) == 0x00000010)) {
           output.writeInt32(5, ringDurationInSecond_);
+        }
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          output.writeBytes(6, getRingtonePathBytes());
         }
         getUnknownFields().writeTo(output);
       }
@@ -2423,6 +2541,10 @@ public final class OutputProtos {
         if (((bitField0_ & 0x00000010) == 0x00000010)) {
           size += com.google.protobuf.CodedOutputStream
             .computeInt32Size(5, ringDurationInSecond_);
+        }
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(6, getRingtonePathBytes());
         }
         size += getUnknownFields().getSerializedSize();
         memoizedSerializedSize = size;
@@ -2550,6 +2672,8 @@ public final class OutputProtos {
           bitField0_ = (bitField0_ & ~0x00000008);
           ringDurationInSecond_ = 0;
           bitField0_ = (bitField0_ & ~0x00000010);
+          ringtonePath_ = "";
+          bitField0_ = (bitField0_ & ~0x00000020);
           return this;
         }
 
@@ -2598,6 +2722,10 @@ public final class OutputProtos {
             to_bitField0_ |= 0x00000010;
           }
           result.ringDurationInSecond_ = ringDurationInSecond_;
+          if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+            to_bitField0_ |= 0x00000020;
+          }
+          result.ringtonePath_ = ringtonePath_;
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -2628,6 +2756,11 @@ public final class OutputProtos {
           }
           if (other.hasRingDurationInSecond()) {
             setRingDurationInSecond(other.getRingDurationInSecond());
+          }
+          if (other.hasRingtonePath()) {
+            bitField0_ |= 0x00000020;
+            ringtonePath_ = other.ringtonePath_;
+            onChanged();
           }
           this.mergeUnknownFields(other.getUnknownFields());
           return this;
@@ -2865,6 +2998,80 @@ public final class OutputProtos {
         public Builder clearRingDurationInSecond() {
           bitField0_ = (bitField0_ & ~0x00000010);
           ringDurationInSecond_ = 0;
+          onChanged();
+          return this;
+        }
+
+        // optional string ringtone_path = 6;
+        private Object ringtonePath_ = "";
+        /**
+         * <code>optional string ringtone_path = 6;</code>
+         */
+        public boolean hasRingtonePath() {
+          return ((bitField0_ & 0x00000020) == 0x00000020);
+        }
+        /**
+         * <code>optional string ringtone_path = 6;</code>
+         */
+        public String getRingtonePath() {
+          Object ref = ringtonePath_;
+          if (!(ref instanceof String)) {
+            String s = ((com.google.protobuf.ByteString) ref)
+                .toStringUtf8();
+            ringtonePath_ = s;
+            return s;
+          } else {
+            return (String) ref;
+          }
+        }
+        /**
+         * <code>optional string ringtone_path = 6;</code>
+         */
+        public com.google.protobuf.ByteString
+            getRingtonePathBytes() {
+          Object ref = ringtonePath_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (String) ref);
+            ringtonePath_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         * <code>optional string ringtone_path = 6;</code>
+         */
+        public Builder setRingtonePath(
+            String value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+          ringtonePath_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string ringtone_path = 6;</code>
+         */
+        public Builder clearRingtonePath() {
+          bitField0_ = (bitField0_ & ~0x00000020);
+          ringtonePath_ = getDefaultInstance().getRingtonePath();
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string ringtone_path = 6;</code>
+         */
+        public Builder setRingtonePathBytes(
+            com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+          ringtonePath_ = value;
           onChanged();
           return this;
         }
@@ -6241,6 +6448,558 @@ public final class OutputProtos {
       // @@protoc_insertion_point(class_scope:SyncResponse.LEDAction)
     }
 
+    public interface PillSettingsOrBuilder
+        extends com.google.protobuf.MessageOrBuilder {
+
+      // optional string pill_id = 1;
+      /**
+       * <code>optional string pill_id = 1;</code>
+       */
+      boolean hasPillId();
+      /**
+       * <code>optional string pill_id = 1;</code>
+       */
+      String getPillId();
+      /**
+       * <code>optional string pill_id = 1;</code>
+       */
+      com.google.protobuf.ByteString
+          getPillIdBytes();
+
+      // optional uint32 pill_color = 2;
+      /**
+       * <code>optional uint32 pill_color = 2;</code>
+       */
+      boolean hasPillColor();
+      /**
+       * <code>optional uint32 pill_color = 2;</code>
+       */
+      int getPillColor();
+    }
+    /**
+     * Protobuf type {@code SyncResponse.PillSettings}
+     */
+    public static final class PillSettings extends
+        com.google.protobuf.GeneratedMessage
+        implements PillSettingsOrBuilder {
+      // Use PillSettings.newBuilder() to construct.
+      private PillSettings(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+        super(builder);
+        this.unknownFields = builder.getUnknownFields();
+      }
+      private PillSettings(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+      private static final PillSettings defaultInstance;
+      public static PillSettings getDefaultInstance() {
+        return defaultInstance;
+      }
+
+      public PillSettings getDefaultInstanceForType() {
+        return defaultInstance;
+      }
+
+      private final com.google.protobuf.UnknownFieldSet unknownFields;
+      @Override
+      public final com.google.protobuf.UnknownFieldSet
+          getUnknownFields() {
+        return this.unknownFields;
+      }
+      private PillSettings(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        initFields();
+        int mutable_bitField0_ = 0;
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              default: {
+                if (!parseUnknownField(input, unknownFields,
+                                       extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+              case 10: {
+                bitField0_ |= 0x00000001;
+                pillId_ = input.readBytes();
+                break;
+              }
+              case 16: {
+                bitField0_ |= 0x00000002;
+                pillColor_ = input.readUInt32();
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e.getMessage()).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return OutputProtos.internal_static_SyncResponse_PillSettings_descriptor;
+      }
+
+      protected FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return OutputProtos.internal_static_SyncResponse_PillSettings_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                PillSettings.class, Builder.class);
+      }
+
+      public static com.google.protobuf.Parser<PillSettings> PARSER =
+          new com.google.protobuf.AbstractParser<PillSettings>() {
+        public PillSettings parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new PillSettings(input, extensionRegistry);
+        }
+      };
+
+      @Override
+      public com.google.protobuf.Parser<PillSettings> getParserForType() {
+        return PARSER;
+      }
+
+      private int bitField0_;
+      // optional string pill_id = 1;
+      public static final int PILL_ID_FIELD_NUMBER = 1;
+      private Object pillId_;
+      /**
+       * <code>optional string pill_id = 1;</code>
+       */
+      public boolean hasPillId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string pill_id = 1;</code>
+       */
+      public String getPillId() {
+        Object ref = pillId_;
+        if (ref instanceof String) {
+          return (String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
+          String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            pillId_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       * <code>optional string pill_id = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getPillIdBytes() {
+        Object ref = pillId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (String) ref);
+          pillId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
+      // optional uint32 pill_color = 2;
+      public static final int PILL_COLOR_FIELD_NUMBER = 2;
+      private int pillColor_;
+      /**
+       * <code>optional uint32 pill_color = 2;</code>
+       */
+      public boolean hasPillColor() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional uint32 pill_color = 2;</code>
+       */
+      public int getPillColor() {
+        return pillColor_;
+      }
+
+      private void initFields() {
+        pillId_ = "";
+        pillColor_ = 0;
+      }
+      private byte memoizedIsInitialized = -1;
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized != -1) return isInitialized == 1;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        getSerializedSize();
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          output.writeBytes(1, getPillIdBytes());
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          output.writeUInt32(2, pillColor_);
+        }
+        getUnknownFields().writeTo(output);
+      }
+
+      private int memoizedSerializedSize = -1;
+      public int getSerializedSize() {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(1, getPillIdBytes());
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeUInt32Size(2, pillColor_);
+        }
+        size += getUnknownFields().getSerializedSize();
+        memoizedSerializedSize = size;
+        return size;
+      }
+
+      private static final long serialVersionUID = 0L;
+      @Override
+      protected Object writeReplace()
+          throws java.io.ObjectStreamException {
+        return super.writeReplace();
+      }
+
+      public static PillSettings parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static PillSettings parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static PillSettings parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static PillSettings parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static PillSettings parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static PillSettings parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+      public static PillSettings parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input);
+      }
+      public static PillSettings parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      }
+      public static PillSettings parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static PillSettings parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+
+      public static Builder newBuilder() { return Builder.create(); }
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder(PillSettings prototype) {
+        return newBuilder().mergeFrom(prototype);
+      }
+      public Builder toBuilder() { return newBuilder(this); }
+
+      @Override
+      protected Builder newBuilderForType(
+          BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code SyncResponse.PillSettings}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessage.Builder<Builder>
+         implements PillSettingsOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return OutputProtos.internal_static_SyncResponse_PillSettings_descriptor;
+        }
+
+        protected FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return OutputProtos.internal_static_SyncResponse_PillSettings_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  PillSettings.class, Builder.class);
+        }
+
+        // Construct using com.hello.suripu.api.output.OutputProtos.SyncResponse.PillSettings.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          }
+        }
+        private static Builder create() {
+          return new Builder();
+        }
+
+        public Builder clear() {
+          super.clear();
+          pillId_ = "";
+          bitField0_ = (bitField0_ & ~0x00000001);
+          pillColor_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000002);
+          return this;
+        }
+
+        public Builder clone() {
+          return create().mergeFrom(buildPartial());
+        }
+
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return OutputProtos.internal_static_SyncResponse_PillSettings_descriptor;
+        }
+
+        public PillSettings getDefaultInstanceForType() {
+          return PillSettings.getDefaultInstance();
+        }
+
+        public PillSettings build() {
+          PillSettings result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        public PillSettings buildPartial() {
+          PillSettings result = new PillSettings(this);
+          int from_bitField0_ = bitField0_;
+          int to_bitField0_ = 0;
+          if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+            to_bitField0_ |= 0x00000001;
+          }
+          result.pillId_ = pillId_;
+          if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+            to_bitField0_ |= 0x00000002;
+          }
+          result.pillColor_ = pillColor_;
+          result.bitField0_ = to_bitField0_;
+          onBuilt();
+          return result;
+        }
+
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof PillSettings) {
+            return mergeFrom((PillSettings)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(PillSettings other) {
+          if (other == PillSettings.getDefaultInstance()) return this;
+          if (other.hasPillId()) {
+            bitField0_ |= 0x00000001;
+            pillId_ = other.pillId_;
+            onChanged();
+          }
+          if (other.hasPillColor()) {
+            setPillColor(other.getPillColor());
+          }
+          this.mergeUnknownFields(other.getUnknownFields());
+          return this;
+        }
+
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          PillSettings parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (PillSettings) e.getUnfinishedMessage();
+            throw e;
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+        private int bitField0_;
+
+        // optional string pill_id = 1;
+        private Object pillId_ = "";
+        /**
+         * <code>optional string pill_id = 1;</code>
+         */
+        public boolean hasPillId() {
+          return ((bitField0_ & 0x00000001) == 0x00000001);
+        }
+        /**
+         * <code>optional string pill_id = 1;</code>
+         */
+        public String getPillId() {
+          Object ref = pillId_;
+          if (!(ref instanceof String)) {
+            String s = ((com.google.protobuf.ByteString) ref)
+                .toStringUtf8();
+            pillId_ = s;
+            return s;
+          } else {
+            return (String) ref;
+          }
+        }
+        /**
+         * <code>optional string pill_id = 1;</code>
+         */
+        public com.google.protobuf.ByteString
+            getPillIdBytes() {
+          Object ref = pillId_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (String) ref);
+            pillId_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         * <code>optional string pill_id = 1;</code>
+         */
+        public Builder setPillId(
+            String value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+          pillId_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string pill_id = 1;</code>
+         */
+        public Builder clearPillId() {
+          bitField0_ = (bitField0_ & ~0x00000001);
+          pillId_ = getDefaultInstance().getPillId();
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string pill_id = 1;</code>
+         */
+        public Builder setPillIdBytes(
+            com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+          pillId_ = value;
+          onChanged();
+          return this;
+        }
+
+        // optional uint32 pill_color = 2;
+        private int pillColor_ ;
+        /**
+         * <code>optional uint32 pill_color = 2;</code>
+         */
+        public boolean hasPillColor() {
+          return ((bitField0_ & 0x00000002) == 0x00000002);
+        }
+        /**
+         * <code>optional uint32 pill_color = 2;</code>
+         */
+        public int getPillColor() {
+          return pillColor_;
+        }
+        /**
+         * <code>optional uint32 pill_color = 2;</code>
+         */
+        public Builder setPillColor(int value) {
+          bitField0_ |= 0x00000002;
+          pillColor_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional uint32 pill_color = 2;</code>
+         */
+        public Builder clearPillColor() {
+          bitField0_ = (bitField0_ & ~0x00000002);
+          pillColor_ = 0;
+          onChanged();
+          return this;
+        }
+
+        // @@protoc_insertion_point(builder_scope:SyncResponse.PillSettings)
+      }
+
+      static {
+        defaultInstance = new PillSettings(true);
+        defaultInstance.initFields();
+      }
+
+      // @@protoc_insertion_point(class_scope:SyncResponse.PillSettings)
+    }
+
     private int bitField0_;
     // optional .SyncResponse.Alarm alarm = 6;
     public static final int ALARM_FIELD_NUMBER = 6;
@@ -6495,25 +7254,76 @@ public final class OutputProtos {
     private int batchSize_;
     /**
      * <code>optional int32 batch_size = 19;</code>
-     *
-     * <pre>
-     * TODO: settings for snoring detection
-     * TODO: settings for firmware update
-     * </pre>
      */
     public boolean hasBatchSize() {
       return ((bitField0_ & 0x00000200) == 0x00000200);
     }
     /**
      * <code>optional int32 batch_size = 19;</code>
+     */
+    public int getBatchSize() {
+      return batchSize_;
+    }
+
+    // repeated .SyncResponse.PillSettings pill_settings = 20;
+    public static final int PILL_SETTINGS_FIELD_NUMBER = 20;
+    private java.util.List<PillSettings> pillSettings_;
+    /**
+     * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
      *
      * <pre>
      * TODO: settings for snoring detection
      * TODO: settings for firmware update
      * </pre>
      */
-    public int getBatchSize() {
-      return batchSize_;
+    public java.util.List<PillSettings> getPillSettingsList() {
+      return pillSettings_;
+    }
+    /**
+     * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+     *
+     * <pre>
+     * TODO: settings for snoring detection
+     * TODO: settings for firmware update
+     * </pre>
+     */
+    public java.util.List<? extends PillSettingsOrBuilder>
+        getPillSettingsOrBuilderList() {
+      return pillSettings_;
+    }
+    /**
+     * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+     *
+     * <pre>
+     * TODO: settings for snoring detection
+     * TODO: settings for firmware update
+     * </pre>
+     */
+    public int getPillSettingsCount() {
+      return pillSettings_.size();
+    }
+    /**
+     * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+     *
+     * <pre>
+     * TODO: settings for snoring detection
+     * TODO: settings for firmware update
+     * </pre>
+     */
+    public PillSettings getPillSettings(int index) {
+      return pillSettings_.get(index);
+    }
+    /**
+     * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+     *
+     * <pre>
+     * TODO: settings for snoring detection
+     * TODO: settings for firmware update
+     * </pre>
+     */
+    public PillSettingsOrBuilder getPillSettingsOrBuilder(
+        int index) {
+      return pillSettings_.get(index);
     }
 
     private void initFields() {
@@ -6528,6 +7338,7 @@ public final class OutputProtos {
       ledAction_ = LEDAction.getDefaultInstance();
       mac_ = com.google.protobuf.ByteString.EMPTY;
       batchSize_ = 0;
+      pillSettings_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -6573,6 +7384,9 @@ public final class OutputProtos {
       }
       if (((bitField0_ & 0x00000200) == 0x00000200)) {
         output.writeInt32(19, batchSize_);
+      }
+      for (int i = 0; i < pillSettings_.size(); i++) {
+        output.writeMessage(20, pillSettings_.get(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -6626,6 +7440,10 @@ public final class OutputProtos {
       if (((bitField0_ & 0x00000200) == 0x00000200)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(19, batchSize_);
+      }
+      for (int i = 0; i < pillSettings_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(20, pillSettings_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -6740,6 +7558,7 @@ public final class OutputProtos {
           getFilesFieldBuilder();
           getAudioControlFieldBuilder();
           getLedActionFieldBuilder();
+          getPillSettingsFieldBuilder();
         }
       }
       private static Builder create() {
@@ -6790,6 +7609,12 @@ public final class OutputProtos {
         bitField0_ = (bitField0_ & ~0x00000200);
         batchSize_ = 0;
         bitField0_ = (bitField0_ & ~0x00000400);
+        if (pillSettingsBuilder_ == null) {
+          pillSettings_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000800);
+        } else {
+          pillSettingsBuilder_.clear();
+        }
         return this;
       }
 
@@ -6883,6 +7708,15 @@ public final class OutputProtos {
           to_bitField0_ |= 0x00000200;
         }
         result.batchSize_ = batchSize_;
+        if (pillSettingsBuilder_ == null) {
+          if (((bitField0_ & 0x00000800) == 0x00000800)) {
+            pillSettings_ = java.util.Collections.unmodifiableList(pillSettings_);
+            bitField0_ = (bitField0_ & ~0x00000800);
+          }
+          result.pillSettings_ = pillSettings_;
+        } else {
+          result.pillSettings_ = pillSettingsBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -6954,6 +7788,32 @@ public final class OutputProtos {
         }
         if (other.hasBatchSize()) {
           setBatchSize(other.getBatchSize());
+        }
+        if (pillSettingsBuilder_ == null) {
+          if (!other.pillSettings_.isEmpty()) {
+            if (pillSettings_.isEmpty()) {
+              pillSettings_ = other.pillSettings_;
+              bitField0_ = (bitField0_ & ~0x00000800);
+            } else {
+              ensurePillSettingsIsMutable();
+              pillSettings_.addAll(other.pillSettings_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.pillSettings_.isEmpty()) {
+            if (pillSettingsBuilder_.isEmpty()) {
+              pillSettingsBuilder_.dispose();
+              pillSettingsBuilder_ = null;
+              pillSettings_ = other.pillSettings_;
+              bitField0_ = (bitField0_ & ~0x00000800);
+              pillSettingsBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getPillSettingsFieldBuilder() : null;
+            } else {
+              pillSettingsBuilder_.addAllMessages(other.pillSettings_);
+            }
+          }
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -7989,33 +8849,18 @@ public final class OutputProtos {
       private int batchSize_ ;
       /**
        * <code>optional int32 batch_size = 19;</code>
-       *
-       * <pre>
-       * TODO: settings for snoring detection
-       * TODO: settings for firmware update
-       * </pre>
        */
       public boolean hasBatchSize() {
         return ((bitField0_ & 0x00000400) == 0x00000400);
       }
       /**
        * <code>optional int32 batch_size = 19;</code>
-       *
-       * <pre>
-       * TODO: settings for snoring detection
-       * TODO: settings for firmware update
-       * </pre>
        */
       public int getBatchSize() {
         return batchSize_;
       }
       /**
        * <code>optional int32 batch_size = 19;</code>
-       *
-       * <pre>
-       * TODO: settings for snoring detection
-       * TODO: settings for firmware update
-       * </pre>
        */
       public Builder setBatchSize(int value) {
         bitField0_ |= 0x00000400;
@@ -8025,17 +8870,342 @@ public final class OutputProtos {
       }
       /**
        * <code>optional int32 batch_size = 19;</code>
-       *
-       * <pre>
-       * TODO: settings for snoring detection
-       * TODO: settings for firmware update
-       * </pre>
        */
       public Builder clearBatchSize() {
         bitField0_ = (bitField0_ & ~0x00000400);
         batchSize_ = 0;
         onChanged();
         return this;
+      }
+
+      // repeated .SyncResponse.PillSettings pill_settings = 20;
+      private java.util.List<PillSettings> pillSettings_ =
+        java.util.Collections.emptyList();
+      private void ensurePillSettingsIsMutable() {
+        if (!((bitField0_ & 0x00000800) == 0x00000800)) {
+          pillSettings_ = new java.util.ArrayList<PillSettings>(pillSettings_);
+          bitField0_ |= 0x00000800;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          PillSettings, PillSettings.Builder, PillSettingsOrBuilder> pillSettingsBuilder_;
+
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public java.util.List<PillSettings> getPillSettingsList() {
+        if (pillSettingsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(pillSettings_);
+        } else {
+          return pillSettingsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public int getPillSettingsCount() {
+        if (pillSettingsBuilder_ == null) {
+          return pillSettings_.size();
+        } else {
+          return pillSettingsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public PillSettings getPillSettings(int index) {
+        if (pillSettingsBuilder_ == null) {
+          return pillSettings_.get(index);
+        } else {
+          return pillSettingsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public Builder setPillSettings(
+          int index, PillSettings value) {
+        if (pillSettingsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePillSettingsIsMutable();
+          pillSettings_.set(index, value);
+          onChanged();
+        } else {
+          pillSettingsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public Builder setPillSettings(
+          int index, PillSettings.Builder builderForValue) {
+        if (pillSettingsBuilder_ == null) {
+          ensurePillSettingsIsMutable();
+          pillSettings_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          pillSettingsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public Builder addPillSettings(PillSettings value) {
+        if (pillSettingsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePillSettingsIsMutable();
+          pillSettings_.add(value);
+          onChanged();
+        } else {
+          pillSettingsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public Builder addPillSettings(
+          int index, PillSettings value) {
+        if (pillSettingsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePillSettingsIsMutable();
+          pillSettings_.add(index, value);
+          onChanged();
+        } else {
+          pillSettingsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public Builder addPillSettings(
+          PillSettings.Builder builderForValue) {
+        if (pillSettingsBuilder_ == null) {
+          ensurePillSettingsIsMutable();
+          pillSettings_.add(builderForValue.build());
+          onChanged();
+        } else {
+          pillSettingsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public Builder addPillSettings(
+          int index, PillSettings.Builder builderForValue) {
+        if (pillSettingsBuilder_ == null) {
+          ensurePillSettingsIsMutable();
+          pillSettings_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          pillSettingsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public Builder addAllPillSettings(
+          Iterable<? extends PillSettings> values) {
+        if (pillSettingsBuilder_ == null) {
+          ensurePillSettingsIsMutable();
+          super.addAll(values, pillSettings_);
+          onChanged();
+        } else {
+          pillSettingsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public Builder clearPillSettings() {
+        if (pillSettingsBuilder_ == null) {
+          pillSettings_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000800);
+          onChanged();
+        } else {
+          pillSettingsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public Builder removePillSettings(int index) {
+        if (pillSettingsBuilder_ == null) {
+          ensurePillSettingsIsMutable();
+          pillSettings_.remove(index);
+          onChanged();
+        } else {
+          pillSettingsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public PillSettings.Builder getPillSettingsBuilder(
+          int index) {
+        return getPillSettingsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public PillSettingsOrBuilder getPillSettingsOrBuilder(
+          int index) {
+        if (pillSettingsBuilder_ == null) {
+          return pillSettings_.get(index);  } else {
+          return pillSettingsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public java.util.List<? extends PillSettingsOrBuilder>
+           getPillSettingsOrBuilderList() {
+        if (pillSettingsBuilder_ != null) {
+          return pillSettingsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(pillSettings_);
+        }
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public PillSettings.Builder addPillSettingsBuilder() {
+        return getPillSettingsFieldBuilder().addBuilder(
+            PillSettings.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public PillSettings.Builder addPillSettingsBuilder(
+          int index) {
+        return getPillSettingsFieldBuilder().addBuilder(
+            index, PillSettings.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 20;</code>
+       *
+       * <pre>
+       * TODO: settings for snoring detection
+       * TODO: settings for firmware update
+       * </pre>
+       */
+      public java.util.List<PillSettings.Builder>
+           getPillSettingsBuilderList() {
+        return getPillSettingsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          PillSettings, PillSettings.Builder, PillSettingsOrBuilder>
+          getPillSettingsFieldBuilder() {
+        if (pillSettingsBuilder_ == null) {
+          pillSettingsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              PillSettings, PillSettings.Builder, PillSettingsOrBuilder>(
+                  pillSettings_,
+                  ((bitField0_ & 0x00000800) == 0x00000800),
+                  getParentForChildren(),
+                  isClean());
+          pillSettings_ = null;
+        }
+        return pillSettingsBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:SyncResponse)
@@ -8047,6 +9217,680 @@ public final class OutputProtos {
     }
 
     // @@protoc_insertion_point(class_scope:SyncResponse)
+  }
+
+  public interface BatchedPillSettingsOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // repeated .SyncResponse.PillSettings pill_settings = 1;
+    /**
+     * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+     */
+    java.util.List<SyncResponse.PillSettings>
+        getPillSettingsList();
+    /**
+     * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+     */
+    SyncResponse.PillSettings getPillSettings(int index);
+    /**
+     * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+     */
+    int getPillSettingsCount();
+    /**
+     * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+     */
+    java.util.List<? extends SyncResponse.PillSettingsOrBuilder>
+        getPillSettingsOrBuilderList();
+    /**
+     * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+     */
+    SyncResponse.PillSettingsOrBuilder getPillSettingsOrBuilder(
+            int index);
+  }
+  /**
+   * Protobuf type {@code BatchedPillSettings}
+   */
+  public static final class BatchedPillSettings extends
+      com.google.protobuf.GeneratedMessage
+      implements BatchedPillSettingsOrBuilder {
+    // Use BatchedPillSettings.newBuilder() to construct.
+    private BatchedPillSettings(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private BatchedPillSettings(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final BatchedPillSettings defaultInstance;
+    public static BatchedPillSettings getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public BatchedPillSettings getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private BatchedPillSettings(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                pillSettings_ = new java.util.ArrayList<SyncResponse.PillSettings>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              pillSettings_.add(input.readMessage(SyncResponse.PillSettings.PARSER, extensionRegistry));
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          pillSettings_ = java.util.Collections.unmodifiableList(pillSettings_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return OutputProtos.internal_static_BatchedPillSettings_descriptor;
+    }
+
+    protected FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return OutputProtos.internal_static_BatchedPillSettings_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              BatchedPillSettings.class, Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<BatchedPillSettings> PARSER =
+        new com.google.protobuf.AbstractParser<BatchedPillSettings>() {
+      public BatchedPillSettings parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new BatchedPillSettings(input, extensionRegistry);
+      }
+    };
+
+    @Override
+    public com.google.protobuf.Parser<BatchedPillSettings> getParserForType() {
+      return PARSER;
+    }
+
+    // repeated .SyncResponse.PillSettings pill_settings = 1;
+    public static final int PILL_SETTINGS_FIELD_NUMBER = 1;
+    private java.util.List<SyncResponse.PillSettings> pillSettings_;
+    /**
+     * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+     */
+    public java.util.List<SyncResponse.PillSettings> getPillSettingsList() {
+      return pillSettings_;
+    }
+    /**
+     * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+     */
+    public java.util.List<? extends SyncResponse.PillSettingsOrBuilder>
+        getPillSettingsOrBuilderList() {
+      return pillSettings_;
+    }
+    /**
+     * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+     */
+    public int getPillSettingsCount() {
+      return pillSettings_.size();
+    }
+    /**
+     * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+     */
+    public SyncResponse.PillSettings getPillSettings(int index) {
+      return pillSettings_.get(index);
+    }
+    /**
+     * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+     */
+    public SyncResponse.PillSettingsOrBuilder getPillSettingsOrBuilder(
+        int index) {
+      return pillSettings_.get(index);
+    }
+
+    private void initFields() {
+      pillSettings_ = java.util.Collections.emptyList();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      for (int i = 0; i < pillSettings_.size(); i++) {
+        output.writeMessage(1, pillSettings_.get(i));
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (int i = 0; i < pillSettings_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, pillSettings_.get(i));
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @Override
+    protected Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static BatchedPillSettings parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static BatchedPillSettings parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static BatchedPillSettings parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static BatchedPillSettings parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static BatchedPillSettings parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static BatchedPillSettings parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static BatchedPillSettings parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static BatchedPillSettings parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static BatchedPillSettings parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static BatchedPillSettings parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(BatchedPillSettings prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @Override
+    protected Builder newBuilderForType(
+        BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code BatchedPillSettings}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements BatchedPillSettingsOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return OutputProtos.internal_static_BatchedPillSettings_descriptor;
+      }
+
+      protected FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return OutputProtos.internal_static_BatchedPillSettings_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                BatchedPillSettings.class, Builder.class);
+      }
+
+      // Construct using com.hello.suripu.api.output.OutputProtos.BatchedPillSettings.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getPillSettingsFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        if (pillSettingsBuilder_ == null) {
+          pillSettings_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          pillSettingsBuilder_.clear();
+        }
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return OutputProtos.internal_static_BatchedPillSettings_descriptor;
+      }
+
+      public BatchedPillSettings getDefaultInstanceForType() {
+        return BatchedPillSettings.getDefaultInstance();
+      }
+
+      public BatchedPillSettings build() {
+        BatchedPillSettings result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public BatchedPillSettings buildPartial() {
+        BatchedPillSettings result = new BatchedPillSettings(this);
+        int from_bitField0_ = bitField0_;
+        if (pillSettingsBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+            pillSettings_ = java.util.Collections.unmodifiableList(pillSettings_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.pillSettings_ = pillSettings_;
+        } else {
+          result.pillSettings_ = pillSettingsBuilder_.build();
+        }
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof BatchedPillSettings) {
+          return mergeFrom((BatchedPillSettings)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(BatchedPillSettings other) {
+        if (other == BatchedPillSettings.getDefaultInstance()) return this;
+        if (pillSettingsBuilder_ == null) {
+          if (!other.pillSettings_.isEmpty()) {
+            if (pillSettings_.isEmpty()) {
+              pillSettings_ = other.pillSettings_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensurePillSettingsIsMutable();
+              pillSettings_.addAll(other.pillSettings_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.pillSettings_.isEmpty()) {
+            if (pillSettingsBuilder_.isEmpty()) {
+              pillSettingsBuilder_.dispose();
+              pillSettingsBuilder_ = null;
+              pillSettings_ = other.pillSettings_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              pillSettingsBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getPillSettingsFieldBuilder() : null;
+            } else {
+              pillSettingsBuilder_.addAllMessages(other.pillSettings_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        BatchedPillSettings parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (BatchedPillSettings) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // repeated .SyncResponse.PillSettings pill_settings = 1;
+      private java.util.List<SyncResponse.PillSettings> pillSettings_ =
+        java.util.Collections.emptyList();
+      private void ensurePillSettingsIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          pillSettings_ = new java.util.ArrayList<SyncResponse.PillSettings>(pillSettings_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          SyncResponse.PillSettings, SyncResponse.PillSettings.Builder, SyncResponse.PillSettingsOrBuilder> pillSettingsBuilder_;
+
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+       */
+      public java.util.List<SyncResponse.PillSettings> getPillSettingsList() {
+        if (pillSettingsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(pillSettings_);
+        } else {
+          return pillSettingsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+       */
+      public int getPillSettingsCount() {
+        if (pillSettingsBuilder_ == null) {
+          return pillSettings_.size();
+        } else {
+          return pillSettingsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+       */
+      public SyncResponse.PillSettings getPillSettings(int index) {
+        if (pillSettingsBuilder_ == null) {
+          return pillSettings_.get(index);
+        } else {
+          return pillSettingsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+       */
+      public Builder setPillSettings(
+          int index, SyncResponse.PillSettings value) {
+        if (pillSettingsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePillSettingsIsMutable();
+          pillSettings_.set(index, value);
+          onChanged();
+        } else {
+          pillSettingsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+       */
+      public Builder setPillSettings(
+          int index, SyncResponse.PillSettings.Builder builderForValue) {
+        if (pillSettingsBuilder_ == null) {
+          ensurePillSettingsIsMutable();
+          pillSettings_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          pillSettingsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+       */
+      public Builder addPillSettings(SyncResponse.PillSettings value) {
+        if (pillSettingsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePillSettingsIsMutable();
+          pillSettings_.add(value);
+          onChanged();
+        } else {
+          pillSettingsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+       */
+      public Builder addPillSettings(
+          int index, SyncResponse.PillSettings value) {
+        if (pillSettingsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePillSettingsIsMutable();
+          pillSettings_.add(index, value);
+          onChanged();
+        } else {
+          pillSettingsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+       */
+      public Builder addPillSettings(
+          SyncResponse.PillSettings.Builder builderForValue) {
+        if (pillSettingsBuilder_ == null) {
+          ensurePillSettingsIsMutable();
+          pillSettings_.add(builderForValue.build());
+          onChanged();
+        } else {
+          pillSettingsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+       */
+      public Builder addPillSettings(
+          int index, SyncResponse.PillSettings.Builder builderForValue) {
+        if (pillSettingsBuilder_ == null) {
+          ensurePillSettingsIsMutable();
+          pillSettings_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          pillSettingsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+       */
+      public Builder addAllPillSettings(
+          Iterable<? extends SyncResponse.PillSettings> values) {
+        if (pillSettingsBuilder_ == null) {
+          ensurePillSettingsIsMutable();
+          super.addAll(values, pillSettings_);
+          onChanged();
+        } else {
+          pillSettingsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+       */
+      public Builder clearPillSettings() {
+        if (pillSettingsBuilder_ == null) {
+          pillSettings_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          pillSettingsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+       */
+      public Builder removePillSettings(int index) {
+        if (pillSettingsBuilder_ == null) {
+          ensurePillSettingsIsMutable();
+          pillSettings_.remove(index);
+          onChanged();
+        } else {
+          pillSettingsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+       */
+      public SyncResponse.PillSettings.Builder getPillSettingsBuilder(
+          int index) {
+        return getPillSettingsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+       */
+      public SyncResponse.PillSettingsOrBuilder getPillSettingsOrBuilder(
+          int index) {
+        if (pillSettingsBuilder_ == null) {
+          return pillSettings_.get(index);  } else {
+          return pillSettingsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+       */
+      public java.util.List<? extends SyncResponse.PillSettingsOrBuilder>
+           getPillSettingsOrBuilderList() {
+        if (pillSettingsBuilder_ != null) {
+          return pillSettingsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(pillSettings_);
+        }
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+       */
+      public SyncResponse.PillSettings.Builder addPillSettingsBuilder() {
+        return getPillSettingsFieldBuilder().addBuilder(
+            SyncResponse.PillSettings.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+       */
+      public SyncResponse.PillSettings.Builder addPillSettingsBuilder(
+          int index) {
+        return getPillSettingsFieldBuilder().addBuilder(
+            index, SyncResponse.PillSettings.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .SyncResponse.PillSettings pill_settings = 1;</code>
+       */
+      public java.util.List<SyncResponse.PillSettings.Builder>
+           getPillSettingsBuilderList() {
+        return getPillSettingsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          SyncResponse.PillSettings, SyncResponse.PillSettings.Builder, SyncResponse.PillSettingsOrBuilder>
+          getPillSettingsFieldBuilder() {
+        if (pillSettingsBuilder_ == null) {
+          pillSettingsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              SyncResponse.PillSettings, SyncResponse.PillSettings.Builder, SyncResponse.PillSettingsOrBuilder>(
+                  pillSettings_,
+                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  getParentForChildren(),
+                  isClean());
+          pillSettings_ = null;
+        }
+        return pillSettingsBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:BatchedPillSettings)
+    }
+
+    static {
+      defaultInstance = new BatchedPillSettings(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:BatchedPillSettings)
   }
 
   private static com.google.protobuf.Descriptors.Descriptor
@@ -8084,6 +9928,16 @@ public final class OutputProtos {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_SyncResponse_LEDAction_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_SyncResponse_PillSettings_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_SyncResponse_PillSettings_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_BatchedPillSettings_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_BatchedPillSettings_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -8094,7 +9948,7 @@ public final class OutputProtos {
   static {
     String[] descriptorData = {
       "\n\023sync_response.proto\032\023audio_control.pro" +
-      "to\"\243\013\n\014SyncResponse\022\"\n\005alarm\030\006 \001(\0132\023.Syn" +
+      "to\"\242\014\n\014SyncResponse\022\"\n\005alarm\030\006 \001(\0132\023.Syn" +
       "cResponse.Alarm\022-\n\013white_noise\030\010 \001(\0132\030.S" +
       "yncResponse.WhiteNoise\022\024\n\014reset_device\030\n" +
       " \001(\010\0225\n\017room_conditions\030\014 \001(\0162\034.SyncResp" +
@@ -8103,35 +9957,40 @@ public final class OutputProtos {
       "ry_fw\030\016 \001(\010\022$\n\raudio_control\030\017 \001(\0132\r.Aud" +
       "ioControl\022\021\n\tunix_time\030\020 \001(\r\022+\n\nled_acti" +
       "on\030\021 \001(\0132\027.SyncResponse.LEDAction\022\013\n\003mac",
-      "\030\022 \001(\014\022\022\n\nbatch_size\030\023 \001(\005\032\205\002\n\014FileDownl" +
-      "oad\022\014\n\004host\030\001 \001(\t\022\013\n\003url\030\002 \001(\t\022\034\n\024copy_t" +
-      "o_serial_flash\030\004 \001(\010\022\037\n\027reset_network_pr" +
-      "ocessor\030\005 \001(\010\022#\n\033reset_application_proce" +
-      "ssor\030\006 \001(\010\022\035\n\025serial_flash_filename\030\007 \001(" +
-      "\t\022\031\n\021serial_flash_path\030\010 \001(\t\022\030\n\020sd_card_" +
-      "filename\030\003 \001(\t\022\024\n\014sd_card_path\030\t \001(\t\022\014\n\004" +
-      "sha1\030\n \001(\014\032\216\001\n\005Alarm\022\022\n\nstart_time\030\001 \001(\r" +
-      "\022\020\n\010end_time\030\002 \001(\r\022\026\n\013ringtone_id\030\003 \001(\005:" +
-      "\0011\022&\n\036ring_offset_from_now_in_second\030\004 \001",
-      "(\005\022\037\n\027ring_duration_in_second\030\005 \001(\005\032w\n\rP" +
-      "airingAction\022\014\n\004ssid\030\001 \001(\t\0224\n\004type\030\002 \001(\016" +
-      "2&.SyncResponse.PairingAction.ActionType" +
-      "\"\"\n\nActionType\022\010\n\004PAIR\020\000\022\n\n\006UNPAIR\020\001\032D\n\n" +
-      "WhiteNoise\022\022\n\nstart_time\030\001 \001(\005\022\020\n\010end_ti" +
-      "me\030\002 \001(\005\022\020\n\010sound_id\030\003 \001(\005\032\225\001\n\013FlashActi" +
-      "on\022\013\n\003red\030\001 \001(\005\022\r\n\005green\030\002 \001(\005\022\014\n\004blue\030\003" +
-      " \001(\005\022\032\n\022delay_milliseconds\030\004 \001(\005\022\017\n\007fade" +
-      "_in\030\005 \001(\010\022\020\n\010fade_out\030\006 \001(\010\022\016\n\006rotate\030\007 " +
-      "\001(\010\022\r\n\005alpha\030\010 \001(\005\032\376\001\n\tLEDAction\0223\n\004type",
-      "\030\001 \001(\0162%.SyncResponse.LEDAction.LEDActio" +
-      "nType\022\013\n\003url\030\002 \001(\t\022\r\n\005color\030\003 \001(\r\022\021\n\talt" +
-      "_color\030\004 \001(\r\022\030\n\020duration_seconds\030\006 \001(\005\"s" +
-      "\n\rLEDActionType\022\n\n\006FADEIO\020\000\022\010\n\004GLOW\020\001\022\t\n" +
-      "\005THROB\020\002\022\n\n\006PULSAR\020\003\022\n\n\006DOUBLE\020\004\022\t\n\005SIRE" +
-      "N\020\005\022\n\n\006TRIPPY\020\006\022\t\n\005PARTY\020\007\022\007\n\003URL\020\010\"3\n\016R" +
-      "oomConditions\022\t\n\005IDEAL\020\001\022\013\n\007WARNING\020\002\022\t\n" +
-      "\005ALERT\020\003B+\n\033com.hello.suripu.api.outputB" +
-      "\014OutputProtos"
+      "\030\022 \001(\014\022\022\n\nbatch_size\030\023 \001(\005\0221\n\rpill_setti" +
+      "ngs\030\024 \003(\0132\032.SyncResponse.PillSettings\032\205\002" +
+      "\n\014FileDownload\022\014\n\004host\030\001 \001(\t\022\013\n\003url\030\002 \001(" +
+      "\t\022\034\n\024copy_to_serial_flash\030\004 \001(\010\022\037\n\027reset" +
+      "_network_processor\030\005 \001(\010\022#\n\033reset_applic" +
+      "ation_processor\030\006 \001(\010\022\035\n\025serial_flash_fi" +
+      "lename\030\007 \001(\t\022\031\n\021serial_flash_path\030\010 \001(\t\022" +
+      "\030\n\020sd_card_filename\030\003 \001(\t\022\024\n\014sd_card_pat" +
+      "h\030\t \001(\t\022\014\n\004sha1\030\n \001(\014\032\245\001\n\005Alarm\022\022\n\nstart" +
+      "_time\030\001 \001(\r\022\020\n\010end_time\030\002 \001(\r\022\026\n\013rington",
+      "e_id\030\003 \001(\005:\0011\022&\n\036ring_offset_from_now_in" +
+      "_second\030\004 \001(\005\022\037\n\027ring_duration_in_second" +
+      "\030\005 \001(\005\022\025\n\rringtone_path\030\006 \001(\t\032w\n\rPairing" +
+      "Action\022\014\n\004ssid\030\001 \001(\t\0224\n\004type\030\002 \001(\0162&.Syn" +
+      "cResponse.PairingAction.ActionType\"\"\n\nAc" +
+      "tionType\022\010\n\004PAIR\020\000\022\n\n\006UNPAIR\020\001\032D\n\nWhiteN" +
+      "oise\022\022\n\nstart_time\030\001 \001(\005\022\020\n\010end_time\030\002 \001" +
+      "(\005\022\020\n\010sound_id\030\003 \001(\005\032\225\001\n\013FlashAction\022\013\n\003" +
+      "red\030\001 \001(\005\022\r\n\005green\030\002 \001(\005\022\014\n\004blue\030\003 \001(\005\022\032" +
+      "\n\022delay_milliseconds\030\004 \001(\005\022\017\n\007fade_in\030\005 ",
+      "\001(\010\022\020\n\010fade_out\030\006 \001(\010\022\016\n\006rotate\030\007 \001(\010\022\r\n" +
+      "\005alpha\030\010 \001(\005\032\376\001\n\tLEDAction\0223\n\004type\030\001 \001(\016" +
+      "2%.SyncResponse.LEDAction.LEDActionType\022" +
+      "\013\n\003url\030\002 \001(\t\022\r\n\005color\030\003 \001(\r\022\021\n\talt_color" +
+      "\030\004 \001(\r\022\030\n\020duration_seconds\030\006 \001(\005\"s\n\rLEDA" +
+      "ctionType\022\n\n\006FADEIO\020\000\022\010\n\004GLOW\020\001\022\t\n\005THROB" +
+      "\020\002\022\n\n\006PULSAR\020\003\022\n\n\006DOUBLE\020\004\022\t\n\005SIREN\020\005\022\n\n" +
+      "\006TRIPPY\020\006\022\t\n\005PARTY\020\007\022\007\n\003URL\020\010\0323\n\014PillSet" +
+      "tings\022\017\n\007pill_id\030\001 \001(\t\022\022\n\npill_color\030\002 \001" +
+      "(\r\"3\n\016RoomConditions\022\t\n\005IDEAL\020\001\022\013\n\007WARNI",
+      "NG\020\002\022\t\n\005ALERT\020\003\"H\n\023BatchedPillSettings\0221" +
+      "\n\rpill_settings\030\001 \003(\0132\032.SyncResponse.Pil" +
+      "lSettingsB+\n\033com.hello.suripu.api.output" +
+      "B\014OutputProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -8143,7 +10002,7 @@ public final class OutputProtos {
           internal_static_SyncResponse_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_SyncResponse_descriptor,
-              new String[] { "Alarm", "WhiteNoise", "ResetDevice", "RoomConditions", "Files", "ResetToFactoryFw", "AudioControl", "UnixTime", "LedAction", "Mac", "BatchSize", });
+              new String[] { "Alarm", "WhiteNoise", "ResetDevice", "RoomConditions", "Files", "ResetToFactoryFw", "AudioControl", "UnixTime", "LedAction", "Mac", "BatchSize", "PillSettings", });
           internal_static_SyncResponse_FileDownload_descriptor =
             internal_static_SyncResponse_descriptor.getNestedTypes().get(0);
           internal_static_SyncResponse_FileDownload_fieldAccessorTable = new
@@ -8155,7 +10014,7 @@ public final class OutputProtos {
           internal_static_SyncResponse_Alarm_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_SyncResponse_Alarm_descriptor,
-              new String[] { "StartTime", "EndTime", "RingtoneId", "RingOffsetFromNowInSecond", "RingDurationInSecond", });
+              new String[] { "StartTime", "EndTime", "RingtoneId", "RingOffsetFromNowInSecond", "RingDurationInSecond", "RingtonePath", });
           internal_static_SyncResponse_PairingAction_descriptor =
             internal_static_SyncResponse_descriptor.getNestedTypes().get(2);
           internal_static_SyncResponse_PairingAction_fieldAccessorTable = new
@@ -8180,6 +10039,18 @@ public final class OutputProtos {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_SyncResponse_LEDAction_descriptor,
               new String[] { "Type", "Url", "Color", "AltColor", "DurationSeconds", });
+          internal_static_SyncResponse_PillSettings_descriptor =
+            internal_static_SyncResponse_descriptor.getNestedTypes().get(6);
+          internal_static_SyncResponse_PillSettings_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_SyncResponse_PillSettings_descriptor,
+              new String[] { "PillId", "PillColor", });
+          internal_static_BatchedPillSettings_descriptor =
+            getDescriptor().getMessageTypes().get(1);
+          internal_static_BatchedPillSettings_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_BatchedPillSettings_descriptor,
+              new String[] { "PillSettings", });
           return null;
         }
       };

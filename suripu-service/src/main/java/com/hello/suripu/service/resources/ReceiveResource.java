@@ -48,6 +48,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -156,6 +157,7 @@ public class ReceiveResource extends BaseResource {
                 .setData(data)
                 .setReceivedAt(DateTime.now().getMillis())
                 .setIpAddress(ipAddress)
+                .setUptimeInSecond(data.getUptimeInSecond())
                 .build();
 
         final DataLogger batchSenseDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
@@ -163,6 +165,74 @@ public class ReceiveResource extends BaseResource {
         return generateSyncResponse(data.getDeviceId(), data.getFirmwareVersion(), optionalKeyBytes.get(), data);
     }
 
+
+    public static OutputProtos.SyncResponse.Builder setPillSettings(final String deviceId, final OutputProtos.SyncResponse.Builder syncResponseBuilder, final DeviceDAO deviceDAO){
+        final List<DeviceAccountPair> accounts = deviceDAO.getAccountIdsForDeviceId(deviceId);
+        final int red = 0x0000FEFF;  // BGRA
+        final int blue = 0xFF0000FF; // BGRA
+
+        if(accounts.size() > 2){
+            LOGGER.warn("device {} has {} accounts, get the last 2 for pill settings.", deviceId, accounts.size());
+        }
+
+        if(accounts.size() == 0){
+            return syncResponseBuilder;
+        }
+
+        final ArrayList<AbstractMap.SimpleEntry<Long, DeviceAccountPair>> accountsHasPill = new ArrayList<>();
+        final List<DeviceAccountPair> lastAccounts = new ArrayList<>();
+        if(accounts.size() == 1){
+            lastAccounts.add(accounts.get(0));
+        }else{
+            lastAccounts.add(accounts.get(accounts.size() - 2));
+            lastAccounts.add(accounts.get(accounts.size() - 1));
+        }
+
+        // get all accounts that has pills.
+        for(final DeviceAccountPair account:accounts){
+            final long accountId = account.accountId;
+
+            final List<DeviceAccountPair> pills = deviceDAO.getPillsForAccountId(accountId);
+            if(pills.size() == 0){
+                continue;
+            }
+
+            final DeviceAccountPair lastPill = pills.get(pills.size() - 1);
+            accountsHasPill.add(new AbstractMap.SimpleEntry<Long, DeviceAccountPair>(accountId, lastPill));
+            if (pills.size() > 1) {
+                LOGGER.warn("account {} has {} pills, only get settings for last pill {}", accountId, pills.size(), lastPill.externalDeviceId);
+            }
+        }
+
+        if(accountsHasPill.size() == 0){
+            return syncResponseBuilder;
+        }
+
+        // Set pill settings
+        if(accountsHasPill.size() == 1){
+            final OutputProtos.SyncResponse.PillSettings pillSettings = OutputProtos.SyncResponse.PillSettings.newBuilder()
+                    .setPillId(accountsHasPill.get(accountsHasPill.size() - 1).getValue().externalDeviceId)
+                    .setPillColor(red)
+                    .build();
+            syncResponseBuilder.setPillSettings(0, pillSettings);
+        }else{
+            // Pill linked with 1st account is red.
+            final OutputProtos.SyncResponse.PillSettings firstPillSettings = OutputProtos.SyncResponse.PillSettings.newBuilder()
+                    .setPillId(accountsHasPill.get(accountsHasPill.size() - 2).getValue().externalDeviceId)
+                    .setPillColor(red)
+                    .build();
+            syncResponseBuilder.setPillSettings(0, firstPillSettings);
+
+            // Pill linked with 2nd account is blue
+            final OutputProtos.SyncResponse.PillSettings secondPillSettings = OutputProtos.SyncResponse.PillSettings.newBuilder()
+                    .setPillId(accountsHasPill.get(accountsHasPill.size() - 1).getValue().externalDeviceId)
+                    .setPillColor(blue)
+                    .build();
+            syncResponseBuilder.setPillSettings(1, secondPillSettings);
+        }
+
+        return syncResponseBuilder;
+    }
 
     @Deprecated
     @POST
@@ -439,7 +509,14 @@ public class ReceiveResource extends BaseResource {
             responseBuilder.addAllFiles(fileDownloadList);
         } else {
             // groups take precedence over feature
-            if (!groups.isEmpty() && batch.getDataList().size() > 1) {
+            boolean canOTA = false;
+            if(batch.hasUptimeInSecond()){
+                canOTA = (batch.getUptimeInSecond() > 20 * DateTimeConstants.SECONDS_PER_MINUTE);
+            }else{
+                canOTA = (batch.getDataList().size() > 1);
+            }
+
+            if (!groups.isEmpty() && canOTA) {
                 // TODO check for sense uptime instead and do not OTA if it was just plugged in
 
                 LOGGER.debug("DeviceId {} belongs to groups: {}", deviceName, groups);
@@ -482,6 +559,7 @@ public class ReceiveResource extends BaseResource {
             responseBuilder.setBatchSize(uploadInterval);
         }
         responseBuilder.setAudioControl(audioControl);
+        setPillSettings(deviceName, responseBuilder, this.deviceDAO);
 
 
         final OutputProtos.SyncResponse syncResponse = responseBuilder.build();
