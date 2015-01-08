@@ -230,28 +230,22 @@ public class QuestionProcessor {
 
     private List<Question> getOnBoardingQuestions(Long accountId, DateTime today) {
 
-        // check if we have already generated a list of questions
-        final Map<Integer, Question> preGeneratedQuestions = this.getPreGeneratedQuestions(accountId, today);
-        if (preGeneratedQuestions.size() >= NEW_USER_NUM_Q) {
-            return new ArrayList<>(preGeneratedQuestions.values());
-        }
-
-        // add base-questions that has been answered, and question-id of those answered in the past week
-        final Set<Integer> addedIds = new HashSet<>();
-        addedIds.addAll(this.getUserAnsweredQuestionIds(accountId));
+        // check if user has already responded to any onboarding questions
+        final Set<Integer> answeredIds = new HashSet<>(this.questionResponseDAO.getAnsweredOnboardingQuestions(accountId));
 
         final List<Question> onboardingQs = new ArrayList<>();
-        if (!addedIds.contains(1)) {
+        if (!answeredIds.contains(1)) {
             onboardingQs.add(questionIdMap.get(1));
         }
-        if (!addedIds.contains(2)) {
+        if (!answeredIds.contains(2)) {
             onboardingQs.add(questionIdMap.get(2));
         }
-        if (!addedIds.contains(3)) {
+        if (!answeredIds.contains(3)) {
             onboardingQs.add(questionIdMap.get(3));
         }
 
-        if (onboardingQs.size() > 0) {
+        // None of questions has been answered, insert into DB
+        if (onboardingQs.size() == NEW_USER_NUM_Q) {
             try {
                 final DateTime expiration = today.plusDays(1);
                 this.questionResponseDAO.insertAccountOnBoardingQuestions(accountId, today, expiration); // save to DB
@@ -273,12 +267,11 @@ public class QuestionProcessor {
 
         final List<Question> questions = new ArrayList<>();
 
-        // add questions that has already been selected
-        final Set<Integer> addedIds = new HashSet<>();
-        addedIds.addAll(seenIds);
-
         // from DB, get answered base-questions and other answered questions from the past week
-        addedIds.addAll(this.getUserAnsweredQuestionIds(accountId));
+        final Set<Integer> addedIds = this.getUserAnsweredQuestionIds(accountId);
+
+        // add questions that has already been selected
+        addedIds.addAll(seenIds);
 
         // always include the ONE daily calibration question, most important Q has lower id
         final Integer questionId = this.availableQuestionIds.get(Question.FREQUENCY.DAILY).get(0);
@@ -327,12 +320,11 @@ public class QuestionProcessor {
 
         final List<Question> questions = new ArrayList<>();
 
-        // add questions that has already been selected
-        final Set<Integer> addedIds = new HashSet<>();
-        addedIds.addAll(seenIds);
+        // from DB, get answered base-questions and other answered questions from the past week
+        final Set<Integer> addedIds = this.getUserAnsweredQuestionIds(accountId);
 
-        // add base-questions that has been answered, and question-id of those answered in the past week
-        addedIds.addAll(this.getUserAnsweredQuestionIds(accountId));
+        // add questions that has already been selected
+        addedIds.addAll(seenIds);
 
         // always choose ONE random daily-question
         List<Question> dailyQs = this.randomlySelectFromQuestionPool(accountId, seenIds, Question.FREQUENCY.DAILY, today, 1);
@@ -436,11 +428,12 @@ public class QuestionProcessor {
     /**
      * Get ids of base questions answered, and recently answered questions (one week)
      */
-    private List<Integer> getUserAnsweredQuestionIds (final Long accountId) {
+    private Set<Integer> getUserAnsweredQuestionIds (final Long accountId) {
         final DateTime oneWeekAgo = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(7);
         final List<Integer> baseIds = this.questionResponseDAO.getBaseAndRecentAnsweredQuestionIds(accountId, Question.FREQUENCY.ONE_TIME.toSQLString(), oneWeekAgo);
+        final Set<Integer> uniqueIds = new HashSet<>(baseIds);
         LOGGER.debug("User has seen {} base questions", baseIds.size());
-        return baseIds;
+        return uniqueIds;
     }
 
     /**
