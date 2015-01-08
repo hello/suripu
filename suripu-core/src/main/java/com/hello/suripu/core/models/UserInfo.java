@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Created by pangwu on 9/25/14.
  */
-public class AlarmInfo {
+public class UserInfo {
     public final String deviceId;
     public final long accountId;
     public final List<Alarm> alarmList;
@@ -17,10 +17,10 @@ public class AlarmInfo {
     public final Optional<DateTimeZone> timeZone;
 
 
-    public AlarmInfo(final String deviceId, final long accountId,
-                     final List<Alarm> alarmList,
-                     final Optional<RingTime> ringTime,
-                     final Optional<DateTimeZone> timeZone){
+    public UserInfo(final String deviceId, final long accountId,
+                    final List<Alarm> alarmList,
+                    final Optional<RingTime> ringTime,
+                    final Optional<DateTimeZone> timeZone){
         if(deviceId == null || alarmList == null || timeZone == null || ringTime == null){
             throw new IllegalArgumentException("Device Id can't be null");
         }
@@ -32,10 +32,10 @@ public class AlarmInfo {
         this.timeZone = timeZone;
     }
 
-    public static AlarmInfo createEmpty(final String deviceId, final long accountId){
+    public static UserInfo createEmpty(final String deviceId, final long accountId){
 
 
-        return new AlarmInfo(deviceId, accountId,
+        return new UserInfo(deviceId, accountId,
                 Collections.<Alarm>emptyList(),
                 Optional.of(RingTime.createEmpty()),
                 Optional.<DateTimeZone>absent());

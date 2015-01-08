@@ -6,9 +6,9 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.models.Alarm;
-import com.hello.suripu.core.models.AlarmInfo;
+import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.AlarmSound;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -43,16 +43,16 @@ public class AlarmResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AlarmResource.class);
     private final AlarmDAODynamoDB alarmDAODynamoDB;
-    private final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
+    private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final DeviceDAO deviceDAO;
     private final AmazonS3 amazonS3;
 
     public AlarmResource(final AlarmDAODynamoDB alarmDAODynamoDB,
-                         final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
+                         final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                          final DeviceDAO deviceDAO,
                          final AmazonS3 amazonS3){
         this.alarmDAODynamoDB = alarmDAODynamoDB;
-        this.mergedAlarmInfoDynamoDB = mergedAlarmInfoDynamoDB;
+        this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.deviceDAO = deviceDAO;
         this.amazonS3 = amazonS3;
     }
@@ -70,30 +70,30 @@ public class AlarmResource {
 
         try {
             LOGGER.debug("Before getting device account map from account_id");
-            final Optional<AlarmInfo> alarmInfoOptional = this.mergedAlarmInfoDynamoDB.getInfo(deviceAccountMap.get(0).externalDeviceId, token.accountId);
+            final Optional<UserInfo> alarmInfoOptional = this.mergedUserInfoDynamoDB.getInfo(deviceAccountMap.get(0).externalDeviceId, token.accountId);
             LOGGER.debug("Fetched alarm info optional");
 
             if(!alarmInfoOptional.isPresent()){
                 LOGGER.warn("Merge alarm info table doesn't have record for device {}, account {}.", deviceAccountMap.get(0).externalDeviceId, token.accountId);
 
                 // At account creation, the merged table doesn't have any alarm info, so let's create an empty one
-                mergedAlarmInfoDynamoDB.setAlarms(deviceAccountMap.get(0).externalDeviceId, token.accountId, Collections.EMPTY_LIST);
+                mergedUserInfoDynamoDB.setAlarms(deviceAccountMap.get(0).externalDeviceId, token.accountId, Collections.EMPTY_LIST);
                 LOGGER.warn("Saved empty alarm info for device {} and account {}.", deviceAccountMap.get(0).externalDeviceId, token.accountId);
 //                throw new WebApplicationException(Response.Status.BAD_REQUEST);
                 return Collections.emptyList();
             }
 
 
-            final AlarmInfo alarmInfo = alarmInfoOptional.get();
-            if(!alarmInfo.timeZone.isPresent()){
+            final UserInfo userInfo = alarmInfoOptional.get();
+            if(!userInfo.timeZone.isPresent()){
                 LOGGER.error("User {} tries to get alarm without having a time zone.", token.accountId);
                 throw new WebApplicationException(Response.Status.BAD_REQUEST);
             }
 
-            final DateTimeZone userTimeZone = alarmInfo.timeZone.get();
-            final List<Alarm> smartAlarms = Alarm.Utils.disableExpiredNoneRepeatedAlarms(alarmInfo.alarmList, DateTime.now().getMillis(), userTimeZone);
+            final DateTimeZone userTimeZone = userInfo.timeZone.get();
+            final List<Alarm> smartAlarms = Alarm.Utils.disableExpiredNoneRepeatedAlarms(userInfo.alarmList, DateTime.now().getMillis(), userTimeZone);
             if(!Alarm.Utils.isValidSmartAlarms(smartAlarms, DateTime.now(), userTimeZone)){
-                LOGGER.error("Invalid alarm for user {} device {}", token.accountId, alarmInfo.deviceId);
+                LOGGER.error("Invalid alarm for user {} device {}", token.accountId, userInfo.deviceId);
                 throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             }
 
@@ -129,7 +129,7 @@ public class AlarmResource {
         // Only update alarms in the account that linked with the most recent sense.
         final DeviceAccountPair deviceAccountPair = deviceAccountMap.get(0);
         try {
-            final Optional<AlarmInfo> alarmInfoOptional = this.mergedAlarmInfoDynamoDB.getInfo(deviceAccountPair.externalDeviceId, token.accountId);
+            final Optional<UserInfo> alarmInfoOptional = this.mergedUserInfoDynamoDB.getInfo(deviceAccountPair.externalDeviceId, token.accountId);
             if(!alarmInfoOptional.isPresent()){
                 LOGGER.warn("No merge info for user {}, device {}", token.accountId, deviceAccountPair.externalDeviceId);
                 throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
@@ -146,7 +146,7 @@ public class AlarmResource {
                 throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
             }
 
-            this.mergedAlarmInfoDynamoDB.setAlarms(deviceAccountPair.externalDeviceId, token.accountId, alarms);
+            this.mergedUserInfoDynamoDB.setAlarms(deviceAccountPair.externalDeviceId, token.accountId, alarms);
             this.alarmDAODynamoDB.setAlarms(token.accountId, alarms);
         }catch (AmazonServiceException awsException){
             LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);

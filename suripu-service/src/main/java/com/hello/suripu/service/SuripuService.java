@@ -19,7 +19,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
-import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
@@ -120,7 +120,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final String bucketName = configuration.getAudioBucketName();
 
         final AlarmDAODynamoDB alarmDAODynamoDB = new AlarmDAODynamoDB(dynamoDBClient, configuration.getAlarmDBConfiguration().getTableName());
-        final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB = new MergedAlarmInfoDynamoDB(dynamoDBClient,
+        final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(dynamoDBClient,
                 configuration.getAlarmInfoDynamoDBConfiguration().getTableName());
         final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(dynamoDBClient, configuration.getTimeZoneHistoryDBConfiguration().getTableName());
 
@@ -186,7 +186,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final ReceiveResource receiveResource = new ReceiveResource(deviceDataDAO, deviceDAO,
                 senseKeyStore,
                 kinesisLoggerFactory,
-                mergedAlarmInfoDynamoDB,
+                mergedUserInfoDynamoDB,
                 configuration.getDebug(),
                 // the room condition in config file is intentionally left there, just in case we figure out it is still useful.
                 // Let's remove it in the next next deploy.

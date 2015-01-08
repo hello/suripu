@@ -9,7 +9,7 @@ import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.TimeZoneHistory;
@@ -80,8 +80,8 @@ public class TimeZoneResourceIT {
             );
 
 
-            MergedAlarmInfoDynamoDB.createTable(this.alarmInfoTableName, this.amazonDynamoDBClient);
-            final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB = new MergedAlarmInfoDynamoDB(
+            MergedUserInfoDynamoDB.createTable(this.alarmInfoTableName, this.amazonDynamoDBClient);
+            final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(
                     this.amazonDynamoDBClient,
                     this.alarmInfoTableName
             );
@@ -92,7 +92,7 @@ public class TimeZoneResourceIT {
             when(deviceDAO.getDeviceAccountMapFromAccountId(1L)).thenReturn(ImmutableList.copyOf(this.deviceAccountPairs));
 
             this.timeZoneResource = new TimeZoneResource(this.timeZoneHistoryDAODynamoDB,
-                    mergedAlarmInfoDynamoDB, deviceDAO);
+                    mergedUserInfoDynamoDB, deviceDAO);
 
 
         }catch (ResourceInUseException rie){

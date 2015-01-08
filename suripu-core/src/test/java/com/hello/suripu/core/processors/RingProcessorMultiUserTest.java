@@ -5,11 +5,11 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Alarm;
-import com.hello.suripu.core.models.AlarmInfo;
+import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.AlarmSound;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.RingTime;
@@ -44,19 +44,19 @@ public class RingProcessorMultiUserTest {
     private final static Logger LOGGER = LoggerFactory.getLogger(RingProcessorMultiUserTest.class);
 
     private final RingTimeDAODynamoDB ringTimeDAODynamoDB = mock(RingTimeDAODynamoDB.class);
-    private final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB = mock(MergedAlarmInfoDynamoDB.class);
+    private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = mock(MergedUserInfoDynamoDB.class);
 
     private final DeviceDAO deviceDAO = mock(DeviceDAO.class);
     private final TrackerMotionDAO trackerMotionDAO = mock(TrackerMotionDAO.class);
 
     private final String testDeviceId = "test morpheus";
-    private final List<AlarmInfo> alarmInfoList = new ArrayList<>();
+    private final List<UserInfo> userInfoList = new ArrayList<>();
 
 
     @Before
     public void setUp(){
 
-        when(this.mergedAlarmInfoDynamoDB.getInfo(testDeviceId)).thenReturn(alarmInfoList);
+        when(this.mergedUserInfoDynamoDB.getInfo(testDeviceId)).thenReturn(userInfoList);
 
         final URL url = Resources.getResource("pill_data_09_23_2014_pang.csv");
         final List<TrackerMotion> motions = new ArrayList<TrackerMotion>();
@@ -85,7 +85,7 @@ public class RingProcessorMultiUserTest {
 
     @After
     public void cleanUp(){
-        this.alarmInfoList.clear();
+        this.userInfoList.clear();
         setUp();
     }
 
@@ -108,7 +108,7 @@ public class RingProcessorMultiUserTest {
                 new DateTime(2014, 9, 23, 8, 20, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
-        alarmInfoList.add(new AlarmInfo(testDeviceId, 1L,
+        userInfoList.add(new UserInfo(testDeviceId, 1L,
                 alarmList,
                 Optional.of(ringTime),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
@@ -125,7 +125,7 @@ public class RingProcessorMultiUserTest {
                 new DateTime(2014, 9, 23, 8, 30, 0, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
-        alarmInfoList.add(new AlarmInfo(testDeviceId, 2L,
+        userInfoList.add(new UserInfo(testDeviceId, 2L,
                 alarmList2,
                 Optional.of(ringTime2),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
@@ -192,7 +192,7 @@ public class RingProcessorMultiUserTest {
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, 0, 0, DateTimeZone.forID("America/Los_Angeles"));
 
         // Minutes before alarm triggered
-        ringTime = RingProcessor.updateNextRingTime(this.mergedAlarmInfoDynamoDB,
+        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -207,15 +207,15 @@ public class RingProcessorMultiUserTest {
         assertThat(ringTime.isRegular(), is(true));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
 
-        AlarmInfo alarmInfo1 = this.alarmInfoList.get(0);
-        this.alarmInfoList.set(0, new AlarmInfo(alarmInfo1.deviceId, alarmInfo1.accountId,
-                alarmInfo1.alarmList,
+        UserInfo userInfo1 = this.userInfoList.get(0);
+        this.userInfoList.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
+                userInfo1.alarmList,
                 Optional.of(ringTime),
-                alarmInfo1.timeZone));
+                userInfo1.timeZone));
 
 
         // Minute that trigger 1st smart alarm processing
-        ringTime = RingProcessor.updateNextRingTime(this.mergedAlarmInfoDynamoDB,
+        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -231,16 +231,16 @@ public class RingProcessorMultiUserTest {
 
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
 
-        alarmInfo1 = this.alarmInfoList.get(0);
-        this.alarmInfoList.set(0, new AlarmInfo(alarmInfo1.deviceId, alarmInfo1.accountId,
-                alarmInfo1.alarmList,
+        userInfo1 = this.userInfoList.get(0);
+        this.userInfoList.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
+                userInfo1.alarmList,
                 Optional.of(ringTime),
-                alarmInfo1.timeZone));
+                userInfo1.timeZone));
 
 
         // Minute that update 2nd alarm processing
         deadline = new DateTime(2014, 9, 23, 8, 30, 0, 0, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = RingProcessor.updateNextRingTime(this.mergedAlarmInfoDynamoDB,
+        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -255,16 +255,16 @@ public class RingProcessorMultiUserTest {
         assertThat(ringTime.isRegular(), is(true));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
 
-        AlarmInfo alarmInfo2 = this.alarmInfoList.get(1);
-        this.alarmInfoList.set(1, new AlarmInfo(alarmInfo2.deviceId, alarmInfo2.accountId,
-                alarmInfo2.alarmList,
+        UserInfo userInfo2 = this.userInfoList.get(1);
+        this.userInfoList.set(1, new UserInfo(userInfo2.deviceId, userInfo2.accountId,
+                userInfo2.alarmList,
                 Optional.of(ringTime),
-                alarmInfo2.timeZone));
+                userInfo2.timeZone));
 
 
         // Minute that trigger 2nd smart alarm processing
         deadline = new DateTime(2014, 9, 23, 8, 30, 0, 0, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = RingProcessor.updateNextRingTime(this.mergedAlarmInfoDynamoDB,
+        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -279,16 +279,16 @@ public class RingProcessorMultiUserTest {
         assertThat(ringTime.isSmart(), is(true));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
 
-        alarmInfo2 = this.alarmInfoList.get(1);
-        this.alarmInfoList.set(1, new AlarmInfo(alarmInfo2.deviceId, alarmInfo2.accountId,
-                alarmInfo2.alarmList,
+        userInfo2 = this.userInfoList.get(1);
+        this.userInfoList.set(1, new UserInfo(userInfo2.deviceId, userInfo2.accountId,
+                userInfo2.alarmList,
                 Optional.of(ringTime),
-                alarmInfo2.timeZone));
+                userInfo2.timeZone));
 
 
         // Minutes after smart alarm processing but before next smart alarm process triggered.
         deadline = new DateTime(2014, 9, 24, 9, 20, 0, 0, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = RingProcessor.updateNextRingTime(this.mergedAlarmInfoDynamoDB,
+        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -320,7 +320,7 @@ public class RingProcessorMultiUserTest {
                 new DateTime(2014, 9, 23, 8, 20, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
-        alarmInfoList.add(new AlarmInfo(testDeviceId, 1L,
+        userInfoList.add(new UserInfo(testDeviceId, 1L,
                 alarmList,
                 Optional.of(ringTime),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
@@ -337,7 +337,7 @@ public class RingProcessorMultiUserTest {
                 new DateTime(2014, 9, 23, 8, 30, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
-        alarmInfoList.add(new AlarmInfo(testDeviceId, 2L,
+        userInfoList.add(new UserInfo(testDeviceId, 2L,
                 alarmList2,
                 Optional.of(ringTime2),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
@@ -405,7 +405,7 @@ public class RingProcessorMultiUserTest {
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
 
         // Minutes before alarm triggered
-        ringTime = RingProcessor.updateNextRingTime(this.mergedAlarmInfoDynamoDB,
+        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -420,15 +420,15 @@ public class RingProcessorMultiUserTest {
         assertThat(ringTime.isRegular(), is(true));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
 
-        AlarmInfo alarmInfo1 = this.alarmInfoList.get(0);
-        this.alarmInfoList.set(0, new AlarmInfo(alarmInfo1.deviceId, alarmInfo1.accountId,
-                alarmInfo1.alarmList,
+        UserInfo userInfo1 = this.userInfoList.get(0);
+        this.userInfoList.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
+                userInfo1.alarmList,
                 Optional.of(ringTime),
-                alarmInfo1.timeZone));
+                userInfo1.timeZone));
 
 
         // Minute that trigger 1st smart alarm processing
-        ringTime = RingProcessor.updateNextRingTime(this.mergedAlarmInfoDynamoDB,
+        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -443,15 +443,15 @@ public class RingProcessorMultiUserTest {
         assertThat(ringTime.isSmart(), is(true));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
 
-        alarmInfo1 = this.alarmInfoList.get(0);
-        this.alarmInfoList.set(0, new AlarmInfo(alarmInfo1.deviceId, alarmInfo1.accountId,
-                alarmInfo1.alarmList,
+        userInfo1 = this.userInfoList.get(0);
+        this.userInfoList.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
+                userInfo1.alarmList,
                 Optional.of(ringTime),
-                alarmInfo1.timeZone));
+                userInfo1.timeZone));
 
         // Minute that update 2nd alarm processing
         deadline = new DateTime(2014, 9, 23, 8, 30, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = RingProcessor.updateNextRingTime(this.mergedAlarmInfoDynamoDB,
+        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -466,15 +466,15 @@ public class RingProcessorMultiUserTest {
         assertThat(ringTime.isRegular(), is(true));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
 
-        AlarmInfo alarmInfo2 = this.alarmInfoList.get(1);
-        this.alarmInfoList.set(1, new AlarmInfo(alarmInfo2.deviceId, alarmInfo2.accountId,
-                alarmInfo2.alarmList,
+        UserInfo userInfo2 = this.userInfoList.get(1);
+        this.userInfoList.set(1, new UserInfo(userInfo2.deviceId, userInfo2.accountId,
+                userInfo2.alarmList,
                 Optional.of(ringTime),
-                alarmInfo2.timeZone));
+                userInfo2.timeZone));
 
         // Minute that trigger 2nd smart alarm processing
         deadline = new DateTime(2014, 9, 23, 8, 30, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = RingProcessor.updateNextRingTime(this.mergedAlarmInfoDynamoDB,
+        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -489,17 +489,17 @@ public class RingProcessorMultiUserTest {
         assertThat(ringTime.isSmart(), is(true));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
 
-        alarmInfo2 = this.alarmInfoList.get(1);
-        this.alarmInfoList.set(1, new AlarmInfo(alarmInfo2.deviceId, alarmInfo2.accountId,
-                alarmInfo2.alarmList,
+        userInfo2 = this.userInfoList.get(1);
+        this.userInfoList.set(1, new UserInfo(userInfo2.deviceId, userInfo2.accountId,
+                userInfo2.alarmList,
                 Optional.of(ringTime),
-                alarmInfo2.timeZone));
+                userInfo2.timeZone));
 
 
         // Minutes after smart alarm processing but before next smart alarm process triggered.
         // Since the alarm is only repeated on Tuesday, the next deadline will be next week.
         deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles")).plusWeeks(1);
-        ringTime = RingProcessor.updateNextRingTime(this.mergedAlarmInfoDynamoDB,
+        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -534,7 +534,7 @@ public class RingProcessorMultiUserTest {
                 new DateTime(2014, 9, 23, 8, 20, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
-        this.alarmInfoList.add(new AlarmInfo(testDeviceId, 1L,
+        this.userInfoList.add(new UserInfo(testDeviceId, 1L,
                 alarmList,
                 Optional.of(ringTime1),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
@@ -550,13 +550,13 @@ public class RingProcessorMultiUserTest {
                 new DateTime(2014, 9, 23, 8, 20, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
-        this.alarmInfoList.add(new AlarmInfo(testDeviceId, 2L,
+        this.userInfoList.add(new UserInfo(testDeviceId, 2L,
                 alarmList2,
                 Optional.of(ringTime2),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
 
 
-        RingTime ringTime = RingProcessor.getNextRegularRingTime(this.alarmInfoList,
+        RingTime ringTime = RingProcessor.getNextRegularRingTime(this.userInfoList,
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")));
 

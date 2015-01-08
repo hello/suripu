@@ -7,12 +7,12 @@ import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.DataSource;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.event.SleepCycleAlgorithm;
-import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.Alarm;
-import com.hello.suripu.core.models.AlarmInfo;
+import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.librato.rollout.RolloutClient;
@@ -72,7 +72,7 @@ public class RingProcessor {
     }
 
     @Timed
-    public static RingTime updateNextRingTime(final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
+    public static RingTime updateNextRingTime(final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                           final RingTimeDAODynamoDB ringTimeDAODynamoDB,
                                           final TrackerMotionDAO trackerMotionDAO,
                                           final String morpheusId,
@@ -82,55 +82,55 @@ public class RingProcessor {
                                           final float lightSleepThreshold,
                                           final RolloutClient feature){
 
-        Optional<List<AlarmInfo>> alarmInfoListOptional = Optional.absent();
+        Optional<List<UserInfo>> alarmInfoListOptional = Optional.absent();
 
         try{
-            final List<AlarmInfo> alarmInfoList = mergedAlarmInfoDynamoDB.getInfo(morpheusId);
-            alarmInfoListOptional = Optional.of(alarmInfoList);
+            final List<UserInfo> userInfoList = mergedUserInfoDynamoDB.getInfo(morpheusId);
+            alarmInfoListOptional = Optional.of(userInfoList);
         }catch (Exception ex){
             LOGGER.error("Get alarm info list for device {} failed: {}, {}", morpheusId, ex.getMessage(), ex.getClass().toString());
             return RingTime.createEmpty();
         }
 
-        final List<AlarmInfo> alarmInfoList = alarmInfoListOptional.get();
+        final List<UserInfo> userInfoList = alarmInfoListOptional.get();
         final List<RingTime> ringTimes = new ArrayList<RingTime>();
 
-        for(final AlarmInfo alarmInfo:alarmInfoList){
+        for(final UserInfo userInfo : userInfoList){
 
-            if(!userHasValidAlarmInfo(alarmInfo)){
+            if(!userHasValidAlarmInfo(userInfo)){
                 continue;
             }
 
 
-            final List<Alarm> alarms = alarmInfo.alarmList;
+            final List<Alarm> alarms = userInfo.alarmList;
 
-            RingTime nextRegularRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarms, currentTime.getMillis(), alarmInfo.timeZone.get());
+            RingTime nextRegularRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarms, currentTime.getMillis(), userInfo.timeZone.get());
 
             if(nextRegularRingTime.isEmpty()){
-                LOGGER.debug("Alarm worker: No alarm set for account {}", alarmInfo.accountId);
+                LOGGER.debug("Alarm worker: No alarm set for account {}", userInfo.accountId);
                 continue;
             }
-            final RingTime currentRingTime = getRingTimeFromAlarmInfo(alarmInfo);
+            final RingTime currentRingTime = getRingTimeFromAlarmInfo(userInfo);
 
             if(feature != null) {
-                if (feature.userFeatureActive(FeatureFlipper.SMART_ALARM, alarmInfo.accountId, Collections.<String>emptyList())) {
+                if (feature.userFeatureActive(FeatureFlipper.SMART_ALARM, userInfo.accountId, Collections.<String>emptyList())) {
                     final RingTime nextRingTime = updateNextSmartRingTime(currentTime,
                             slidingWindowSizeInMinutes, lightSleepThreshold, smartAlarmProcessAheadInMinutes,
                             currentRingTime, nextRegularRingTime,
-                            alarmInfo,
-                            trackerMotionDAO, mergedAlarmInfoDynamoDB);
+                            userInfo,
+                            trackerMotionDAO, mergedUserInfoDynamoDB);
 
                     ringTimes.add(nextRingTime);
                 } else {
-                    LOGGER.info("Account {} not in smart alarm group.", alarmInfo.accountId);
+                    LOGGER.info("Account {} not in smart alarm group.", userInfo.accountId);
                     ringTimes.add(nextRegularRingTime);
                 }
             }else{
                 final RingTime nextRingTime = updateNextSmartRingTime(currentTime,
                         slidingWindowSizeInMinutes, lightSleepThreshold, smartAlarmProcessAheadInMinutes,
                         currentRingTime, nextRegularRingTime,
-                        alarmInfo,
-                        trackerMotionDAO, mergedAlarmInfoDynamoDB);
+                        userInfo,
+                        trackerMotionDAO, mergedUserInfoDynamoDB);
 
                 ringTimes.add(nextRingTime);
             }
@@ -150,17 +150,17 @@ public class RingProcessor {
                                                    final float lightSleepThreshold,
                                                    final int smartAlarmProcessAheadInMinutes,
                                                    final RingTime currentRingTime, final RingTime nextRegularRingTime,
-                                                   final AlarmInfo alarmInfo,
+                                                   final UserInfo userInfo,
                                                    final TrackerMotionDAO trackerMotionDAO,
-                                                   final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB){
+                                                   final MergedUserInfoDynamoDB mergedUserInfoDynamoDB){
 
-        LOGGER.info("Updating smart alarm for device {}, account {}", alarmInfo.deviceId, alarmInfo.accountId);
+        LOGGER.info("Updating smart alarm for device {}, account {}", userInfo.deviceId, userInfo.accountId);
         
         if (currentRingTime.equals(nextRegularRingTime) && currentRingTime.isSmart()) {
             LOGGER.debug("Smart alarm already set to {} for device {}, account {}.",
-                    new DateTime(currentRingTime.actualRingTimeUTC, alarmInfo.timeZone.get()),
-                    alarmInfo.deviceId,
-                    alarmInfo.accountId);
+                    new DateTime(currentRingTime.actualRingTimeUTC, userInfo.timeZone.get()),
+                    userInfo.deviceId,
+                    userInfo.accountId);
             return currentRingTime;
         }
 
@@ -174,26 +174,26 @@ public class RingProcessor {
 
         // Try to get smart alarm time.
         // Check if the current time is N min before next ring.
-        final DateTime nextRegularRingTimeLocal = new DateTime(nextRegularRingTime.expectedRingTimeUTC, alarmInfo.timeZone.get());
+        final DateTime nextRegularRingTimeLocal = new DateTime(nextRegularRingTime.expectedRingTimeUTC, userInfo.timeZone.get());
         if (shouldTriggerSmartAlarmProcessing(currentTime, nextRegularRingTimeLocal, smartAlarmProcessAheadInMinutes)) {
             // It is time to compute sleep cycles.
-            nextRingTime = getNextSmartRingTime(alarmInfo.accountId,
-                    currentTime, alarmInfo.timeZone.get(),
+            nextRingTime = getNextSmartRingTime(userInfo.accountId,
+                    currentTime, userInfo.timeZone.get(),
                     nextRegularRingTime,
                     slidingWindowSizeInMinutes, lightSleepThreshold,
                     trackerMotionDAO);
 
-            LOGGER.info("Device {} smart ring time updated to {}", alarmInfo.deviceId, new DateTime(nextRingTime.actualRingTimeUTC, alarmInfo.timeZone.get()));
-            mergedAlarmInfoDynamoDB.setRingTime(alarmInfo.deviceId, alarmInfo.accountId, nextRingTime);
+            LOGGER.info("Device {} smart ring time updated to {}", userInfo.deviceId, new DateTime(nextRingTime.actualRingTimeUTC, userInfo.timeZone.get()));
+            mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, nextRingTime);
 
         } else {
             // Too early to compute smart alarm time.
             nextRingTime = nextRegularRingTime;
             if(currentRingTime.expectedRingTimeUTC < nextRegularRingTime.expectedRingTimeUTC){
-                LOGGER.info("Device {} regular ring time updated to {}", alarmInfo.deviceId, new DateTime(nextRingTime.actualRingTimeUTC, alarmInfo.timeZone.get()));
-                mergedAlarmInfoDynamoDB.setRingTime(alarmInfo.deviceId, alarmInfo.accountId, nextRingTime);
+                LOGGER.info("Device {} regular ring time updated to {}", userInfo.deviceId, new DateTime(nextRingTime.actualRingTimeUTC, userInfo.timeZone.get()));
+                mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, nextRingTime);
             }else if(currentRingTime.expectedRingTimeUTC > nextRegularRingTime.expectedRingTimeUTC){
-                LOGGER.warn("Invalid current ring time for device {} and account {}", alarmInfo.deviceId, alarmInfo.accountId);
+                LOGGER.warn("Invalid current ring time for device {} and account {}", userInfo.deviceId, userInfo.accountId);
             }
         }
 
@@ -216,9 +216,9 @@ public class RingProcessor {
         return result;
     }
 
-    public static RingTime getRingTimeFromAlarmInfo(final AlarmInfo alarmInfo){
-        if(alarmInfo.ringTime.isPresent()){
-            return alarmInfo.ringTime.get();
+    public static RingTime getRingTimeFromAlarmInfo(final UserInfo userInfo){
+        if(userInfo.ringTime.isPresent()){
+            return userInfo.ringTime.get();
         }
 
         return RingTime.createEmpty();
@@ -226,16 +226,16 @@ public class RingProcessor {
     }
 
 
-    public static boolean userHasValidAlarmInfo(final AlarmInfo alarmInfo){
-        if(alarmInfo.alarmList.isEmpty()) {
-            LOGGER.trace("Skip alarm for user {} device {} because empty alarm list", alarmInfo.accountId, alarmInfo.deviceId);
+    public static boolean userHasValidAlarmInfo(final UserInfo userInfo){
+        if(userInfo.alarmList.isEmpty()) {
+            LOGGER.trace("Skip alarm for user {} device {} because empty alarm list", userInfo.accountId, userInfo.deviceId);
             return false;
         }
 
         // Based on current time, the user's alarm template & user's current timezone, compute
         // the next ring moment.
-        if(!alarmInfo.timeZone.isPresent()){
-            LOGGER.warn("Timezone not set for user {} on device {}", alarmInfo.accountId, alarmInfo.deviceId);
+        if(!userInfo.timeZone.isPresent()){
+            LOGGER.warn("Timezone not set for user {} on device {}", userInfo.accountId, userInfo.deviceId);
             return false;
         }
 
@@ -308,7 +308,7 @@ public class RingProcessor {
 
 
     @Timed
-    public static RingTime getNextRegularRingTime(final List<AlarmInfo> alarmInfoList,
+    public static RingTime getNextRegularRingTime(final List<UserInfo> userInfoList,
                                               final String morpheusId,
                                               final DateTime currentTime){
 
@@ -319,9 +319,9 @@ public class RingProcessor {
 
         try {
 
-            for (final AlarmInfo alarmInfo:alarmInfoList){
-                if(!alarmInfo.alarmList.isEmpty()){
-                    final List<Alarm> alarms = alarmInfo.alarmList;
+            for (final UserInfo userInfo : userInfoList){
+                if(!userInfo.alarmList.isEmpty()){
+                    final List<Alarm> alarms = userInfo.alarmList;
                     final RingTime nextRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarms, currentTime.getMillis(), userTimeZone);
 
                     if (!nextRingTime.isEmpty()) {
@@ -334,7 +334,7 @@ public class RingProcessor {
                         // So we can know if users had set same alarms.
                         groupedRingTime.get(nextRingTime.expectedRingTimeUTC).add(nextRingTime);
                     } else {
-                        LOGGER.debug("Alarm worker: No alarm set for account {}", alarmInfo.accountId);
+                        LOGGER.debug("Alarm worker: No alarm set for account {}", userInfo.accountId);
                     }
                 }
             }

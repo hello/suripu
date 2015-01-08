@@ -2,7 +2,7 @@ package com.hello.suripu.workers.alarm;
 
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
-import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 
@@ -11,19 +11,19 @@ import com.hello.suripu.core.db.TrackerMotionDAO;
  */
 public class AlarmRecordProcessorFactory implements IRecordProcessorFactory {
 
-    private final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
+    private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
     private final TrackerMotionDAO trackerMotionDAO;
     private final AlarmWorkerConfiguration configuration;
 
 
     public AlarmRecordProcessorFactory(
-            final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
+            final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
             final RingTimeDAODynamoDB ringTimeDAODynamoDB,
             final TrackerMotionDAO trackerMotionDAO,
             final AlarmWorkerConfiguration configuration) {
 
-        this.mergedAlarmInfoDynamoDB = mergedAlarmInfoDynamoDB;
+        this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.trackerMotionDAO = trackerMotionDAO;
         this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
         this.configuration = configuration;
@@ -32,7 +32,7 @@ public class AlarmRecordProcessorFactory implements IRecordProcessorFactory {
 
     @Override
     public IRecordProcessor createProcessor() {
-        return new AlarmRecordProcessor(this.mergedAlarmInfoDynamoDB,
+        return new AlarmRecordProcessor(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.configuration);

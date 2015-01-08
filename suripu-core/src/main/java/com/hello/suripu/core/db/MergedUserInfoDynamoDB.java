@@ -30,7 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.Alarm;
-import com.hello.suripu.core.models.AlarmInfo;
+import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.RingTime;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -48,9 +48,9 @@ import java.util.Map;
 /**
  * Created by pangwu on 9/25/14.
  */
-public class MergedAlarmInfoDynamoDB {
+public class MergedUserInfoDynamoDB {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(MergedAlarmInfoDynamoDB.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(MergedUserInfoDynamoDB.class);
     private final AmazonDynamoDBClient dynamoDBClient;
     private final String tableName;
 
@@ -74,7 +74,7 @@ public class MergedAlarmInfoDynamoDB {
     private static int MAX_CALL_COUNT = 3;
     public static final int MAX_ALARM_COUNT = 7;
 
-    public MergedAlarmInfoDynamoDB(final AmazonDynamoDBClient dynamoDBClient, final String tableName){
+    public MergedUserInfoDynamoDB(final AmazonDynamoDBClient dynamoDBClient, final String tableName){
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
     }
@@ -180,18 +180,18 @@ public class MergedAlarmInfoDynamoDB {
         return true;
     }
 
-    public Optional<AlarmInfo> getInfo(final String deviceId, final long accountId){
-        final List<AlarmInfo> alarmInfos = getInfo(deviceId);
-        for(final AlarmInfo alarmInfo:alarmInfos){
-            if(alarmInfo.accountId == accountId){
-                return Optional.of(alarmInfo);
+    public Optional<UserInfo> getInfo(final String deviceId, final long accountId){
+        final List<UserInfo> userInfos = getInfo(deviceId);
+        for(final UserInfo userInfo : userInfos){
+            if(userInfo.accountId == accountId){
+                return Optional.of(userInfo);
             }
         }
 
         return Optional.absent();
     }
 
-    public Optional<AlarmInfo> unlinkAccountToDevice(final long accountId, final String deviceId){
+    public Optional<UserInfo> unlinkAccountToDevice(final long accountId, final String deviceId){
         try {
             final Map<String, ExpectedAttributeValue> deleteConditions = new HashMap<String, ExpectedAttributeValue>();
 
@@ -222,7 +222,7 @@ public class MergedAlarmInfoDynamoDB {
         return Optional.absent();
     }
 
-    public List<AlarmInfo> getInfo(final String deviceId){
+    public List<UserInfo> getInfo(final String deviceId){
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
         final Condition selectByDeviceId  = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
@@ -251,7 +251,7 @@ public class MergedAlarmInfoDynamoDB {
         }
 
         final List<Map<String, AttributeValue>> items = queryResult.getItems();
-        final List<AlarmInfo> alarmInfos = new ArrayList<AlarmInfo>();
+        final List<UserInfo> userInfos = new ArrayList<UserInfo>();
 
         for (final Map<String, AttributeValue> item:items) {
             final HashSet<String> accountDeviceIdAttributes = new HashSet<String>();
@@ -262,19 +262,19 @@ public class MergedAlarmInfoDynamoDB {
                 continue;
             }
 
-            final Optional<AlarmInfo> alarmInfoOptional = attributeValuesToAlarmInfo(item);
+            final Optional<UserInfo> alarmInfoOptional = attributeValuesToAlarmInfo(item);
             if(!alarmInfoOptional.isPresent()){
                 LOGGER.error("Get alarm info for device id {} failed.", deviceId);
                 continue;
             }
-            alarmInfos.add(alarmInfoOptional.get());
+            userInfos.add(alarmInfoOptional.get());
         }
 
-        return ImmutableList.copyOf(alarmInfos);
+        return ImmutableList.copyOf(userInfos);
     }
 
 
-    public static Optional<AlarmInfo> attributeValuesToAlarmInfo(final Map<String, AttributeValue> item){
+    public static Optional<UserInfo> attributeValuesToAlarmInfo(final Map<String, AttributeValue> item){
 
         try {
             final long accountId = Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN());
@@ -282,7 +282,7 @@ public class MergedAlarmInfoDynamoDB {
             final List<Alarm> alarmListOptional = getAlarmListFromAttributes(deviceId, accountId, item);
             final Optional<RingTime> ringTimeOptional = getRingTimeFromAttributes(deviceId, accountId, item);
             final Optional<DateTimeZone> dateTimeZoneOptional = getTimeZoneFromAttributes(deviceId, accountId, item);
-            return Optional.of(new AlarmInfo(deviceId, accountId, alarmListOptional, ringTimeOptional, dateTimeZoneOptional));
+            return Optional.of(new UserInfo(deviceId, accountId, alarmListOptional, ringTimeOptional, dateTimeZoneOptional));
         }catch (Exception ex){
             LOGGER.error("attributeValuesToAlarmInfo error: {}", ex.getMessage());
         }
@@ -368,7 +368,7 @@ public class MergedAlarmInfoDynamoDB {
             LOGGER.warn("Timezone item was null for sense {} and accountId {}", senseId, accountId);
             return Optional.absent();
         }
-        return MergedAlarmInfoDynamoDB.getTimeZoneFromAttributes(senseId, accountId, result.getItem());
+        return MergedUserInfoDynamoDB.getTimeZoneFromAttributes(senseId, accountId, result.getItem());
     }
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){

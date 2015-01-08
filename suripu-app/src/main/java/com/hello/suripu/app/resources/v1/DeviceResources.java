@@ -6,10 +6,10 @@ import com.hello.suripu.app.models.RedisPaginator;
 import com.hello.suripu.core.configuration.ActiveDevicesTrackerConfiguration;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Account;
-import com.hello.suripu.core.models.AlarmInfo;
+import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceInactive;
@@ -55,17 +55,17 @@ public class DeviceResources {
 
     private final DeviceDAO deviceDAO;
     private final AccountDAO accountDAO;
-    private final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
+    private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final JedisPool jedisPool;
 
     public DeviceResources(final DeviceDAO deviceDAO,
                            final AccountDAO accountDAO,
-                           final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
+                           final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                            final JedisPool jedisPool) {
         this.deviceDAO = deviceDAO;
         this.accountDAO = accountDAO;
         this.jedisPool = jedisPool;
-        this.mergedAlarmInfoDynamoDB = mergedAlarmInfoDynamoDB;
+        this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
     }
 
     @POST
@@ -114,7 +114,7 @@ public class DeviceResources {
     public void unregisterSense(@Scope(OAuthScope.DEVICE_INFORMATION_WRITE) final AccessToken accessToken,
                                @PathParam("sense_id") String senseId) {
         final Integer numRows = deviceDAO.unregisterSense(senseId);
-        final Optional<AlarmInfo> alarmInfoOptional = this.mergedAlarmInfoDynamoDB.unlinkAccountToDevice(accessToken.accountId, senseId);
+        final Optional<UserInfo> alarmInfoOptional = this.mergedUserInfoDynamoDB.unlinkAccountToDevice(accessToken.accountId, senseId);
 
         // WARNING: Shall we throw error if the dynamoDB unlink fail?
         if(numRows == 0) {

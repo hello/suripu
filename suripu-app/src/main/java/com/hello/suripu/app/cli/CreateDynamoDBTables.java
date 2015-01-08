@@ -11,7 +11,7 @@ import com.hello.suripu.core.configuration.DynamoDBConfiguration;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.FeatureStore;
-import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
@@ -95,7 +95,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
             client.describeTable(tableName);
             System.out.println(String.format("%s already exists.", tableName));
         } catch (AmazonServiceException exception) {
-            final CreateTableResult result = MergedAlarmInfoDynamoDB.createTable(tableName, client);
+            final CreateTableResult result = MergedUserInfoDynamoDB.createTable(tableName, client);
             final TableDescription description = result.getTableDescription();
             System.out.println(description.getTableStatus());
         }
