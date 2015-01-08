@@ -236,13 +236,32 @@ public class QuestionProcessor {
             return new ArrayList<>(preGeneratedQuestions.values());
         }
 
-        final List<Question> onboardingQs = new ArrayList<>();
-        onboardingQs.add(questionIdMap.get(1));
-        onboardingQs.add(questionIdMap.get(2));
-        onboardingQs.add(questionIdMap.get(3));
+        // add base-questions that has been answered, and question-id of those answered in the past week
+        final Set<Integer> addedIds = new HashSet<>();
+        addedIds.addAll(this.getUserAnsweredQuestionIds(accountId));
 
-        final DateTime expiration = today.plusDays(1);
-        this.questionResponseDAO.insertAccountOnBoardingQuestions(accountId, today, expiration); // save to DB
+        final List<Question> onboardingQs = new ArrayList<>();
+        if (!addedIds.contains(1)) {
+            onboardingQs.add(questionIdMap.get(1));
+        }
+        if (!addedIds.contains(2)) {
+            onboardingQs.add(questionIdMap.get(2));
+        }
+        if (!addedIds.contains(3)) {
+            onboardingQs.add(questionIdMap.get(3));
+        }
+
+        if (onboardingQs.size() > 0) {
+            try {
+                final DateTime expiration = today.plusDays(1);
+                this.questionResponseDAO.insertAccountOnBoardingQuestions(accountId, today, expiration); // save to DB
+            } catch (UnableToExecuteStatementException exception) {
+                final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
+                if (matcher.find()) {
+                    LOGGER.debug("Onboarding questions already saved");
+                }
+            }
+        }
 
         return onboardingQs;
     }
