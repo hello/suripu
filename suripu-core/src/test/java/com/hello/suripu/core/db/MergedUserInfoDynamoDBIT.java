@@ -7,8 +7,8 @@ import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.base.Optional;
-import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.RingTime;
+import com.hello.suripu.core.models.UserInfo;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -17,6 +17,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
+import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.List;
 
@@ -26,7 +28,7 @@ import static org.hamcrest.Matchers.is;
 /**
  * Created by pangwu on 9/26/14.
  */
-public class MergedAlarmInfoDynamoDBIT {
+public class MergedUserInfoDynamoDBIT {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(AlarmDAODynamoDB.class);
 
@@ -86,6 +88,7 @@ public class MergedAlarmInfoDynamoDBIT {
         final RingTime ringTime = new RingTime(DateTime.now().getMillis(), DateTime.now().getMillis(), new long[]{1L});
         this.mergedUserInfoDynamoDB.setRingTime(this.deviceId, this.accountId, ringTime);
         this.mergedUserInfoDynamoDB.setTimeZone(this.deviceId, this.accountId, DateTimeZone.UTC);
+        this.mergedUserInfoDynamoDB.setPillColor(this.deviceId, this.accountId, new Color(0xFE, 0x00, 0x00));
 
         final List<UserInfo> userInfoList = this.mergedUserInfoDynamoDB.getInfo(this.deviceId);
         assertThat(userInfoList.size(), is(1));
@@ -93,6 +96,14 @@ public class MergedAlarmInfoDynamoDBIT {
         assertThat(userInfoList.get(0).timeZone.isPresent(), is(true));
         assertThat(userInfoList.get(0).ringTime.get().equals(ringTime), is(true));
         assertThat(userInfoList.get(0).timeZone.get().equals(DateTimeZone.UTC), is(true));
+
+        final byte[] bytes = ByteBuffer.allocate(4).putInt(userInfoList.get(0).pillColor.get().getRGB()).array();
+        assertThat(bytes[0], is((byte)0xFF));
+        assertThat(bytes[1], is((byte)0xFE));
+        assertThat(bytes[2], is((byte)0x00));
+        assertThat(bytes[3], is((byte)0x00));
+
+        int argb = ByteBuffer.wrap(bytes).getInt();
     }
 
     @Test
