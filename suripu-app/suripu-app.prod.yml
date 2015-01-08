@@ -178,6 +178,7 @@ alarm_info_db:
   table_name: alarm_info
 
 # remember to update version when changing score methods
+# v0.1: pure movement
 sleep_score_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
     region: us-east-1
@@ -193,6 +194,11 @@ teams_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
     region: us-east-1
     table_name: teams
+
+insights_dynamo_db:
+    endpoint : http://dynamodb.us-east-1.amazonaws.com
+    region: us-east-1
+    table_name: insights
 
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com

@@ -1,15 +1,22 @@
 package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
+import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.processors.InsightProcessor;
+import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.TimelineUtils;
 import org.joda.time.DateTime;
@@ -18,7 +25,9 @@ import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -33,16 +42,28 @@ import java.util.List;
 @Path("/v1/datascience")
 public class DataScienceResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataScienceResource.class);
+    private final AccountDAO accountDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
+    private final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB;
+    private final InsightsDAODynamoDB insightsDAODynamoDB;
+    private final LightData lightData;
 
-    public DataScienceResource(final TrackerMotionDAO trackerMotionDAO,
+    public DataScienceResource(final AccountDAO accountDAO,
+                               final TrackerMotionDAO trackerMotionDAO,
                                final DeviceDataDAO deviceDataDAO,
-                               final DeviceDAO deviceDAO){
+                               final DeviceDAO deviceDAO,
+                               final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
+                               final InsightsDAODynamoDB insightsDAODynamoDB,
+                               final LightData lightData){
+        this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
+        this.aggregateSleepScoreDAODynamoDB = aggregateSleepScoreDAODynamoDB;
+        this.insightsDAODynamoDB = insightsDAODynamoDB;
+        this.lightData = lightData;
     }
 
     @GET
@@ -85,5 +106,28 @@ public class DataScienceResource {
         final List<Event> lightEvents = TimelineUtils.getLightEvents(senseData);
 
         return lightEvents;
+    }
+
+    // TODO: rm later. temporary endpoint to create insights
+    @PUT
+    @Path("insights/{category}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void createLightInsight(@Scope(OAuthScope.SENSORS_BASIC) final AccessToken accessToken,
+                                   @PathParam("category") int value) {
+
+        final InsightCard.Category category = InsightCard.Category.fromInteger(value);
+
+        final InsightProcessor processor = new InsightProcessor(deviceDataDAO, deviceDAO, trackerMotionDAO, aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, lightData);
+        final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
+        if (accountOptional.isPresent()) {
+            final Long accountId = accountOptional.get().id.get();
+
+            final Optional<Long> deviceIdOptional = deviceDAO.getMostRecentSenseByAccountId(accountId);
+            if (!deviceIdOptional.isPresent()) {
+                return;
+            }
+
+            processor.generateInsightsByCategory(accountId, deviceIdOptional.get(), category);
+        }
     }
 }

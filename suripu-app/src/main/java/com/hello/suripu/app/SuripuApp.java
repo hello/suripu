@@ -49,6 +49,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.EventDAODynamoDB;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
+import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
@@ -70,6 +71,7 @@ import com.hello.suripu.core.oauth.OAuthAuthenticator;
 import com.hello.suripu.core.oauth.OAuthProvider;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
+import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.util.CustomJSONExceptionMapper;
 import com.hello.suripu.core.util.DropwizardServiceUtil;
 import com.hello.suripu.core.util.SunData;
@@ -177,6 +179,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 dynamoDBClient, configuration.getAlarmInfoDynamoDBConfiguration().getTableName()
         );
 
+        final InsightsDAODynamoDB insightsDAODynamoDB = new InsightsDAODynamoDB(
+                dynamoDBClient, configuration.getInsightsDynamoDBConfiguration().getTableName());
+
         // for localhost debug, may need to point to prod to get data
         final AmazonDynamoDBClient dynamoDBScoreClient = new AmazonDynamoDBClient(awsCredentialsProvider);
         dynamoDBScoreClient.setEndpoint(configuration.getSleepScoreDBConfiguration().getEndpoint());
@@ -259,11 +264,11 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new FeaturesResource(featureStore));
 
         environment.addResource(new QuestionsResource(accountDAO, questionResponseDAO, timeZoneHistoryDAODynamoDB, configuration.getQuestionConfigs().getNumSkips()));
-        environment.addResource(new InsightsResource(accountDAO, trendsDAO, aggregateSleepScoreDAODynamoDB, trackerMotionDAO));
+        environment.addResource(new InsightsResource(accountDAO, trendsDAO, aggregateSleepScoreDAODynamoDB, trackerMotionDAO, insightsDAODynamoDB));
         environment.addResource(new TeamsResource(teamStore));
         environment.addResource(new FeedbackResource(feedbackDAO));
 
-        environment.addResource(new DataScienceResource(trackerMotionDAO, deviceDataDAO, deviceDAO));
+        environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO, deviceDataDAO, deviceDAO, aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, new LightData()));
 
         final FirmwareUpdateDAO firmwareUpdateDAO = commonDB.onDemand(FirmwareUpdateDAO.class);
         final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);

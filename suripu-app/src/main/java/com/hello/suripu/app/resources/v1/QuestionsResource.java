@@ -12,6 +12,7 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.QuestionProcessor;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -36,7 +37,6 @@ import java.util.List;
 public class QuestionsResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(QuestionsResource.class);
-    private static final long DAY_IN_MILLIS = 86400000L;
     private static final int DEFAULT_NUM_QUESTIONS = 2;
     private static final int DEFAULT_NUM_MORE_QUESTIONS = 4;
 
@@ -171,6 +171,6 @@ public class QuestionsResource {
             return -1;
         }
 
-        return (int) ((DateTime.now(DateTimeZone.UTC).getMillis() - accountOptional.get().created.getMillis()) / DAY_IN_MILLIS);
+        return (int) ((DateTime.now(DateTimeZone.UTC).getMillis() - accountOptional.get().created.getMillis()) / DateTimeUtil.DAY_IN_MILLIS);
     }
 }

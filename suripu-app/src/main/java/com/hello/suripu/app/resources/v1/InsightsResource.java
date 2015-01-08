@@ -4,19 +4,19 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
+import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.Insights.AvailableGraph;
 import com.hello.suripu.core.models.Insights.DowSample;
-import com.hello.suripu.core.models.Insights.SleepInsight;
+import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.SleepStatsSample;
 import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
-import com.hello.suripu.core.processors.InsightProcessor;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.TrendGraphUtils;
 import com.yammer.metrics.annotation.Timed;
@@ -48,12 +48,14 @@ public class InsightsResource {
     private final TrendsDAO trendsDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
     private final TrackerMotionDAO trackerMotionDAO;
+    private final InsightsDAODynamoDB insightsDAODynamoDB;
 
-    public InsightsResource(final AccountDAO accountDAO, final TrendsDAO trendsDAO, final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB, final TrackerMotionDAO trackerMotionDAO) {
+    public InsightsResource(final AccountDAO accountDAO, final TrendsDAO trendsDAO, final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB, final TrackerMotionDAO trackerMotionDAO, InsightsDAODynamoDB insightsDAODynamoDB) {
         this.accountDAO = accountDAO;
         this.trendsDAO = trendsDAO;
         this.scoreDAODynamoDB = scoreDAODynamoDB;
         this.trackerMotionDAO = trackerMotionDAO;
+        this.insightsDAODynamoDB = insightsDAODynamoDB;
     }
 
     /**
@@ -62,13 +64,30 @@ public class InsightsResource {
     @Timed
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<SleepInsight> getInsights(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
+    public List<InsightCard> getInsights(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken,
+                                         @QueryParam("date") final String date) {
 
         LOGGER.debug("Returning list of insights for account id = {}", accessToken.accountId);
-        // TODO: real insights
-        return InsightProcessor.getInsights(accessToken.accountId);
+        final int limit = 5;
+        final Boolean chronological = false; // reverse chronological
+        final ImmutableList<InsightCard> cards = insightsDAODynamoDB.getInsightsByDate(accessToken.accountId,
+                date, chronological, limit);
+        // TODO: fetch generic cards.
+
+        return cards;
     }
 
+    @Timed
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/light")
+    public ImmutableList<InsightCard> getLightInsights(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
+        final int limit = 5;
+        final ImmutableList<InsightCard> cards = insightsDAODynamoDB.getInsightsByCategory(accessToken.accountId,
+                InsightCard.Category.LIGHT, limit);
+        // TODO: fetch generic cards.
+        return cards;
+    }
     /**
      * get a specific graph
      */
@@ -94,6 +113,7 @@ public class InsightsResource {
 
         return graphs;
     }
+
 
     /**
      * get a list of available trend graphs

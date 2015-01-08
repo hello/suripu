@@ -3,6 +3,7 @@ package com.hello.suripu.workers.framework;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.flipper.DynamoDBAdapter;
 import com.hello.suripu.workers.alarm.AlarmRecordProcessor;
+import com.hello.suripu.workers.insights.InsightsGenerator;
 import com.hello.suripu.workers.pill.S3RecordProcessor;
 import com.hello.suripu.workers.pill.SavePillDataProcessor;
 import com.hello.suripu.workers.pillscorer.PillScoreProcessor;
@@ -23,6 +24,7 @@ import javax.inject.Singleton;
         SavePillDataProcessor.class,
         PillScoreProcessor.class,
         SenseSaveProcessor.class,
+        InsightsGenerator.class,
 })
 public class WorkerRolloutModule {
     private final FeatureStore featureStore;
