@@ -4,19 +4,19 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
+import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.Insights.AvailableGraph;
 import com.hello.suripu.core.models.Insights.DowSample;
-import com.hello.suripu.core.models.Insights.SleepInsight;
+import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.SleepStatsSample;
 import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
-import com.hello.suripu.core.processors.InsightProcessor;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.TrendGraphUtils;
 import com.yammer.metrics.annotation.Timed;
@@ -41,18 +41,22 @@ import java.util.Map;
 @Path("/v1/insights")
 public class InsightsResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(InsightsResource.class);
-    private static long DAY_IN_MILLIS = 86400000;
+    private static long DAY_IN_MILLIS = 86400000L;
+    private static int MIN_DATAPOINTS = 2;
+    private static int MAX_INSIGHTS_NUM = 20;
 
     private final AccountDAO accountDAO;
     private final TrendsDAO trendsDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
     private final TrackerMotionDAO trackerMotionDAO;
+    private final InsightsDAODynamoDB insightsDAODynamoDB;
 
-    public InsightsResource(final AccountDAO accountDAO, final TrendsDAO trendsDAO, final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB, final TrackerMotionDAO trackerMotionDAO) {
+    public InsightsResource(final AccountDAO accountDAO, final TrendsDAO trendsDAO, final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB, final TrackerMotionDAO trackerMotionDAO, InsightsDAODynamoDB insightsDAODynamoDB) {
         this.accountDAO = accountDAO;
         this.trendsDAO = trendsDAO;
         this.scoreDAODynamoDB = scoreDAODynamoDB;
         this.trackerMotionDAO = trackerMotionDAO;
+        this.insightsDAODynamoDB = insightsDAODynamoDB;
     }
 
     /**
@@ -61,13 +65,29 @@ public class InsightsResource {
     @Timed
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<SleepInsight> getInsights(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
+    public List<InsightCard> getInsights(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
 
         LOGGER.debug("Returning list of insights for account id = {}", accessToken.accountId);
-        // TODO: real insights
-        return InsightProcessor.getInsights(accessToken.accountId);
+        final Boolean chronological = false; // reverse chronological
+        final DateTime queryDate = DateTime.now(DateTimeZone.UTC).plusDays(1);
+        final ImmutableList<InsightCard> cards = insightsDAODynamoDB.getInsightsByDate(accessToken.accountId,
+                queryDate, chronological, MAX_INSIGHTS_NUM);
+        // TODO: fetch generic cards.
+
+        return cards;
     }
 
+    @Timed
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/light")
+    public ImmutableList<InsightCard> getLightInsights(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
+        final int limit = 5;
+        final ImmutableList<InsightCard> cards = insightsDAODynamoDB.getInsightsByCategory(accessToken.accountId,
+                InsightCard.Category.LIGHT, limit);
+        // TODO: fetch generic cards.
+        return cards;
+    }
     /**
      * get a specific graph
      */
@@ -75,7 +95,7 @@ public class InsightsResource {
     @GET
     @Path("/trends/graph")
     @Produces(MediaType.APPLICATION_JSON)
-    public TrendGraph getTrends(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken,
+    public List<TrendGraph> getTrends(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken,
                                 @QueryParam("data_type") String dataType,
                                 @QueryParam("time_period") String timePeriod) {
 
@@ -84,10 +104,16 @@ public class InsightsResource {
         final TrendGraph.TimePeriodType timePeriodType = TrendGraph.TimePeriodType.fromString(timePeriod);
         final TrendGraph.DataType graphDataType = TrendGraph.DataType.fromString(dataType);
 
-        TrendGraph graph = getGraph(accessToken.accountId, timePeriodType, graphDataType);
-        return graph;
+        Optional<TrendGraph> graphOptional = getGraph(accessToken.accountId, timePeriodType, graphDataType);
 
+        final List<TrendGraph> graphs = new ArrayList<>();
+        if (graphOptional.isPresent()) {
+            graphs.add(graphOptional.get());
+        }
+
+        return graphs;
     }
+
 
     /**
      * get a list of available trend graphs
@@ -128,14 +154,20 @@ public class InsightsResource {
                 // add all the default graphs
                 final long accountId = account.id.get();
 
-                final TrendGraph sleepScoreDayOfWeek = getGraph(accountId, TrendGraph.TimePeriodType.DAY_OF_WEEK, TrendGraph.DataType.SLEEP_SCORE);
-                graphs.add(sleepScoreDayOfWeek);
+                final Optional<TrendGraph> sleepScoreDayOfWeek = getGraph(accountId, TrendGraph.TimePeriodType.DAY_OF_WEEK, TrendGraph.DataType.SLEEP_SCORE);
+                if (sleepScoreDayOfWeek.isPresent()) {
+                    graphs.add(sleepScoreDayOfWeek.get());
+                }
 
-                final TrendGraph sleepDurationDayOfWeek = getGraph(accountId, TrendGraph.TimePeriodType.DAY_OF_WEEK, TrendGraph.DataType.SLEEP_DURATION);
-                graphs.add(sleepDurationDayOfWeek);
+                final Optional<TrendGraph> sleepDurationDayOfWeek = getGraph(accountId, TrendGraph.TimePeriodType.DAY_OF_WEEK, TrendGraph.DataType.SLEEP_DURATION);
+                if (sleepDurationDayOfWeek.isPresent()) {
+                    graphs.add(sleepDurationDayOfWeek.get());
+                }
 
-                final TrendGraph sleepScoreOverTime = getGraph(accountId, TrendGraph.TimePeriodType.OVER_TIME_ALL, TrendGraph.DataType.SLEEP_SCORE);
-                graphs.add(sleepScoreOverTime);
+                final Optional<TrendGraph> sleepScoreOverTime = getGraph(accountId, TrendGraph.TimePeriodType.OVER_TIME_ALL, TrendGraph.DataType.SLEEP_SCORE);
+                if (sleepScoreOverTime.isPresent()) {
+                    graphs.add(sleepScoreOverTime.get());
+                }
             }
         }
 
@@ -146,7 +178,7 @@ public class InsightsResource {
      * Get data from data-stores, aggregate, create graph
      * @return TrendGraph
      */
-    private TrendGraph getGraph(final Long accountId, final TrendGraph.TimePeriodType timePeriod, final TrendGraph.DataType graphType) {
+    private Optional<TrendGraph> getGraph(final Long accountId, final TrendGraph.TimePeriodType timePeriod, final TrendGraph.DataType graphType) {
 
         if (timePeriod == TrendGraph.TimePeriodType.DAY_OF_WEEK) {
             // Histogram
@@ -156,7 +188,12 @@ public class InsightsResource {
             } else {
                 rawData = trendsDAO.getSleepDurationDow(accountId);
             }
-            return TrendGraphUtils.getDayOfWeekGraph(graphType, timePeriod, rawData);
+
+            if (rawData.size() < MIN_DATAPOINTS) {
+                return Optional.absent();
+            }
+
+            return Optional.of(TrendGraphUtils.getDayOfWeekGraph(graphType, timePeriod, rawData));
 
         } else {
             // time series
@@ -172,15 +209,24 @@ public class InsightsResource {
                         DateTimeUtil.dateToYmdString(startDate),
                         DateTimeUtil.dateToYmdString(endDate), numDays);
 
+                if (scores.size() < MIN_DATAPOINTS) {
+                    return Optional.absent();
+                }
+
                 // scores table has no offset, pull timezone offset from tracker-motion
                 final Map<DateTime, Integer> userOffsetMillis = getUserTimeZoneOffsetsUTC(accountId, startDate, endDate);
 
-                return TrendGraphUtils.getScoresOverTimeGraph(timePeriod, scores, userOffsetMillis);
+                return Optional.of(TrendGraphUtils.getScoresOverTimeGraph(timePeriod, scores, userOffsetMillis));
 
             } else {
                 // sleep duration over time, up to 365 days
                 ImmutableList<SleepStatsSample> statsSamples = trendsDAO.getAccountSleepStatsBetweenDates(accountId, startDate, endDate);
-                return TrendGraphUtils.getDurationOverTimeGraph(timePeriod, statsSamples);
+
+                if (statsSamples.size() < MIN_DATAPOINTS) {
+                    return Optional.absent();
+                }
+
+                return Optional.of(TrendGraphUtils.getDurationOverTimeGraph(timePeriod, statsSamples));
             }
 
         }

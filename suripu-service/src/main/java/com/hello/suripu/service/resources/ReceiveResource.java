@@ -18,13 +18,15 @@ import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
-import com.hello.suripu.core.models.UserInfo;
+import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.RingTime;
+import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DeviceIdUtil;
+import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.core.util.RoomConditionUtil;
 import com.hello.suripu.service.SignedMessage;
 import com.hello.suripu.service.configuration.SenseUploadConfiguration;
@@ -113,6 +115,13 @@ public class ReceiveResource extends BaseResource {
         final SignedMessage signedMessage = SignedMessage.parse(body);
         DataInputProtos.batched_periodic_data data = null;
 
+        String debugSenseId = this.request.getHeader(HelloHttpHeader.SENSE_ID);
+        if(debugSenseId == null){
+            debugSenseId = "";
+        }
+
+        LOGGER.info("DebugSenseId device_id = {}", debugSenseId);
+
         try {
             data = DataInputProtos.batched_periodic_data.parseFrom(signedMessage.body);
         } catch (IOException exception) {
@@ -162,7 +171,9 @@ public class ReceiveResource extends BaseResource {
 
         final DataLogger batchSenseDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
         batchSenseDataLogger.put(data.getDeviceId(), batchPeriodicDataWorkerMessage.toByteArray());
-        return generateSyncResponse(data.getDeviceId(), data.getFirmwareVersion(), optionalKeyBytes.get(), data);
+
+        final String tempSenseId = data.hasDeviceId() ? data.getDeviceId() : debugSenseId;
+        return generateSyncResponse(tempSenseId, data.getFirmwareVersion(), optionalKeyBytes.get(), data);
     }
 
 
@@ -214,21 +225,21 @@ public class ReceiveResource extends BaseResource {
                     .setPillId(accountsHasPill.get(accountsHasPill.size() - 1).getValue().externalDeviceId)
                     .setPillColor(red)
                     .build();
-            syncResponseBuilder.setPillSettings(0, pillSettings);
+            syncResponseBuilder.addPillSettings(pillSettings);
         }else{
             // Pill linked with 1st account is red.
             final OutputProtos.SyncResponse.PillSettings firstPillSettings = OutputProtos.SyncResponse.PillSettings.newBuilder()
                     .setPillId(accountsHasPill.get(accountsHasPill.size() - 2).getValue().externalDeviceId)
                     .setPillColor(red)
                     .build();
-            syncResponseBuilder.setPillSettings(0, firstPillSettings);
+            syncResponseBuilder.addPillSettings(firstPillSettings);
 
             // Pill linked with 2nd account is blue
             final OutputProtos.SyncResponse.PillSettings secondPillSettings = OutputProtos.SyncResponse.PillSettings.newBuilder()
                     .setPillId(accountsHasPill.get(accountsHasPill.size() - 1).getValue().externalDeviceId)
                     .setPillColor(blue)
                     .build();
-            syncResponseBuilder.setPillSettings(1, secondPillSettings);
+            syncResponseBuilder.addPillSettings(secondPillSettings);
         }
 
         return syncResponseBuilder;
@@ -431,6 +442,7 @@ public class ReceiveResource extends BaseResource {
                 .setEndTime((int) ((nextRingTime.actualRingTimeUTC + ringDurationInMS) / DateTimeConstants.MILLIS_PER_SECOND))
                 .setRingDurationInSecond(ringDurationInMS / DateTimeConstants.MILLIS_PER_SECOND)
                 .setRingtoneId(soundId)
+                .setRingtonePath(Alarm.Utils.getSoundPathFromSoundId(soundId))
                 .setRingOffsetFromNowInSecond(ringOffsetFromNowInSecond);
 
         return alarmBuilder;
@@ -504,9 +516,18 @@ public class ReceiveResource extends BaseResource {
 
         if(featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceName, groups)) {
             LOGGER.warn("Always OTA is on for device: ", deviceName);
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName, "jackson-dev", firmwareVersion);
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName,
+                    FeatureFlipper.ALWAYS_OTA_RELEASE, firmwareVersion);
             LOGGER.warn("{} files added to syncResponse to be downloaded", fileDownloadList.size());
             responseBuilder.addAllFiles(fileDownloadList);
+        } else if (featureFlipper.deviceFeatureActive(FeatureFlipper.FORCE_EVT_OTA_UPDATE, deviceName, groups) && deviceName.length() == 12) {
+
+            LOGGER.warn("Forcing OTA for EVT units: ", deviceName);
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName,
+                    "pang-fire-fighting", firmwareVersion);
+            LOGGER.warn("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+            responseBuilder.addAllFiles(fileDownloadList);
+
         } else {
             // groups take precedence over feature
             boolean canOTA = false;

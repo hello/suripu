@@ -276,7 +276,7 @@ public class DeviceResources {
                                                          @QueryParam("max_devices") final Long maxDevices,
                                                          @PathParam("device_id") final String deviceId) {
         LOGGER.debug("Searching accounts who have used device {}", deviceId);
-        final ImmutableList<Account> accounts = deviceDAO.getAccountsByDevices(deviceId, maxDevices);
+        final ImmutableList<Account> accounts = deviceDAO.getAccountsByDevice(deviceId, maxDevices);
         return accounts;
     }
 

@@ -162,29 +162,29 @@ public class AlarmResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<AlarmSound> getAlarmSounds(@Scope(OAuthScope.ALARM_READ) final AccessToken accessToken) {
         final List<AlarmSound> alarmSounds = new ArrayList<>();
-        final List<String> fileNames = Lists.newArrayList(
-                "102914_SENSE_DIGITAL_1.1",
-                "102914_SENSE_DIGITAL_2.1",
-                "102914_SENSE_DIGITAL_3.1",
-                "102914_SENSE_DIGITAL_4.1",
-                "102914_SENSE_DIGITAL_5.1",
-                "102914_SENSE_ORGANIC_2.1",
-                "102914_SENSE_ORGANIC_3.1",
-                "102914_SENSE_NEW_1",
-                "102914_SENSE_NEW_2",
-                "102914_SENSE_NEW_3",
-                "102914_SENSE_NEW_4",
-                "102914_SENSE_NEW_5",
-                "102914_SENSE_NEW_6",
-                "102914_SENSE_NEW_7",
-                "102914_SENSE_NEW_8",
-                "102914_SENSE_NEW_9"
+
+        final List<String> displayNames = Lists.newArrayList(
+                "Pulse",
+                "Dusk",
+                "Lilt",
+                "Bounce",
+                "Celebration",
+                "Milky Way",
+                "Waves",
+                "Lights",
+                "Echo",
+                "Drops",
+                "Twinkle",
+                "Silver",
+                "Hightlights",
+                "Ripple",
+                "Sway"
         );
 
-        int i = 1;
-        for(String fileName : fileNames) {
-            final URL url = amazonS3.generatePresignedUrl("hello-audio", String.format("ringtones/%s.mp3", fileName), DateTime.now().plusWeeks(1).toDate());
-            final AlarmSound sound = new AlarmSound(i, fileName, url.toExternalForm());
+        int i = 4;
+        for(String name : displayNames) {
+            final URL url = amazonS3.generatePresignedUrl("hello-audio", String.format("ringtones/%s.mp3", name), DateTime.now().plusWeeks(1).toDate());
+            final AlarmSound sound = new AlarmSound(i, name, url.toExternalForm());
             alarmSounds.add(sound);
             i++;
         }

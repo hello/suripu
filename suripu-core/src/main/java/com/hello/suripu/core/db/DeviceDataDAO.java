@@ -140,6 +140,22 @@ public abstract class DeviceDataDAO {
     public abstract void insertSound(@Bind("device_id") Long deviceId, @Bind("amplitude") float amplitude, @Bind("ts") DateTime ts, @Bind("offset") int offset);
 
     @RegisterMapper(DeviceDataMapper.class)
+    @SqlQuery("SELECT * FROM device_sensors_master " +
+            "WHERE account_id = :account_id AND device_id = :device_id AND ambient_light > :light_level " +
+            "AND local_utc_ts >= :start_ts AND local_utc_ts <= :end_ts " +
+            "AND (CAST(date_part('hour', local_utc_ts) AS integer) >= :start_hour " +
+            "OR CAST(date_part('hour', local_utc_ts) AS integer) < :end_hour) " +
+            "ORDER BY ts")
+    public abstract ImmutableList<DeviceData> getLightByBetweenHourDate(
+            @Bind("account_id") Long accountId,
+            @Bind("device_id") Long deviceId,
+            @Bind("light_level") int lightLevel,
+            @Bind("start_ts") DateTime startTimestamp,
+            @Bind("end_ts") DateTime endTimestamp,
+            @Bind("start_hour") int startHour,
+            @Bind("end_hour") int endHour);
+
+    @RegisterMapper(DeviceDataMapper.class)
     @SingleValueResult(DeviceData.class)
     @SqlQuery("SELECT * FROM device_sensors_master WHERE account_id = :account_id AND device_id = :device_id AND ts < :utc_ts_limit ORDER BY ts DESC LIMIT 1;")
     public abstract Optional<DeviceData> getMostRecent(@Bind("account_id") final Long accountId, @Bind("device_id") Long deviceId, @Bind("utc_ts_limit") final DateTime tsLimit);
