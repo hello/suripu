@@ -10,7 +10,6 @@ import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
-import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
@@ -113,7 +112,6 @@ public class InsightProcessor {
 
     }
 
-
     public void generateInsightsByCategory(final Long accountId, final Long deviceId, final InsightCard.Category category) {
 
         Optional<InsightCard> insightCardOptional = Optional.absent();
@@ -126,12 +124,13 @@ public class InsightProcessor {
             this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
         }
     }
+
     private Set<InsightCard.Category> getRecentInsightsCategories(final Long accountId) {
         // get all insights from the past week
-        final String ymd = DateTimeUtil.dateToYmdString(DateTime.now(DateTimeZone.UTC).minus(7));
+        final DateTime aWeekAgo = DateTime.now(DateTimeZone.UTC).minus(7);
         final Boolean chronological = true;
 
-        final List<InsightCard> cards = this.insightsDAODynamoDB.getInsightsByDate(accountId, ymd, chronological, RECENT_DAYS);
+        final List<InsightCard> cards = this.insightsDAODynamoDB.getInsightsByDate(accountId, aWeekAgo, chronological, RECENT_DAYS);
 
         final Set<InsightCard.Category> seenCategories = new HashSet<>();
         for (InsightCard card : cards) {

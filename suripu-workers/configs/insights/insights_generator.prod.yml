@@ -78,7 +78,6 @@ sensors_db:
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
-    pill_data : test-pill-suripu
     batch_pill_data : batch_pill_data
 
 app_name: InsightsGeneratorConsumer

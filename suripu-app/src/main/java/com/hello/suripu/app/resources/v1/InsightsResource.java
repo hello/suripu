@@ -43,6 +43,7 @@ public class InsightsResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(InsightsResource.class);
     private static long DAY_IN_MILLIS = 86400000L;
     private static int MIN_DATAPOINTS = 2;
+    private static int MAX_INSIGHTS_NUM = 20;
 
     private final AccountDAO accountDAO;
     private final TrendsDAO trendsDAO;
@@ -64,14 +65,13 @@ public class InsightsResource {
     @Timed
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<InsightCard> getInsights(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken,
-                                         @QueryParam("date") final String date) {
+    public List<InsightCard> getInsights(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
 
         LOGGER.debug("Returning list of insights for account id = {}", accessToken.accountId);
-        final int limit = 5;
         final Boolean chronological = false; // reverse chronological
+        final DateTime queryDate = DateTime.now(DateTimeZone.UTC).plusDays(1);
         final ImmutableList<InsightCard> cards = insightsDAODynamoDB.getInsightsByDate(accessToken.accountId,
-                date, chronological, limit);
+                queryDate, chronological, MAX_INSIGHTS_NUM);
         // TODO: fetch generic cards.
 
         return cards;
