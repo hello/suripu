@@ -20,6 +20,7 @@ import com.hello.suripu.core.util.DateTimeUtil;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +73,7 @@ public class InsightsDAODynamoDB {
     }
 
     @Timed
-    public ImmutableList<InsightCard> getInsightsByDate(final Long accountId, final String date, final Boolean chronological, final int limit) {
+    public ImmutableList<InsightCard> getInsightsByDate(final Long accountId, final DateTime date, final Boolean chronological, final int limit) {
 
         final Condition selectByAccountId = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
@@ -105,7 +106,9 @@ public class InsightsDAODynamoDB {
                 .withComparisonOperator(ComparisonOperator.EQ)
                 .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
 
-        final String rangeKey = this.createDateCategoryKey("0000-00-00", category.toCategoryString());
+        final DateTime beginningOfTime = DateTime.parse("2014-01-01", DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                .withZone(DateTimeZone.UTC);
+        final String rangeKey = this.createDateCategoryKey(beginningOfTime, category.toCategoryString());
 
         final Condition selectByCategory = new Condition()
                 .withComparisonOperator(ComparisonOperator.GE.toString())
@@ -183,8 +186,8 @@ public class InsightsDAODynamoDB {
 
     }
 
-    private String createDateCategoryKey(final String date, final String category) {
-        return date + "_" + category;
+    private String createDateCategoryKey(final DateTime date, final String category) {
+        return DateTimeUtil.dateToYmdString(date) + "_" + category;
     }
 
     private HashMap<String, AttributeValue> createItem(final InsightCard insightCard) {
@@ -193,7 +196,7 @@ public class InsightsDAODynamoDB {
 
         final DateTime dateTime = new DateTime(insightCard.timestamp, DateTimeZone.UTC);
 
-        final String ymdCategory = this.createDateCategoryKey(DateTimeUtil.dateToYmdString(dateTime.withTimeAtStartOfDay()), insightCard.category.toCategoryString());
+        final String ymdCategory = this.createDateCategoryKey(dateTime.withTimeAtStartOfDay(), insightCard.category.toCategoryString());
 
         item.put(DATE_CATEGORY_ATTRIBUTE_NAME, new AttributeValue().withS(ymdCategory));
 

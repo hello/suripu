@@ -38,7 +38,7 @@ public class Lights {
             return Optional.absent();
         }
 
-        // compute median value TODO: check correct times are used
+        // compute median value
         final DescriptiveStatistics stats = new DescriptiveStatistics();
         final int offsetMillis = data.get(0).offsetMillis;
         for (final DeviceData deviceData : data) {
