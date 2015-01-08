@@ -360,7 +360,13 @@ public class QuestionProcessor {
         final List<Integer> questionsPool = new ArrayList<>();
         questionsPool.addAll(this.availableQuestionIds.get(questionType));
         questionsPool.removeAll(seenIds);
+
         int poolSize = questionsPool.size();
+
+        if (poolSize == 0) {
+            return questions;
+        }
+
         final int originalPoolSize = poolSize;
 
         int loop = 0;
