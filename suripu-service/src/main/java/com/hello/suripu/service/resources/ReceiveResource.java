@@ -121,6 +121,7 @@ public class ReceiveResource extends BaseResource {
         }
 
         LOGGER.info("DebugSenseId device_id = {}", debugSenseId);
+
         try {
             data = DataInputProtos.batched_periodic_data.parseFrom(signedMessage.body);
         } catch (IOException exception) {
@@ -170,7 +171,9 @@ public class ReceiveResource extends BaseResource {
 
         final DataLogger batchSenseDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
         batchSenseDataLogger.put(data.getDeviceId(), batchPeriodicDataWorkerMessage.toByteArray());
-        return generateSyncResponse(data.getDeviceId(), data.getFirmwareVersion(), optionalKeyBytes.get(), data);
+
+        final String tempSenseId = data.hasDeviceId() ? data.getDeviceId() : debugSenseId;
+        return generateSyncResponse(tempSenseId, data.getFirmwareVersion(), optionalKeyBytes.get(), data);
     }
 
 
