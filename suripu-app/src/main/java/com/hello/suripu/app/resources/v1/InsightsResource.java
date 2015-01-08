@@ -68,7 +68,7 @@ public class InsightsResource {
                                          @QueryParam("date") final String date) {
 
         LOGGER.debug("Returning list of insights for account id = {}", accessToken.accountId);
-        final int limit = 1;
+        final int limit = 5;
         final Boolean chronological = false; // reverse chronological
         final ImmutableList<InsightCard> cards = insightsDAODynamoDB.getInsightsByDate(accessToken.accountId,
                 date, chronological, limit);

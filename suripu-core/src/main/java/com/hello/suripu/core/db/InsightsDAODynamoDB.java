@@ -80,12 +80,12 @@ public class InsightsDAODynamoDB {
 
         final Condition selectByDate;
         if (chronological) { // ascending date
-            final String rangeKey = date + "_000";
+            final String rangeKey = this.createDateCategoryKey(date, "000");
             selectByDate = new Condition()
                     .withComparisonOperator(ComparisonOperator.GE.toString())
                     .withAttributeValueList(new AttributeValue().withS(rangeKey));
         } else { // reverse chronological
-            final String rangeKey = date + "_ZZZ";
+            final String rangeKey = this.createDateCategoryKey(date, "ZZZ");
             selectByDate = new Condition()
                     .withComparisonOperator(ComparisonOperator.LE.toString())
                     .withAttributeValueList(new AttributeValue().withS(rangeKey));
@@ -105,7 +105,7 @@ public class InsightsDAODynamoDB {
                 .withComparisonOperator(ComparisonOperator.EQ)
                 .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
 
-        final String rangeKey = "0000-00-00_" + category.toCategoryString();
+        final String rangeKey = this.createDateCategoryKey("0000-00-00", category.toCategoryString());
 
         final Condition selectByCategory = new Condition()
                 .withComparisonOperator(ComparisonOperator.GE.toString())
@@ -183,13 +183,18 @@ public class InsightsDAODynamoDB {
 
     }
 
+    private String createDateCategoryKey(final String date, final String category) {
+        return date + "_" + category;
+    }
+
     private HashMap<String, AttributeValue> createItem(final InsightCard insightCard) {
         final HashMap<String, AttributeValue> item = new HashMap<>();
         item.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(insightCard.accountId.get())));
 
         final DateTime dateTime = new DateTime(insightCard.timestamp, DateTimeZone.UTC);
 
-        final String ymdCategory = DateTimeUtil.dateToYmdString(dateTime.withTimeAtStartOfDay()) + "_" + insightCard.category.toCategoryString();
+        final String ymdCategory = this.createDateCategoryKey(DateTimeUtil.dateToYmdString(dateTime.withTimeAtStartOfDay()), insightCard.category.toCategoryString());
+
         item.put(DATE_CATEGORY_ATTRIBUTE_NAME, new AttributeValue().withS(ymdCategory));
 
         item.put(CATEGORY_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(insightCard.category.getValue())));

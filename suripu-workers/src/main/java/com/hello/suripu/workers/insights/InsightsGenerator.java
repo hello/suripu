@@ -67,15 +67,12 @@ public class InsightsGenerator extends HelloBaseRecordProcessor {
                     }
 
                     final Long accountId = internalPillPairingMap.get().accountId;
-                    LOGGER.debug("Heartbeat data 1 for account: {}", accountId);
 
                     Optional<DateTime> accountCreated = Optional.absent();
                     if (this.accountCreatedMap.containsKey(accountId)) {
                         accountCreated = Optional.of(this.accountCreatedMap.get(accountId));
                     } else {
-                        LOGGER.debug("Generating Insight 1 for account: {}", accountId);
                         final Optional<Account> accountOptional = this.accountDAO.getById(accountId);
-                        LOGGER.debug("Generating Insight 2 for account: {}", accountId);
                         if (accountOptional.isPresent()) {
                             accountCreated = Optional.of(accountOptional.get().created);
                             this.accountCreatedMap.put(accountId, accountOptional.get().created);
