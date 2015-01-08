@@ -140,9 +140,15 @@ public class InsightsResource {
     @GET
     @Path("/trends/all")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<TrendGraph> getAllTrends(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
+    public List<TrendGraph> getAllTrends(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken,
+                                         @QueryParam("option") String timePeriodOption) {
 
         LOGGER.debug("Returning ALL available default graphs for account id = {}", accessToken.accountId);
+
+        TrendGraph.TimePeriodType scoreOverTimePeriod = TrendGraph.TimePeriodType.OVER_TIME_ALL;
+        if (timePeriodOption != null) {
+            scoreOverTimePeriod = TrendGraph.TimePeriodType.fromString(timePeriodOption);
+        }
 
         final Optional<Account> optionalAccount = accountDAO.getById(accessToken.accountId);
         final List<TrendGraph> graphs = new ArrayList<>();
@@ -164,7 +170,7 @@ public class InsightsResource {
                     graphs.add(sleepDurationDayOfWeek.get());
                 }
 
-                final Optional<TrendGraph> sleepScoreOverTime = getGraph(accountId, TrendGraph.TimePeriodType.OVER_TIME_ALL, TrendGraph.DataType.SLEEP_SCORE);
+                final Optional<TrendGraph> sleepScoreOverTime = getGraph(accountId, scoreOverTimePeriod, TrendGraph.DataType.SLEEP_SCORE);
                 if (sleepScoreOverTime.isPresent()) {
                     graphs.add(sleepScoreOverTime.get());
                 }

@@ -104,6 +104,10 @@ public interface QuestionResponseDAO {
                                                       @Bind("frequency") String frequency,
                                                       @Bind("one_week_ago") DateTime oneWeekAgo);
 
+    //TODO: optimize
+    @SqlQuery("SELECT question_id FROM responses WHERE account_id = :account_id AND question_id <= 3")
+    List<Integer> getAnsweredOnboardingQuestions(@Bind("account_id") long accountId);
+
     @SingleValueResult
     @SqlQuery("SELECT next_ask_time_local_utc FROM account_question_ask_time WHERE account_id = :account_id ORDER BY id DESC LIMIT 1")
     Optional<Timestamp> getNextAskTime(@Bind("account_id") long accountId);
