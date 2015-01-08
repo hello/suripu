@@ -20,7 +20,7 @@ public class LogChunker {
      * @param messages
      * @return
      */
-    public static IndexTankClient.Document merge(final List<LoggingProtos.LogMessage> messages) {
+    public static IndexTankClient.Document merge(final List<LoggingProtos.LogMessage> messages, final String version) {
         if(messages.isEmpty()) {
             throw new RuntimeException("List of messages to merge can not be empty");
         }
@@ -38,6 +38,8 @@ public class LogChunker {
         documentAttributes.put("text", sb.toString());
         documentAttributes.put("ts", String.valueOf(messages.get(0).getTs()));
 
+
+        categories.put("version", version);
         categories.put("origin", messages.get(0).getOrigin());
         categories.put("level", Level.toLevel(messages.get(0).getLevel()).toString());
 
@@ -60,9 +62,10 @@ public class LogChunker {
 
         final List<LoggingProtos.LogMessage> buffer = Lists.newArrayList(batchLogMessage.getMessages(0));
         Integer previousLevel = batchLogMessage.getMessages(0).getLevel();
+        final String version = batchLogMessage.getAppVersion();
         for(final LoggingProtos.LogMessage message : batchLogMessage.getMessagesList()) {
             if(message.hasLevel() && message.getLevel() != previousLevel) {
-                documents.add(merge(ImmutableList.copyOf(buffer)));
+                documents.add(merge(ImmutableList.copyOf(buffer), version));
                 buffer.clear();
                 previousLevel = message.getLevel();
             }
@@ -71,7 +74,7 @@ public class LogChunker {
 
         // Flush buffer might contain consecutive messages with same log level
         if(!buffer.isEmpty()) {
-            documents.add(merge(ImmutableList.copyOf(buffer)));
+            documents.add(merge(ImmutableList.copyOf(buffer), version));
         }
         return documents;
     }

@@ -276,7 +276,7 @@ public class DeviceResources {
                                                          @QueryParam("max_devices") final Long maxDevices,
                                                          @PathParam("device_id") final String deviceId) {
         LOGGER.debug("Searching accounts who have used device {}", deviceId);
-        final ImmutableList<Account> accounts = deviceDAO.getAccountsByDevices(deviceId, maxDevices);
+        final ImmutableList<Account> accounts = deviceDAO.getAccountsByDevice(deviceId, maxDevices);
         return accounts;
     }
 
@@ -304,5 +304,27 @@ public class DeviceResources {
         final RedisPaginator redisPaginator = new RedisPaginator(jedisPool, afterTimestamp, beforeTimestamp, ActiveDevicesTrackerConfiguration.PILL_ACTIVE_SET_KEY);
         final DeviceInactivePage inactivePillsPage = redisPaginator.generatePage();
         return inactivePillsPage;
+    }
+
+
+    @GET
+    @Timed
+    @Path("/pill/{email}/status")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<DeviceStatus> getPillStatus(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                            @PathParam("email") final String email) {
+        LOGGER.debug("Fetching pill status for user = {}", email);
+        final Optional<Long> accountId = getAccountIdByEmail(email);
+        final List<DeviceStatus> pillStatuses = new ArrayList<>();
+        if (!accountId.isPresent()) {
+            LOGGER.debug("ID not found for account {}", email);
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        final ImmutableList<DeviceAccountPair> pills = deviceDAO.getPillsForAccountId(accountId.get());
+
+        for (final DeviceAccountPair pill : pills) {
+            pillStatuses.addAll(deviceDAO.pillStatusWithBatteryLevel(pill.internalDeviceId));
+        }
+        return pillStatuses;
     }
 }

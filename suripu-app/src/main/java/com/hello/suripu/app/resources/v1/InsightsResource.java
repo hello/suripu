@@ -41,7 +41,8 @@ import java.util.Map;
 @Path("/v1/insights")
 public class InsightsResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(InsightsResource.class);
-    private static long DAY_IN_MILLIS = 86400000;
+    private static long DAY_IN_MILLIS = 86400000L;
+    private static int MIN_DATAPOINTS = 2;
 
     private final AccountDAO accountDAO;
     private final TrendsDAO trendsDAO;
@@ -94,7 +95,7 @@ public class InsightsResource {
     @GET
     @Path("/trends/graph")
     @Produces(MediaType.APPLICATION_JSON)
-    public TrendGraph getTrends(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken,
+    public List<TrendGraph> getTrends(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken,
                                 @QueryParam("data_type") String dataType,
                                 @QueryParam("time_period") String timePeriod) {
 
@@ -103,9 +104,14 @@ public class InsightsResource {
         final TrendGraph.TimePeriodType timePeriodType = TrendGraph.TimePeriodType.fromString(timePeriod);
         final TrendGraph.DataType graphDataType = TrendGraph.DataType.fromString(dataType);
 
-        TrendGraph graph = getGraph(accessToken.accountId, timePeriodType, graphDataType);
-        return graph;
+        Optional<TrendGraph> graphOptional = getGraph(accessToken.accountId, timePeriodType, graphDataType);
 
+        final List<TrendGraph> graphs = new ArrayList<>();
+        if (graphOptional.isPresent()) {
+            graphs.add(graphOptional.get());
+        }
+
+        return graphs;
     }
 
 
@@ -148,14 +154,20 @@ public class InsightsResource {
                 // add all the default graphs
                 final long accountId = account.id.get();
 
-                final TrendGraph sleepScoreDayOfWeek = getGraph(accountId, TrendGraph.TimePeriodType.DAY_OF_WEEK, TrendGraph.DataType.SLEEP_SCORE);
-                graphs.add(sleepScoreDayOfWeek);
+                final Optional<TrendGraph> sleepScoreDayOfWeek = getGraph(accountId, TrendGraph.TimePeriodType.DAY_OF_WEEK, TrendGraph.DataType.SLEEP_SCORE);
+                if (sleepScoreDayOfWeek.isPresent()) {
+                    graphs.add(sleepScoreDayOfWeek.get());
+                }
 
-                final TrendGraph sleepDurationDayOfWeek = getGraph(accountId, TrendGraph.TimePeriodType.DAY_OF_WEEK, TrendGraph.DataType.SLEEP_DURATION);
-                graphs.add(sleepDurationDayOfWeek);
+                final Optional<TrendGraph> sleepDurationDayOfWeek = getGraph(accountId, TrendGraph.TimePeriodType.DAY_OF_WEEK, TrendGraph.DataType.SLEEP_DURATION);
+                if (sleepDurationDayOfWeek.isPresent()) {
+                    graphs.add(sleepDurationDayOfWeek.get());
+                }
 
-                final TrendGraph sleepScoreOverTime = getGraph(accountId, TrendGraph.TimePeriodType.OVER_TIME_ALL, TrendGraph.DataType.SLEEP_SCORE);
-                graphs.add(sleepScoreOverTime);
+                final Optional<TrendGraph> sleepScoreOverTime = getGraph(accountId, TrendGraph.TimePeriodType.OVER_TIME_ALL, TrendGraph.DataType.SLEEP_SCORE);
+                if (sleepScoreOverTime.isPresent()) {
+                    graphs.add(sleepScoreOverTime.get());
+                }
             }
         }
 
@@ -166,7 +178,7 @@ public class InsightsResource {
      * Get data from data-stores, aggregate, create graph
      * @return TrendGraph
      */
-    private TrendGraph getGraph(final Long accountId, final TrendGraph.TimePeriodType timePeriod, final TrendGraph.DataType graphType) {
+    private Optional<TrendGraph> getGraph(final Long accountId, final TrendGraph.TimePeriodType timePeriod, final TrendGraph.DataType graphType) {
 
         if (timePeriod == TrendGraph.TimePeriodType.DAY_OF_WEEK) {
             // Histogram
@@ -176,7 +188,12 @@ public class InsightsResource {
             } else {
                 rawData = trendsDAO.getSleepDurationDow(accountId);
             }
-            return TrendGraphUtils.getDayOfWeekGraph(graphType, timePeriod, rawData);
+
+            if (rawData.size() < MIN_DATAPOINTS) {
+                return Optional.absent();
+            }
+
+            return Optional.of(TrendGraphUtils.getDayOfWeekGraph(graphType, timePeriod, rawData));
 
         } else {
             // time series
@@ -192,15 +209,24 @@ public class InsightsResource {
                         DateTimeUtil.dateToYmdString(startDate),
                         DateTimeUtil.dateToYmdString(endDate), numDays);
 
+                if (scores.size() < MIN_DATAPOINTS) {
+                    return Optional.absent();
+                }
+
                 // scores table has no offset, pull timezone offset from tracker-motion
                 final Map<DateTime, Integer> userOffsetMillis = getUserTimeZoneOffsetsUTC(accountId, startDate, endDate);
 
-                return TrendGraphUtils.getScoresOverTimeGraph(timePeriod, scores, userOffsetMillis);
+                return Optional.of(TrendGraphUtils.getScoresOverTimeGraph(timePeriod, scores, userOffsetMillis));
 
             } else {
                 // sleep duration over time, up to 365 days
                 ImmutableList<SleepStatsSample> statsSamples = trendsDAO.getAccountSleepStatsBetweenDates(accountId, startDate, endDate);
-                return TrendGraphUtils.getDurationOverTimeGraph(timePeriod, statsSamples);
+
+                if (statsSamples.size() < MIN_DATAPOINTS) {
+                    return Optional.absent();
+                }
+
+                return Optional.of(TrendGraphUtils.getDurationOverTimeGraph(timePeriod, statsSamples));
             }
 
         }

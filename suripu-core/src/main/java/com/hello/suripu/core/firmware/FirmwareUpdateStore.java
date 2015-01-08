@@ -10,6 +10,7 @@ import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Ordering;
 import com.google.common.io.CharStreams;
 import com.google.protobuf.ByteString;
 import com.hello.suripu.api.output.OutputProtos.SyncResponse;
@@ -173,17 +174,8 @@ public class FirmwareUpdateStore {
 
             if(f.contains("kitsune.bin")) {
 
-
-                final S3Object s3Object = s3.getObject(bucketName, f);
-                final S3ObjectInputStream s3ObjectInputStream = s3Object.getObjectContent();
-
-                try {
-                    final byte[] sha1 = DigestUtils.sha1(s3ObjectInputStream);
-                    fileDownloadBuilder.setSha1(ByteString.copyFrom(sha1));
-                } catch (IOException e) {
-                    LOGGER.error("Failed computing sha1 for {}", f);
-                    throw new RuntimeException(e.getMessage());
-                }
+                final byte[] sha1 = computeSha1ForS3File(bucketName, f);
+                fileDownloadBuilder.setSha1(ByteString.copyFrom(sha1));
 
                 final boolean copyToSerialFlash = true;
                 final boolean resetApplicationProcessor = true;
@@ -203,19 +195,13 @@ public class FirmwareUpdateStore {
                 fileDownloadList.add(fileDownloadBuilder.build());
             }
 
+
             if(f.contains("top.bin")) {
 
+                final byte[] sha1 = computeSha1ForS3File(bucketName, f);
+                fileDownloadBuilder.setSha1(ByteString.copyFrom(sha1));
 
-//                final S3Object s3Object = s3.getObject(bucketName, f);
-//                final S3ObjectInputStream s3ObjectInputStream = s3Object.getObjectContent();
-//
-//                try {
-//                    final byte[] sha1 = DigestUtils.sha1(s3ObjectInputStream);
-//                    fileDownloadBuilder.setSha1(ByteString.copyFrom(sha1));
-//                } catch (IOException e) {
-//                    LOGGER.error("Failed computing sha1 for {}", f);
-//                    throw new RuntimeException(e.getMessage());
-//                }
+
 
                 final boolean copyToSerialFlash = true;
                 final boolean resetApplicationProcessor = false;
@@ -236,6 +222,32 @@ public class FirmwareUpdateStore {
             }
         }
 
-        return fileDownloadList;
+        final Ordering<SyncResponse.FileDownload> byResetApplicationProcessor = new Ordering<SyncResponse.FileDownload>() {
+            public int compare(SyncResponse.FileDownload left, SyncResponse.FileDownload right) {
+                return Boolean.compare(left.getResetApplicationProcessor(), right.getResetApplicationProcessor());
+            }
+        };
+
+        final List<SyncResponse.FileDownload> sortedFiles = byResetApplicationProcessor.sortedCopy(fileDownloadList);
+        return sortedFiles;
+    }
+
+    private byte[] computeSha1ForS3File(final String bucketName, final String fileName) {
+        final S3Object s3Object = s3.getObject(bucketName, fileName);
+        final S3ObjectInputStream s3ObjectInputStream = s3Object.getObjectContent();
+
+        try {
+            return DigestUtils.sha1(s3ObjectInputStream);
+
+        } catch (IOException e) {
+            LOGGER.error("Failed computing sha1 for {}", fileName);
+            throw new RuntimeException(e.getMessage());
+        } finally {
+            try {
+                s3Object.close();
+            } catch (IOException e) {
+                LOGGER.error("Failed closing S3 stream");
+            }
+        }
     }
 }

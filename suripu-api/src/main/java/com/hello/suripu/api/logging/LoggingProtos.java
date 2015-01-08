@@ -905,6 +905,21 @@ public final class LoggingProtos {
      */
     com.hello.suripu.api.logging.LoggingProtos.LogMessageOrBuilder getMessagesOrBuilder(
         int index);
+
+    // optional string app_version = 2;
+    /**
+     * <code>optional string app_version = 2;</code>
+     */
+    boolean hasAppVersion();
+    /**
+     * <code>optional string app_version = 2;</code>
+     */
+    java.lang.String getAppVersion();
+    /**
+     * <code>optional string app_version = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getAppVersionBytes();
   }
   /**
    * Protobuf type {@code BatchLogMessage}
@@ -965,6 +980,11 @@ public final class LoggingProtos {
               messages_.add(input.readMessage(com.hello.suripu.api.logging.LoggingProtos.LogMessage.PARSER, extensionRegistry));
               break;
             }
+            case 18: {
+              bitField0_ |= 0x00000001;
+              appVersion_ = input.readBytes();
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -1007,6 +1027,7 @@ public final class LoggingProtos {
       return PARSER;
     }
 
+    private int bitField0_;
     // repeated .LogMessage messages = 1;
     public static final int MESSAGES_FIELD_NUMBER = 1;
     private java.util.List<com.hello.suripu.api.logging.LoggingProtos.LogMessage> messages_;
@@ -1043,8 +1064,52 @@ public final class LoggingProtos {
       return messages_.get(index);
     }
 
+    // optional string app_version = 2;
+    public static final int APP_VERSION_FIELD_NUMBER = 2;
+    private java.lang.Object appVersion_;
+    /**
+     * <code>optional string app_version = 2;</code>
+     */
+    public boolean hasAppVersion() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string app_version = 2;</code>
+     */
+    public java.lang.String getAppVersion() {
+      java.lang.Object ref = appVersion_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          appVersion_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string app_version = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getAppVersionBytes() {
+      java.lang.Object ref = appVersion_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        appVersion_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       messages_ = java.util.Collections.emptyList();
+      appVersion_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1061,6 +1126,9 @@ public final class LoggingProtos {
       for (int i = 0; i < messages_.size(); i++) {
         output.writeMessage(1, messages_.get(i));
       }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(2, getAppVersionBytes());
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -1073,6 +1141,10 @@ public final class LoggingProtos {
       for (int i = 0; i < messages_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, messages_.get(i));
+      }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getAppVersionBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1197,6 +1269,8 @@ public final class LoggingProtos {
         } else {
           messagesBuilder_.clear();
         }
+        appVersion_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
@@ -1224,6 +1298,7 @@ public final class LoggingProtos {
       public com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage buildPartial() {
         com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage result = new com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage(this);
         int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
         if (messagesBuilder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001)) {
             messages_ = java.util.Collections.unmodifiableList(messages_);
@@ -1233,6 +1308,11 @@ public final class LoggingProtos {
         } else {
           result.messages_ = messagesBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.appVersion_ = appVersion_;
+        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -1273,6 +1353,11 @@ public final class LoggingProtos {
               messagesBuilder_.addAllMessages(other.messages_);
             }
           }
+        }
+        if (other.hasAppVersion()) {
+          bitField0_ |= 0x00000002;
+          appVersion_ = other.appVersion_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1539,6 +1624,80 @@ public final class LoggingProtos {
           messages_ = null;
         }
         return messagesBuilder_;
+      }
+
+      // optional string app_version = 2;
+      private java.lang.Object appVersion_ = "";
+      /**
+       * <code>optional string app_version = 2;</code>
+       */
+      public boolean hasAppVersion() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string app_version = 2;</code>
+       */
+      public java.lang.String getAppVersion() {
+        java.lang.Object ref = appVersion_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          appVersion_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string app_version = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getAppVersionBytes() {
+        java.lang.Object ref = appVersion_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          appVersion_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string app_version = 2;</code>
+       */
+      public Builder setAppVersion(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        appVersion_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string app_version = 2;</code>
+       */
+      public Builder clearAppVersion() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        appVersion_ = getDefaultInstance().getAppVersion();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string app_version = 2;</code>
+       */
+      public Builder setAppVersionBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        appVersion_ = value;
+        onChanged();
+        return this;
       }
 
       // @@protoc_insertion_point(builder_scope:BatchLogMessage)
@@ -5797,21 +5956,22 @@ public final class LoggingProtos {
       "\n\024suripu_logging.proto\"c\n\nLogMessage\022\016\n\006" +
       "origin\030\001 \001(\t\022\017\n\007message\030\002 \001(\t\022\n\n\002ts\030\003 \001(" +
       "\003\022\031\n\nproduction\030\004 \001(\010:\005false\022\r\n\005level\030\005 " +
-      "\001(\005\"0\n\017BatchLogMessage\022\035\n\010messages\030\001 \003(\013" +
-      "2\013.LogMessage\"\250\002\n\013HttpRequest\022\014\n\004path\030\001 " +
-      "\001(\t\022\024\n\014access_token\030\002 \001(\t\022\022\n\naccount_id\030" +
-      "\003 \001(\003\022\026\n\016application_id\030\004 \001(\003\022\025\n\rtimesta" +
-      "mp_utc\030\005 \001(\003\022\027\n\017required_scopes\030\006 \003(\t\022\027\n" +
-      "\017provided_scopes\030\007 \003(\t\022\037\n\027access_token_c" +
-      "reated_at\030\010 \001(\003\022\022\n\nuser_agent\030\t \001(\t\022$\n\007h",
-      "eaders\030\n \003(\0132\023.HttpRequest.Header\032%\n\006Hea" +
-      "der\022\014\n\004name\030\001 \001(\t\022\r\n\005value\030\002 \001(\t\"\\\n\014Regi" +
-      "stration\022\021\n\tdevice_id\030\001 \001(\t\022\021\n\ttimestamp" +
-      "\030\002 \001(\003\022\022\n\naccount_id\030\003 \001(\003\022\022\n\nip_address" +
-      "\030\004 \001(\t\"e\n\017DecryptionError\022\021\n\tdevice_id\030\001" +
-      " \001(\t\022\016\n\006keyHex\030\002 \001(\t\022\n\n\002ts\030\003 \001(\003\022\024\n\014requ" +
-      "est_body\030\004 \001(\014\022\r\n\005other\030\005 \001(\tB-\n\034com.hel" +
-      "lo.suripu.api.loggingB\rLoggingProtos"
+      "\001(\005\"E\n\017BatchLogMessage\022\035\n\010messages\030\001 \003(\013" +
+      "2\013.LogMessage\022\023\n\013app_version\030\002 \001(\t\"\250\002\n\013H" +
+      "ttpRequest\022\014\n\004path\030\001 \001(\t\022\024\n\014access_token" +
+      "\030\002 \001(\t\022\022\n\naccount_id\030\003 \001(\003\022\026\n\016applicatio" +
+      "n_id\030\004 \001(\003\022\025\n\rtimestamp_utc\030\005 \001(\003\022\027\n\017req" +
+      "uired_scopes\030\006 \003(\t\022\027\n\017provided_scopes\030\007 " +
+      "\003(\t\022\037\n\027access_token_created_at\030\010 \001(\003\022\022\n\n",
+      "user_agent\030\t \001(\t\022$\n\007headers\030\n \003(\0132\023.Http" +
+      "Request.Header\032%\n\006Header\022\014\n\004name\030\001 \001(\t\022\r" +
+      "\n\005value\030\002 \001(\t\"\\\n\014Registration\022\021\n\tdevice_" +
+      "id\030\001 \001(\t\022\021\n\ttimestamp\030\002 \001(\003\022\022\n\naccount_i" +
+      "d\030\003 \001(\003\022\022\n\nip_address\030\004 \001(\t\"e\n\017Decryptio" +
+      "nError\022\021\n\tdevice_id\030\001 \001(\t\022\016\n\006keyHex\030\002 \001(" +
+      "\t\022\n\n\002ts\030\003 \001(\003\022\024\n\014request_body\030\004 \001(\014\022\r\n\005o" +
+      "ther\030\005 \001(\tB-\n\034com.hello.suripu.api.loggi" +
+      "ngB\rLoggingProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -5829,7 +5989,7 @@ public final class LoggingProtos {
           internal_static_BatchLogMessage_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_BatchLogMessage_descriptor,
-              new java.lang.String[] { "Messages", });
+              new java.lang.String[] { "Messages", "AppVersion", });
           internal_static_HttpRequest_descriptor =
             getDescriptor().getMessageTypes().get(2);
           internal_static_HttpRequest_fieldAccessorTable = new
