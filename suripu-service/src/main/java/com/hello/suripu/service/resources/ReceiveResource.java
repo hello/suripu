@@ -537,7 +537,7 @@ public class ReceiveResource extends BaseResource {
                 canOTA = (batch.getDataList().size() > 1);
             }
 
-            if(!groups.isEmpty() && groups.contains("chris-dev")){
+            if(groups.contains("chris-dev")){
                 canOTA = true;
             }
 
@@ -582,7 +582,7 @@ public class ReceiveResource extends BaseResource {
 
             final Integer uploadInterval = UploadSettings.getUploadInterval(DateTime.now(userTimeZone), senseUploadConfiguration, userNextAlarmTimestamp);
             responseBuilder.setBatchSize(uploadInterval);
-            if(!groups.isEmpty() && groups.contains("chris-dev")){
+            if(groups.contains("chris-dev")){
                 responseBuilder.setBatchSize(1);
             }
         }
