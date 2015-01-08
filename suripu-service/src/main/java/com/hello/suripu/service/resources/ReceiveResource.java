@@ -520,11 +520,11 @@ public class ReceiveResource extends BaseResource {
                     FeatureFlipper.ALWAYS_OTA_RELEASE, firmwareVersion);
             LOGGER.warn("{} files added to syncResponse to be downloaded", fileDownloadList.size());
             responseBuilder.addAllFiles(fileDownloadList);
-        } else if (deviceName.equals("0000000000000000")) {
+        } else if (featureFlipper.deviceFeatureActive(FeatureFlipper.FORCE_EVT_OTA_UPDATE, deviceName, groups) && deviceName.length() == 12) {
 
             LOGGER.warn("Forcing OTA for EVT units: ", deviceName);
             final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName,
-                    "pang-fire-fighting", 88888);
+                    "pang-fire-fighting", firmwareVersion);
             LOGGER.warn("{} files added to syncResponse to be downloaded", fileDownloadList.size());
             responseBuilder.addAllFiles(fileDownloadList);
 
