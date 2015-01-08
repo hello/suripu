@@ -119,6 +119,8 @@ public class ReceiveResource extends BaseResource {
         if(debugSenseId == null){
             debugSenseId = "";
         }
+
+        LOGGER.info("DebugSenseId device_id = {}", debugSenseId);
         try {
             data = DataInputProtos.batched_periodic_data.parseFrom(signedMessage.body);
         } catch (IOException exception) {
@@ -143,7 +145,7 @@ public class ReceiveResource extends BaseResource {
 
         final Optional<byte[]> optionalKeyBytes = keyStore.get(data.getDeviceId());
         if(!optionalKeyBytes.isPresent()) {
-            LOGGER.error("Failed to get key from key store for device_id = {}, actual sense id {}", data.getDeviceId(), debugSenseId);
+            LOGGER.error("Failed to get key from key store for device_id = {}", data.getDeviceId());
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
