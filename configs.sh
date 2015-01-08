@@ -15,3 +15,4 @@ s3cmd put suripu-workers/configs/pill/pill.prod.yml s3://hello-deploy/configs/co
 s3cmd put suripu-workers/configs/alarm/alarm_worker.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/alarm_worker.prod.yml
 s3cmd put suripu-workers/configs/sense/sense_save.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/sense_save.prod.yml
 s3cmd put suripu-workers/configs/logs/index_logs_worker.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/index_logs_worker.prod.yml
+s3cmd put suripu-workers/configs/insights/insights_generator.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/insights_generator.prod.yml
