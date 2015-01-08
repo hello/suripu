@@ -537,6 +537,10 @@ public class ReceiveResource extends BaseResource {
                 canOTA = (batch.getDataList().size() > 1);
             }
 
+            if(groups.contains("chris-dev")){
+                canOTA = true;
+            }
+
             if (!groups.isEmpty() && canOTA) {
                 // TODO check for sense uptime instead and do not OTA if it was just plugged in
 
@@ -578,6 +582,9 @@ public class ReceiveResource extends BaseResource {
 
             final Integer uploadInterval = UploadSettings.getUploadInterval(DateTime.now(userTimeZone), senseUploadConfiguration, userNextAlarmTimestamp);
             responseBuilder.setBatchSize(uploadInterval);
+            if(groups.contains("chris-dev")){
+                responseBuilder.setBatchSize(1);
+            }
         }
         responseBuilder.setAudioControl(audioControl);
         setPillSettings(deviceName, responseBuilder, this.deviceDAO);
