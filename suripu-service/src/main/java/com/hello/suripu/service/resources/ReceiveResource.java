@@ -26,6 +26,7 @@ import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DeviceIdUtil;
+import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.core.util.RoomConditionUtil;
 import com.hello.suripu.service.SignedMessage;
 import com.hello.suripu.service.configuration.SenseUploadConfiguration;
@@ -114,6 +115,10 @@ public class ReceiveResource extends BaseResource {
         final SignedMessage signedMessage = SignedMessage.parse(body);
         DataInputProtos.batched_periodic_data data = null;
 
+        String debugSenseId = this.request.getHeader(HelloHttpHeader.SENSE_ID);
+        if(debugSenseId == null){
+            debugSenseId = "";
+        }
         try {
             data = DataInputProtos.batched_periodic_data.parseFrom(signedMessage.body);
         } catch (IOException exception) {
@@ -138,7 +143,7 @@ public class ReceiveResource extends BaseResource {
 
         final Optional<byte[]> optionalKeyBytes = keyStore.get(data.getDeviceId());
         if(!optionalKeyBytes.isPresent()) {
-            LOGGER.error("Failed to get key from key store for device_id = {}", data.getDeviceId());
+            LOGGER.error("Failed to get key from key store for device_id = {}, actual sense id {}", data.getDeviceId(), debugSenseId);
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
