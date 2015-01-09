@@ -561,18 +561,14 @@ public class ReceiveResource extends BaseResource {
 
         final AudioControlProtos.AudioControl.Builder audioControl = AudioControlProtos.AudioControl
                 .newBuilder()
-                .setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.OFF);
-
-        final DateTime now = DateTime.now(DateTimeZone.forID("America/Los_Angeles"));
-        final Boolean audioRecordingWindow = now.getHourOfDay() > 0 && now.getHourOfDay() < 7;
-
-        if(featureFlipper.deviceFeatureActive(FeatureFlipper.AUDIO_CAPTURE, deviceName, groups) && audioRecordingWindow) {
-            LOGGER.debug("AUDIO_CAPTURE feature is active for device_id = {}", deviceName);
-            audioControl.setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
-        }
+                .setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.ON)
+                .setAudioSaveFeatures(AudioControlProtos.AudioControl.AudioCaptureAction.OFF)
+                .setAudioSaveRawData(AudioControlProtos.AudioControl.AudioCaptureAction.OFF);
 
         if(featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_ON_AUDIO, deviceName, groups)) {
             audioControl.setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
+            audioControl.setAudioSaveFeatures(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
+            audioControl.setAudioSaveRawData(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
         }
 
 
