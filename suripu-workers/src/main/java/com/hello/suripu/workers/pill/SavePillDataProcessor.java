@@ -13,6 +13,7 @@ import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +62,8 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                     final int batteryLevel = data.getBatteryLevel();
                     final int upTime = data.getUpTime();
                     final int firmwareVersion = data.getFirmwareVersion();
-                    pillHeartBeatDAO.silentInsert(trackerMotion.trackerId, batteryLevel, upTime, firmwareVersion);
+                    final DateTime lastUpdated = new DateTime(data.getTimestamp());
+                    pillHeartBeatDAO.silentInsert(trackerMotion.trackerId, batteryLevel, upTime, firmwareVersion, lastUpdated);
                 }
             } catch (InvalidProtocolBufferException e) {
                 LOGGER.error("Failed to decode protobuf: {}", e.getMessage());
