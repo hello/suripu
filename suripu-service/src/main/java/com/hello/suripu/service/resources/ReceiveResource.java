@@ -487,7 +487,7 @@ public class ReceiveResource extends BaseResource {
                 continue;
             }
 
-            final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(),
+            final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(), data.getLight(),
                     roundedDateTime.getMillis(),
                     data.getFirmwareVersion(),
                     DateTime.now(),
