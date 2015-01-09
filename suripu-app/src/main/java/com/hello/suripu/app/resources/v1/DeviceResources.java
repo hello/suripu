@@ -82,10 +82,11 @@ public class DeviceResources {
             if(sensePairedWithAccount.size() == 0){
                 LOGGER.error("No sense paired with account {}", accessToken.accountId);
                 throw new WebApplicationException(Response.Status.BAD_REQUEST);
-            }else {
-                final String senseId = sensePairedWithAccount.get(0).externalDeviceId;
-                this.mergedUserInfoDynamoDB.setNextPillColor(senseId, accessToken.accountId, pillRegistration.pillId);
             }
+
+            final String senseId = sensePairedWithAccount.get(0).externalDeviceId;
+            this.mergedUserInfoDynamoDB.setNextPillColor(senseId, accessToken.accountId, pillRegistration.pillId);
+
             return;
         } catch (UnableToExecuteStatementException exception) {
             final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
