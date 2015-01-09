@@ -17,6 +17,7 @@ import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.processors.insights.GenericInsights;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.TrendGraphUtils;
 import com.yammer.metrics.annotation.Timed;
@@ -72,6 +73,16 @@ public class InsightsResource {
         final DateTime queryDate = DateTime.now(DateTimeZone.UTC).plusDays(1);
         final ImmutableList<InsightCard> cards = insightsDAODynamoDB.getInsightsByDate(accessToken.accountId,
                 queryDate, chronological, MAX_INSIGHTS_NUM);
+
+        if (cards.size() == 0) {
+            // no insights generated yet, probably a new user, send introduction card
+            final InsightCard introCard = GenericInsights.getIntroductionCard(accessToken.accountId);
+            this.insightsDAODynamoDB.insertInsight(introCard);
+            final List<InsightCard> newCards = new ArrayList<>();
+            newCards.add(introCard);
+            return newCards;
+        }
+
         // TODO: fetch generic cards.
 
         return cards;
