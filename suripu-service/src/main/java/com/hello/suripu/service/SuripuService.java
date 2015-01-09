@@ -199,7 +199,12 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
 
         environment.addResource(receiveResource);
-        environment.addResource(new RegisterResource(deviceDAO, tokenStore, kinesisLoggerFactory, senseKeyStore, configuration.getDebug()));
+        environment.addResource(new RegisterResource(deviceDAO,
+                tokenStore,
+                kinesisLoggerFactory,
+                senseKeyStore,
+                mergedUserInfoDynamoDB,
+                configuration.getDebug()));
         final LogsResource logsResource = new LogsResource(
                 configuration.getIndexLogConfiguration().getPrivateUrl(),
                 configuration.getIndexLogConfiguration().getIndexName(),

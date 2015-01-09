@@ -1,9 +1,9 @@
 package com.hello.suripu.core.models;
 
 import com.google.common.base.Optional;
+import com.hello.suripu.api.output.OutputProtos;
 import org.joda.time.DateTimeZone;
 
-import java.awt.*;
 import java.util.Collections;
 import java.util.List;
 
@@ -16,14 +16,14 @@ public class UserInfo {
     public final List<Alarm> alarmList;
     public final Optional<RingTime> ringTime;
     public final Optional<DateTimeZone> timeZone;
-    public final Optional<Color> pillColor;
+    public final Optional<OutputProtos.SyncResponse.PillSettings> pillColor;
 
 
     public UserInfo(final String deviceId, final long accountId,
                     final List<Alarm> alarmList,
                     final Optional<RingTime> ringTime,
                     final Optional<DateTimeZone> timeZone,
-                    final Optional<Color> pillColor){
+                    final Optional<OutputProtos.SyncResponse.PillSettings> pillColor){
         if(deviceId == null || alarmList == null || timeZone == null || ringTime == null){
             throw new IllegalArgumentException("Device Id can't be null");
         }
@@ -43,7 +43,7 @@ public class UserInfo {
                 Collections.<Alarm>emptyList(),
                 Optional.of(RingTime.createEmpty()),
                 Optional.<DateTimeZone>absent(),
-                Optional.<Color>absent());
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent());
     }
 
     public boolean isEmpty(){

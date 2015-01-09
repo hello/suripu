@@ -4,15 +4,16 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
+import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Alarm;
-import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.AlarmSound;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.models.UserInfo;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -22,7 +23,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -79,7 +79,7 @@ public class RingProcessorSingleUserTest {
                 alarmList,
                 Optional.of(ringTime),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles")),
-                Optional.<Color>absent()));
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
 
         when(this.mergedUserInfoDynamoDB.getInfo(testDeviceId)).thenReturn(userInfoList1);
 

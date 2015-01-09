@@ -1,5 +1,6 @@
 package com.hello.suripu.app.resources.v1;
 
+import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.app.models.RedisPaginator;
@@ -76,6 +77,15 @@ public class DeviceResources {
         try {
             final Long trackerId = deviceDAO.registerTracker(accessToken.accountId, pillRegistration.pillId);
             LOGGER.info("Account {} registered pill {} with internal id = {}", accessToken.accountId, pillRegistration.pillId, trackerId);
+
+            final List<DeviceAccountPair> sensePairedWithAccount = this.deviceDAO.getSensesForAccountId(accessToken.accountId);
+            if(sensePairedWithAccount.size() == 0){
+                LOGGER.error("No sense paired with account {}", accessToken.accountId);
+                throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            }else {
+                final String senseId = sensePairedWithAccount.get(0).externalDeviceId;
+                this.mergedUserInfoDynamoDB.setNextPillColor(senseId, accessToken.accountId, pillRegistration.pillId);
+            }
             return;
         } catch (UnableToExecuteStatementException exception) {
             final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
@@ -85,6 +95,8 @@ public class DeviceResources {
                 throw new WebApplicationException(Response.status(Response.Status.CONFLICT)
                         .entity(new JsonError(409, "Pill already exists for this account.")).build());
             }
+        } catch (AmazonServiceException awsEx){
+            LOGGER.error("Set pill color failed for pill {}, error: {}", pillRegistration.pillId, awsEx.getMessage());
         }
 
         throw new WebApplicationException(Response.Status.BAD_REQUEST);
@@ -105,6 +117,24 @@ public class DeviceResources {
         final Integer numRows = deviceDAO.unregisterTracker(pillId);
         if(numRows == 0) {
             LOGGER.warn("Did not find active pill to unregister");
+        }
+
+        final List<DeviceAccountPair> sensePairedWithAccount = this.deviceDAO.getSensesForAccountId(accessToken.accountId);
+        if(sensePairedWithAccount.size() == 0){
+            LOGGER.error("No sense paired with account {}", accessToken.accountId);
+            return;
+        }
+
+        final String senseId = sensePairedWithAccount.get(0).externalDeviceId;
+
+        try {
+            this.mergedUserInfoDynamoDB.deletePillColor(senseId, accessToken.accountId, pillId);
+        }catch (Exception ex){
+            LOGGER.error("Delete pill {}'s color from user info table for sense {} and account {} failed: {}",
+                    pillId,
+                    senseId,
+                    accessToken.accountId,
+                    ex.getMessage());
         }
     }
 

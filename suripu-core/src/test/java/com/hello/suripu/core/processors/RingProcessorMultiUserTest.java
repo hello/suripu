@@ -4,16 +4,17 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
+import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Alarm;
-import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.AlarmSound;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.models.UserInfo;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -23,7 +24,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -113,7 +113,7 @@ public class RingProcessorMultiUserTest {
                 alarmList,
                 Optional.of(ringTime),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles")),
-                Optional.<Color>absent()));
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
 
 
         final List<Alarm> alarmList2 = new ArrayList<Alarm>();
@@ -131,7 +131,7 @@ public class RingProcessorMultiUserTest {
                 alarmList2,
                 Optional.of(ringTime2),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles")),
-                Optional.<Color>absent()));
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
 
         final URL url = Resources.getResource("pill_data_09_23_2014_pang.csv");
         final List<TrackerMotion> motions1 = new ArrayList<TrackerMotion>();
@@ -331,7 +331,7 @@ public class RingProcessorMultiUserTest {
                 alarmList,
                 Optional.of(ringTime),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles")),
-                Optional.<Color>absent()));
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
 
 
         final List<Alarm> alarmList2 = new ArrayList<Alarm>();
@@ -349,7 +349,7 @@ public class RingProcessorMultiUserTest {
                 alarmList2,
                 Optional.of(ringTime2),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles")),
-                Optional.<Color>absent()));
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
 
 
         final URL url = Resources.getResource("pill_data_09_23_2014_pang.csv");
@@ -551,7 +551,7 @@ public class RingProcessorMultiUserTest {
                 alarmList,
                 Optional.of(ringTime1),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles")),
-                Optional.<Color>absent()));
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
 
         final List<Alarm> alarmList2 = new ArrayList<Alarm>();
         final HashSet<Integer> dayOfWeek2 = new HashSet<Integer>();
@@ -568,7 +568,7 @@ public class RingProcessorMultiUserTest {
                 alarmList2,
                 Optional.of(ringTime2),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles")),
-                Optional.<Color>absent()));
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
 
 
         RingTime ringTime = RingProcessor.getNextRegularRingTime(this.userInfoList,
