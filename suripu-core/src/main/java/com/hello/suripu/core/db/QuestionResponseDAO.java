@@ -3,9 +3,11 @@ package com.hello.suripu.core.db;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.mappers.AccountQuestionMapper;
+import com.hello.suripu.core.db.mappers.AccountQuestionResponsesMapper;
 import com.hello.suripu.core.db.mappers.QuestionMapper;
 import com.hello.suripu.core.db.mappers.RecentResponseMapper;
 import com.hello.suripu.core.models.AccountQuestion;
+import com.hello.suripu.core.models.AccountQuestionResponses;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Response;
 import org.joda.time.DateTime;
@@ -117,5 +119,13 @@ public interface QuestionResponseDAO {
             "(:account_id, :next_ask_time)")
     Long setNextAskTime(@Bind("account_id") long accountId,
                         @Bind("next_ask_time") DateTime nextAskTime);
+
+    @RegisterMapper(AccountQuestionResponsesMapper.class)
+    @SqlQuery("SELECT Q.*, R.created AS response_created " +
+            "FROM account_questions Q " +
+            "LEFT OUTER JOIN responses R ON R.account_question_id = Q.id " +
+            "WHERE Q.account_id = :account_id AND Q.expires_local_utc_ts >= :expiration ORDER BY Q.id DESC")
+    ImmutableList<AccountQuestionResponses> getQuestionsResponsesByDate(@Bind("account_id") long accountId,
+                                                               @Bind("expiration") DateTime expiration);
 
 }

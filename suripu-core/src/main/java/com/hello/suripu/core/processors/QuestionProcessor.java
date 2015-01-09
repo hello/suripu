@@ -7,6 +7,7 @@ import com.google.common.collect.ListMultimap;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.AccountQuestion;
+import com.hello.suripu.core.models.AccountQuestionResponses;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Response;
@@ -116,8 +117,39 @@ public class QuestionProcessor {
         }
 
         // check if we have already generated a list of questions
-        final Map<Integer, Question> preGeneratedQuestions = this.getPreGeneratedQuestions(accountId, today);
-        if (preGeneratedQuestions.size() > 0) {
+        // and if the user has answered any
+        final Map<Integer, Question> preGeneratedQuestions = new HashMap<>();
+
+        // grab user question and response status for today if this is not a "get-more questions" request
+        final DateTime expiration = today.plusDays(1);
+        final ImmutableList<AccountQuestionResponses> questionResponseList = this.questionResponseDAO.getQuestionsResponsesByDate(accountId, expiration);
+
+        // check if we have generated any questions for this user TODAY
+        int answered = 0;
+        if (questionResponseList.size() != 0) {
+            // check number of today's question the user has answered
+            for (final AccountQuestionResponses question : questionResponseList) {
+                if (question.responded) {
+                    answered++;
+                    continue;
+                }
+
+                // add this unanswered question to list
+                final Integer qid = question.questionId;
+                if (!preGeneratedQuestions.containsKey(qid)) {
+                    final Long accountQId = question.id;
+                    preGeneratedQuestions.put(qid, Question.withAskTimeAccountQId(this.questionIdMap.get(qid), accountQId, today));
+                }
+            }
+
+            if (checkPause && answered >= numQuestions) {
+                // user has answered today's quota
+                LOGGER.debug("User has answered all questions for today {}", accountId);
+                return Collections.emptyList();
+            }
+        }
+
+        if ((preGeneratedQuestions.size() + answered) >= numQuestions) {
             return new ArrayList<>(preGeneratedQuestions.values());
         }
 
@@ -437,7 +469,7 @@ public class QuestionProcessor {
     }
 
     /**
-     * Get questions that were generated earlier and saved to DB
+     * Get questions that were generated earlier and saved to DB, and have not been responded
      */
     private Map<Integer, Question> getPreGeneratedQuestions(final Long accountId, final DateTime today) {
         final DateTime expiration = today.plusDays(1);
