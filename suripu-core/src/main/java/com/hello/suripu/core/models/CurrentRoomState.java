@@ -21,7 +21,8 @@ public class CurrentRoomState {
             PERCENT("%"),
             PPM("ppm"),
             MICRO_G_M3("µg/m3"),
-            AQI("AQI");
+            AQI("AQI"),
+            LUX("lux");
 
             private final String value;
             private Unit(final String value) {
@@ -83,14 +84,17 @@ public class CurrentRoomState {
     @JsonProperty("particulates")
     public final State particulates;
 
+    @JsonProperty("light")
+    public final State light;
 
-    public CurrentRoomState(final State temperature, final State humidity, final State particulates) {
+    public CurrentRoomState(final State temperature, final State humidity, final State particulates, final State light) {
         this.temperature = temperature;
         this.humidity = humidity;
         this.particulates = particulates;
+        this.light = light;
     }
 
-    public static CurrentRoomState fromRawData(final int rawTemperature, final int rawHumidity, final int rawDustMax,
+    public static CurrentRoomState fromRawData(final int rawTemperature, final int rawHumidity, final int rawDustMax, final int rawLight,
                                                final long timestamp,
                                                final int firmwareVersion,
                                                final DateTime referenceTime,
@@ -98,11 +102,12 @@ public class CurrentRoomState {
         final float humidity = DeviceData.dbIntToFloat(rawHumidity);
         final float temperature = DeviceData.dbIntToFloat(rawTemperature);
         final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(rawDustMax, firmwareVersion));
-        return fromTempHumidDust(temperature, humidity, particulatesAQI, new DateTime(timestamp, DateTimeZone.UTC), referenceTime, thresholdInMinutes, DEFAULT_TEMP_UNIT);
+        final float light = DeviceData.dbIntToFloat(rawLight);
+        return fromTempHumidDust(temperature, humidity, particulatesAQI, rawLight, new DateTime(timestamp, DateTimeZone.UTC), referenceTime, thresholdInMinutes, DEFAULT_TEMP_UNIT);
 
     }
 
-    public static CurrentRoomState fromTempHumidDust(final float temperature, final float humidity, final float particulatesAQI,
+    public static CurrentRoomState fromTempHumidDust(final float temperature, final float humidity, final float particulatesAQI, final float light,
                                                      final DateTime dataTimestampUTC,
                                                      final DateTime referenceTime,
                                                      final Integer thresholdInMinutes,
@@ -111,6 +116,7 @@ public class CurrentRoomState {
         State temperatureState;
         State humidityState;
         State particulatesState;
+        State lightState;
 
         LOGGER.debug("temp = {}, humidity = {}, particulates = {}", temperature, humidity, particulatesAQI);
 
@@ -125,7 +131,8 @@ public class CurrentRoomState {
             temperatureState = new State(temperature, "Could not retrieve a recent temperature reading", "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.CELCIUS);
             humidityState = new State(humidity, "Could not retrieve a recent humidity reading", "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.PERCENT);
             particulatesState = new State(humidity, "Could not retrieve recent particulates reading", "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.AQI);
-            final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState);
+            lightState = new State(humidity, "Could not retrieve recent light reading", "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.LUX);
+            final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState, lightState);
             return roomState;
         }
 
@@ -159,7 +166,9 @@ public class CurrentRoomState {
             particulatesState = new State(particulatesAQI, "AQI is at an **UNHEALTHY** level.", idealParticulatesConditions, State.Condition.ALERT, dataTimestampUTC, State.Unit.AQI);
         }
 
-        final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState);
+
+        lightState = new State(light, "Light level is **just right**", "A pitch-black room is usually better", State.Condition.IDEAL, dataTimestampUTC, State.Unit.LUX);
+        final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState, lightState);
         return roomState;
 
     }
@@ -173,9 +182,10 @@ public class CurrentRoomState {
 
         final float temp = DeviceData.dbIntToFloat(data.ambientTemperature);
         final float humidity = DeviceData.dbIntToFloat(data.ambientHumidity);
+        final float light = DeviceData.dbIntToFloat(data.ambientLight);
         // max value is in raw counts, conversion needed
         final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(data.ambientDustMax, data.firmwareVersion));
-        return fromTempHumidDust(temp, humidity, particulatesAQI, data.dateTimeUTC, referenceTime, thresholdInMinutes, tempUnit);
+        return fromTempHumidDust(temp, humidity, particulatesAQI, light, data.dateTimeUTC, referenceTime, thresholdInMinutes, tempUnit);
 
     }
 
@@ -190,7 +200,8 @@ public class CurrentRoomState {
         final CurrentRoomState roomState = new CurrentRoomState(
                 new State(null, "Waiting for data.", "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.CELCIUS),
                 new State(null, "Waiting for data.", "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.PERCENT),
-                new State(null, "Waiting for data.", "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.AQI)
+                new State(null, "Waiting for data.", "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.AQI),
+                new State(null, "Waiting for data.", "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.LUX)
         );
 
         return roomState;
