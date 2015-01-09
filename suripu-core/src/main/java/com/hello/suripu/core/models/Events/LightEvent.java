@@ -4,7 +4,7 @@ import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SleepSegment;
 
 public class LightEvent extends Event {
-    private String description = "Light";
+    private String description = "";
 
     public LightEvent(final long startTimestamp, final long endTimestamp, final int offsetMillis, final String description) {
         super(Type.LIGHT, startTimestamp, endTimestamp, offsetMillis);
