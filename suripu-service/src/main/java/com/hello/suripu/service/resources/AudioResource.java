@@ -7,10 +7,10 @@ import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.audio.EncodeProtos;
 import com.hello.suripu.api.audio.FileTransfer;
 import com.hello.suripu.api.audio.MatrixProtos;
+import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.resources.BaseResource;
-import com.hello.suripu.core.util.DeviceIdUtil;
 import com.hello.suripu.service.SignedMessage;
 import com.librato.rollout.RolloutClient;
 import org.slf4j.Logger;
@@ -40,6 +40,7 @@ public class AudioResource extends BaseResource {
     private final String audioBucketName;
     private final DataLogger dataLogger;
     private final DataLogger audioMetadataLogger;
+    private final KeyStore keyStore;
     private final boolean debug;
 
     public AudioResource(
@@ -47,17 +48,19 @@ public class AudioResource extends BaseResource {
             final String audioBucketName,
             final DataLogger dataLogger,
             final boolean debug,
-            final DataLogger audioMetadataLogger) {
+            final DataLogger audioMetadataLogger,
+            final KeyStore senseKeyStore) {
         this.s3Client = s3Client;
         this.audioBucketName = audioBucketName;
         this.dataLogger = dataLogger;
         this.debug = debug;
         this.audioMetadataLogger = audioMetadataLogger;
+        this.keyStore = senseKeyStore;
     }
 
     @POST
     @Path("/features")
-    public void getAudioFeatures(@Context HttpServletRequest request, byte[] body) {
+    public void getAudioFeatures(byte[] body) {
 
 
         final SignedMessage signedMessage = SignedMessage.parse(body);
@@ -75,15 +78,15 @@ public class AudioResource extends BaseResource {
             );
         }
 
-        final Optional<String> mac = DeviceIdUtil.macToStringId(message.getMac().toByteArray());
-        if(!mac.isPresent()) {
-            LOGGER.warn("No mac address");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        final String deviceId = message.getDeviceId();
+        if(!featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_ON_AUDIO, deviceId, new ArrayList<String>())) {
+            LOGGER.trace("{} is disabled for {}", FeatureFlipper.ALWAYS_ON_AUDIO, deviceId);
+            return;
         }
 
-        // TODO: Fetch key from Datastore
-        final byte[] keyBytes = "1234567891234567".getBytes();
-        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytes);
+        final Optional<byte[]> keyBytes = keyStore.get(deviceId);
+
+        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytes.get());
 
         if(error.isPresent()) {
             LOGGER.error(error.get().message);
@@ -93,7 +96,7 @@ public class AudioResource extends BaseResource {
             );
         }
 
-        dataLogger.put(mac.get(), signedMessage.body);
+        dataLogger.put(deviceId, signedMessage.body);
     }
 
 
@@ -116,14 +119,19 @@ public class AudioResource extends BaseResource {
             );
         }
 
-        if(!featureFlipper.deviceFeatureActive(FeatureFlipper.AUDIO_STORAGE, message.getDeviceId(), new ArrayList<String>())) {
+        if(!featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_ON_AUDIO, message.getDeviceId(), new ArrayList<String>())) {
             LOGGER.trace("{} is disabled for {}", FeatureFlipper.AUDIO_STORAGE, message.getDeviceId());
             return;
         }
 
-        // TODO: Fetch key from Datastore
-        final byte[] keyBytes = "1234567891234567".getBytes();
-        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytes);
+        final Optional<byte[]> keyBytes = keyStore.get(message.getDeviceId());
+        if(!keyBytes.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("could not find device id in key store")
+                    .type(MediaType.TEXT_PLAIN_TYPE).build()
+            );
+        }
+        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytes.get());
 
         if(error.isPresent()) {
             LOGGER.error(error.get().message);

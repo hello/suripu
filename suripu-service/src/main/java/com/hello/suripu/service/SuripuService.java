@@ -220,7 +220,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
                         bucketName,
                         audioDataLogger,
                         configuration.getDebug(),
-                        audioMetaDataLogger));
+                        audioMetaDataLogger,
+                        senseKeyStore));
 
         environment.addResource(new DownloadResource(s3Client, "hello-firmware"));
 

@@ -69,6 +69,21 @@ public final class MatrixProtos {
      */
     com.hello.suripu.api.audio.MatrixProtos.MatrixOrBuilder getMatrixListOrBuilder(
         int index);
+
+    // optional string device_id = 5;
+    /**
+     * <code>optional string device_id = 5;</code>
+     */
+    boolean hasDeviceId();
+    /**
+     * <code>optional string device_id = 5;</code>
+     */
+    java.lang.String getDeviceId();
+    /**
+     * <code>optional string device_id = 5;</code>
+     */
+    com.google.protobuf.ByteString
+        getDeviceIdBytes();
   }
   /**
    * Protobuf type {@code MatrixClientMessage}
@@ -150,6 +165,11 @@ public final class MatrixProtos {
                 mutable_bitField0_ |= 0x00000008;
               }
               matrixList_.add(input.readMessage(com.hello.suripu.api.audio.MatrixProtos.Matrix.PARSER, extensionRegistry));
+              break;
+            }
+            case 42: {
+              bitField0_ |= 0x00000008;
+              deviceId_ = input.readBytes();
               break;
             }
           }
@@ -285,11 +305,55 @@ public final class MatrixProtos {
       return matrixList_.get(index);
     }
 
+    // optional string device_id = 5;
+    public static final int DEVICE_ID_FIELD_NUMBER = 5;
+    private java.lang.Object deviceId_;
+    /**
+     * <code>optional string device_id = 5;</code>
+     */
+    public boolean hasDeviceId() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional string device_id = 5;</code>
+     */
+    public java.lang.String getDeviceId() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          deviceId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string device_id = 5;</code>
+     */
+    public com.google.protobuf.ByteString
+        getDeviceIdBytes() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        deviceId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       mac_ = com.google.protobuf.ByteString.EMPTY;
       unixTime_ = 0;
       matrixPayload_ = com.hello.suripu.api.audio.MatrixProtos.Matrix.getDefaultInstance();
       matrixList_ = java.util.Collections.emptyList();
+      deviceId_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -327,6 +391,9 @@ public final class MatrixProtos {
       for (int i = 0; i < matrixList_.size(); i++) {
         output.writeMessage(4, matrixList_.get(i));
       }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(5, getDeviceIdBytes());
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -351,6 +418,10 @@ public final class MatrixProtos {
       for (int i = 0; i < matrixList_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, matrixList_.get(i));
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(5, getDeviceIdBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -486,6 +557,8 @@ public final class MatrixProtos {
         } else {
           matrixListBuilder_.clear();
         }
+        deviceId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -539,6 +612,10 @@ public final class MatrixProtos {
         } else {
           result.matrixList_ = matrixListBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.deviceId_ = deviceId_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -589,6 +666,11 @@ public final class MatrixProtos {
               matrixListBuilder_.addAllMessages(other.matrixList_);
             }
           }
+        }
+        if (other.hasDeviceId()) {
+          bitField0_ |= 0x00000010;
+          deviceId_ = other.deviceId_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1053,6 +1135,80 @@ public final class MatrixProtos {
           matrixList_ = null;
         }
         return matrixListBuilder_;
+      }
+
+      // optional string device_id = 5;
+      private java.lang.Object deviceId_ = "";
+      /**
+       * <code>optional string device_id = 5;</code>
+       */
+      public boolean hasDeviceId() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional string device_id = 5;</code>
+       */
+      public java.lang.String getDeviceId() {
+        java.lang.Object ref = deviceId_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          deviceId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string device_id = 5;</code>
+       */
+      public com.google.protobuf.ByteString
+          getDeviceIdBytes() {
+        java.lang.Object ref = deviceId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          deviceId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string device_id = 5;</code>
+       */
+      public Builder setDeviceId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        deviceId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string device_id = 5;</code>
+       */
+      public Builder clearDeviceId() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        deviceId_ = getDefaultInstance().getDeviceId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string device_id = 5;</code>
+       */
+      public Builder setDeviceIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        deviceId_ = value;
+        onChanged();
+        return this;
       }
 
       // @@protoc_insertion_point(builder_scope:MatrixClientMessage)
@@ -2739,16 +2895,17 @@ public final class MatrixProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\014matrix.proto\"t\n\023MatrixClientMessage\022\013\n" +
-      "\003mac\030\001 \001(\014\022\021\n\tunix_time\030\002 \001(\005\022\037\n\016matrix_" +
-      "payload\030\003 \001(\0132\007.Matrix\022\034\n\013matrix_list\030\004 " +
-      "\003(\0132\007.Matrix\"\316\001\n\006Matrix\022\n\n\002id\030\001 \002(\t\022\014\n\004r" +
-      "ows\030\002 \002(\005\022\014\n\004cols\030\003 \002(\005\022\"\n\010datatype\030\004 \002(" +
-      "\0162\020.Matrix.DataType\022\r\n\005idata\030\005 \003(\021\022\r\n\005fd" +
-      "ata\030\006 \003(\002\022\r\n\005time1\030\007 \002(\003\022\r\n\005time2\030\010 \002(\003\022" +
-      "\014\n\004tags\030\t \002(\t\022\016\n\006source\030\n \002(\t\"\036\n\010DataTyp" +
-      "e\022\t\n\005FLOAT\020\000\022\007\n\003INT\020\001B*\n\032com.hello.surip" +
-      "u.api.audioB\014MatrixProtos"
+      "\n\014matrix.proto\"\207\001\n\023MatrixClientMessage\022\013" +
+      "\n\003mac\030\001 \001(\014\022\021\n\tunix_time\030\002 \001(\005\022\037\n\016matrix" +
+      "_payload\030\003 \001(\0132\007.Matrix\022\034\n\013matrix_list\030\004" +
+      " \003(\0132\007.Matrix\022\021\n\tdevice_id\030\005 \001(\t\"\316\001\n\006Mat" +
+      "rix\022\n\n\002id\030\001 \002(\t\022\014\n\004rows\030\002 \002(\005\022\014\n\004cols\030\003 " +
+      "\002(\005\022\"\n\010datatype\030\004 \002(\0162\020.Matrix.DataType\022" +
+      "\r\n\005idata\030\005 \003(\021\022\r\n\005fdata\030\006 \003(\002\022\r\n\005time1\030\007" +
+      " \002(\003\022\r\n\005time2\030\010 \002(\003\022\014\n\004tags\030\t \002(\t\022\016\n\006sou" +
+      "rce\030\n \002(\t\"\036\n\010DataType\022\t\n\005FLOAT\020\000\022\007\n\003INT\020" +
+      "\001B*\n\032com.hello.suripu.api.audioB\014MatrixP",
+      "rotos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -2760,7 +2917,7 @@ public final class MatrixProtos {
           internal_static_MatrixClientMessage_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_MatrixClientMessage_descriptor,
-              new java.lang.String[] { "Mac", "UnixTime", "MatrixPayload", "MatrixList", });
+              new java.lang.String[] { "Mac", "UnixTime", "MatrixPayload", "MatrixList", "DeviceId", });
           internal_static_Matrix_descriptor =
             getDescriptor().getMessageTypes().get(1);
           internal_static_Matrix_fieldAccessorTable = new
