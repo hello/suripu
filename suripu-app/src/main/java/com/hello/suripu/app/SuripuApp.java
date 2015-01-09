@@ -17,6 +17,7 @@ import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.modules.RolloutAppModule;
 import com.hello.suripu.app.resources.v1.AccountResource;
 import com.hello.suripu.app.resources.v1.AlarmResource;
+import com.hello.suripu.app.resources.v1.AppCheckinResource;
 import com.hello.suripu.app.resources.v1.ApplicationResource;
 import com.hello.suripu.app.resources.v1.DataScienceResource;
 import com.hello.suripu.app.resources.v1.DeviceResources;
@@ -267,6 +268,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new InsightsResource(accountDAO, trendsDAO, aggregateSleepScoreDAODynamoDB, trackerMotionDAO, insightsDAODynamoDB));
         environment.addResource(new TeamsResource(teamStore));
         environment.addResource(new FeedbackResource(feedbackDAO));
+        environment.addResource(new AppCheckinResource(false, "")); // TODO: replace this with real app version. Maybe move it to admin tool?
 
         environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO, deviceDataDAO, deviceDAO, aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, new LightData()));
 
