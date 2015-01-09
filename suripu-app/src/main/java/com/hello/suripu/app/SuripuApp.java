@@ -13,6 +13,7 @@ import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.app.cli.CreateDynamoDBTables;
 import com.hello.suripu.app.cli.RecreateEventsCommand;
+import com.hello.suripu.app.cli.RecreatePillColorCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.modules.RolloutAppModule;
 import com.hello.suripu.app.resources.v1.AccountResource;
@@ -109,6 +110,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         bootstrap.addBundle(new DBIExceptionsBundle());
         bootstrap.addCommand(new RecreateEventsCommand());
         bootstrap.addCommand(new CreateDynamoDBTables());
+        bootstrap.addCommand(new RecreatePillColorCommand());
         bootstrap.addBundle(new KinesisLoggerBundle<SuripuAppConfiguration>() {
             @Override
             public KinesisLoggerConfiguration getConfiguration(final SuripuAppConfiguration configuration) {
@@ -176,7 +178,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         );
 
         final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(
-                dynamoDBClient, configuration.getAlarmInfoDynamoDBConfiguration().getTableName()
+                dynamoDBClient, configuration.getUserInfoDynamoDBConfiguration().getTableName()
         );
 
         final InsightsDAODynamoDB insightsDAODynamoDB = new InsightsDAODynamoDB(

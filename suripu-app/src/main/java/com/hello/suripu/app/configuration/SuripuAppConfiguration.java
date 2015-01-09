@@ -158,9 +158,9 @@ public class SuripuAppConfiguration extends Configuration {
     @Valid
     @NotNull
     @JsonProperty("alarm_info_db")
-    private DynamoDBConfiguration alarmInfoDynamoDBConfiguration;
-    public DynamoDBConfiguration getAlarmInfoDynamoDBConfiguration(){
-        return this.alarmInfoDynamoDBConfiguration;
+    private DynamoDBConfiguration userInfoDynamoDBConfiguration;
+    public DynamoDBConfiguration getUserInfoDynamoDBConfiguration(){
+        return this.userInfoDynamoDBConfiguration;
     }
 
     @Valid

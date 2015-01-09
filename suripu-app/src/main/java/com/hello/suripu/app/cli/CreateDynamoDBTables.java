@@ -108,8 +108,8 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
 
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
 
-        client.setEndpoint(configuration.getAlarmInfoDynamoDBConfiguration().getEndpoint());
-        final String tableName = configuration.getAlarmInfoDynamoDBConfiguration().getTableName();
+        client.setEndpoint(configuration.getUserInfoDynamoDBConfiguration().getEndpoint());
+        final String tableName = configuration.getUserInfoDynamoDBConfiguration().getTableName();
         try {
             client.describeTable(tableName);
             System.out.println(String.format("%s already exists.", tableName));
