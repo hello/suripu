@@ -125,10 +125,9 @@ public class QuestionProcessor {
         final ImmutableList<AccountQuestionResponses> questionResponseList = this.questionResponseDAO.getQuestionsResponsesByDate(accountId, expiration);
 
         // check if we have generated any questions for this user TODAY
+        int answered = 0;
         if (questionResponseList.size() != 0) {
-
             // check number of today's question the user has answered
-            int answered = 0;
             for (final AccountQuestionResponses question : questionResponseList) {
                 if (question.responded) {
                     answered++;
@@ -150,7 +149,7 @@ public class QuestionProcessor {
             }
         }
 
-        if (preGeneratedQuestions.size() >= numQuestions) {
+        if ((preGeneratedQuestions.size() + answered) >= numQuestions) {
             return new ArrayList<>(preGeneratedQuestions.values());
         }
 
