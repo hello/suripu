@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -69,6 +70,8 @@ public class QuestionProcessorTest {
 
         when(questionResponseDAO.getLastFewResponses(ACCOUNT_ID_PASS, 5)).thenReturn(ImmutableList.<Response>of().copyOf(this.getSkippedResponses()));
 
+        // get existing questions and response
+        when(questionResponseDAO.getQuestionsResponsesByDate(ACCOUNT_ID_PASS, today.plusDays(1))).thenReturn(ImmutableList.copyOf(Collections.EMPTY_LIST));
         final QuestionProcessor.Builder builder = new QuestionProcessor.Builder()
                 .withQuestionResponseDAO(questionResponseDAO)
                 .withCheckSkipsNum(CHECK_SKIP_NUM)

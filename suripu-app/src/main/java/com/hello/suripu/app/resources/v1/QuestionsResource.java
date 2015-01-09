@@ -74,7 +74,7 @@ public class QuestionsResource {
         final DateTime today = DateTime.now(DateTimeZone.UTC).plusMillis(timeZoneOffset).withTimeAtStartOfDay();
         LOGGER.debug("today = {}", today);
         if(date != null && !date.equals(today.toString("yyyy-MM-dd"))) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
         // get question
