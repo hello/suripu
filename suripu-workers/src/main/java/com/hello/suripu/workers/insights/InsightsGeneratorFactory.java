@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.TrendsDAO;
 import com.hello.suripu.core.processors.InsightProcessor;
 import com.hello.suripu.core.processors.insights.LightData;
 
@@ -21,6 +22,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
     private final TrackerMotionDAO trackerMotionDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
+    private final TrendsDAO trendsDAO;
 
     private final LightData lightData;
 
@@ -30,6 +32,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
                                     final TrackerMotionDAO trackerMotionDAO,
                                     final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
                                     final InsightsDAODynamoDB insightsDAODynamoDB,
+                                    final TrendsDAO trendsDAO,
                                     final LightData lightData) {
         this.accountDAO = accountDAO;
         this.deviceDataDAO = deviceDataDAO;
@@ -37,12 +40,13 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
         this.trackerMotionDAO = trackerMotionDAO;
         this.scoreDAODynamoDB = scoreDAODynamoDB;
         this.insightsDAODynamoDB = insightsDAODynamoDB;
+        this.trendsDAO = trendsDAO;
         this.lightData = lightData;
     }
 
     @Override
     public IRecordProcessor createProcessor() {
-        final InsightProcessor insightProcessor =  new InsightProcessor(deviceDataDAO, deviceDAO, trackerMotionDAO, scoreDAODynamoDB, insightsDAODynamoDB, lightData);
+        final InsightProcessor insightProcessor =  new InsightProcessor(deviceDataDAO, deviceDAO, trendsDAO, trackerMotionDAO, scoreDAODynamoDB, insightsDAODynamoDB, lightData);
         return new InsightsGenerator(accountDAO, deviceDAO, insightProcessor);
     }
 }
