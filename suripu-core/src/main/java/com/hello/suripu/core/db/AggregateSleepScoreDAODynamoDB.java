@@ -99,7 +99,9 @@ public class AggregateSleepScoreDAODynamoDB {
     }
 
     @Timed
-    public AggregateScore getSingleScore(final Long accountId, final String date) {
+    public AggregateScore
+
+    getSingleScore(final Long accountId, final String date) {
 
         final Map<String, AttributeValue> key = new HashMap<>();
         key.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));

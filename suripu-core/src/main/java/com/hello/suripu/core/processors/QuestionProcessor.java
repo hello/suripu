@@ -7,6 +7,7 @@ import com.google.common.collect.ListMultimap;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.AccountQuestion;
+import com.hello.suripu.core.models.AccountQuestionResponses;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Response;
@@ -116,8 +117,39 @@ public class QuestionProcessor {
         }
 
         // check if we have already generated a list of questions
-        final Map<Integer, Question> preGeneratedQuestions = this.getPreGeneratedQuestions(accountId, today);
-        if (preGeneratedQuestions.size() > 0) {
+        // and if the user has answered any
+        final Map<Integer, Question> preGeneratedQuestions = new HashMap<>();
+
+        // grab user question and response status for today if this is not a "get-more questions" request
+        final DateTime expiration = today.plusDays(1);
+        final ImmutableList<AccountQuestionResponses> questionResponseList = this.questionResponseDAO.getQuestionsResponsesByDate(accountId, expiration);
+
+        // check if we have generated any questions for this user TODAY
+        int answered = 0;
+        if (questionResponseList.size() != 0) {
+            // check number of today's question the user has answered
+            for (final AccountQuestionResponses question : questionResponseList) {
+                if (question.responded) {
+                    answered++;
+                    continue;
+                }
+
+                // add this unanswered question to list
+                final Integer qid = question.questionId;
+                if (!preGeneratedQuestions.containsKey(qid)) {
+                    final Long accountQId = question.id;
+                    preGeneratedQuestions.put(qid, Question.withAskTimeAccountQId(this.questionIdMap.get(qid), accountQId, today));
+                }
+            }
+
+            if (checkPause && answered >= numQuestions) {
+                // user has answered today's quota
+                LOGGER.debug("User has answered all questions for today {}", accountId);
+                return Collections.emptyList();
+            }
+        }
+
+        if ((preGeneratedQuestions.size() + answered) >= numQuestions) {
             return new ArrayList<>(preGeneratedQuestions.values());
         }
 
@@ -230,19 +262,32 @@ public class QuestionProcessor {
 
     private List<Question> getOnBoardingQuestions(Long accountId, DateTime today) {
 
-        // check if we have already generated a list of questions
-        final Map<Integer, Question> preGeneratedQuestions = this.getPreGeneratedQuestions(accountId, today);
-        if (preGeneratedQuestions.size() >= NEW_USER_NUM_Q) {
-            return new ArrayList<>(preGeneratedQuestions.values());
-        }
+        // check if user has already responded to any onboarding questions
+        final Set<Integer> answeredIds = new HashSet<>(this.questionResponseDAO.getAnsweredOnboardingQuestions(accountId));
 
         final List<Question> onboardingQs = new ArrayList<>();
-        onboardingQs.add(questionIdMap.get(1));
-        onboardingQs.add(questionIdMap.get(2));
-        onboardingQs.add(questionIdMap.get(3));
+        if (!answeredIds.contains(1)) {
+            onboardingQs.add(questionIdMap.get(1));
+        }
+        if (!answeredIds.contains(2)) {
+            onboardingQs.add(questionIdMap.get(2));
+        }
+        if (!answeredIds.contains(3)) {
+            onboardingQs.add(questionIdMap.get(3));
+        }
 
-        final DateTime expiration = today.plusDays(1);
-        this.questionResponseDAO.insertAccountOnBoardingQuestions(accountId, today, expiration); // save to DB
+        // None of questions has been answered, insert into DB
+        if (onboardingQs.size() == NEW_USER_NUM_Q) {
+            try {
+                final DateTime expiration = today.plusDays(1);
+                this.questionResponseDAO.insertAccountOnBoardingQuestions(accountId, today, expiration); // save to DB
+            } catch (UnableToExecuteStatementException exception) {
+                final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
+                if (matcher.find()) {
+                    LOGGER.debug("Onboarding questions already saved");
+                }
+            }
+        }
 
         return onboardingQs;
     }
@@ -254,12 +299,11 @@ public class QuestionProcessor {
 
         final List<Question> questions = new ArrayList<>();
 
-        // add questions that has already been selected
-        final Set<Integer> addedIds = new HashSet<>();
-        addedIds.addAll(seenIds);
-
         // from DB, get answered base-questions and other answered questions from the past week
-        addedIds.addAll(this.getUserAnsweredQuestionIds(accountId));
+        final Set<Integer> addedIds = this.getUserAnsweredQuestionIds(accountId);
+
+        // add questions that has already been selected
+        addedIds.addAll(seenIds);
 
         // always include the ONE daily calibration question, most important Q has lower id
         final Integer questionId = this.availableQuestionIds.get(Question.FREQUENCY.DAILY).get(0);
@@ -308,12 +352,11 @@ public class QuestionProcessor {
 
         final List<Question> questions = new ArrayList<>();
 
-        // add questions that has already been selected
-        final Set<Integer> addedIds = new HashSet<>();
-        addedIds.addAll(seenIds);
+        // from DB, get answered base-questions and other answered questions from the past week
+        final Set<Integer> addedIds = this.getUserAnsweredQuestionIds(accountId);
 
-        // add base-questions that has been answered, and question-id of those answered in the past week
-        addedIds.addAll(this.getUserAnsweredQuestionIds(accountId));
+        // add questions that has already been selected
+        addedIds.addAll(seenIds);
 
         // always choose ONE random daily-question
         List<Question> dailyQs = this.randomlySelectFromQuestionPool(accountId, seenIds, Question.FREQUENCY.DAILY, today, 1);
@@ -360,7 +403,13 @@ public class QuestionProcessor {
         final List<Integer> questionsPool = new ArrayList<>();
         questionsPool.addAll(this.availableQuestionIds.get(questionType));
         questionsPool.removeAll(seenIds);
+
         int poolSize = questionsPool.size();
+
+        if (poolSize == 0) {
+            return questions;
+        }
+
         final int originalPoolSize = poolSize;
 
         int loop = 0;
@@ -411,15 +460,16 @@ public class QuestionProcessor {
     /**
      * Get ids of base questions answered, and recently answered questions (one week)
      */
-    private List<Integer> getUserAnsweredQuestionIds (final Long accountId) {
+    private Set<Integer> getUserAnsweredQuestionIds (final Long accountId) {
         final DateTime oneWeekAgo = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(7);
         final List<Integer> baseIds = this.questionResponseDAO.getBaseAndRecentAnsweredQuestionIds(accountId, Question.FREQUENCY.ONE_TIME.toSQLString(), oneWeekAgo);
+        final Set<Integer> uniqueIds = new HashSet<>(baseIds);
         LOGGER.debug("User has seen {} base questions", baseIds.size());
-        return baseIds;
+        return uniqueIds;
     }
 
     /**
-     * Get questions that were generated earlier and saved to DB
+     * Get questions that were generated earlier and saved to DB, and have not been responded
      */
     private Map<Integer, Question> getPreGeneratedQuestions(final Long accountId, final DateTime today) {
         final DateTime expiration = today.plusDays(1);

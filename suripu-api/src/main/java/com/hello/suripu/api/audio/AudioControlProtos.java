@@ -842,6 +842,26 @@ public final class AudioControlProtos {
      * <code>optional .AudioClassifierMessage audio_capture_hmm = 10;</code>
      */
     com.hello.suripu.api.audio.AudioControlProtos.AudioClassifierMessageOrBuilder getAudioCaptureHmmOrBuilder();
+
+    // optional .AudioControl.AudioCaptureAction audio_save_raw_data = 11;
+    /**
+     * <code>optional .AudioControl.AudioCaptureAction audio_save_raw_data = 11;</code>
+     */
+    boolean hasAudioSaveRawData();
+    /**
+     * <code>optional .AudioControl.AudioCaptureAction audio_save_raw_data = 11;</code>
+     */
+    com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction getAudioSaveRawData();
+
+    // optional .AudioControl.AudioCaptureAction audio_save_features = 12;
+    /**
+     * <code>optional .AudioControl.AudioCaptureAction audio_save_features = 12;</code>
+     */
+    boolean hasAudioSaveFeatures();
+    /**
+     * <code>optional .AudioControl.AudioCaptureAction audio_save_features = 12;</code>
+     */
+    com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction getAudioSaveFeatures();
   }
   /**
    * Protobuf type {@code AudioControl}
@@ -949,6 +969,28 @@ public final class AudioControlProtos {
                 audioCaptureHmm_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000040;
+              break;
+            }
+            case 88: {
+              int rawValue = input.readEnum();
+              com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction value = com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(11, rawValue);
+              } else {
+                bitField0_ |= 0x00000080;
+                audioSaveRawData_ = value;
+              }
+              break;
+            }
+            case 96: {
+              int rawValue = input.readEnum();
+              com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction value = com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(12, rawValue);
+              } else {
+                bitField0_ |= 0x00000100;
+                audioSaveFeatures_ = value;
+              }
               break;
             }
           }
@@ -1239,6 +1281,38 @@ public final class AudioControlProtos {
       return audioCaptureHmm_;
     }
 
+    // optional .AudioControl.AudioCaptureAction audio_save_raw_data = 11;
+    public static final int AUDIO_SAVE_RAW_DATA_FIELD_NUMBER = 11;
+    private com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction audioSaveRawData_;
+    /**
+     * <code>optional .AudioControl.AudioCaptureAction audio_save_raw_data = 11;</code>
+     */
+    public boolean hasAudioSaveRawData() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    /**
+     * <code>optional .AudioControl.AudioCaptureAction audio_save_raw_data = 11;</code>
+     */
+    public com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction getAudioSaveRawData() {
+      return audioSaveRawData_;
+    }
+
+    // optional .AudioControl.AudioCaptureAction audio_save_features = 12;
+    public static final int AUDIO_SAVE_FEATURES_FIELD_NUMBER = 12;
+    private com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction audioSaveFeatures_;
+    /**
+     * <code>optional .AudioControl.AudioCaptureAction audio_save_features = 12;</code>
+     */
+    public boolean hasAudioSaveFeatures() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional .AudioControl.AudioCaptureAction audio_save_features = 12;</code>
+     */
+    public com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction getAudioSaveFeatures() {
+      return audioSaveFeatures_;
+    }
+
     private void initFields() {
       audioMinEnergyThreshold_ = 0;
       audioNumFeatVecsUntilAttemptFeatureUpload_ = 0;
@@ -1247,6 +1321,8 @@ public final class AudioControlProtos {
       audioCaptureAction_ = com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction.OFF;
       audioCaptureClassifier_ = com.hello.suripu.api.audio.AudioControlProtos.AudioClassifierMessage.getDefaultInstance();
       audioCaptureHmm_ = com.hello.suripu.api.audio.AudioControlProtos.AudioClassifierMessage.getDefaultInstance();
+      audioSaveRawData_ = com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction.OFF;
+      audioSaveFeatures_ = com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction.OFF;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1280,6 +1356,12 @@ public final class AudioControlProtos {
       }
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
         output.writeMessage(10, audioCaptureHmm_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeEnum(11, audioSaveRawData_.getNumber());
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeEnum(12, audioSaveFeatures_.getNumber());
       }
       getUnknownFields().writeTo(output);
     }
@@ -1317,6 +1399,14 @@ public final class AudioControlProtos {
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(10, audioCaptureHmm_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(11, audioSaveRawData_.getNumber());
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(12, audioSaveFeatures_.getNumber());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1458,6 +1548,10 @@ public final class AudioControlProtos {
           audioCaptureHmmBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000040);
+        audioSaveRawData_ = com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction.OFF;
+        bitField0_ = (bitField0_ & ~0x00000080);
+        audioSaveFeatures_ = com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction.OFF;
+        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
 
@@ -1522,6 +1616,14 @@ public final class AudioControlProtos {
         } else {
           result.audioCaptureHmm_ = audioCaptureHmmBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.audioSaveRawData_ = audioSaveRawData_;
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        result.audioSaveFeatures_ = audioSaveFeatures_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1558,6 +1660,12 @@ public final class AudioControlProtos {
         }
         if (other.hasAudioCaptureHmm()) {
           mergeAudioCaptureHmm(other.getAudioCaptureHmm());
+        }
+        if (other.hasAudioSaveRawData()) {
+          setAudioSaveRawData(other.getAudioSaveRawData());
+        }
+        if (other.hasAudioSaveFeatures()) {
+          setAudioSaveFeatures(other.getAudioSaveFeatures());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -2064,6 +2172,78 @@ public final class AudioControlProtos {
         return audioCaptureHmmBuilder_;
       }
 
+      // optional .AudioControl.AudioCaptureAction audio_save_raw_data = 11;
+      private com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction audioSaveRawData_ = com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction.OFF;
+      /**
+       * <code>optional .AudioControl.AudioCaptureAction audio_save_raw_data = 11;</code>
+       */
+      public boolean hasAudioSaveRawData() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional .AudioControl.AudioCaptureAction audio_save_raw_data = 11;</code>
+       */
+      public com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction getAudioSaveRawData() {
+        return audioSaveRawData_;
+      }
+      /**
+       * <code>optional .AudioControl.AudioCaptureAction audio_save_raw_data = 11;</code>
+       */
+      public Builder setAudioSaveRawData(com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000080;
+        audioSaveRawData_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .AudioControl.AudioCaptureAction audio_save_raw_data = 11;</code>
+       */
+      public Builder clearAudioSaveRawData() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        audioSaveRawData_ = com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction.OFF;
+        onChanged();
+        return this;
+      }
+
+      // optional .AudioControl.AudioCaptureAction audio_save_features = 12;
+      private com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction audioSaveFeatures_ = com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction.OFF;
+      /**
+       * <code>optional .AudioControl.AudioCaptureAction audio_save_features = 12;</code>
+       */
+      public boolean hasAudioSaveFeatures() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional .AudioControl.AudioCaptureAction audio_save_features = 12;</code>
+       */
+      public com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction getAudioSaveFeatures() {
+        return audioSaveFeatures_;
+      }
+      /**
+       * <code>optional .AudioControl.AudioCaptureAction audio_save_features = 12;</code>
+       */
+      public Builder setAudioSaveFeatures(com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000100;
+        audioSaveFeatures_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .AudioControl.AudioCaptureAction audio_save_features = 12;</code>
+       */
+      public Builder clearAudioSaveFeatures() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        audioSaveFeatures_ = com.hello.suripu.api.audio.AudioControlProtos.AudioControl.AudioCaptureAction.OFF;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:AudioControl)
     }
 
@@ -2098,7 +2278,7 @@ public final class AudioControlProtos {
       "rMessage\022\r\n\005idata\030\001 \003(\021\022\022\n\nnumclasses\030\002 " +
       "\001(\005\0224\n\004type\030\003 \001(\0162&.AudioClassifierMessa" +
       "ge.ClassifierType\"\037\n\016ClassifierType\022\r\n\tL" +
-      "INEARSVM\020\000\"\214\003\n\014AudioControl\022\"\n\032audio_min" +
+      "INEARSVM\020\000\"\212\004\n\014AudioControl\022\"\n\032audio_min" +
       "_energy_threshold\030\001 \001(\005\0228\n0audio_num_fea" +
       "t_vecs_until_attempt_feature_upload\030\002 \001(" +
       "\005\022\036\n\026audio_feat_buffer_size\030\003 \001(\005\022(\n aud" +
@@ -2107,9 +2287,12 @@ public final class AudioControlProtos {
       ".AudioCaptureAction\0229\n\030audio_capture_cla" +
       "ssifier\030\t \001(\0132\027.AudioClassifierMessage\0222" +
       "\n\021audio_capture_hmm\030\n \001(\0132\027.AudioClassif" +
-      "ierMessage\"%\n\022AudioCaptureAction\022\007\n\003OFF\020" +
-      "\000\022\006\n\002ON\020\001B0\n\032com.hello.suripu.api.audioB" +
-      "\022AudioControlProtos"
+      "ierMessage\022=\n\023audio_save_raw_data\030\013 \001(\0162" +
+      " .AudioControl.AudioCaptureAction\022=\n\023aud" +
+      "io_save_features\030\014 \001(\0162 .AudioControl.Au" +
+      "dioCaptureAction\"%\n\022AudioCaptureAction\022\007" +
+      "\n\003OFF\020\000\022\006\n\002ON\020\001B0\n\032com.hello.suripu.api." +
+      "audioB\022AudioControlProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -2127,7 +2310,7 @@ public final class AudioControlProtos {
           internal_static_AudioControl_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_AudioControl_descriptor,
-              new java.lang.String[] { "AudioMinEnergyThreshold", "AudioNumFeatVecsUntilAttemptFeatureUpload", "AudioFeatBufferSize", "AudioRecordingPeriodInFrames", "AudioCaptureAction", "AudioCaptureClassifier", "AudioCaptureHmm", });
+              new java.lang.String[] { "AudioMinEnergyThreshold", "AudioNumFeatVecsUntilAttemptFeatureUpload", "AudioFeatBufferSize", "AudioRecordingPeriodInFrames", "AudioCaptureAction", "AudioCaptureClassifier", "AudioCaptureHmm", "AudioSaveRawData", "AudioSaveFeatures", });
           return null;
         }
       };

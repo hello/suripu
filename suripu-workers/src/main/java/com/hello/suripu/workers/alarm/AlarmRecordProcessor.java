@@ -7,7 +7,7 @@ import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.DataInputProtos;
-import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.processors.RingProcessor;
@@ -25,18 +25,18 @@ import java.util.Set;
  */
 public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
     private final static Logger LOGGER = LoggerFactory.getLogger(AlarmRecordProcessor.class);
-    private final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
+    private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
 
     private final TrackerMotionDAO trackerMotionDAO;
     private final AlarmWorkerConfiguration configuration;
 
-    public AlarmRecordProcessor(final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
+    public AlarmRecordProcessor(final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                 final RingTimeDAODynamoDB ringTimeDAODynamoDB,
                                 final TrackerMotionDAO trackerMotionDAO,
                                 final AlarmWorkerConfiguration configuration){
 
-        this.mergedAlarmInfoDynamoDB = mergedAlarmInfoDynamoDB;
+        this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
         this.trackerMotionDAO = trackerMotionDAO;
 
@@ -74,7 +74,7 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
         LOGGER.info("Processing {} unique senseIds.", senseIds.size());
         final DateTime currentTime = DateTime.now();
         for(final String senseId : senseIds) {
-            RingProcessor.updateNextRingTime(this.mergedAlarmInfoDynamoDB,
+            RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
                     this.ringTimeDAODynamoDB,
                     this.trackerMotionDAO,
                     senseId,

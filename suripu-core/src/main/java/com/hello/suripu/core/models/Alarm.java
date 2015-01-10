@@ -360,5 +360,36 @@ public class Alarm {
 
             return RingTime.createEmpty();
         }
+
+        public static final String getSoundPathFromSoundId(final int soundId){
+            switch (soundId){
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                    return "/RINGTONE/DIGO00" + String.valueOf(soundId) + ".raw";
+                case 4:
+                case 5:
+                case 6:
+                case 7:
+                case 8:
+                    return "/RINGTONE/DIG00" + String.valueOf(soundId - 3) + ".raw";
+                case 9:
+                case 10:
+                case 11:
+                case 12:
+                case 13:
+                case 14:
+                    return "/RINGTONE/NEW00" + String.valueOf(soundId - 8) + ".raw";
+                case 15:
+                case 16:
+                case 17:
+                case 18:
+                    return "/RINGTONE/ORG00" + String.valueOf(soundId - 14) + ".raw";
+
+            }
+
+            return "/RINGTONE/DIG001.raw";
+        }
     }
 }

@@ -12,19 +12,21 @@ import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.KeyStore;
-import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.firmware.FirmwareUpdateStore;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
-import com.hello.suripu.core.models.AlarmInfo;
+import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.RingTime;
+import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DeviceIdUtil;
+import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.core.util.RoomConditionUtil;
 import com.hello.suripu.service.SignedMessage;
 import com.hello.suripu.service.configuration.SenseUploadConfiguration;
@@ -48,6 +50,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,7 +68,7 @@ public class ReceiveResource extends BaseResource {
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
     private final KeyStore keyStore;
-    private final MergedAlarmInfoDynamoDB mergedInfoDynamoDB;
+    private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
 
     private final KinesisLoggerFactory kinesisLoggerFactory;
     private final Boolean debug;
@@ -81,7 +84,7 @@ public class ReceiveResource extends BaseResource {
                            final DeviceDAO deviceDAO,
                            final KeyStore keyStore,
                            final KinesisLoggerFactory kinesisLoggerFactory,
-                           final MergedAlarmInfoDynamoDB mergedInfoDynamoDB,
+                           final MergedUserInfoDynamoDB mergedInfoDynamoDB,
                            final Boolean debug,
                            final FirmwareUpdateStore firmwareUpdateStore,
                            final GroupFlipper groupFlipper,
@@ -111,6 +114,13 @@ public class ReceiveResource extends BaseResource {
     public byte[] receiveBatchSenseData(final byte[] body) {
         final SignedMessage signedMessage = SignedMessage.parse(body);
         DataInputProtos.batched_periodic_data data = null;
+
+        String debugSenseId = this.request.getHeader(HelloHttpHeader.SENSE_ID);
+        if(debugSenseId == null){
+            debugSenseId = "";
+        }
+
+        LOGGER.info("DebugSenseId device_id = {}", debugSenseId);
 
         try {
             data = DataInputProtos.batched_periodic_data.parseFrom(signedMessage.body);
@@ -156,13 +166,84 @@ public class ReceiveResource extends BaseResource {
                 .setData(data)
                 .setReceivedAt(DateTime.now().getMillis())
                 .setIpAddress(ipAddress)
+                .setUptimeInSecond(data.getUptimeInSecond())
                 .build();
 
         final DataLogger batchSenseDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
         batchSenseDataLogger.put(data.getDeviceId(), batchPeriodicDataWorkerMessage.toByteArray());
-        return generateSyncResponse(data.getDeviceId(), data.getFirmwareVersion(), optionalKeyBytes.get(), data);
+
+        final String tempSenseId = data.hasDeviceId() ? data.getDeviceId() : debugSenseId;
+        return generateSyncResponse(tempSenseId, data.getFirmwareVersion(), optionalKeyBytes.get(), data);
     }
 
+
+    public static OutputProtos.SyncResponse.Builder setPillSettings(final String deviceId, final OutputProtos.SyncResponse.Builder syncResponseBuilder, final DeviceDAO deviceDAO){
+        final List<DeviceAccountPair> accounts = deviceDAO.getAccountIdsForDeviceId(deviceId);
+        final int red = 0x0000FEFF;  // BGRA
+        final int blue = 0xFE0000FF; // BGRA
+
+        if(accounts.size() > 2){
+            LOGGER.warn("device {} has {} accounts, get the last 2 for pill settings.", deviceId, accounts.size());
+        }
+
+        if(accounts.size() == 0){
+            return syncResponseBuilder;
+        }
+
+        final ArrayList<AbstractMap.SimpleEntry<Long, DeviceAccountPair>> accountsHasPill = new ArrayList<>();
+        final List<DeviceAccountPair> lastAccounts = new ArrayList<>();
+        if(accounts.size() == 1){
+            lastAccounts.add(accounts.get(0));
+        }else{
+            lastAccounts.add(accounts.get(accounts.size() - 2));
+            lastAccounts.add(accounts.get(accounts.size() - 1));
+        }
+
+        // get all accounts that has pills.
+        for(final DeviceAccountPair account:accounts){
+            final long accountId = account.accountId;
+
+            final List<DeviceAccountPair> pills = deviceDAO.getPillsForAccountId(accountId);
+            if(pills.size() == 0){
+                continue;
+            }
+
+            final DeviceAccountPair lastPill = pills.get(pills.size() - 1);
+            accountsHasPill.add(new AbstractMap.SimpleEntry<Long, DeviceAccountPair>(accountId, lastPill));
+            if (pills.size() > 1) {
+                LOGGER.warn("account {} has {} pills, only get settings for last pill {}", accountId, pills.size(), lastPill.externalDeviceId);
+            }
+        }
+
+        if(accountsHasPill.size() == 0){
+            return syncResponseBuilder;
+        }
+
+        // Set pill settings
+        if(accountsHasPill.size() == 1){
+            final OutputProtos.SyncResponse.PillSettings pillSettings = OutputProtos.SyncResponse.PillSettings.newBuilder()
+                    .setPillId(accountsHasPill.get(accountsHasPill.size() - 1).getValue().externalDeviceId)
+                    .setPillColor(red)
+                    .build();
+            syncResponseBuilder.addPillSettings(pillSettings);
+        }else{
+            // Pill linked with 1st account is red.
+            final OutputProtos.SyncResponse.PillSettings firstPillSettings = OutputProtos.SyncResponse.PillSettings.newBuilder()
+                    .setPillId(accountsHasPill.get(accountsHasPill.size() - 2).getValue().externalDeviceId)
+                    .setPillColor(red)
+                    .build();
+            syncResponseBuilder.addPillSettings(firstPillSettings);
+
+            // Pill linked with 2nd account is blue
+            final OutputProtos.SyncResponse.PillSettings secondPillSettings = OutputProtos.SyncResponse.PillSettings.newBuilder()
+                    .setPillId(accountsHasPill.get(accountsHasPill.size() - 1).getValue().externalDeviceId)
+                    .setPillColor(blue)
+                    .build();
+            syncResponseBuilder.addPillSettings(secondPillSettings);
+        }
+
+        return syncResponseBuilder;
+    }
 
     @Deprecated
     @POST
@@ -249,36 +330,36 @@ public class ReceiveResource extends BaseResource {
     }
 
 
-    private OutputProtos.SyncResponse.Alarm.Builder getAlarmBuilderFromNextRingTime(final String deviceId, final List<AlarmInfo> alarmInfoFromThatDevice){
+    private OutputProtos.SyncResponse.Alarm.Builder getAlarmBuilderFromNextRingTime(final String deviceId, final List<UserInfo> userInfoFromThatDevice){
         RingTime nextRingTimeFromWorker = RingTime.createEmpty();
         RingTime nextRingTime = RingTime.createEmpty();
         Optional<DateTimeZone> userTimeZoneOptional = Optional.absent();
 
         //// Start: Try get the user time zone and ring time generated by smart alarm worker /////////
-        for(final AlarmInfo alarmInfo:alarmInfoFromThatDevice){
+        for(final UserInfo userInfo : userInfoFromThatDevice){
 
-            if(!alarmInfo.deviceId.equals(deviceId)){
-                LOGGER.warn("alarm info list contains data not from device {}, got {}", deviceId, alarmInfo.deviceId);
+            if(!userInfo.deviceId.equals(deviceId)){
+                LOGGER.warn("alarm info list contains data not from device {}, got {}", deviceId, userInfo.deviceId);
                 continue;
             }
 
-            if(alarmInfo.timeZone.isPresent()){
-                userTimeZoneOptional = Optional.of(alarmInfo.timeZone.get());
+            if(userInfo.timeZone.isPresent()){
+                userTimeZoneOptional = Optional.of(userInfo.timeZone.get());
             }else{
-                LOGGER.warn("User {} on device {} time zone not set.", alarmInfo.accountId, alarmInfo.deviceId);
+                LOGGER.warn("User {} on device {} time zone not set.", userInfo.accountId, userInfo.deviceId);
                 continue;
             }
 
-            if(alarmInfo.ringTime.isPresent()){
-                if(alarmInfo.ringTime.get().isEmpty()){
+            if(userInfo.ringTime.isPresent()){
+                if(userInfo.ringTime.get().isEmpty()){
                     continue;
                 }
 
                 if(nextRingTimeFromWorker.isEmpty()){
-                    nextRingTimeFromWorker = alarmInfo.ringTime.get();
+                    nextRingTimeFromWorker = userInfo.ringTime.get();
                 }else{
-                    if(alarmInfo.ringTime.get().actualRingTimeUTC < nextRingTimeFromWorker.actualRingTimeUTC){
-                        nextRingTimeFromWorker = alarmInfo.ringTime.get();
+                    if(userInfo.ringTime.get().actualRingTimeUTC < nextRingTimeFromWorker.actualRingTimeUTC){
+                        nextRingTimeFromWorker = userInfo.ringTime.get();
                     }
                 }
             }
@@ -297,7 +378,7 @@ public class ReceiveResource extends BaseResource {
         int ringDurationInMS = 30 * DateTimeConstants.MILLIS_PER_SECOND;  // TODO: make this flexible so we can adjust based on user preferences.
 
         try {
-            nextRegularRingTimeOptional = Optional.of(RingProcessor.getNextRegularRingTime(alarmInfoFromThatDevice,
+            nextRegularRingTimeOptional = Optional.of(RingProcessor.getNextRegularRingTime(userInfoFromThatDevice,
                     deviceId,
                     DateTime.now()));
         }catch (Exception ex){
@@ -361,6 +442,7 @@ public class ReceiveResource extends BaseResource {
                 .setEndTime((int) ((nextRingTime.actualRingTimeUTC + ringDurationInMS) / DateTimeConstants.MILLIS_PER_SECOND))
                 .setRingDurationInSecond(ringDurationInMS / DateTimeConstants.MILLIS_PER_SECOND)
                 .setRingtoneId(soundId)
+                .setRingtonePath(Alarm.Utils.getSoundPathFromSoundId(soundId))
                 .setRingOffsetFromNowInSecond(ringOffsetFromNowInSecond);
 
         return alarmBuilder;
@@ -379,14 +461,14 @@ public class ReceiveResource extends BaseResource {
         // requests to break our bank(Assume that Dynamo DB never goes down).
         // May be we should somehow cache these data to reduce load & cost.
 
-        final List<AlarmInfo> alarmInfoList = new ArrayList<>();
+        final List<UserInfo> userInfoList = new ArrayList<>();
 
         try {
-            alarmInfoList.addAll(this.mergedInfoDynamoDB.getInfo(deviceName));  // get alarm related info from DynamoDB "cache".
+            userInfoList.addAll(this.mergedInfoDynamoDB.getInfo(deviceName));  // get alarm related info from DynamoDB "cache".
         }catch (Exception ex){
             LOGGER.error("Failed to retrieve info from merge info db for device {}: {}", deviceName, ex.getMessage());
         }
-        LOGGER.debug("Found {} pairs", alarmInfoList.size());
+        LOGGER.debug("Found {} pairs", userInfoList.size());
 
         final OutputProtos.SyncResponse.Builder responseBuilder = OutputProtos.SyncResponse.newBuilder();
 
@@ -405,7 +487,7 @@ public class ReceiveResource extends BaseResource {
                 continue;
             }
 
-            final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(),
+            final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(), data.getLight(),
                     roundedDateTime.getMillis(),
                     data.getFirmwareVersion(),
                     DateTime.now(),
@@ -423,7 +505,7 @@ public class ReceiveResource extends BaseResource {
 //            alarmBuilder.setRingtoneIds(i, replyRingTime.soundIds[i]);
 //        }
 
-        final OutputProtos.SyncResponse.Alarm.Builder alarmBuilder = getAlarmBuilderFromNextRingTime(deviceName, alarmInfoList);
+        final OutputProtos.SyncResponse.Alarm.Builder alarmBuilder = getAlarmBuilderFromNextRingTime(deviceName, userInfoList);
         responseBuilder.setAlarm(alarmBuilder.build());
 
         final String firmwareFeature = String.format("firmware_release_%s", firmwareVersion);
@@ -434,12 +516,32 @@ public class ReceiveResource extends BaseResource {
 
         if(featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceName, groups)) {
             LOGGER.warn("Always OTA is on for device: ", deviceName);
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName, "jackson-dev", firmwareVersion);
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName,
+                    FeatureFlipper.ALWAYS_OTA_RELEASE, firmwareVersion);
             LOGGER.warn("{} files added to syncResponse to be downloaded", fileDownloadList.size());
             responseBuilder.addAllFiles(fileDownloadList);
+        } else if (featureFlipper.deviceFeatureActive(FeatureFlipper.FORCE_EVT_OTA_UPDATE, deviceName, groups) && deviceName.length() == 12) {
+
+            LOGGER.warn("Forcing OTA for EVT units: ", deviceName);
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName,
+                    "pang-fire-fighting", firmwareVersion);
+            LOGGER.warn("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+            responseBuilder.addAllFiles(fileDownloadList);
+
         } else {
             // groups take precedence over feature
-            if (!groups.isEmpty() && batch.getDataList().size() > 1) {
+            boolean canOTA = false;
+            if(batch.hasUptimeInSecond()){
+                canOTA = (batch.getUptimeInSecond() > 20 * DateTimeConstants.SECONDS_PER_MINUTE);
+            }else{
+                canOTA = (batch.getDataList().size() > 1);
+            }
+
+            if(groups.contains("chris-dev")){
+                canOTA = true;
+            }
+
+            if (!groups.isEmpty() && canOTA) {
                 // TODO check for sense uptime instead and do not OTA if it was just plugged in
 
                 LOGGER.debug("DeviceId {} belongs to groups: {}", deviceName, groups);
@@ -459,29 +561,32 @@ public class ReceiveResource extends BaseResource {
 
         final AudioControlProtos.AudioControl.Builder audioControl = AudioControlProtos.AudioControl
                 .newBuilder()
-                .setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.OFF);
+                .setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.ON)
+                .setAudioSaveFeatures(AudioControlProtos.AudioControl.AudioCaptureAction.OFF)
+                .setAudioSaveRawData(AudioControlProtos.AudioControl.AudioCaptureAction.OFF);
 
-        final DateTime now = DateTime.now(DateTimeZone.forID("America/Los_Angeles"));
-        final Boolean audioRecordingWindow = now.getHourOfDay() > 0 && now.getHourOfDay() < 7;
-
-        if(featureFlipper.deviceFeatureActive(FeatureFlipper.AUDIO_CAPTURE, deviceName, groups) && audioRecordingWindow) {
-            LOGGER.debug("AUDIO_CAPTURE feature is active for device_id = {}", deviceName);
+        if(featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_ON_AUDIO, deviceName, groups)) {
             audioControl.setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
+            audioControl.setAudioSaveFeatures(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
+            audioControl.setAudioSaveRawData(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
         }
-
 
 
         if(featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceName, groups)) {
             responseBuilder.setBatchSize(1);
         } else {
-            final DateTimeZone userTimeZone = getUserTimeZone(alarmInfoList);
+            final DateTimeZone userTimeZone = getUserTimeZone(userInfoList);
 
             final Long userNextAlarmTimestamp = alarmBuilder.hasStartTime() ? alarmBuilder.getStartTime() * 1000L : 0;
 
             final Integer uploadInterval = UploadSettings.getUploadInterval(DateTime.now(userTimeZone), senseUploadConfiguration, userNextAlarmTimestamp);
             responseBuilder.setBatchSize(uploadInterval);
+            if(groups.contains("chris-dev")){
+                responseBuilder.setBatchSize(1);
+            }
         }
         responseBuilder.setAudioControl(audioControl);
+        setPillSettings(deviceName, responseBuilder, this.deviceDAO);
 
 
         final OutputProtos.SyncResponse syncResponse = responseBuilder.build();
@@ -566,8 +671,8 @@ public class ReceiveResource extends BaseResource {
         // This is the default timezone.
         DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
         final String senseId  = batchPilldata.getDeviceId();
-        final List<AlarmInfo> alarmInfoList = this.mergedInfoDynamoDB.getInfo(senseId);
-        for(final AlarmInfo info:alarmInfoList){
+        final List<UserInfo> userInfoList = this.mergedInfoDynamoDB.getInfo(senseId);
+        for(final UserInfo info: userInfoList){
             if(info.timeZone.isPresent()){
                 userTimeZone = info.timeZone.get();
             }
@@ -643,9 +748,9 @@ public class ReceiveResource extends BaseResource {
         return signedResponse.get();
     }
 
-    private DateTimeZone getUserTimeZone(List<AlarmInfo> alarmInfoList) {
+    private DateTimeZone getUserTimeZone(List<UserInfo> userInfoList) {
         DateTimeZone userTimeZone = DateTimeZone.getDefault();
-        for(final AlarmInfo info:alarmInfoList){
+        for(final UserInfo info: userInfoList){
             if(info.timeZone.isPresent()){
                 userTimeZone = info.timeZone.get();
             }

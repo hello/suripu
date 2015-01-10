@@ -6,10 +6,10 @@ import com.hello.suripu.app.models.RedisPaginator;
 import com.hello.suripu.core.configuration.ActiveDevicesTrackerConfiguration;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Account;
-import com.hello.suripu.core.models.AlarmInfo;
+import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceInactive;
@@ -17,6 +17,7 @@ import com.hello.suripu.core.models.DeviceInactivePage;
 import com.hello.suripu.core.models.DeviceInactivePaginator;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.PillRegistration;
+import com.hello.suripu.core.models.SenseRegistration;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -55,17 +56,37 @@ public class DeviceResources {
 
     private final DeviceDAO deviceDAO;
     private final AccountDAO accountDAO;
-    private final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
+    private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final JedisPool jedisPool;
 
     public DeviceResources(final DeviceDAO deviceDAO,
                            final AccountDAO accountDAO,
-                           final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
+                           final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                            final JedisPool jedisPool) {
         this.deviceDAO = deviceDAO;
         this.accountDAO = accountDAO;
         this.jedisPool = jedisPool;
-        this.mergedAlarmInfoDynamoDB = mergedAlarmInfoDynamoDB;
+        this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
+    }
+
+    @POST
+    @Path("/sense")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public void registerSense(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final SenseRegistration senseRegistration) {
+        try {
+            final Long senseInternalId = deviceDAO.registerSense(accessToken.accountId, senseRegistration.senseId);
+            LOGGER.info("Account {} registered sense {} with internal id = {}", accessToken.accountId, senseRegistration.senseId, senseInternalId);
+            return;
+        } catch (UnableToExecuteStatementException exception) {
+            final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
+            if(matcher.find()) {
+                LOGGER.error("Failed to register sense for account id = {} and sense id = {} : {}", accessToken.accountId, senseRegistration.senseId, exception.getMessage());
+                throw new WebApplicationException(Response.status(Response.Status.CONFLICT)
+                        .entity(new JsonError(409, "Sense already exists for this account.")).build());
+            }
+        }
+
     }
 
     @POST
@@ -114,7 +135,7 @@ public class DeviceResources {
     public void unregisterSense(@Scope(OAuthScope.DEVICE_INFORMATION_WRITE) final AccessToken accessToken,
                                @PathParam("sense_id") String senseId) {
         final Integer numRows = deviceDAO.unregisterSense(senseId);
-        final Optional<AlarmInfo> alarmInfoOptional = this.mergedAlarmInfoDynamoDB.unlinkAccountToDevice(accessToken.accountId, senseId);
+        final Optional<UserInfo> alarmInfoOptional = this.mergedUserInfoDynamoDB.unlinkAccountToDevice(accessToken.accountId, senseId);
 
         // WARNING: Shall we throw error if the dynamoDB unlink fail?
         if(numRows == 0) {
@@ -276,7 +297,7 @@ public class DeviceResources {
                                                          @QueryParam("max_devices") final Long maxDevices,
                                                          @PathParam("device_id") final String deviceId) {
         LOGGER.debug("Searching accounts who have used device {}", deviceId);
-        final ImmutableList<Account> accounts = deviceDAO.getAccountsByDevices(deviceId, maxDevices);
+        final ImmutableList<Account> accounts = deviceDAO.getAccountsByDevice(deviceId, maxDevices);
         return accounts;
     }
 

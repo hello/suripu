@@ -3,7 +3,7 @@ package com.hello.suripu.app.resources.v1;
 import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.TimeZoneHistory;
@@ -33,15 +33,15 @@ public class TimeZoneResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TimeZoneResource.class);
     private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
-    private final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
+    private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final DeviceDAO deviceDAO;
 
     public TimeZoneResource(final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB,
-                            final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB,
+                            final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                             final DeviceDAO deviceDAO){
         this.timeZoneHistoryDAODynamoDB = timeZoneHistoryDAODynamoDB;
         this.deviceDAO = deviceDAO;
-        this.mergedAlarmInfoDynamoDB = mergedAlarmInfoDynamoDB;
+        this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
     }
 
     @POST
@@ -63,7 +63,7 @@ public class TimeZoneResource {
         {
             try {
                 final DateTimeZone timeZone = DateTimeZone.forID(timeZoneHistory.timeZoneId);
-                this.mergedAlarmInfoDynamoDB.setTimeZone(deviceAccountPair.externalDeviceId, token.accountId, timeZone);
+                this.mergedUserInfoDynamoDB.setTimeZone(deviceAccountPair.externalDeviceId, token.accountId, timeZone);
 
                 final Optional<TimeZoneHistory> timeZoneHistoryOptional = this.timeZoneHistoryDAODynamoDB.updateTimeZone(token.accountId,
                         timeZoneHistory.timeZoneId,

@@ -14,7 +14,7 @@ import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
-import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
@@ -113,10 +113,10 @@ public final class SenseSaveWorkerCommand extends ConfiguredCommand<SenseSaveWor
         final AmazonDynamoDBClient dynamoDB = new AmazonDynamoDBClient(awsCredentialsProvider);
         dynamoDB.setEndpoint(configuration.getMergedInfoDB().getEndpoint());
 
-        final MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB = new MergedAlarmInfoDynamoDB(dynamoDB, configuration.getMergedInfoDB().getTableName());
+        final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(dynamoDB, configuration.getMergedInfoDB().getTableName());
 
         final JedisPool jedisPool = new JedisPool("localhost");
-        final IRecordProcessorFactory factory = new SenseSaveProcessorFactory(deviceDAO, mergedAlarmInfoDynamoDB, deviceDataDAO, jedisPool);
+        final IRecordProcessorFactory factory = new SenseSaveProcessorFactory(deviceDAO, mergedUserInfoDynamoDB, deviceDataDAO, jedisPool);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
     }

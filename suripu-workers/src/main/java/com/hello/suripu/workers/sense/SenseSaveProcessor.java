@@ -11,8 +11,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
-import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
-import com.hello.suripu.core.models.AlarmInfo;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
@@ -41,7 +41,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     public final static Integer CLOCK_SKEW_TOLERATED_IN_HOURS = 2;
     private final DeviceDAO deviceDAO;
     private final DeviceDataDAO deviceDataDAO;
-    private final MergedAlarmInfoDynamoDB mergedInfoDynamoDB;
+    private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
     private final ActiveDevicesTracker activeDevicesTracker;
 
     private final Meter messagesProcessed;
@@ -50,7 +50,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private final Meter emptyDynamoDB;
 
 
-    public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedAlarmInfoDynamoDB mergedInfoDynamoDB, final DeviceDataDAO deviceDataDAO, final ActiveDevicesTracker activeDevicesTracker) {
+    public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataDAO deviceDataDAO, final ActiveDevicesTracker activeDevicesTracker) {
         this.deviceDAO = deviceDAO;
         this.mergedInfoDynamoDB = mergedInfoDynamoDB;
         this.deviceDataDAO = deviceDataDAO;
@@ -101,7 +101,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             }
 
             // This is the default timezone.
-            final List<AlarmInfo> deviceAccountInfoFromMergeTable = new ArrayList<>();
+            final List<UserInfo> deviceAccountInfoFromMergeTable = new ArrayList<>();
             int retries = 2;
             for(int i = 0; i < retries; i++) {
                 try {
@@ -146,12 +146,12 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
                 for (final DeviceAccountPair pair : deviceAccountPairs) {
                     Optional<DateTimeZone> timeZoneOptional = Optional.absent();
-                    for(final AlarmInfo alarmInfo:deviceAccountInfoFromMergeTable){
-                        if(alarmInfo.accountId == pair.accountId){
-                            if(alarmInfo.timeZone.isPresent()){
-                                timeZoneOptional = alarmInfo.timeZone;
+                    for(final UserInfo userInfo :deviceAccountInfoFromMergeTable){
+                        if(userInfo.accountId == pair.accountId){
+                            if(userInfo.timeZone.isPresent()){
+                                timeZoneOptional = userInfo.timeZone;
                             }else{
-                                LOGGER.warn("No timezone for device {} account {}", deviceName, alarmInfo.accountId);
+                                LOGGER.warn("No timezone for device {} account {}", deviceName, userInfo.accountId);
                                 continue;
                             }
                         }

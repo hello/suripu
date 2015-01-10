@@ -10,7 +10,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.MergedAlarmInfoDynamoDB;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmSound;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -45,7 +45,7 @@ public class AlarmResourceTestIT {
     private BasicAWSCredentials awsCredentials;
     private AmazonDynamoDBClient amazonDynamoDBClient;
     private AlarmDAODynamoDB alarmDAODynamoDB;
-    private MergedAlarmInfoDynamoDB mergedAlarmInfoDynamoDB;
+    private MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final AmazonS3 amazonS3 = mock(AmazonS3.class);
 
     private AlarmResource alarmResource;
@@ -87,8 +87,8 @@ public class AlarmResourceTestIT {
                     this.tableName
             );
 
-            MergedAlarmInfoDynamoDB.createTable(this.alarmInfoTableName, this.amazonDynamoDBClient);
-            this.mergedAlarmInfoDynamoDB = new MergedAlarmInfoDynamoDB(
+            MergedUserInfoDynamoDB.createTable(this.alarmInfoTableName, this.amazonDynamoDBClient);
+            this.mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(
                     this.amazonDynamoDBClient,
                     this.alarmInfoTableName
             );
@@ -98,7 +98,7 @@ public class AlarmResourceTestIT {
             this.deviceAccountPairs.add(new DeviceAccountPair(1L, 1L, "test morpheus"));
             when(deviceDAO.getDeviceAccountMapFromAccountId(1L)).thenReturn(ImmutableList.copyOf(this.deviceAccountPairs));
 
-            this.alarmResource = new AlarmResource(this.alarmDAODynamoDB, mergedAlarmInfoDynamoDB, deviceDAO, amazonS3);
+            this.alarmResource = new AlarmResource(this.alarmDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO, amazonS3);
 
 
         }catch (ResourceInUseException rie){
@@ -214,7 +214,7 @@ public class AlarmResourceTestIT {
 
     @Test
     public void testSetAndGetValidAlarm(){
-        this.mergedAlarmInfoDynamoDB.setTimeZone("test morpheus", 1L, DateTimeZone.getDefault());
+        this.mergedUserInfoDynamoDB.setTimeZone("test morpheus", 1L, DateTimeZone.getDefault());
         this.alarmResource.setAlarms(this.token, DateTime.now().getMillis(), this.validList);
         final List<Alarm> actual = this.alarmResource.getAlarms(this.token);
         final List<Alarm> expected = this.validList;
