@@ -268,7 +268,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new TeamsResource(teamStore));
         environment.addResource(new FeedbackResource(feedbackDAO));
 
-        environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO, deviceDataDAO, deviceDAO, aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, new LightData()));
+        environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO, deviceDataDAO, deviceDAO, aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, trendsDAO, new LightData()));
 
         final FirmwareUpdateDAO firmwareUpdateDAO = commonDB.onDemand(FirmwareUpdateDAO.class);
         final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);
