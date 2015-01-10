@@ -30,6 +30,14 @@ public class InsightsGeneratorWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
+    @JsonProperty("insights_db")
+    private DatabaseConfiguration insightsDB = new DatabaseConfiguration();
+    public DatabaseConfiguration getInsightsDB() {
+        return insightsDB;
+    }
+
+    @Valid
+    @NotNull
     @Max(1000)
     @JsonProperty("max_records")
     private Integer maxRecords;

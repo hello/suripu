@@ -19,6 +19,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.TrendsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.processors.insights.LightData;
@@ -81,6 +82,16 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
         final DeviceDAO deviceDAO = sensorDBI.onDemand(DeviceDAO.class);
         final DeviceDataDAO deviceDataDAO = sensorDBI.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorDBI.onDemand(TrackerMotionDAO.class);
+
+        final ManagedDataSource insightsDataSource = managedDataSourceFactory.build(configuration.getInsightsDB());
+        final DBI insightsDBI = new DBI(sensorDataSource);
+        insightsDBI.registerArgumentFactory(new OptionalArgumentFactory(configuration.getInsightsDB().getDriverClass()));
+        insightsDBI.registerContainerFactory(new ImmutableListContainerFactory());
+        insightsDBI.registerContainerFactory(new ImmutableSetContainerFactory());
+        insightsDBI.registerContainerFactory(new OptionalContainerFactory());
+        insightsDBI.registerArgumentFactory(new JodaArgumentFactory());
+
+        final TrendsDAO trendsDAO = insightsDBI.onDemand(TrendsDAO.class);
 
         // metrics stuff
         if(configuration.getMetricsEnabled()) {
@@ -153,6 +164,7 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
                 trackerMotionDAO,
                 aggregateSleepScoreDAODynamoDB,
                 insightsDAODynamoDB,
+                trendsDAO,
                 lightData);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
