@@ -266,16 +266,22 @@ public class RegisterResource {
             }
         }
 
-        final String ip = request.getHeader("X-Forwarded-For");
-        LoggingProtos.Registration registration = LoggingProtos.Registration.newBuilder()
-                .setAccountId(accountId)
-                .setDeviceId(deviceId)
-                .setTimestamp(DateTime.now().getMillis())
-                .setIpAddress(ip)
-                .build();
+        try {
+            final String ip = request.getHeader("X-Forwarded-For");
+            LoggingProtos.Registration.Builder registration = LoggingProtos.Registration.newBuilder()
+                    .setAccountId(accountId)
+                    .setDeviceId(deviceId)
+                    .setTimestamp(DateTime.now().getMillis());
 
-        final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.REGISTRATIONS);
-        dataLogger.put(accountId.toString(), registration.toByteArray());
+            if (ip != null) {
+                registration.setIpAddress(ip);
+            }
+
+            final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.REGISTRATIONS);
+            dataLogger.put(accountId.toString(), registration.build().toByteArray());
+        } catch (Exception e) {
+            LOGGER.error("Failed inserting registration into kinesis stream: {}", e.getMessage());
+        }
 
         return builder;
     }
@@ -300,8 +306,25 @@ public class RegisterResource {
     @Path("/morpheus")
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Timed
+    @Deprecated
     public Response registerMorpheus(final byte[] body) {
+        final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
+        if(senseIdFromHeader != null){
+            LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
+        }
+        final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_MORPHEUS);
+        if(senseIdFromHeader != null){
+            return signAndSend(senseIdFromHeader, builder, senseKeyStore);
+        }
+        return signAndSend(builder.getDeviceId(), builder, senseKeyStore);
+    }
+
+    @POST
+    @Path("/sense")
+    @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Timed
+    public Response registerSense(final byte[] body) {
         final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
         if(senseIdFromHeader != null){
             LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
