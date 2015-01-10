@@ -7,6 +7,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.TrendsDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -48,6 +49,7 @@ public class DataScienceResource {
     private final DeviceDAO deviceDAO;
     private final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
+    private final TrendsDAO trendsDAO;
     private final LightData lightData;
 
     public DataScienceResource(final AccountDAO accountDAO,
@@ -56,6 +58,7 @@ public class DataScienceResource {
                                final DeviceDAO deviceDAO,
                                final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
                                final InsightsDAODynamoDB insightsDAODynamoDB,
+                               final TrendsDAO trendsDAO,
                                final LightData lightData){
         this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
@@ -63,6 +66,7 @@ public class DataScienceResource {
         this.deviceDAO = deviceDAO;
         this.aggregateSleepScoreDAODynamoDB = aggregateSleepScoreDAODynamoDB;
         this.insightsDAODynamoDB = insightsDAODynamoDB;
+        this.trendsDAO = trendsDAO;
         this.lightData = lightData;
     }
 
@@ -117,7 +121,7 @@ public class DataScienceResource {
 
         final InsightCard.Category category = InsightCard.Category.fromInteger(value);
 
-        final InsightProcessor processor = new InsightProcessor(deviceDataDAO, deviceDAO, trackerMotionDAO, aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, lightData);
+        final InsightProcessor processor = new InsightProcessor(deviceDataDAO, deviceDAO, trendsDAO, trackerMotionDAO, aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, lightData);
         final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
         if (accountOptional.isPresent()) {
             final Long accountId = accountOptional.get().id.get();
@@ -127,7 +131,8 @@ public class DataScienceResource {
                 return;
             }
 
-            processor.generateInsightsByCategory(accountId, deviceIdOptional.get(), category);
+            processor.generateInsights(accountId, accountOptional.get().created);
+            //processor.generateInsightsByCategory(accountId, deviceIdOptional.get(), category);
         }
     }
 }

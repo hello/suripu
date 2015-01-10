@@ -17,9 +17,7 @@ public class SunRiseEvent extends Event {
     }
 
     @Override
-    public String getDescription(){
-        return "Sun rise";
-    }
+    public String getDescription(){ return ""; }
 
     /*
     * Let's don't put the setters in the base class, because not all events has those properties.

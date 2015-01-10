@@ -13,7 +13,7 @@ public class WakeupEvent extends Event {
 
     @Override
     public String getDescription() {
-        return "Woke up";
+        return "";
     }
 
     @Override

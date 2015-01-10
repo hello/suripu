@@ -57,6 +57,12 @@ public class RegisterResource {
 
     private final Boolean debug;
 
+    private enum PairState{
+        NOT_PAIRED,
+        PAIRED_WITH_CURRENT_ACCOUNT,
+        PAIRING_VIOLATION;
+    }
+
     @Context
     HttpServletRequest request;
 
@@ -99,6 +105,52 @@ public class RegisterResource {
         }catch (AmazonServiceException ase){
             LOGGER.error("Set pill {} color for sense {} faile: {}", pillId, senseId, ase.getErrorMessage());
         }
+    }
+
+    public static PairState getSensePairingState(final DeviceDAO deviceDAO, final String senseId, final long accountId){
+        final List<DeviceAccountPair> pairedSense = deviceDAO.getSensesForAccountId(accountId);
+        if(pairedSense.size() > 1){  // This account already paired with multiple senses
+            return PairState.PAIRING_VIOLATION;
+        }
+
+        if(pairedSense.size() == 0){
+            return PairState.NOT_PAIRED;
+        }
+
+        if(pairedSense.get(0).externalDeviceId.equals(senseId)){
+            return PairState.PAIRED_WITH_CURRENT_ACCOUNT;  // only one sense, and it is current sense, firmware retry request
+        }else{
+            return PairState.PAIRING_VIOLATION;  // already paired with another one.
+        }
+    }
+
+    public static PairState getPillPairingState(final DeviceDAO deviceDAO, final String pillId, final long accountId){
+        final List<DeviceAccountPair> pairedPills = deviceDAO.getPillsForAccountId(accountId);
+        final List<DeviceAccountPair> pairedAccounts = deviceDAO.getLinkedAccountFromPillId(pillId);
+        if(pairedPills.size() > 1 || pairedAccounts.size() > 1){  // This account already paired with multiple pills
+            return PairState.PAIRING_VIOLATION;
+        }
+
+        if(pairedAccounts.size() == 0 && pairedPills.size() == 0){
+            return PairState.NOT_PAIRED;
+        }
+
+        if(pairedAccounts.size() == 1 && pairedPills.size() == 1 && pairedPills.get(0).externalDeviceId.equals(pillId)){
+            // might be a firmware retry
+            return PairState.PAIRED_WITH_CURRENT_ACCOUNT;
+        }
+
+        // else:
+        if(pairedAccounts.size() == 1 && pairedPills.size() == 0){
+            // pill already paired with an account, but this account is new, stolen pill?
+            LOGGER.error("Pill {} might got stolen, account {} is a theft!", pillId, accountId);
+        }
+        if(pairedPills.size() == 1 && pairedAccounts.size() == 0){
+            // account already paired with a pill, only one pill is allowed
+            LOGGER.error("Account {} already paired with pill {}", accountId, pairedPills.get(0).externalDeviceId);
+        }
+        return PairState.PAIRING_VIOLATION;
+
     }
 
     private MorpheusCommand.Builder pair(final byte[] encryptedRequest, final KeyStore keyStore, final PairAction action) {
@@ -182,17 +234,35 @@ public class RegisterResource {
 
         try {
             switch (action){
-                case PAIR_MORPHEUS:
+                case PAIR_MORPHEUS: {
+                    final PairState pairState = getSensePairingState(this.deviceDAO, senseId, accountId);
+                    if (pairState == PairState.NOT_PAIRED) {
+                        this.deviceDAO.registerSense(accountId, senseId);
+                    }
 
-
-                    this.deviceDAO.registerSense(accountId, deviceId);
-                    builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE);
+                    if (pairState == PairState.NOT_PAIRED || pairState == PairState.PAIRED_WITH_CURRENT_ACCOUNT) {
+                        builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE);
+                    } else {
+                        LOGGER.error("Account {} tries to pair multiple senses", accountId);
+                        builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
+                        builder.setError(SenseCommandProtos.ErrorType.DEVICE_ALREADY_PAIRED);
+                    }
+                }
                     break;
-                case PAIR_PILL:
+                case PAIR_PILL: {
+                    final PairState pairState = getPillPairingState(this.deviceDAO, deviceId, accountId);
+                    if (pairState == PairState.NOT_PAIRED) {
+                        this.deviceDAO.registerTracker(accountId, deviceId);
+                        this.setPillColor(senseId, accountId, deviceId);
+                    }
 
-                    this.deviceDAO.registerTracker(accountId, deviceId);
-                    this.setPillColor(senseId, accountId, deviceId);
-                    builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_PILL);
+                    if (pairState == PairState.NOT_PAIRED || pairState == PairState.PAIRED_WITH_CURRENT_ACCOUNT) {
+                        builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_PILL);
+                    } else {
+                        builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
+                        builder.setError(SenseCommandProtos.ErrorType.DEVICE_ALREADY_PAIRED);
+                    }
+                }
                     break;
             }
             //builder.setAccountId(morpheusCommand.getAccountId());
@@ -213,16 +283,22 @@ public class RegisterResource {
             }
         }
 
-        final String ip = request.getHeader("X-Forwarded-For");
-        LoggingProtos.Registration registration = LoggingProtos.Registration.newBuilder()
-                .setAccountId(accountId)
-                .setDeviceId(deviceId)
-                .setTimestamp(DateTime.now().getMillis())
-                .setIpAddress(ip)
-                .build();
+        try {
+            final String ip = request.getHeader("X-Forwarded-For");
+            LoggingProtos.Registration.Builder registration = LoggingProtos.Registration.newBuilder()
+                    .setAccountId(accountId)
+                    .setDeviceId(deviceId)
+                    .setTimestamp(DateTime.now().getMillis());
 
-        final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.REGISTRATIONS);
-        dataLogger.put(accountId.toString(), registration.toByteArray());
+            if (ip != null) {
+                registration.setIpAddress(ip);
+            }
+
+            final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.REGISTRATIONS);
+            dataLogger.put(accountId.toString(), registration.build().toByteArray());
+        } catch (Exception e) {
+            LOGGER.error("Failed inserting registration into kinesis stream: {}", e.getMessage());
+        }
 
         return builder;
     }
@@ -247,8 +323,25 @@ public class RegisterResource {
     @Path("/morpheus")
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Timed
+    @Deprecated
     public Response registerMorpheus(final byte[] body) {
+        final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
+        if(senseIdFromHeader != null){
+            LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
+        }
+        final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_MORPHEUS);
+        if(senseIdFromHeader != null){
+            return signAndSend(senseIdFromHeader, builder, senseKeyStore);
+        }
+        return signAndSend(builder.getDeviceId(), builder, senseKeyStore);
+    }
+
+    @POST
+    @Path("/sense")
+    @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Timed
+    public Response registerSense(final byte[] body) {
         final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
         if(senseIdFromHeader != null){
             LOGGER.info("Sense Id from http header {}", senseIdFromHeader);

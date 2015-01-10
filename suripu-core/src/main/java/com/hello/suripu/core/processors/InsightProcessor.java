@@ -6,6 +6,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.TrendsDAO;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
@@ -30,6 +31,7 @@ public class InsightProcessor {
 
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
+    private final TrendsDAO trendsDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
@@ -37,12 +39,14 @@ public class InsightProcessor {
 
     public InsightProcessor(final DeviceDataDAO deviceDataDAO,
                             final DeviceDAO deviceDAO,
+                            final TrendsDAO trendsDAO,
                             final TrackerMotionDAO trackerMotionDAO,
                             final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
                             final InsightsDAODynamoDB insightsDAODynamoDB,
                             final LightData lightData) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
+        this.trendsDAO = trendsDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.scoreDAODynamoDB = scoreDAODynamoDB;
         this.insightsDAODynamoDB = insightsDAODynamoDB;
@@ -82,7 +86,7 @@ public class InsightProcessor {
                 insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
                 break;
             case 2:
-                insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceDAO, deviceDataDAO);
+                insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO);
                 break;
             default:
                 insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
@@ -105,6 +109,7 @@ public class InsightProcessor {
 
         // TODO
         if (recentCategories.contains(InsightCard.Category.LIGHT)) {
+            LOGGER.debug("No new insights generated: {}", accountId);
             return;
         }
 
@@ -128,7 +133,7 @@ public class InsightProcessor {
     private Set<InsightCard.Category> getRecentInsightsCategories(final Long accountId) {
         // get all insights from the past week
         final DateTime aWeekAgo = DateTime.now(DateTimeZone.UTC).minus(7);
-        final Boolean chronological = true;
+        final Boolean chronological = false;
 
         final List<InsightCard> cards = this.insightsDAODynamoDB.getInsightsByDate(accountId, aWeekAgo, chronological, RECENT_DAYS);
 

@@ -45,6 +45,7 @@ import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
 import com.hello.suripu.service.cli.CreateKeyStoreDynamoDBTable;
+import com.hello.suripu.service.cli.CreatePillKeyStoreDynamoDBTable;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
 import com.hello.suripu.service.modules.RolloutModule;
 import com.hello.suripu.service.resources.AudioResource;
@@ -83,7 +84,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
     public void initialize(Bootstrap<SuripuConfiguration> bootstrap) {
         bootstrap.addBundle(new DBIExceptionsBundle());
         bootstrap.addCommand(new CreateKeyStoreDynamoDBTable());
-//        bootstrap.addCommand(new CreatePillKeyStoreDynamoDBTable());
+        bootstrap.addCommand(new CreatePillKeyStoreDynamoDBTable());
     }
 
     @Override
@@ -225,7 +226,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
                         bucketName,
                         audioDataLogger,
                         configuration.getDebug(),
-                        audioMetaDataLogger));
+                        audioMetaDataLogger,
+                        senseKeyStore));
 
         environment.addResource(new DownloadResource(s3Client, "hello-firmware"));
 

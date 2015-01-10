@@ -437,7 +437,7 @@ public class ReceiveResource extends BaseResource {
                 continue;
             }
 
-            final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(),
+            final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(), data.getLight(),
                     roundedDateTime.getMillis(),
                     data.getFirmwareVersion(),
                     DateTime.now(),
@@ -487,6 +487,10 @@ public class ReceiveResource extends BaseResource {
                 canOTA = (batch.getDataList().size() > 1);
             }
 
+            if(groups.contains("chris-dev")){
+                canOTA = true;
+            }
+
             if (!groups.isEmpty() && canOTA) {
                 // TODO check for sense uptime instead and do not OTA if it was just plugged in
 
@@ -507,16 +511,15 @@ public class ReceiveResource extends BaseResource {
 
         final AudioControlProtos.AudioControl.Builder audioControl = AudioControlProtos.AudioControl
                 .newBuilder()
-                .setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.OFF);
+                .setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.ON)
+                .setAudioSaveFeatures(AudioControlProtos.AudioControl.AudioCaptureAction.OFF)
+                .setAudioSaveRawData(AudioControlProtos.AudioControl.AudioCaptureAction.OFF);
 
-        final DateTime now = DateTime.now(DateTimeZone.forID("America/Los_Angeles"));
-        final Boolean audioRecordingWindow = now.getHourOfDay() > 0 && now.getHourOfDay() < 7;
-
-        if(featureFlipper.deviceFeatureActive(FeatureFlipper.AUDIO_CAPTURE, deviceName, groups) && audioRecordingWindow) {
-            LOGGER.debug("AUDIO_CAPTURE feature is active for device_id = {}", deviceName);
+        if(featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_ON_AUDIO, deviceName, groups)) {
             audioControl.setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
+            audioControl.setAudioSaveFeatures(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
+            audioControl.setAudioSaveRawData(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
         }
-
 
 
         if(featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceName, groups)) {
@@ -526,6 +529,9 @@ public class ReceiveResource extends BaseResource {
             final Long userNextAlarmTimestamp = alarmBuilder.hasStartTime() ? alarmBuilder.getStartTime() * 1000L : 0;
             final Integer uploadInterval = UploadSettings.getUploadInterval(DateTime.now(userTimeZone), senseUploadConfiguration, userNextAlarmTimestamp);
             responseBuilder.setBatchSize(uploadInterval);
+            if(groups.contains("chris-dev")){
+                responseBuilder.setBatchSize(1);
+            }
         }
         responseBuilder.setAudioControl(audioControl);
         setPillColors(userInfoList, responseBuilder);

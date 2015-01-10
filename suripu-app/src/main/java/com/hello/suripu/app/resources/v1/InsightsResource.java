@@ -17,6 +17,7 @@ import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.processors.insights.GenericInsights;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.TrendGraphUtils;
 import com.yammer.metrics.annotation.Timed;
@@ -72,6 +73,16 @@ public class InsightsResource {
         final DateTime queryDate = DateTime.now(DateTimeZone.UTC).plusDays(1);
         final ImmutableList<InsightCard> cards = insightsDAODynamoDB.getInsightsByDate(accessToken.accountId,
                 queryDate, chronological, MAX_INSIGHTS_NUM);
+
+        if (cards.size() == 0) {
+            // no insights generated yet, probably a new user, send introduction card
+            final InsightCard introCard = GenericInsights.getIntroductionCard(accessToken.accountId);
+            this.insightsDAODynamoDB.insertInsight(introCard);
+            final List<InsightCard> newCards = new ArrayList<>();
+            newCards.add(introCard);
+            return newCards;
+        }
+
         // TODO: fetch generic cards.
 
         return cards;
@@ -140,9 +151,15 @@ public class InsightsResource {
     @GET
     @Path("/trends/all")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<TrendGraph> getAllTrends(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
+    public List<TrendGraph> getAllTrends(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken,
+                                         @QueryParam("option") String timePeriodOption) {
 
         LOGGER.debug("Returning ALL available default graphs for account id = {}", accessToken.accountId);
+
+        TrendGraph.TimePeriodType scoreOverTimePeriod = TrendGraph.TimePeriodType.OVER_TIME_ALL;
+        if (timePeriodOption != null) {
+            scoreOverTimePeriod = TrendGraph.TimePeriodType.fromString(timePeriodOption);
+        }
 
         final Optional<Account> optionalAccount = accountDAO.getById(accessToken.accountId);
         final List<TrendGraph> graphs = new ArrayList<>();
@@ -164,7 +181,7 @@ public class InsightsResource {
                     graphs.add(sleepDurationDayOfWeek.get());
                 }
 
-                final Optional<TrendGraph> sleepScoreOverTime = getGraph(accountId, TrendGraph.TimePeriodType.OVER_TIME_ALL, TrendGraph.DataType.SLEEP_SCORE);
+                final Optional<TrendGraph> sleepScoreOverTime = getGraph(accountId, scoreOverTimePeriod, TrendGraph.DataType.SLEEP_SCORE);
                 if (sleepScoreOverTime.isPresent()) {
                     graphs.add(sleepScoreOverTime.get());
                 }

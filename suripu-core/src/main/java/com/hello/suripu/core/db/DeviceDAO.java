@@ -67,11 +67,9 @@ public interface DeviceDAO {
     @SqlQuery("SELECT * FROM account_tracker_map WHERE account_id = :account_id AND active = true;")
     ImmutableList<DeviceAccountPair> getPillsForAccountId(@Bind("account_id") Long accountId);
 
-    @SingleValueResult(Long.class)
-    @SqlQuery("SELECT id FROM account_tracker_map WHERE account_id = :account_id AND device_id = :device_id;")
-    Optional<Long> getPillIdForAccountIdDeviceId(
-            @Bind("account_id") Long accountId,
-            @Bind("device_id") String deviceId);
+    @RegisterMapper(DeviceAccountPairMapper.class)
+    @SqlQuery("SELECT * FROM account_tracker_map WHERE device_id = :pill_id AND active = TRUE;")
+    ImmutableList<DeviceAccountPair> getLinkedAccountFromPillId(@Bind("pill_id") String deviceId);
 
     @RegisterMapper(DeviceAccountPairMapper.class)
     @SqlQuery("SELECT * FROM account_tracker_map WHERE account_id = :account_id;")
