@@ -53,11 +53,29 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                     LOGGER.error("Missing decryption key for pill: {}", data.getPillId());
                     continue;
                 }
-                final TrackerMotion trackerMotion = new TrackerMotion.Builder().withPillKinesisData(decryptionKey.get(), data).build();
+                TrackerMotion trackerMotion = null; new TrackerMotion.Builder().withPillKinesisData(decryptionKey.get(), data).build();
+                if(data.hasEncryptedData()){
+                    switch (data.getFirmwareVersion()){
+                        case 0:
+                        case 1:
+                            trackerMotion = new TrackerMotion.Builder().withPillKinesisData(decryptionKey.get(), data).build();
+                            break;
+                        case 2:
+                            // TODO: add column to tracker_motion table to save acceleration range and kickoff time
+                            // TODO: modify TrackerMotion & its mapper to have those two attributes
+                            trackerMotion = new TrackerMotion.Builder().withPillKinesisDataVersion2(decryptionKey.get(), data).build();
+                            LOGGER.info("Long data received from pill {}", data.getPillId());
+                            break;
+                        default:
+                            LOGGER.warn("Unknown firmware version of pill data from pill {}", data.getPillId());
+                    }
 
-                trackerData.add(trackerMotion);
+                    if(trackerMotion != null){
+                        trackerData.add(trackerMotion);
+                    }
+                }
 
-                if(data.hasBatteryLevel()){
+                if(data.hasBatteryLevel() && trackerMotion != null){
                     final int batteryLevel = data.getBatteryLevel();
                     final int upTime = data.getUpTime();
                     final int firmwareVersion = data.getFirmwareVersion();

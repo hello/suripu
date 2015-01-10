@@ -162,6 +162,32 @@ public class TrackerMotion {
             return this;
         }
 
+        /*
+        * Take data from Morpheus and transform to core TrackerMotion data structure.
+         */
+        public Builder withPillKinesisDataVersion2(final byte[] key, final InputProtos.PillDataKinesis data){
+
+            final Long accountID = data.hasAccountIdLong() ? data.getAccountIdLong() : Long.parseLong(data.getAccountId());
+            final Long pillID = data.hasPillIdLong() ? data.getPillIdLong() : Long.parseLong(data.getPillId());
+            final DateTime sampleDT = new DateTime(data.getTimestamp(), DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
+            long amplitudeMilliG = -1;
+
+            if(data.hasEncryptedData()){
+                final byte[] encryptedData = data.getEncryptedData().toByteArray();
+
+                final long[] featureVector = Utils.encryptedToRawVersion2(key, encryptedData);
+                amplitudeMilliG = Utils.rawToMilliMS2(featureVector[0]);
+            }
+
+            this.withAccountId(accountID);
+            this.withTrackerId(pillID);
+            this.withTimestampMillis(sampleDT.getMillis());
+            this.withValue((int)amplitudeMilliG);
+            this.withOffsetMillis(data.getOffsetMillis());
+
+            return this;
+        }
+
         public Builder withEncryptedValue(final byte[] key, final SenseCommandProtos.pill_data pillData) {
             long amplitudeMilliG = -1;
             if(pillData.hasMotionDataEntrypted()){
@@ -254,6 +280,53 @@ public class TrackerMotion {
             }
 
             return motionAmplitude;
+
+        }
+
+
+        public static long[] encryptedToRawVersion2(final byte[] key, final byte[] encryptedMotionData) throws IllegalArgumentException {
+
+            final byte[] nonce = Arrays.copyOfRange(encryptedMotionData, 0, 8);
+
+            //final byte[] crc = Arrays.copyOfRange(encryptedMotionData, encryptedMotionData.length - 1 - 2, encryptedMotionData.length);  // Not used yet
+            final byte[] encryptedRawMotion = Arrays.copyOfRange(encryptedMotionData, 8, encryptedMotionData.length);
+
+            final byte[] decryptedRawMotion = counterModeDecrypt(key, nonce, encryptedRawMotion);
+
+            // check for magic bytes 5A5A added by the pill
+            // fail if they don't match
+            // Only pill DVT has magic bytes, so check length to ensure only pill DVT fails if we don't find magic bytes
+            if(decryptedRawMotion.length > 4 && decryptedRawMotion[decryptedRawMotion.length -1] != 90 && decryptedRawMotion[decryptedRawMotion.length -2] != 90) {
+                throw new IllegalArgumentException("Magic bytes don't match");
+            }
+            final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion));
+            Exception exception = null;
+            long motionAmplitude = -1;
+            long maxAccelerationRange = 0;
+            long kickOffTimePerMinute = 0;
+
+            try {
+                motionAmplitude = UnsignedInts.toLong(littleEndianDataInputStream.readInt());
+                maxAccelerationRange = UnsignedInts.toLong(littleEndianDataInputStream.readShort());
+                kickOffTimePerMinute = UnsignedInts.toLong(littleEndianDataInputStream.readShort());
+
+            }catch (IOException ioe){
+                exception = ioe;
+            }finally {
+                try {
+                    littleEndianDataInputStream.close();
+                }catch (IOException ioe){
+                    exception = ioe;
+                }
+            }
+
+
+
+            if(exception != null){
+                throw new IllegalArgumentException(exception);
+            }
+
+            return new long[]{ motionAmplitude, maxAccelerationRange, kickOffTimePerMinute };
 
         }
     }
