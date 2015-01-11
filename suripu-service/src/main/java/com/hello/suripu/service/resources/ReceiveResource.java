@@ -375,7 +375,7 @@ public class ReceiveResource extends BaseResource {
         //// Start: Compute next ring time on-the-fly based on alarm templates, just in case the smart alarm worker dead /////
         Optional<RingTime> nextRegularRingTimeOptional = Optional.absent();
         int ringOffsetFromNowInSecond = -1;
-        int ringDurationInMS = 30 * DateTimeConstants.MILLIS_PER_SECOND;  // TODO: make this flexible so we can adjust based on user preferences.
+        int ringDurationInMS = 120 * DateTimeConstants.MILLIS_PER_SECOND;  // TODO: make this flexible so we can adjust based on user preferences.
 
         try {
             nextRegularRingTimeOptional = Optional.of(RingProcessor.getNextRegularRingTime(userInfoFromThatDevice,
