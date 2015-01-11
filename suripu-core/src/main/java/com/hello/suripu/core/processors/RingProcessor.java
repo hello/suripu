@@ -10,11 +10,10 @@ import com.hello.suripu.algorithm.event.SleepCycleAlgorithm;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
-import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.Alarm;
-import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.models.UserInfo;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -25,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -111,29 +109,14 @@ public class RingProcessor {
                 continue;
             }
             final RingTime currentRingTime = getRingTimeFromAlarmInfo(userInfo);
+            final RingTime nextRingTime = updateNextSmartRingTime(currentTime,
+                    slidingWindowSizeInMinutes, lightSleepThreshold, smartAlarmProcessAheadInMinutes,
+                    currentRingTime, nextRegularRingTime,
+                    userInfo,
+                    trackerMotionDAO, mergedUserInfoDynamoDB);
 
-            if(feature != null) {
-                if (feature.userFeatureActive(FeatureFlipper.SMART_ALARM, userInfo.accountId, Collections.<String>emptyList())) {
-                    final RingTime nextRingTime = updateNextSmartRingTime(currentTime,
-                            slidingWindowSizeInMinutes, lightSleepThreshold, smartAlarmProcessAheadInMinutes,
-                            currentRingTime, nextRegularRingTime,
-                            userInfo,
-                            trackerMotionDAO, mergedUserInfoDynamoDB);
-
-                    ringTimes.add(nextRingTime);
-                } else {
-                    LOGGER.info("Account {} not in smart alarm group.", userInfo.accountId);
-                    ringTimes.add(nextRegularRingTime);
-                }
-            }else{
-                final RingTime nextRingTime = updateNextSmartRingTime(currentTime,
-                        slidingWindowSizeInMinutes, lightSleepThreshold, smartAlarmProcessAheadInMinutes,
-                        currentRingTime, nextRegularRingTime,
-                        userInfo,
-                        trackerMotionDAO, mergedUserInfoDynamoDB);
-
-                ringTimes.add(nextRingTime);
-            }
+            ringTimes.add(nextRingTime);
+            
 
         }
 
