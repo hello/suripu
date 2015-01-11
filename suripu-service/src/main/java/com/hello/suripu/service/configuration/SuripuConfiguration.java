@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hello.suripu.core.configuration.DynamoDBConfiguration;
 import com.hello.suripu.core.configuration.GraphiteConfiguration;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
+import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
@@ -144,9 +145,13 @@ public class SuripuConfiguration extends Configuration {
         return roomConditions;
     }
 
-
-
     @JsonProperty("sense_upload_configuration")
     private SenseUploadConfiguration senseUploadConfiguration;
     public SenseUploadConfiguration getSenseUploadConfiguration() { return this.senseUploadConfiguration; }
+
+    @JsonProperty("kinesis_logger")
+    private KinesisLoggerConfiguration kinesisLoggerConfiguration;
+    public KinesisLoggerConfiguration kinesisLoggerConfiguration() {
+        return kinesisLoggerConfiguration;
+    }
 }
