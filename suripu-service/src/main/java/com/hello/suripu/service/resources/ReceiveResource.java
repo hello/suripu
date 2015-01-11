@@ -380,7 +380,7 @@ public class ReceiveResource extends BaseResource {
         try {
             nextRegularRingTimeOptional = Optional.of(RingProcessor.getNextRegularRingTime(userInfoFromThatDevice,
                     deviceId,
-                    DateTime.now()));
+                    DateTime.now().minusMinutes(1)));  // minus 1 min is important, or we might cancel the alarm when upload happens in the middle of that minute
         }catch (Exception ex){
             LOGGER.error("Get next regular ring time for device {} failed: {}", deviceId, ex.getMessage());
         }
