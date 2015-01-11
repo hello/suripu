@@ -537,7 +537,7 @@ public class ReceiveResource extends BaseResource {
                 canOTA = (batch.getDataList().size() > 1);
             }
 
-            if(groups.contains("chris-dev")){
+            if(groups.contains("chris-dev") || groups.contains("video-photoshoot")){
                 canOTA = true;
             }
 
