@@ -70,7 +70,10 @@ public class AccountResource {
 //            throw new WebApplicationException(Response.status(400).entity(new JsonError(400, error.get().toString())).build());
         }
 
-        final Registration securedRegistration = Registration.encryptPassword(registration);
+        // Overriding email address for kaytlin
+        final Registration possiblyModifiedRegistration = Registration.overrideEmail(registration, "kaitlyn@hello.is");
+        final Registration securedRegistration = Registration.encryptPassword(possiblyModifiedRegistration);
+
 
         LOGGER.debug("Lat: {}", securedRegistration.latitude);
         LOGGER.debug("Lon: {}", securedRegistration.longitude);

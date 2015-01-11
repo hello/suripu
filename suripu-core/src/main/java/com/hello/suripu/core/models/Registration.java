@@ -5,9 +5,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.util.PasswordUtil;
+import org.apache.commons.validator.routines.EmailValidator;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.apache.commons.validator.routines.EmailValidator;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Registration {
@@ -149,6 +150,26 @@ public class Registration {
         );
     }
 
+    public static Registration overrideEmail(final Registration originalRegistration, final String newEmail) {
+        if(!originalRegistration.email.equals(newEmail)) {
+            return originalRegistration;
+        }
+
+        return new Registration(
+                originalRegistration.name,
+                String.format("%d-%s", DateTime.now().getMillisOfDay(), newEmail),
+                originalRegistration.password,
+                originalRegistration.age,
+                originalRegistration.gender,
+                originalRegistration.height,
+                originalRegistration.weight,
+                originalRegistration.DOB,
+                originalRegistration.tzOffsetMillis,
+                originalRegistration.created,
+                originalRegistration.latitude,
+                originalRegistration.longitude
+        );
+    }
 
     /**
      * Validates that registration matches validation constraints.
