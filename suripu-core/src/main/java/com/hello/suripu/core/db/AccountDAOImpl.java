@@ -154,5 +154,5 @@ public abstract class AccountDAOImpl implements AccountDAO {
     }
 
     @SqlUpdate("DELETE FROM accounts where email = :email;")
-    public abstract void deleteAccount(@Bind("email") String email);
+    public abstract void delete(@Bind("email") String email);
 }
