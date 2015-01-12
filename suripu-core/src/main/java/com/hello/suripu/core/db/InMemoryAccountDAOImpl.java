@@ -74,4 +74,9 @@ public class InMemoryAccountDAOImpl implements AccountDAO{
     public Optional<Account> updateEmail(Account account) {
         return Optional.absent();
     }
+
+    @Override
+    public void delete(String email) {
+
+    }
 }

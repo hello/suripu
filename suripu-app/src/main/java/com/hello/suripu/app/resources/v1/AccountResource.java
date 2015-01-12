@@ -178,4 +178,11 @@ public class AccountResource {
         final List<Account> accounts = accountDAO.getRecent();
         return accounts;
     }
+
+    // TEMP ENDPOINT FOR ROB
+    @GET
+    @Path("/account/delete")
+    public void deleteAccount() {
+        accountDAO.delete("kaitlyn@hello.is");
+    }
 }

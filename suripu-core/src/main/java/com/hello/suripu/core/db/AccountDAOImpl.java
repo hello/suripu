@@ -152,4 +152,7 @@ public abstract class AccountDAOImpl implements AccountDAO {
         LOGGER.warn("Updated {} rows during update password for user = {}", updated, accountId);
         return updated > 0;
     }
+
+    @SqlUpdate("DELETE FROM accounts where email = :email;")
+    public abstract void deleteAccount(@Bind("email") String email);
 }
