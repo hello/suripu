@@ -8,6 +8,8 @@ import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.KeyStore;
+import com.hello.suripu.core.flipper.FeatureFlipper;
+import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -18,12 +20,14 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.service.SignedMessage;
+import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -62,6 +66,11 @@ public class RegisterResource {
     @Context
     HttpServletRequest request;
 
+    @Inject
+    RolloutClient featureFlipper;
+
+    private final GroupFlipper groupFlipper;
+
     private static enum PairAction{
         PAIR_MORPHEUS,
         PAIR_PILL
@@ -71,12 +80,14 @@ public class RegisterResource {
                             final OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore,
                             final KinesisLoggerFactory kinesisLoggerFactory,
                             final KeyStore senseKeyStore,
+                            final GroupFlipper groupFlipper,
                             final Boolean debug){
         this.deviceDAO = deviceDAO;
         this.tokenStore = tokenStore;
         this.debug = debug;
         this.kinesisLoggerFactory = kinesisLoggerFactory;
         this.senseKeyStore = senseKeyStore;
+        this.groupFlipper = groupFlipper;
     }
 
     private boolean checkCommandType(final MorpheusCommand morpheusCommand, final PairAction action){
@@ -90,8 +101,8 @@ public class RegisterResource {
         }
     }
 
-    public static PairState getSensePairingState(final DeviceDAO deviceDAO, final String senseId, final long accountId){
-        final List<DeviceAccountPair> pairedSense = deviceDAO.getSensesForAccountId(accountId);
+    private PairState getSensePairingState(final String senseId, final long accountId){
+        final List<DeviceAccountPair> pairedSense = this.deviceDAO.getSensesForAccountId(accountId);
         if(pairedSense.size() > 1){  // This account already paired with multiple senses
             return PairState.PAIRING_VIOLATION;
         }
@@ -107,30 +118,41 @@ public class RegisterResource {
         }
     }
 
-    public static PairState getPillPairingState(final DeviceDAO deviceDAO, final String pillId, final long accountId){
-        final List<DeviceAccountPair> pairedPills = deviceDAO.getPillsForAccountId(accountId);
-        final List<DeviceAccountPair> pairedAccounts = deviceDAO.getLinkedAccountFromPillId(pillId);
-        if(pairedPills.size() > 1 || pairedAccounts.size() > 1){  // This account already paired with multiple pills
+    private PairState getPillPairingState(final String senseId, final String pillId, final long accountId){
+        final List<DeviceAccountPair> pillsPairedToCurrentAccount = this.deviceDAO.getPillsForAccountId(accountId);
+        final List<DeviceAccountPair> accountsPairedToCurrentPill = this.deviceDAO.getLinkedAccountFromPillId(pillId);
+        if(pillsPairedToCurrentAccount.size() > 1 || accountsPairedToCurrentPill.size() > 1){  // This account already paired with multiple pills
             return PairState.PAIRING_VIOLATION;
         }
 
-        if(pairedAccounts.size() == 0 && pairedPills.size() == 0){
+        if(accountsPairedToCurrentPill.size() == 0 && pillsPairedToCurrentAccount.size() == 0){
             return PairState.NOT_PAIRED;
         }
 
-        if(pairedAccounts.size() == 1 && pairedPills.size() == 1 && pairedPills.get(0).externalDeviceId.equals(pillId)){
+        if(accountsPairedToCurrentPill.size() == 1 && pillsPairedToCurrentAccount.size() == 1 && pillsPairedToCurrentAccount.get(0).externalDeviceId.equals(pillId)){
             // might be a firmware retry
             return PairState.PAIRED_WITH_CURRENT_ACCOUNT;
         }
 
+        final List<String> groups = groupFlipper.getGroups(senseId);
+        if(featureFlipper.deviceFeatureActive(FeatureFlipper.DEBUG_MODE_PILL_PAIRING, senseId, groups)) {
+            LOGGER.info("Debug mode for pairing pill {} to sense {}.", pillId, senseId);
+            if(pillsPairedToCurrentAccount.size() == 0 /* && accountsPairedToCurrentPill.size() >= 0 */ /* 2nd condition actually not needed */){
+                return PairState.NOT_PAIRED;
+            }else{
+                LOGGER.error("Debug mode: account {} already paired with {} pills.", accountId, pillsPairedToCurrentAccount.size());
+                return PairState.PAIRING_VIOLATION;
+            }
+        }
+
         // else:
-        if(pairedAccounts.size() == 1 && pairedPills.size() == 0){
+        if(accountsPairedToCurrentPill.size() == 1 && pillsPairedToCurrentAccount.size() == 0){
             // pill already paired with an account, but this account is new, stolen pill?
             LOGGER.error("Pill {} might got stolen, account {} is a theft!", pillId, accountId);
         }
-        if(pairedPills.size() == 1 && pairedAccounts.size() == 0){
+        if(pillsPairedToCurrentAccount.size() == 1 && accountsPairedToCurrentPill.size() == 0){
             // account already paired with a pill, only one pill is allowed
-            LOGGER.error("Account {} already paired with pill {}", accountId, pairedPills.get(0).externalDeviceId);
+            LOGGER.error("Account {} already paired with pill {}", accountId, pillsPairedToCurrentAccount.get(0).externalDeviceId);
         }
         return PairState.PAIRING_VIOLATION;
 
@@ -157,7 +179,8 @@ public class RegisterResource {
         final String deviceId = morpheusCommand.getDeviceId();
         builder.setDeviceId(deviceId);
 
-        String senseId = deviceId;
+        String senseId = "";
+        String pillId = "";
 
         final String token = morpheusCommand.getAccountId();
         LOGGER.debug("deviceId = {}", deviceId);
@@ -182,9 +205,10 @@ public class RegisterResource {
                 senseId = deviceId;
                 break;
             case PAIR_PILL:
+                pillId = deviceId;
                 final List<DeviceAccountPair> deviceAccountPairs = this.deviceDAO.getSensesForAccountId(accountId);
                 if(deviceAccountPairs.size() == 0){
-                    LOGGER.error("No sense paired with account {} when pill {} tries to register", accountId, deviceId);
+                    LOGGER.error("No sense paired with account {} when pill {} tries to register", accountId, pillId);
                     builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
                     builder.setError(SenseCommandProtos.ErrorType.INTERNAL_DATA_ERROR);
                     return builder;
@@ -219,7 +243,7 @@ public class RegisterResource {
         try {
             switch (action){
                 case PAIR_MORPHEUS: {
-                    final PairState pairState = getSensePairingState(this.deviceDAO, senseId, accountId);
+                    final PairState pairState = getSensePairingState(senseId, accountId);
                     if (pairState == PairState.NOT_PAIRED) {
                         this.deviceDAO.registerSense(accountId, senseId);
                     }
@@ -234,7 +258,7 @@ public class RegisterResource {
                 }
                     break;
                 case PAIR_PILL: {
-                    final PairState pairState = getPillPairingState(this.deviceDAO, deviceId, accountId);
+                    final PairState pairState = getPillPairingState(senseId, pillId, accountId);
                     if (pairState == PairState.NOT_PAIRED) {
                         this.deviceDAO.registerTracker(accountId, deviceId);
                     }
