@@ -215,6 +215,7 @@ public class RegisterResource extends BaseResource {
                     return builder;
                 }
                 senseId = deviceAccountPairs.get(0).externalDeviceId;
+                break;
         }
 
         final Optional<byte[]> keyBytesOptional = keyStore.get(senseId);
