@@ -18,6 +18,7 @@ import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
+import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.service.SignedMessage;
 import com.librato.rollout.RolloutClient;
@@ -46,7 +47,7 @@ import java.util.regex.Pattern;
  * Created by pangwu on 10/10/14.
  */
 @Path("/register")
-public class RegisterResource {
+public class RegisterResource extends BaseResource {
     private static final Pattern PG_UNIQ_PATTERN = Pattern.compile("ERROR: duplicate key value violates unique constraint \"(\\w+)\"");
     private static int PROTOBUF_VERSION = 0;
     private static final Logger LOGGER = LoggerFactory.getLogger(RegisterResource.class);
