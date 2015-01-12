@@ -59,6 +59,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                         case 0:
                         case 1:
                             trackerMotion = new TrackerMotion.Builder().withPillKinesisData(decryptionKey.get(), data).build();
+                            LOGGER.info("Short data received from pill {}", data.getPillId());
                             break;
                         case 2:
                             // TODO: add column to tracker_motion table to save acceleration range and kickoff time
