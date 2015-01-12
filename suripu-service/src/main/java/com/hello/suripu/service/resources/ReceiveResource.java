@@ -533,8 +533,6 @@ public class ReceiveResource extends BaseResource {
             boolean canOTA = false;
             if(batch.hasUptimeInSecond()){
                 canOTA = (batch.getUptimeInSecond() > 20 * DateTimeConstants.SECONDS_PER_MINUTE);
-            }else{
-                canOTA = (batch.getDataList().size() > 1);
             }
 
             if(groups.contains("chris-dev") || groups.contains("video-photoshoot")){
