@@ -296,7 +296,8 @@ public class TrackerMotion {
             // check for magic bytes 5A5A added by the pill
             // fail if they don't match
             // Only pill DVT has magic bytes, so check length to ensure only pill DVT fails if we don't find magic bytes
-            if(decryptedRawMotion.length > 4 && decryptedRawMotion[decryptedRawMotion.length -1] != 90 && decryptedRawMotion[decryptedRawMotion.length -2] != 90) {
+            if(decryptedRawMotion.length > 4 && decryptedRawMotion[decryptedRawMotion.length -1] != 0x5A &&
+                    decryptedRawMotion[decryptedRawMotion.length -2] != 0x5A) {
                 throw new IllegalArgumentException("Magic bytes don't match");
             }
             final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion));
@@ -304,11 +305,13 @@ public class TrackerMotion {
             long motionAmplitude = -1;
             long maxAccelerationRange = 0;
             long kickOffTimePerMinute = 0;
+            long motionDurationInSecond = 0;
 
             try {
                 motionAmplitude = UnsignedInts.toLong(littleEndianDataInputStream.readInt());
                 maxAccelerationRange = UnsignedInts.toLong(littleEndianDataInputStream.readShort());
-                kickOffTimePerMinute = UnsignedInts.toLong(littleEndianDataInputStream.readShort());
+                kickOffTimePerMinute = UnsignedInts.toLong(littleEndianDataInputStream.readByte());
+                motionDurationInSecond = UnsignedInts.toLong(littleEndianDataInputStream.readByte());
 
             }catch (IOException ioe){
                 exception = ioe;
@@ -326,7 +329,7 @@ public class TrackerMotion {
                 throw new IllegalArgumentException(exception);
             }
 
-            return new long[]{ motionAmplitude, maxAccelerationRange, kickOffTimePerMinute };
+            return new long[]{ motionAmplitude, maxAccelerationRange, kickOffTimePerMinute, motionDurationInSecond };
 
         }
     }
