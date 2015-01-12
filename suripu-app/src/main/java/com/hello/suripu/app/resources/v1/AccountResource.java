@@ -71,8 +71,7 @@ public class AccountResource {
         }
 
         // Overriding email address for kaytlin
-        final Registration possiblyModifiedRegistration = Registration.overrideEmail(registration, "kaitlyn@hello.is");
-        final Registration securedRegistration = Registration.encryptPassword(possiblyModifiedRegistration);
+        final Registration securedRegistration = Registration.encryptPassword(registration);
 
 
         LOGGER.debug("Lat: {}", securedRegistration.latitude);
