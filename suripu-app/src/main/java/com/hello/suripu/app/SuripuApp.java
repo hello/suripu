@@ -2,6 +2,7 @@ package com.hello.suripu.app;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
 import com.amazonaws.services.s3.AmazonS3;
@@ -59,8 +60,9 @@ import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsDAO;
-import com.hello.suripu.core.db.notifications.DynamoDBNotificationSubscriptionDAO;
-import com.hello.suripu.core.db.notifications.NotificationSubscriptionsDAO;
+import com.hello.suripu.core.notifications.DynamoDBNotificationSubscriptionDAO;
+import com.hello.suripu.core.notifications.MobilePushNotificationProcessor;
+import com.hello.suripu.core.notifications.NotificationSubscriptionsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.firmware.FirmwareUpdateDAO;
@@ -185,6 +187,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         // for localhost debug, may need to point to prod to get data
         final AmazonDynamoDBClient dynamoDBScoreClient = new AmazonDynamoDBClient(awsCredentialsProvider);
+
         dynamoDBScoreClient.setEndpoint(configuration.getSleepScoreDBConfiguration().getEndpoint());
         final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB = new AggregateSleepScoreDAODynamoDB(
                 dynamoDBScoreClient,
@@ -194,12 +197,17 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final JedisPool jedisPool = new JedisPool("localhost", 6379);
         final ImmutableMap<String, String> arns = ImmutableMap.copyOf(configuration.getPushNotificationsConfiguration().getArns());
+        final AmazonDynamoDB notificationsDynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
+        notificationsDynamoDBClient.setEndpoint(configuration.getNotificationsDBConfiguration().getEndpoint());
+
         final NotificationSubscriptionsDAO subscriptionDAO = new DynamoDBNotificationSubscriptionDAO(
-                dynamoDBClient,
-                configuration.getPushNotificationsConfiguration().getTableName(),
+                notificationsDynamoDBClient,
+                configuration.getNotificationsDBConfiguration().getTableName(),
                 snsClient,
                 arns
         );
+
+        final MobilePushNotificationProcessor mobilePushNotificationProcessor = new MobilePushNotificationProcessor(snsClient, subscriptionDAO);
         
         final TeamStore teamStore = new TeamStore(dynamoDBClient, "teams");
 
@@ -261,7 +269,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new TimeZoneResource(timeZoneHistoryDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO));
         environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO, amazonS3));
 
-        environment.addResource(new MobilePushRegistrationResource(subscriptionDAO));
+        environment.addResource(new MobilePushRegistrationResource(subscriptionDAO, mobilePushNotificationProcessor, accountDAO));
         environment.addResource(new FeaturesResource(featureStore));
 
         environment.addResource(new QuestionsResource(accountDAO, questionResponseDAO, timeZoneHistoryDAODynamoDB, configuration.getQuestionConfigs().getNumSkips()));
