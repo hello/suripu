@@ -218,4 +218,13 @@ public class SuripuAppConfiguration extends Configuration {
     private DynamoDBConfiguration dynamoDBConfiguration;
     public DynamoDBConfiguration getKeyStoreDynamoDBConfiguration() { return dynamoDBConfiguration; }
 
+    @Valid
+    @NotNull
+    @JsonProperty("notifications_db")
+    private DynamoDBConfiguration notificationsDBConfiguration;
+
+    public DynamoDBConfiguration getNotificationsDBConfiguration() {
+        return notificationsDBConfiguration;
+    }
+
 }
