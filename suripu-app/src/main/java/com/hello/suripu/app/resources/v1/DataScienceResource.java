@@ -141,11 +141,13 @@ public class DataScienceResource {
                 return;
             }
 
-            if (category == InsightCard.Category.LIGHT || category == InsightCard.Category.TEMPERATURE) {
-                processor.generateInsightsByCategory(accountId, deviceIdOptional.get(), category);
-            } else {
-                processor.generateInsights(accountId, accountOptional.get().created);
-            }
+            processor.generateInsights(accountId, accountOptional.get().created);
+
+//            if (category == InsightCard.Category.LIGHT || category == InsightCard.Category.TEMPERATURE) {
+//                processor.generateInsightsByCategory(accountId, deviceIdOptional.get(), category);
+//            } else {
+//                processor.generateInsights(accountId, accountOptional.get().created);
+//            }
         }
     }
 }

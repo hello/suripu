@@ -22,7 +22,7 @@ public class Lights {
 
         // get light data for last three days, filter by time
         final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withHourOfDay(NIGHT_START_HOUR); // today 6pm
-        final DateTime queryStartTime = queryEndTime.minusDays(3);
+        final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.RECENT_DAYS);
 
         // get light data > 0 between the hour of 6pm to 1am
         final List<DeviceData> rows = deviceDataDAO.getLightByBetweenHourDate(accountId, deviceId, 0, queryStartTime, queryEndTime, NIGHT_START_HOUR, NIGHT_END_HOUR);

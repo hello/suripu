@@ -17,8 +17,10 @@ import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 /**
@@ -112,13 +114,22 @@ public class InsightProcessor {
 
         final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
 
-        // TODO - randomly select a card that hasn't been generated recently
-        if (recentCategories.contains(InsightCard.Category.LIGHT)) {
+        // randomly select a card that hasn't been generated recently
+        final List<InsightCard.Category> eligibleCategories = new ArrayList<>();
+        for (final InsightCard.Category category : InsightCard.Category.values()) {
+            if (!recentCategories.contains(category)) {
+                eligibleCategories.add(category);
+            }
+        }
+
+        if (eligibleCategories.isEmpty()) {
             LOGGER.debug("No new insights generated: {}", accountId);
             return;
         }
 
-        this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.LIGHT);
+        final Random rand = new Random();
+        final int index = rand.nextInt(2); // todo: use real size. fix to 2 since only 2 categories are implemented
+        this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.fromInteger(index * 2));
 
     }
 

@@ -34,8 +34,8 @@ public class TemperatureHumidity {
     private static final int TEMP_END_HOUR = 6; // 6am
 
     public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final String tempPref) {
-        final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withHourOfDay(TEMP_END_HOUR).minusDays(15); // today 6pm
-        final DateTime queryStartTime = queryEndTime.minusDays(3).withHourOfDay(TEMP_START_HOUR);
+        final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withHourOfDay(TEMP_END_HOUR); // today 6am
+        final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.RECENT_DAYS).withHourOfDay(TEMP_START_HOUR); // 11pm three days ago
 
         final int slotDuration = 30;
         final List<DeviceData> sensorData = deviceDataDAO.getBetweenByLocalHourAggregateBySlotDuration(accountId, deviceId, queryStartTime,
@@ -84,7 +84,7 @@ public class TemperatureHumidity {
         }
 
         final int idealMinC = fahrenheitToCelsius((double) idealMinF);
-        final int idealMaxC = fahrenheitToCelsius((double)idealMaxF);
+        final int idealMaxC = fahrenheitToCelsius((double) idealMaxF);
 
         String title;
         String message = String.format("Your bedroom's temperature during your sleep ranges from %d%s (%d%s) to %d%s (%d%s). ",
