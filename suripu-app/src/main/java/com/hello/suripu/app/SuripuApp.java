@@ -1,5 +1,6 @@
 package com.hello.suripu.app;
 
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -16,6 +17,7 @@ import com.hello.suripu.app.cli.CreateDynamoDBTables;
 import com.hello.suripu.app.cli.RecreateEventsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.modules.RolloutAppModule;
+import com.hello.suripu.app.resources.v1.AccountPreferencesResource;
 import com.hello.suripu.app.resources.v1.AccountResource;
 import com.hello.suripu.app.resources.v1.AlarmResource;
 import com.hello.suripu.app.resources.v1.AppCheckinResource;
@@ -76,6 +78,8 @@ import com.hello.suripu.core.oauth.OAuthAuthenticator;
 import com.hello.suripu.core.oauth.OAuthProvider;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
+import com.hello.suripu.core.preferences.AccountPreferencesDAO;
+import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.util.CustomJSONExceptionMapper;
 import com.hello.suripu.core.util.DropwizardServiceUtil;
@@ -160,14 +164,18 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
         final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
 
+        final ClientConfiguration clientConfiguration = new ClientConfiguration();
+        clientConfiguration.withConnectionTimeout(200); // in ms
+        clientConfiguration.withMaxErrorRetry(1);
+
         final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
-        final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider, clientConfiguration);
         dynamoDBClient.setEndpoint(configuration.getEventDBConfiguration().getEndpoint());
 
-        final AmazonSNSClient snsClient = new AmazonSNSClient(awsCredentialsProvider);
-        final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider);
+        final AmazonSNSClient snsClient = new AmazonSNSClient(awsCredentialsProvider, clientConfiguration);
+        final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider, clientConfiguration);
 
-        final AmazonS3 amazonS3 = new AmazonS3Client(awsCredentialsProvider);
+        final AmazonS3 amazonS3 = new AmazonS3Client(awsCredentialsProvider, clientConfiguration);
 
         final String eventTableName = configuration.getEventDBConfiguration().getTableName();
 
@@ -188,7 +196,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 dynamoDBClient, configuration.getInsightsDynamoDBConfiguration().getTableName());
 
         // for localhost debug, may need to point to prod to get data
-        final AmazonDynamoDBClient dynamoDBScoreClient = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final AmazonDynamoDBClient dynamoDBScoreClient = new AmazonDynamoDBClient(awsCredentialsProvider, clientConfiguration);
 
         dynamoDBScoreClient.setEndpoint(configuration.getSleepScoreDBConfiguration().getEndpoint());
         final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB = new AggregateSleepScoreDAODynamoDB(
@@ -199,7 +207,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final JedisPool jedisPool = new JedisPool("localhost", 6379);
         final ImmutableMap<String, String> arns = ImmutableMap.copyOf(configuration.getPushNotificationsConfiguration().getArns());
-        final AmazonDynamoDB notificationsDynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final AmazonDynamoDB notificationsDynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider, clientConfiguration);
         notificationsDynamoDBClient.setEndpoint(configuration.getNotificationsDBConfiguration().getEndpoint());
 
         final NotificationSubscriptionsDAO subscriptionDAO = new DynamoDBNotificationSubscriptionDAO(
@@ -286,6 +294,12 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new TeamsResource(teamStore));
         environment.addResource(new FeedbackResource(feedbackDAO));
         environment.addResource(new AppCheckinResource(false, "")); // TODO: replace this with real app version. Maybe move it to admin tool?
+
+
+        final AmazonDynamoDB prefsClient = new AmazonDynamoDBClient(awsCredentialsProvider, clientConfiguration);
+        prefsClient.setEndpoint(configuration.getPreferencesDBConfiguration().getEndpoint());
+        final AccountPreferencesDAO accountPreferencesDAO = new AccountPreferencesDynamoDB(prefsClient, configuration.getPreferencesDBConfiguration().getTableName());
+        environment.addResource(new AccountPreferencesResource(accountPreferencesDAO));
 
         environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO, deviceDataDAO, deviceDAO, aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, trendsDAO, new LightData()));
 

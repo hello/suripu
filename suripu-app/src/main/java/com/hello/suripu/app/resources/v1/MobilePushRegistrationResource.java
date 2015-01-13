@@ -73,7 +73,7 @@ public class MobilePushRegistrationResource {
     @Timed
     @Consumes(MediaType.APPLICATION_JSON)
     public Response send(
-            @Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+//            @Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
             @PathParam("email") final String email,
             @Valid final HelloPushMessage message) {
 

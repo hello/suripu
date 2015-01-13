@@ -223,6 +223,12 @@ public class SuripuAppConfiguration extends Configuration {
 
     @Valid
     @NotNull
+    @JsonProperty("preferences_db")
+    private DynamoDBConfiguration preferencesDBConfiguration;
+    public DynamoDBConfiguration getPreferencesDBConfiguration() {
+        return preferencesDBConfiguration;
+    }
+
     @JsonProperty("key_store_dynamo_db")
     private DynamoDBConfiguration dynamoDBConfiguration;
     public DynamoDBConfiguration getKeyStoreDynamoDBConfiguration() { return dynamoDBConfiguration; }
