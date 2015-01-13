@@ -3,7 +3,7 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
-import com.hello.suripu.core.db.notifications.NotificationSubscriptionsDAO;
+import com.hello.suripu.core.notifications.NotificationSubscriptionsDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.Application;

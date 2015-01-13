@@ -120,6 +120,11 @@ push_notifications:
   table_name: notifications
 
 
+notifications_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: notifications
+
 ring_time_db:
   endpoint : http://localhost:7777
   region: us-east-1
