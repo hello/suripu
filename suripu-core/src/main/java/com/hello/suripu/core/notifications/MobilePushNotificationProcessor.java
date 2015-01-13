@@ -65,7 +65,6 @@ public class MobilePushNotificationProcessor {
 
         appMessageMap.put("alert", content);
         appMessageMap.put("sound", "default");
-        appleMessageMap.put("badge", 0);
 
         appleMessageMap.put("aps", appMessageMap);
 

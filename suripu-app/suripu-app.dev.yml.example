@@ -157,6 +157,11 @@ insights_dynamo_db:
     region: us-east-1
     table_name: insights
 
+key_store_dynamo_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: key_store
+
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :

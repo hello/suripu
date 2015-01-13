@@ -135,4 +135,46 @@ public class DataScienceResource {
             //processor.generateInsightsByCategory(accountId, deviceIdOptional.get(), category);
         }
     }
+
+
+    // TODO: temporary located here, need to move this to suripu-admin
+    @GET
+    @Path("/admin/pill/{email}/{query_date_local_utc}/")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<TrackerMotion> getMotion(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                         @PathParam("query_date_local_utc") String date,
+                                         @PathParam("email") String email) {
+        final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                .withZone(DateTimeZone.UTC).withHourOfDay(20);
+        final DateTime endDate = targetDate.plusHours(16);
+        LOGGER.debug("Target date: {}", targetDate);
+        LOGGER.debug("End date: {}", endDate);
+
+        final Optional<Long> accountId = getAccountIdByEmail(email);
+        if (!accountId.isPresent()) {
+            LOGGER.debug("ID not found for account {}", email);
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId.get(), targetDate, endDate);
+        LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
+
+        return trackerMotions;
+    }
+
+    private Optional<Long> getAccountIdByEmail(final String email) {
+        final Optional<Account> accountOptional = accountDAO.getByEmail(email);
+
+        if (!accountOptional.isPresent()) {
+            LOGGER.debug("Account {} not found", email);
+            return Optional.absent();
+        }
+        final Account account = accountOptional.get();
+        if (!account.id.isPresent()) {
+            LOGGER.debug("ID not found for account {}", email);
+            return Optional.absent();
+        }
+        return account.id;
+    }
+
 }
