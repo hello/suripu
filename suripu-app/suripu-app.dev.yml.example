@@ -125,6 +125,11 @@ notifications_db:
   region: us-east-1
   table_name: notifications
 
+preferences_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: preferences
+
 ring_time_db:
   endpoint : http://localhost:7777
   region: us-east-1
