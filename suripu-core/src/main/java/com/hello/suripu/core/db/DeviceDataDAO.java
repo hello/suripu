@@ -35,7 +35,7 @@ public abstract class DeviceDataDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAO.class);
 
-    private static final String AGGREGATE_SELECT_STRING = "SELECT " +  // for queries using DeviceDataBucketMapper
+    private static final String AGGREGATE_SELECT_STRING_GROUPBY_TSBUCKET = "SELECT " +  // for queries using DeviceDataBucketMapper
             "MAX(account_id) AS account_id," +
             "MAX(device_id) AS device_id," +
             "ROUND(MIN(ambient_temp)) as ambient_temp," +
@@ -93,7 +93,7 @@ public abstract class DeviceDataDAO {
 
 
     @RegisterMapper(DeviceDataBucketMapper.class)
-    @SqlQuery(AGGREGATE_SELECT_STRING +
+    @SqlQuery(AGGREGATE_SELECT_STRING_GROUPBY_TSBUCKET +
             "FROM device_sensors_master " +
             "WHERE account_id = :account_id AND device_id = :device_id " +
             "AND local_utc_ts >= :start_ts AND local_utc_ts < :end_ts " +
@@ -108,7 +108,7 @@ public abstract class DeviceDataDAO {
 
 
     @RegisterMapper(DeviceDataBucketMapper.class)
-    @SqlQuery(AGGREGATE_SELECT_STRING +
+    @SqlQuery(AGGREGATE_SELECT_STRING_GROUPBY_TSBUCKET +
             "FROM device_sensors_master " +
             "WHERE account_id = :account_id AND device_id = :device_id " +
             "AND ts >= :start_ts AND ts < :end_ts " +
@@ -140,7 +140,7 @@ public abstract class DeviceDataDAO {
                                                                         @Bind("end_hour") int endHour);
 
     @RegisterMapper(DeviceDataBucketMapper.class)
-    @SqlQuery(AGGREGATE_SELECT_STRING +
+    @SqlQuery(AGGREGATE_SELECT_STRING_GROUPBY_TSBUCKET +
             "FROM device_sensors_master " +
             "WHERE account_id = :account_id AND device_id = :device_id " +
             "AND local_utc_ts >= :start_ts AND local_utc_ts < :end_ts " +

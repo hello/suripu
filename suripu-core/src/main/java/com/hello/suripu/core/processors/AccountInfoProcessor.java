@@ -38,7 +38,8 @@ public class AccountInfoProcessor {
         public Builder withMapping(final QuestionResponseDAO questionResponseDAO) {
             final List<Question> baseQuestions = questionResponseDAO.getBaseQuestions();
             for (final Question question : baseQuestions) {
-                final String text = question.text;
+                // TODO: refactor this, ¡¡don't use string!!
+                final String text = question.text.toLowerCase();
                 if (text.contains("hot or cold")) {
                     infoQuestionMap.put(AccountInfo.Type.TEMPERATURE, question);
                 } else if (text.contains("snore")) {
@@ -62,12 +63,17 @@ public class AccountInfoProcessor {
         this.infoQuestionMap = ImmutableMap.copyOf(infoQuestionMap);
     }
 
-    public String checkTemperaturePreference(final Long accountId) {
+    public AccountInfo.SleepTempType checkTemperaturePreference(final Long accountId) {
         final Optional<Response> optionalResponse = getSingleUserResponse(accountId, AccountInfo.Type.TEMPERATURE);
         if(optionalResponse.isPresent()) {
-            return optionalResponse.get().response;
+            final String response = optionalResponse.get().response.toLowerCase();
+            if (response.equals("hot")) {
+                return AccountInfo.SleepTempType.HOT;
+            } else if (response.equals("cold")) {
+                return AccountInfo.SleepTempType.COLD;
+            }
         }
-        return TEMPERATURE_NONE;
+        return AccountInfo.SleepTempType.NONE;
     }
 
     public Boolean checkUserSnore(final Long accountId) {

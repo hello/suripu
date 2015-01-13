@@ -20,4 +20,13 @@ public class AccountInfo {
             this.value = value;
         }
     }
+
+    public enum SleepTempType {
+        NONE(0),
+        HOT(1),
+        COLD(2);
+
+        private int value;
+        private SleepTempType(final int value) {this.value = value;}
+    }
 }

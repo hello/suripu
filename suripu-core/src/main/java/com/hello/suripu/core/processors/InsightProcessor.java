@@ -7,6 +7,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsDAO;
+import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
@@ -92,7 +93,7 @@ public class InsightProcessor {
                 insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
                 break;
             case 2:
-                final String tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
+                final AccountInfo.SleepTempType tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
                 insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref);
                 break;
             default:
@@ -128,7 +129,7 @@ public class InsightProcessor {
         }
 
         final Random rand = new Random();
-        final int index = rand.nextInt(2); // todo: use real size. fix to 2 since only 2 categories are implemented
+        final int index = rand.nextInt(2) + 1; // todo: use real size. fix to 2 since only 2 categories are implemented
         this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.fromInteger(index * 2));
 
     }
@@ -140,7 +141,7 @@ public class InsightProcessor {
         if (category == InsightCard.Category.LIGHT) {
             insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
         } else if (category == InsightCard.Category.TEMPERATURE) {
-            final String tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
+            final AccountInfo.SleepTempType tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
             insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref);
         }
 

@@ -4,6 +4,8 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Insights.InsightCard;
+import com.hello.suripu.core.models.Insights.Message.LightMsgEN;
+import com.hello.suripu.core.models.Insights.Message.Text;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -21,7 +23,7 @@ public class Lights {
     public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final LightData lightData) {
 
         // get light data for last three days, filter by time
-        final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withHourOfDay(NIGHT_START_HOUR); // today 6pm
+        final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withHourOfDay(NIGHT_START_HOUR).minusDays(16); // today 6pm
         final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.RECENT_DAYS);
 
         // get light data > 0 between the hour of 6pm to 1am
@@ -50,45 +52,24 @@ public class Lights {
 
         final int percentile = lightData.getLightPercentile(medianLight);
 
-        String title;
-        String message;
         // see: http://en.wikipedia.org/wiki/Lux and http://www.greenbusinesslight.com/page/119/lux-lumens-and-watts
         // todo: refine levels
+        Text text;
         if (medianLight <= 1) {
-            title = "Hello, Darkness";
-            message = String.format("Your bedroom light condition of %d lux is perfect, ", medianLight) +
-                    String.format("it is **dimmer than** %d%% of all Sense users.", 100 - percentile);
-
+            text = LightMsgEN.getLightDark(medianLight, percentile);
         } else if (medianLight <= 4) {
-            title = "Hello, Dark Room";
-            message = String.format("Your bedroom light condition of %d lux is close to ideal, ", medianLight) +
-                    String.format("it is **dimmer than** %d%% of all Sense users.", 100 - percentile);
-
+            text = LightMsgEN.getLightNotDarkEnough(medianLight, percentile);
         } else if (medianLight <= 20) {
-            title = "Hmm, It's A Little Bright";
-            message = String.format("Your bedroom light of %d lux is a little brighter than ideal, ", medianLight) +
-                    String.format("it is **brighter than** %d%% of all Sense users. ", percentile) +
-                    "\n\nTry dimming the light a little before bedtime.";
-
+            text = LightMsgEN.getLightALittleBright(medianLight, percentile);
         } else if (medianLight <= 40) {
-            title = "Hello, Light";
-            message = String.format("Your bedroom is too bright (%d lux) for ideal sleep conditions, ", medianLight) +
-                    String.format("it is **brighter than** %d%% of all Sense users. ", percentile) +
-                    "\n\nTry changing to a lower wattage light bulb, or turning off the light 15 minutes before bedtime.";
-
+            text = LightMsgEN.getLightQuiteBright(medianLight, percentile);
         } else if (medianLight <= 100) {
-            title = "Time to Dim It Down";
-            message = String.format("Your bedroom light of %d lux is as bright as a warehouse aisle! ", medianLight) +
-                    String.format("It is **brighter than** %d%% of all Sense users. ", percentile) +
-                    "\n\nChanging to a lower wattage light bulb might help improve your sleep";
+            text = LightMsgEN.getLightTooBright(medianLight, percentile);
         } else {
-            title = "It's Way Too Bright";
-            message = String.format("Your bedroom light of %d lux is as bright as an office room! ", medianLight) +
-                    String.format("It's **brighter than** %d%% of all Sense users. ", percentile) +
-                    "\n\nChanging to a lower wattage light bulb might help improve your sleep";
+            text = LightMsgEN.getLightWayTooBright(medianLight, percentile);
         }
 
-        return Optional.of(new InsightCard(accountId, title, message,
+        return Optional.of(new InsightCard(accountId, text.title, text.message,
                 InsightCard.Category.LIGHT, InsightCard.TimePeriod.RECENTLY,
                 DateTime.now(DateTimeZone.UTC)));
     }
