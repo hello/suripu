@@ -1,4 +1,4 @@
-package com.hello.suripu.core.db.notifications;
+package com.hello.suripu.core.notifications;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.MobilePushRegistration;

@@ -182,7 +182,8 @@ public class AccountResource {
     // TEMP ENDPOINT FOR ROB
     @GET
     @Path("/account/delete")
-    public void deleteAccount() {
+    public Response deleteAccount() {
         accountDAO.delete("kaitlyn@hello.is");
+        return Response.ok().build();
     }
 }
