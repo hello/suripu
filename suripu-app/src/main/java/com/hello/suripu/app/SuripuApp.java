@@ -1,5 +1,6 @@
 package com.hello.suripu.app;
 
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -16,6 +17,7 @@ import com.hello.suripu.app.cli.CreateDynamoDBTables;
 import com.hello.suripu.app.cli.RecreateEventsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.modules.RolloutAppModule;
+import com.hello.suripu.app.resources.v1.AccountPreferencesResource;
 import com.hello.suripu.app.resources.v1.AccountResource;
 import com.hello.suripu.app.resources.v1.AlarmResource;
 import com.hello.suripu.app.resources.v1.AppCheckinResource;
@@ -74,6 +76,8 @@ import com.hello.suripu.core.oauth.OAuthAuthenticator;
 import com.hello.suripu.core.oauth.OAuthProvider;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
+import com.hello.suripu.core.preferences.AccountPreferencesDAO;
+import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.util.CustomJSONExceptionMapper;
 import com.hello.suripu.core.util.DropwizardServiceUtil;
@@ -277,6 +281,14 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new TeamsResource(teamStore));
         environment.addResource(new FeedbackResource(feedbackDAO));
         environment.addResource(new AppCheckinResource(false, "")); // TODO: replace this with real app version. Maybe move it to admin tool?
+
+        final ClientConfiguration clientConfiguration = new ClientConfiguration();
+        clientConfiguration.withConnectionTimeout(200);
+        clientConfiguration.withMaxErrorRetry(0);
+        final AmazonDynamoDB prefsClient = new AmazonDynamoDBClient(awsCredentialsProvider);
+        prefsClient.setEndpoint(configuration.getPreferencesDBConfiguration().getEndpoint());
+        final AccountPreferencesDAO accountPreferencesDAO = new AccountPreferencesDynamoDB(prefsClient, configuration.getPreferencesDBConfiguration().getTableName());
+        environment.addResource(new AccountPreferencesResource(accountPreferencesDAO));
 
         environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO, deviceDataDAO, deviceDAO, aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, trendsDAO, new LightData()));
 

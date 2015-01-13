@@ -220,4 +220,13 @@ public class SuripuAppConfiguration extends Configuration {
     public DynamoDBConfiguration getNotificationsDBConfiguration() {
         return notificationsDBConfiguration;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("preferences_db")
+    private DynamoDBConfiguration preferencesDBConfiguration;
+    public DynamoDBConfiguration getPreferencesDBConfiguration() {
+        return preferencesDBConfiguration;
+    }
+
 }
