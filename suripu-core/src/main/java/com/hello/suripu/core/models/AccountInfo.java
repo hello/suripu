@@ -5,15 +5,16 @@ package com.hello.suripu.core.models;
  */
 public class AccountInfo {
     public enum Type {
-        CITY("city"),
-        TEMPERATURE("temperature"), // hot or cold sleeper
-        SOUND("sound"), // sensitivity to sound
-        LIGHT("light"), // sensitivity to light -- scale
-        WORKOUT("workout"), // workout regularly -- boolean
-        LIGHT_SLEEPER("light_sleeper"), // boolean
-        SNORE("snore"), // boolean
-        SLEEP_TALK("sleep_talk"), // boolean
-        CAFFEINE("caffeine"); // text
+        SLEEP_TEMPERATURE("sleep_temperature"), // hot or cold sleeper
+        WORKOUT("workout"),                     // workout regularly -- boolean
+        SNORE("snore"),                         // boolean
+        SLEEP_TALK("sleep_talk"),               // boolean
+        CAFFEINE("caffeine"),                   // boolean
+        LIGHT_SLEEPER("light_sleeper"),         // boolean
+        NAP("nap"),                             // boolean
+        TROUBLE_SLEEPING("trouble_sleeping"),   // boolean
+        EAT_LATE("eat_late"),                   // type
+        BEDTIME("bedtime");                     // type
 
         private String value;
         private Type(String value) {
