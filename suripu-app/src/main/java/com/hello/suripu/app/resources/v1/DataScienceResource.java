@@ -6,6 +6,7 @@ import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
+import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsDAO;
 import com.hello.suripu.core.models.Account;
@@ -16,6 +17,7 @@ import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.processors.AccountInfoProcessor;
 import com.hello.suripu.core.processors.InsightProcessor;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.util.DateTimeUtil;
@@ -50,6 +52,7 @@ public class DataScienceResource {
     private final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
     private final TrendsDAO trendsDAO;
+    private final QuestionResponseDAO questionResponseDAO;
     private final LightData lightData;
 
     public DataScienceResource(final AccountDAO accountDAO,
@@ -59,6 +62,7 @@ public class DataScienceResource {
                                final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
                                final InsightsDAODynamoDB insightsDAODynamoDB,
                                final TrendsDAO trendsDAO,
+                               final QuestionResponseDAO questionResponseDAO,
                                final LightData lightData){
         this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
@@ -67,6 +71,7 @@ public class DataScienceResource {
         this.aggregateSleepScoreDAODynamoDB = aggregateSleepScoreDAODynamoDB;
         this.insightsDAODynamoDB = insightsDAODynamoDB;
         this.trendsDAO = trendsDAO;
+        this.questionResponseDAO = questionResponseDAO;
         this.lightData = lightData;
     }
 
@@ -121,7 +126,12 @@ public class DataScienceResource {
 
         final InsightCard.Category category = InsightCard.Category.fromInteger(value);
 
-        final InsightProcessor processor = new InsightProcessor(deviceDataDAO, deviceDAO, trendsDAO, trackerMotionDAO, aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, lightData);
+        final AccountInfoProcessor.Builder builder = new AccountInfoProcessor.Builder()
+                .withQuestionResponseDAO(questionResponseDAO)
+                .withMapping(questionResponseDAO);
+        final AccountInfoProcessor accountInfoProcessor = builder.build();
+
+        final InsightProcessor processor = new InsightProcessor(deviceDataDAO, deviceDAO, trendsDAO, trackerMotionDAO, aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, accountInfoProcessor, lightData);
         final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
         if (accountOptional.isPresent()) {
             final Long accountId = accountOptional.get().id.get();
@@ -131,8 +141,11 @@ public class DataScienceResource {
                 return;
             }
 
-            processor.generateInsights(accountId, accountOptional.get().created);
-            //processor.generateInsightsByCategory(accountId, deviceIdOptional.get(), category);
+            if (category == InsightCard.Category.LIGHT || category == InsightCard.Category.TEMPERATURE) {
+                processor.generateInsightsByCategory(accountId, deviceIdOptional.get(), category);
+            } else {
+                processor.generateInsights(accountId, accountOptional.get().created);
+            }
         }
     }
 }

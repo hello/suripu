@@ -39,7 +39,6 @@ public class Lights {
 
         // compute median value
         final DescriptiveStatistics stats = new DescriptiveStatistics();
-        final int offsetMillis = data.get(0).offsetMillis;
         for (final DeviceData deviceData : data) {
             stats.addValue(deviceData.ambientLight);
         }

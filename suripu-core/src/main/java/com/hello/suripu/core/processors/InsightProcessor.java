@@ -36,6 +36,7 @@ public class InsightProcessor {
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
     private final LightData lightData;
+    private final AccountInfoProcessor accountInfoProcessor;
 
     public InsightProcessor(final DeviceDataDAO deviceDataDAO,
                             final DeviceDAO deviceDAO,
@@ -43,7 +44,9 @@ public class InsightProcessor {
                             final TrackerMotionDAO trackerMotionDAO,
                             final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
                             final InsightsDAODynamoDB insightsDAODynamoDB,
-                            final LightData lightData) {
+                            final AccountInfoProcessor accountInfoProcessor,
+                            final LightData lightData
+                            ) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.trendsDAO = trendsDAO;
@@ -51,6 +54,7 @@ public class InsightProcessor {
         this.scoreDAODynamoDB = scoreDAODynamoDB;
         this.insightsDAODynamoDB = insightsDAODynamoDB;
         this.lightData = lightData;
+        this.accountInfoProcessor = accountInfoProcessor;
     }
 
     public void generateInsights(final Long accountId, final DateTime accountCreated) {
@@ -86,7 +90,8 @@ public class InsightProcessor {
                 insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
                 break;
             case 2:
-                insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO);
+                final String tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
+                insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref);
                 break;
             default:
                 insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
@@ -107,7 +112,7 @@ public class InsightProcessor {
 
         final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
 
-        // TODO
+        // TODO - randomly select a card that hasn't been generated recently
         if (recentCategories.contains(InsightCard.Category.LIGHT)) {
             LOGGER.debug("No new insights generated: {}", accountId);
             return;
@@ -120,8 +125,12 @@ public class InsightProcessor {
     public void generateInsightsByCategory(final Long accountId, final Long deviceId, final InsightCard.Category category) {
 
         Optional<InsightCard> insightCardOptional = Optional.absent();
+
         if (category == InsightCard.Category.LIGHT) {
             insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
+        } else if (category == InsightCard.Category.TEMPERATURE) {
+            final String tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
+            insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref);
         }
 
         if (insightCardOptional.isPresent()) {

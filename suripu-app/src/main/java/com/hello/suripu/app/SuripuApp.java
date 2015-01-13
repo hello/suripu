@@ -270,7 +270,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new FeedbackResource(feedbackDAO));
         environment.addResource(new AppCheckinResource(false, "")); // TODO: replace this with real app version. Maybe move it to admin tool?
 
-        environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO, deviceDataDAO, deviceDAO, aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, trendsDAO, new LightData()));
+        environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO, deviceDataDAO, deviceDAO, aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, trendsDAO, questionResponseDAO, new LightData()));
 
         final FirmwareUpdateDAO firmwareUpdateDAO = commonDB.onDemand(FirmwareUpdateDAO.class);
         final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);
