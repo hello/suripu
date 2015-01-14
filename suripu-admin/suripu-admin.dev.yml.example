@@ -20,3 +20,8 @@ common_db:
   url: jdbc:postgresql://localhost:5432/dump_2015_01_06
   properties:
     charSet: UTF-8
+
+logging:
+  level: INFO
+  loggers:
+    com.hello.suripu.admin: DEBUG

@@ -20,3 +20,8 @@ common_db:
   url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
+
+logging:
+  level: INFO
+  loggers:
+    com.hello.suripu.admin: DEBUG

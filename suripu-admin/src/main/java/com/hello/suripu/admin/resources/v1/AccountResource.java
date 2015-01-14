@@ -1,7 +1,7 @@
 package com.hello.suripu.admin.resources.v1;
 
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.AccountAdminDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -15,15 +15,16 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 @Path("/admin/v1/account")
 public class AccountResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountResource.class);
 
-    private final AccountDAO accountDAO;
+    private final AccountAdminDAO accountAdminDAO;
 
-    public AccountResource(final AccountDAO accountDAO) {
-        this.accountDAO = accountDAO;
+    public AccountResource(final AccountAdminDAO accountAdminDAO) {
+        this.accountAdminDAO = accountAdminDAO;
     }
 
     @GET
@@ -38,11 +39,11 @@ public class AccountResource {
     @Produces(MediaType.APPLICATION_JSON)
     public ImmutableList<Account> getAccountByName(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
                                           @PathParam("name") final String name) {
-        System.out.println(name);
+        LOGGER.debug("Querying for account with name like {}", name);
 
-        final ImmutableList<Account> accounts = accountDAO.getAccountsByNameHint(name);
+        final List<Account> accounts = accountAdminDAO.getAccountsByNameHint(name);
 
-        return accounts;
+        return ImmutableList.copyOf(accounts);
     }
     @GET
     @Timed
@@ -50,10 +51,10 @@ public class AccountResource {
     @Produces(MediaType.APPLICATION_JSON)
     public ImmutableList<Account> getAccountByEmail(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
                                                    @PathParam("email") final String email) {
-        System.out.println(email);
+        LOGGER.debug("Querying for account with email like {}", email);
 
-        final ImmutableList<Account> accounts = accountDAO.getAccountsByEmailHint(email);
+        final List<Account> accounts = accountAdminDAO.getAccountsByEmailHint(email);
 
-        return accounts;
+        return ImmutableList.copyOf(accounts);
     }
 }
