@@ -287,35 +287,32 @@ public class Alarm {
         public static boolean isValidAlarms(final List<Alarm> alarms, final DateTime now, final DateTimeZone timeZone){
             final Set<Integer> alarmDays = new HashSet<Integer>();
             for(final Alarm alarm: alarms){
-                if(alarm.isSmart) {
-                    if(alarm.isRepeated) {
-                        for (final Integer dayOfWeek : alarm.dayOfWeek) {
-                            if (alarmDays.contains(dayOfWeek)) {
-                                return false;
-                            } else {
-                                alarmDays.add(dayOfWeek);
-                            }
-                        }
-                    }else{
+                if(!alarm.isRepeated){
+                    if (!isValidNoneRepeatedAlarm(alarm)) {
+                        return false;
+                    }
 
-                        if (!isValidNoneRepeatedAlarm(alarm)) {
-                            return false;
-                        }
-
+                    if(alarm.isSmart){
                         final DateTime expectedRingTime = new DateTime(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour, timeZone);
                         if(alarmDays.contains(expectedRingTime.getDayOfWeek())){
                             return false;
-                        }else{
-                            alarmDays.add(expectedRingTime.getDayOfWeek());
                         }
 
+                        alarmDays.add(expectedRingTime.getDayOfWeek());
                     }
                 }else{
-                    if(!alarm.isRepeated) {
-                        if (!isValidNoneRepeatedAlarm(alarm)) {
+                    if(!alarm.isSmart) {
+                        continue;
+                    }
+
+                    for (final Integer dayOfWeek : alarm.dayOfWeek) {
+                        if (alarmDays.contains(dayOfWeek)) {
                             return false;
                         }
+
+                        alarmDays.add(dayOfWeek);
                     }
+
                 }
             }
 
