@@ -47,6 +47,7 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
 
             if (throwable.getClass().getName().startsWith("com.fasterxml.jackson")) {
 
+                // TODO: there's bug in debug mode where throwable might not have a cause
                 final String message = (debug) ? throwable.getCause().getMessage() : "Bad request.";
                 return Response.status(Response.Status.BAD_REQUEST)
                         .entity(new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), message))
