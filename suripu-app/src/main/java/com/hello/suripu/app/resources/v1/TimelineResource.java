@@ -168,7 +168,7 @@ public class TimelineResource extends BaseResource {
 
         if(trackerMotions.isEmpty()) {
             LOGGER.debug("No data for account_id = {} and day = {}", accountId, targetDate);
-            final Timeline timeline = new Timeline(0, "You haven't been sleeping!", date, new ArrayList<SleepSegment>(), new ArrayList<Insight>());
+            final Timeline timeline = new Timeline(0, "No sleep data recorded.", date, new ArrayList<SleepSegment>(), new ArrayList<Insight>());
             final List<Timeline> timelines = new ArrayList<>();
             timelines.add(timeline);
             return timelines;

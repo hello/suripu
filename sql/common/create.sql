@@ -184,3 +184,18 @@ CREATE TABLE sleep_feedback(
 
 GRANT ALL PRIVILEGES ON sleep_feedback TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE sleep_feedback_id_seq TO ingress_user;
+
+CREATE TABLE user_location (
+    id SERIAL PRIMARY KEY,
+    account_id BIGINT NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    latitude DOUBLE PRECISION NOT NULL,
+    ip_address INET,
+    city varchar(100),
+    country varchar(2), -- see http://en.wikipedia.org/wiki/ISO_3166-1
+    created TIMESTAMP default current_timestamp
+);
+
+GRANT ALL PRIVILEGES ON user_location TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE user_location_id_seq TO ingress_user;
+
