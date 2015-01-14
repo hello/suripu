@@ -1,6 +1,7 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.PasswordUpdate;
 import com.hello.suripu.core.models.Registration;
@@ -78,5 +79,15 @@ public class InMemoryAccountDAOImpl implements AccountDAO{
     @Override
     public void delete(String email) {
 
+    }
+
+    @Override
+    public ImmutableList<Account> getAccountsByNameHint(String name) {
+        return null;
+    }
+
+    @Override
+    public ImmutableList<Account> getAccountsByEmailHint(String email) {
+        return null;
     }
 }
