@@ -375,12 +375,12 @@ public class ReceiveResource extends BaseResource {
         //// Start: Compute next ring time on-the-fly based on alarm templates, just in case the smart alarm worker dead /////
         Optional<RingTime> nextRegularRingTimeOptional = Optional.absent();
         int ringOffsetFromNowInSecond = -1;
-        int ringDurationInMS = 30 * DateTimeConstants.MILLIS_PER_SECOND;  // TODO: make this flexible so we can adjust based on user preferences.
+        int ringDurationInMS = 120 * DateTimeConstants.MILLIS_PER_SECOND;  // TODO: make this flexible so we can adjust based on user preferences.
 
         try {
             nextRegularRingTimeOptional = Optional.of(RingProcessor.getNextRegularRingTime(userInfoFromThatDevice,
                     deviceId,
-                    DateTime.now()));
+                    DateTime.now().minusMinutes(1)));  // minus 1 min is important, or we might cancel the alarm when upload happens in the middle of that minute
         }catch (Exception ex){
             LOGGER.error("Get next regular ring time for device {} failed: {}", deviceId, ex.getMessage());
         }
@@ -533,11 +533,9 @@ public class ReceiveResource extends BaseResource {
             boolean canOTA = false;
             if(batch.hasUptimeInSecond()){
                 canOTA = (batch.getUptimeInSecond() > 20 * DateTimeConstants.SECONDS_PER_MINUTE);
-            }else{
-                canOTA = (batch.getDataList().size() > 1);
             }
 
-            if(groups.contains("chris-dev")){
+            if(groups.contains("chris-dev") || groups.contains("video-photoshoot")){
                 canOTA = true;
             }
 

@@ -17,4 +17,5 @@ public interface AccountDAO {
     Optional<Account> update(final Account account, Long accountId);
     Boolean updatePassword(final Long accountId, final PasswordUpdate passwordUpdate);
     Optional<Account> updateEmail(final Account account);
+    void delete(final String email);
 }

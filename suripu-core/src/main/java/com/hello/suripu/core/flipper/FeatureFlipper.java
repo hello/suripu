@@ -10,4 +10,5 @@ public class FeatureFlipper {
     public final static String OTA_RELEASE = "release";
     public final static String ALWAYS_OTA_RELEASE = "jackson-dev";
     public final static String FORCE_EVT_OTA_UPDATE = "pang-fire-fighting";
+    public final static String DEBUG_MODE_PILL_PAIRING = "debug-mode-pill-pairing";
 }

@@ -1,4 +1,4 @@
-package com.hello.suripu.core.db.notifications;
+package com.hello.suripu.core.notifications;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
@@ -128,7 +128,7 @@ public class DynamoDBNotificationSubscriptionDAO implements NotificationSubscrip
             final String endpoint = item.get("endpoint").getS();
             final String token = item.get("token").getS();
 
-            final String os = (item.containsKey("ios")) ? item.get("ios").getS() : "";
+            final String os = (item.containsKey("os")) ? item.get("os").getS() : "";
             final String version = (item.containsKey("version")) ? item.get("version").getS() : "";
             final String appVersion = (item.containsKey("app_version")) ? item.get("app_version").getS() : "";
             final String oauthToken = (item.containsKey("oauth_token")) ? item.get("oauth_token").getS() : "";

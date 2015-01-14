@@ -10,6 +10,8 @@ import com.hello.dropwizard.mikkusu.helpers.JacksonProtobufProvider;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.core.ObjectGraphRoot;
+import com.hello.suripu.core.bundles.KinesisLoggerBundle;
+import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
@@ -85,6 +87,12 @@ public class SuripuService extends Service<SuripuConfiguration> {
         bootstrap.addBundle(new DBIExceptionsBundle());
         bootstrap.addCommand(new CreateKeyStoreDynamoDBTable());
         bootstrap.addCommand(new CreatePillKeyStoreDynamoDBTable());
+        bootstrap.addBundle(new KinesisLoggerBundle<SuripuConfiguration>() {
+            @Override
+            public KinesisLoggerConfiguration getConfiguration(final SuripuConfiguration configuration) {
+                return configuration.kinesisLoggerConfiguration();
+            }
+        });
     }
 
     @Override
@@ -200,7 +208,12 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
 
         environment.addResource(receiveResource);
-        environment.addResource(new RegisterResource(deviceDAO, tokenStore, kinesisLoggerFactory, senseKeyStore, configuration.getDebug()));
+        environment.addResource(new RegisterResource(deviceDAO,
+                tokenStore,
+                kinesisLoggerFactory,
+                senseKeyStore,
+                groupFlipper,
+                configuration.getDebug()));
         final LogsResource logsResource = new LogsResource(
                 configuration.getIndexLogConfiguration().getPrivateUrl(),
                 configuration.getIndexLogConfiguration().getIndexName(),

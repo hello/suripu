@@ -143,3 +143,8 @@ sense_upload_configuration:
   long_interval: 2
   short_interval: 2
 
+kinesis_logger:
+  stream_name: logs
+  enabled : true
+  buffer_size: 100
+  origin: suripu-service

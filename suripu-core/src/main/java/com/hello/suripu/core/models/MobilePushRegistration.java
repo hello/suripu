@@ -8,6 +8,25 @@ import com.google.common.base.Optional;
 
 public class MobilePushRegistration {
 
+    public enum OS {
+        ANDROID("android"),
+        IOS("ios");
+
+        private String value;
+        private OS(String value) {
+            this.value = value;
+        }
+
+        public static OS fromString(final String val) {
+            for(final OS os : OS.values()) {
+                if(os.value.equalsIgnoreCase(val)) {
+                    return os;
+                }
+            }
+
+            throw new IllegalArgumentException(String.format("No OS with value: %s", val));
+        }
+    }
     @JsonIgnore
     public final Optional<Long> accountId;
 
