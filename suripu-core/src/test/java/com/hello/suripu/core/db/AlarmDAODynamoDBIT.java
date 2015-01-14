@@ -3,7 +3,10 @@ package com.hello.suripu.core.db;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
+import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
+import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.collect.ImmutableList;
@@ -19,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -116,6 +120,7 @@ public class AlarmDAODynamoDBIT {
                 .withIsRepeated(true)
                 .withIsEnabled(true)
                 .withIsEditable(true)
+                .withIsSmart(true)
                 .withAlarmSound(new AlarmSound(1, "god save the queen"));
 
         expected.add(builder.build());
@@ -130,6 +135,7 @@ public class AlarmDAODynamoDBIT {
                 .withHour(0)
                 .withMinute(1)
                 .withIsRepeated(false)
+                .withIsSmart(false)
                 .withIsEnabled(true)
                 .withIsEditable(true)
                 .withAlarmSound(new AlarmSound(1, "god save the queen"));
@@ -171,7 +177,7 @@ public class AlarmDAODynamoDBIT {
 
 
     @Test(expected = RuntimeException.class)
-    public void testTwoAlarmsInOneDay(){
+    public void testTwoSmartAlarmsInOneDay(){
         long accountId = 1;
         final List<Alarm> expected = new ArrayList<Alarm>();
 
@@ -188,6 +194,7 @@ public class AlarmDAODynamoDBIT {
                 .withHour(1)
                 .withMinute(1)
                 .withIsRepeated(false)
+                .withIsSmart(true)
                 .withIsEnabled(true)
                 .withIsEditable(true)
                 .withAlarmSound(new AlarmSound(1, "god save the queen"));
@@ -199,6 +206,29 @@ public class AlarmDAODynamoDBIT {
 
         expected.add(builder.build());
         this.alarmDAODynamoDB.setAlarms(accountId, expected);
+    }
+
+    @Test
+    public void testJSONBackwardCompatibility(){
+        final String alarmJSONString = "[{\"year\":0,\"month\":0,\"day_of_month\":0,\"hour\":7,\"minute\":30,\"day_of_week\":[1,2,3,4,5],\"repeated\":true,\"enabled\":true,\"editable\":true,\"sound\":{\"id\":0,\"name\":\"Waterfall\"}}]";
+        final HashMap<String, AttributeValue> items = new HashMap<String, AttributeValue>();
+        items.put(AlarmDAODynamoDB.ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(1L)));
+        items.put(AlarmDAODynamoDB.ALARM_TEMPLATES_ATTRIBUTE_NAME, new AttributeValue().withS(alarmJSONString));
+        items.put(AlarmDAODynamoDB.UPDATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(DateTime.now().getMillis())));
+
+        final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, items);
+        final PutItemResult result = this.amazonDynamoDBClient.putItem(putItemRequest);
+
+        List<Alarm> alarmList = this.alarmDAODynamoDB.getAlarms(1L);
+        final HashSet<Integer> daysOfWeeks = new HashSet<>();
+
+        for(int i = 1; i < 6; i++){
+            daysOfWeeks.add(i);
+        }
+
+        assertThat(alarmList.get(0).isSmart, is(false));
+        assertThat(alarmList.get(0).isRepeated, is(true));
+        assertThat(alarmList.get(0).dayOfWeek, containsInAnyOrder(daysOfWeeks.toArray()));
     }
 
 }

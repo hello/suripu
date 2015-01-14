@@ -156,12 +156,23 @@ public class RingProcessor {
 
         LOGGER.info("Updating smart alarm for device {}, account {}", userInfo.deviceId, userInfo.accountId);
         
-        if (currentRingTime.equals(nextRegularRingTime) && currentRingTime.isSmart()) {
+        if (currentRingTime.equals(nextRegularRingTime) && currentRingTime.processed()) {
             LOGGER.debug("Smart alarm already set to {} for device {}, account {}.",
                     new DateTime(currentRingTime.actualRingTimeUTC, userInfo.timeZone.get()),
                     userInfo.deviceId,
                     userInfo.accountId);
             return currentRingTime;
+        }
+
+        if(!nextRegularRingTime.fromSmartAlarm){
+            if(currentRingTime.expectedRingTimeUTC < nextRegularRingTime.expectedRingTimeUTC) {
+
+                return nextRegularRingTime;
+            }
+
+            if(nextRegularRingTime.isEmpty()){
+                return nextRegularRingTime;
+            }
         }
 
         // currentRingTime.equals(nextRingTime) && currentRingTime.isSmart == false // next regular alarm generated, no pill data and not yet ring
@@ -303,7 +314,7 @@ public class RingProcessor {
             nextRingTimeMillis = smartAlarmRingTimeUTC.getMillis();
         }
 
-        return new RingTime(nextRingTimeMillis, nextRegularRingTime.expectedRingTimeUTC, nextRegularRingTime.soundIds);
+        return new RingTime(nextRingTimeMillis, nextRegularRingTime.expectedRingTimeUTC, nextRegularRingTime.soundIds, nextRegularRingTime.fromSmartAlarm);
     }
 
 
@@ -369,7 +380,7 @@ public class RingProcessor {
                     soundIds.add(soundId);
                 }
             }
-            ringTime = new RingTime(nextRingTime.actualRingTimeUTC, nextRingTime.expectedRingTimeUTC, soundIds.toArray(new Long[0]));
+            ringTime = new RingTime(nextRingTime.actualRingTimeUTC, nextRingTime.expectedRingTimeUTC, soundIds.toArray(new Long[0]), nextRingTime.fromSmartAlarm);
         }
 
         return ringTime;

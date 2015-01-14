@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.Alarm;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,14 +70,8 @@ public class AlarmDAODynamoDB {
         }
 
         final Set<Integer> alarmDays = new HashSet<Integer>();
-        for(final Alarm alarm:alarms){
-            for(final Integer dayOfWeek:alarm.dayOfWeek) {
-                if (alarmDays.contains(dayOfWeek)) {
-                    throw new RuntimeException("Cannot schedule two alarm at the same day.");
-                } else {
-                    alarmDays.add(dayOfWeek);
-                }
-            }
+        if(!Alarm.Utils.isValidAlarms(alarms, DateTime.now(), DateTimeZone.UTC)){
+            throw new RuntimeException("Invalid alarms");
         }
 
         final ObjectMapper mapper = new ObjectMapper();

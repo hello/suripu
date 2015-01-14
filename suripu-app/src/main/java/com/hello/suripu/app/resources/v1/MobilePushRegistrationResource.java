@@ -77,6 +77,11 @@ public class MobilePushRegistrationResource {
             @PathParam("email") final String email,
             @Valid final HelloPushMessage message) {
 
+        LOGGER.debug("email: {}", email);
+        LOGGER.debug("push target: {}", message.target);
+        LOGGER.debug("push details: {}", message.details);
+        LOGGER.debug("push body: {}", message.body);
+
         final Optional<Account> accountOptional = accountDAO.getByEmail(email);
         if(!accountOptional.isPresent()) {
             return Response.status(Response.Status.NOT_FOUND).build();

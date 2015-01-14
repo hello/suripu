@@ -141,9 +141,9 @@ public class DataScienceResource {
     @GET
     @Path("/admin/pill/{email}/{query_date_local_utc}/")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<TrackerMotion> getMotion(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                         @PathParam("query_date_local_utc") String date,
-                                         @PathParam("email") String email) {
+    public List<TrackerMotion> getMotionAdmin(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                              @PathParam("query_date_local_utc") String date,
+                                              @PathParam("email") String email) {
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withHourOfDay(20);
         final DateTime endDate = targetDate.plusHours(16);
