@@ -1,5 +1,5 @@
 metrics_enabled: false
-debug : true
+debug: true
 graphite:
   host: carbon.hostedgraphite.com
   api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
@@ -8,3 +8,15 @@ graphite:
     - org.skife
     - xx-responses
     - com.hello
+
+http:
+  port: 3333
+  adminPort: 3336
+
+common_db:
+  driverClass: org.postgresql.Driver
+  user: zet
+  password:
+  url: jdbc:postgresql://localhost:5432/dump_2015_01_06
+  properties:
+    charSet: UTF-8
