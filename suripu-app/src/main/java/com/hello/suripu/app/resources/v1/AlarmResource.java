@@ -14,6 +14,7 @@ import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.util.JsonError;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -115,9 +116,13 @@ public class AlarmResource {
                           @PathParam("client_time_utc") long clientTime,
                           final List<Alarm> alarms){
 
-        if(Math.abs(DateTime.now().getMillis() - clientTime) > DateTimeConstants.MILLIS_PER_MINUTE){
-            LOGGER.error("account_id {} set alarm failed, client time too off.", token.accountId);
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+        final Long now = DateTime.now().getMillis();
+        final Long timeDiff =  now - clientTime;
+        if(Math.abs(timeDiff) > DateTimeConstants.MILLIS_PER_MINUTE){
+            LOGGER.error("account_id {} set alarm failed, client time too off.( was {}, now is {}", token.accountId, clientTime, now);
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(
+                    new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), "Clock out of sync. Try again.")).build()
+            );
         }
 
         final List<DeviceAccountPair> deviceAccountMap = this.deviceDAO.getSensesForAccountId(token.accountId);
