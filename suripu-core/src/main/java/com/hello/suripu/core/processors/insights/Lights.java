@@ -23,7 +23,7 @@ public class Lights {
     public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final LightData lightData) {
 
         // get light data for last three days, filter by time
-        final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withHourOfDay(NIGHT_START_HOUR).minusDays(16); // today 6pm
+        final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withHourOfDay(NIGHT_START_HOUR); // today 6pm
         final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.RECENT_DAYS);
 
         // get light data > 0 between the hour of 6pm to 1am

@@ -32,7 +32,7 @@ public class TemperatureHumidity {
     private static final int TEMP_END_HOUR = 6; // 6am
 
     public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final AccountInfo.SleepTempType tempPref) {
-        final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withHourOfDay(TEMP_END_HOUR).minusDays(16); // today 6am
+        final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withHourOfDay(TEMP_END_HOUR); // today 6am
         final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.RECENT_DAYS).withHourOfDay(TEMP_START_HOUR); // 11pm three days ago
 
         final int slotDuration = 30;
