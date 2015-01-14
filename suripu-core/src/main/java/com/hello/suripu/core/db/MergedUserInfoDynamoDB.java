@@ -100,7 +100,7 @@ public class MergedUserInfoDynamoDB {
                 .withValue(new AttributeValue().withN(String.valueOf(ringTime.actualRingTimeUTC))));
         items.put(IS_SMART_ALARM_ATTRIBUTE_NAME, new AttributeValueUpdate()
                 .withAction(AttributeAction.PUT)
-                .withValue(new AttributeValue().withS(String.valueOf(ringTime.fromSmartAlarm))));
+                .withValue(new AttributeValue().withBOOL(ringTime.fromSmartAlarm)));
 
         try {
             final String soundJSON = mapper.writeValueAsString(ringTime.soundIds);
@@ -332,7 +332,7 @@ public class MergedUserInfoDynamoDB {
             final long[] soundIds = mapper.readValue(soundArrayJSON, long[].class);
             boolean isSmart = true;
             if(item.containsKey(IS_SMART_ALARM_ATTRIBUTE_NAME)){
-               isSmart = Boolean.parseBoolean(item.get(IS_SMART_ALARM_ATTRIBUTE_NAME).getS());
+               isSmart = item.get(IS_SMART_ALARM_ATTRIBUTE_NAME).getBOOL();
             }
             return Optional.of(new RingTime(actual, expected, soundIds, isSmart));
         } catch (IOException e) {
