@@ -52,7 +52,11 @@ public class InsightCard implements Comparable<InsightCard> {
             }
             return Category.GENERIC;
         }
+
+
     }
+
+    public static final int RECENT_DAYS = 3;
 
     public enum TimePeriod {
         NONE(0),
