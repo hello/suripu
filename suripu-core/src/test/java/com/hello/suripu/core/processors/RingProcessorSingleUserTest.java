@@ -63,7 +63,7 @@ public class RingProcessorSingleUserTest {
         dayOfWeek.add(DateTimeConstants.TUESDAY);
 
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
-                true, true, true,
+                true, true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
         final RingTime ringTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList,
@@ -120,7 +120,8 @@ public class RingProcessorSingleUserTest {
 
         final RingTime nextRingTime = new RingTime(deadline.getMillis(),
                 deadline.getMillis(),
-                100);
+                100,
+                true);
 
         final UserInfo userInfo1 = userInfoList1.get(0);
         userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId, userInfo1.alarmList,
@@ -139,7 +140,7 @@ public class RingProcessorSingleUserTest {
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
-        assertThat(ringTime.isSmart(), is(false));
+        assertThat(ringTime.processed(), is(false));
 
         userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId, userInfo1.alarmList,
                 Optional.of(ringTime), userInfo1.timeZone));
@@ -160,7 +161,7 @@ public class RingProcessorSingleUserTest {
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
         assertThat(actualRingTime.isAfter(dataCollectionTime), is(true));
-        assertThat(ringTime.isSmart(), is(true));
+        assertThat(ringTime.processed(), is(true));
 
 
 
@@ -194,7 +195,7 @@ public class RingProcessorSingleUserTest {
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
-        assertThat(ringTime.isRegular(), is(true));
+        assertThat(ringTime.processed(), is(false));
 
         final UserInfo userInfo1 = userInfoList1.get(0);
         userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId, userInfo1.alarmList,
@@ -214,7 +215,7 @@ public class RingProcessorSingleUserTest {
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.getMillis(), is(deadline.getMillis()));
-        assertThat(ringTime.isRegular(), is(true));
+        assertThat(ringTime.processed(), is(false));
     }
 
 
@@ -228,7 +229,7 @@ public class RingProcessorSingleUserTest {
         dayOfWeek.add(DateTimeConstants.TUESDAY);
 
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
-                false, true, true,
+                false, true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
         when(this.alarmDAODynamoDB.getAlarms(1)).thenReturn(ImmutableList.copyOf(alarmList));
@@ -248,7 +249,7 @@ public class RingProcessorSingleUserTest {
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
-        assertThat(ringTime.isSmart(), is(false));
+        assertThat(ringTime.processed(), is(false));
 
         final UserInfo userInfo1 = userInfoList1.get(0);
         userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId, userInfo1.alarmList,
@@ -268,7 +269,7 @@ public class RingProcessorSingleUserTest {
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
         assertThat(actualRingTime.isAfter(new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"))), is(true));
-        assertThat(ringTime.isSmart(), is(true));
+        assertThat(ringTime.processed(), is(true));
     }
 
 
@@ -282,7 +283,7 @@ public class RingProcessorSingleUserTest {
         dayOfWeek.add(DateTimeConstants.TUESDAY);
 
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
-                true, false, true,
+                true, false, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
         final UserInfo userInfo1 = this.userInfoList1.get(0);
@@ -388,7 +389,7 @@ public class RingProcessorSingleUserTest {
 
         final DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.getMillis(), is(deadline.getMillis()));
-        assertThat(ringTime.isRegular(), is(true));
+        assertThat(ringTime.processed(), is(false));
     }
 
 
@@ -403,7 +404,7 @@ public class RingProcessorSingleUserTest {
         dayOfWeek.add(DateTimeConstants.TUESDAY);
 
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
-                false, true, true,
+                false, true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
         when(this.alarmDAODynamoDB.getAlarms(1)).thenReturn(ImmutableList.copyOf(alarmList));
@@ -426,7 +427,7 @@ public class RingProcessorSingleUserTest {
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
-        assertThat(ringTime.isRegular(), is(true));
+        assertThat(ringTime.processed(), is(false));
 
         when(this.ringTimeDAODynamoDB.getNextRingTime(testDeviceId)).thenReturn(ringTime);
 
@@ -443,7 +444,7 @@ public class RingProcessorSingleUserTest {
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
-        assertThat(ringTime.isSmart(), is(true));
+        assertThat(ringTime.processed(), is(true));
     }
 
     @Test
@@ -457,7 +458,7 @@ public class RingProcessorSingleUserTest {
         dayOfWeek.add(DateTimeConstants.TUESDAY);
 
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
-                false, true, true,
+                false, true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
         when(this.alarmDAODynamoDB.getAlarms(1)).thenReturn(ImmutableList.copyOf(alarmList));
@@ -484,7 +485,7 @@ public class RingProcessorSingleUserTest {
 
         final DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
-        assertThat(ringTime.isRegular(), is(true));
+        assertThat(ringTime.processed(), is(false));
     }
 
 
@@ -499,7 +500,7 @@ public class RingProcessorSingleUserTest {
         dayOfWeek.add(DateTimeConstants.MONDAY);
 
         alarmList.add(new Alarm(2014, 9, 22, 8, 20, dayOfWeek,
-                false, true, true,
+                false, true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
         final UserInfo userInfo1 = this.userInfoList1.get(0);
@@ -534,7 +535,7 @@ public class RingProcessorSingleUserTest {
         dayOfWeek.add(DateTimeConstants.MONDAY);
 
         alarmList.add(new Alarm(2014, 9, 22, 8, 20, dayOfWeek,
-                false, true, true,
+                false, true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
         final UserInfo userInfo1 = this.userInfoList1.get(0);
@@ -568,13 +569,13 @@ public class RingProcessorSingleUserTest {
         dayOfWeek.add(DateTimeConstants.TUESDAY);
 
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
-                false, true, true,
+                false, true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
         final HashSet<Integer> dayOfWeek2 = new HashSet<Integer>();
         dayOfWeek2.add(DateTimeConstants.WEDNESDAY);
         alarmList.add(new Alarm(2014, 9, 24, 9, 20, dayOfWeek2,
-                false, true, true,
+                false, true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
 
@@ -601,7 +602,7 @@ public class RingProcessorSingleUserTest {
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
-        assertThat(ringTime.isRegular(), is(true));
+        assertThat(ringTime.processed(), is(false));
 
         when(this.ringTimeDAODynamoDB.getNextRingTime(testDeviceId)).thenReturn(ringTime);
 
@@ -624,7 +625,7 @@ public class RingProcessorSingleUserTest {
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
-        assertThat(ringTime.isSmart(), is(true));
+        assertThat(ringTime.processed(), is(true));
 
         userInfo1 = this.userInfoList1.get(0);
         this.userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
@@ -646,7 +647,7 @@ public class RingProcessorSingleUserTest {
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
-        assertThat(ringTime.isRegular(), is(true));
+        assertThat(ringTime.processed(), is(false));
     }
 
 
@@ -659,7 +660,8 @@ public class RingProcessorSingleUserTest {
 
         final RingTime nextRingTime = new RingTime(deadline.minusMinutes(3).getMillis(),
                 deadline.getMillis(),
-                100);
+                100,
+                true);
 
         UserInfo userInfo1 = userInfoList1.get(0);
         userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId, userInfo1.alarmList,
@@ -680,7 +682,7 @@ public class RingProcessorSingleUserTest {
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline.minusMinutes(3)), is(true));
-        assertThat(ringTime.isSmart(), is(true));
+        assertThat(ringTime.processed(), is(true));
 
         userInfo1 = userInfoList1.get(0);
         userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId, userInfo1.alarmList,
@@ -699,6 +701,6 @@ public class RingProcessorSingleUserTest {
 
 
         assertThat(ringTime.actualRingTimeUTC, is(deadline.minusMinutes(3).getMillis()));
-        assertThat(ringTime.isSmart(), is(true));
+        assertThat(ringTime.processed(), is(true));
     }
 }

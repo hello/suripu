@@ -92,7 +92,7 @@ public class AlarmResource {
 
             final DateTimeZone userTimeZone = userInfo.timeZone.get();
             final List<Alarm> smartAlarms = Alarm.Utils.disableExpiredNoneRepeatedAlarms(userInfo.alarmList, DateTime.now().getMillis(), userTimeZone);
-            if(!Alarm.Utils.isValidSmartAlarms(smartAlarms, DateTime.now(), userTimeZone)){
+            if(!Alarm.Utils.isValidAlarms(smartAlarms, DateTime.now(), userTimeZone)){
                 LOGGER.error("Invalid alarm for user {} device {}", token.accountId, userInfo.deviceId);
                 throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             }
@@ -141,7 +141,7 @@ public class AlarmResource {
             }
 
             final DateTimeZone timeZone = alarmInfoOptional.get().timeZone.get();
-            if(!Alarm.Utils.isValidSmartAlarms(alarms, DateTime.now(), timeZone)){
+            if(!Alarm.Utils.isValidAlarms(alarms, DateTime.now(), timeZone)){
                 LOGGER.error("Invalid alarm for account {}, device {}, alarm set skipped", deviceAccountPair.accountId, deviceAccountPair.externalDeviceId);
                 throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
             }
