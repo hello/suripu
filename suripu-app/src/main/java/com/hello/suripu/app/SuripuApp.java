@@ -78,8 +78,11 @@ import com.hello.suripu.core.oauth.OAuthAuthenticator;
 import com.hello.suripu.core.oauth.OAuthProvider;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
+import com.hello.suripu.core.processors.AccountInfoProcessor;
+import com.hello.suripu.core.processors.InsightProcessor;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
+import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.util.CustomJSONExceptionMapper;
 import com.hello.suripu.core.util.DropwizardServiceUtil;
@@ -281,7 +284,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new ScoresResource(trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), configuration.getSleepScoreVersion()));
 
         final SunData sunData = new SunData();
-        environment.addResource(new TimelineResource(trackerMotionDAO, accountDAO, deviceDAO, deviceDataDAO, sleepLabelDAO, sleepScoreDAO, trendsDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), sunData, amazonS3, "hello-audio"));
+        final TimelineProcessor timelineProcessor = new TimelineProcessor(trackerMotionDAO, accountDAO, deviceDAO, deviceDataDAO, sleepLabelDAO, sleepScoreDAO, trendsDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), sunData, amazonS3, "hello-audio");
+        environment.addResource(new TimelineResource(accountDAO, timelineProcessor));
 
         environment.addResource(new TimeZoneResource(timeZoneHistoryDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO));
         environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO, amazonS3));
@@ -295,13 +299,27 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new FeedbackResource(feedbackDAO));
         environment.addResource(new AppCheckinResource(false, "")); // TODO: replace this with real app version. Maybe move it to admin tool?
 
+        // data science resource stuff
+        final AccountInfoProcessor.Builder builder = new AccountInfoProcessor.Builder()
+                .withQuestionResponseDAO(questionResponseDAO)
+                .withMapping(questionResponseDAO);
+        final AccountInfoProcessor accountInfoProcessor = builder.build();
+
+        final InsightProcessor.Builder insightBuilder = new InsightProcessor.Builder()
+                .withSenseDAOs(deviceDataDAO, deviceDAO)
+                .withTrackerMotionDAOs(trackerMotionDAO)
+                .withInsightsDAOs(trendsDAO)
+                .withDynamoDBDAOs(aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB)
+                .withAccountInfoProcessor(accountInfoProcessor)
+                .withLightData(new LightData());
+        final InsightProcessor insightProcessor = insightBuilder.build();
+
+        environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO, deviceDataDAO, deviceDAO, insightProcessor));
 
         final AmazonDynamoDB prefsClient = new AmazonDynamoDBClient(awsCredentialsProvider, clientConfiguration);
         prefsClient.setEndpoint(configuration.getPreferencesDBConfiguration().getEndpoint());
         final AccountPreferencesDAO accountPreferencesDAO = new AccountPreferencesDynamoDB(prefsClient, configuration.getPreferencesDBConfiguration().getTableName());
         environment.addResource(new AccountPreferencesResource(accountPreferencesDAO));
-
-        environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO, deviceDataDAO, deviceDAO, aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, trendsDAO, new LightData()));
 
         final FirmwareUpdateDAO firmwareUpdateDAO = commonDB.onDemand(FirmwareUpdateDAO.class);
         final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);

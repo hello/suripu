@@ -6,6 +6,7 @@ import com.hello.suripu.core.db.mappers.AccountQuestionMapper;
 import com.hello.suripu.core.db.mappers.AccountQuestionResponsesMapper;
 import com.hello.suripu.core.db.mappers.QuestionMapper;
 import com.hello.suripu.core.db.mappers.RecentResponseMapper;
+import com.hello.suripu.core.db.mappers.ResponseMapper;
 import com.hello.suripu.core.models.AccountQuestion;
 import com.hello.suripu.core.models.AccountQuestionResponses;
 import com.hello.suripu.core.models.Question;
@@ -29,6 +30,10 @@ public interface QuestionResponseDAO {
     @RegisterMapper(QuestionMapper.class)
     @SqlQuery("SELECT * FROM questions ORDER BY id")
     ImmutableList<Question> getAllQuestions();
+
+    @RegisterMapper(QuestionMapper.class)
+    @SqlQuery("SELECT * FROM questions WHERE frequency = 'one_time' ORDER BY id")
+    ImmutableList<Question> getBaseQuestions();
 
     @GetGeneratedKeys
     @SqlUpdate("INSERT INTO responses (account_id, question_id, account_question_id, response_id, question_freq) VALUES " +
@@ -128,4 +133,10 @@ public interface QuestionResponseDAO {
     ImmutableList<AccountQuestionResponses> getQuestionsResponsesByDate(@Bind("account_id") long accountId,
                                                                @Bind("expiration") DateTime expiration);
 
+    @RegisterMapper(ResponseMapper.class)
+    @SqlQuery("SELECT R.*, C.response_text FROM responses R " +
+            "INNER JOIN response_choices C ON R.response_id = C.id " +
+            "WHERE account_id = :account_id AND R.question_id = :question_id ORDER BY id DESC")
+    ImmutableList<Response> getAccountResponseByQuestionId(@Bind("account_id") long account_id,
+                                                           @Bind("question_id") int question_id);
 }
