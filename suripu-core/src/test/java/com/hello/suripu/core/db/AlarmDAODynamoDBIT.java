@@ -116,6 +116,7 @@ public class AlarmDAODynamoDBIT {
                 .withIsRepeated(true)
                 .withIsEnabled(true)
                 .withIsEditable(true)
+                .withIsSmart(true)
                 .withAlarmSound(new AlarmSound(1, "god save the queen"));
 
         expected.add(builder.build());
@@ -130,6 +131,7 @@ public class AlarmDAODynamoDBIT {
                 .withHour(0)
                 .withMinute(1)
                 .withIsRepeated(false)
+                .withIsSmart(false)
                 .withIsEnabled(true)
                 .withIsEditable(true)
                 .withAlarmSound(new AlarmSound(1, "god save the queen"));
@@ -171,7 +173,7 @@ public class AlarmDAODynamoDBIT {
 
 
     @Test(expected = RuntimeException.class)
-    public void testTwoAlarmsInOneDay(){
+    public void testTwoSmartAlarmsInOneDay(){
         long accountId = 1;
         final List<Alarm> expected = new ArrayList<Alarm>();
 
@@ -188,6 +190,7 @@ public class AlarmDAODynamoDBIT {
                 .withHour(1)
                 .withMinute(1)
                 .withIsRepeated(false)
+                .withIsSmart(true)
                 .withIsEnabled(true)
                 .withIsEditable(true)
                 .withAlarmSound(new AlarmSound(1, "god save the queen"));

@@ -21,24 +21,6 @@ public class RingTimeTest {
     public void testInvalid(){
         final RingTime invalidRingTime = new RingTime(DateTime.now().plusMinutes(1).getMillis(),
                 DateTime.now().getMillis(),
-                0);
-    }
-
-    @Test
-    public void testRegularRingTime(){
-        final DateTime ring = DateTime.now();
-        final RingTime regularRingTime = new RingTime(ring.getMillis(), ring.getMillis(), 0);
-        assertThat(regularRingTime.isRegular(), is(true));
-        assertThat(regularRingTime.isSmart(), is(false));
-        assertThat(regularRingTime.isEmpty(), is(false));
-    }
-
-    @Test
-    public void testSmartRingTime(){
-        final DateTime ring = DateTime.now();
-        final RingTime smartRingTime = new RingTime(ring.minusMinutes(1).getMillis(), ring.getMillis(), 0);
-        assertThat(smartRingTime.isRegular(), is(false));
-        assertThat(smartRingTime.isSmart(), is(true));
-        assertThat(smartRingTime.isEmpty(), is(false));
+                0, true);
     }
 }

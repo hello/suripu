@@ -21,10 +21,14 @@ public class RingTime {
     @JsonProperty("sound_ids")
     public final long[] soundIds;
 
+    @JsonProperty("from_smart_alarm")
+    public final boolean fromSmartAlarm;
+
     @JsonCreator
     public RingTime(@JsonProperty("actual_ring_time_utc") long actual,
                     @JsonProperty("expected_ring_time_utc") long expected,
-                    @JsonProperty("sound_ids") final long[] soundIds){
+                    @JsonProperty("sound_ids") final long[] soundIds,
+                    @JsonProperty("from_smart_alarm") final boolean fromSmartAlarm){
         if(expected < actual){
             throw new IllegalArgumentException("Actual ring behind deadline.");
         }
@@ -32,10 +36,11 @@ public class RingTime {
         this.actualRingTimeUTC = actual;
         this.expectedRingTimeUTC = expected;
         this.soundIds = soundIds;
+        this.fromSmartAlarm = fromSmartAlarm;
 
     }
 
-    public RingTime(long actual, long expected, final Long[] soundIds){
+    public RingTime(long actual, long expected, final Long[] soundIds, final boolean fromSmartAlarm){
         if(expected < actual){
             throw new IllegalArgumentException("Actual ring behind deadline.");
         }
@@ -47,11 +52,11 @@ public class RingTime {
             this.soundIds[i] = soundIds[i];
         }
 
-
+        this.fromSmartAlarm = fromSmartAlarm;
 
     }
 
-    public RingTime(long actual, long expected, long soundId){
+    public RingTime(long actual, long expected, long soundId, final boolean fromSmartAlarm){
         if(expected < actual){
             throw new IllegalArgumentException("Actual ring behind deadline.");
         }
@@ -59,11 +64,12 @@ public class RingTime {
         this.actualRingTimeUTC = actual;
         this.expectedRingTimeUTC = expected;
         this.soundIds = new long[]{ soundId };
+        this.fromSmartAlarm = fromSmartAlarm;
 
     }
 
     public static RingTime createEmpty(){
-        return new RingTime(EMPTY, EMPTY, new long[0]);
+        return new RingTime(EMPTY, EMPTY, new long[0], false);
     }
 
     @JsonIgnore
@@ -72,13 +78,8 @@ public class RingTime {
     }
 
     @JsonIgnore
-    public boolean isSmart(){
-        return isEmpty() == false && this.expectedRingTimeUTC != this.actualRingTimeUTC;
-    }
-
-    @JsonIgnore
-    public boolean isRegular(){
-        return isEmpty() == false && this.expectedRingTimeUTC == this.actualRingTimeUTC;
+    public boolean processed(){
+        return this.fromSmartAlarm && this.expectedRingTimeUTC != this.actualRingTimeUTC;
     }
 
     @Override
