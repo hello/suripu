@@ -82,6 +82,7 @@ import com.hello.suripu.core.processors.AccountInfoProcessor;
 import com.hello.suripu.core.processors.InsightProcessor;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
+import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.util.CustomJSONExceptionMapper;
 import com.hello.suripu.core.util.DropwizardServiceUtil;
@@ -283,7 +284,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new ScoresResource(trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), configuration.getSleepScoreVersion()));
 
         final SunData sunData = new SunData();
-        environment.addResource(new TimelineResource(trackerMotionDAO, accountDAO, deviceDAO, deviceDataDAO, sleepLabelDAO, sleepScoreDAO, trendsDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), sunData, amazonS3, "hello-audio"));
+        final TimelineProcessor timelineProcessor = new TimelineProcessor(trackerMotionDAO, accountDAO, deviceDAO, deviceDataDAO, sleepLabelDAO, sleepScoreDAO, trendsDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), sunData, amazonS3, "hello-audio");
+        environment.addResource(new TimelineResource(accountDAO, timelineProcessor));
 
         environment.addResource(new TimeZoneResource(timeZoneHistoryDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO));
         environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO, amazonS3));
