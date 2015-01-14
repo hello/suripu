@@ -5,6 +5,7 @@ package com.hello.suripu.core.models;
  */
 public class AccountInfo {
     public enum Type {
+        NONE("none"),
         SLEEP_TEMPERATURE("sleep_temperature"), // hot or cold sleeper
         WORKOUT("workout"),                     // workout regularly -- boolean
         SNORE("snore"),                         // boolean
@@ -20,14 +21,40 @@ public class AccountInfo {
         private Type(String value) {
             this.value = value;
         }
+
+        public static Type fromString(final String text) {
+            if (text == null) {
+                return Type.NONE;
+            }
+
+            for (final Type infoType : Type.values()) {
+                if (text.equalsIgnoreCase(infoType.toString())) {
+                    return infoType;
+                }
+            }
+            throw new IllegalArgumentException();
+        }
     }
 
     public enum SleepTempType {
-        NONE(0),
-        HOT(1),
-        COLD(2);
+        HOT(1), // note, values are response_id
+        COLD(2),
+        NONE(3);
 
         private int value;
+
         private SleepTempType(final int value) {this.value = value;}
+
+        public static SleepTempType fromInteger(final int value) {
+            switch (value) {
+                case 1:
+                    return SleepTempType.HOT;
+                case 2:
+                    return SleepTempType.COLD;
+                default:
+                    return SleepTempType.NONE;
+            }
+        }
     }
+
 }

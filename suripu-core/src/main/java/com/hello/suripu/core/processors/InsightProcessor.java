@@ -129,7 +129,8 @@ public class InsightProcessor {
         }
 
         final Random rand = new Random();
-        final int index = rand.nextInt(2) + 1; // todo: use real size. fix to 2 since only 2 categories are implemented
+        //final int index = rand.nextInt(2) + 1; // todo: use real size. fix to 2 since only 2 categories are implemented
+        final int index = 2;
         this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.fromInteger(index * 2));
 
     }
@@ -169,5 +170,60 @@ public class InsightProcessor {
         final DateTime now = DateTime.now(DateTimeZone.UTC);
         final Duration duration = new Duration(accountCreated, now);
         return duration.toStandardDays().getDays();
+    }
+
+    /**
+     * Builder class, too many variables to initialize in the constructor
+     */
+    public static class Builder {
+        private DeviceDataDAO deviceDataDAO;
+        private DeviceDAO deviceDAO;
+        private TrendsDAO trendsDAO;
+        private TrackerMotionDAO trackerMotionDAO;
+        private AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
+        private InsightsDAODynamoDB insightsDAODynamoDB;
+        private LightData lightData;
+        private AccountInfoProcessor accountInfoProcessor;
+
+        public Builder withSenseDAOs(final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO) {
+            this.deviceDAO = deviceDAO;
+            this.deviceDataDAO = deviceDataDAO;
+            return this;
+        }
+
+        public Builder withTrackerMotionDAOs(final TrackerMotionDAO trackerMotionDAO) {
+            this.trackerMotionDAO = trackerMotionDAO;
+            return this;
+        }
+
+        public Builder withInsightsDAOs(final TrendsDAO trendsDAO) {
+            this.trendsDAO = trendsDAO;
+            return this;
+        }
+
+        public Builder withDynamoDBDAOs(final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB, final InsightsDAODynamoDB insightsDAODynamoDB) {
+            this.scoreDAODynamoDB = scoreDAODynamoDB;
+            this.insightsDAODynamoDB = insightsDAODynamoDB;
+            return this;
+        }
+
+        public Builder withAccountInfoProcessor(final AccountInfoProcessor processor) {
+            this.accountInfoProcessor = processor;
+            return this;
+        }
+
+        public Builder withLightData(final LightData lightData) {
+            this.lightData = lightData;
+            return this;
+        }
+
+        public InsightProcessor build() {
+            return new InsightProcessor(deviceDataDAO, deviceDAO,
+                    trendsDAO,
+                    trackerMotionDAO,
+                    scoreDAODynamoDB, insightsDAODynamoDB,
+                    accountInfoProcessor,
+                    lightData);
+        }
     }
 }

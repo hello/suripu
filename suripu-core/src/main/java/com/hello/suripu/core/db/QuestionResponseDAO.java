@@ -134,7 +134,7 @@ public interface QuestionResponseDAO {
                                                                @Bind("expiration") DateTime expiration);
 
     @RegisterMapper(ResponseMapper.class)
-    @SqlQuery("SELECT R.*, LOWER(C.response_text) FROM responses R " +
+    @SqlQuery("SELECT R.*, C.response_text FROM responses R " +
             "INNER JOIN response_choices C ON R.response_id = C.id " +
             "WHERE account_id = :account_id AND R.question_id = :question_id ORDER BY id DESC")
     ImmutableList<Response> getAccountResponseByQuestionId(@Bind("account_id") long account_id,

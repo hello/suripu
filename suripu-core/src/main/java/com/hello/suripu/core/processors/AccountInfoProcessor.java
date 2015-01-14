@@ -20,8 +20,6 @@ import java.util.Map;
 public class AccountInfoProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountInfoProcessor.class);
 
-    private static final String TEMPERATURE_NONE = "no effect";
-
     private final QuestionResponseDAO questionResponseDAO;
     private final ImmutableMap<AccountInfo.Type, Question> infoQuestionMap;
 
@@ -38,15 +36,16 @@ public class AccountInfoProcessor {
         public Builder withMapping(final QuestionResponseDAO questionResponseDAO) {
             final List<Question> baseQuestions = questionResponseDAO.getBaseQuestions();
             for (final Question question : baseQuestions) {
-                // TODO: refactor this, ¡¡don't use string!!
-                final String text = question.text.toLowerCase();
-                if (text.contains("hot or cold")) {
-                    infoQuestionMap.put(AccountInfo.Type.TEMPERATURE, question);
-                } else if (text.contains("snore")) {
+                if (question.accountInfo == AccountInfo.Type.SLEEP_TEMPERATURE) {
+                    infoQuestionMap.put(AccountInfo.Type.SLEEP_TEMPERATURE, question);
+
+                } else if (question.accountInfo == AccountInfo.Type.SNORE) {
                     infoQuestionMap.put(AccountInfo.Type.SNORE, question);
-                } else if (text.contains("talk in your sleep")) {
+
+                } else if (question.accountInfo == AccountInfo.Type.SLEEP_TALK) {
                     infoQuestionMap.put(AccountInfo.Type.SLEEP_TALK, question);
-                } else if (text.contains("workout regularly")) {
+
+                } else if (question.accountInfo == AccountInfo.Type.WORKOUT) {
                     infoQuestionMap.put(AccountInfo.Type.WORKOUT, question);
                 }
             }
@@ -63,39 +62,62 @@ public class AccountInfoProcessor {
         this.infoQuestionMap = ImmutableMap.copyOf(infoQuestionMap);
     }
 
+    /**
+     * get user sleeping temperature preference (hot, cold or none)
+     * @param accountId
+     * @return SleepTempType (HOT, COLD or NONE)
+     */
     public AccountInfo.SleepTempType checkTemperaturePreference(final Long accountId) {
-        final Optional<Response> optionalResponse = getSingleUserResponse(accountId, AccountInfo.Type.TEMPERATURE);
+        final Optional<Response> optionalResponse = getSingleUserResponse(accountId, AccountInfo.Type.SLEEP_TEMPERATURE);
         if(optionalResponse.isPresent()) {
-            final String response = optionalResponse.get().response.toLowerCase();
-            if (response.equals("hot")) {
-                return AccountInfo.SleepTempType.HOT;
-            } else if (response.equals("cold")) {
-                return AccountInfo.SleepTempType.COLD;
+            final Optional<Integer> optionalResponseId = optionalResponse.get().responseId;
+            if (optionalResponseId.isPresent()) {
+                final Integer responseId = optionalResponseId.get();
+                return AccountInfo.SleepTempType.fromInteger(responseId);
             }
         }
         return AccountInfo.SleepTempType.NONE;
     }
 
+    /**
+     * Check if the user snores
+     * @param accountId
+     * @return boolean
+     */
     public Boolean checkUserSnore(final Long accountId) {
-        final Optional<Response> optionalResponse = getSingleUserResponse(accountId, AccountInfo.Type.SNORE);
-        if(optionalResponse.isPresent()) {
-            final String responseText = optionalResponse.get().response;
-            if (responseText.equals("snore")) {
-                return true;
-            }
-        }
-        return false;
+        return this.getYesNoResponse(accountId, AccountInfo.Type.SNORE);
     }
 
+    /**
+     * Check if the user sleep-talks
+     * @param accountId
+     * @return boolean
+     */
     public Boolean checkUserSleepTalk(final Long accountId) {
-        final Optional<Response> optionalResponse = getSingleUserResponse(accountId, AccountInfo.Type.SLEEP_TALK);
+        return this.getYesNoResponse(accountId, AccountInfo.Type.SLEEP_TALK);
+    }
+
+    public Boolean checkUserIsALightSleeper(final Long accountId) {
+        return this.getYesNoResponse(accountId, AccountInfo.Type.LIGHT_SLEEPER);
+    }
+
+    /**
+     * To process "yes", "no", "sometimes" responses and return a boolean result
+     * @param accountId Long
+     * @param infoType AccountInfo.Type
+     * @return true or false
+     */
+    private Boolean getYesNoResponse(final Long accountId, final AccountInfo.Type infoType) {
+        final Optional<Response> optionalResponse = this.getSingleUserResponse(accountId, infoType);
         if(optionalResponse.isPresent()) {
             final String responseText = optionalResponse.get().response;
-            if (responseText.equals("sleep-talk")) {
+            //TODO: still easier to compare text response for now
+            if (responseText.equalsIgnoreCase("yes") || responseText.equalsIgnoreCase("sometimes")) {
                 return true;
             }
         }
         return false;
+
     }
 
     private Optional<Response> getSingleUserResponse(final Long accountId, final AccountInfo.Type infoType) {

@@ -55,8 +55,16 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
                 .withMapping(questionResponseDAO);
         final AccountInfoProcessor accountInfoProcessor = builder.build();
 
+        final InsightProcessor.Builder insightBuilder = new InsightProcessor.Builder()
+                .withSenseDAOs(deviceDataDAO, deviceDAO)
+                .withTrackerMotionDAOs(trackerMotionDAO)
+                .withInsightsDAOs(trendsDAO)
+                .withDynamoDBDAOs(scoreDAODynamoDB, insightsDAODynamoDB)
+                .withAccountInfoProcessor(accountInfoProcessor)
+                .withLightData(lightData);
 
-        final InsightProcessor insightProcessor =  new InsightProcessor(deviceDataDAO, deviceDAO, trendsDAO, trackerMotionDAO, scoreDAODynamoDB, insightsDAODynamoDB, accountInfoProcessor, lightData);
+        final InsightProcessor insightProcessor = insightBuilder.build();
+
         return new InsightsGenerator(accountDAO, deviceDAO, insightProcessor);
     }
 }
