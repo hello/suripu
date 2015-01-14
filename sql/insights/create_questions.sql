@@ -24,6 +24,19 @@ CREATE TYPE FREQUENCY_TYPE AS ENUM (
     'trigger' -- only when there's a relevant event
 );
 
+CREATE TYPE ACCOUNT_INFO_TYPE AS ENUM(
+    'sleep_temperature',
+    'workout',
+    'snore',
+    'sleep_talk',
+    'caffeine',
+    'light_sleeper',
+    'nap',
+    'trouble_sleeping',
+    'eat_late',
+    'bedtime'
+);
+
 -- all the questions
 CREATE TABLE questions (
     id SERIAL PRIMARY KEY,
@@ -36,6 +49,7 @@ CREATE TABLE questions (
     responses_ids INTEGER[],
     dependency INTEGER, -- id of question that this depends on
     ask_time ASK_TIME_TYPE, -- when to ask the user this question
+    account_info ACCOUNT_INFO_TYPE DEFAULT NULL, -- data related to Account Information
     created TIMESTAMP default current_timestamp -- question creation date
 );
 
@@ -43,7 +57,6 @@ CREATE UNIQUE INDEX uniq_question_text_lang on questions(question_text, lang);
 
 GRANT ALL PRIVILEGES ON questions TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE questions_id_seq TO ingress_user;
-
 
 -- tracks all the responses
 CREATE TABLE response_choices (
@@ -111,8 +124,6 @@ CREATE INDEX aq_ask_time_account_id ON account_question_ask_time(account_id);
 GRANT ALL PRIVILEGES ON account_question_ask_time TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE account_question_ask_time_id_seq TO ingress_user;
 
-
-
 --
 -- Populate questions table
 --
@@ -121,40 +132,40 @@ GRANT ALL PRIVILEGES ON SEQUENCE account_question_ask_time_id_seq TO ingress_use
 -- 1. baseline, one-time only questions (reserved first 10K ids for these)
 --    * first three questions are asked during onboarding
 --
-INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
 VALUES ('Do you sleep better when it''s hot or cold',
 'EN', 'one_time', 'choice',
-'{"Hot", "Cold", "No Effect"}', null, 'anytime');
+'{"Hot", "Cold", "No Effect"}', null, 'anytime', 'sleep_temperature');
 
-INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
-VALUES ('Do you snore or talk in your sleep?',
-'EN', 'one_time', 'checkbox',
-'{"Snore", "Sleep-talk", "None of the above"}',  null, 'anytime');
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
+VALUES ('Do you snore in your sleep?',
+'EN', 'one_time', 'choice',
+'{"Yes", "No", "Sometimes"}',  null, 'anytime', 'snore');
 
-INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
 VALUES ('Are you a light sleeper?',
 'EN', 'one_time', 'choice',
-'{"Yes", "Somewhat", "No"}', null, 'anytime');
+'{"Yes", "No", "Somewhat"}', null, 'anytime', 'light_sleeper');
 
-INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
 VALUES ('Do you consume any caffeine drinks?',
 'EN', 'one_time', 'checkbox',
-'{"Coffee", "Tea", "Energy drinks", "Others", "None"}', null, 'anytime');
+'{"Coffee", "Tea", "Others", "None"}', null, 'anytime', 'caffeine');
 
-INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
 VALUES ('Do you workout regularly?',
-'EN', 'one_time', 'choice', '{"Everyday", "More than 4 times a week", "2 to 4 times a week", "Once a week", "None"}',
-null, 'anytime');
+'EN', 'one_time', 'choice', '{"Everyday", "A few times a week", "Once a week", "None"}',
+null, 'anytime', 'workout');
 
-INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
 VALUES ('Do you take naps during the day?',
 'EN', 'one_time', 'choice',
-'{"Yes", "Sometimes", "No"}', null, 'anytime');
+'{"Yes", "No", "Sometimes"}', null, 'anytime', 'nap');
 
-INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
 VALUES ('Do you usually have trouble falling asleep?',
 'EN', 'one_time', 'choice',
-'{"Yes", "No", "Sometimes"}', null, 'anytime');
+'{"Yes", "No", "Sometimes"}', null, 'anytime', 'trouble_sleeping');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
 VALUES ('Do you take any medication to help you fall asleep?',
@@ -164,10 +175,10 @@ VALUES ('Do you take any medication to help you fall asleep?',
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
 VALUES ('What activities do you usually undertake before going to bed? (Check all that applies.)',
 'EN', 'one_time', 'checkbox',
-'{"Reading", "Use tablet/phone/computers", "Watch TV", "Listen to Music", "Chatting", "Working"}', null, 'anytime');
+'{"Reading", "Use tablet/phone/computer", "Watch TV", "Listen to Music", "Others"}', null, 'anytime');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
-VALUES ('Do you experience an uncomfortable/restless sensation in your legs at night?',
+VALUES ('Do you experience an uncomfortable sensation in your legs at night?',
 'EN', 'one_time', 'choice',
 '{"Yes", "No", "Sometimes"}', null, 'anytime');
 
@@ -211,15 +222,25 @@ VALUES ('Do you practice meditation?',
 'EN', 'one_time', 'choice',
 '{"Yes", "No", "Sometimes"}', null, 'anytime');
 
-INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
 VALUES ('What is your usual dinner time?',
 'EN', 'one_time', 'choice',
-'{"5pm or earlier", "6pm", "7pm", "8pm", "9pm or later"}', null, 'anytime');
+'{"5pm or earlier", "6pm", "7pm", "8pm", "9pm or later"}', null, 'anytime', 'eat_late');
 
-INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
 VALUES ('What time do you usually go to bed?',
 'EN', 'one_time', 'choice',
-'{"8pm or earlier", "9pm", "10pm", "11pm", "12am", "1am", "2am or later"}', null, 'anytime');
+'{"Before 8pm", "Between 8 - 10:59pm", "Between 11pm - 12:59am", "1am or later"}', null, 'anytime', 'bedtime');
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
+VALUES ('Do you practice meditation?',
+'EN', 'one_time', 'choice',
+'{"Yes", "No", "Sometimes"}', null, 'anytime');
+
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
+VALUES ('Do you talk in your sleep?',
+'EN', 'one_time', 'choice',
+'{"Yes", "No", "Sometimes"}', null, 'anytime', 'sleep_talk');
 
 
 --
@@ -287,9 +308,9 @@ VALUES ('Did you have a late, big dinner today?',
 '{"Yes", "No"}', null, 'evening');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
-VALUES ('Did you consume any of these within 3 hours of going to bed?',
+VALUES ('Did you consume any of these within 3 hours of going to bed? (Check all that applies)',
 'EN', 'occasionally', 'checkbox',
-'{"Coffee", "Tea with caffeine", "Milk", "Wine", "Beer", "Cocktails", "Hard Liquor"}', null, 'evening');
+'{"Coffee", "Tea with caffeine", "Alcoholic drinks", "None"}', null, 'evening');
 
 --
 -- Questions requiring quantities
@@ -328,6 +349,7 @@ VALUES ('Did you consume any of these within 3 hours of going to bed?',
 -- insert all available responses into response_choices
 INSERT INTO response_choices (question_id, response_text) (SELECT id, UNNEST(responses) FROM questions);
 
+
 -- update questions with the ids created above
 UPDATE questions
 SET responses = subquery.responses, responses_ids = subquery.responses_ids
@@ -336,4 +358,5 @@ FROM (SELECT question_id,
     FROM response_choices WHERE question_id IN (SELECT id FROM questions)
     GROUP BY question_id) AS subquery
 WHERE questions.id = subquery.question_id;
+
 

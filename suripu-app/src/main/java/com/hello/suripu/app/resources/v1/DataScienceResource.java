@@ -2,12 +2,9 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
-import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
-import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
-import com.hello.suripu.core.db.TrendsDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -17,7 +14,6 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.InsightProcessor;
-import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.TimelineUtils;
 import org.joda.time.DateTime;
@@ -47,27 +43,18 @@ public class DataScienceResource {
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
-    private final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB;
-    private final InsightsDAODynamoDB insightsDAODynamoDB;
-    private final TrendsDAO trendsDAO;
-    private final LightData lightData;
+    private final InsightProcessor insightProcessor;
 
     public DataScienceResource(final AccountDAO accountDAO,
                                final TrackerMotionDAO trackerMotionDAO,
                                final DeviceDataDAO deviceDataDAO,
                                final DeviceDAO deviceDAO,
-                               final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
-                               final InsightsDAODynamoDB insightsDAODynamoDB,
-                               final TrendsDAO trendsDAO,
-                               final LightData lightData){
+                               final InsightProcessor insightProcessor) {
         this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
-        this.aggregateSleepScoreDAODynamoDB = aggregateSleepScoreDAODynamoDB;
-        this.insightsDAODynamoDB = insightsDAODynamoDB;
-        this.trendsDAO = trendsDAO;
-        this.lightData = lightData;
+        this.insightProcessor = insightProcessor;
     }
 
     @GET
@@ -121,7 +108,6 @@ public class DataScienceResource {
 
         final InsightCard.Category category = InsightCard.Category.fromInteger(value);
 
-        final InsightProcessor processor = new InsightProcessor(deviceDataDAO, deviceDAO, trendsDAO, trackerMotionDAO, aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, lightData);
         final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
         if (accountOptional.isPresent()) {
             final Long accountId = accountOptional.get().id.get();
@@ -131,8 +117,7 @@ public class DataScienceResource {
                 return;
             }
 
-            processor.generateInsights(accountId, accountOptional.get().created);
-            //processor.generateInsightsByCategory(accountId, deviceIdOptional.get(), category);
+            insightProcessor.generateInsights(accountId, accountOptional.get().created);
         }
     }
 

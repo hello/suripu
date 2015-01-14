@@ -3,6 +3,7 @@ package com.hello.suripu.core.processors;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.QuestionResponseDAO;
+import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Response;
@@ -115,7 +116,7 @@ public class QuestionProcessorTest {
                 Question.Type.CHOICE,
                 Question.FREQUENCY.ONE_TIME,
                 Question.ASK_TIME.ANYTIME,
-                dependency, parentId, now, choices));
+                dependency, parentId, now, choices, AccountInfo.Type.NONE));
 
         List<Choice> choices2 = new ArrayList<>();
         qid = 2;
@@ -127,7 +128,7 @@ public class QuestionProcessorTest {
                 Question.Type.CHOICE,
                 Question.FREQUENCY.ONE_TIME,
                 Question.ASK_TIME.ANYTIME,
-                dependency, parentId, now, choices2));
+                dependency, parentId, now, choices2, AccountInfo.Type.NONE));
 
 
         List<Choice> choices3 = new ArrayList<>();
@@ -140,7 +141,7 @@ public class QuestionProcessorTest {
                 Question.Type.CHOICE,
                 Question.FREQUENCY.ONE_TIME,
                 Question.ASK_TIME.ANYTIME,
-                dependency, parentId, now, choices3));
+                dependency, parentId, now, choices3, AccountInfo.Type.NONE));
 
         List<Choice> choices4 = new ArrayList<>();
         qid = 4;
@@ -154,7 +155,7 @@ public class QuestionProcessorTest {
                 Question.Type.CHECKBOX,
                 Question.FREQUENCY.ONE_TIME,
                 Question.ASK_TIME.ANYTIME,
-                dependency, parentId, now, choices4));
+                dependency, parentId, now, choices4, AccountInfo.Type.NONE));
 
 
         List<Choice> choices5 = new ArrayList<>();
@@ -169,7 +170,7 @@ public class QuestionProcessorTest {
                 Question.Type.CHOICE,
                 Question.FREQUENCY.ONE_TIME,
                 Question.ASK_TIME.ANYTIME,
-                dependency, parentId, now, choices5));
+                dependency, parentId, now, choices5, AccountInfo.Type.NONE));
 
         List<Choice> choices6 = new ArrayList<>();
         qid = 10000;
@@ -181,7 +182,7 @@ public class QuestionProcessorTest {
                 Question.Type.CHOICE,
                 Question.FREQUENCY.DAILY,
                 Question.ASK_TIME.MORNING,
-                dependency, parentId, now, choices6));
+                dependency, parentId, now, choices6, AccountInfo.Type.NONE));
 
         List<Choice> choices7 = new ArrayList<>();
         qid = 10002;
@@ -192,7 +193,7 @@ public class QuestionProcessorTest {
                 Question.Type.CHOICE,
                 Question.FREQUENCY.DAILY,
                 Question.ASK_TIME.EVENING,
-                5, parentId, now, choices7));
+                5, parentId, now, choices7, AccountInfo.Type.NONE));
 
         List<Choice> choices8 = new ArrayList<>();
         qid = 10003;
@@ -204,7 +205,7 @@ public class QuestionProcessorTest {
                 Question.Type.CHOICE,
                 Question.FREQUENCY.OCCASIONALLY,
                 Question.ASK_TIME.AFTERNOON,
-                dependency, parentId, now, choices8));
+                dependency, parentId, now, choices8, AccountInfo.Type.NONE));
 
         return questions;
     }

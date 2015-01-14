@@ -26,6 +26,17 @@ public class Question {
         public String toString() {
             return value;
         }
+
+        public static Type fromString(final String text) {
+            if (text != null) {
+                for (final Type questionType : Type.values()) {
+                    if (text.equalsIgnoreCase(questionType.toString())) {
+                        return questionType;
+                    }
+                }
+            }
+            throw new IllegalArgumentException();
+        }
     }
 
     public enum FREQUENCY {
@@ -46,6 +57,18 @@ public class Question {
         }
 
         public String toSQLString() {return value.toLowerCase();}
+
+        public static FREQUENCY fromString(final String text) {
+            if (text != null) {
+                for (final FREQUENCY frequency : FREQUENCY.values()) {
+                    if (text.equalsIgnoreCase(frequency.toString())) {
+                        return frequency;
+                    }
+                }
+            }
+            throw new IllegalArgumentException();
+        }
+
     }
 
     public enum ASK_TIME {
@@ -65,6 +88,17 @@ public class Question {
             return value;
         }
 
+        public static ASK_TIME fromString(final String text) {
+            if (text != null) {
+                for (final ASK_TIME askTime : ASK_TIME.values()) {
+                    if (text.equalsIgnoreCase(askTime.toString())) {
+                        return askTime;
+                    }
+                }
+            }
+            throw new IllegalArgumentException();
+        }
+
     }
 
     @JsonProperty("id")
@@ -82,6 +116,7 @@ public class Question {
     @JsonProperty("ask_local_date")
     final public DateTime askLocalDate;
 
+    @JsonProperty("type")
     final public Type type;
 
     @JsonIgnore
@@ -99,10 +134,14 @@ public class Question {
     @JsonIgnore
     final public String lang;
 
+    @JsonIgnore
+    final public AccountInfo.Type accountInfo;
+
     public Question(final Integer id, final Long accountQuestionId, final String text, final String lang,
                     final Type type, final FREQUENCY frequency, final ASK_TIME askTime,
                     final int dependency, final int parentId,
-                    final DateTime askLocalDate, final List<Choice> choiceList) {
+                    final DateTime askLocalDate, final List<Choice> choiceList,
+                    final AccountInfo.Type accountInfo) {
         this.id = id;
         this.accountQuestionId = accountQuestionId;
         this.text = text;
@@ -114,18 +153,19 @@ public class Question {
         this.parentId = parentId;
         this.askLocalDate = askLocalDate;
         this.choiceList = choiceList;
+        this.accountInfo = accountInfo;
     }
 
     public static Question withAskLocalTime(final Question question, final DateTime askLocalTime) {
         return new Question(question.id, question.accountQuestionId, question.text, question.lang,
                 question.type, question.frequency, question.askTime,
-                question.dependency, question.parentId, askLocalTime, question.choiceList);
+                question.dependency, question.parentId, askLocalTime, question.choiceList, question.accountInfo);
     }
 
     public static Question withAskTimeAccountQId(final Question question, final Long accountQuestionId, final DateTime askLocalTime) {
         return new Question(question.id, accountQuestionId, question.text, question.lang,
                 question.type, question.frequency, question.askTime,
-                question.dependency, question.parentId, askLocalTime, question.choiceList);
+                question.dependency, question.parentId, askLocalTime, question.choiceList, question.accountInfo);
     }
 
 }

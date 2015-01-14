@@ -1,5 +1,6 @@
 package com.hello.suripu.core.db.mappers;
 
+import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
 import org.joda.time.DateTime;
@@ -44,14 +45,14 @@ public class QuestionMapper implements ResultSetMapper<Question> {
                 accountQuestionId,
                 r.getString("question_text"),
                 r.getString("lang"),
-                Question.Type.valueOf(r.getString("response_type").toUpperCase()),
-                Question.FREQUENCY.valueOf(r.getString("frequency").toUpperCase()),
-                Question.ASK_TIME.valueOf(r.getString("ask_time").toUpperCase()),
+                Question.Type.fromString(r.getString("response_type")),
+                Question.FREQUENCY.fromString(r.getString("frequency")),
+                Question.ASK_TIME.fromString(r.getString("ask_time")),
                 r.getInt("dependency"),
                 r.getInt("parent_id"),
                 createdLocal,
-                choices
-        );
+                choices,
+                AccountInfo.Type.fromString(r.getString("account_info")));
 
         return question;
     }
