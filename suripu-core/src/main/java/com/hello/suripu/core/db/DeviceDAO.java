@@ -96,18 +96,18 @@ public interface DeviceDAO {
     //    @SqlQuery("SELECT * FROM pill_status WHERE pill_id = :pill_id;")
     @RegisterMapper(DeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
-    @SqlQuery("SELECT id, tracker_id AS pill_id, '1' AS firmware_version, 100 AS battery_level, ts AS last_seen, 0 AS uptime from tracker_motion_master WHERE tracker_id = :pill_id ORDER BY id DESC LIMIT 1;")
+    @SqlQuery("SELECT id, tracker_id AS device_id, '1' AS firmware_version, 100 AS battery_level, ts AS last_updated, 0 AS uptime from tracker_motion_master WHERE tracker_id = :pill_id ORDER BY id DESC LIMIT 1;")
     Optional<DeviceStatus> pillStatus(@Bind("pill_id") final Long pillId);
 
     @RegisterMapper(DeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
-    @SqlQuery("SELECT id, pill_id, fw_version as firmware_version, battery_level, last_updated as last_seen, uptime FROM pill_status WHERE pill_id = :pill_id ORDER BY id DESC LIMIT 1000;")
+    @SqlQuery("SELECT id, pill_id AS device_id, fw_version as firmware_version, battery_level, last_updated, uptime FROM pill_status WHERE pill_id = :pill_id ORDER BY id DESC LIMIT 1000;")
     ImmutableList<DeviceStatus> pillStatusWithBatteryLevel(@Bind("pill_id") final Long pillId);
 
     //    @SqlQuery("SELECT * FROM pill_status WHERE pill_id = :pill_id;")
     @RegisterMapper(DeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
-    @SqlQuery("SELECT id, device_id AS pill_id, firmware_version AS firmware_version, 100 AS battery_level, ts AS last_seen, 0 AS uptime from device_sensors_master WHERE device_id = :sense_id ORDER BY id DESC LIMIT 1;")
+    @SqlQuery("SELECT id, device_id firmware_version AS firmware_version, 100 AS battery_level, ts AS last_updated, 0 AS uptime from device_sensors_master WHERE device_id = :sense_id ORDER BY id DESC LIMIT 1;")
     Optional<DeviceStatus> senseStatus(@Bind("sense_id") final Long senseId);
 
     @RegisterMapper(AccountMapper.class)
