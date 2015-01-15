@@ -75,4 +75,23 @@ public class DataUtils{
         return dustDensity; // milli-grams per m-3
     }
 
+    public static int convertLightCountsToLux(final int rawCount) {
+        // TODO: factor in Sense Color whenever we have that
+        // applicable for DVT units onwards
+        final float maxLux = 125.0f;
+        final float maxCount = 65536.0f; // 16-bit counts
+
+        // note internal to external intensity conversion:
+        // white sense: 2x
+        // dark sense: 10x
+        final float whiteMultiplier = 2.0f;
+
+        // set conversion to 2x for now until we have a way to get sense color
+        if ((float) rawCount > maxCount) {
+            return (int) (whiteMultiplier * maxLux);
+        }
+
+        final float internalIntensity = ((float) rawCount / maxCount) * maxLux;
+        return (int) (whiteMultiplier * internalIntensity);
+    }
 }
