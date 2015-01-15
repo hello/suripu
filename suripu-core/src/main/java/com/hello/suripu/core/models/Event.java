@@ -1,10 +1,12 @@
 package com.hello.suripu.core.models;
 
 import com.google.common.base.Objects;
+import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.LightEvent;
 import com.hello.suripu.core.models.Events.LightsOutEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.NullEvent;
+import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.PartnerMotionEvent;
 import com.hello.suripu.core.models.Events.SleepEvent;
 import com.hello.suripu.core.models.Events.SleepMotionEvent;
@@ -31,8 +33,10 @@ public abstract class Event {
         LIGHTS_OUT(7),
         SUNSET(8),
         SUNRISE(9),
-        SLEEP(10),
-        WAKE_UP(11);
+        IN_BED(10),
+        SLEEP(11),
+        OUT_OF_BED(12),
+        WAKE_UP(13);
 
         private int value;
 
@@ -69,8 +73,12 @@ public abstract class Event {
                 case 9:
                     return SUNRISE;
                 case 10:
-                    return SLEEP;
+                    return IN_BED;
                 case 11:
+                    return SLEEP;
+                case 12:
+                    return OUT_OF_BED;
+                case 13:
                     return WAKE_UP;
                 default:
                     return NONE;
@@ -121,6 +129,10 @@ public abstract class Event {
                 return new SleepMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
             case SLEEP:
                 return new SleepEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
+            case IN_BED:
+                return new InBedEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
+            case OUT_OF_BED:
+                return new OutOfBedEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
             case WAKE_UP:
                 return new WakeupEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
             case NONE:
@@ -151,6 +163,10 @@ public abstract class Event {
                 return new SleepEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
             case WAKE_UP:
                 return new WakeupEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+            case IN_BED:
+                return new InBedEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
+            case OUT_OF_BED:
+                return new OutOfBedEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
             case NONE:
                 return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
             case SUNRISE:
