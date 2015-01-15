@@ -3,9 +3,13 @@ package com.hello.suripu.core.db;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
+import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
+import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hello.suripu.core.models.RingTime;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -14,6 +18,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -73,17 +79,17 @@ public class RingTimeDAODynamoDBIT {
 
         final DateTime alarmTime1 = new DateTime(2014, 9, 23, 8, 20, 0, localTimeZone);
         final DateTime actualTime1 = new DateTime(2014, 9, 23, 8, 10, 0, localTimeZone);
-        final RingTime ringTime1 = new RingTime(actualTime1.getMillis(), alarmTime1.getMillis(), 0);
+        final RingTime ringTime1 = new RingTime(actualTime1.getMillis(), alarmTime1.getMillis(), 0, true);
 
         final DateTime alarmTime2 = new DateTime(2014, 9, 24, 9, 10, 0, localTimeZone);
         final DateTime actualTime2 = new DateTime(2014, 9, 24, 9, 0, 0, localTimeZone);
-        final RingTime ringTime2 = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0);
+        final RingTime ringTime2 = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0, true);
 
         this.ringTimeDAODynamoDB.setNextRingTime(deviceId, ringTime1);
         this.ringTimeDAODynamoDB.setNextRingTime(deviceId, ringTime2);
 
         final RingTime nextRingTime = this.ringTimeDAODynamoDB.getNextRingTime(deviceId);
-        final RingTime expected = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0);
+        final RingTime expected = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0, true);
 
         assertThat(nextRingTime, is(expected));
     }
@@ -93,6 +99,27 @@ public class RingTimeDAODynamoDBIT {
     public void testGetEmptyRingTime(){
         final RingTime ringTimeOptional = this.ringTimeDAODynamoDB.getNextRingTime("test morpheus");
         assertThat(ringTimeOptional, is(RingTime.createEmpty()));
+    }
+
+    @Test
+    public void testJSONBackwardCompatibility(){
+        //{\"actual_ring_time_utc\":1418311800000,\"expected_ring_time_utc\":1418311800000,\"sound_ids\":[0]}
+        final String deviceId = "morpheus";
+        final String ringTimeJSON = "{\"actual_ring_time_utc\":1418311800000,\"expected_ring_time_utc\":1418311800000,\"sound_ids\":[0]}";
+        final HashMap<String, AttributeValue> items = new HashMap<String, AttributeValue>();
+        items.put(RingTimeDAODynamoDB.MORPHEUS_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
+        final ObjectMapper mapper = new ObjectMapper();
+
+        items.put(RingTimeDAODynamoDB.CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(DateTime.now().getMillis())));
+        items.put(RingTimeDAODynamoDB.RING_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(ringTimeJSON));
+
+        final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, items);
+        final PutItemResult result = this.amazonDynamoDBClient.putItem(putItemRequest);
+
+        final RingTime actual = this.ringTimeDAODynamoDB.getNextRingTime(deviceId);
+        assertThat(actual.actualRingTimeUTC, is(1418311800000L));
+        assertThat(actual.expectedRingTimeUTC, is(1418311800000L));
+        assertThat(actual.fromSmartAlarm, is(false));
     }
 
 }

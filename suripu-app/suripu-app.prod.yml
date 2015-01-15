@@ -165,7 +165,17 @@ push_notifications:
     ios: arn:aws:sns:us-east-1:053216739513:app/APNS/hello-sense-ios-dev
     android: arn:aws:sns:us-east-1:053216739513:app/GCM/hello-sense-android-dev
 
+  table_name: notifications #deprecate later
+
+notifications_db:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
   table_name: notifications
+
+preferences_db:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: preferences
 
 ring_time_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
@@ -199,6 +209,11 @@ insights_dynamo_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
     region: us-east-1
     table_name: insights
+
+key_store_dynamo_db:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: key_store
 
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com

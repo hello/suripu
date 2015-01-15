@@ -69,6 +69,7 @@ public class MergedUserInfoDynamoDB {
     public static final String EXPECTED_RING_TIME_ATTRIBUTE_NAME = "expected_ring_at_utc";
     public static final String ACTUAL_RING_TIME_ATTRIBUTE_NAME = "actual_ring_at_utc";
     public static final String SOUND_IDS_ATTRIBUTE_NAME = "sound_ids";
+    public static final String IS_SMART_ALARM_ATTRIBUTE_NAME = "is_smart";
 
     // Timezone history
     public static final String TIMEZONE_ID_ATTRIBUTE_NAME = "timezone_id";
@@ -119,6 +120,9 @@ public class MergedUserInfoDynamoDB {
         items.put(ACTUAL_RING_TIME_ATTRIBUTE_NAME, new AttributeValueUpdate()
                 .withAction(AttributeAction.PUT)
                 .withValue(new AttributeValue().withN(String.valueOf(ringTime.actualRingTimeUTC))));
+        items.put(IS_SMART_ALARM_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                .withAction(AttributeAction.PUT)
+                .withValue(new AttributeValue().withBOOL(ringTime.fromSmartAlarm)));
 
         try {
             final String soundJSON = mapper.writeValueAsString(ringTime.soundIds);
@@ -303,7 +307,7 @@ public class MergedUserInfoDynamoDB {
         Collections.addAll(targetAttributes,
                 MORPHEUS_ID_ATTRIBUTE_NAME, ACCOUNT_ID_ATTRIBUTE_NAME,
                 ALARM_TEMPLATES_ATTRIBUTE_NAME,
-                EXPECTED_RING_TIME_ATTRIBUTE_NAME, ACTUAL_RING_TIME_ATTRIBUTE_NAME, SOUND_IDS_ATTRIBUTE_NAME,
+                EXPECTED_RING_TIME_ATTRIBUTE_NAME, ACTUAL_RING_TIME_ATTRIBUTE_NAME, SOUND_IDS_ATTRIBUTE_NAME, IS_SMART_ALARM_ATTRIBUTE_NAME,
                 TIMEZONE_ID_ATTRIBUTE_NAME,
                 PILL_COLOR_ATTRIBUTE_NAME,
                 UPDATED_AT_ATTRIBUTE_NAME);
@@ -401,7 +405,11 @@ public class MergedUserInfoDynamoDB {
         final ObjectMapper mapper = new ObjectMapper();
         try {
             final long[] soundIds = mapper.readValue(soundArrayJSON, long[].class);
-            return Optional.of(new RingTime(actual, expected, soundIds));
+            boolean isSmart = true;
+            if(item.containsKey(IS_SMART_ALARM_ATTRIBUTE_NAME)){
+               isSmart = item.get(IS_SMART_ALARM_ATTRIBUTE_NAME).getBOOL();
+            }
+            return Optional.of(new RingTime(actual, expected, soundIds, isSmart));
         } catch (IOException e) {
             LOGGER.error("Deserialize JSON for ring time failed {}, device {}, account id {}.", e.getMessage(), deviceId, accountId);
         }

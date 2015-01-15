@@ -54,26 +54,26 @@ public class AlarmUtilTest {
 
         alarmList.add(builder.build());
 
-        assertThat(Alarm.Utils.isValidSmartAlarms(alarmList, DateTime.now(), DateTimeZone.getDefault()), is(true));
+        assertThat(Alarm.Utils.isValidAlarms(alarmList, DateTime.now(), DateTimeZone.getDefault()), is(true));
     }
 
     @Test
     public void testIsExpired(){
         final HashSet<Integer> dayOfWeek =  new HashSet<>();
         dayOfWeek.add(DateTime.now().getDayOfWeek());
-        final Alarm repeated = new Alarm(0,0,0,7,30,dayOfWeek,true, true, true, new AlarmSound(0, "god save the queen"));
+        final Alarm repeated = new Alarm(0,0,0,7,30,dayOfWeek,true, true, true, true, new AlarmSound(0, "god save the queen"));
         assertThat(Alarm.Utils.isAlarmExpired(repeated, DateTime.now(), DateTimeZone.getDefault()), is(false));
 
         final DateTime now = DateTime.now().withMillis(0);
-        Alarm nonRepeated = new Alarm(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), now.getHourOfDay(), now.getMinuteOfHour(), dayOfWeek, false, true, true, new AlarmSound(0, "god save the queen"));
+        Alarm nonRepeated = new Alarm(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), now.getHourOfDay(), now.getMinuteOfHour(), dayOfWeek, false, true, true, true, new AlarmSound(0, "god save the queen"));
         assertThat(Alarm.Utils.isAlarmExpired(nonRepeated, now, DateTimeZone.getDefault()), is(false));
 
         final DateTime future = now.plusHours(1);
-        nonRepeated = new Alarm(future.getYear(), future.getMonthOfYear(), future.getDayOfMonth(), future.getHourOfDay(), future.getMinuteOfHour(), dayOfWeek, false, true, true, new AlarmSound(0, "god save the queen"));
+        nonRepeated = new Alarm(future.getYear(), future.getMonthOfYear(), future.getDayOfMonth(), future.getHourOfDay(), future.getMinuteOfHour(), dayOfWeek, false, true, true,true,  new AlarmSound(0, "god save the queen"));
         assertThat(Alarm.Utils.isAlarmExpired(nonRepeated, now, DateTimeZone.getDefault()), is(false));
 
         final DateTime past = now.minusHours(1);
-        nonRepeated = new Alarm(past.getYear(), past.getMonthOfYear(), past.getDayOfMonth(), past.getHourOfDay(), past.getMinuteOfHour(), dayOfWeek, false, true, true, new AlarmSound(0, "god save the queen"));
+        nonRepeated = new Alarm(past.getYear(), past.getMonthOfYear(), past.getDayOfMonth(), past.getHourOfDay(), past.getMinuteOfHour(), dayOfWeek, false, true, true, true, new AlarmSound(0, "god save the queen"));
         assertThat(Alarm.Utils.isAlarmExpired(nonRepeated, now, DateTimeZone.getDefault()), is(true));
 
 
@@ -96,6 +96,7 @@ public class AlarmUtilTest {
                 .withIsRepeated(true)
                 .withIsEnabled(true)
                 .withIsEditable(true)
+                .withIsSmart(true)
                 .withAlarmSound(new AlarmSound(1, "god save the queen"));
 
         alarmList.add(builder.build());
@@ -112,13 +113,14 @@ public class AlarmUtilTest {
                 .withIsRepeated(false)
                 .withIsEnabled(true)
                 .withIsEditable(true)
+                .withIsSmart(true)
                 .withAlarmSound(new AlarmSound(1, "god save the queen"));
 
         alarmList.add(builder.build());
 
         final DateTime now = new DateTime(2014,9,15,0,0,DateTimeZone.getDefault());
 
-        assertThat(Alarm.Utils.isValidSmartAlarms(alarmList, now, DateTimeZone.getDefault()), is(false));
+        assertThat(Alarm.Utils.isValidAlarms(alarmList, now, DateTimeZone.getDefault()), is(false));
 
         alarmList.clear();
         // Non repeated expired
@@ -132,6 +134,7 @@ public class AlarmUtilTest {
                 .withIsRepeated(true)
                 .withIsEnabled(true)
                 .withIsEditable(true)
+                .withIsSmart(true)
                 .withAlarmSound(new AlarmSound(1, "god save the queen"));
 
         alarmList.add(builder.build());
@@ -148,11 +151,12 @@ public class AlarmUtilTest {
                 .withIsRepeated(false)
                 .withIsEnabled(true)
                 .withIsEditable(true)
+                .withIsSmart(true)
                 .withAlarmSound(new AlarmSound(1, "god save the queen"));
 
         alarmList.add(builder.build());
 
-        assertThat(Alarm.Utils.isValidSmartAlarms(alarmList, now, DateTimeZone.getDefault()), is(true));
+        assertThat(Alarm.Utils.isValidAlarms(alarmList, now, DateTimeZone.getDefault()), is(true));
 
     }
 
@@ -175,21 +179,20 @@ public class AlarmUtilTest {
                 .withIsRepeated(true)
                 .withIsEnabled(true)
                 .withIsEditable(true)
+                .withIsSmart(true)
                 .withAlarmSound(new AlarmSound(1, "god save the queen"));
 
         alarmList.add(builder.build());
 
         RingTime actualRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList, DateTime.now().minusMinutes(2).getMillis(), DateTimeZone.getDefault());
         assertThat(actualRingTime.isEmpty(), is(false));
-        assertThat(actualRingTime.isRegular(), is(true));
-        assertThat(actualRingTime.isSmart(), is(false));
+        assertThat(actualRingTime.processed(), is(false));
         assertThat(actualRingTime.actualRingTimeUTC, is(alarmTime.getMillis()));
 
         // Test current time is after alarm time.
         actualRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList, DateTime.now().plusMinutes(2).getMillis(), DateTimeZone.getDefault());
         assertThat(actualRingTime.isEmpty(), is(false));
-        assertThat(actualRingTime.isRegular(), is(true));
-        assertThat(actualRingTime.isSmart(), is(false));
+        assertThat(actualRingTime.processed(), is(false));
         assertThat(actualRingTime.actualRingTimeUTC, is(alarmTime.plusWeeks(1).getMillis()));
     }
 
@@ -213,21 +216,20 @@ public class AlarmUtilTest {
                 .withIsRepeated(false)
                 .withIsEnabled(true)
                 .withIsEditable(true)
+                .withIsSmart(true)
                 .withAlarmSound(new AlarmSound(1, "god save the queen"));
 
         alarmList.add(builder.build());
 
         RingTime actualRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList, DateTime.now().minusMinutes(2).getMillis(), DateTimeZone.getDefault());
         assertThat(actualRingTime.isEmpty(), is(false));
-        assertThat(actualRingTime.isRegular(), is(true));
-        assertThat(actualRingTime.isSmart(), is(false));
+        assertThat(actualRingTime.processed(), is(false));
         assertThat(actualRingTime.actualRingTimeUTC, is(alarmTime.getMillis()));
 
         // Test current time is after alarm time.
         actualRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList, DateTime.now().plusMinutes(2).getMillis(), DateTimeZone.getDefault());
         assertThat(actualRingTime.isEmpty(), is(true));
-        assertThat(actualRingTime.isRegular(), is(false));
-        assertThat(actualRingTime.isSmart(), is(false));
+        assertThat(actualRingTime.processed(), is(false));
     }
 
 
@@ -250,14 +252,14 @@ public class AlarmUtilTest {
                 .withIsRepeated(false)
                 .withIsEnabled(false)
                 .withIsEditable(true)
+                .withIsSmart(true)
                 .withAlarmSound(new AlarmSound(1, "god save the queen"));
 
         alarmList.add(builder.build());
 
         final RingTime actualRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList, DateTime.now().minusMinutes(2).getMillis(), DateTimeZone.getDefault());
         assertThat(actualRingTime.isEmpty(), is(true));
-        assertThat(actualRingTime.isRegular(), is(false));
-        assertThat(actualRingTime.isSmart(), is(false));
+        assertThat(actualRingTime.processed(), is(false));
 
     }
 }

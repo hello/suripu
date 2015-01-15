@@ -14,6 +14,7 @@ import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.util.JsonError;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -92,7 +93,7 @@ public class AlarmResource {
 
             final DateTimeZone userTimeZone = userInfo.timeZone.get();
             final List<Alarm> smartAlarms = Alarm.Utils.disableExpiredNoneRepeatedAlarms(userInfo.alarmList, DateTime.now().getMillis(), userTimeZone);
-            if(!Alarm.Utils.isValidSmartAlarms(smartAlarms, DateTime.now(), userTimeZone)){
+            if(!Alarm.Utils.isValidAlarms(smartAlarms, DateTime.now(), userTimeZone)){
                 LOGGER.error("Invalid alarm for user {} device {}", token.accountId, userInfo.deviceId);
                 throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             }
@@ -115,9 +116,13 @@ public class AlarmResource {
                           @PathParam("client_time_utc") long clientTime,
                           final List<Alarm> alarms){
 
-        if(Math.abs(DateTime.now().getMillis() - clientTime) > DateTimeConstants.MILLIS_PER_MINUTE){
-            LOGGER.error("account_id {} set alarm failed, client time too off.", token.accountId);
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+        final Long now = DateTime.now().getMillis();
+        final Long timeDiff =  now - clientTime;
+        if(Math.abs(timeDiff) > DateTimeConstants.MILLIS_PER_MINUTE){
+            LOGGER.error("account_id {} set alarm failed, client time too off.( was {}, now is {}", token.accountId, clientTime, now);
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(
+                    new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), "Clock out of sync. Try again.")).build()
+            );
         }
 
         final List<DeviceAccountPair> deviceAccountMap = this.deviceDAO.getSensesForAccountId(token.accountId);
@@ -141,7 +146,7 @@ public class AlarmResource {
             }
 
             final DateTimeZone timeZone = alarmInfoOptional.get().timeZone.get();
-            if(!Alarm.Utils.isValidSmartAlarms(alarms, DateTime.now(), timeZone)){
+            if(!Alarm.Utils.isValidAlarms(alarms, DateTime.now(), timeZone)){
                 LOGGER.error("Invalid alarm for account {}, device {}, alarm set skipped", deviceAccountPair.accountId, deviceAccountPair.externalDeviceId);
                 throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
             }

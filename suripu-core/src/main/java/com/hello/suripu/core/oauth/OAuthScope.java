@@ -31,7 +31,8 @@ public enum OAuthScope {
     AUTH(20),
     DEVICE_INFORMATION_WRITE(21),
     SLEEP_FEEDBACK(22),
-    INSIGHTS_READ(23);
+    INSIGHTS_READ(23),
+    PREFERENCES(24);
 
     private int value;
 

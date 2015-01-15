@@ -182,7 +182,7 @@ public class CurrentRoomState {
 
         final float temp = DeviceData.dbIntToFloat(data.ambientTemperature);
         final float humidity = DeviceData.dbIntToFloat(data.ambientHumidity);
-        final float light = DeviceData.dbIntToFloat(data.ambientLight);
+        final float light = data.ambientLight; // dvt units values are already converted to lux
         // max value is in raw counts, conversion needed
         final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(data.ambientDustMax, data.firmwareVersion));
         return fromTempHumidDust(temp, humidity, particulatesAQI, light, data.dateTimeUTC, referenceTime, thresholdInMinutes, tempUnit);

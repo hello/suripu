@@ -12,10 +12,12 @@ import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
+import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
+import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -38,7 +40,25 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createRingTimeTable(configuration, awsCredentialsProvider);
         createTimeZoneHistoryTable(configuration, awsCredentialsProvider);
         createInsightsTable(configuration, awsCredentialsProvider);
+        createAccountPreferencesTable(configuration, awsCredentialsProvider);
+        createKeyStoreTable(configuration, awsCredentialsProvider);
 
+
+    }
+
+    private void createAccountPreferencesTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+        final DynamoDBConfiguration config = configuration.getPreferencesDBConfiguration();
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final String tableName = config.getTableName();
+        client.setEndpoint(config.getEndpoint());
+        try {
+            client.describeTable(tableName);
+            System.out.println(String.format("%s already exists.", tableName));
+        } catch (AmazonServiceException exception) {
+            final CreateTableResult result = AccountPreferencesDynamoDB.createTable(tableName, client);
+            final TableDescription description = result.getTableDescription();
+            System.out.println(description.getTableStatus());
+        }
     }
 
     private void createRingTimeTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
@@ -163,6 +183,21 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
             System.out.println(String.format("%s already exists.", tableName));
         } catch (AmazonServiceException exception) {
             final CreateTableResult result = TimeZoneHistoryDAODynamoDB.createTable(tableName, client);
+            final TableDescription description = result.getTableDescription();
+            System.out.println(description.getTableStatus());
+        }
+    }
+
+    private void createKeyStoreTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+
+        client.setEndpoint(configuration.getKeyStoreDynamoDBConfiguration().getEndpoint());
+        final String tableName = configuration.getKeyStoreDynamoDBConfiguration().getTableName();
+        try {
+            client.describeTable(tableName);
+            System.out.println(String.format("%s already exists.", tableName));
+        } catch (AmazonServiceException exception) {
+            final CreateTableResult result = KeyStoreDynamoDB.createTable(tableName, client);
             final TableDescription description = result.getTableDescription();
             System.out.println(description.getTableStatus());
         }

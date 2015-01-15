@@ -102,7 +102,7 @@ public class RingProcessorMultiUserTest {
         dayOfWeek.add(DateTimeConstants.TUESDAY);
 
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
-                false, true, true,
+                false, true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
         RingTime ringTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList,
@@ -120,7 +120,7 @@ public class RingProcessorMultiUserTest {
         final HashSet<Integer> dayOfWeek2 = new HashSet<Integer>();
         dayOfWeek2.add(DateTimeConstants.TUESDAY);
         alarmList2.add(new Alarm(2014, 9, 23, 8, 30, dayOfWeek2,
-                false, true, true,
+                false, true, true, true,
                 new AlarmSound(101, "God Save the Queen")));
 
         final RingTime ringTime2 = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList2,
@@ -207,7 +207,7 @@ public class RingProcessorMultiUserTest {
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
-        assertThat(ringTime.isRegular(), is(true));
+        assertThat(ringTime.processed(), is(false));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
 
         UserInfo userInfo1 = this.userInfoList.get(0);
@@ -231,7 +231,7 @@ public class RingProcessorMultiUserTest {
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
-        assertThat(ringTime.isSmart(), is(true));
+        assertThat(ringTime.processed(), is(true));
 
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
 
@@ -257,7 +257,7 @@ public class RingProcessorMultiUserTest {
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
-        assertThat(ringTime.isRegular(), is(true));
+        assertThat(ringTime.processed(), is(true));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
 
         UserInfo userInfo2 = this.userInfoList.get(1);
@@ -282,7 +282,7 @@ public class RingProcessorMultiUserTest {
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
-        assertThat(ringTime.isSmart(), is(true));
+        assertThat(ringTime.processed(), is(true));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
 
         userInfo2 = this.userInfoList.get(1);
@@ -320,7 +320,7 @@ public class RingProcessorMultiUserTest {
         dayOfWeek.add(DateTimeConstants.TUESDAY);
 
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
-                true, true, true,
+                true, true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
         RingTime ringTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList,
@@ -338,7 +338,7 @@ public class RingProcessorMultiUserTest {
         final HashSet<Integer> dayOfWeek2 = new HashSet<Integer>();
         dayOfWeek2.add(DateTimeConstants.TUESDAY);
         alarmList2.add(new Alarm(2014, 9, 23, 8, 30, dayOfWeek2,
-                true, true, true,
+                true, true, true, true,
                 new AlarmSound(101, "God Save the Queen")));
 
         final RingTime ringTime2 = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList2,
@@ -426,7 +426,7 @@ public class RingProcessorMultiUserTest {
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
-        assertThat(ringTime.isRegular(), is(true));
+        assertThat(ringTime.processed(), is(false));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
 
         UserInfo userInfo1 = this.userInfoList.get(0);
@@ -450,7 +450,7 @@ public class RingProcessorMultiUserTest {
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
-        assertThat(ringTime.isSmart(), is(true));
+        assertThat(ringTime.processed(), is(true));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
 
         userInfo1 = this.userInfoList.get(0);
@@ -474,7 +474,7 @@ public class RingProcessorMultiUserTest {
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
-        assertThat(ringTime.isRegular(), is(true));
+        assertThat(ringTime.processed(), is(false));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
 
         UserInfo userInfo2 = this.userInfoList.get(1);
@@ -498,7 +498,7 @@ public class RingProcessorMultiUserTest {
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
-        assertThat(ringTime.isSmart(), is(true));
+        assertThat(ringTime.processed(), is(true));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
 
         userInfo2 = this.userInfoList.get(1);
@@ -524,7 +524,7 @@ public class RingProcessorMultiUserTest {
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
-        assertThat(ringTime.isRegular(), is(true));
+        assertThat(ringTime.processed(), is(true));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
     }
 
@@ -540,7 +540,7 @@ public class RingProcessorMultiUserTest {
         dayOfWeek.add(DateTimeConstants.TUESDAY);
 
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
-                true, true, true,
+                true, true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
         RingTime ringTime1 = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList,
@@ -557,7 +557,7 @@ public class RingProcessorMultiUserTest {
         final HashSet<Integer> dayOfWeek2 = new HashSet<Integer>();
         dayOfWeek2.add(DateTimeConstants.TUESDAY);
         alarmList2.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek2,
-                true, true, true,
+                true, true, true, true,
                 new AlarmSound(101, "God Save the Queen")));
 
         RingTime ringTime2 = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList2,
@@ -579,7 +579,7 @@ public class RingProcessorMultiUserTest {
         final DateTime expectRingTime = new DateTime(2014,9,23,8,20, DateTimeZone.forID("America/Los_Angeles"));
 
         assertThat(actualRingTime, is(expectRingTime));
-        assertThat(ringTime.isRegular(), is(true));
+        assertThat(ringTime.processed(), is(false));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{100L, 101L}));
 
     }

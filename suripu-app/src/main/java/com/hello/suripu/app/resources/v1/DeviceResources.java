@@ -7,23 +7,26 @@ import com.hello.suripu.app.models.RedisPaginator;
 import com.hello.suripu.core.configuration.ActiveDevicesTrackerConfiguration;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Account;
-import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceInactive;
 import com.hello.suripu.core.models.DeviceInactivePage;
 import com.hello.suripu.core.models.DeviceInactivePaginator;
+import com.hello.suripu.core.models.DeviceKeystoreHint;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.PillRegistration;
 import com.hello.suripu.core.models.SenseRegistration;
+import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.util.JsonError;
 import com.yammer.metrics.annotation.Timed;
+import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
@@ -45,6 +48,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -59,15 +63,17 @@ public class DeviceResources {
     private final AccountDAO accountDAO;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final JedisPool jedisPool;
-
+    private final KeyStore senseKeyStore;
     public DeviceResources(final DeviceDAO deviceDAO,
                            final AccountDAO accountDAO,
                            final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
-                           final JedisPool jedisPool) {
+                           final JedisPool jedisPool,
+                           final KeyStore senseKeyStore) {
         this.deviceDAO = deviceDAO;
         this.accountDAO = accountDAO;
-        this.jedisPool = jedisPool;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
+        this.jedisPool = jedisPool;
+        this.senseKeyStore = senseKeyStore;
     }
 
     @POST
@@ -378,5 +384,28 @@ public class DeviceResources {
             pillStatuses.addAll(deviceDAO.pillStatusWithBatteryLevel(pill.internalDeviceId));
         }
         return pillStatuses;
+    }
+
+    @GET
+    @Timed
+    @Path("/key_store_hints/{device_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public DeviceKeystoreHint getKeyHintForDevice(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                      @PathParam("device_id") final String deviceId) {
+        final Optional<byte[]> keyStoreByte = senseKeyStore.get(deviceId);
+        if (!keyStoreByte.isPresent()) {
+            LOGGER.debug("No key store found for device {}", deviceId);
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        final String encodedKeyStore = Hex.encodeHexString(keyStoreByte.get());
+        final DeviceKeystoreHint output = new DeviceKeystoreHint(deviceId, censorKey(encodedKeyStore));
+        LOGGER.debug("Device {} has key {}", output.deviceId, output.hint);
+        return output;
+    }
+
+    private String censorKey(final String key) {
+        char[] censoredParts = new char[key.length() - 8];
+        Arrays.fill(censoredParts, 'x');
+        return new StringBuilder(key).replace(4, key.length() - 4, new String(censoredParts)).toString();
     }
 }

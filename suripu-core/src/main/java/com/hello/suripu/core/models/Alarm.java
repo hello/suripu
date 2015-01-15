@@ -53,6 +53,10 @@ public class Alarm {
     @JsonProperty("sound")
     public final AlarmSound sound;
 
+    @JsonProperty("smart")
+    public final boolean isSmart;
+
+    /*
     @JsonCreator
     public Alarm(@JsonProperty("year") int year,
                  @JsonProperty("month") int month,
@@ -81,6 +85,48 @@ public class Alarm {
 
         this.isEnabled = isEnabled;
         this.isEditable = isEditable;
+
+        this.isSmart = true;
+
+        for(final Integer d:dayOfWeek){
+            if(d < DateTimeConstants.MONDAY || d > DateTimeConstants.SUNDAY){
+                throw new IllegalArgumentException("Invalid day of week.");
+            }
+        }
+    }
+    */
+
+    @JsonCreator
+    public Alarm(@JsonProperty("year") int year,
+                 @JsonProperty("month") int month,
+                 @JsonProperty("day_of_month") int day,
+                 @JsonProperty("hour")int hourOfDay,
+                 @JsonProperty("minute") int minuteOfHour,
+                 @JsonProperty("day_of_week") final Set<Integer> dayOfWeek,
+                 @JsonProperty("repeated") boolean isRepeated,
+                 @JsonProperty("enabled") boolean isEnabled,
+                 @JsonProperty("editable") boolean isEditable,
+                 @JsonProperty("smart") boolean isSmart,
+                 @JsonProperty("sound") final AlarmSound sound){
+        this.dayOfWeek = dayOfWeek;
+        this.hourOfDay = hourOfDay;
+        this.minuteOfHour = minuteOfHour;
+        this.isRepeated = isRepeated;
+        // TODO: find out why some alarms don't have a default sound
+        if(sound == null) {
+            this.sound = new AlarmSound(1, "Digital 3");
+        } else {
+            this.sound = sound;
+        }
+
+        this.year = year;
+        this.month = month;
+        this.day = day;
+
+        this.isEnabled = isEnabled;
+        this.isEditable = isEditable;
+
+        this.isSmart = isSmart;
 
         for(final Integer d:dayOfWeek){
             if(d < DateTimeConstants.MONDAY || d > DateTimeConstants.SUNDAY){
@@ -139,6 +185,7 @@ public class Alarm {
         private boolean isRepeated;
         private boolean isEnabled;
         private boolean isEditable;
+        private boolean isSmart;
         private Set<Integer> dayOfWeek;
         private AlarmSound sound;
 
@@ -209,12 +256,19 @@ public class Alarm {
             return this;
         }
 
+        @JsonProperty("smart")
+        public Builder withIsSmart(boolean isSmart){
+            this.isSmart = isSmart;
+            return this;
+        }
+
 
         public Alarm build(){
             return new Alarm(this.year, this.month, this.day, this.hourOfDay, this.minuteOfHour, this.dayOfWeek,
                     this.isRepeated,
                     this.isEnabled,
                     this.isEditable,
+                    this.isSmart,
                     this.sound);
         }
 
@@ -230,31 +284,35 @@ public class Alarm {
          * @param alarms
          * @return
          */
-        public static boolean isValidSmartAlarms(final List<Alarm> alarms, final DateTime now, final DateTimeZone timeZone){
+        public static boolean isValidAlarms(final List<Alarm> alarms, final DateTime now, final DateTimeZone timeZone){
             final Set<Integer> alarmDays = new HashSet<Integer>();
             for(final Alarm alarm: alarms){
-                if(alarm.isRepeated) {
-                    for (final Integer dayOfWeek : alarm.dayOfWeek) {
-                        if (alarmDays.contains(dayOfWeek)) {
-                            return false;
-                        } else {
-                            alarmDays.add(dayOfWeek);
-                        }
-                    }
-                }else{
-                    if(!isValidNoneRepeatedAlarm(alarm)){
+                if(!alarm.isRepeated){
+                    if (!isValidNoneRepeatedAlarm(alarm)) {
                         return false;
                     }
 
-                    if(!isAlarmExpired(alarm, now, timeZone)){
-                        final DateTime ringTime = new DateTime(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour, 0, timeZone);
-                        final int dayOfWeek = ringTime.getDayOfWeek();
+                    if(alarm.isSmart){
+                        final DateTime expectedRingTime = new DateTime(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour, timeZone);
+                        if(alarmDays.contains(expectedRingTime.getDayOfWeek())){
+                            return false;
+                        }
+
+                        alarmDays.add(expectedRingTime.getDayOfWeek());
+                    }
+                }else{
+                    if(!alarm.isSmart) {
+                        continue;
+                    }
+
+                    for (final Integer dayOfWeek : alarm.dayOfWeek) {
                         if (alarmDays.contains(dayOfWeek)) {
                             return false;
-                        } else {
-                            alarmDays.add(dayOfWeek);
                         }
+
+                        alarmDays.add(dayOfWeek);
                     }
+
                 }
             }
 
@@ -294,6 +352,7 @@ public class Alarm {
                             false,
                             false,
                             alarm.isEditable,
+                            alarm.isSmart,
                             alarm.sound);
                     newAlarmList.add(disabledAlarm);
                 }else{
@@ -313,7 +372,7 @@ public class Alarm {
          */
         public static RingTime generateNextRingTimeFromAlarmTemplates(final List<Alarm> alarms, long currentTimestampUTC, final DateTimeZone timeZone){
 
-            if(!isValidSmartAlarms(alarms, new DateTime(currentTimestampUTC, DateTimeZone.UTC), timeZone)){
+            if(!isValidAlarms(alarms, new DateTime(currentTimestampUTC, DateTimeZone.UTC), timeZone)){
                 throw new IllegalArgumentException("Invalid alarms.");
             }
 
@@ -334,14 +393,14 @@ public class Alarm {
                         }
 
                         if(ringTime.isAfter(currentLocalTime)) {
-                            possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), alarm.sound.id));
+                            possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), alarm.sound.id, alarm.isSmart));
                         }
                     }
                 }else{
                     // None repeated alarm, check if still valid
                     final DateTime ringTime = new DateTime(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour, 0, timeZone);
                     if(ringTime.isAfter(currentLocalTime)){
-                        possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), alarm.sound.id));
+                        possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), alarm.sound.id, alarm.isSmart));
                     }
                 }
             }

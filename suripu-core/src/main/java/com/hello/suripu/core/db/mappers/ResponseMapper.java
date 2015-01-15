@@ -38,11 +38,16 @@ public class ResponseMapper implements ResultSetMapper<Response> {
             qfreq = Optional.fromNullable(Question.FREQUENCY.valueOf(r.getString("question_freq").toUpperCase()));
         }
 
+        String response_text = "";
+        if (r.getString("response_text") != null) {
+            response_text = r.getString("response_text");
+        }
+
         return new Response(
                 r.getLong("id"),
                 r.getLong("account_id"),
                 r.getInt("question_id"),
-                "", // empty response string for now
+                response_text,
                 Optional.fromNullable(response_id),
                 skip,
                 created,

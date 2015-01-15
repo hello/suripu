@@ -70,7 +70,9 @@ public class AccountResource {
 //            throw new WebApplicationException(Response.status(400).entity(new JsonError(400, error.get().toString())).build());
         }
 
+        // Overriding email address for kaytlin
         final Registration securedRegistration = Registration.encryptPassword(registration);
+
 
         LOGGER.debug("Lat: {}", securedRegistration.latitude);
         LOGGER.debug("Lon: {}", securedRegistration.longitude);
@@ -175,5 +177,13 @@ public class AccountResource {
 
         final List<Account> accounts = accountDAO.getRecent();
         return accounts;
+    }
+
+    // TEMP ENDPOINT FOR ROB
+    @GET
+    @Path("/account/delete")
+    public Response deleteAccount() {
+        accountDAO.delete("kaitlyn@hello.is");
+        return Response.ok().build();
     }
 }
