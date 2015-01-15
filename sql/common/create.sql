@@ -185,7 +185,7 @@ CREATE TABLE sleep_feedback(
 GRANT ALL PRIVILEGES ON sleep_feedback TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE sleep_feedback_id_seq TO ingress_user;
 
-CREATE TABLE user_location (
+CREATE TABLE account_location (
     id SERIAL PRIMARY KEY,
     account_id BIGINT NOT NULL,
     longitude DOUBLE PRECISION NOT NULL,
@@ -196,6 +196,6 @@ CREATE TABLE user_location (
     created TIMESTAMP default current_timestamp
 );
 
-GRANT ALL PRIVILEGES ON user_location TO ingress_user;
-GRANT ALL PRIVILEGES ON SEQUENCE user_location_id_seq TO ingress_user;
+GRANT ALL PRIVILEGES ON account_location TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE account_location_id_seq TO ingress_user;
 
