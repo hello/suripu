@@ -18,12 +18,12 @@ public class DeviceStatusMapper implements ResultSetMapper<DeviceStatus> {
     public DeviceStatus map(int index, ResultSet r, StatementContext ctx) throws SQLException {
 
         final Long id = r.getLong("id");
-        final Long pillId = r.getLong("pill_id");
+        final Long deviceId = r.getLong("device_id");
         final String firmwareVersion = r.getString("firmware_version");
         final Integer batteryLevel = r.getInt("battery_level");
-        final DateTime lastUpdated = new DateTime(r.getTimestamp("last_seen"));
+        final DateTime lastUpdated = new DateTime(r.getTimestamp("last_updated"));
         final Integer uptime = r.getInt("uptime");
 
-        return new DeviceStatus(id, pillId, firmwareVersion, batteryLevel, lastUpdated, uptime);
+        return new DeviceStatus(id, deviceId, firmwareVersion, batteryLevel, lastUpdated, uptime);
     }
 }
