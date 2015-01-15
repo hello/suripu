@@ -1,5 +1,5 @@
 metrics_enabled: true
-debug : false
+debug: false
 graphite:
   host: carbon.hostedgraphite.com
   api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
@@ -8,3 +8,20 @@ graphite:
     - org.skife
     - xx-responses
     - com.hello
+
+http:
+  port: 3333
+  adminPort: 3336
+
+common_db:
+  driverClass: org.postgresql.Driver
+  user: ingress_user
+  password: hello ingress user
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
+  properties:
+    hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
+
+logging:
+  level: INFO
+  loggers:
+    com.hello.suripu.admin: DEBUG
