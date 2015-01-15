@@ -221,18 +221,17 @@ public class RegisterResource extends BaseResource {
         final Optional<byte[]> keyBytesOptional = keyStore.get(senseId);
         if(!keyBytesOptional.isPresent()) {
             LOGGER.error("Missing AES key for device = {}", senseId);
-            builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
-            builder.setError(SenseCommandProtos.ErrorType.INTERNAL_DATA_ERROR);
-            return builder;
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
         final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytesOptional.get());
 
         if(error.isPresent()) {
             LOGGER.error("Fail to validate signature {}", error.get().message);
-            builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
-            builder.setError(SenseCommandProtos.ErrorType.INTERNAL_DATA_ERROR);
-            return builder;
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+                    .entity((debug) ? error.get().message : "bad request")
+                    .type(MediaType.TEXT_PLAIN_TYPE).build()
+            );
         }
         
         if(!checkCommandType(morpheusCommand, action)){
