@@ -14,7 +14,9 @@ import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsDAO;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
+import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.SleepEvent;
 import com.hello.suripu.core.models.Events.SunRiseEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
@@ -155,8 +157,22 @@ public class TimelineProcessor {
                         sleepSegment.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                         sleepSegment.getOffsetMillis());
 
-                events.add(sleepEventFromAwakeDetection);
-                events.add(wakeupSegmentFromAwakeDetection);
+                final InBedEvent inBedFromAwakeDetection = new InBedEvent(
+                        sleepSegment.getStartTimestamp(),
+                        sleepSegment.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                        sleepSegment.getOffsetMillis(),
+                        "You went to bed");
+
+                final OutOfBedEvent outOfBedFromAwakeDetection = new OutOfBedEvent(
+                        sleepSegment.getEndTimestamp(),
+                        sleepSegment.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                        sleepSegment.getOffsetMillis());
+
+                // TODO: don't use sleep/awake until we have tune the algorithm....
+                events.add(inBedFromAwakeDetection);
+                events.add(outOfBedFromAwakeDetection);
+//                events.add(sleepEventFromAwakeDetection);
+//                events.add(wakeupSegmentFromAwakeDetection);
             }
 
             LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
