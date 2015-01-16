@@ -70,7 +70,8 @@ public class AlarmDAODynamoDB {
         }
 
         final Set<Integer> alarmDays = new HashSet<Integer>();
-        if(!Alarm.Utils.isValidAlarms(alarms, DateTime.now(), DateTimeZone.UTC)){
+        final Alarm.Utils.AlarmVerificationResult alarmResult = Alarm.Utils.isValidAlarms(alarms, DateTime.now(), DateTimeZone.UTC);
+        if(!alarmResult.equals(Alarm.Utils.AlarmVerificationResult.OK)){
             throw new RuntimeException("Invalid alarms");
         }
 
