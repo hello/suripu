@@ -65,6 +65,7 @@ public class DeviceResources {
     private final JedisPool jedisPool;
     private final KeyStore senseKeyStore;
     private final KeyStore pillKeyStore;
+
     public DeviceResources(final DeviceDAO deviceDAO,
                            final AccountDAO accountDAO,
                            final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
