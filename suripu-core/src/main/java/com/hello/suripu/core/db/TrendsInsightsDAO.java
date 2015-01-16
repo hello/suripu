@@ -3,9 +3,11 @@ package com.hello.suripu.core.db;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.mappers.DowSampleMapper;
+import com.hello.suripu.core.db.mappers.InfoInsightCardsMapper;
 import com.hello.suripu.core.db.mappers.SleepStatsSampleMapper;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Insights.DowSample;
+import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.SleepStatsSample;
 import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.models.SleepStats;
@@ -20,6 +22,7 @@ import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.regex.Matcher;
 
 /**
@@ -27,8 +30,8 @@ import java.util.regex.Matcher;
  * Assumption:
  * 1. sleep score and duration data are updated once a day, assume that it's always for the previous night
  */
-public abstract class TrendsDAO {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TrendsDAO.class);
+public abstract class TrendsInsightsDAO {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TrendsInsightsDAO.class);
     private static final String SLEEP_DURATION_DOW_TABLE = "sleep_duration_dow";
     private static final String SLEEP_SCORE_DOW_TABLE = "sleep_score_dow";
 
@@ -191,4 +194,10 @@ public abstract class TrendsDAO {
         }
         return rowCount;
     }
+
+    // Insights Stuff
+
+    @RegisterMapper(InfoInsightCardsMapper.class)
+    @SqlQuery("SELECT * FROM info_insight_cards WHERE category = :category ORDER BY id")
+    public abstract List<InfoInsightCards> getGenericInsightCardsByCategory(@Bind("category") final int category);
 }

@@ -6,11 +6,12 @@ import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
-import com.hello.suripu.core.db.TrendsDAO;
+import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.Insights.AvailableGraph;
 import com.hello.suripu.core.models.Insights.DowSample;
+import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.SleepStatsSample;
 import com.hello.suripu.core.models.Insights.TrendGraph;
@@ -28,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -47,14 +49,14 @@ public class InsightsResource {
     private static int MAX_INSIGHTS_NUM = 20;
 
     private final AccountDAO accountDAO;
-    private final TrendsDAO trendsDAO;
+    private final TrendsInsightsDAO trendsInsightsDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
     private final TrackerMotionDAO trackerMotionDAO;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
 
-    public InsightsResource(final AccountDAO accountDAO, final TrendsDAO trendsDAO, final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB, final TrackerMotionDAO trackerMotionDAO, InsightsDAODynamoDB insightsDAODynamoDB) {
+    public InsightsResource(final AccountDAO accountDAO, final TrendsInsightsDAO trendsInsightsDAO, final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB, final TrackerMotionDAO trackerMotionDAO, InsightsDAODynamoDB insightsDAODynamoDB) {
         this.accountDAO = accountDAO;
-        this.trendsDAO = trendsDAO;
+        this.trendsInsightsDAO = trendsInsightsDAO;
         this.scoreDAODynamoDB = scoreDAODynamoDB;
         this.trackerMotionDAO = trackerMotionDAO;
         this.insightsDAODynamoDB = insightsDAODynamoDB;
@@ -89,6 +91,19 @@ public class InsightsResource {
     }
 
     @Timed
+    @GET
+    @Path("/info/{category}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<InfoInsightCards> getGenericInsightCards(
+            @Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken,
+            @PathParam("category") final String value) {
+
+        final InsightCard.Category category = InsightCard.Category.fromString(value);
+
+        return trendsInsightsDAO.getGenericInsightCardsByCategory(category.getValue());
+    }
+
+        @Timed
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/light")
@@ -201,9 +216,9 @@ public class InsightsResource {
             // Histogram
             List<DowSample> rawData;
             if (graphType == TrendGraph.DataType.SLEEP_SCORE) {
-                rawData = trendsDAO.getSleepScoreDow(accountId);
+                rawData = trendsInsightsDAO.getSleepScoreDow(accountId);
             } else {
-                rawData = trendsDAO.getSleepDurationDow(accountId);
+                rawData = trendsInsightsDAO.getSleepDurationDow(accountId);
             }
 
             if (rawData.size() < MIN_DATAPOINTS) {
@@ -237,7 +252,7 @@ public class InsightsResource {
 
             } else {
                 // sleep duration over time, up to 365 days
-                ImmutableList<SleepStatsSample> statsSamples = trendsDAO.getAccountSleepStatsBetweenDates(accountId, startDate, endDate);
+                ImmutableList<SleepStatsSample> statsSamples = trendsInsightsDAO.getAccountSleepStatsBetweenDates(accountId, startDate, endDate);
 
                 if (statsSamples.size() < MIN_DATAPOINTS) {
                     return Optional.absent();
