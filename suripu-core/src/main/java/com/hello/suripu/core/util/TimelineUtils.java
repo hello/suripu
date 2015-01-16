@@ -638,7 +638,7 @@ public class TimelineUtils {
         LOGGER.info("smoothed data size {}", smoothedData.size());
 
         final ArrayList<SleepDataScoringFunction> scoringFunctions = new ArrayList<>();
-        scoringFunctions.add(new AmplitudeDataScoringFunction(10, 0.5));
+        scoringFunctions.add(new AmplitudeDataScoringFunction(10, new double[]{0.5, 1d}));
 
         int featureDimension = 1;
 

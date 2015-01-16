@@ -13,21 +13,29 @@ import java.util.Map;
  */
 public class LinearRankAscendingScoringFunction implements ScoringFunction<Long, Double> {
 
-    private final double cutPercentage;
-    public LinearRankAscendingScoringFunction(final double cutPercentage){
-        this.cutPercentage = cutPercentage;
+    private final double[] cutPercentages;
+    private final double startScore;
+    private final double endScore;
+
+    public LinearRankAscendingScoringFunction(final double startScore, final double endScore, final double[] cutPercentages){
+        this.cutPercentages = new double[]{cutPercentages[0], cutPercentages[1]};
+        this.endScore = endScore;
+        this.startScore = startScore;
+
     }
     @Override
     public Map<Long, Double> getPDF(final Collection<Long> data) {
         List<Long> sortedCopy = Ordering.natural().immutableSortedCopy(data);
 
         final LinkedHashMap<Long, Double> rankingPositions = new LinkedHashMap<>();
-        final double cutBound = data.size() * this.cutPercentage;
+        final double startCutBound = data.size() * this.cutPercentages[0];
+        final double endCutBound = data.size() * this.cutPercentages[1];
+
         final int dataSize = data.size();
         for(int i = 0; i < sortedCopy.size(); i++){
             double score = 0;
-            if(i >= cutBound){
-                score = Double.valueOf(i - cutBound) / (dataSize - cutBound);
+            if(i >= startCutBound && i <= endCutBound){
+                score = Double.valueOf(i - startCutBound) / (endCutBound - startCutBound) * (this.endScore - this.startScore) + this.startScore;
             }
 
             final Long value = sortedCopy.get(i);

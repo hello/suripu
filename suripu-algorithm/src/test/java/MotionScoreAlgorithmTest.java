@@ -35,7 +35,7 @@ public class MotionScoreAlgorithmTest {
         tsArray.add(now.getMillis());
         tsArray.add(now.plusMinutes(1).getMillis());
         tsArray.add(now.plusMinutes(2).getMillis());
-        final LinearRankAscendingScoringFunction linearRankAscendingScoringFunction = new LinearRankAscendingScoringFunction(0);
+        final LinearRankAscendingScoringFunction linearRankAscendingScoringFunction = new LinearRankAscendingScoringFunction(0d, 1d, new double[]{0d, 1d});
 
         Map<Long, Double> rankingMap = linearRankAscendingScoringFunction.getPDF(tsArray);
         assertThat(rankingMap.size(), is(3));
@@ -45,12 +45,12 @@ public class MotionScoreAlgorithmTest {
         assertThat(linearRankAscendingScoringFunction.getScore(0L, rankingMap), is(0d));
 
         // Test order by DESC
-        final LinearRankDescendingScoringFunction linearRankDescendingScoringFunction = new LinearRankDescendingScoringFunction();
+        final LinearRankDescendingScoringFunction linearRankDescendingScoringFunction = new LinearRankDescendingScoringFunction(1d, 0, new double[]{0d, 1d});
         rankingMap = linearRankDescendingScoringFunction.getPDF(tsArray);
         assertThat(rankingMap.size(), is(3));
-        assertThat(rankingMap.get(now.getMillis()), is(2d / tsArray.size()));
-        assertThat(rankingMap.get(now.plusMinutes(1).getMillis()), is(1d / tsArray.size()));
-        assertThat(rankingMap.get(now.plusMinutes(2).getMillis()), is(0d / tsArray.size()));
+        assertThat(rankingMap.get(now.getMillis()), is(3d / tsArray.size()));
+        assertThat(rankingMap.get(now.plusMinutes(1).getMillis()), is(2d / tsArray.size()));
+        assertThat(rankingMap.get(now.plusMinutes(2).getMillis()), is(1d / tsArray.size()));
 
         assertThat(linearRankDescendingScoringFunction.getScore(0L, rankingMap), is(0d));
 
@@ -112,7 +112,7 @@ public class MotionScoreAlgorithmTest {
         final List<AmplitudeData> smoothedData = smoother.process(dataSource.getDataForDate(new DateTime(2014, 12, 02, 0, 0, DateTimeZone.UTC)));
 
         final ArrayList<SleepDataScoringFunction> scoringFunctions = new ArrayList<>();
-        scoringFunctions.add(new AmplitudeDataScoringFunction(10, 0.5));
+        scoringFunctions.add(new AmplitudeDataScoringFunction(10, new double[]{0.5d, 1d}));
         scoringFunctions.add(new LightOutScoringFunction(firstLightOutTime, 3d));
 
         final Map<Long, List<AmplitudeData>> matrix = MotionScoreAlgorithm.getMatrix(smoothedData);

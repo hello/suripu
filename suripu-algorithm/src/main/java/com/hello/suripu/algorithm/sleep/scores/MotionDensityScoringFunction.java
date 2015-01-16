@@ -30,7 +30,7 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
             amplitudes.add(Double.valueOf(amplitudeData.amplitude));
         }
 
-        final LinearRankDescendingScoringFunction sleepTimeScoreFunction = new LinearRankDescendingScoringFunction();  // sleep time should be desc
+        final LinearRankDescendingScoringFunction sleepTimeScoreFunction = new LinearRankDescendingScoringFunction(1d, 0d, new double[]{0d, 1d});  // sleep time should be desc
         final Map<Long, Double> sleepTimePDF = sleepTimeScoreFunction.getPDF(timestamps);
 
         final RankPowerScoringFunction amplitudeScoringFunction = new RankPowerScoringFunction(this.motionMaxPower);

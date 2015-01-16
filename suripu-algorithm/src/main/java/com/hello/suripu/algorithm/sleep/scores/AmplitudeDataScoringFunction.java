@@ -6,6 +6,7 @@ import com.hello.suripu.algorithm.pdf.LinearRankDescendingScoringFunction;
 import com.hello.suripu.algorithm.pdf.RankPowerScoringFunction;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -15,12 +16,12 @@ import java.util.Map;
  * Created by pangwu on 12/16/14.
  */
 public class AmplitudeDataScoringFunction implements SleepDataScoringFunction<AmplitudeData> {
-    private final double wakeUpStartPercentage;
+    private final double[] wakeUpStartPercentage;
     private final double motionMaxPower;
 
-    public AmplitudeDataScoringFunction(final double motionPloyDistributionParam, final double wakeUpPDFParam){
+    public AmplitudeDataScoringFunction(final double motionPloyDistributionParam, final double[] wakeUpPDFParam){
         this.motionMaxPower = motionPloyDistributionParam;
-        this.wakeUpStartPercentage = wakeUpPDFParam;
+        this.wakeUpStartPercentage = Arrays.copyOf(wakeUpPDFParam, wakeUpPDFParam.length);
     }
 
     @Override
@@ -32,10 +33,10 @@ public class AmplitudeDataScoringFunction implements SleepDataScoringFunction<Am
             amplitudes.add(Double.valueOf(amplitudeData.amplitude));
         }
 
-        final LinearRankAscendingScoringFunction wakeUpTimeScoreFunction = new LinearRankAscendingScoringFunction(this.wakeUpStartPercentage);
+        final LinearRankAscendingScoringFunction wakeUpTimeScoreFunction = new LinearRankAscendingScoringFunction(0d, 1d, this.wakeUpStartPercentage);
         final Map<Long, Double> wakeUpTimePDF = wakeUpTimeScoreFunction.getPDF(timestamps);
 
-        final LinearRankDescendingScoringFunction goToBedTimeScoreFunction = new LinearRankDescendingScoringFunction();  // sleep time should be desc
+        final LinearRankDescendingScoringFunction goToBedTimeScoreFunction = new LinearRankDescendingScoringFunction(1d, 0d, new double[]{0d, 1d});  // sleep time should be desc
         final Map<Long, Double> goToBedTimePDF = goToBedTimeScoreFunction.getPDF(timestamps);
 
         final RankPowerScoringFunction amplitudeScoringFunction = new RankPowerScoringFunction(this.motionMaxPower);
