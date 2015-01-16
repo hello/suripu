@@ -270,8 +270,15 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final KeyStore senseKeyStore = new KeyStoreDynamoDB(
                 dynamoDBClient,
-                configuration.getKeyStoreDynamoDBConfiguration().getTableName(),
+                configuration.getSenseKeyStoreDynamoDBConfiguration().getTableName(),
                 "1234567891234567".getBytes(), // TODO: REMOVE THIS WHEN WE ARE NOT SUPPOSED TO HAVE A DEFAULT KEY
+                120 // 2 minutes for cache
+        );
+
+        final KeyStore pillKeyStore = new KeyStoreDynamoDB(
+                dynamoDBClient,
+                configuration.getPillKeyStoreDynamoDBConfiguration().getTableName(),
+                "9876543219876543".getBytes(), // TODO: REMOVE THIS WHEN WE ARE NOT SUPPOSED TO HAVE A DEFAULT KEY
                 120 // 2 minutes for cache
         );
 
@@ -281,7 +288,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new SleepLabelResource(sleepLabelDAO));
         environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
         environment.addResource(new EventResource(eventDAODynamoDB));
-        environment.addResource(new DeviceResources(deviceDAO, accountDAO, mergedUserInfoDynamoDB, jedisPool, senseKeyStore));
+        environment.addResource(new DeviceResources(deviceDAO, accountDAO, mergedUserInfoDynamoDB, jedisPool, senseKeyStore, pillKeyStore));
 
         environment.addResource(new ScoresResource(trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), configuration.getSleepScoreVersion()));
 

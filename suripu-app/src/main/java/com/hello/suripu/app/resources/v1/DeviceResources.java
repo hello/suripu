@@ -64,16 +64,20 @@ public class DeviceResources {
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final JedisPool jedisPool;
     private final KeyStore senseKeyStore;
+    private final KeyStore pillKeyStore;
+
     public DeviceResources(final DeviceDAO deviceDAO,
                            final AccountDAO accountDAO,
                            final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                            final JedisPool jedisPool,
-                           final KeyStore senseKeyStore) {
+                           final KeyStore senseKeyStore,
+                           final KeyStore pillKeyStore) {
         this.deviceDAO = deviceDAO;
         this.accountDAO = accountDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.jedisPool = jedisPool;
         this.senseKeyStore = senseKeyStore;
+        this.pillKeyStore = pillKeyStore;
     }
 
     @POST
@@ -388,18 +392,35 @@ public class DeviceResources {
 
     @GET
     @Timed
-    @Path("/key_store_hints/{device_id}")
+    @Path("/key_store_hints/sense/{sense_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public DeviceKeystoreHint getKeyHintForDevice(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                      @PathParam("device_id") final String deviceId) {
-        final Optional<byte[]> keyStoreByte = senseKeyStore.get(deviceId);
+    public DeviceKeystoreHint getKeyHintForSense(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                      @PathParam("sense_id") final String senseId) {
+        final Optional<byte[]> keyStoreByte = senseKeyStore.get(senseId);
         if (!keyStoreByte.isPresent()) {
-            LOGGER.debug("No key store found for device {}", deviceId);
+            LOGGER.debug("No key store found for device {}", senseId);
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
         final String encodedKeyStore = Hex.encodeHexString(keyStoreByte.get());
-        final DeviceKeystoreHint output = new DeviceKeystoreHint(deviceId, censorKey(encodedKeyStore));
-        LOGGER.debug("Device {} has key {}", output.deviceId, output.hint);
+        final DeviceKeystoreHint output = new DeviceKeystoreHint("sense", senseId, censorKey(encodedKeyStore));
+        LOGGER.debug("Sense {} has key {}", output.deviceId, output.hint);
+        return output;
+    }
+
+    @GET
+    @Timed
+    @Path("/key_store_hints/pill/{pill_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public DeviceKeystoreHint getKeyHintForPill(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                  @PathParam("pill_id") final String pillId) {
+        final Optional<byte[]> keyStoreByte = pillKeyStore.get(pillId);
+        if (!keyStoreByte.isPresent()) {
+            LOGGER.debug("No key store found for device {}", pillId);
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        final String encodedKeyStore = Hex.encodeHexString(keyStoreByte.get());
+        final DeviceKeystoreHint output = new DeviceKeystoreHint("pill", pillId, censorKey(encodedKeyStore));
+        LOGGER.debug("Pill {} has key {}", output.deviceId, output.hint);
         return output;
     }
 
