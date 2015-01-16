@@ -16,6 +16,7 @@ CREATE TYPE ACCOUNT_INFO_TYPE AS ENUM(
 );
 ALTER TABLE questions ADD COLUMN account_info ACCOUNT_INFO_TYPE DEFAULT NULL;
 
+-- add new questions
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
 VALUES ('Do you talk in your sleep?', 'EN', 'one_time', 'choice',
 '{"Yes", "No", "Sometimes"}', null, 'anytime', 'sleep_talk');
@@ -23,11 +24,12 @@ VALUES ('Do you talk in your sleep?', 'EN', 'one_time', 'choice',
 INSERT INTO response_choices (question_id, response_text) VALUES (33, 'Yes'), (33, 'No'), (33, 'Sometimes');
 UPDATE questions SET responses_ids = '{114, 115, 116}' WHERE id = 33;
 
+-- update some responses
 UPDATE responses SET question_id = 33, response_id = 114 WHERE question_id = 2 AND response_id = 5;
 UPDATE responses SET account_question_id = 0 where question_id = 33;
 
+-- update question 2 to snoring only
 UPDATE questions SET question_text = 'Do you snore in your sleep?', responses = '{"Yes", "No", "Sometimes"}', account_info = 'snore' WHERE id = 2;
-
 UPDATE response_choices SET response_text = 'Yes' where id = 4;
 UPDATE response_choices SET response_text = 'No' where id = 5;
 UPDATE response_choices SET response_text = 'Sometimes' where id = 6;
