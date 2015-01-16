@@ -97,6 +97,9 @@ public interface DeviceDAO {
     @SqlUpdate("UPDATE account_device_map SET active = FALSE, last_updated = NOW() WHERE device_id = :device_id and active = TRUE;")
     Integer unregisterSense(@Bind("device_id") final String id);
 
+    @SqlUpdate("UPDATE account_device_map SET active = FALSE, last_updated = NOW() WHERE device_id = :device_id AND account_id =:account_id AND active = TRUE;")
+    Integer unregisterSenseByUser(@Bind("device_id") final String id, @Bind("account_id") final Long accountId);
+
     //    @SqlQuery("SELECT * FROM pill_status WHERE pill_id = :pill_id;")
     @RegisterMapper(DeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
