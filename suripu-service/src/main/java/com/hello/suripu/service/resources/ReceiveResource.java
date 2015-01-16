@@ -185,7 +185,7 @@ public class ReceiveResource extends BaseResource {
             }
         }
 
-        for(int i = pillSettings.size() - 1; i >= 0 && i >= pillSettings.size() - 3; i--){
+        for(int i = pillSettings.size() - 1; i >= 0 && i >= pillSettings.size() - 2; i--){
             syncResponseBuilder.addPillSettings(pillSettings.get(i));
         }
 
