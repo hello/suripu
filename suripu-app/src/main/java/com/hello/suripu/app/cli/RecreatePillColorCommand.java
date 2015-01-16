@@ -99,8 +99,8 @@ public class RecreatePillColorCommand extends ConfiguredCommand<SuripuAppConfigu
                 }else{
                     pillColor = pillIdToColorMap.get(pill.externalDeviceId);
                 }
-                mergedUserInfoDynamoDB.setPillColor(senseId, pill.accountId, pill.externalDeviceId, pillColor);
                 LOGGER.info("Pill {} linked with sense {} set to color {}", pill.externalDeviceId, senseId, pillColor.getRGB());
+                mergedUserInfoDynamoDB.setPillColor(senseId, pill.accountId, pill.externalDeviceId, pillColor);
             }
         }
 
