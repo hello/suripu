@@ -92,7 +92,7 @@ public class InsightsResource {
 
     @Timed
     @GET
-    @Path("/cards/{category}")
+    @Path("/info/{category}")
     @Produces(MediaType.APPLICATION_JSON)
     public List<GenericInsightCards> getGenericInsightCards(
             @Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken,
