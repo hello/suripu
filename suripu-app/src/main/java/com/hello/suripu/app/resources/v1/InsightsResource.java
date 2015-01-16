@@ -96,8 +96,11 @@ public class InsightsResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<GenericInsightCards> getGenericInsightCards(
             @Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken,
-            @PathParam("category") int category) {
-        return trendsInsightsDAO.getGenericInsightCardsByCategory(category);
+            @PathParam("category") final String value) {
+
+        final InsightCard.Category category = InsightCard.Category.fromString(value);
+
+        return trendsInsightsDAO.getGenericInsightCardsByCategory(category.getValue());
     }
 
         @Timed

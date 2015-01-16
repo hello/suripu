@@ -49,6 +49,16 @@ public class InsightCard implements Comparable<InsightCard> {
             return Category.GENERIC;
         }
 
+        public static Category fromString(final String text) {
+            if (text != null) {
+                for (final Category category : Category.values()) {
+                    if (text.equalsIgnoreCase(category.toString()))
+                        return category;
+                }
+            }
+            throw new IllegalArgumentException("Invalid Category string");
+        }
+
     }
 
     public static final int RECENT_DAYS = 3;
@@ -77,7 +87,7 @@ public class InsightCard implements Comparable<InsightCard> {
                         return period;
                 }
             }
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Invalid TimePeriod string");
         }
 
     }
