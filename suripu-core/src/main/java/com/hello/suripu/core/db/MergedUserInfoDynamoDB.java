@@ -201,8 +201,24 @@ public class MergedUserInfoDynamoDB {
 
     public Optional<Color> setNextPillColor(final String senseId, final long accountId, final String pillId){
         final List<UserInfo> userInfoList = this.getInfo(senseId);
+        final HashMap<String, Integer> pillColorMap = new HashMap<>();
+        for(final UserInfo userInfo:userInfoList){
+            if(!userInfo.pillColor.isPresent()){
+                continue;
+            }
+
+            final OutputProtos.SyncResponse.PillSettings colorSetting = userInfo.pillColor.get();
+            if(!pillColorMap.containsKey(colorSetting.getPillId())){
+                pillColorMap.put(colorSetting.getPillId(), colorSetting.getPillColor());
+            }
+        }
         // There is a dependency on the max user we can register with sense
-        final Color pillColor = PillColorUtil.getPillColorByAccountRegistrationOrder(userInfoList.size());
+        Color pillColor;
+        if(pillColorMap.containsKey(pillId) == false) {
+            pillColor = PillColorUtil.getPillColorByAccountRegistrationOrder(pillColorMap.size());
+        }else{
+            pillColor = new Color(pillColorMap.get(pillId));
+        }
 
         try {
             // WARNING: potential race condition here.
