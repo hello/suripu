@@ -3,11 +3,11 @@ package com.hello.suripu.core.db;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.mappers.DowSampleMapper;
-import com.hello.suripu.core.db.mappers.GenericInsightCardsMapper;
+import com.hello.suripu.core.db.mappers.InfoInsightCardsMapper;
 import com.hello.suripu.core.db.mappers.SleepStatsSampleMapper;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Insights.DowSample;
-import com.hello.suripu.core.models.Insights.GenericInsightCards;
+import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.SleepStatsSample;
 import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.models.SleepStats;
@@ -197,7 +197,7 @@ public abstract class TrendsInsightsDAO {
 
     // Insights Stuff
 
-    @RegisterMapper(GenericInsightCardsMapper.class)
-    @SqlQuery("SELECT * FROM generic_insight_cards WHERE category = :category ORDER BY id")
-    public abstract List<GenericInsightCards> getGenericInsightCardsByCategory(@Bind("category") final int category);
+    @RegisterMapper(InfoInsightCardsMapper.class)
+    @SqlQuery("SELECT * FROM info_insight_cards WHERE category = :category ORDER BY id")
+    public abstract List<InfoInsightCards> getGenericInsightCardsByCategory(@Bind("category") final int category);
 }

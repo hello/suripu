@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Created by kingshy on 12/15/14.
  */
-public class GenericInsightCards {
+public class InfoInsightCards {
 
     @JsonProperty("id")
     public final int id;
@@ -19,7 +19,7 @@ public class GenericInsightCards {
     @JsonProperty("image_url")
     public final String imageUrl;
 
-    public GenericInsightCards(int id, InsightCard.Category category, String text, String imageUrl) {
+    public InfoInsightCards(int id, InsightCard.Category category, String text, String imageUrl) {
         this.id = id;
         this.category = category;
         this.text = text;

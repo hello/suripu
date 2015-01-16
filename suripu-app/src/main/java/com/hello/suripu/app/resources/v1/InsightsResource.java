@@ -11,7 +11,7 @@ import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.Insights.AvailableGraph;
 import com.hello.suripu.core.models.Insights.DowSample;
-import com.hello.suripu.core.models.Insights.GenericInsightCards;
+import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.SleepStatsSample;
 import com.hello.suripu.core.models.Insights.TrendGraph;
@@ -94,7 +94,7 @@ public class InsightsResource {
     @GET
     @Path("/info/{category}")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<GenericInsightCards> getGenericInsightCards(
+    public List<InfoInsightCards> getGenericInsightCards(
             @Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken,
             @PathParam("category") final String value) {
 
