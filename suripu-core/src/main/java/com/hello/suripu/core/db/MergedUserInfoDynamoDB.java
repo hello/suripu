@@ -29,15 +29,20 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.models.Alarm;
-import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.RingTime;
+import com.hello.suripu.core.models.UserInfo;
+import com.hello.suripu.core.util.PillColorUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.Color;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -69,6 +74,9 @@ public class MergedUserInfoDynamoDB {
     // Timezone history
     public static final String TIMEZONE_ID_ATTRIBUTE_NAME = "timezone_id";
 
+    // Pill color
+    public static final String PILL_COLOR_ATTRIBUTE_NAME = "pill_color";
+
     public static final String UPDATED_AT_ATTRIBUTE_NAME = "updated_at";
 
 
@@ -88,6 +96,20 @@ public class MergedUserInfoDynamoDB {
         return items;
     }
 
+    private Map<String, AttributeValueUpdate> generatePillColorUpdateItem(final OutputProtos.SyncResponse.PillSettings pillSettings){
+        final Map<String, AttributeValueUpdate> items = new HashMap<>();
+
+        final byte[] bytes = pillSettings.toByteArray();
+        final ByteBuffer byteBuffer = ByteBuffer.allocate(bytes.length);
+        byteBuffer.put(bytes, 0, bytes.length);
+        byteBuffer.position(0);  // http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/JavaDocumentAPIBinaryTypeExample.html
+
+        items.put(PILL_COLOR_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                .withAction(AttributeAction.PUT)
+                .withValue(new AttributeValue().withB(byteBuffer)));
+
+        return items;
+    }
 
     private Map<String, AttributeValueUpdate> generateRingTimeUpdateItem(final RingTime ringTime){
         final ObjectMapper mapper = new ObjectMapper();
@@ -131,6 +153,14 @@ public class MergedUserInfoDynamoDB {
         return items;
     }
 
+    private Map<String, AttributeValueUpdate> generatePillColorDeleteItem(){
+        final Map<String, AttributeValueUpdate> items = new HashMap<>();
+
+        items.put(PILL_COLOR_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                .withAction(AttributeAction.DELETE));
+        return items;
+    }
+
 
     private UpdateItemRequest generateUpdateRequest(final String deviceId, final long accountId, final Map<String, AttributeValueUpdate> items){
         items.put(UPDATED_AT_ATTRIBUTE_NAME, new AttributeValueUpdate()
@@ -153,6 +183,62 @@ public class MergedUserInfoDynamoDB {
 
     public boolean setTimeZone(final String deviceId, final long accountId, final DateTimeZone timeZone){
         final Map<String, AttributeValueUpdate> items = generateTimeZoneUpdateItem(timeZone);
+        if(items.isEmpty()){
+            return false;
+        }
+
+        final UpdateItemRequest request = generateUpdateRequest(deviceId, accountId, items);
+        final UpdateItemResult result = this.dynamoDBClient.updateItem(request);
+        return true;
+    }
+
+    public boolean deletePillColor(final String senseId, final long accountId, final String pillId){
+        final Map<String, AttributeValueUpdate> items = generatePillColorDeleteItem();
+        final UpdateItemRequest request = generateUpdateRequest(senseId, accountId, items);
+        final UpdateItemResult result = this.dynamoDBClient.updateItem(request);
+        return true;
+    }
+
+    public Optional<Color> setNextPillColor(final String senseId, final long accountId, final String pillId){
+        final List<UserInfo> userInfoList = this.getInfo(senseId);
+        final HashMap<String, Integer> pillColorMap = new HashMap<>();
+        for(final UserInfo userInfo:userInfoList){
+            if(!userInfo.pillColor.isPresent()){
+                continue;
+            }
+
+            final OutputProtos.SyncResponse.PillSettings colorSetting = userInfo.pillColor.get();
+            if(!pillColorMap.containsKey(colorSetting.getPillId())){
+                pillColorMap.put(colorSetting.getPillId(), colorSetting.getPillColor());
+            }
+        }
+        // There is a dependency on the max user we can register with sense
+        Color pillColor;
+        if(pillColorMap.containsKey(pillId) == false) {
+            pillColor = PillColorUtil.getPillColorByAccountRegistrationOrder(pillColorMap.size());
+        }else{
+            pillColor = new Color(pillColorMap.get(pillId));
+        }
+
+        try {
+            // WARNING: potential race condition here.
+            this.setPillColor(senseId, accountId, pillId, pillColor);
+            return Optional.of(pillColor);
+        }catch (AmazonServiceException ase){
+            LOGGER.error("Set pill {} color for sense {} faile: {}", pillId, senseId, ase.getErrorMessage());
+        }
+
+        return Optional.absent();
+    }
+
+    public boolean setPillColor(final String deviceId, final long accountId, final String pillId, final Color pillColor){
+        final byte[] argb = PillColorUtil.colorToARGB(pillColor);
+        final int intARGB = PillColorUtil.argbToIntBasedOnSystemEndianess(argb);
+        final OutputProtos.SyncResponse.PillSettings pillSettings = OutputProtos.SyncResponse.PillSettings.newBuilder()
+                .setPillColor(intARGB)
+                .setPillId(pillId)
+                .build();
+        final Map<String, AttributeValueUpdate> items = generatePillColorUpdateItem(pillSettings);
         if(items.isEmpty()){
             return false;
         }
@@ -218,7 +304,7 @@ public class MergedUserInfoDynamoDB {
 
             final DeleteItemResult result = this.dynamoDBClient.deleteItem(deleteItemRequest);
 
-            return attributeValuesToAlarmInfo(result.getAttributes());
+            return attributeValuesToUserInfo(result.getAttributes());
         }  catch (AmazonServiceException ase) {
             LOGGER.error("Failed to get item after for device {} and account {}, error {}", deviceId, accountId, ase.getMessage());
         }
@@ -239,6 +325,7 @@ public class MergedUserInfoDynamoDB {
                 ALARM_TEMPLATES_ATTRIBUTE_NAME,
                 EXPECTED_RING_TIME_ATTRIBUTE_NAME, ACTUAL_RING_TIME_ATTRIBUTE_NAME, SOUND_IDS_ATTRIBUTE_NAME, IS_SMART_ALARM_ATTRIBUTE_NAME,
                 TIMEZONE_ID_ATTRIBUTE_NAME,
+                PILL_COLOR_ATTRIBUTE_NAME,
                 UPDATED_AT_ATTRIBUTE_NAME);
 
         final QueryRequest queryRequest = new QueryRequest(this.tableName)
@@ -266,7 +353,7 @@ public class MergedUserInfoDynamoDB {
                 continue;
             }
 
-            final Optional<UserInfo> alarmInfoOptional = attributeValuesToAlarmInfo(item);
+            final Optional<UserInfo> alarmInfoOptional = attributeValuesToUserInfo(item);
             if(!alarmInfoOptional.isPresent()){
                 LOGGER.error("Get alarm info for device id {} failed.", deviceId);
                 continue;
@@ -278,7 +365,7 @@ public class MergedUserInfoDynamoDB {
     }
 
 
-    public static Optional<UserInfo> attributeValuesToAlarmInfo(final Map<String, AttributeValue> item){
+    public static Optional<UserInfo> attributeValuesToUserInfo(final Map<String, AttributeValue> item){
 
         try {
             final long accountId = Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN());
@@ -286,9 +373,13 @@ public class MergedUserInfoDynamoDB {
             final List<Alarm> alarmListOptional = getAlarmListFromAttributes(deviceId, accountId, item);
             final Optional<RingTime> ringTimeOptional = getRingTimeFromAttributes(deviceId, accountId, item);
             final Optional<DateTimeZone> dateTimeZoneOptional = getTimeZoneFromAttributes(deviceId, accountId, item);
-            return Optional.of(new UserInfo(deviceId, accountId, alarmListOptional, ringTimeOptional, dateTimeZoneOptional));
+            final Optional<OutputProtos.SyncResponse.PillSettings> pillColorOptional = getPillColorFromAttributes(deviceId, accountId, item);
+            return Optional.of(new UserInfo(deviceId, accountId,
+                    alarmListOptional, ringTimeOptional,
+                    dateTimeZoneOptional,
+                    pillColorOptional));
         }catch (Exception ex){
-            LOGGER.error("attributeValuesToAlarmInfo error: {}", ex.getMessage());
+            LOGGER.error("attributeValuesToUserInfo error: {}", ex.getMessage());
         }
 
         return Optional.absent();
@@ -355,6 +446,29 @@ public class MergedUserInfoDynamoDB {
             return Optional.of(DateTimeZone.forID(timeZoneId));
         }catch (Exception ex){
             LOGGER.error("Create timezone failed {}, device {}, account id {}.", ex.getMessage(), deviceId, accountId);
+        }
+
+        return Optional.absent();
+    }
+
+    public static Optional<OutputProtos.SyncResponse.PillSettings> getPillColorFromAttributes(final String deviceId, final long accountId, final Map<String, AttributeValue> item){
+        final HashSet<String> pillColorAttributes = new HashSet<String>();
+        Collections.addAll(pillColorAttributes, PILL_COLOR_ATTRIBUTE_NAME);
+
+        if(!item.keySet().containsAll(pillColorAttributes)){
+            return Optional.absent();
+        }
+
+
+
+        try {
+            final byte[] bytes = item.get(PILL_COLOR_ATTRIBUTE_NAME).getB().array();
+            final OutputProtos.SyncResponse.PillSettings pillSettings = OutputProtos.SyncResponse.PillSettings.parseFrom(bytes);
+            return Optional.of(pillSettings);
+        } catch (InvalidProtocolBufferException ipbExc){
+            LOGGER.error("Invalid protobuf. Get pill color failed {}, device {}, account id {}.", ipbExc.getMessage(), deviceId, accountId);
+        } catch (Exception e) {
+            LOGGER.error("Get pill color failed {}, device {}, account id {}.", e.getMessage(), deviceId, accountId);
         }
 
         return Optional.absent();

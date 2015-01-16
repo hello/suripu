@@ -1,5 +1,6 @@
 package com.hello.suripu.service.resources;
 
+import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.ble.SenseCommandProtos;
@@ -8,6 +9,7 @@ import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.KeyStore;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.logging.DataLogger;
@@ -38,10 +40,12 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.awt.*;
 import java.io.IOException;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 
 /**
  * Created by pangwu on 10/10/14.
@@ -55,6 +59,7 @@ public class RegisterResource extends BaseResource {
     final OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore;
     private final KinesisLoggerFactory kinesisLoggerFactory;
     private final KeyStore senseKeyStore;
+    private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
 
     private final Boolean debug;
 
@@ -81,6 +86,7 @@ public class RegisterResource extends BaseResource {
                             final OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore,
                             final KinesisLoggerFactory kinesisLoggerFactory,
                             final KeyStore senseKeyStore,
+                            final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                             final GroupFlipper groupFlipper,
                             final Boolean debug){
         this.deviceDAO = deviceDAO;
@@ -88,6 +94,7 @@ public class RegisterResource extends BaseResource {
         this.debug = debug;
         this.kinesisLoggerFactory = kinesisLoggerFactory;
         this.senseKeyStore = senseKeyStore;
+        this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.groupFlipper = groupFlipper;
     }
 
@@ -99,6 +106,17 @@ public class RegisterResource extends BaseResource {
                 return morpheusCommand.getType() == MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE;
             default:
                 return false;
+        }
+    }
+
+    private void setPillColor(final String senseId, final long accountId, final String pillId){
+
+        try {
+            // WARNING: potential race condition here.
+            final Optional<Color> pillColor = this.mergedUserInfoDynamoDB.setNextPillColor(senseId, accountId, pillId);
+            LOGGER.info("Pill {} set to color {} on sense {}", pillId, pillColor.get(), senseId);
+        }catch (AmazonServiceException ase){
+            LOGGER.error("Set pill {} color for sense {} faile: {}", pillId, senseId, ase.getErrorMessage());
         }
     }
 
@@ -158,7 +176,6 @@ public class RegisterResource extends BaseResource {
         return PairState.PAIRING_VIOLATION;
 
     }
-
 
     private MorpheusCommand.Builder pair(final byte[] encryptedRequest, final KeyStore keyStore, final PairAction action) {
 
@@ -221,18 +238,17 @@ public class RegisterResource extends BaseResource {
         final Optional<byte[]> keyBytesOptional = keyStore.get(senseId);
         if(!keyBytesOptional.isPresent()) {
             LOGGER.error("Missing AES key for device = {}", senseId);
-            builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
-            builder.setError(SenseCommandProtos.ErrorType.INTERNAL_DATA_ERROR);
-            return builder;
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
         final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytesOptional.get());
 
         if(error.isPresent()) {
             LOGGER.error("Fail to validate signature {}", error.get().message);
-            builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
-            builder.setError(SenseCommandProtos.ErrorType.INTERNAL_DATA_ERROR);
-            return builder;
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+                    .entity((debug) ? error.get().message : "bad request")
+                    .type(MediaType.TEXT_PLAIN_TYPE).build()
+            );
         }
 
         if(!checkCommandType(morpheusCommand, action)){
@@ -265,6 +281,7 @@ public class RegisterResource extends BaseResource {
                     if (pairState == PairState.NOT_PAIRED) {
                         this.deviceDAO.registerTracker(accountId, deviceId);
                         LOGGER.warn("Registered pill {} to account {}", pillId, accountId);
+                        this.setPillColor(senseId, accountId, deviceId);
                     }
 
                     if (pairState == PairState.NOT_PAIRED || pairState == PairState.PAIRED_WITH_CURRENT_ACCOUNT) {

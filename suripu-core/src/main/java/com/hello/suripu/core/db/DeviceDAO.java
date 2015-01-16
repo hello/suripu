@@ -76,6 +76,10 @@ public interface DeviceDAO {
     public abstract ImmutableList<DeviceAccountPair> getTrackerIds(@Bind("account_id") Long accountId);
 
     @RegisterMapper(DeviceAccountPairMapper.class)
+    @SqlQuery("SELECT * FROM account_tracker_map WHERE active = :is_active;")
+    ImmutableList<DeviceAccountPair> getAllPills(@Bind("is_active") Boolean isActive);
+
+    @RegisterMapper(DeviceAccountPairMapper.class)
     @SingleValueResult(DeviceAccountPair.class)
     @SqlQuery("SELECT * FROM account_tracker_map WHERE device_id = :pill_id AND active = TRUE ORDER BY id DESC LIMIT 1;")
     Optional<DeviceAccountPair> getInternalPillId(@Bind("pill_id") final String pillId);

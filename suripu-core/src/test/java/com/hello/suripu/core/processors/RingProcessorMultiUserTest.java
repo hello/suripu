@@ -4,16 +4,17 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
+import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Alarm;
-import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.AlarmSound;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.models.UserInfo;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -111,7 +112,8 @@ public class RingProcessorMultiUserTest {
         userInfoList.add(new UserInfo(testDeviceId, 1L,
                 alarmList,
                 Optional.of(ringTime),
-                Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
+                Optional.of(DateTimeZone.forID("America/Los_Angeles")),
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
 
 
         final List<Alarm> alarmList2 = new ArrayList<Alarm>();
@@ -128,7 +130,8 @@ public class RingProcessorMultiUserTest {
         userInfoList.add(new UserInfo(testDeviceId, 2L,
                 alarmList2,
                 Optional.of(ringTime2),
-                Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
+                Optional.of(DateTimeZone.forID("America/Los_Angeles")),
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
 
         final URL url = Resources.getResource("pill_data_09_23_2014_pang.csv");
         final List<TrackerMotion> motions1 = new ArrayList<TrackerMotion>();
@@ -211,7 +214,8 @@ public class RingProcessorMultiUserTest {
         this.userInfoList.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
                 userInfo1.alarmList,
                 Optional.of(ringTime),
-                userInfo1.timeZone));
+                userInfo1.timeZone,
+                userInfo1.pillColor));
 
 
         // Minute that trigger 1st smart alarm processing
@@ -235,7 +239,8 @@ public class RingProcessorMultiUserTest {
         this.userInfoList.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
                 userInfo1.alarmList,
                 Optional.of(ringTime),
-                userInfo1.timeZone));
+                userInfo1.timeZone,
+                userInfo1.pillColor));
 
 
         // Minute that update 2nd alarm processing
@@ -259,7 +264,8 @@ public class RingProcessorMultiUserTest {
         this.userInfoList.set(1, new UserInfo(userInfo2.deviceId, userInfo2.accountId,
                 userInfo2.alarmList,
                 Optional.of(ringTime),
-                userInfo2.timeZone));
+                userInfo2.timeZone,
+                userInfo2.pillColor));
 
 
         // Minute that trigger 2nd smart alarm processing
@@ -283,7 +289,8 @@ public class RingProcessorMultiUserTest {
         this.userInfoList.set(1, new UserInfo(userInfo2.deviceId, userInfo2.accountId,
                 userInfo2.alarmList,
                 Optional.of(ringTime),
-                userInfo2.timeZone));
+                userInfo2.timeZone,
+                userInfo2.pillColor));
 
 
         // Minutes after smart alarm processing but before next smart alarm process triggered.
@@ -323,7 +330,8 @@ public class RingProcessorMultiUserTest {
         userInfoList.add(new UserInfo(testDeviceId, 1L,
                 alarmList,
                 Optional.of(ringTime),
-                Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
+                Optional.of(DateTimeZone.forID("America/Los_Angeles")),
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
 
 
         final List<Alarm> alarmList2 = new ArrayList<Alarm>();
@@ -340,7 +348,8 @@ public class RingProcessorMultiUserTest {
         userInfoList.add(new UserInfo(testDeviceId, 2L,
                 alarmList2,
                 Optional.of(ringTime2),
-                Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
+                Optional.of(DateTimeZone.forID("America/Los_Angeles")),
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
 
 
         final URL url = Resources.getResource("pill_data_09_23_2014_pang.csv");
@@ -424,7 +433,8 @@ public class RingProcessorMultiUserTest {
         this.userInfoList.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
                 userInfo1.alarmList,
                 Optional.of(ringTime),
-                userInfo1.timeZone));
+                userInfo1.timeZone,
+                userInfo1.pillColor));
 
 
         // Minute that trigger 1st smart alarm processing
@@ -447,7 +457,8 @@ public class RingProcessorMultiUserTest {
         this.userInfoList.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
                 userInfo1.alarmList,
                 Optional.of(ringTime),
-                userInfo1.timeZone));
+                userInfo1.timeZone,
+                userInfo1.pillColor));
 
         // Minute that update 2nd alarm processing
         deadline = new DateTime(2014, 9, 23, 8, 30, DateTimeZone.forID("America/Los_Angeles"));
@@ -470,7 +481,8 @@ public class RingProcessorMultiUserTest {
         this.userInfoList.set(1, new UserInfo(userInfo2.deviceId, userInfo2.accountId,
                 userInfo2.alarmList,
                 Optional.of(ringTime),
-                userInfo2.timeZone));
+                userInfo2.timeZone,
+                userInfo2.pillColor));
 
         // Minute that trigger 2nd smart alarm processing
         deadline = new DateTime(2014, 9, 23, 8, 30, DateTimeZone.forID("America/Los_Angeles"));
@@ -493,7 +505,8 @@ public class RingProcessorMultiUserTest {
         this.userInfoList.set(1, new UserInfo(userInfo2.deviceId, userInfo2.accountId,
                 userInfo2.alarmList,
                 Optional.of(ringTime),
-                userInfo2.timeZone));
+                userInfo2.timeZone,
+                userInfo2.pillColor));
 
 
         // Minutes after smart alarm processing but before next smart alarm process triggered.
@@ -537,7 +550,8 @@ public class RingProcessorMultiUserTest {
         this.userInfoList.add(new UserInfo(testDeviceId, 1L,
                 alarmList,
                 Optional.of(ringTime1),
-                Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
+                Optional.of(DateTimeZone.forID("America/Los_Angeles")),
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
 
         final List<Alarm> alarmList2 = new ArrayList<Alarm>();
         final HashSet<Integer> dayOfWeek2 = new HashSet<Integer>();
@@ -553,7 +567,8 @@ public class RingProcessorMultiUserTest {
         this.userInfoList.add(new UserInfo(testDeviceId, 2L,
                 alarmList2,
                 Optional.of(ringTime2),
-                Optional.of(DateTimeZone.forID("America/Los_Angeles"))));
+                Optional.of(DateTimeZone.forID("America/Los_Angeles")),
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
 
 
         RingTime ringTime = RingProcessor.getNextRegularRingTime(this.userInfoList,

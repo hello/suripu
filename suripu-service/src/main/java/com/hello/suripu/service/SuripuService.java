@@ -212,6 +212,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 tokenStore,
                 kinesisLoggerFactory,
                 senseKeyStore,
+                mergedUserInfoDynamoDB,
                 groupFlipper,
                 configuration.getDebug()));
         final LogsResource logsResource = new LogsResource(

@@ -7,8 +7,8 @@ import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.base.Optional;
-import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.RingTime;
+import com.hello.suripu.core.models.UserInfo;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -17,6 +17,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
+import java.nio.ByteOrder;
 import java.util.Collections;
 import java.util.List;
 
@@ -26,7 +28,7 @@ import static org.hamcrest.Matchers.is;
 /**
  * Created by pangwu on 9/26/14.
  */
-public class MergedAlarmInfoDynamoDBIT {
+public class MergedUserInfoDynamoDBIT {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(AlarmDAODynamoDB.class);
 
@@ -86,6 +88,7 @@ public class MergedAlarmInfoDynamoDBIT {
         final RingTime ringTime = new RingTime(DateTime.now().getMillis(), DateTime.now().getMillis(), new long[]{1L}, false);
         this.mergedUserInfoDynamoDB.setRingTime(this.deviceId, this.accountId, ringTime);
         this.mergedUserInfoDynamoDB.setTimeZone(this.deviceId, this.accountId, DateTimeZone.UTC);
+        this.mergedUserInfoDynamoDB.setPillColor(this.deviceId, this.accountId, "Pang's Pill", new Color(0xFE, 0x00, 0x00));
 
         final List<UserInfo> userInfoList = this.mergedUserInfoDynamoDB.getInfo(this.deviceId);
         assertThat(userInfoList.size(), is(1));
@@ -93,6 +96,14 @@ public class MergedAlarmInfoDynamoDBIT {
         assertThat(userInfoList.get(0).timeZone.isPresent(), is(true));
         assertThat(userInfoList.get(0).ringTime.get().equals(ringTime), is(true));
         assertThat(userInfoList.get(0).timeZone.get().equals(DateTimeZone.UTC), is(true));
+
+        final int intARGB = userInfoList.get(0).pillColor.get().getPillColor();
+
+        if(ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)) {
+            assertThat(intARGB, is(0x0000FEFF));  // WTF? Now mac is little endian??!?!?!
+        }else{
+            assertThat(intARGB, is(0xFFFE0000));
+        }
     }
 
     @Test
@@ -121,6 +132,30 @@ public class MergedAlarmInfoDynamoDBIT {
 
         final Optional<UserInfo> deleteNoExist = this.mergedUserInfoDynamoDB.unlinkAccountToDevice(911L, deviceId);
         assertThat(deleteNoExist.isPresent(), is(false));
+    }
+
+
+    @Test
+    public void testDeletePillColor(){
+        final String senseId = "Pang's Sense";
+        final String pillId = "Pang's Pill";
+        this.mergedUserInfoDynamoDB.setTimeZone(senseId, 1L, DateTimeZone.getDefault());
+        this.mergedUserInfoDynamoDB.setPillColor(senseId, 1L, pillId, Color.red);
+
+        final Optional<UserInfo> userInfoOptional =  this.mergedUserInfoDynamoDB.getInfo(senseId, 1L);
+        assertThat(userInfoOptional.isPresent(), is(true));
+
+        if(ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)) {
+            assertThat(userInfoOptional.get().pillColor.get().getPillColor(), is(0x0000FFFF));
+        }else{
+            assertThat(userInfoOptional.get().pillColor.get().getPillColor(), is(0xFFFF0000));
+        }
+
+        this.mergedUserInfoDynamoDB.deletePillColor(senseId, 1L, pillId);
+        final Optional<UserInfo> userInfoNoPillColor = this.mergedUserInfoDynamoDB.getInfo(senseId, 1L);
+        assertThat(userInfoNoPillColor.isPresent(), is(true));
+        assertThat(userInfoNoPillColor.get().pillColor.isPresent(), is(false));
+        assertThat(userInfoNoPillColor.get().timeZone.get(), is(DateTimeZone.getDefault()));
     }
 
 }
