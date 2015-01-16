@@ -17,6 +17,7 @@ public class InfoInsightCardsMapper implements ResultSetMapper<InfoInsightCards>
 
         return new InfoInsightCards(r.getInt("id"),
                 InsightCard.Category.fromInteger(r.getInt("category")),
+                r.getString("title"),
                 r.getString("text"),
                 r.getString("image_url"));
     }
