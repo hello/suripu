@@ -3,10 +3,11 @@ package com.hello.suripu.core.util;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.io.Resources;
-import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.SleepEvent;
+import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.hamcrest.core.Is;
 import org.joda.time.DateTime;
@@ -154,9 +155,12 @@ public class TimelineUtilsTest {
             ex.printStackTrace();
         }
 
-        final Segment sleepSegment = TimelineUtils.getSleepPeriod(new DateTime(2014, 12, 02, 0, 0, DateTimeZone.UTC),
+        final List<Event> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2014, 12, 02, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 Optional.of(new DateTime(1417598760000L, DateTimeZone.UTC)));
+        final SleepEvent sleepSegment = (SleepEvent) sleepEvents.get(1);
+        final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0);
+        final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2);
 
         // Out put from python script suripu_light_test.py:
         /*
@@ -164,12 +168,13 @@ public class TimelineUtilsTest {
         wake up at 2014-12-03 07:09:00, prob: 0.0924221378596, amp: 518
         */
 
-        final DateTime sleepTime = new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis()));
-        final DateTime wakeUpTime = new DateTime(sleepSegment.getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis()));
-        final DateTime sleepLocalUTC = new DateTime(sleepTime.getYear(), sleepTime.getMonthOfYear(), sleepTime.getDayOfMonth(), sleepTime.getHourOfDay(), sleepTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime goToBedTime = new DateTime(goToBedSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getTimezoneOffset()));
+        final DateTime wakeUpTime = new DateTime(wakeUpSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getTimezoneOffset()));
+
+        final DateTime goToBedLocalUTC = new DateTime(goToBedTime.getYear(), goToBedTime.getMonthOfYear(), goToBedTime.getDayOfMonth(), goToBedTime.getHourOfDay(), goToBedTime.getMinuteOfHour(), DateTimeZone.UTC);
         final DateTime wakeUpLocalUTC = new DateTime(wakeUpTime.getYear(), wakeUpTime.getMonthOfYear(), wakeUpTime.getDayOfMonth(), wakeUpTime.getHourOfDay(), wakeUpTime.getMinuteOfHour(), DateTimeZone.UTC);
 
-        assertThat(sleepLocalUTC, is(new DateTime(2014, 12, 03, 1, 39, DateTimeZone.UTC)));
+        assertThat(goToBedLocalUTC, is(new DateTime(2014, 12, 03, 1, 39, DateTimeZone.UTC)));
         assertThat(wakeUpLocalUTC, is(new DateTime(2014, 12, 03, 7, 9, DateTimeZone.UTC)));
     }
 }

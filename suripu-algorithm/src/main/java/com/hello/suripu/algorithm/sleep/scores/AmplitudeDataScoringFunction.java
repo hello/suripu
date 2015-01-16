@@ -1,6 +1,9 @@
 package com.hello.suripu.algorithm.sleep.scores;
 
 import com.hello.suripu.algorithm.core.AmplitudeData;
+import com.hello.suripu.algorithm.pdf.LinearRankAscendingScoringFunction;
+import com.hello.suripu.algorithm.pdf.LinearRankDescendingScoringFunction;
+import com.hello.suripu.algorithm.pdf.RankPowerScoringFunction;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,22 +32,22 @@ public class AmplitudeDataScoringFunction implements SleepDataScoringFunction<Am
             amplitudes.add(Double.valueOf(amplitudeData.amplitude));
         }
 
-        final WakeUpTimeScoringFunction wakeUpTimeScoreFunction = new WakeUpTimeScoringFunction(this.wakeUpStartPercentage);
+        final LinearRankAscendingScoringFunction wakeUpTimeScoreFunction = new LinearRankAscendingScoringFunction(this.wakeUpStartPercentage);
         final Map<Long, Double> wakeUpTimePDF = wakeUpTimeScoreFunction.getPDF(timestamps);
 
-        final SleepTimeScoringFunction sleepTimeScoreFunction = new SleepTimeScoringFunction();  // sleep time should be desc
-        final Map<Long, Double> sleepTimePDF = sleepTimeScoreFunction.getPDF(timestamps);
+        final LinearRankDescendingScoringFunction goToBedTimeScoreFunction = new LinearRankDescendingScoringFunction();  // sleep time should be desc
+        final Map<Long, Double> goToBedTimePDF = goToBedTimeScoreFunction.getPDF(timestamps);
 
-        final MotionScoringFunction amplitudeScoringFunction = new MotionScoringFunction(this.motionMaxPower);
+        final RankPowerScoringFunction amplitudeScoringFunction = new RankPowerScoringFunction(this.motionMaxPower);
         final Map<Double, Double> amplitudePDF = amplitudeScoringFunction.getPDF(amplitudes);
         final HashMap<AmplitudeData, EventScores> pdf = new HashMap<>();
 
         for(final AmplitudeData datum:data){
             final double motionScore = amplitudeScoringFunction.getScore(datum.amplitude, amplitudePDF);
-            final double sleepScore = sleepTimeScoreFunction.getScore(datum.timestamp, sleepTimePDF);
-            final double wakeUpScore = wakeUpTimeScoreFunction.getScore(datum.timestamp, wakeUpTimePDF);
+            final double goToBedTimeScore = goToBedTimeScoreFunction.getScore(datum.timestamp, goToBedTimePDF);
+            final double wakeUpTimeScore = wakeUpTimeScoreFunction.getScore(datum.timestamp, wakeUpTimePDF);
 
-            pdf.put(datum, new EventScores(sleepScore * motionScore, wakeUpScore * motionScore));
+            pdf.put(datum, new EventScores(1d, wakeUpTimeScore * motionScore, goToBedTimeScore * motionScore));
         }
         return pdf;
     }
@@ -55,6 +58,7 @@ public class AmplitudeDataScoringFunction implements SleepDataScoringFunction<Am
             return pdf.get(data);
         }
 
-        return new EventScores(0d, 0d);
+        // Not found, keep fall asleep score as it is, ground the wake up and go to bed scores.
+        return new EventScores(1d, 0d, 0d);
     }
 }

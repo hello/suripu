@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Created by pangwu on 12/14/14.
  */
-public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
+public class MotionScoreAlgorithm {
     private final static Logger LOGGER = LoggerFactory.getLogger(MotionScoreAlgorithm.class);
     private final List<SleepDataScoringFunction> scoringFunctions = new ArrayList<>();
     private final Map<Long, List<AmplitudeData>> dimensions;
@@ -30,7 +30,6 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
     private final int rowCount;
 
     public MotionScoreAlgorithm(final Map<Long, List<AmplitudeData>> dataMatrix, final int dimensionCount, final int rowCount, final List<SleepDataScoringFunction> scoringFunctions){
-        super(null, 0);
 
         checkNotNull(dataMatrix, "dataMatrix cannot be null");
         if(scoringFunctions.size() != dimensionCount){
@@ -53,8 +52,7 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
         return Optional.of(copy.get(0));
     }
 
-    @Override
-    public Segment getSleepPeriod(final DateTime dateOfTheNightLocalUTC) throws AlgorithmException {
+    public List<Segment> getSleepEvents() throws AlgorithmException {
         final List<List<AmplitudeData>> rawData = new ArrayList<>();
 
         for(int i = 0; i < this.dimensionCount; i++){
@@ -78,6 +76,7 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
 
         final ArrayList<InternalScore> fallAsleepScores = new ArrayList<>();
         final ArrayList<InternalScore> wakeUpScores = new ArrayList<>();
+        final ArrayList<InternalScore> goToBedScores = new ArrayList<>();
 
         for(int i = 0; i < this.dimensionCount; i++){
             sleepScorePDFs.add(this.scoringFunctions.get(i).getPDF(rawData.get(i)));
@@ -86,6 +85,7 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
         for(int r = 0; r < this.rowCount; r++){
             double sleepScore = 1d;
             double wakeUpScore = 1d;
+            double goToBedScore = 1d;
             long timestamp = 0;
             for(int d = 0; d < this.dimensionCount; d++){
 
@@ -95,12 +95,15 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
                 final SleepDataScoringFunction<AmplitudeData> scoringFunction = this.scoringFunctions.get(d);
                 sleepScore *= scoringFunction.getScore(datum, pdf).sleepEventScore;
                 wakeUpScore *= scoringFunction.getScore(datum, pdf).wakeUpEventScore;
+                goToBedScore *= scoringFunction.getScore(datum, pdf).goToBedEventScore;
                 //LOGGER.info("ds: {}, dw: {}", scoringFunction.getScore(datum, pdf).sleepEventScore, scoringFunction.getScore(datum, pdf).wakeUpEventScore);
             }
             fallAsleepScores.add(new InternalScore(timestamp, sleepScore));
             wakeUpScores.add(new InternalScore(timestamp, wakeUpScore));
-            LOGGER.info("time {}, sleep_prob {}, wake up prob {}, amp {}",
+            goToBedScores.add(new InternalScore(timestamp, goToBedScore));
+            LOGGER.info("time {}, goto_bed_prob {}, sleep_prob {}, wake up prob {}, amp {}",
                     new DateTime(timestamp, DateTimeZone.forOffsetMillis(rawData.get(0).get(r).offsetMillis)),
+                    goToBedScore,
                     sleepScore,
                     wakeUpScore,
                     rawData.get(0).get(r).amplitude);
@@ -109,11 +112,22 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
         // Step 4: Pick the highest sleep and wake up scores, sleep and wake up detected.
         final Optional<InternalScore> wakeUpScore = getHighestScore(wakeUpScores);
         final Optional<InternalScore> fallAsleepScore = getHighestScore(fallAsleepScores);
+        final Optional<InternalScore> goToBedScore = getHighestScore(goToBedScores);
 
         // We always have data, no need to check score.isPresent()
         final AmplitudeData fallAsleepData = this.dimensions.get(fallAsleepScore.get().timestamp).get(0);
         final AmplitudeData wakeUpData = this.dimensions.get(wakeUpScore.get().timestamp).get(0);
+        AmplitudeData goToBedData = this.dimensions.get(goToBedScore.get().timestamp).get(0);
 
+        if(goToBedData.timestamp > fallAsleepData.timestamp){
+            LOGGER.warn("Go to bed later the fall asleep");
+            goToBedData = fallAsleepData;
+        }
+
+        LOGGER.info("Prob go to bed time: {}, score {}, amp {}", new DateTime(goToBedData.timestamp,
+                        DateTimeZone.forOffsetMillis(goToBedData.offsetMillis)),
+                goToBedScore.get().score,
+                goToBedData.amplitude);
         LOGGER.info("Prob fall asleep time: {}, score {}, amp {}", new DateTime(fallAsleepData.timestamp,
                 DateTimeZone.forOffsetMillis(fallAsleepData.offsetMillis)),
                 fallAsleepScore.get().score,
@@ -123,7 +137,12 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
                 wakeUpScore.get().score,
                 wakeUpData.amplitude);
 
-        return new Segment(fallAsleepScore.get().timestamp, wakeUpScore.get().timestamp, fallAsleepData.offsetMillis);
+        final ArrayList<Segment> sleepEvents = new ArrayList<>();
+        sleepEvents.add(new Segment(goToBedScore.get().timestamp, goToBedScore.get().timestamp, goToBedData.offsetMillis));
+        sleepEvents.add(new Segment(fallAsleepScore.get().timestamp, fallAsleepScore.get().timestamp, fallAsleepData.offsetMillis));
+        sleepEvents.add(new Segment(wakeUpScore.get().timestamp, wakeUpScore.get().timestamp, wakeUpData.offsetMillis));
+
+        return sleepEvents;
     }
 
     public static Map<Long, List<AmplitudeData>> getMatrix(final List<AmplitudeData> smoothedMotion){

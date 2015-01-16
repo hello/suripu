@@ -35,7 +35,7 @@ public class LightOutScoringFunction implements SleepDataScoringFunction<Amplitu
 
             // since all scores are multiplied together and light out is just for fall asleep detection
             // the wake up score has to be 1.
-            lightOutPDF.put(datum, new EventScores(sleepProbability, 1d));
+            lightOutPDF.put(datum, new EventScores(sleepProbability, 1d, sleepProbability));
         }
         return lightOutPDF;
     }
@@ -47,9 +47,12 @@ public class LightOutScoringFunction implements SleepDataScoringFunction<Amplitu
 
             // The benefit of adding weight is when we run into false positive the motion data
             // wont get cut off.
-            return new EventScores(eventScores.sleepEventScore * this.modalityWeight + 1d, eventScores.wakeUpEventScore);
+            return new EventScores(eventScores.sleepEventScore * this.modalityWeight + 1d,
+                    eventScores.wakeUpEventScore,
+                    //eventScores.goToBedEventScore);
+                    eventScores.goToBedEventScore * this.modalityWeight + 1d);
         }
 
-        return new EventScores(1d, 1d);  // Not found, keep everything as it is.
+        return new EventScores(1d, 1d, 1d);  // Not found, keep everything as it is.
     }
 }

@@ -1,4 +1,4 @@
-package com.hello.suripu.algorithm.sleep.scores;
+package com.hello.suripu.algorithm.pdf;
 
 import com.google.common.collect.Ordering;
 import com.hello.suripu.algorithm.core.ScoringFunction;
@@ -11,10 +11,10 @@ import java.util.Map;
 /**
  * Created by pangwu on 12/16/14.
  */
-public class WakeUpTimeScoringFunction implements ScoringFunction<Long, Double> {
+public class LinearRankAscendingScoringFunction implements ScoringFunction<Long, Double> {
 
     private final double cutPercentage;
-    public WakeUpTimeScoringFunction(final double cutPercentage){
+    public LinearRankAscendingScoringFunction(final double cutPercentage){
         this.cutPercentage = cutPercentage;
     }
     @Override

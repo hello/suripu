@@ -1,4 +1,4 @@
-package com.hello.suripu.algorithm.sleep.scores;
+package com.hello.suripu.algorithm.pdf;
 
 import com.google.common.collect.Ordering;
 import com.hello.suripu.algorithm.core.ScoringFunction;
@@ -11,9 +11,9 @@ import java.util.Map;
 /**
  * Created by pangwu on 12/16/14.
  */
-public class MotionScoringFunction implements ScoringFunction<Double, Double> {
+public class RankPowerScoringFunction implements ScoringFunction<Double, Double> {
     private final double maxPower;
-    public MotionScoringFunction(final double maxPower){
+    public RankPowerScoringFunction(final double maxPower){
         this.maxPower = maxPower;
     }
 

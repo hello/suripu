@@ -140,39 +140,26 @@ public class TimelineProcessor {
         final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);
         events.addAll(motionEvents);
 
-        // A day starts with 8pm local time and ends with 4pm local time next day
         Segment sleepSegment = null;
+        // A day starts with 8pm local time and ends with 4pm local time next day
         try {
-            sleepSegment = TimelineUtils.getSleepPeriod(targetDate, trackerMotions, lightOutTimeOptional);
+            final List<Event> sleepEvents = TimelineUtils.getSleepEvents(targetDate, trackerMotions, lightOutTimeOptional);
+            final SleepEvent sleepEvent = (SleepEvent) sleepEvents.get(1);
+            final WakeupEvent wakeupEvent = (WakeupEvent) sleepEvents.get(2);
+            sleepSegment = new Segment(sleepEvent.getStartTimestamp(),
+                    wakeupEvent.getStartTimestamp(),
+                    wakeupEvent.getTimezoneOffset());
 
             if(sleepSegment.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
-                final SleepEvent sleepEventFromAwakeDetection = new SleepEvent(
-                        sleepSegment.getStartTimestamp(),
-                        sleepSegment.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                        sleepSegment.getOffsetMillis(),
-                        "You fell asleep");
 
-                final WakeupEvent wakeupSegmentFromAwakeDetection = new WakeupEvent(
-                        sleepSegment.getEndTimestamp(),
-                        sleepSegment.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                        sleepSegment.getOffsetMillis());
-
-                final InBedEvent inBedFromAwakeDetection = new InBedEvent(
-                        sleepSegment.getStartTimestamp(),
-                        sleepSegment.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                        sleepSegment.getOffsetMillis(),
-                        "You went to bed");
-
-                final OutOfBedEvent outOfBedFromAwakeDetection = new OutOfBedEvent(
-                        sleepSegment.getEndTimestamp(),
-                        sleepSegment.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                        sleepSegment.getOffsetMillis());
+                final InBedEvent inBedFromAwakeDetection = (InBedEvent) sleepEvents.get(0);
+                final OutOfBedEvent outOfBedFromAwakeDetection = (OutOfBedEvent) sleepEvents.get(sleepEvents.size() - 1);
 
                 // TODO: don't use sleep/awake until we have tune the algorithm....
                 events.add(inBedFromAwakeDetection);
                 events.add(outOfBedFromAwakeDetection);
-//                events.add(sleepEventFromAwakeDetection);
-//                events.add(wakeupSegmentFromAwakeDetection);
+                events.add(sleepEvent);
+                events.add(wakeupEvent);
             }
 
             LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",

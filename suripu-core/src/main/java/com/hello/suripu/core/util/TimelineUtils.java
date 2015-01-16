@@ -8,18 +8,21 @@ import com.hello.suripu.algorithm.core.LightSegment;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sensordata.LightEventsDetector;
 import com.hello.suripu.algorithm.sleep.MotionScoreAlgorithm;
-import com.hello.suripu.algorithm.sleep.SleepDetectionAlgorithm;
 import com.hello.suripu.algorithm.sleep.scores.AmplitudeDataScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.LightOutScoringFunction;
+import com.hello.suripu.algorithm.sleep.scores.MotionDensityScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.SleepDataScoringFunction;
 import com.hello.suripu.algorithm.utils.MaxAmplitudeAggregator;
+import com.hello.suripu.algorithm.utils.MotionDensity;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.LightEvent;
 import com.hello.suripu.core.models.Events.LightsOutEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.SleepEvent;
+import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
@@ -618,7 +621,7 @@ public class TimelineUtils {
         return Optional.absent();
     }
 
-    public static Segment getSleepPeriod(final DateTime targetDateLocalUTC,
+    public static List<Event> getSleepEvents(final DateTime targetDateLocalUTC,
                                          final List<TrackerMotion> trackerMotions,
                                          final Optional<DateTime> lightOutTimeOptional){
         final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions);
@@ -626,17 +629,40 @@ public class TimelineUtils {
 
         final AmplitudeDataPreprocessor smoother = new MaxAmplitudeAggregator(smoothWindowSize);
         final List<AmplitudeData> dataWithGapFilled = dataSource.getDataForDate(targetDateLocalUTC.withTimeAtStartOfDay());
+        final List<AmplitudeData> motionDensityFeature = MotionDensity.generateDensity(dataWithGapFilled, 10 * DateTimeConstants.MILLIS_PER_MINUTE);
 
 
         final List<AmplitudeData> smoothedData = smoother.process(dataWithGapFilled);
+        final List<AmplitudeData> smoothedDensity = smoother.process(motionDensityFeature);
+
         LOGGER.info("smoothed data size {}", smoothedData.size());
 
         final ArrayList<SleepDataScoringFunction> scoringFunctions = new ArrayList<>();
         scoringFunctions.add(new AmplitudeDataScoringFunction(10, 0.5));
 
-        int sensorModality = 1;
+        int featureDimension = 1;
 
         final Map<Long, List<AmplitudeData>> matrix = MotionScoreAlgorithm.getMatrix(smoothedData);
+
+        for(final AmplitudeData feature:smoothedDensity){
+            if(!matrix.containsKey(feature.timestamp)){
+                LOGGER.error("feature not aligned on {}", feature.timestamp);
+            }
+            matrix.get(feature.timestamp).add(feature);
+        }
+        featureDimension++;
+        scoringFunctions.add(new MotionDensityScoringFunction(10d));
+
+        for(final Long timestamp:matrix.keySet()){
+            final List<AmplitudeData> dataVector = matrix.get(timestamp);
+            // Pad the light data
+            if(timestamp < lightOutTimeOptional.get().getMillis()){
+                dataVector.add(new AmplitudeData(timestamp, 0, dataVector.get(0).offsetMillis));
+            }else{
+                dataVector.add(new AmplitudeData(timestamp, 1, dataVector.get(0).offsetMillis));
+            }
+        }
+
         if(lightOutTimeOptional.isPresent()){
             for(final Long timestamp:matrix.keySet()){
                 final List<AmplitudeData> dataVector = matrix.get(timestamp);
@@ -649,11 +675,29 @@ public class TimelineUtils {
             }
 
             scoringFunctions.add(new LightOutScoringFunction(lightOutTimeOptional.get(), 3d));
-            sensorModality++;
+            featureDimension++;
         }
 
-        final SleepDetectionAlgorithm sleepDetectionAlgorithm = new MotionScoreAlgorithm(matrix, sensorModality, smoothedData.size(), scoringFunctions);
-        return sleepDetectionAlgorithm.getSleepPeriod(targetDateLocalUTC.withTimeAtStartOfDay());
+        final MotionScoreAlgorithm sleepDetectionAlgorithm = new MotionScoreAlgorithm(matrix, featureDimension, smoothedData.size(), scoringFunctions);
+        final List<Segment> segments = sleepDetectionAlgorithm.getSleepEvents();
+        final ArrayList<Event> events = new ArrayList<>();
+        final Segment goToBedSegment = segments.get(0);
+        final Segment fallAsleepSegment = segments.get(1);
+        final Segment wakeUpSegment = segments.get(2);
+        events.add(new InBedEvent(goToBedSegment.getStartTimestamp(),
+                goToBedSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
+                goToBedSegment.getOffsetMillis()));
+
+        events.add(new SleepEvent(fallAsleepSegment.getStartTimestamp() + smoothWindowSize,
+                fallAsleepSegment.getStartTimestamp() + smoothWindowSize + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
+                fallAsleepSegment.getOffsetMillis()));
+
+        events.add(new WakeupEvent(wakeUpSegment.getStartTimestamp(),
+                wakeUpSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
+                wakeUpSegment.getOffsetMillis()));
+
+        return events;
+
     }
 
 
