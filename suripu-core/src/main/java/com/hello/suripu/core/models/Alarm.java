@@ -279,7 +279,7 @@ public class Alarm {
 
     public static class Utils{
 
-        public enum AlarmVerificationResult {
+        public enum AlarmStatus {
             OK,
             NOT_VALID_NON_REPEATED_ALARM,
             SMART_ALARM_ALREADY_SET,
@@ -292,22 +292,22 @@ public class Alarm {
          * @param alarms
          * @return
          */
-        public static AlarmVerificationResult isValidAlarms(final List<Alarm> alarms, final DateTime now, final DateTimeZone timeZone){
+        public static AlarmStatus isValidAlarms(final List<Alarm> alarms, final DateTime now, final DateTimeZone timeZone){
             final Set<Integer> alarmDays = new HashSet<Integer>();
             for(final Alarm alarm: alarms){
                 if(!alarm.isEnabled) {
-                    return AlarmVerificationResult.OK;
+                    return AlarmStatus.OK;
                 }
 
                 if(!alarm.isRepeated){
                     if (!isValidNoneRepeatedAlarm(alarm)) {
-                        return AlarmVerificationResult.NOT_VALID_NON_REPEATED_ALARM;
+                        return AlarmStatus.NOT_VALID_NON_REPEATED_ALARM;
                     }
 
                     if(alarm.isSmart){
                         final DateTime expectedRingTime = new DateTime(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour, timeZone);
                         if(alarmDays.contains(expectedRingTime.getDayOfWeek())){
-                            return AlarmVerificationResult.SMART_ALARM_ALREADY_SET;
+                            return AlarmStatus.SMART_ALARM_ALREADY_SET;
                         }
 
                         alarmDays.add(expectedRingTime.getDayOfWeek());
@@ -319,7 +319,7 @@ public class Alarm {
 
                     for (final Integer dayOfWeek : alarm.dayOfWeek) {
                         if (alarmDays.contains(dayOfWeek)) {
-                            return AlarmVerificationResult.DUPLICATE_DAYS;
+                            return AlarmStatus.DUPLICATE_DAYS;
                         }
 
                         alarmDays.add(dayOfWeek);
@@ -328,7 +328,7 @@ public class Alarm {
                 }
             }
 
-            return AlarmVerificationResult.OK;
+            return AlarmStatus.OK;
         }
 
         public static boolean isValidNoneRepeatedAlarm(final Alarm alarm){
@@ -383,8 +383,8 @@ public class Alarm {
          * @return
          */
         public static RingTime generateNextRingTimeFromAlarmTemplates(final List<Alarm> alarms, long currentTimestampUTC, final DateTimeZone timeZone){
-            final AlarmVerificationResult result = isValidAlarms(alarms, new DateTime(currentTimestampUTC, DateTimeZone.UTC), timeZone);
-            if(!result.equals(AlarmVerificationResult.OK)){
+            final AlarmStatus result = isValidAlarms(alarms, new DateTime(currentTimestampUTC, DateTimeZone.UTC), timeZone);
+            if(!result.equals(AlarmStatus.OK)){
                 throw new IllegalArgumentException("Invalid alarms.");
             }
 

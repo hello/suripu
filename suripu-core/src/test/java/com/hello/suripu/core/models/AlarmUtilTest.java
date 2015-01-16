@@ -53,8 +53,8 @@ public class AlarmUtilTest {
                 .withAlarmSound(new AlarmSound(1, "god save the queen"));
 
         alarmList.add(builder.build());
-        final Alarm.Utils.AlarmVerificationResult result = Alarm.Utils.isValidAlarms(alarmList, DateTime.now(), DateTimeZone.getDefault());
-        assertThat(result, is(Alarm.Utils.AlarmVerificationResult.OK));
+        final Alarm.Utils.AlarmStatus status = Alarm.Utils.isValidAlarms(alarmList, DateTime.now(), DateTimeZone.getDefault());
+        assertThat(status, is(Alarm.Utils.AlarmStatus.OK));
     }
 
     @Test
@@ -120,8 +120,8 @@ public class AlarmUtilTest {
 
         final DateTime now = new DateTime(2014,9,15,0,0,DateTimeZone.getDefault());
 
-        final Alarm.Utils.AlarmVerificationResult result = Alarm.Utils.isValidAlarms(alarmList, now, DateTimeZone.getDefault());
-        assertThat(result, is(Alarm.Utils.AlarmVerificationResult.SMART_ALARM_ALREADY_SET));
+        final Alarm.Utils.AlarmStatus status = Alarm.Utils.isValidAlarms(alarmList, now, DateTimeZone.getDefault());
+        assertThat(status, is(Alarm.Utils.AlarmStatus.SMART_ALARM_ALREADY_SET));
 
         alarmList.clear();
         // Non repeated expired
@@ -156,8 +156,8 @@ public class AlarmUtilTest {
                 .withAlarmSound(new AlarmSound(1, "god save the queen"));
 
         alarmList.add(builder.build());
-        Alarm.Utils.AlarmVerificationResult result1 = Alarm.Utils.isValidAlarms(alarmList, now, DateTimeZone.getDefault());
-        assertThat(result1, is(Alarm.Utils.AlarmVerificationResult.OK));
+        Alarm.Utils.AlarmStatus result1 = Alarm.Utils.isValidAlarms(alarmList, now, DateTimeZone.getDefault());
+        assertThat(result1, is(Alarm.Utils.AlarmStatus.OK));
 
     }
 

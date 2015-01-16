@@ -93,8 +93,8 @@ public class AlarmResource {
 
             final DateTimeZone userTimeZone = userInfo.timeZone.get();
             final List<Alarm> smartAlarms = Alarm.Utils.disableExpiredNoneRepeatedAlarms(userInfo.alarmList, DateTime.now().getMillis(), userTimeZone);
-            final Alarm.Utils.AlarmVerificationResult result = Alarm.Utils.isValidAlarms(smartAlarms, DateTime.now(), userTimeZone);
-            if(!result.equals(Alarm.Utils.AlarmVerificationResult.OK)){
+            final Alarm.Utils.AlarmStatus status = Alarm.Utils.isValidAlarms(smartAlarms, DateTime.now(), userTimeZone);
+            if(!status.equals(Alarm.Utils.AlarmStatus.OK)){
                 LOGGER.error("Invalid alarm for user {} device {}", token.accountId, userInfo.deviceId);
                 throw new WebApplicationException(Response.Status.CONFLICT);
             }
@@ -147,14 +147,14 @@ public class AlarmResource {
             }
 
             final DateTimeZone timeZone = alarmInfoOptional.get().timeZone.get();
-            final Alarm.Utils.AlarmVerificationResult result = Alarm.Utils.isValidAlarms(alarms, DateTime.now(), timeZone);
+            final Alarm.Utils.AlarmStatus status = Alarm.Utils.isValidAlarms(alarms, DateTime.now(), timeZone);
 
-            if(result.equals(Alarm.Utils.AlarmVerificationResult.OK)) {
+            if(status.equals(Alarm.Utils.AlarmStatus.OK)) {
                 this.mergedUserInfoDynamoDB.setAlarms(deviceAccountPair.externalDeviceId, token.accountId, alarms);
                 this.alarmDAODynamoDB.setAlarms(token.accountId, alarms);
             }
 
-            if(result.equals(Alarm.Utils.AlarmVerificationResult.SMART_ALARM_ALREADY_SET)){
+            if(status.equals(Alarm.Utils.AlarmStatus.SMART_ALARM_ALREADY_SET)){
                 LOGGER.error("Invalid alarm for account {}, device {}, alarm set skipped", deviceAccountPair.accountId, deviceAccountPair.externalDeviceId);
                 throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(
                         new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), "Currently, you can only set one Smart Alarm per day. You already have a Smart Alarm scheduled for this day.")).build());
