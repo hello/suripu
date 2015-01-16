@@ -564,10 +564,10 @@ public class TimelineUtils {
         }
 
         // TODO: could make this configurable.
-        final double darknessThreshold = 0.0001;
+        final double darknessThreshold = 1.1; // DVT unit ALS is very sensitive
         final int approxSunsetHour = 17;
         final int approxSunriseHour = 6;
-        final int smoothingDegree = 20; // think of it as minutes
+        final int smoothingDegree = 5; // think of it as minutes
 
         final LightEventsDetector detector = new LightEventsDetector(approxSunriseHour, approxSunsetHour, darknessThreshold, smoothingDegree);
 
