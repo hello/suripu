@@ -100,7 +100,8 @@ public class InsightsResource {
 
         final InsightCard.Category category = InsightCard.Category.fromString(value);
 
-        return trendsInsightsDAO.getGenericInsightCardsByCategory(category.getValue());
+        final List<InfoInsightCards> cards = trendsInsightsDAO.getGenericInsightCardsByCategory(category.toString().toLowerCase());
+        return cards;
     }
 
         @Timed

@@ -198,6 +198,6 @@ public abstract class TrendsInsightsDAO {
     // Insights Stuff
 
     @RegisterMapper(InfoInsightCardsMapper.class)
-    @SqlQuery("SELECT * FROM info_insight_cards WHERE category = :category ORDER BY id")
-    public abstract List<InfoInsightCards> getGenericInsightCardsByCategory(@Bind("category") final int category);
+    @SqlQuery("SELECT * FROM info_insight_cards WHERE category = (CAST(:category AS INSIGHT_CATEGORY)) ORDER BY id DESC LIMIT 1")
+    public abstract List<InfoInsightCards> getGenericInsightCardsByCategory(@Bind("category") final String category);
 }
