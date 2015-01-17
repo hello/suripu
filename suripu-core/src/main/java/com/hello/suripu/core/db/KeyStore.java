@@ -18,4 +18,5 @@ public interface KeyStore {
      * @param publicKey String: base64 encoded string representing a public key generated at the factory
      */
     void put(String deviceId, String publicKey);
+    void put(String deviceId, String publicKey, String metadata);
 }

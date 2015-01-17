@@ -32,6 +32,7 @@ import com.hello.suripu.app.resources.v1.FirmwareResource;
 import com.hello.suripu.app.resources.v1.InsightsResource;
 import com.hello.suripu.app.resources.v1.MobilePushRegistrationResource;
 import com.hello.suripu.app.resources.v1.OAuthResource;
+import com.hello.suripu.app.resources.v1.ProvisionResource;
 import com.hello.suripu.app.resources.v1.QuestionsResource;
 import com.hello.suripu.app.resources.v1.RoomConditionsResource;
 import com.hello.suripu.app.resources.v1.ScoresResource;
@@ -289,6 +290,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
         environment.addResource(new EventResource(eventDAODynamoDB));
         environment.addResource(new DeviceResources(deviceDAO, accountDAO, mergedUserInfoDynamoDB, jedisPool, senseKeyStore, pillKeyStore));
+        environment.addResource(new ProvisionResource(senseKeyStore, pillKeyStore));
 
         environment.addResource(new ScoresResource(trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), configuration.getSleepScoreVersion()));
 
