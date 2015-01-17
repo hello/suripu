@@ -188,6 +188,24 @@ public class DeviceResources {
         }
     }
 
+    @DELETE
+    @Timed
+    @Path("/sense/{sense_id}/user")
+    public void unregisterSenseByUser(@Scope(OAuthScope.DEVICE_INFORMATION_WRITE) final AccessToken accessToken,
+                                @PathParam("sense_id") String senseId) {
+        final Integer numRows = deviceDAO.unregisterSenseByUser(senseId, accessToken.accountId);
+        final Optional<UserInfo> alarmInfoOptional = this.mergedUserInfoDynamoDB.unlinkAccountToDevice(accessToken.accountId, senseId);
+
+        // WARNING: Shall we throw error if the dynamoDB unlink fail?
+        if(numRows == 0) {
+            LOGGER.warn("Did not find active sense to unregister");
+        }
+
+        if(!alarmInfoOptional.isPresent()){
+            LOGGER.warn("Cannot find device {} account {} pair in merge info table.", senseId, accessToken.accountId);
+        }
+    }
+
     @Timed
     @GET
     @Path("/q")
