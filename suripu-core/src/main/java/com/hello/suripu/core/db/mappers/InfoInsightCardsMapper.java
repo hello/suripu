@@ -16,7 +16,7 @@ public class InfoInsightCardsMapper implements ResultSetMapper<InfoInsightCards>
     public InfoInsightCards map(int index, ResultSet r, StatementContext ctx) throws SQLException {
 
         return new InfoInsightCards(r.getInt("id"),
-                InsightCard.Category.fromInteger(r.getInt("category")),
+                InsightCard.Category.fromString(r.getString("category")),
                 r.getString("title"),
                 r.getString("text"),
                 r.getString("image_url"));
