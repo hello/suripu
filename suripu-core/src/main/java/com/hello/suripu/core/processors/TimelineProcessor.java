@@ -11,7 +11,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
-import com.hello.suripu.core.db.TrendsDAO;
+import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.InBedEvent;
@@ -53,7 +53,7 @@ public class TimelineProcessor {
     private final DeviceDataDAO deviceDataDAO;
     private final SleepScoreDAO sleepScoreDAO;
     private final SleepLabelDAO sleepLabelDAO;
-    private final TrendsDAO trendsDAO;
+    private final TrendsInsightsDAO trendsInsightsDAO;
     private final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB;
     private final int dateBucketPeriod;
     private final SunData sunData;
@@ -67,7 +67,7 @@ public class TimelineProcessor {
                             final DeviceDataDAO deviceDataDAO,
                             final SleepLabelDAO sleepLabelDAO,
                             final SleepScoreDAO sleepScoreDAO,
-                            final TrendsDAO trendsDAO,
+                            final TrendsInsightsDAO trendsInsightsDAO,
                             final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
                             final int dateBucketPeriod,
                             final SunData sunData,
@@ -79,7 +79,7 @@ public class TimelineProcessor {
         this.deviceDataDAO = deviceDataDAO;
         this.sleepLabelDAO = sleepLabelDAO;
         this.sleepScoreDAO = sleepScoreDAO;
-        this.trendsDAO = trendsDAO;
+        this.trendsInsightsDAO = trendsInsightsDAO;
         this.aggregateSleepScoreDAODynamoDB = aggregateSleepScoreDAODynamoDB;
         this.dateBucketPeriod = dateBucketPeriod;
         this.sunData = sunData;
@@ -237,7 +237,8 @@ public class TimelineProcessor {
 
         List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(cleanedUpEvents);
 
-        final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments, 70);
+        final int lightSleepThreshold = 70; // todo: configurable
+        final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments, lightSleepThreshold);
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
         // get scores - check dynamoDB first
@@ -263,16 +264,17 @@ public class TimelineProcessor {
 
                 // add sleep-score and duration to day-of-week, over time tracking table
                 if (sleepScore > 0) {
-                    this.trendsDAO.updateDayOfWeekData(accountId, sleepScore, targetDate.withTimeAtStartOfDay(), userOffsetMillis, TrendGraph.DataType.SLEEP_SCORE);
+                    this.trendsInsightsDAO.updateDayOfWeekData(accountId, sleepScore, targetDate.withTimeAtStartOfDay(), userOffsetMillis, TrendGraph.DataType.SLEEP_SCORE);
                 }
 
                 if (sleepStats.sleepDurationInMinutes > 0) {
-                    this.trendsDAO.updateSleepStats(accountId, userOffsetMillis, targetDate.withTimeAtStartOfDay(), sleepStats);
+                    this.trendsInsightsDAO.updateSleepStats(accountId, userOffsetMillis, targetDate.withTimeAtStartOfDay(), sleepStats);
                 }
             }
         }
 
-        final String timeLineMessage = TimelineUtils.generateMessage(sleepStats);
+        final Boolean reportSleepDuration = false;
+        final String timeLineMessage = TimelineUtils.generateMessage(sleepStats, reportSleepDuration);
 
         LOGGER.debug("Score for account_id = {} is {}", accountId, sleepScore);
 

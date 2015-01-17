@@ -20,7 +20,7 @@ import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
-import com.hello.suripu.core.db.TrendsDAO;
+import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.processors.insights.LightData;
@@ -92,7 +92,7 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
         insightsDBI.registerContainerFactory(new OptionalContainerFactory());
         insightsDBI.registerArgumentFactory(new JodaArgumentFactory());
 
-        final TrendsDAO trendsDAO = insightsDBI.onDemand(TrendsDAO.class);
+        final TrendsInsightsDAO trendsInsightsDAO = insightsDBI.onDemand(TrendsInsightsDAO.class);
         final QuestionResponseDAO questionResponseDAO = insightsDBI.onDemand(QuestionResponseDAO.class);
 
         // metrics stuff
@@ -166,7 +166,7 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
                 trackerMotionDAO,
                 aggregateSleepScoreDAODynamoDB,
                 insightsDAODynamoDB,
-                trendsDAO,
+                trendsInsightsDAO,
                 questionResponseDAO,
                 lightData);
         final Worker worker = new Worker(factory, kinesisConfig);

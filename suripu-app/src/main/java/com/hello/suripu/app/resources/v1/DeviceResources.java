@@ -64,16 +64,20 @@ public class DeviceResources {
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final JedisPool jedisPool;
     private final KeyStore senseKeyStore;
+    private final KeyStore pillKeyStore;
+
     public DeviceResources(final DeviceDAO deviceDAO,
                            final AccountDAO accountDAO,
                            final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                            final JedisPool jedisPool,
-                           final KeyStore senseKeyStore) {
+                           final KeyStore senseKeyStore,
+                           final KeyStore pillKeyStore) {
         this.deviceDAO = deviceDAO;
         this.accountDAO = accountDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.jedisPool = jedisPool;
         this.senseKeyStore = senseKeyStore;
+        this.pillKeyStore = pillKeyStore;
     }
 
     @POST
@@ -172,6 +176,24 @@ public class DeviceResources {
     public void unregisterSense(@Scope(OAuthScope.DEVICE_INFORMATION_WRITE) final AccessToken accessToken,
                                @PathParam("sense_id") String senseId) {
         final Integer numRows = deviceDAO.unregisterSense(senseId);
+        final Optional<UserInfo> alarmInfoOptional = this.mergedUserInfoDynamoDB.unlinkAccountToDevice(accessToken.accountId, senseId);
+
+        // WARNING: Shall we throw error if the dynamoDB unlink fail?
+        if(numRows == 0) {
+            LOGGER.warn("Did not find active sense to unregister");
+        }
+
+        if(!alarmInfoOptional.isPresent()){
+            LOGGER.warn("Cannot find device {} account {} pair in merge info table.", senseId, accessToken.accountId);
+        }
+    }
+
+    @DELETE
+    @Timed
+    @Path("/sense/{sense_id}/user")
+    public void unregisterSenseByUser(@Scope(OAuthScope.DEVICE_INFORMATION_WRITE) final AccessToken accessToken,
+                                @PathParam("sense_id") String senseId) {
+        final Integer numRows = deviceDAO.unregisterSenseByUser(senseId, accessToken.accountId);
         final Optional<UserInfo> alarmInfoOptional = this.mergedUserInfoDynamoDB.unlinkAccountToDevice(accessToken.accountId, senseId);
 
         // WARNING: Shall we throw error if the dynamoDB unlink fail?
@@ -333,9 +355,13 @@ public class DeviceResources {
     public ImmutableList<Account> getAccountsByDeviceIDs(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                                          @QueryParam("max_devices") final Long maxDevices,
                                                          @PathParam("device_id") final String deviceId) {
+        final List<Account> accounts = new ArrayList<>();
         LOGGER.debug("Searching accounts who have used device {}", deviceId);
-        final ImmutableList<Account> accounts = deviceDAO.getAccountsByDevice(deviceId, maxDevices);
-        return accounts;
+        accounts.addAll(deviceDAO.getAccountsByDevice(deviceId, maxDevices));
+        if (accounts.isEmpty()) {
+            accounts.addAll(deviceDAO.getAccountsByPill(deviceId, maxDevices));
+        }
+        return ImmutableList.copyOf(accounts);
     }
 
     @GET
@@ -388,18 +414,35 @@ public class DeviceResources {
 
     @GET
     @Timed
-    @Path("/key_store_hints/{device_id}")
+    @Path("/key_store_hints/sense/{sense_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public DeviceKeystoreHint getKeyHintForDevice(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                      @PathParam("device_id") final String deviceId) {
-        final Optional<byte[]> keyStoreByte = senseKeyStore.get(deviceId);
+    public DeviceKeystoreHint getKeyHintForSense(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                      @PathParam("sense_id") final String senseId) {
+        final Optional<byte[]> keyStoreByte = senseKeyStore.get(senseId);
         if (!keyStoreByte.isPresent()) {
-            LOGGER.debug("No key store found for device {}", deviceId);
+            LOGGER.debug("No key store found for device {}", senseId);
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
         final String encodedKeyStore = Hex.encodeHexString(keyStoreByte.get());
-        final DeviceKeystoreHint output = new DeviceKeystoreHint(deviceId, censorKey(encodedKeyStore));
-        LOGGER.debug("Device {} has key {}", output.deviceId, output.hint);
+        final DeviceKeystoreHint output = new DeviceKeystoreHint("sense", senseId, censorKey(encodedKeyStore));
+        LOGGER.debug("Sense {} has key {}", output.deviceId, output.hint);
+        return output;
+    }
+
+    @GET
+    @Timed
+    @Path("/key_store_hints/pill/{pill_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public DeviceKeystoreHint getKeyHintForPill(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                  @PathParam("pill_id") final String pillId) {
+        final Optional<byte[]> keyStoreByte = pillKeyStore.get(pillId);
+        if (!keyStoreByte.isPresent()) {
+            LOGGER.debug("No key store found for device {}", pillId);
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        final String encodedKeyStore = Hex.encodeHexString(keyStoreByte.get());
+        final DeviceKeystoreHint output = new DeviceKeystoreHint("pill", pillId, censorKey(encodedKeyStore));
+        LOGGER.debug("Pill {} has key {}", output.deviceId, output.hint);
         return output;
     }
 
