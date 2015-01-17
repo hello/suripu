@@ -413,12 +413,12 @@ public class TimelineUtils {
                 inBedTime = segment.getTimestamp();
             }
 
-            if(segment.getType() == Event.Type.SLEEP && sleepStarted == false){
+            if(segment.getType() == Event.Type.IN_BED && sleepStarted == false){
                 sleepStarted = true;
                 sleepTime = segment.getTimestamp();
             }
 
-            if(segment.getType() == Event.Type.WAKE_UP && sleepStarted == true){  //On purpose dangling case, if no wakeup present
+            if(segment.getType() == Event.Type.OUT_OF_BED && sleepStarted == true){  //On purpose dangling case, if no wakeup present
                 sleepStarted = false;
                 wakeTime = segment.getTimestamp();
             }
@@ -467,12 +467,21 @@ public class TimelineUtils {
      * @param sleepStats
      * @return
      */
-    public static String generateMessage(final SleepStats sleepStats) {
+    public static String generateMessage(final SleepStats sleepStats, final Boolean reportSleepDuration) {
         final Integer percentageOfSoundSleep = Math.round(new Float(sleepStats.soundSleepDurationInMinutes) /sleepStats.sleepDurationInMinutes * 100);
         final double sleepDurationInHours = sleepStats.sleepDurationInMinutes / (double)DateTimeConstants.MINUTES_PER_HOUR;
         final double soundDurationInHours = sleepStats.soundSleepDurationInMinutes / (double)DateTimeConstants.MINUTES_PER_HOUR;
-        return String.format("You slept for a total of **%.1f hours**, soundly for %.1f hours, (%d%%) and moved %d times",
+
+        if (reportSleepDuration) {
+            // report sleep duration
+            return String.format("You slept for a total of **%.1f hours**, soundly for %.1f hours, (%d%%) and moved %d times",
+                    sleepDurationInHours, soundDurationInHours, percentageOfSoundSleep, sleepStats.numberOfMotionEvents);
+        }
+
+        // report in-bed time
+        return String.format("You were in bed for a total of **%.1f hours**, slept soundly for %.1f hours, (%d%%) and moved %d times",
                 sleepDurationInHours, soundDurationInHours, percentageOfSoundSleep, sleepStats.numberOfMotionEvents);
+
     }
 
     public static List<Insight> generateRandomInsights(int seed) {

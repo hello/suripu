@@ -128,9 +128,12 @@ public class InsightProcessor {
             return;
         }
 
-        final Random rand = new Random();
-        final int index = rand.nextInt(2) + 1; // todo: use real size. fix to 2 since only 2 categories are implemented
-        this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.fromInteger(index * 2));
+        // for now, we only have these two categories
+        if (!recentCategories.contains(InsightCard.Category.LIGHT) && !recentCategories.contains(InsightCard.Category.TEMPERATURE)) {
+            final Random rand = new Random();
+            final int index = rand.nextInt(2) + 1; // todo: use real size. fix to 2 since only 2 categories are implemented
+            this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.fromInteger(index * 2));
+        }
 
     }
 
