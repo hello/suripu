@@ -309,9 +309,9 @@ public class TrackerMotion {
 
             try {
                 motionAmplitude = UnsignedInts.toLong(littleEndianDataInputStream.readInt());
-                maxAccelerationRange = UnsignedInts.toLong(littleEndianDataInputStream.readShort());
-                kickOffTimePerMinute = UnsignedInts.toLong(littleEndianDataInputStream.readByte());
-                motionDurationInSecond = UnsignedInts.toLong(littleEndianDataInputStream.readByte());
+                maxAccelerationRange = littleEndianDataInputStream.readShort() & 0xFFFFL;
+                kickOffTimePerMinute = littleEndianDataInputStream.readByte() & 0xFFL;
+                motionDurationInSecond = littleEndianDataInputStream.readByte() & 0xFFL;
 
             }catch (IOException ioe){
                 exception = ioe;

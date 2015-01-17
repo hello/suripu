@@ -97,6 +97,9 @@ public interface DeviceDAO {
     @SqlUpdate("UPDATE account_device_map SET active = FALSE, last_updated = NOW() WHERE device_id = :device_id and active = TRUE;")
     Integer unregisterSense(@Bind("device_id") final String id);
 
+    @SqlUpdate("UPDATE account_device_map SET active = FALSE, last_updated = NOW() WHERE device_id = :device_id AND account_id =:account_id AND active = TRUE;")
+    Integer unregisterSenseByUser(@Bind("device_id") final String id, @Bind("account_id") final Long accountId);
+
     //    @SqlQuery("SELECT * FROM pill_status WHERE pill_id = :pill_id;")
     @RegisterMapper(DeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
@@ -118,6 +121,14 @@ public interface DeviceDAO {
     @SingleValueResult(Account.class)
     @SqlQuery("SELECT * FROM account_device_map as m JOIN accounts as a ON (a.id = m.account_id) WHERE m.device_name = :device_id LIMIT :max_devices;")
     ImmutableList<Account> getAccountsByDevice(
+            @Bind("device_id") final String deviceId,
+            @Bind("max_devices") final Long maxDevices
+    );
+
+    @RegisterMapper(AccountMapper.class)
+    @SingleValueResult(Account.class)
+    @SqlQuery("SELECT * FROM account_tracker_map as m JOIN accounts as a ON (a.id = m.account_id) WHERE m.device_id = :device_id LIMIT :max_devices;")
+    ImmutableList<Account> getAccountsByPill(
             @Bind("device_id") final String deviceId,
             @Bind("max_devices") final Long maxDevices
     );

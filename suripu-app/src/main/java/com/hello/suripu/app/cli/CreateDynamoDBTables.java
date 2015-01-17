@@ -41,8 +41,8 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createTimeZoneHistoryTable(configuration, awsCredentialsProvider);
         createInsightsTable(configuration, awsCredentialsProvider);
         createAccountPreferencesTable(configuration, awsCredentialsProvider);
-        createKeyStoreTable(configuration, awsCredentialsProvider);
-
+        createSenseKeyStoreTable(configuration, awsCredentialsProvider);
+        createPillKeyStoreTable(configuration, awsCredentialsProvider);
 
     }
 
@@ -188,11 +188,26 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         }
     }
 
-    private void createKeyStoreTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+    private void createSenseKeyStoreTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
 
-        client.setEndpoint(configuration.getKeyStoreDynamoDBConfiguration().getEndpoint());
-        final String tableName = configuration.getKeyStoreDynamoDBConfiguration().getTableName();
+        client.setEndpoint(configuration.getSenseKeyStoreDynamoDBConfiguration().getEndpoint());
+        final String tableName = configuration.getSenseKeyStoreDynamoDBConfiguration().getTableName();
+        try {
+            client.describeTable(tableName);
+            System.out.println(String.format("%s already exists.", tableName));
+        } catch (AmazonServiceException exception) {
+            final CreateTableResult result = KeyStoreDynamoDB.createTable(tableName, client);
+            final TableDescription description = result.getTableDescription();
+            System.out.println(description.getTableStatus());
+        }
+    }
+
+    private void createPillKeyStoreTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+
+        client.setEndpoint(configuration.getPillKeyStoreDynamoDBConfiguration().getEndpoint());
+        final String tableName = configuration.getPillKeyStoreDynamoDBConfiguration().getTableName();
         try {
             client.describeTable(tableName);
             System.out.println(String.format("%s already exists.", tableName));

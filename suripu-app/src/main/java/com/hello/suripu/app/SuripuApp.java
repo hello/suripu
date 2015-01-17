@@ -32,6 +32,7 @@ import com.hello.suripu.app.resources.v1.FirmwareResource;
 import com.hello.suripu.app.resources.v1.InsightsResource;
 import com.hello.suripu.app.resources.v1.MobilePushRegistrationResource;
 import com.hello.suripu.app.resources.v1.OAuthResource;
+import com.hello.suripu.app.resources.v1.ProvisionResource;
 import com.hello.suripu.app.resources.v1.QuestionsResource;
 import com.hello.suripu.app.resources.v1.RoomConditionsResource;
 import com.hello.suripu.app.resources.v1.ScoresResource;
@@ -64,7 +65,7 @@ import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
-import com.hello.suripu.core.db.TrendsDAO;
+import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.notifications.DynamoDBNotificationSubscriptionDAO;
 import com.hello.suripu.core.notifications.MobilePushNotificationProcessor;
 import com.hello.suripu.core.notifications.NotificationSubscriptionsDAO;
@@ -159,7 +160,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final SleepLabelDAO sleepLabelDAO = commonDB.onDemand(SleepLabelDAO.class);
         final SleepScoreDAO sleepScoreDAO = commonDB.onDemand(SleepScoreDAO.class);
-        final TrendsDAO trendsDAO = insightsDB.onDemand(TrendsDAO.class);
+        final TrendsInsightsDAO trendsInsightsDAO = insightsDB.onDemand(TrendsInsightsDAO.class);
 
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
@@ -270,8 +271,15 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final KeyStore senseKeyStore = new KeyStoreDynamoDB(
                 dynamoDBClient,
-                configuration.getKeyStoreDynamoDBConfiguration().getTableName(),
+                configuration.getSenseKeyStoreDynamoDBConfiguration().getTableName(),
                 "1234567891234567".getBytes(), // TODO: REMOVE THIS WHEN WE ARE NOT SUPPOSED TO HAVE A DEFAULT KEY
+                120 // 2 minutes for cache
+        );
+
+        final KeyStore pillKeyStore = new KeyStoreDynamoDB(
+                dynamoDBClient,
+                configuration.getPillKeyStoreDynamoDBConfiguration().getTableName(),
+                "9876543219876543".getBytes(), // TODO: REMOVE THIS WHEN WE ARE NOT SUPPOSED TO HAVE A DEFAULT KEY
                 120 // 2 minutes for cache
         );
 
@@ -281,12 +289,13 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new SleepLabelResource(sleepLabelDAO));
         environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
         environment.addResource(new EventResource(eventDAODynamoDB));
-        environment.addResource(new DeviceResources(deviceDAO, accountDAO, mergedUserInfoDynamoDB, jedisPool, senseKeyStore));
+        environment.addResource(new DeviceResources(deviceDAO, accountDAO, mergedUserInfoDynamoDB, jedisPool, senseKeyStore, pillKeyStore));
+        environment.addResource(new ProvisionResource(senseKeyStore, pillKeyStore));
 
         environment.addResource(new ScoresResource(trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), configuration.getSleepScoreVersion()));
 
         final SunData sunData = new SunData();
-        final TimelineProcessor timelineProcessor = new TimelineProcessor(trackerMotionDAO, accountDAO, deviceDAO, deviceDataDAO, sleepLabelDAO, sleepScoreDAO, trendsDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), sunData, amazonS3, "hello-audio");
+        final TimelineProcessor timelineProcessor = new TimelineProcessor(trackerMotionDAO, accountDAO, deviceDAO, deviceDataDAO, sleepLabelDAO, sleepScoreDAO, trendsInsightsDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), sunData, amazonS3, "hello-audio");
         environment.addResource(new TimelineResource(accountDAO, timelineProcessor));
 
         environment.addResource(new TimeZoneResource(timeZoneHistoryDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO));
@@ -296,7 +305,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new FeaturesResource(featureStore));
 
         environment.addResource(new QuestionsResource(accountDAO, questionResponseDAO, timeZoneHistoryDAODynamoDB, configuration.getQuestionConfigs().getNumSkips()));
-        environment.addResource(new InsightsResource(accountDAO, trendsDAO, aggregateSleepScoreDAODynamoDB, trackerMotionDAO, insightsDAODynamoDB));
+        environment.addResource(new InsightsResource(accountDAO, trendsInsightsDAO, aggregateSleepScoreDAODynamoDB, trackerMotionDAO, insightsDAODynamoDB));
         environment.addResource(new TeamsResource(teamStore));
         environment.addResource(new FeedbackResource(feedbackDAO));
         environment.addResource(new AppCheckinResource(false, "")); // TODO: replace this with real app version. Maybe move it to admin tool?
@@ -310,7 +319,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final InsightProcessor.Builder insightBuilder = new InsightProcessor.Builder()
                 .withSenseDAOs(deviceDataDAO, deviceDAO)
                 .withTrackerMotionDAOs(trackerMotionDAO)
-                .withInsightsDAOs(trendsDAO)
+                .withInsightsDAOs(trendsInsightsDAO)
                 .withDynamoDBDAOs(aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB)
                 .withAccountInfoProcessor(accountInfoProcessor)
                 .withLightData(new LightData());
