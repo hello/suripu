@@ -237,7 +237,8 @@ public class TimelineProcessor {
 
         List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(cleanedUpEvents);
 
-        final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments, 70);
+        final int lightSleepThreshold = 70; // todo: configurable
+        final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments, lightSleepThreshold);
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
         // get scores - check dynamoDB first
@@ -272,7 +273,8 @@ public class TimelineProcessor {
             }
         }
 
-        final String timeLineMessage = TimelineUtils.generateMessage(sleepStats);
+        final Boolean reportSleepDuration = false;
+        final String timeLineMessage = TimelineUtils.generateMessage(sleepStats, reportSleepDuration);
 
         LOGGER.debug("Score for account_id = {} is {}", accountId, sleepScore);
 
