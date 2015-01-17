@@ -337,9 +337,13 @@ public class DeviceResources {
     public ImmutableList<Account> getAccountsByDeviceIDs(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                                          @QueryParam("max_devices") final Long maxDevices,
                                                          @PathParam("device_id") final String deviceId) {
+        final List<Account> accounts = new ArrayList<>();
         LOGGER.debug("Searching accounts who have used device {}", deviceId);
-        final ImmutableList<Account> accounts = deviceDAO.getAccountsByDevice(deviceId, maxDevices);
-        return accounts;
+        accounts.addAll(deviceDAO.getAccountsByDevice(deviceId, maxDevices));
+        if (accounts.isEmpty()) {
+            accounts.addAll(deviceDAO.getAccountsByPill(deviceId, maxDevices));
+        }
+        return ImmutableList.copyOf(accounts);
     }
 
     @GET

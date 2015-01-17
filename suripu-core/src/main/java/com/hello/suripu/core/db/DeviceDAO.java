@@ -121,4 +121,12 @@ public interface DeviceDAO {
             @Bind("device_id") final String deviceId,
             @Bind("max_devices") final Long maxDevices
     );
+
+    @RegisterMapper(AccountMapper.class)
+    @SingleValueResult(Account.class)
+    @SqlQuery("SELECT * FROM account_tracker_map as m JOIN accounts as a ON (a.id = m.account_id) WHERE m.device_id = :device_id LIMIT :max_devices;")
+    ImmutableList<Account> getAccountsByPill(
+            @Bind("device_id") final String deviceId,
+            @Bind("max_devices") final Long maxDevices
+    );
 }
