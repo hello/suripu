@@ -375,7 +375,7 @@ public class ReceiveResource extends BaseResource {
             LOGGER.debug("Next ring time: {}", new DateTime(nextRingTime.actualRingTimeUTC, userTimeZoneOptional.get()));
 
             if(!nextRingTime.isEmpty()) {
-                ringOffsetFromNowInSecond = (int) ((nextRingTime.actualRingTimeUTC - DateTime.now().getMillis()) / DateTimeConstants.MILLIS_PER_SECOND);
+                ringOffsetFromNowInSecond = (int) ((nextRingTime.actualRingTimeUTC - DateTime.now().withSecondOfMinute(0).withMillisOfSecond(0).getMillis()) / DateTimeConstants.MILLIS_PER_SECOND);
             }
         }
 
