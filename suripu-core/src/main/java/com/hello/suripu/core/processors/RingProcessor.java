@@ -325,16 +325,18 @@ public class RingProcessor {
                                               final DateTime currentTime){
 
         final ArrayList<RingTime> ringTimes = new ArrayList<RingTime>();
-        DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
         final HashMap<Long, ArrayList<RingTime>> groupedRingTime = new HashMap<>();
-
 
         try {
 
             for (final UserInfo userInfo : userInfoList){
+                if(!userInfo.timeZone.isPresent()){
+                    LOGGER.error("No timezone set for device {} account {}, get regular ring time failed.", userInfo.deviceId, userInfo.accountId);
+                    continue;
+                }
                 if(!userInfo.alarmList.isEmpty()){
                     final List<Alarm> alarms = userInfo.alarmList;
-                    final RingTime nextRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarms, currentTime.getMillis(), userTimeZone);
+                    final RingTime nextRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarms, currentTime.getMillis(), userInfo.timeZone.get());
 
                     if (!nextRingTime.isEmpty()) {
                         ringTimes.add(nextRingTime);  // Add the alarm of this user to the list.
