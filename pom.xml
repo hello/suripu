@@ -5,7 +5,7 @@
     <groupId>com.hello.suripu</groupId>
     <artifactId>suripu-parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.1.380-SNAPSHOT</version>
+    <version>0.1.380</version>
 
     <properties>
         <dropwizard.version>0.6.2</dropwizard.version>
@@ -32,7 +32,7 @@
         <connection>scm:git:git://github.com/hello/suripu.git</connection>
         <developerConnection>scm:git:git@github.com:hello/suripu.git</developerConnection>
         <url>http://github.com/hello/suripu</url>
-        <tag>HEAD</tag>
+        <tag>suripu-0.1.380</tag>
     </scm>
 
     <distributionManagement>
