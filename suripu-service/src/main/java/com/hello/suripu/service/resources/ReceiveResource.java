@@ -326,7 +326,7 @@ public class ReceiveResource extends BaseResource {
         Optional<RingTime> nextRegularRingTimeOptional = Optional.absent();
 
         try {
-            nextRegularRingTimeOptional = Optional.of(RingProcessor.getNextRegularRingTime(userInfoFromThatDevice,
+            nextRegularRingTimeOptional = Optional.of(RingProcessor.getNextRingTimeFromAlarmTemplateForSense(userInfoFromThatDevice,
                     deviceId,
                     DateTime.now().withSecondOfMinute(0).withMillisOfSecond(0)));
         }catch (Exception ex){

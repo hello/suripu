@@ -105,7 +105,7 @@ public class RingProcessorMultiUserTest {
                 false, true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
-        RingTime ringTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList,
+        RingTime ringTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList,
                 new DateTime(2014, 9, 23, 8, 20, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
@@ -123,7 +123,7 @@ public class RingProcessorMultiUserTest {
                 false, true, true, true,
                 new AlarmSound(101, "God Save the Queen")));
 
-        final RingTime ringTime2 = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList2,
+        final RingTime ringTime2 = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList2,
                 new DateTime(2014, 9, 23, 8, 30, 0, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
@@ -195,7 +195,7 @@ public class RingProcessorMultiUserTest {
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, 0, 0, DateTimeZone.forID("America/Los_Angeles"));
 
         // Minutes before alarm triggered
-        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -219,7 +219,7 @@ public class RingProcessorMultiUserTest {
 
 
         // Minute that trigger 1st smart alarm processing
-        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -245,7 +245,7 @@ public class RingProcessorMultiUserTest {
 
         // Minute that update 2nd alarm processing
         deadline = new DateTime(2014, 9, 23, 8, 30, 0, 0, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -270,7 +270,7 @@ public class RingProcessorMultiUserTest {
 
         // Minute that trigger 2nd smart alarm processing
         deadline = new DateTime(2014, 9, 23, 8, 30, 0, 0, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -295,7 +295,7 @@ public class RingProcessorMultiUserTest {
 
         // Minutes after smart alarm processing but before next smart alarm process triggered.
         deadline = new DateTime(2014, 9, 24, 9, 20, 0, 0, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -323,7 +323,7 @@ public class RingProcessorMultiUserTest {
                 true, true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
-        RingTime ringTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList,
+        RingTime ringTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList,
                 new DateTime(2014, 9, 23, 8, 20, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
@@ -341,7 +341,7 @@ public class RingProcessorMultiUserTest {
                 true, true, true, true,
                 new AlarmSound(101, "God Save the Queen")));
 
-        final RingTime ringTime2 = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList2,
+        final RingTime ringTime2 = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList2,
                 new DateTime(2014, 9, 23, 8, 30, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
@@ -414,7 +414,7 @@ public class RingProcessorMultiUserTest {
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
 
         // Minutes before alarm triggered
-        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -438,7 +438,7 @@ public class RingProcessorMultiUserTest {
 
 
         // Minute that trigger 1st smart alarm processing
-        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -462,7 +462,7 @@ public class RingProcessorMultiUserTest {
 
         // Minute that update 2nd alarm processing
         deadline = new DateTime(2014, 9, 23, 8, 30, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -486,7 +486,7 @@ public class RingProcessorMultiUserTest {
 
         // Minute that trigger 2nd smart alarm processing
         deadline = new DateTime(2014, 9, 23, 8, 30, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -512,7 +512,7 @@ public class RingProcessorMultiUserTest {
         // Minutes after smart alarm processing but before next smart alarm process triggered.
         // Since the alarm is only repeated on Tuesday, the next deadline will be next week.
         deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles")).plusWeeks(1);
-        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -543,7 +543,7 @@ public class RingProcessorMultiUserTest {
                 true, true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
-        RingTime ringTime1 = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList,
+        RingTime ringTime1 = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList,
                 new DateTime(2014, 9, 23, 8, 20, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
@@ -560,7 +560,7 @@ public class RingProcessorMultiUserTest {
                 true, true, true, true,
                 new AlarmSound(101, "God Save the Queen")));
 
-        RingTime ringTime2 = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList2,
+        RingTime ringTime2 = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList2,
                 new DateTime(2014, 9, 23, 8, 20, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
@@ -571,7 +571,7 @@ public class RingProcessorMultiUserTest {
                 Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
 
 
-        RingTime ringTime = RingProcessor.getNextRegularRingTime(this.userInfoList,
+        RingTime ringTime = RingProcessor.getNextRingTimeFromAlarmTemplateForSense(this.userInfoList,
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")));
 
