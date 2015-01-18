@@ -339,7 +339,7 @@ public class Alarm {
             }
 
             final DateTime ringTime = new DateTime(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour, 0, timeZone);
-            return ringTime.isBefore(currentTime);
+            return ringTime.isBefore(currentTime.withSecondOfMinute(0).withMillisOfSecond(0));
         }
 
         public static List<Alarm> disableExpiredNoneRepeatedAlarms(final List<Alarm> alarms, long currentTimestampUTC, final DateTimeZone timeZone){
@@ -377,7 +377,7 @@ public class Alarm {
             }
 
             final ArrayList<RingTime> possibleRings = new ArrayList<RingTime>();
-            final DateTime currentLocalTime = new DateTime(currentTimestampUTC, timeZone);
+            final DateTime currentLocalTime = new DateTime(currentTimestampUTC, timeZone).withSecondOfMinute(0).withMillisOfSecond(0);
             for(final Alarm alarm:alarms){
                 if(!alarm.isEnabled){
                     continue;
@@ -392,14 +392,12 @@ public class Alarm {
                             ringTime = ringTime.plusWeeks(1);
                         }
 
-                        if(ringTime.isAfter(currentLocalTime)) {
-                            possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), alarm.sound.id, alarm.isSmart));
-                        }
+                        possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), alarm.sound.id, alarm.isSmart));
                     }
                 }else{
                     // None repeated alarm, check if still valid
                     final DateTime ringTime = new DateTime(alarm.year, alarm.month, alarm.day, alarm.hourOfDay, alarm.minuteOfHour, 0, timeZone);
-                    if(ringTime.isAfter(currentLocalTime)){
+                    if(!ringTime.isBefore(currentLocalTime)){
                         possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), alarm.sound.id, alarm.isSmart));
                     }
                 }

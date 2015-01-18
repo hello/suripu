@@ -103,8 +103,9 @@ public class RingProcessor {
 
 
             final List<Alarm> alarms = userInfo.alarmList;
+            final DateTime currentUserLocalTime = currentTime.withZone(userInfo.timeZone.get()).withSecondOfMinute(0).withMillisOfSecond(0);
 
-            RingTime nextRegularRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarms, currentTime.getMillis(), userInfo.timeZone.get());
+            RingTime nextRegularRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarms, currentUserLocalTime.getMillis(), userInfo.timeZone.get());
 
             if(nextRegularRingTime.isEmpty()){
                 LOGGER.debug("Alarm worker: No alarm set for account {}", userInfo.accountId);
@@ -114,7 +115,7 @@ public class RingProcessor {
 
             if(feature != null) {
                 if (feature.userFeatureActive(FeatureFlipper.SMART_ALARM, userInfo.accountId, Collections.<String>emptyList())) {
-                    final RingTime nextRingTime = updateNextSmartRingTime(currentTime,
+                    final RingTime nextRingTime = updateNextSmartRingTime(currentUserLocalTime,
                             slidingWindowSizeInMinutes, lightSleepThreshold, smartAlarmProcessAheadInMinutes,
                             currentRingTime, nextRegularRingTime,
                             userInfo,
@@ -126,7 +127,7 @@ public class RingProcessor {
                     ringTimes.add(nextRegularRingTime);
                 }
             }else{
-                final RingTime nextRingTime = updateNextSmartRingTime(currentTime,
+                final RingTime nextRingTime = updateNextSmartRingTime(currentUserLocalTime,
                         slidingWindowSizeInMinutes, lightSleepThreshold, smartAlarmProcessAheadInMinutes,
                         currentRingTime, nextRegularRingTime,
                         userInfo,
