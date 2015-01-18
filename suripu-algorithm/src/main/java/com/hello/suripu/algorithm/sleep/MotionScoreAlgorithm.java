@@ -139,7 +139,12 @@ public class MotionScoreAlgorithm {
 
         final ArrayList<Segment> sleepEvents = new ArrayList<>();
         sleepEvents.add(new Segment(goToBedScore.get().timestamp, goToBedScore.get().timestamp, goToBedData.offsetMillis));
-        sleepEvents.add(new Segment(fallAsleepScore.get().timestamp, fallAsleepScore.get().timestamp, fallAsleepData.offsetMillis));
+        if(fallAsleepScore.get().timestamp < goToBedScore.get().timestamp){
+            sleepEvents.add(new Segment(goToBedScore.get().timestamp, goToBedScore.get().timestamp, goToBedData.offsetMillis));
+        }else {
+            sleepEvents.add(new Segment(fallAsleepScore.get().timestamp, fallAsleepScore.get().timestamp, fallAsleepData.offsetMillis));
+        }
+
         sleepEvents.add(new Segment(wakeUpScore.get().timestamp, wakeUpScore.get().timestamp, wakeUpData.offsetMillis));
 
         return sleepEvents;

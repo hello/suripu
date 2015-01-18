@@ -634,6 +634,7 @@ public class TimelineUtils {
 
         final List<AmplitudeData> smoothedData = smoother.process(dataWithGapFilled);
         final List<AmplitudeData> smoothedDensity = smoother.process(motionDensityFeature);
+        final List<AmplitudeData> smoothedDensityDrop = MotionDensity.densityDelta(smoothedDensity);
 
         LOGGER.info("smoothed data size {}", smoothedData.size());
 
@@ -644,7 +645,7 @@ public class TimelineUtils {
 
         final Map<Long, List<AmplitudeData>> matrix = MotionScoreAlgorithm.getMatrix(smoothedData);
 
-        for(final AmplitudeData feature:smoothedDensity){
+        for(final AmplitudeData feature:smoothedDensityDrop){
             if(!matrix.containsKey(feature.timestamp)){
                 LOGGER.error("feature not aligned on {}", feature.timestamp);
             }

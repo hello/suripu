@@ -31,4 +31,20 @@ public class MotionDensity {
 
         return densities;
     }
+
+    public static List<AmplitudeData> densityDelta(final List<AmplitudeData> density){
+        final LinkedList<AmplitudeData> deltas = new LinkedList<>();
+        AmplitudeData previous  = null;
+        for(final AmplitudeData datum:density){
+            if(previous == null){
+                previous = datum;
+                continue;
+            }
+
+            deltas.add(new AmplitudeData(previous.timestamp, previous.amplitude - datum.amplitude, previous.offsetMillis));
+            previous = datum;
+        }
+        deltas.add(new AmplitudeData(previous.timestamp, 0d, previous.offsetMillis));
+        return deltas;
+    }
 }

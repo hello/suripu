@@ -48,7 +48,7 @@ public class AmplitudeDataScoringFunction implements SleepDataScoringFunction<Am
             final double goToBedTimeScore = goToBedTimeScoreFunction.getScore(datum.timestamp, goToBedTimePDF);
             final double wakeUpTimeScore = wakeUpTimeScoreFunction.getScore(datum.timestamp, wakeUpTimePDF);
 
-            pdf.put(datum, new EventScores(1d, wakeUpTimeScore * motionScore, goToBedTimeScore * motionScore));
+            pdf.put(datum, new EventScores(motionScore, wakeUpTimeScore * motionScore, goToBedTimeScore * motionScore));
         }
         return pdf;
     }
