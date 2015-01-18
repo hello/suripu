@@ -72,7 +72,7 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
         }
 
         LOGGER.info("Processing {} unique senseIds.", senseIds.size());
-        final DateTime currentTime = DateTime.now();  // Minus 1 minutes is important, or alarm can get cancelled when this happens in the middle of that minute
+        final DateTime currentTime = DateTime.now().withSecondOfMinute(0).withMillisOfSecond(0);
         for(final String senseId : senseIds) {
             RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
                     this.ringTimeDAODynamoDB,
