@@ -370,7 +370,7 @@ public class Alarm {
          * @param timeZone - time zone of the user's Sense
          * @return
          */
-        public static RingTime generateNextRingTimeFromAlarmTemplates(final List<Alarm> alarms, long currentTimestampUTC, final DateTimeZone timeZone){
+        public static RingTime generateNextRingTimeFromAlarmTemplatesForUser(final List<Alarm> alarms, long currentTimestampUTC, final DateTimeZone timeZone){
 
             if(!isValidAlarms(alarms, new DateTime(currentTimestampUTC, DateTimeZone.UTC), timeZone)){
                 throw new IllegalArgumentException("Invalid alarms.");

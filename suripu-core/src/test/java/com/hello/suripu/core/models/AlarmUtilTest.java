@@ -184,13 +184,13 @@ public class AlarmUtilTest {
 
         alarmList.add(builder.build());
 
-        RingTime actualRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList, DateTime.now().minusMinutes(2).getMillis(), DateTimeZone.getDefault());
+        RingTime actualRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList, DateTime.now().minusMinutes(2).getMillis(), DateTimeZone.getDefault());
         assertThat(actualRingTime.isEmpty(), is(false));
         assertThat(actualRingTime.processed(), is(false));
         assertThat(actualRingTime.actualRingTimeUTC, is(alarmTime.getMillis()));
 
         // Test current time is after alarm time.
-        actualRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList, DateTime.now().plusMinutes(2).getMillis(), DateTimeZone.getDefault());
+        actualRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList, DateTime.now().plusMinutes(2).getMillis(), DateTimeZone.getDefault());
         assertThat(actualRingTime.isEmpty(), is(false));
         assertThat(actualRingTime.processed(), is(false));
         assertThat(actualRingTime.actualRingTimeUTC, is(alarmTime.plusWeeks(1).getMillis()));
@@ -221,13 +221,13 @@ public class AlarmUtilTest {
 
         alarmList.add(builder.build());
 
-        RingTime actualRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList, DateTime.now().minusMinutes(2).getMillis(), DateTimeZone.getDefault());
+        RingTime actualRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList, DateTime.now().minusMinutes(2).getMillis(), DateTimeZone.getDefault());
         assertThat(actualRingTime.isEmpty(), is(false));
         assertThat(actualRingTime.processed(), is(false));
         assertThat(actualRingTime.actualRingTimeUTC, is(alarmTime.getMillis()));
 
         // Test current time is after alarm time.
-        actualRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList, DateTime.now().plusMinutes(2).getMillis(), DateTimeZone.getDefault());
+        actualRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList, DateTime.now().plusMinutes(2).getMillis(), DateTimeZone.getDefault());
         assertThat(actualRingTime.isEmpty(), is(true));
         assertThat(actualRingTime.processed(), is(false));
     }
@@ -257,7 +257,7 @@ public class AlarmUtilTest {
 
         alarmList.add(builder.build());
 
-        final RingTime actualRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList, DateTime.now().minusMinutes(2).getMillis(), DateTimeZone.getDefault());
+        final RingTime actualRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList, DateTime.now().minusMinutes(2).getMillis(), DateTimeZone.getDefault());
         assertThat(actualRingTime.isEmpty(), is(true));
         assertThat(actualRingTime.processed(), is(false));
 
