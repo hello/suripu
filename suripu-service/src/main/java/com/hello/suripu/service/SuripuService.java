@@ -22,7 +22,6 @@ import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.ScoreDAO;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
@@ -116,7 +115,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final AccessTokenDAO accessTokenDAO = commonDB.onDemand(AccessTokenDAO.class);
         final DeviceDAO deviceDAO = sensorsDB.onDemand(DeviceDAO.class);
         final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
-        final ScoreDAO scoreDAO = commonDB.onDemand(ScoreDAO.class);
+
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
         final FirmwareUpdateDAO firmwareUpdateDAO = commonDB.onDemand(FirmwareUpdateDAO.class);
 
