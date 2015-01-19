@@ -149,7 +149,10 @@ public class TimelineUtilsTest {
             final String[] lines = csvString.split("\\n");
             for(int i = 1; i < lines.length; i++){
                 final String[] columns = lines[i].split(",");
-                trackerMotions.add(new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2])));
+                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]));
+                //if(trackerMotion.value > 0){
+                trackerMotions.add(trackerMotion);
+                //}
             }
         }catch (IOException ex){
             ex.printStackTrace();
@@ -157,15 +160,15 @@ public class TimelineUtilsTest {
 
         final List<Event> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2014, 12, 02, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
-                Optional.of(new DateTime(1417598760000L, DateTimeZone.UTC)));
+                Optional.of(new DateTime(1417598580000L, DateTimeZone.UTC)));
         final SleepEvent sleepSegment = (SleepEvent) sleepEvents.get(1);
         final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0);
         final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2);
 
-        // Out put from python script suripu_light_test.py:
+        // Out put from python script suripu_sum.py:
         /*
-        sleep at 2014-12-03 01:39:00, prob: 1.06747942852, amp: 5471
-        wake up at 2014-12-03 07:09:00, prob: 0.0924221378596, amp: 518
+        in bed at 2014-12-03 01:22:00, prob: 1.11502650032, amp: 2967
+        wake up at 2014-12-03 09:38:00, prob: 0.0631222110581, amp: 522
         */
 
         final DateTime goToBedTime = new DateTime(goToBedSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getTimezoneOffset()));
@@ -174,7 +177,7 @@ public class TimelineUtilsTest {
         final DateTime goToBedLocalUTC = new DateTime(goToBedTime.getYear(), goToBedTime.getMonthOfYear(), goToBedTime.getDayOfMonth(), goToBedTime.getHourOfDay(), goToBedTime.getMinuteOfHour(), DateTimeZone.UTC);
         final DateTime wakeUpLocalUTC = new DateTime(wakeUpTime.getYear(), wakeUpTime.getMonthOfYear(), wakeUpTime.getDayOfMonth(), wakeUpTime.getHourOfDay(), wakeUpTime.getMinuteOfHour(), DateTimeZone.UTC);
 
-        assertThat(goToBedLocalUTC, is(new DateTime(2014, 12, 03, 1, 39, DateTimeZone.UTC)));
-        assertThat(wakeUpLocalUTC, is(new DateTime(2014, 12, 03, 7, 9, DateTimeZone.UTC)));
+        assertThat(goToBedLocalUTC, is(new DateTime(2014, 12, 03, 1, 22, DateTimeZone.UTC)));
+        assertThat(wakeUpLocalUTC, is(new DateTime(2014, 12, 03, 9, 38, DateTimeZone.UTC)));
     }
 }

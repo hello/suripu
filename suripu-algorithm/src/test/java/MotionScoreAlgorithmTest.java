@@ -115,7 +115,7 @@ public class MotionScoreAlgorithmTest {
         scoringFunctions.add(new AmplitudeDataScoringFunction(10, new double[]{0.5d, 1d}));
         scoringFunctions.add(new LightOutScoringFunction(firstLightOutTime, 3d));
 
-        final Map<Long, List<AmplitudeData>> matrix = MotionScoreAlgorithm.getMatrix(smoothedData);
+        final Map<Long, List<AmplitudeData>> matrix = MotionScoreAlgorithm.createFeatureMatrix(smoothedData);
         for(final Long timestamp:matrix.keySet()){
             final List<AmplitudeData> dataVector = matrix.get(timestamp);
             if(timestamp < firstLightOutTime.getMillis()){

@@ -8,6 +8,7 @@ import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.scores.EventScores;
 import com.hello.suripu.algorithm.sleep.scores.SleepDataScoringFunction;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,22 +88,31 @@ public class MotionScoreAlgorithm {
             double wakeUpScore = 1d;
             double goToBedScore = 1d;
             long timestamp = 0;
+            boolean printedTime = false;
+
             for(int d = 0; d < this.dimensionCount; d++){
 
                 final AmplitudeData datum = rawData.get(d).get(r);
                 timestamp = datum.timestamp;
+                if(!printedTime){
+                    LOGGER.info("time {}: ", new DateTime(timestamp, DateTimeZone.forOffsetMillis(rawData.get(0).get(r).offsetMillis)));
+                    printedTime = true;
+                }
                 final Map<AmplitudeData, EventScores> pdf = sleepScorePDFs.get(d);
                 final SleepDataScoringFunction<AmplitudeData> scoringFunction = this.scoringFunctions.get(d);
                 sleepScore *= scoringFunction.getScore(datum, pdf).sleepEventScore;
                 wakeUpScore *= scoringFunction.getScore(datum, pdf).wakeUpEventScore;
                 goToBedScore *= scoringFunction.getScore(datum, pdf).goToBedEventScore;
-                //LOGGER.info("ds: {}, dw: {}", scoringFunction.getScore(datum, pdf).sleepEventScore, scoringFunction.getScore(datum, pdf).wakeUpEventScore);
+                LOGGER.info("    {}, sleep: {}, wakeup: {}, in_bed: {}",
+                        d,
+                        scoringFunction.getScore(datum, pdf).sleepEventScore,
+                        scoringFunction.getScore(datum, pdf).wakeUpEventScore,
+                        scoringFunction.getScore(datum, pdf).goToBedEventScore);
             }
             fallAsleepScores.add(new InternalScore(timestamp, sleepScore));
             wakeUpScores.add(new InternalScore(timestamp, wakeUpScore));
             goToBedScores.add(new InternalScore(timestamp, goToBedScore));
-            LOGGER.info("time {}, goto_bed_prob {}, sleep_prob {}, wake up prob {}, amp {}",
-                    new DateTime(timestamp, DateTimeZone.forOffsetMillis(rawData.get(0).get(r).offsetMillis)),
+            LOGGER.info("goto_bed_prob {}, sleep_prob {}, wake up prob {}, amp {}\n",
                     goToBedScore,
                     sleepScore,
                     wakeUpScore,
@@ -119,10 +129,6 @@ public class MotionScoreAlgorithm {
         final AmplitudeData wakeUpData = this.dimensions.get(wakeUpScore.get().timestamp).get(0);
         AmplitudeData goToBedData = this.dimensions.get(goToBedScore.get().timestamp).get(0);
 
-        if(goToBedData.timestamp > fallAsleepData.timestamp){
-            LOGGER.warn("Go to bed later the fall asleep");
-            goToBedData = fallAsleepData;
-        }
 
         LOGGER.info("Prob go to bed time: {}, score {}, amp {}", new DateTime(goToBedData.timestamp,
                         DateTimeZone.forOffsetMillis(goToBedData.offsetMillis)),
@@ -139,8 +145,10 @@ public class MotionScoreAlgorithm {
 
         final ArrayList<Segment> sleepEvents = new ArrayList<>();
         sleepEvents.add(new Segment(goToBedScore.get().timestamp, goToBedScore.get().timestamp, goToBedData.offsetMillis));
-        if(fallAsleepScore.get().timestamp < goToBedScore.get().timestamp){
+        if(fallAsleepScore.get().timestamp < goToBedScore.get().timestamp ||
+                fallAsleepScore.get().timestamp - goToBedScore.get().timestamp > 2 * DateTimeConstants.MILLIS_PER_HOUR){
             sleepEvents.add(new Segment(goToBedScore.get().timestamp, goToBedScore.get().timestamp, goToBedData.offsetMillis));
+            LOGGER.warn("Go to bed later the fall asleep");
         }else {
             sleepEvents.add(new Segment(fallAsleepScore.get().timestamp, fallAsleepScore.get().timestamp, fallAsleepData.offsetMillis));
         }
@@ -150,9 +158,9 @@ public class MotionScoreAlgorithm {
         return sleepEvents;
     }
 
-    public static Map<Long, List<AmplitudeData>> getMatrix(final List<AmplitudeData> smoothedMotion){
+    public static Map<Long, List<AmplitudeData>> createFeatureMatrix(final List<AmplitudeData> firstFeatureDimension){
         final Map<Long, List<AmplitudeData>> matrix = new LinkedHashMap<>();
-        for(final AmplitudeData motion:smoothedMotion){
+        for(final AmplitudeData motion:firstFeatureDimension){
             if(!matrix.containsKey(motion.timestamp)){
                 matrix.put(motion.timestamp, new ArrayList<AmplitudeData>());
             }
@@ -160,5 +168,23 @@ public class MotionScoreAlgorithm {
         }
 
         return matrix;
+    }
+
+    public static int addToFeatureMatrix(final Map<Long, List<AmplitudeData>> featureMatrix, final List<AmplitudeData> additionalFeature){
+
+        int dimension = 0;
+        for(final AmplitudeData feature:additionalFeature){
+            if(!featureMatrix.containsKey(feature.timestamp)){
+                LOGGER.error("feature not aligned on {}", feature.timestamp);
+                throw new AlgorithmException("feature not aligned on " + new DateTime(feature.timestamp, DateTimeZone.forOffsetMillis(feature.offsetMillis)));
+            }
+            featureMatrix.get(feature.timestamp).add(feature);
+
+            if(dimension == 0) {
+                dimension = featureMatrix.get(feature.timestamp).size();
+            }
+        }
+
+        return dimension;
     }
 }
