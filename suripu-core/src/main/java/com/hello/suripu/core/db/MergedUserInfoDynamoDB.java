@@ -137,12 +137,22 @@ public class MergedUserInfoDynamoDB {
         return items;
     }
 
-    private Map<String, AttributeValueUpdate> generateAlarmUpdateItem(final List<Alarm> alarmList){
+    private Map<String, AttributeValueUpdate> generateAlarmUpdateItem(final List<Alarm> alarmList, final DateTimeZone userTimeZone){
         final ObjectMapper mapper = new ObjectMapper();
         final Map<String, AttributeValueUpdate> items = new HashMap<>();
         final String alarmListJSON;
         try {
             alarmListJSON = mapper.writeValueAsString(alarmList);
+            final RingTime updateRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList,
+                    DateTime.now().withSecondOfMinute(0).withMillisOfSecond(0).getMillis(),
+                    userTimeZone);
+            items.put(MergedUserInfoDynamoDB.ACTUAL_RING_TIME_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                .withAction(AttributeAction.PUT)
+                .withValue(new AttributeValue().withN(String.valueOf(updateRingTime.actualRingTimeUTC))));
+            items.put(MergedUserInfoDynamoDB.EXPECTED_RING_TIME_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                    .withAction(AttributeAction.PUT)
+                    .withValue(new AttributeValue().withN(String.valueOf(updateRingTime.expectedRingTimeUTC))));
+
         } catch (JsonProcessingException e) {
             LOGGER.error("Deserialize alarmList error: {}", e.getMessage());
             return Collections.EMPTY_MAP;
@@ -248,8 +258,9 @@ public class MergedUserInfoDynamoDB {
         return true;
     }
 
-    public boolean setAlarms(final String deviceId, final long accountId, final List<Alarm> alarms){
-        final Map<String, AttributeValueUpdate> items = generateAlarmUpdateItem(alarms);
+    public boolean setAlarms(final String deviceId, final long accountId, final List<Alarm> alarms, final DateTimeZone userTimeZone){
+        final Map<String, AttributeValueUpdate> items = generateAlarmUpdateItem(alarms, userTimeZone);
+
         if(items.isEmpty()){
             return false;
         }
