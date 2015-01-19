@@ -77,7 +77,7 @@ public class MergedUserInfoDynamoDBIT {
 
     @Test
     public void testCreateAndRetrieve(){
-        this.mergedUserInfoDynamoDB.setAlarms(this.deviceId, this.accountId, Collections.EMPTY_LIST);
+        this.mergedUserInfoDynamoDB.setAlarms(this.deviceId, this.accountId, Collections.EMPTY_LIST, DateTimeZone.UTC);
         final Optional<UserInfo> retrieved = this.mergedUserInfoDynamoDB.getInfo(this.deviceId, this.accountId);
         assertThat(retrieved.isPresent(), is(true));
         assertThat(retrieved.get().timeZone.isPresent(), is(false));
@@ -118,8 +118,8 @@ public class MergedUserInfoDynamoDBIT {
     @Test
     public void testUnlinkAccountAndDeviceId(){
         final String deviceId = "Pang's Morpheus";
-        this.mergedUserInfoDynamoDB.setAlarms(deviceId, 0L, Collections.EMPTY_LIST);
-        this.mergedUserInfoDynamoDB.setAlarms(deviceId, 1L, Collections.EMPTY_LIST);
+        this.mergedUserInfoDynamoDB.setAlarms(deviceId, 0L, Collections.EMPTY_LIST, DateTimeZone.UTC);
+        this.mergedUserInfoDynamoDB.setAlarms(deviceId, 1L, Collections.EMPTY_LIST, DateTimeZone.UTC);
         final Optional<UserInfo> deleted = this.mergedUserInfoDynamoDB.unlinkAccountToDevice(0L, deviceId);
         assertThat(deleted.isPresent(), is(true));
         assertThat(deleted.get().deviceId, is(deviceId));
