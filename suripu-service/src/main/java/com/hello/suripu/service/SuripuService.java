@@ -2,7 +2,7 @@ package com.hello.suripu.service;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.common.base.Joiner;
@@ -11,6 +11,7 @@ import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
+import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
@@ -122,8 +123,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
         // Checks Environment first and then instance profile.
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
 
-        final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
-        dynamoDBClient.setEndpoint(configuration.getDynamoDBConfiguration().getEndpoint());
+        final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
+        final AmazonDynamoDB dynamoDBClient = amazonDynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().getEndpoint());
         final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);
         final String bucketName = configuration.getAudioBucketName();
 
