@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 /**
@@ -129,12 +128,11 @@ public class InsightProcessor {
         }
 
         // for now, we only have these two categories
-        if (!recentCategories.contains(InsightCard.Category.LIGHT) && !recentCategories.contains(InsightCard.Category.TEMPERATURE)) {
-            final Random rand = new Random();
-            final int index = rand.nextInt(2) + 1; // todo: use real size. fix to 2 since only 2 categories are implemented
-            this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.fromInteger(index * 2));
+        if (!recentCategories.contains(InsightCard.Category.LIGHT)) {
+            this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.LIGHT);
+        } else if (!recentCategories.contains(InsightCard.Category.TEMPERATURE)) {
+            this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.TEMPERATURE);
         }
-
     }
 
     public void generateInsightsByCategory(final Long accountId, final Long deviceId, final InsightCard.Category category) {
