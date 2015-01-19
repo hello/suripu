@@ -8,9 +8,9 @@ import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.models.Alarm;
-import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.AlarmSound;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -78,7 +78,7 @@ public class AlarmResource {
                 LOGGER.warn("Merge alarm info table doesn't have record for device {}, account {}.", deviceAccountMap.get(0).externalDeviceId, token.accountId);
 
                 // At account creation, the merged table doesn't have any alarm info, so let's create an empty one
-                mergedUserInfoDynamoDB.setAlarms(deviceAccountMap.get(0).externalDeviceId, token.accountId, Collections.EMPTY_LIST);
+                mergedUserInfoDynamoDB.setAlarms(deviceAccountMap.get(0).externalDeviceId, token.accountId, Collections.EMPTY_LIST, DateTimeZone.UTC);
                 LOGGER.warn("Saved empty alarm info for device {} and account {}.", deviceAccountMap.get(0).externalDeviceId, token.accountId);
 //                throw new WebApplicationException(Response.Status.BAD_REQUEST);
                 return Collections.emptyList();
@@ -150,7 +150,7 @@ public class AlarmResource {
             final Alarm.Utils.AlarmStatus status = Alarm.Utils.isValidAlarms(alarms, DateTime.now(), timeZone);
 
             if(status.equals(Alarm.Utils.AlarmStatus.OK)) {
-                this.mergedUserInfoDynamoDB.setAlarms(deviceAccountPair.externalDeviceId, token.accountId, alarms);
+                this.mergedUserInfoDynamoDB.setAlarms(deviceAccountPair.externalDeviceId, token.accountId, alarms, alarmInfoOptional.get().timeZone.get());
                 this.alarmDAODynamoDB.setAlarms(token.accountId, alarms);
             }
 
