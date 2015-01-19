@@ -319,7 +319,7 @@ public class Alarm {
 
                     for (final Integer dayOfWeek : alarm.dayOfWeek) {
                         if (alarmDays.contains(dayOfWeek)) {
-                            return AlarmStatus.DUPLICATE_DAYS;
+                            return AlarmStatus.SMART_ALARM_ALREADY_SET;
                         }
 
                         alarmDays.add(dayOfWeek);
