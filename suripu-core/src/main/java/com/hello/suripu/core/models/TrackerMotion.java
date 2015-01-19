@@ -1,7 +1,6 @@
 package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.io.LittleEndianDataInputStream;
@@ -43,12 +42,13 @@ public class TrackerMotion {
     @JsonProperty("timezone_offset")
     public final int offsetMillis;
 
-
-    @JsonIgnore
+    @JsonProperty("motion_range")
     public final Long motionRange;
 
+    @JsonProperty("kickoff_counts")
     public final Long kickOffCounts;
 
+    @JsonProperty("on_duration_seconds")
     public final Long onDurationInSeconds;
 
     @JsonCreator
