@@ -17,13 +17,17 @@ public class GroupedTrackerMotionMapper implements ResultSetMapper<TrackerMotion
     @Override
     public TrackerMotion map(int i, ResultSet resultSet, StatementContext statementContext) throws SQLException {
 
-        return new TrackerMotion(
-                resultSet.getLong("id"),
-                resultSet.getLong("account_id"),
-                resultSet.getLong("tracker_id"),
-                new DateTime(resultSet.getTimestamp("ts_bucket"), DateTimeZone.UTC).getMillis(),
-                resultSet.getInt("svm_no_gravity"),
-                resultSet.getInt("offset_millis")
-        );
+
+        final TrackerMotion.Builder builder = new TrackerMotion.Builder();
+        builder.withId(resultSet.getLong("id"));
+        builder.withAccountId(resultSet.getLong("account_id"));
+        builder.withTrackerId(resultSet.getLong("tracker_id"));
+        builder.withTimestampMillis(new DateTime(resultSet.getTimestamp("ts_bucket"), DateTimeZone.UTC).getMillis());
+        builder.withValue(resultSet.getInt("svm_no_gravity"));
+        builder.withOffsetMillis(resultSet.getInt("offset_millis"));
+        builder.withMotionRange(resultSet.getLong("motion_range"));
+        builder.withKickOffCounts(resultSet.getLong("kickoff_counts"));
+        builder.withOnDurationInSeconds(resultSet.getLong("on_duration_seconds"));
+        return builder.build();
     }
 }

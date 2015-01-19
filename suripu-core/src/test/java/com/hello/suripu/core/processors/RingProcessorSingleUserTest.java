@@ -93,7 +93,7 @@ public class RingProcessorSingleUserTest {
                 long timestamp = Long.valueOf(columns[0]);
                 long value = Long.valueOf(columns[1]);
                 int offsetMillis = DateTimeZone.forID("America/Los_Angeles").getOffset(timestamp);
-                motions.add(new TrackerMotion(1L, 1L, 1L, timestamp, (int)value, offsetMillis));
+                motions.add(new TrackerMotion(1L, 1L, 1L, timestamp, (int)value, offsetMillis, 0L, 0L, 0L));
             }
         }catch (IOException ioe){
             LOGGER.error("Failed parsing CSV: {}", ioe.getMessage());

@@ -69,7 +69,7 @@ public class RingProcessorMultiUserTest {
                 long timestamp = Long.valueOf(columns[0]);
                 long value = Long.valueOf(columns[1]);
                 int offsetMillis = DateTimeZone.forID("America/Los_Angeles").getOffset(timestamp);
-                motions.add(new TrackerMotion(1L, 1L, 1L, timestamp, (int)value, offsetMillis));
+                motions.add(new TrackerMotion(1L, 1L, 1L, timestamp, (int)value, offsetMillis, 0L, 0L, 0L));
             }
         }catch (IOException ioe){
             LOGGER.error("Failed parsing CSV");
@@ -145,8 +145,8 @@ public class RingProcessorMultiUserTest {
                 long timestamp = Long.valueOf(columns[0]);
                 long value = Long.valueOf(columns[1]);
                 int offsetMillis = DateTimeZone.forID("America/Los_Angeles").getOffset(timestamp);
-                motions2.add(new TrackerMotion(1L, 2L, 2L, timestamp, (int)value, offsetMillis));
-                motions1.add(new TrackerMotion(1L, 1L, 1L, timestamp, (int)value, offsetMillis));
+                motions2.add(new TrackerMotion(1L, 2L, 2L, timestamp, (int)value, offsetMillis,0L, 0L, 0L));
+                motions1.add(new TrackerMotion(1L, 1L, 1L, timestamp, (int)value, offsetMillis,0L, 0L, 0L));
             }
         }catch (IOException ioe){
             LOGGER.error("Failed parsing CSV");
@@ -364,8 +364,8 @@ public class RingProcessorMultiUserTest {
                 long timestamp = Long.valueOf(columns[0]);
                 long value = Long.valueOf(columns[1]);
                 int offsetMillis = DateTimeZone.forID("America/Los_Angeles").getOffset(timestamp);
-                motions2.add(new TrackerMotion(1L, 2L, 2L, timestamp, (int)value, offsetMillis));
-                motions1.add(new TrackerMotion(1L, 1L, 1L, timestamp, (int)value, offsetMillis));
+                motions2.add(new TrackerMotion(1L, 2L, 2L, timestamp, (int)value, offsetMillis,0L, 0L, 0L));
+                motions1.add(new TrackerMotion(1L, 1L, 1L, timestamp, (int)value, offsetMillis,0L, 0L, 0L));
             }
         }catch (IOException ioe){
             LOGGER.error("Failed parsing CSV");

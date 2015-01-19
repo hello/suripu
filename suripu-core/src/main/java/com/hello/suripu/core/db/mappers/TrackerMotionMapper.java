@@ -1,6 +1,8 @@
 package com.hello.suripu.core.db.mappers;
 
 import com.hello.suripu.core.models.TrackerMotion;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
@@ -15,13 +17,17 @@ public class TrackerMotionMapper implements ResultSetMapper<TrackerMotion> {
     @Override
     public TrackerMotion map(int i, ResultSet resultSet, StatementContext statementContext) throws SQLException {
 
-        return new TrackerMotion(
-                resultSet.getLong("id"),
-                resultSet.getLong("account_id"),
-                resultSet.getLong("tracker_id"),
-                resultSet.getTimestamp("ts").getTime(),
-                resultSet.getInt("svm_no_gravity"),
-                resultSet.getInt("offset_millis")
-        );
+        final TrackerMotion.Builder builder = new TrackerMotion.Builder();
+        builder.withId(resultSet.getLong("id"));
+        builder.withAccountId(resultSet.getLong("account_id"));
+        builder.withTrackerId(resultSet.getLong("tracker_id"));
+        builder.withTimestampMillis(new DateTime(resultSet.getTimestamp("ts"), DateTimeZone.UTC).getMillis());
+        builder.withOffsetMillis(resultSet.getInt("offset_millis"));
+        builder.withValue(resultSet.getInt("svm_no_gravity"));
+        builder.withMotionRange(resultSet.getLong("motion_range"));
+        builder.withKickOffCounts(resultSet.getLong("kickoff_counts"));
+        builder.withOnDurationInSeconds(resultSet.getLong("on_duration_seconds"));
+
+        return builder.build();
     }
 }
