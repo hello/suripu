@@ -12,10 +12,8 @@ import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 public class AccountPreferencesDynamoDB implements AccountPreferencesDAO {
@@ -46,7 +44,7 @@ public class AccountPreferencesDynamoDB implements AccountPreferencesDAO {
     }
 
     @Override
-    public List<AccountPreference> get(final Long accountId) {
+    public Map<AccountPreference.EnabledPreference, Boolean> get(final Long accountId) {
         final GetItemRequest getItemRequest = new GetItemRequest();
         getItemRequest.addKeyEntry(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(accountId.toString()));
         getItemRequest.setTableName(tableName);
@@ -55,18 +53,22 @@ public class AccountPreferencesDynamoDB implements AccountPreferencesDAO {
         return itemToPreferences(result.getItem());
     }
 
-    private List<AccountPreference> itemToPreferences(final Map<String, AttributeValue> item) {
-        if(item == null || item.isEmpty()) {
-            return Collections.EMPTY_LIST;
+    private Map<AccountPreference.EnabledPreference, Boolean> itemToPreferences(final Map<String, AttributeValue> item) {
+        final Map<AccountPreference.EnabledPreference, Boolean> temp = Maps.newHashMap();
+        for(final AccountPreference.EnabledPreference pref : AccountPreference.EnabledPreference.values()) {
+            temp.put(pref, Boolean.FALSE); // OPT IN
         }
 
-        final List<AccountPreference> preferences = Lists.newArrayList();
+        if(item == null || item.isEmpty()) {
+            return temp;
+        }
+
         for(final AccountPreference.EnabledPreference pref : AccountPreference.EnabledPreference.values()) {
             if(item.containsKey(pref.toString())) {
-                preferences.add(new AccountPreference(pref, item.get(pref.toString()).getBOOL()));
+                temp.put(pref, item.get(pref.toString()).getBOOL());
             }
         }
-        return preferences;
+        return temp;
     }
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDB dynamoDBClient) {

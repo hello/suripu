@@ -148,7 +148,8 @@ public class TrackerMotionDAOIT {
                     this.trackerID,
                     startTimestamp + (i * this.MINUTE_MILLIS),
                     r.nextInt(100) * 100,
-                    this.OFFSET_MILLIS);
+                    this.OFFSET_MILLIS,
+                    0L,0L,0L);
             trackerData.add(data);
         }
         return trackerData;

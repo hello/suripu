@@ -93,9 +93,10 @@ public class AlarmResource {
 
             final DateTimeZone userTimeZone = userInfo.timeZone.get();
             final List<Alarm> smartAlarms = Alarm.Utils.disableExpiredNoneRepeatedAlarms(userInfo.alarmList, DateTime.now().getMillis(), userTimeZone);
-            if(!Alarm.Utils.isValidAlarms(smartAlarms, DateTime.now(), userTimeZone)){
+            final Alarm.Utils.AlarmStatus status = Alarm.Utils.isValidAlarms(smartAlarms, DateTime.now(), userTimeZone);
+            if(!status.equals(Alarm.Utils.AlarmStatus.OK)){
                 LOGGER.error("Invalid alarm for user {} device {}", token.accountId, userInfo.deviceId);
-                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+                throw new WebApplicationException(Response.Status.CONFLICT);
             }
 
             return smartAlarms;
@@ -146,13 +147,20 @@ public class AlarmResource {
             }
 
             final DateTimeZone timeZone = alarmInfoOptional.get().timeZone.get();
-            if(!Alarm.Utils.isValidAlarms(alarms, DateTime.now(), timeZone)){
-                LOGGER.error("Invalid alarm for account {}, device {}, alarm set skipped", deviceAccountPair.accountId, deviceAccountPair.externalDeviceId);
-                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+            final Alarm.Utils.AlarmStatus status = Alarm.Utils.isValidAlarms(alarms, DateTime.now(), timeZone);
+
+            if(status.equals(Alarm.Utils.AlarmStatus.OK)) {
+                this.mergedUserInfoDynamoDB.setAlarms(deviceAccountPair.externalDeviceId, token.accountId, alarms);
+                this.alarmDAODynamoDB.setAlarms(token.accountId, alarms);
             }
 
-            this.mergedUserInfoDynamoDB.setAlarms(deviceAccountPair.externalDeviceId, token.accountId, alarms);
-            this.alarmDAODynamoDB.setAlarms(token.accountId, alarms);
+            if(status.equals(Alarm.Utils.AlarmStatus.SMART_ALARM_ALREADY_SET)){
+                LOGGER.error("Invalid alarm for account {}, device {}, alarm set skipped", deviceAccountPair.accountId, deviceAccountPair.externalDeviceId);
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(
+                        new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), "Currently, you can only set one Smart Alarm per day. You already have a Smart Alarm scheduled for this day.")).build());
+            }
+
+
         }catch (AmazonServiceException awsException){
             LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
