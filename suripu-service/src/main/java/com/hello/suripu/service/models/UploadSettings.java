@@ -12,9 +12,9 @@ public class UploadSettings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UploadSettings.class);
 
-    private static final Long ALLOWABLE_TIME_BETWEEN_NOW_AND_NEXT_ALARM = 20*60*1000L;  // milliseconds
+    private static final Long ALLOWABLE_TIME_BETWEEN_NOW_AND_NEXT_ALARM = 40*60*1000L;  // milliseconds
     private static final Long SUSTAINED_TIME_BETWEEN_NOW_AND_NEXT_ALARM = 60*60*1000L;  // milliseconds
-    private static final Integer FASTEST_UPLOAD_INTERVAL = 2; // minute(s)
+    private static final Integer FASTEST_UPLOAD_INTERVAL = 1; // This must be 1 minutes or Sense will miss alarm.
 
     public static Integer getUploadInterval(final DateTime userLocalDateTime, final SenseUploadConfiguration senseUploadConfiguration, final Long userNextAlarmTimestampMillis) {
         final Integer adjustedUploadIntervalInMinutes = adjustUploadIntervalInMinutes(
