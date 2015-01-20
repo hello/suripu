@@ -127,7 +127,9 @@ public class SleepCycleAlgorithm {
             long nextLightSleepMoment = lastCycle.getEndTimestamp() + cycleNumberInTheMiddle * sleepCycleLength;
             LOGGER.info("User already in deep sleep. Next light sleep moment: " + new DateTime(nextLightSleepMoment));
 
-            if(nextLightSleepMoment > dataCollectionMoment && nextLightSleepMoment < alarmDeadlineUTC){
+            // the smart alarm should happens at least 10 minutes later, so sense will have enough time to retrieve it
+            if(nextLightSleepMoment > dataCollectionMoment + 10 * DateTimeConstants.MILLIS_PER_MINUTE &&
+                    nextLightSleepMoment < alarmDeadlineUTC){
                 smartAlarmTime = new DateTime(nextLightSleepMoment, DateTimeZone.UTC);
             }else {
                 smartAlarmTime = smartAlarmTime.minusMinutes(5).plusMinutes(random.nextInt(5) + 1);

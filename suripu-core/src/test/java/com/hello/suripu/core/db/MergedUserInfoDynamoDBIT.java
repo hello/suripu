@@ -3,10 +3,9 @@ package com.hello.suripu.core.db;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
-import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
-import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
+import com.amazonaws.services.dynamodbv2.model.*;
 import com.google.common.base.Optional;
+import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.UserInfo;
 import org.joda.time.DateTime;
@@ -19,8 +18,11 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -77,7 +79,7 @@ public class MergedUserInfoDynamoDBIT {
 
     @Test
     public void testCreateAndRetrieve(){
-        this.mergedUserInfoDynamoDB.setAlarms(this.deviceId, this.accountId, Collections.EMPTY_LIST);
+        this.mergedUserInfoDynamoDB.setAlarms(this.deviceId, this.accountId, Collections.EMPTY_LIST, DateTimeZone.UTC);
         final Optional<UserInfo> retrieved = this.mergedUserInfoDynamoDB.getInfo(this.deviceId, this.accountId);
         assertThat(retrieved.isPresent(), is(true));
         assertThat(retrieved.get().timeZone.isPresent(), is(false));
@@ -118,8 +120,8 @@ public class MergedUserInfoDynamoDBIT {
     @Test
     public void testUnlinkAccountAndDeviceId(){
         final String deviceId = "Pang's Morpheus";
-        this.mergedUserInfoDynamoDB.setAlarms(deviceId, 0L, Collections.EMPTY_LIST);
-        this.mergedUserInfoDynamoDB.setAlarms(deviceId, 1L, Collections.EMPTY_LIST);
+        this.mergedUserInfoDynamoDB.setAlarms(deviceId, 0L, Collections.EMPTY_LIST, DateTimeZone.UTC);
+        this.mergedUserInfoDynamoDB.setAlarms(deviceId, 1L, Collections.EMPTY_LIST, DateTimeZone.UTC);
         final Optional<UserInfo> deleted = this.mergedUserInfoDynamoDB.unlinkAccountToDevice(0L, deviceId);
         assertThat(deleted.isPresent(), is(true));
         assertThat(deleted.get().deviceId, is(deviceId));
@@ -156,6 +158,29 @@ public class MergedUserInfoDynamoDBIT {
         assertThat(userInfoNoPillColor.isPresent(), is(true));
         assertThat(userInfoNoPillColor.get().pillColor.isPresent(), is(false));
         assertThat(userInfoNoPillColor.get().timeZone.get(), is(DateTimeZone.getDefault()));
+    }
+
+
+    @Test
+    public void testUpdateConflict(){
+        final Map<String, AttributeValueUpdate> items = new HashMap<>();
+        items.put(MergedUserInfoDynamoDB.UPDATED_AT_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                .withAction(AttributeAction.PUT)
+                .withValue(new AttributeValue().withN(String.valueOf(DateTime.now().plusHours(1).getMillis()))));
+
+        final HashMap<String, AttributeValue> keys = new HashMap<>();
+        keys.put(MergedUserInfoDynamoDB.MORPHEUS_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
+        keys.put(MergedUserInfoDynamoDB.ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
+
+
+        final UpdateItemRequest updateItemRequest = new UpdateItemRequest()
+                .withTableName(this.tableName)
+                .withKey(keys)
+                .withAttributeUpdates(items)
+                .withReturnValues(ReturnValue.ALL_NEW);
+        this.amazonDynamoDBClient.updateItem(updateItemRequest);
+        final boolean updated = this.mergedUserInfoDynamoDB.setAlarms(deviceId, accountId, DateTime.now().getMillis(), new ArrayList<Alarm>(), DateTimeZone.UTC);
+        assertThat(updated, is(false));
     }
 
 }

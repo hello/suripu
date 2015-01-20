@@ -55,7 +55,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                     LOGGER.error("Missing decryption key for pill: {}", data.getPillId());
                     continue;
                 }
-                TrackerMotion trackerMotion = null; new TrackerMotion.Builder().withPillKinesisData(decryptionKey.get(), data).build();
+                TrackerMotion trackerMotion = null;
                 if(data.hasEncryptedData()){
                     switch (data.getFirmwareVersion()){
                         case 0:

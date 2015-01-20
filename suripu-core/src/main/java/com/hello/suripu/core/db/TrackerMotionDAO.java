@@ -70,20 +70,24 @@ public abstract class TrackerMotionDAO {
                                                    @Bind("slot_duration") Integer slotDuration);
 
     @SingleValueResult(Integer.class)
-    @SqlUpdate("INSERT INTO tracker_motion_master (account_id, tracker_id, svm_no_gravity, ts, offset_millis, local_utc_ts) " +
-            "VALUES(:account_id, :tracker_id, :svm_no_gravity, :ts, :offset_millis, :local_utc_ts);")
+    @SqlUpdate("INSERT INTO tracker_motion_master (account_id, tracker_id, svm_no_gravity, ts, offset_millis, local_utc_ts, motion_range, kickoff_counts, on_duration_seconds) " +
+            "VALUES(:account_id, :tracker_id, :svm_no_gravity, :ts, :offset_millis, :local_utc_ts, :motion_range, :kickoff_counts, :on_duration_seconds);")
     public abstract Integer insertTrackerMotion(@BindTrackerMotion TrackerMotion trackerMotion);
 
 
     @SqlBatch("INSERT INTO tracker_motion_master (account_id, tracker_id, svm_no_gravity, ts, offset_millis, local_utc_ts) " +
-            "VALUES(:account_ids, :tracker_ids, :svm_no_gravity, :ts, :offset_millis, :local_utc_ts);")
+            "VALUES(:account_ids, :tracker_ids, :svm_no_gravity, :ts, :offset_millis, :local_utc_ts, :motion_range, :kickoff_counts, :on_duration_seconds);")
     public abstract void batchInsert(
             @Bind("account_ids") List<Long> accountIDs,
             @Bind("tracker_ids") List<Long> trackerIDs,
             @Bind("svm_no_gravity") List<Integer> pillValues,
             @Bind("ts") List<DateTime> timestamps,
             @Bind("offset_millis") List<Integer> offsets,
-            @Bind("local_utc_ts") List<DateTime> local_utc
+            @Bind("local_utc_ts") List<DateTime> local_utc,
+            @Bind("motion_range") List<Long> motionRanges,
+            @Bind("kickoff_counts") List<Long> kickoffCountsList,
+            @Bind("on_duration_seconds") List<Long> onDurationSecondsList
+
             );
 
     @SqlUpdate("DELETE FROM tracker_motion_master WHERE tracker_id = :tracker_id")
@@ -115,6 +119,9 @@ public abstract class TrackerMotionDAO {
         final List<Integer> offsets = new ArrayList<>();
         final List<DateTime> local_utc_ts = new ArrayList<>();
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
+        final List<Long> motionRanges = new ArrayList<>();
+        final List<Long> kickoffCounts = new ArrayList<>();
+        final List<Long> onDurationSeconds = new ArrayList<>();
 
         int totalInserted = 0;
         int numIterations = 0;
@@ -130,6 +137,9 @@ public abstract class TrackerMotionDAO {
             values.add(trackerMotion.value);
             rawTimestamps.add(trackerMotion.timestamp);
             offsets.add(trackerMotion.offsetMillis);
+            motionRanges.add(trackerMotion.motionRange);
+            kickoffCounts.add(trackerMotion.kickOffCounts);
+            onDurationSeconds.add(trackerMotion.onDurationInSeconds);
 
             final DateTime ts = new DateTime(trackerMotion.timestamp, DateTimeZone.UTC);
             timestamps.add(ts);
@@ -145,7 +155,7 @@ public abstract class TrackerMotionDAO {
             numIterations++;
             int inserted = 0;
             try {
-                this.batchInsert(accountIDs, trackerIDs, values, timestamps, offsets, local_utc_ts);
+                this.batchInsert(accountIDs, trackerIDs, values, timestamps, offsets, local_utc_ts, motionRanges, kickoffCounts, onDurationSeconds);
                 inserted = accountIDs.size();
             } catch (UnableToExecuteStatementException exception) {
                 LOGGER.warn("Batch insert fails, duplicate records!");

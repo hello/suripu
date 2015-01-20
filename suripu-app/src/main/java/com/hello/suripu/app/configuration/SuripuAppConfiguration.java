@@ -231,8 +231,14 @@ public class SuripuAppConfiguration extends Configuration {
 
     @Valid
     @NotNull
-    @JsonProperty("key_store_dynamo_db")
-    private DynamoDBConfiguration dynamoDBConfiguration;
-    public DynamoDBConfiguration getKeyStoreDynamoDBConfiguration() { return dynamoDBConfiguration; }
+    @JsonProperty("sense_key_store_dynamo_db")
+    private DynamoDBConfiguration senseKeyStoreDynamoConfiguration;
+    public DynamoDBConfiguration getSenseKeyStoreDynamoDBConfiguration() { return senseKeyStoreDynamoConfiguration; }
+
+    @Valid
+    @NotNull
+    @JsonProperty("pill_key_store_dynamo_db")
+    private DynamoDBConfiguration pillKeyStoreDynamoDBConfiguration;
+    public DynamoDBConfiguration getPillKeyStoreDynamoDBConfiguration() { return pillKeyStoreDynamoDBConfiguration; }
 
 }

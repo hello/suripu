@@ -38,6 +38,11 @@ GRANT ALL PRIVILEGES ON SEQUENCE tracker_motion_master_id_seq TO ingress_user;
 
 CREATE UNIQUE INDEX uniq_account_tracker_ts on tracker_motion_master(account_id, tracker_id, ts);
 
+
+ALTER TABLE tracker_motion_master ADD COLUMN motion_range BIGINT;
+ALTER TABLE tracker_motion_master ADD COLUMN kickoff_counts INTEGER;
+ALTER TABLE tracker_motion_master ADD COLUMN on_duration_seconds INTEGER;
+
 --
 -- ALWAYS CREATE A DEFAULT TABLE
 --

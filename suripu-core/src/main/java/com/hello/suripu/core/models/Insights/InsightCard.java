@@ -4,11 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.ImmutableList;
 import org.joda.time.DateTime;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by kingshy on 10/24/14.
@@ -53,6 +49,15 @@ public class InsightCard implements Comparable<InsightCard> {
             return Category.GENERIC;
         }
 
+        public static Category fromString(final String text) {
+            if (text != null) {
+                for (final Category category : Category.values()) {
+                    if (text.equalsIgnoreCase(category.toString()))
+                        return category;
+                }
+            }
+            throw new IllegalArgumentException("Invalid Category string");
+        }
 
     }
 
@@ -82,7 +87,7 @@ public class InsightCard implements Comparable<InsightCard> {
                         return period;
                 }
             }
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Invalid TimePeriod string");
         }
 
     }
@@ -105,9 +110,6 @@ public class InsightCard implements Comparable<InsightCard> {
     @JsonProperty("timestamp")
     public final DateTime timestamp; // created timestamp in UTC
 
-    @JsonProperty("insights_info")
-    public final List<GenericInsightCards> genericInsightCards = new ArrayList<>();
-
     public InsightCard(final Long accountId, final String title, final String message,
                        final Category category, final TimePeriod timePeriod, final DateTime timestamp) {
         this.accountId = Optional.fromNullable(accountId);
@@ -116,19 +118,6 @@ public class InsightCard implements Comparable<InsightCard> {
         this.category = category;
         this.timePeriod = timePeriod;
         this.timestamp = timestamp;
-    }
-
-    public InsightCard(final Long accountId, final String title, final String message,
-                       final Category category, final TimePeriod timePeriod, final DateTime timestamp,
-                       final List<GenericInsightCards> genericInsightCards) {
-        this(accountId, title, message, category, timePeriod, timestamp);
-        this.genericInsightCards.addAll(genericInsightCards);
-    }
-
-    public static InsightCard withGenericCards(final InsightCard insightCard, final ImmutableList<GenericInsightCards> genericCards) {
-        return new InsightCard(insightCard.accountId.get(),
-                insightCard.title, insightCard.message, insightCard.category, insightCard.timePeriod,
-                insightCard.timestamp, genericCards);
     }
 
     @Override

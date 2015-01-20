@@ -6,7 +6,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
-import com.hello.suripu.core.db.TrendsDAO;
+import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.processors.insights.LightData;
@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 /**
@@ -34,7 +33,7 @@ public class InsightProcessor {
 
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
-    private final TrendsDAO trendsDAO;
+    private final TrendsInsightsDAO trendsInsightsDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
@@ -43,7 +42,7 @@ public class InsightProcessor {
 
     public InsightProcessor(final DeviceDataDAO deviceDataDAO,
                             final DeviceDAO deviceDAO,
-                            final TrendsDAO trendsDAO,
+                            final TrendsInsightsDAO trendsInsightsDAO,
                             final TrackerMotionDAO trackerMotionDAO,
                             final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
                             final InsightsDAODynamoDB insightsDAODynamoDB,
@@ -52,7 +51,7 @@ public class InsightProcessor {
                             ) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
-        this.trendsDAO = trendsDAO;
+        this.trendsInsightsDAO = trendsInsightsDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.scoreDAODynamoDB = scoreDAODynamoDB;
         this.insightsDAODynamoDB = insightsDAODynamoDB;
@@ -128,10 +127,12 @@ public class InsightProcessor {
             return;
         }
 
-        final Random rand = new Random();
-        final int index = rand.nextInt(2) + 1; // todo: use real size. fix to 2 since only 2 categories are implemented
-        this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.fromInteger(index * 2));
-
+        // for now, we only have these two categories
+        if (!recentCategories.contains(InsightCard.Category.LIGHT)) {
+            this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.LIGHT);
+        } else if (!recentCategories.contains(InsightCard.Category.TEMPERATURE)) {
+            this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.TEMPERATURE);
+        }
     }
 
     public void generateInsightsByCategory(final Long accountId, final Long deviceId, final InsightCard.Category category) {
@@ -177,7 +178,7 @@ public class InsightProcessor {
     public static class Builder {
         private DeviceDataDAO deviceDataDAO;
         private DeviceDAO deviceDAO;
-        private TrendsDAO trendsDAO;
+        private TrendsInsightsDAO trendsInsightsDAO;
         private TrackerMotionDAO trackerMotionDAO;
         private AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
         private InsightsDAODynamoDB insightsDAODynamoDB;
@@ -195,8 +196,8 @@ public class InsightProcessor {
             return this;
         }
 
-        public Builder withInsightsDAOs(final TrendsDAO trendsDAO) {
-            this.trendsDAO = trendsDAO;
+        public Builder withInsightsDAOs(final TrendsInsightsDAO trendsInsightsDAO) {
+            this.trendsInsightsDAO = trendsInsightsDAO;
             return this;
         }
 
@@ -218,7 +219,7 @@ public class InsightProcessor {
 
         public InsightProcessor build() {
             return new InsightProcessor(deviceDataDAO, deviceDAO,
-                    trendsDAO,
+                    trendsInsightsDAO,
                     trackerMotionDAO,
                     scoreDAODynamoDB, insightsDAODynamoDB,
                     accountInfoProcessor,

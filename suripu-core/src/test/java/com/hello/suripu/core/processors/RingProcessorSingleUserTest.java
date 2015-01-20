@@ -67,7 +67,7 @@ public class RingProcessorSingleUserTest {
                 true, true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
-        final RingTime ringTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarmList,
+        final RingTime ringTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList,
                 new DateTime(2014, 9, 23, 8, 0, 0, DateTimeZone.forID("America/Los_Angeles")).getMillis(),
                 DateTimeZone.forID("America/Los_Angeles")
         );
@@ -79,7 +79,8 @@ public class RingProcessorSingleUserTest {
                 alarmList,
                 Optional.of(ringTime),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles")),
-                Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent(),
+                0));
 
         when(this.mergedUserInfoDynamoDB.getInfo(testDeviceId)).thenReturn(userInfoList1);
 
@@ -93,7 +94,7 @@ public class RingProcessorSingleUserTest {
                 long timestamp = Long.valueOf(columns[0]);
                 long value = Long.valueOf(columns[1]);
                 int offsetMillis = DateTimeZone.forID("America/Los_Angeles").getOffset(timestamp);
-                motions.add(new TrackerMotion(1L, 1L, 1L, timestamp, (int)value, offsetMillis));
+                motions.add(new TrackerMotion(1L, 1L, 1L, timestamp, (int)value, offsetMillis, 0L, 0L, 0L));
             }
         }catch (IOException ioe){
             LOGGER.error("Failed parsing CSV: {}", ioe.getMessage());
@@ -130,9 +131,10 @@ public class RingProcessorSingleUserTest {
 
         final UserInfo userInfo1 = userInfoList1.get(0);
         userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId, userInfo1.alarmList,
-                Optional.of(nextRingTime), userInfo1.timeZone, userInfo1.pillColor));
+                Optional.of(nextRingTime), userInfo1.timeZone, userInfo1.pillColor,
+                0));
 
-        RingTime ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -148,11 +150,12 @@ public class RingProcessorSingleUserTest {
         assertThat(ringTime.processed(), is(false));
 
         userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId, userInfo1.alarmList,
-                Optional.of(ringTime), userInfo1.timeZone, userInfo1.pillColor));
+                Optional.of(ringTime), userInfo1.timeZone, userInfo1.pillColor,
+                0));
 
 
         // For minute that triggered smart alarm computation
-        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -188,7 +191,7 @@ public class RingProcessorSingleUserTest {
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
 
         // For minutes that not yet trigger smart alarm computation
-        RingTime ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -204,11 +207,12 @@ public class RingProcessorSingleUserTest {
 
         final UserInfo userInfo1 = userInfoList1.get(0);
         userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId, userInfo1.alarmList,
-                Optional.of(ringTime), userInfo1.timeZone, userInfo1.pillColor));
+                Optional.of(ringTime), userInfo1.timeZone, userInfo1.pillColor,
+                0));
 
         // For the minute trigger smart alarm computation
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -242,7 +246,7 @@ public class RingProcessorSingleUserTest {
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
 
         // For moments that not yet trigger smart alarm computation
-        RingTime ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -258,10 +262,11 @@ public class RingProcessorSingleUserTest {
 
         final UserInfo userInfo1 = userInfoList1.get(0);
         userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId, userInfo1.alarmList,
-                Optional.of(ringTime), userInfo1.timeZone, userInfo1.pillColor));
+                Optional.of(ringTime), userInfo1.timeZone, userInfo1.pillColor,
+                0));
 
         // For moments that triggered smart alarm computation
-        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -296,11 +301,12 @@ public class RingProcessorSingleUserTest {
                 alarmList,
                 userInfo1.ringTime,
                 userInfo1.timeZone,
-                userInfo1.pillColor));
+                userInfo1.pillColor,
+                0));
 
 
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -324,10 +330,11 @@ public class RingProcessorSingleUserTest {
                 Collections.EMPTY_LIST,
                 userInfo1.ringTime,
                 userInfo1.timeZone,
-                userInfo1.pillColor));
+                userInfo1.pillColor,
+                0));
 
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -350,11 +357,12 @@ public class RingProcessorSingleUserTest {
                 Collections.<Alarm>emptyList(),
                 Optional.of(RingTime.createEmpty()),
                 userInfo1.timeZone,
-                userInfo1.pillColor));
+                userInfo1.pillColor,
+                0));
 
 
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -385,7 +393,7 @@ public class RingProcessorSingleUserTest {
 
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -422,7 +430,7 @@ public class RingProcessorSingleUserTest {
 
 
         // Minutes before smart alarm triggered.
-        RingTime ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -440,7 +448,7 @@ public class RingProcessorSingleUserTest {
         when(this.ringTimeDAODynamoDB.getNextRingTime(testDeviceId)).thenReturn(ringTime);
 
         // Minutes after smart alarm triggered but before deadline.
-        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -481,7 +489,7 @@ public class RingProcessorSingleUserTest {
 
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -516,11 +524,12 @@ public class RingProcessorSingleUserTest {
                 alarmList,
                 userInfo1.ringTime,
                 userInfo1.timeZone,
-                userInfo1.pillColor));
+                userInfo1.pillColor,
+                0));
 
         final DateTime deadline = new DateTime(2014, 9, 22, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -552,11 +561,12 @@ public class RingProcessorSingleUserTest {
                 alarmList,
                 userInfo1.ringTime,
                 userInfo1.timeZone,
-                userInfo1.pillColor));
+                userInfo1.pillColor,
+                0));
 
         final DateTime deadline = new DateTime(2014, 9, 22, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -594,14 +604,15 @@ public class RingProcessorSingleUserTest {
                 alarmList,
                 userInfo1.ringTime,
                 userInfo1.timeZone,
-                userInfo1.pillColor));
+                userInfo1.pillColor,
+                0));
 
 
         DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
 
         // Minutes before alarm triggered
-        RingTime ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -622,10 +633,11 @@ public class RingProcessorSingleUserTest {
                 userInfo1.alarmList,
                 Optional.of(ringTime),
                 userInfo1.timeZone,
-                userInfo1.pillColor));
+                userInfo1.pillColor,
+                0));
 
         // Minute that trigger smart alarm processing
-        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -644,11 +656,12 @@ public class RingProcessorSingleUserTest {
                 userInfo1.alarmList,
                 Optional.of(ringTime),
                 userInfo1.timeZone,
-                userInfo1.pillColor));
+                userInfo1.pillColor,
+                0));
 
         // Minutes after smart alarm processing but before next smart alarm process triggered.
         deadline = new DateTime(2014, 9, 24, 9, 20, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -678,11 +691,12 @@ public class RingProcessorSingleUserTest {
 
         UserInfo userInfo1 = userInfoList1.get(0);
         userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId, userInfo1.alarmList,
-                Optional.of(nextRingTime), userInfo1.timeZone, userInfo1.pillColor));
+                Optional.of(nextRingTime), userInfo1.timeZone, userInfo1.pillColor,
+                0));
 
 
         // For moments that not yet trigger smart alarm computation
-        RingTime ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
@@ -699,10 +713,11 @@ public class RingProcessorSingleUserTest {
 
         userInfo1 = userInfoList1.get(0);
         userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId, userInfo1.alarmList,
-                Optional.of(ringTime), userInfo1.timeZone, userInfo1.pillColor));
+                Optional.of(ringTime), userInfo1.timeZone, userInfo1.pillColor,
+                0));
 
         // For moments that triggered smart alarm computation
-        ringTime = RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,

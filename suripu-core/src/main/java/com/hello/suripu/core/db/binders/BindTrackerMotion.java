@@ -30,6 +30,9 @@ public @interface BindTrackerMotion {
                     q.bind("ts", new DateTime(arg.timestamp, DateTimeZone.UTC));
                     q.bind("offset_millis", arg.offsetMillis);
                     q.bind("local_utc_ts", new DateTime(arg.timestamp, DateTimeZone.UTC).plusMillis(arg.offsetMillis));
+                    q.bind("motion_range", arg.motionRange);
+                    q.bind("kickoff_counts", arg.kickOffCounts);
+                    q.bind("on_duration_seconds", arg.onDurationInSeconds);
                 }
             };
         }

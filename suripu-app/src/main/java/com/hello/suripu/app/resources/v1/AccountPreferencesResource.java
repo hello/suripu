@@ -13,7 +13,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.List;
+import java.util.Map;
 
 @Path("/v1/preferences")
 public class AccountPreferencesResource {
@@ -26,7 +26,7 @@ public class AccountPreferencesResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<AccountPreference> get(@Scope(OAuthScope.PREFERENCES) final AccessToken accessToken) {
+    public Map<AccountPreference.EnabledPreference, Boolean> get(@Scope(OAuthScope.PREFERENCES) final AccessToken accessToken) {
         return preferencesDAO.get(accessToken.accountId);
     }
 

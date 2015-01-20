@@ -53,10 +53,10 @@ public class TimelineUtilsTest {
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
         final DateTime now = DateTime.now();
 
-        trackerMotions.add(new TrackerMotion(6L,99L,123L, now.getMillis(), 100, 0));
-        trackerMotions.add(new TrackerMotion(7L,99L,123L, now.plusMinutes(1).getMillis(), 50, 0));
-        trackerMotions.add(new TrackerMotion(8L,99L,123L, now.plusMinutes(2).getMillis(), 0, 0));
-        trackerMotions.add(new TrackerMotion(9L,99L,123L, now.plusMinutes(2).getMillis(), 100, 0));
+        trackerMotions.add(new TrackerMotion(6L,99L,123L, now.getMillis(), 100, 0,0L, 0L, 0L));
+        trackerMotions.add(new TrackerMotion(7L,99L,123L, now.plusMinutes(1).getMillis(), 50, 0,0L, 0L, 0L));
+        trackerMotions.add(new TrackerMotion(8L,99L,123L, now.plusMinutes(2).getMillis(), 0, 0,0L, 0L, 0L));
+        trackerMotions.add(new TrackerMotion(9L,99L,123L, now.plusMinutes(2).getMillis(), 100, 0,0L, 0L, 0L));
 
         final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);
         final List<Event> segments = new LinkedList<>();
@@ -77,10 +77,10 @@ public class TimelineUtilsTest {
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
         final DateTime now = DateTime.now();
 
-        trackerMotions.add(new TrackerMotion(6L,99L,123L, now.getMillis(), 100, 0));
-        trackerMotions.add(new TrackerMotion(7L,99L,123L, now.plusMinutes(1).getMillis(), 100, 0));
-        trackerMotions.add(new TrackerMotion(8L,99L,123L, now.plusMinutes(2).getMillis(), 0, 0));
-        trackerMotions.add(new TrackerMotion(9L,99L,123L, now.plusMinutes(2).getMillis(), 100, 0));
+        trackerMotions.add(new TrackerMotion(6L,99L,123L, now.getMillis(), 100, 0,0L, 0L, 0L));
+        trackerMotions.add(new TrackerMotion(7L,99L,123L, now.plusMinutes(1).getMillis(), 100, 0,0L, 0L, 0L));
+        trackerMotions.add(new TrackerMotion(8L,99L,123L, now.plusMinutes(2).getMillis(), 0, 0,0L, 0L, 0L));
+        trackerMotions.add(new TrackerMotion(9L,99L,123L, now.plusMinutes(2).getMillis(), 100, 0,0L, 0L, 0L));
 
         final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);
         final List<Event> segments = new LinkedList<>();
@@ -150,10 +150,7 @@ public class TimelineUtilsTest {
             final String[] lines = csvString.split("\\n");
             for(int i = 1; i < lines.length; i++){
                 final String[] columns = lines[i].split(",");
-                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]));
-                //if(trackerMotion.value > 0){
-                trackerMotions.add(trackerMotion);
-                //}
+                trackerMotions.add(new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L));
             }
         }catch (IOException ex){
             ex.printStackTrace();
@@ -192,7 +189,7 @@ public class TimelineUtilsTest {
             final String[] lines = csvString.split("\\n");
             for(int i = 1; i < lines.length; i++){
                 final String[] columns = lines[i].split(",");
-                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]));
+                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
                 //if(trackerMotion.value > 0){
                 trackerMotions.add(trackerMotion);
                 //}

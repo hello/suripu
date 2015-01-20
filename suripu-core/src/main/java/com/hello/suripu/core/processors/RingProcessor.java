@@ -72,15 +72,15 @@ public class RingProcessor {
     }
 
     @Timed
-    public static RingTime updateNextRingTime(final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
-                                          final RingTimeDAODynamoDB ringTimeDAODynamoDB,
-                                          final TrackerMotionDAO trackerMotionDAO,
-                                          final String morpheusId,
-                                          final DateTime currentTime,
-                                          final int smartAlarmProcessAheadInMinutes,
-                                          final int slidingWindowSizeInMinutes,
-                                          final float lightSleepThreshold,
-                                          final RolloutClient feature){
+    public static RingTime updateAndReturnNextRingTimeForSense(final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
+                                                               final RingTimeDAODynamoDB ringTimeDAODynamoDB,
+                                                               final TrackerMotionDAO trackerMotionDAO,
+                                                               final String morpheusId,
+                                                               final DateTime currentTimeNoAligned,
+                                                               final int smartAlarmProcessAheadInMinutes,
+                                                               final int slidingWindowSizeInMinutes,
+                                                               final float lightSleepThreshold,
+                                                               final RolloutClient feature){
 
         Optional<List<UserInfo>> alarmInfoListOptional = Optional.absent();
 
@@ -103,32 +103,34 @@ public class RingProcessor {
 
 
             final List<Alarm> alarms = userInfo.alarmList;
+            final DateTime currentUserLocalTime = Alarm.Utils.alignToMinuteGranularity(
+                    currentTimeNoAligned.withZone(userInfo.timeZone.get()));
 
-            RingTime nextRegularRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarms, currentTime.getMillis(), userInfo.timeZone.get());
+            RingTime nextRingTimeFromTemplate = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarms, currentUserLocalTime.getMillis(), userInfo.timeZone.get());
 
-            if(nextRegularRingTime.isEmpty()){
+            if(nextRingTimeFromTemplate.isEmpty()){
                 LOGGER.debug("Alarm worker: No alarm set for account {}", userInfo.accountId);
                 continue;
             }
-            final RingTime currentRingTime = getRingTimeFromAlarmInfo(userInfo);
+            final RingTime nextRingTimeFromWorker = getRingTimeFromAlarmInfo(userInfo);
 
             if(feature != null) {
                 if (feature.userFeatureActive(FeatureFlipper.SMART_ALARM, userInfo.accountId, Collections.<String>emptyList())) {
-                    final RingTime nextRingTime = updateNextSmartRingTime(currentTime,
+                    final RingTime nextRingTime = updateAndReturnNextSmartRingTimeForUser(currentUserLocalTime,
                             slidingWindowSizeInMinutes, lightSleepThreshold, smartAlarmProcessAheadInMinutes,
-                            currentRingTime, nextRegularRingTime,
+                            nextRingTimeFromWorker, nextRingTimeFromTemplate,
                             userInfo,
                             trackerMotionDAO, mergedUserInfoDynamoDB);
 
                     ringTimes.add(nextRingTime);
                 } else {
                     LOGGER.info("Account {} not in smart alarm group.", userInfo.accountId);
-                    ringTimes.add(nextRegularRingTime);
+                    ringTimes.add(nextRingTimeFromTemplate);
                 }
             }else{
-                final RingTime nextRingTime = updateNextSmartRingTime(currentTime,
+                final RingTime nextRingTime = updateAndReturnNextSmartRingTimeForUser(currentUserLocalTime,
                         slidingWindowSizeInMinutes, lightSleepThreshold, smartAlarmProcessAheadInMinutes,
-                        currentRingTime, nextRegularRingTime,
+                        nextRingTimeFromWorker, nextRingTimeFromTemplate,
                         userInfo,
                         trackerMotionDAO, mergedUserInfoDynamoDB);
 
@@ -140,38 +142,39 @@ public class RingProcessor {
         final RingTime mostRecentRingTime = getMostRecentRingTimeFromList(ringTimes);
 
         // Optional, just for backup
-        appendNextRingTimeToRingTimeHistory(morpheusId, mostRecentRingTime, ringTimeDAODynamoDB);
+        appendNextRingTimeToSenseRingTimeHistory(morpheusId, mostRecentRingTime, ringTimeDAODynamoDB);
         return mostRecentRingTime;
     }
 
 
-    public static RingTime updateNextSmartRingTime(final DateTime currentTime,
-                                                   final int slidingWindowSizeInMinutes,
-                                                   final float lightSleepThreshold,
-                                                   final int smartAlarmProcessAheadInMinutes,
-                                                   final RingTime currentRingTime, final RingTime nextRegularRingTime,
-                                                   final UserInfo userInfo,
-                                                   final TrackerMotionDAO trackerMotionDAO,
-                                                   final MergedUserInfoDynamoDB mergedUserInfoDynamoDB){
+    public static RingTime updateAndReturnNextSmartRingTimeForUser(final DateTime currentTime,
+                                                                   final int slidingWindowSizeInMinutes,
+                                                                   final float lightSleepThreshold,
+                                                                   final int smartAlarmProcessAheadInMinutes,
+                                                                   final RingTime nextRingTimeFromWorker,
+                                                                   final RingTime nextRingTimeFromTemplate,
+                                                                   final UserInfo userInfo,
+                                                                   final TrackerMotionDAO trackerMotionDAO,
+                                                                   final MergedUserInfoDynamoDB mergedUserInfoDynamoDB){
 
         LOGGER.info("Updating smart alarm for device {}, account {}", userInfo.deviceId, userInfo.accountId);
         
-        if (currentRingTime.equals(nextRegularRingTime) && currentRingTime.processed()) {
+        if (nextRingTimeFromWorker.equals(nextRingTimeFromTemplate) && nextRingTimeFromWorker.processed()) {
             LOGGER.debug("Smart alarm already set to {} for device {}, account {}.",
-                    new DateTime(currentRingTime.actualRingTimeUTC, userInfo.timeZone.get()),
+                    new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),
                     userInfo.deviceId,
                     userInfo.accountId);
-            return currentRingTime;
+            return nextRingTimeFromWorker;
         }
 
-        if(!nextRegularRingTime.fromSmartAlarm){
-            if(currentRingTime.expectedRingTimeUTC < nextRegularRingTime.expectedRingTimeUTC) {
-
-                return nextRegularRingTime;
+        if(!nextRingTimeFromTemplate.fromSmartAlarm){
+            if(nextRingTimeFromWorker.expectedRingTimeUTC < nextRingTimeFromTemplate.expectedRingTimeUTC) {
+                // next ring time from worker expired, should use none-smart next ring time.
+                return nextRingTimeFromTemplate;
             }
 
-            if(nextRegularRingTime.isEmpty()){
-                return nextRegularRingTime;
+            if(nextRingTimeFromTemplate.isEmpty()){
+                return nextRingTimeFromTemplate;
             }
         }
 
@@ -185,12 +188,12 @@ public class RingProcessor {
 
         // Try to get smart alarm time.
         // Check if the current time is N min before next ring.
-        final DateTime nextRegularRingTimeLocal = new DateTime(nextRegularRingTime.expectedRingTimeUTC, userInfo.timeZone.get());
+        final DateTime nextRegularRingTimeLocal = new DateTime(nextRingTimeFromTemplate.expectedRingTimeUTC, userInfo.timeZone.get());
         if (shouldTriggerSmartAlarmProcessing(currentTime, nextRegularRingTimeLocal, smartAlarmProcessAheadInMinutes)) {
             // It is time to compute sleep cycles.
-            nextRingTime = getNextSmartRingTime(userInfo.accountId,
+            nextRingTime = processNextSmartRingTimeForUser(userInfo.accountId,
                     currentTime, userInfo.timeZone.get(),
-                    nextRegularRingTime,
+                    nextRingTimeFromTemplate,
                     slidingWindowSizeInMinutes, lightSleepThreshold,
                     trackerMotionDAO);
 
@@ -199,11 +202,11 @@ public class RingProcessor {
 
         } else {
             // Too early to compute smart alarm time.
-            nextRingTime = nextRegularRingTime;
-            if(currentRingTime.expectedRingTimeUTC < nextRegularRingTime.expectedRingTimeUTC){
+            nextRingTime = nextRingTimeFromTemplate;
+            if(nextRingTimeFromWorker.expectedRingTimeUTC < nextRingTimeFromTemplate.expectedRingTimeUTC){
                 LOGGER.info("Device {} regular ring time updated to {}", userInfo.deviceId, new DateTime(nextRingTime.actualRingTimeUTC, userInfo.timeZone.get()));
                 mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, nextRingTime);
-            }else if(currentRingTime.expectedRingTimeUTC > nextRegularRingTime.expectedRingTimeUTC){
+            }else if(nextRingTimeFromWorker.expectedRingTimeUTC > nextRingTimeFromTemplate.expectedRingTimeUTC){
                 LOGGER.warn("Invalid current ring time for device {} and account {}", userInfo.deviceId, userInfo.accountId);
             }
         }
@@ -253,8 +256,8 @@ public class RingProcessor {
         return true;
     }
 
-    public static boolean appendNextRingTimeToRingTimeHistory(final String morpheusId, final RingTime nextRingTime,
-                                                              final RingTimeDAODynamoDB ringTimeDAODynamoDB){
+    public static boolean appendNextRingTimeToSenseRingTimeHistory(final String morpheusId, final RingTime nextRingTime,
+                                                                   final RingTimeDAODynamoDB ringTimeDAODynamoDB){
 
         try {
             final RingTime lastRingTimeFromHistory = ringTimeDAODynamoDB.getNextRingTime(morpheusId);
@@ -274,12 +277,12 @@ public class RingProcessor {
                 now.plusMinutes(smartAlarmProcessAheadInMinutes).isEqual(nextRegularRingTime);
     }
 
-    public static RingTime getNextSmartRingTime(final long accountId,
-                                           final DateTime now, final DateTimeZone timeZone,
-                                           final RingTime nextRegularRingTime,
-                                           final int slidingWindowSizeInMinutes,
-                                           final float lightSleepThreshold,
-                                           final TrackerMotionDAO trackerMotionDAO){
+    public static RingTime processNextSmartRingTimeForUser(final long accountId,
+                                                           final DateTime now, final DateTimeZone timeZone,
+                                                           final RingTime nextRegularRingTime,
+                                                           final int slidingWindowSizeInMinutes,
+                                                           final float lightSleepThreshold,
+                                                           final TrackerMotionDAO trackerMotionDAO){
         final DateTime dataCollectionTime = new DateTime(now, timeZone);
         // Convert the local data collection time to local UTC time, for select motion data.
         final DateTime dataCollectionTimeLocalUTC = new DateTime(dataCollectionTime.getYear(),
@@ -319,21 +322,23 @@ public class RingProcessor {
 
 
     @Timed
-    public static RingTime getNextRegularRingTime(final List<UserInfo> userInfoList,
-                                              final String morpheusId,
-                                              final DateTime currentTime){
+    public static RingTime getNextRingTimeFromAlarmTemplateForSense(final List<UserInfo> userInfoList,
+                                                                    final String senseId,
+                                                                    final DateTime currentTime){
 
         final ArrayList<RingTime> ringTimes = new ArrayList<RingTime>();
-        DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
         final HashMap<Long, ArrayList<RingTime>> groupedRingTime = new HashMap<>();
-
 
         try {
 
             for (final UserInfo userInfo : userInfoList){
+                if(!userInfo.timeZone.isPresent()){
+                    LOGGER.error("No timezone set for device {} account {}, get regular ring time failed.", userInfo.deviceId, userInfo.accountId);
+                    continue;
+                }
                 if(!userInfo.alarmList.isEmpty()){
                     final List<Alarm> alarms = userInfo.alarmList;
-                    final RingTime nextRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplates(alarms, currentTime.getMillis(), userTimeZone);
+                    final RingTime nextRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarms, currentTime.getMillis(), userInfo.timeZone.get());
 
                     if (!nextRingTime.isEmpty()) {
                         ringTimes.add(nextRingTime);  // Add the alarm of this user to the list.
@@ -352,7 +357,7 @@ public class RingProcessor {
 
 
         } catch (AmazonServiceException awsException) {
-            LOGGER.error("AWS error when retrieving alarm for device {}.", morpheusId);
+            LOGGER.error("AWS error when retrieving alarm for device {}.", senseId);
         }
 
 

@@ -36,7 +36,8 @@ public class SleepDepthTest {
                         1L,
                         ts++,
                         Integer.valueOf(columns[1]),
-                        0));
+                        0,
+                        0L, 0L,0L));
 
             }
             bufferedReader.close();
@@ -62,7 +63,7 @@ public class SleepDepthTest {
                     1L,
                     ts++,
                     amplitude,
-                    0));
+                    0,0L, 0L,0L));
         }
 
         assertThat(TimelineUtils.getSleepDepth(70, TimelineUtils.constructValuePositionMap(trackerMotionList), 100), is(100-70));

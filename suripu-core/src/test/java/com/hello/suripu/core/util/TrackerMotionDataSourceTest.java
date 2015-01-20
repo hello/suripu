@@ -27,13 +27,13 @@ public class TrackerMotionDataSourceTest {
     public void testGetMinAmplitude(){
         final ArrayList<TrackerMotion> data = new ArrayList<>();
         final DateTime now = DateTime.now();
-        data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), -1, DateTimeZone.getDefault().getOffset(now)));  // this one should be skipped
-        data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), -2, DateTimeZone.getDefault().getOffset(now)));  // -2 & 0xFFFFFFFF
+        data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), -1, DateTimeZone.getDefault().getOffset(now),0L, 0L,0L));  // this one should be skipped
+        data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), -2, DateTimeZone.getDefault().getOffset(now),0L, 0L,0L));  // -2 & 0xFFFFFFFF
         assertThat(TrackerMotionDataSource.getMinAmplitude(data), is(0));
 
         data.clear();
-        data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), -2, DateTimeZone.getDefault().getOffset(now)));  // -2 & 0xFFFFFFFF
-        data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), 1, DateTimeZone.getDefault().getOffset(now)));  // -2 & 0xFFFFFFFF
+        data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), -2, DateTimeZone.getDefault().getOffset(now), 0L, 0L,0L));  // -2 & 0xFFFFFFFF
+        data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), 1, DateTimeZone.getDefault().getOffset(now),0L, 0L,0L));  // -2 & 0xFFFFFFFF
         assertThat(TrackerMotionDataSource.getMinAmplitude(data), is(1));
 
     }
@@ -57,8 +57,8 @@ public class TrackerMotionDataSourceTest {
     public void testInsertGap(){
         final ArrayList<TrackerMotion> data = new ArrayList<>();
         final DateTime now = DateTime.now();
-        data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), 1, DateTimeZone.getDefault().getOffset(now)));  // this one should be skipped
-        data.add(new TrackerMotion(0L, 0L, 0L, now.plusMinutes(2).getMillis(), -2, DateTimeZone.getDefault().getOffset(now.plusMinutes(2))));  // -2 & 0xFFFFFFFF
+        data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), 1, DateTimeZone.getDefault().getOffset(now),0L, 0L,0L));  // this one should be skipped
+        data.add(new TrackerMotion(0L, 0L, 0L, now.plusMinutes(2).getMillis(), -2, DateTimeZone.getDefault().getOffset(now.plusMinutes(2)),0L, 0L,0L));  // -2 & 0xFFFFFFFF
 
 
         final List<AmplitudeData> insertedList = TrackerMotionDataSource.fillGap(now.getMillis(), now.plusMinutes(2).getMillis(), DateTimeConstants.MILLIS_PER_MINUTE, 0, DateTimeZone.getDefault().getOffset(now));
@@ -85,7 +85,7 @@ public class TrackerMotionDataSourceTest {
             final String[] lines = csvString.split("\\n");
             for(int i = 1; i < lines.length; i++){
                 final String[] columns = lines[i].split(",");
-                dataFromDB.add(new TrackerMotion(i, 0L, 1L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2])));
+                dataFromDB.add(new TrackerMotion(i, 0L, 1L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]),0L, 0L,0L));
             }
         }catch (IOException ex){
             ex.printStackTrace();

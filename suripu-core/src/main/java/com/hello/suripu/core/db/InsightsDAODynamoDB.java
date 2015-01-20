@@ -153,7 +153,7 @@ public class InsightsDAODynamoDB {
 
         } while (lastEvaluatedKey != null && loopCount < MAX_CALL_COUNT && insightCards.size() < limit);
 
-        Collections.sort(insightCards);
+        Collections.sort(insightCards, Collections.reverseOrder());
         return ImmutableList.copyOf(insightCards);
 
     }

@@ -72,18 +72,17 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
         }
 
         LOGGER.info("Processing {} unique senseIds.", senseIds.size());
-        final DateTime currentTime = DateTime.now().minusMinutes(1);  // Minus 1 minutes is important, or alarm can get cancelled when this happens in the middle of that minute
         for(final String senseId : senseIds) {
-            RingProcessor.updateNextRingTime(this.mergedUserInfoDynamoDB,
+            RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                     this.ringTimeDAODynamoDB,
                     this.trackerMotionDAO,
                     senseId,
-                    currentTime,
+                    DateTime.now(),
                     this.configuration.getProcessAheadTimeInMinutes(),
                     this.configuration.getAggregateWindowSizeInMinute(),
                     this.configuration.getLightSleepThreshold(),
                     feature
-                    );
+            );
         }
 
         LOGGER.info("Successfully updated smart ring time for {} sense", senseIds.size());

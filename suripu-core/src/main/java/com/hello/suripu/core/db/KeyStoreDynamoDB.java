@@ -88,6 +88,21 @@ public class KeyStoreDynamoDB implements KeyStore {
         // TODO: Log consumed capacity
     }
 
+    @Override
+    public void put(final String deviceId, final String publicKey, final String metadata) {
+        final Map<String, AttributeValue> attributes = new HashMap<String, AttributeValue>();
+        attributes.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
+        attributes.put(AES_KEY_ATTRIBUTE_NAME, new AttributeValue().withS(publicKey));
+        attributes.put("metadata", new AttributeValue().withS(metadata));
+
+        final PutItemRequest putItemRequest = new PutItemRequest()
+                .withTableName(keyStoreTableName)
+                .withItem(attributes);
+
+        final PutItemResult putItemResult = dynamoDBClient.putItem(putItemRequest);
+        // TODO: Log consumed capacity
+    }
+
     private Optional<byte[]> getRemotely(final String deviceId) {
         final HashMap<String, AttributeValue> key = new HashMap<String, AttributeValue>();
         key.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));

@@ -42,13 +42,27 @@ public class TrackerMotion {
     @JsonProperty("timezone_offset")
     public final int offsetMillis;
 
+    @JsonProperty("motion_range")
+    public final Long motionRange;
+
+    @JsonProperty("kickoff_counts")
+    public final Long kickOffCounts;
+
+    @JsonProperty("on_duration_seconds")
+    public final Long onDurationInSeconds;
+
     @JsonCreator
+    // TODO: make constructor private and force Builder use to reduce risks on not
+    // TODO: converting data properly
     public TrackerMotion(@JsonProperty("id") final long id,
                          @JsonProperty("account_id") final long accountId,
                          @JsonProperty("tracker_id") final Long trackerId,
                          @JsonProperty("timestamp") final long timestamp,
                          @JsonProperty("value") final int value,
-                         @JsonProperty("timezone_offset") final int timeZoneOffset){
+                         @JsonProperty("timezone_offset") final int timeZoneOffset,
+                         final Long motionRange,
+                         final Long kickOffCounts,
+                         final Long onDurationInSeconds){
 
         this.id = id;
         this.accountId = accountId;
@@ -58,6 +72,9 @@ public class TrackerMotion {
         this.offsetMillis = timeZoneOffset;
 
 
+        this.motionRange = motionRange;
+        this.kickOffCounts = kickOffCounts;
+        this.onDurationInSeconds = onDurationInSeconds;
     }
 
     public static float intToFloatValue(final int value){
@@ -94,6 +111,20 @@ public class TrackerMotion {
                 .toString();
     }
 
+    public static class PillPayloadV2 {
+        public final Long maxAmplitude;
+        public final Long motionRange;
+        public final Long kickOffCounts;
+        public final Long onDurationInSeconds;
+
+        public PillPayloadV2(final Long maxAmplitude, final Long motionRange, final Long kickOffCounts, final Long onDurationInSeconds) {
+            this.maxAmplitude = maxAmplitude;
+            this.motionRange = motionRange;
+            this.kickOffCounts = kickOffCounts;
+            this.onDurationInSeconds = onDurationInSeconds;
+        }
+    }
+
     public static class Builder{
 
         private long id = 0L;
@@ -102,11 +133,18 @@ public class TrackerMotion {
         private long timestamp;
         private int valueInMilliMS2 = -1;
         private int offsetMillis;
+        private Long motionRange = 0L;
+        private Long kickOffCounts = 0L;
+        private Long onDurationInSeconds = 0L;
 
         public Builder(){
 
         }
 
+        public Builder withId(final Long id) {
+            this.id = id;
+            return this;
+        }
 
         public Builder withAccountId(final long accountId){
             this.accountId = accountId;
@@ -130,6 +168,29 @@ public class TrackerMotion {
 
         public Builder withOffsetMillis(final int offsetMillis){
             this.offsetMillis = offsetMillis;
+            return this;
+        }
+
+        public Builder withMotionRange(final Long motionRange) {
+            this.motionRange = motionRange;
+            return this;
+        }
+
+        public Builder withKickOffCounts(final Long kickOffCounts) {
+            this.kickOffCounts = kickOffCounts;
+            return this;
+        }
+
+
+        public Builder withOnDurationInSeconds(final Long onDurationInSeconds) {
+            this.onDurationInSeconds = onDurationInSeconds;
+            return this;
+        }
+
+        public Builder withPillPayloadV2(final PillPayloadV2 payloadV2) {
+            this.motionRange = payloadV2.motionRange;
+            this.kickOffCounts = payloadV2.kickOffCounts;
+            this.onDurationInSeconds = payloadV2.onDurationInSeconds;
             return this;
         }
 
@@ -175,8 +236,9 @@ public class TrackerMotion {
             if(data.hasEncryptedData()){
                 final byte[] encryptedData = data.getEncryptedData().toByteArray();
 
-                final long[] featureVector = Utils.encryptedToRawVersion2(key, encryptedData);
-                amplitudeMilliG = Utils.rawToMilliMS2(featureVector[0]);
+                final PillPayloadV2 payloadV2 = Utils.encryptedToRawVersion2(key, encryptedData);
+                amplitudeMilliG = Utils.rawToMilliMS2(payloadV2.maxAmplitude);
+                this.withPillPayloadV2(payloadV2);
             }
 
             this.withAccountId(accountID);
@@ -201,7 +263,16 @@ public class TrackerMotion {
         }
 
         public TrackerMotion build(){
-            return new TrackerMotion(this.id, this.accountId, this.trackerId, this.timestamp, this.valueInMilliMS2, this.offsetMillis);
+            return new TrackerMotion(
+                    this.id,
+                    this.accountId,
+                    this.trackerId,
+                    this.timestamp,
+                    this.valueInMilliMS2,
+                    this.offsetMillis,
+                    this.motionRange,
+                    this.kickOffCounts,
+                    this.onDurationInSeconds);
         }
 
 
@@ -284,7 +355,7 @@ public class TrackerMotion {
         }
 
 
-        public static long[] encryptedToRawVersion2(final byte[] key, final byte[] encryptedMotionData) throws IllegalArgumentException {
+        public static PillPayloadV2 encryptedToRawVersion2(final byte[] key, final byte[] encryptedMotionData) throws IllegalArgumentException {
 
             final byte[] nonce = Arrays.copyOfRange(encryptedMotionData, 0, 8);
 
@@ -309,9 +380,9 @@ public class TrackerMotion {
 
             try {
                 motionAmplitude = UnsignedInts.toLong(littleEndianDataInputStream.readInt());
-                maxAccelerationRange = UnsignedInts.toLong(littleEndianDataInputStream.readShort());
-                kickOffTimePerMinute = UnsignedInts.toLong(littleEndianDataInputStream.readByte());
-                motionDurationInSecond = UnsignedInts.toLong(littleEndianDataInputStream.readByte());
+                maxAccelerationRange = littleEndianDataInputStream.readShort() & 0xFFFFL;
+                kickOffTimePerMinute = littleEndianDataInputStream.readByte() & 0xFFL;
+                motionDurationInSecond = littleEndianDataInputStream.readByte() & 0xFFL;
 
             }catch (IOException ioe){
                 exception = ioe;
@@ -329,7 +400,7 @@ public class TrackerMotion {
                 throw new IllegalArgumentException(exception);
             }
 
-            return new long[]{ motionAmplitude, maxAccelerationRange, kickOffTimePerMinute, motionDurationInSecond };
+            return new PillPayloadV2(motionAmplitude, maxAccelerationRange, kickOffTimePerMinute, motionDurationInSecond);
 
         }
     }

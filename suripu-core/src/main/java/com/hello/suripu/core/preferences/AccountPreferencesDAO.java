@@ -1,9 +1,9 @@
 package com.hello.suripu.core.preferences;
 
-import java.util.List;
+import java.util.Map;
 
 public interface AccountPreferencesDAO {
 
     AccountPreference put(Long accountId, AccountPreference preference);
-    List<AccountPreference> get(Long accountId);
+    Map<AccountPreference.EnabledPreference, Boolean> get(Long accountId);
 }

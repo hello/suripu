@@ -17,13 +17,15 @@ public class UserInfo {
     public final Optional<RingTime> ringTime;
     public final Optional<DateTimeZone> timeZone;
     public final Optional<OutputProtos.SyncResponse.PillSettings> pillColor;
+    public final long lastUpdatedAt;
 
 
     public UserInfo(final String deviceId, final long accountId,
                     final List<Alarm> alarmList,
                     final Optional<RingTime> ringTime,
                     final Optional<DateTimeZone> timeZone,
-                    final Optional<OutputProtos.SyncResponse.PillSettings> pillColor){
+                    final Optional<OutputProtos.SyncResponse.PillSettings> pillColor,
+                    final long lastUpdatedAt){
         if(deviceId == null || alarmList == null || timeZone == null || ringTime == null){
             throw new IllegalArgumentException("Device Id can't be null");
         }
@@ -34,6 +36,7 @@ public class UserInfo {
         this.ringTime  = ringTime;
         this.timeZone = timeZone;
         this.pillColor = pillColor;
+        this.lastUpdatedAt = lastUpdatedAt;
     }
 
     public static UserInfo createEmpty(final String deviceId, final long accountId){
@@ -43,7 +46,8 @@ public class UserInfo {
                 Collections.<Alarm>emptyList(),
                 Optional.of(RingTime.createEmpty()),
                 Optional.<DateTimeZone>absent(),
-                Optional.<OutputProtos.SyncResponse.PillSettings>absent());
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent(),
+                0);
     }
 
     public boolean isEmpty(){

@@ -250,7 +250,7 @@ public class RegisterResource extends BaseResource {
                     .type(MediaType.TEXT_PLAIN_TYPE).build()
             );
         }
-        
+
         if(!checkCommandType(morpheusCommand, action)){
             builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
             builder.setError(SenseCommandProtos.ErrorType.INTERNAL_DATA_ERROR);
@@ -274,11 +274,13 @@ public class RegisterResource extends BaseResource {
                         builder.setError(SenseCommandProtos.ErrorType.DEVICE_ALREADY_PAIRED);
                     }
                 }
-                    break;
+                break;
                 case PAIR_PILL: {
+                    LOGGER.warn("Attempting to pair pill {} to account {}", pillId, accountId);
                     final PairState pairState = getPillPairingState(senseId, pillId, accountId);
                     if (pairState == PairState.NOT_PAIRED) {
                         this.deviceDAO.registerTracker(accountId, deviceId);
+                        LOGGER.warn("Registered pill {} to account {}", pillId, accountId);
                         this.setPillColor(senseId, accountId, deviceId);
                     }
 
@@ -287,9 +289,10 @@ public class RegisterResource extends BaseResource {
                     } else {
                         builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
                         builder.setError(SenseCommandProtos.ErrorType.DEVICE_ALREADY_PAIRED);
+                        LOGGER.warn("Pill already paired {} ", pillId);
                     }
                 }
-                    break;
+                break;
             }
             //builder.setAccountId(morpheusCommand.getAccountId());
 
