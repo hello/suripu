@@ -125,12 +125,11 @@ public class MotionScoreAlgorithm {
             goToBedScores.add(new InternalScore(timestamp, goToBedScore));
             outOfBedScores.add(new InternalScore(timestamp, outOfBedScore));
 
-            LOGGER.info("goto_bed_prob {}, sleep_prob {}, wake up prob {}, out_bed_prob {}, amp {}\n",
+            LOGGER.debug("goto_bed_prob {}, sleep_prob {}, wake up prob {}, out_bed_prob {}\n",
                     goToBedScore,
                     sleepScore,
                     wakeUpScore,
-                    outOfBedScore,
-                    rawData.get(0).get(r).amplitude);
+                    outOfBedScore);
         }
 
         // Step 4: Pick the highest sleep and wake up scores, sleep and wake up detected.
@@ -151,15 +150,15 @@ public class MotionScoreAlgorithm {
                 goToBedScore.get().score,
                 goToBedData.amplitude);
         LOGGER.info("Prob fall asleep time: {}, score {}, amp {}", new DateTime(fallAsleepData.timestamp,
-                DateTimeZone.forOffsetMillis(fallAsleepData.offsetMillis)),
+                    DateTimeZone.forOffsetMillis(fallAsleepData.offsetMillis)),
                 fallAsleepScore.get().score,
                 fallAsleepData.amplitude);
         LOGGER.info("Prob wake up time: {}, score {}, amp {}", new DateTime(wakeUpData.timestamp,
-                DateTimeZone.forOffsetMillis(wakeUpData.offsetMillis)),
+                    DateTimeZone.forOffsetMillis(wakeUpData.offsetMillis)),
                 wakeUpScore.get().score,
                 wakeUpData.amplitude);
         LOGGER.info("Prob out of bed time: {}, score {}, amp {}", new DateTime(outOfBedData.timestamp,
-                DateTimeZone.forOffsetMillis(outOfBedData.offsetMillis)),
+                    DateTimeZone.forOffsetMillis(outOfBedData.offsetMillis)),
                 outOfBedScore.get().score,
                 outOfBedData.amplitude);
 
