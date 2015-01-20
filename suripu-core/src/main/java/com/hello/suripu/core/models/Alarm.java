@@ -376,7 +376,7 @@ public class Alarm {
         }
 
         public static DateTime alignToMinuteGranularity(final DateTime currentLocalTime){
-            return currentLocalTime.withSecondOfMinute(0).withMillisOfSecond(0);
+            return currentLocalTime;
         }
 
         /**
@@ -394,7 +394,7 @@ public class Alarm {
             }
 
             final ArrayList<RingTime> possibleRings = new ArrayList<RingTime>();
-            final DateTime currentLocalTime = new DateTime(currentTimestampUTC, timeZone).withSecondOfMinute(0).withMillisOfSecond(0);
+            final DateTime currentLocalTime = alignToMinuteGranularity(new DateTime(currentTimestampUTC, timeZone));
             for(final Alarm alarm:alarms){
                 if(!alarm.isEnabled){
                     continue;
