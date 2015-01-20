@@ -113,7 +113,8 @@ public class RingProcessorMultiUserTest {
                 alarmList,
                 Optional.of(ringTime),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles")),
-                Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent(),
+                0));
 
 
         final List<Alarm> alarmList2 = new ArrayList<Alarm>();
@@ -131,7 +132,8 @@ public class RingProcessorMultiUserTest {
                 alarmList2,
                 Optional.of(ringTime2),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles")),
-                Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent(),
+                0));
 
         final URL url = Resources.getResource("pill_data_09_23_2014_pang.csv");
         final List<TrackerMotion> motions1 = new ArrayList<TrackerMotion>();
@@ -215,7 +217,8 @@ public class RingProcessorMultiUserTest {
                 userInfo1.alarmList,
                 Optional.of(ringTime),
                 userInfo1.timeZone,
-                userInfo1.pillColor));
+                userInfo1.pillColor,
+                0));
 
 
         // Minute that trigger 1st smart alarm processing
@@ -240,7 +243,8 @@ public class RingProcessorMultiUserTest {
                 userInfo1.alarmList,
                 Optional.of(ringTime),
                 userInfo1.timeZone,
-                userInfo1.pillColor));
+                userInfo1.pillColor,
+                0));
 
 
         // Minute that update 2nd alarm processing
@@ -265,7 +269,8 @@ public class RingProcessorMultiUserTest {
                 userInfo2.alarmList,
                 Optional.of(ringTime),
                 userInfo2.timeZone,
-                userInfo2.pillColor));
+                userInfo2.pillColor,
+                0));
 
 
         // Minute that trigger 2nd smart alarm processing
@@ -290,7 +295,8 @@ public class RingProcessorMultiUserTest {
                 userInfo2.alarmList,
                 Optional.of(ringTime),
                 userInfo2.timeZone,
-                userInfo2.pillColor));
+                userInfo2.pillColor,
+                0));
 
 
         // Minutes after smart alarm processing but before next smart alarm process triggered.
@@ -331,7 +337,8 @@ public class RingProcessorMultiUserTest {
                 alarmList,
                 Optional.of(ringTime),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles")),
-                Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent(),
+                0));
 
 
         final List<Alarm> alarmList2 = new ArrayList<Alarm>();
@@ -349,7 +356,8 @@ public class RingProcessorMultiUserTest {
                 alarmList2,
                 Optional.of(ringTime2),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles")),
-                Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent(),
+                0));
 
 
         final URL url = Resources.getResource("pill_data_09_23_2014_pang.csv");
@@ -434,7 +442,8 @@ public class RingProcessorMultiUserTest {
                 userInfo1.alarmList,
                 Optional.of(ringTime),
                 userInfo1.timeZone,
-                userInfo1.pillColor));
+                userInfo1.pillColor,
+                0));
 
 
         // Minute that trigger 1st smart alarm processing
@@ -458,7 +467,8 @@ public class RingProcessorMultiUserTest {
                 userInfo1.alarmList,
                 Optional.of(ringTime),
                 userInfo1.timeZone,
-                userInfo1.pillColor));
+                userInfo1.pillColor,
+                0));
 
         // Minute that update 2nd alarm processing
         deadline = new DateTime(2014, 9, 23, 8, 30, DateTimeZone.forID("America/Los_Angeles"));
@@ -482,7 +492,8 @@ public class RingProcessorMultiUserTest {
                 userInfo2.alarmList,
                 Optional.of(ringTime),
                 userInfo2.timeZone,
-                userInfo2.pillColor));
+                userInfo2.pillColor,
+                0));
 
         // Minute that trigger 2nd smart alarm processing
         deadline = new DateTime(2014, 9, 23, 8, 30, DateTimeZone.forID("America/Los_Angeles"));
@@ -506,7 +517,8 @@ public class RingProcessorMultiUserTest {
                 userInfo2.alarmList,
                 Optional.of(ringTime),
                 userInfo2.timeZone,
-                userInfo2.pillColor));
+                userInfo2.pillColor,
+                0));
 
 
         // Minutes after smart alarm processing but before next smart alarm process triggered.
@@ -551,7 +563,8 @@ public class RingProcessorMultiUserTest {
                 alarmList,
                 Optional.of(ringTime1),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles")),
-                Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent(),
+                0));
 
         final List<Alarm> alarmList2 = new ArrayList<Alarm>();
         final HashSet<Integer> dayOfWeek2 = new HashSet<Integer>();
@@ -568,7 +581,8 @@ public class RingProcessorMultiUserTest {
                 alarmList2,
                 Optional.of(ringTime2),
                 Optional.of(DateTimeZone.forID("America/Los_Angeles")),
-                Optional.<OutputProtos.SyncResponse.PillSettings>absent()));
+                Optional.<OutputProtos.SyncResponse.PillSettings>absent(),
+                0));
 
 
         RingTime ringTime = RingProcessor.getNextRingTimeFromAlarmTemplateForSense(this.userInfoList,
