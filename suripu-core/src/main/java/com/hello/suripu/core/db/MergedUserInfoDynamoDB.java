@@ -8,6 +8,7 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.AttributeValueUpdate;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
+import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.DeleteItemRequest;
@@ -173,9 +174,10 @@ public class MergedUserInfoDynamoDB {
 
 
     private UpdateItemRequest generateUpdateRequest(final String deviceId, final long accountId, final Map<String, AttributeValueUpdate> items){
+        final DateTime now = DateTime.now();
         items.put(UPDATED_AT_ATTRIBUTE_NAME, new AttributeValueUpdate()
                 .withAction(AttributeAction.PUT)
-                .withValue(new AttributeValue().withN(String.valueOf(DateTime.now().getMillis()))));
+                .withValue(new AttributeValue().withN(String.valueOf(now.getMillis()))));
 
         final HashMap<String, AttributeValue> keys = new HashMap<>();
         keys.put(MORPHEUS_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
@@ -255,6 +257,29 @@ public class MergedUserInfoDynamoDB {
 
         final UpdateItemRequest request = generateUpdateRequest(deviceId, accountId, items);
         final UpdateItemResult result = this.dynamoDBClient.updateItem(request);
+        return true;
+    }
+
+    public boolean setAlarms(final String deviceId, final long accountId, final long lastUpdatedAt, final List<Alarm> alarms, final DateTimeZone userTimeZone){
+        final Map<String, AttributeValueUpdate> items = generateAlarmUpdateItem(alarms, userTimeZone);
+
+        if(items.isEmpty()){
+            return false;
+        }
+
+        final UpdateItemRequest request = generateUpdateRequest(deviceId, accountId, items);
+        final HashMap<String, ExpectedAttributeValue> expected = new HashMap<>();
+        expected.put(UPDATED_AT_ATTRIBUTE_NAME, new ExpectedAttributeValue()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withValue(new AttributeValue().withN(String.valueOf(lastUpdatedAt))));
+
+        request.withExpected(expected);
+        try {
+            final UpdateItemResult result = this.dynamoDBClient.updateItem(request);
+        }catch (ConditionalCheckFailedException conditionalCheckFailedException){
+            LOGGER.warn("Cannot update alarm, last updated at {}", lastUpdatedAt);
+            return false;
+        }
         return true;
     }
 
@@ -388,7 +413,8 @@ public class MergedUserInfoDynamoDB {
             return Optional.of(new UserInfo(deviceId, accountId,
                     alarmListOptional, ringTimeOptional,
                     dateTimeZoneOptional,
-                    pillColorOptional));
+                    pillColorOptional,
+                    Long.valueOf(item.get(UPDATED_AT_ATTRIBUTE_NAME).getN())));
         }catch (Exception ex){
             LOGGER.error("attributeValuesToUserInfo error: {}", ex.getMessage());
         }

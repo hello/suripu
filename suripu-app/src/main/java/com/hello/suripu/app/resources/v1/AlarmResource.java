@@ -150,7 +150,15 @@ public class AlarmResource {
             final Alarm.Utils.AlarmStatus status = Alarm.Utils.isValidAlarms(alarms, DateTime.now(), timeZone);
 
             if(status.equals(Alarm.Utils.AlarmStatus.OK)) {
-                this.mergedUserInfoDynamoDB.setAlarms(deviceAccountPair.externalDeviceId, token.accountId, alarms, alarmInfoOptional.get().timeZone.get());
+                if(!this.mergedUserInfoDynamoDB.setAlarms(deviceAccountPair.externalDeviceId, token.accountId,
+                        alarmInfoOptional.get().lastUpdatedAt,
+                        alarms,
+                        alarmInfoOptional.get().timeZone.get())){
+                    LOGGER.warn("Cannot update alarm, race condition");
+                    throw new WebApplicationException(Response.status(Response.Status.CONFLICT).entity(
+                            new JsonError(Response.Status.CONFLICT.getStatusCode(),
+                                    "Cannot update alarm, please refresh and try again.")).build());
+                }
                 this.alarmDAODynamoDB.setAlarms(token.accountId, alarms);
             }
 
