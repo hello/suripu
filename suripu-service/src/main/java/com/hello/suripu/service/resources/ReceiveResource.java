@@ -328,7 +328,8 @@ public class ReceiveResource extends BaseResource {
         try {
             nextRegularRingTimeOptional = Optional.of(RingProcessor.getNextRingTimeFromAlarmTemplateForSense(userInfoFromThatDevice,
                     deviceId,
-                    DateTime.now().withSecondOfMinute(0).withMillisOfSecond(0)));
+                    Alarm.Utils.alignToMinuteGranularity(
+                            DateTime.now().withZone(userTimeZoneOptional.get()))));
         }catch (Exception ex){
             LOGGER.error("Get next regular ring time for device {} failed: {}", deviceId, ex.getMessage());
         }
@@ -529,7 +530,8 @@ public class ReceiveResource extends BaseResource {
             final DateTimeZone userTimeZone = getUserTimeZone(userInfoList);
             final Long userNextAlarmTimestamp = nextRingTime.expectedRingTimeUTC; // This must be expected time, not actual.
 
-            final Integer uploadInterval = UploadSettings.getUploadInterval(now.withZone(userTimeZone).withSecondOfMinute(0).withMillisOfSecond(0),
+            final Integer uploadInterval = UploadSettings.getUploadInterval(
+                    Alarm.Utils.alignToMinuteGranularity(now.withZone(userTimeZone)),
                     senseUploadConfiguration,
                     userNextAlarmTimestamp);
             responseBuilder.setBatchSize(uploadInterval);
