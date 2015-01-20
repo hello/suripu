@@ -145,7 +145,7 @@ public class MergedUserInfoDynamoDB {
         try {
             alarmListJSON = mapper.writeValueAsString(alarmList);
             final RingTime updateRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList,
-                    DateTime.now().withSecondOfMinute(0).withMillisOfSecond(0).getMillis(),
+                    Alarm.Utils.alignToMinuteGranularity(DateTime.now().withZone(userTimeZone)).getMillis(),
                     userTimeZone);
             items.put(MergedUserInfoDynamoDB.ACTUAL_RING_TIME_ATTRIBUTE_NAME, new AttributeValueUpdate()
                 .withAction(AttributeAction.PUT)

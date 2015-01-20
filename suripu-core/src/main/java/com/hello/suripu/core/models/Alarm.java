@@ -375,6 +375,10 @@ public class Alarm {
             return ImmutableList.copyOf(newAlarmList);
         }
 
+        public static DateTime alignToMinuteGranularity(final DateTime currentLocalTime){
+            return currentLocalTime.withSecondOfMinute(0).withMillisOfSecond(0);
+        }
+
         /**
          * Computes the next moment at which the alarm should ring
          * @param alarms list of alarm templates
