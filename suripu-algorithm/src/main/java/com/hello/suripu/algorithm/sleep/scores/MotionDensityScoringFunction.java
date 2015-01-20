@@ -3,6 +3,10 @@ package com.hello.suripu.algorithm.sleep.scores;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.pdf.LinearRankAscendingScoringFunction;
 import com.hello.suripu.algorithm.pdf.LinearRankDescendingScoringFunction;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,7 +18,7 @@ import java.util.Map;
  * Created by pangwu on 1/15/15.
  */
 public class MotionDensityScoringFunction implements SleepDataScoringFunction<AmplitudeData> {
-
+    private final static Logger LOGGER = LoggerFactory.getLogger(MotionDensityScoringFunction.class);
     private final double motionMaxPower;
 
     public MotionDensityScoringFunction(){
@@ -58,6 +62,14 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
             final double wakeUpMotionDensityScore = wakeUpMotionScoringFunction.getScore((long)datum.amplitude,
                     wakeUpMotionDensityRankPDF);
             final double wakeUpTimeScore = wakeUpTimeScoreFunction.getScore(datum.timestamp, wakeUpTimePDF);
+
+            LOGGER.debug("    density {}: st {}, wt {}, sl_r {}, wp_r {}, val {}",
+                            new DateTime(datum.timestamp, DateTimeZone.forOffsetMillis(datum.offsetMillis)),
+                            sleepTimeScore,
+                            wakeUpTimeScore,
+                            sleepMotionDensityScore,
+                            wakeUpMotionDensityScore,
+                            datum.amplitude);
 
             pdf.put(datum, new EventScores(Math.pow(sleepMotionDensityScore, this.motionMaxPower) * sleepTimeScore,
                     Math.pow(wakeUpMotionDensityScore, this.motionMaxPower) * wakeUpTimeScore,

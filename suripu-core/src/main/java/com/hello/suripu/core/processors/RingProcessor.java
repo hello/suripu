@@ -38,6 +38,7 @@ import java.util.List;
 public class RingProcessor {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(RingProcessor.class);
+    private final static int SMART_ALARM_MIN_DELAY_MILLIS = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  // This must be >= 2 * max possible data upload interval
 
     public static class PipeDataSource implements DataSource<AmplitudeData> {
 
@@ -192,7 +193,9 @@ public class RingProcessor {
         if (shouldTriggerSmartAlarmProcessing(currentTime, nextRegularRingTimeLocal, smartAlarmProcessAheadInMinutes)) {
             // It is time to compute sleep cycles.
             nextRingTime = processNextSmartRingTimeForUser(userInfo.accountId,
-                    currentTime, userInfo.timeZone.get(),
+                    currentTime,
+                    currentTime.plusMillis(SMART_ALARM_MIN_DELAY_MILLIS),
+                    userInfo.timeZone.get(),
                     nextRingTimeFromTemplate,
                     slidingWindowSizeInMinutes, lightSleepThreshold,
                     trackerMotionDAO);
@@ -278,7 +281,9 @@ public class RingProcessor {
     }
 
     public static RingTime processNextSmartRingTimeForUser(final long accountId,
-                                                           final DateTime now, final DateTimeZone timeZone,
+                                                           final DateTime now,
+                                                           final DateTime minRingTime,
+                                                           final DateTimeZone timeZone,
                                                            final RingTime nextRegularRingTime,
                                                            final int slidingWindowSizeInMinutes,
                                                            final float lightSleepThreshold,
@@ -312,6 +317,7 @@ public class RingProcessor {
                     lightSleepThreshold);
             final DateTime smartAlarmRingTimeUTC = sleepCycleAlgorithm.getSmartAlarmTimeUTC(sleepCycles,
                     now.getMillis(),
+                    minRingTime.getMillis(),
                     nextRegularRingTime.expectedRingTimeUTC);
             LOGGER.info("User {} smartAlarm time is {}", accountId, new DateTime(smartAlarmRingTimeUTC, timeZone));
             nextRingTimeMillis = smartAlarmRingTimeUTC.getMillis();
