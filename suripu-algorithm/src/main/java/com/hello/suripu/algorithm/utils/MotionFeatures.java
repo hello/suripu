@@ -96,6 +96,8 @@ public class MotionFeatures {
 
             densityBuffer1 = densityBuffer2;
             densityBuffer2 = new LinkedList<>();
+            densityMax1 = densityMax2;
+            densityMax2 = 0;
 
             i++;
         }

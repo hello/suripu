@@ -143,7 +143,7 @@ public class TimelineProcessor {
         Segment sleepSegment = null;
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
-            final List<Event> sleepEvents = TimelineUtils.getSleepEvents(targetDate, trackerMotions, lightOutTimeOptional);
+            final List<Event> sleepEvents = TimelineUtils.getSleepEvents(targetDate, trackerMotions, lightOutTimeOptional, 15);
             final SleepEvent sleepEvent = (SleepEvent) sleepEvents.get(1);
             final WakeupEvent wakeupEvent = (WakeupEvent) sleepEvents.get(2);
             sleepSegment = new Segment(sleepEvent.getStartTimestamp(),

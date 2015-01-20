@@ -16,8 +16,8 @@ import java.util.Map;
 public class AmplitudeDataScoringFunction implements SleepDataScoringFunction<AmplitudeData> {
     private final double motionMaxPower;
 
-    public AmplitudeDataScoringFunction(final double motionPloyDistributionParam){
-        this.motionMaxPower = motionPloyDistributionParam;
+    public AmplitudeDataScoringFunction(){
+        this.motionMaxPower = 10;
     }
 
     @Override
@@ -31,7 +31,7 @@ public class AmplitudeDataScoringFunction implements SleepDataScoringFunction<Am
 
         final LinearRankAscendingScoringFunction wakeUpTimeScoreFunction =
                 new LinearRankAscendingScoringFunction(0d, 1d, new double[]{0.5d, 1d});
-        final Map<Long, Double> wakeUpTimePDF = wakeUpTimeScoreFunction.getPDF(timestamps);
+        final Map<Long, Double> outOfBedTimePDF = wakeUpTimeScoreFunction.getPDF(timestamps);
 
         final LinearRankDescendingScoringFunction goToBedTimeScoreFunction =
                 new LinearRankDescendingScoringFunction(1d, 0d, new double[]{0d, 1d});  // sleep time should be desc
@@ -45,10 +45,10 @@ public class AmplitudeDataScoringFunction implements SleepDataScoringFunction<Am
         for(final AmplitudeData datum:data){
             final double motionScore = amplitudeScoringFunction.getScore((long)datum.amplitude, amplitudePDF);
             final double goToBedTimeScore = goToBedTimeScoreFunction.getScore(datum.timestamp, goToBedTimePDF);
-            final double wakeUpTimeScore = wakeUpTimeScoreFunction.getScore(datum.timestamp, wakeUpTimePDF);
+            final double outOfBedTimeScore = wakeUpTimeScoreFunction.getScore(datum.timestamp, outOfBedTimePDF);
 
             pdf.put(datum, new EventScores(1d, 1d, goToBedTimeScore * Math.pow(motionScore, this.motionMaxPower),
-                    wakeUpTimeScore * Math.pow(motionScore, this.motionMaxPower)));
+                    outOfBedTimeScore * Math.pow(motionScore, this.motionMaxPower)));
         }
         return pdf;
     }

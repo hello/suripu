@@ -17,8 +17,8 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
 
     private final double motionMaxPower;
 
-    public MotionDensityScoringFunction(final double motionPloyDistributionParam){
-        this.motionMaxPower = motionPloyDistributionParam;
+    public MotionDensityScoringFunction(){
+        this.motionMaxPower = 10;
     }
 
     @Override
@@ -34,13 +34,13 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
                 new LinearRankDescendingScoringFunction(1d, 1d, new double[]{0d, 0.5d});  // sleep time should be desc
 
         final LinearRankAscendingScoringFunction wakeUpTimeScoreFunction =
-                new LinearRankAscendingScoringFunction(0d, 1d, new double[]{0.5d, 1.0d});  // sleep time should be desc
+                new LinearRankAscendingScoringFunction(0d, 1d, new double[]{0.5d, 1.0d});
 
         final Map<Long, Double> sleepTimePDF = sleepTimeScoreFunction.getPDF(timestamps);
         final Map<Long, Double> wakeUpTimePDF = wakeUpTimeScoreFunction.getPDF(timestamps);
 
         final LinearRankAscendingScoringFunction sleepMotionScoringFunction =
-                new LinearRankAscendingScoringFunction(1d, 1d, new double[]{0d, 1d});
+                new LinearRankAscendingScoringFunction(0d, 1d, new double[]{0d, 1d});
 
         final LinearRankDescendingScoringFunction wakeUpMotionScoringFunction =
                 new LinearRankDescendingScoringFunction(1d, 0d, new double[]{0d, 1d});

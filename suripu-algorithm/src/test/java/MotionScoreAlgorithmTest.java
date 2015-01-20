@@ -112,7 +112,7 @@ public class MotionScoreAlgorithmTest {
         final List<AmplitudeData> smoothedData = smoother.process(dataSource.getDataForDate(new DateTime(2014, 12, 02, 0, 0, DateTimeZone.UTC)));
 
         final ArrayList<SleepDataScoringFunction> scoringFunctions = new ArrayList<>();
-        scoringFunctions.add(new AmplitudeDataScoringFunction(10));
+        scoringFunctions.add(new AmplitudeDataScoringFunction());
         scoringFunctions.add(new LightOutScoringFunction(firstLightOutTime, 3d));
 
         final Map<Long, List<AmplitudeData>> matrix = MotionScoreAlgorithm.createFeatureMatrix(smoothedData);

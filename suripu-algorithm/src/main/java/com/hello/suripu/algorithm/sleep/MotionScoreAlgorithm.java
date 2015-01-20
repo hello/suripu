@@ -102,7 +102,7 @@ public class MotionScoreAlgorithm {
                 final AmplitudeData datum = rawData.get(d).get(r);
                 timestamp = datum.timestamp;
                 if(!printedTime){
-                    LOGGER.info("time {}: ", new DateTime(timestamp, DateTimeZone.forOffsetMillis(rawData.get(0).get(r).offsetMillis)));
+                    LOGGER.debug("time {}: ", new DateTime(timestamp, DateTimeZone.forOffsetMillis(rawData.get(0).get(r).offsetMillis)));
                     printedTime = true;
                 }
                 final Map<AmplitudeData, EventScores> pdf = sleepScorePDFs.get(d);
@@ -112,12 +112,13 @@ public class MotionScoreAlgorithm {
                 goToBedScore *= scoringFunction.getScore(datum, pdf).goToBedEventScore;
                 outOfBedScore *= scoringFunction.getScore(datum, pdf).outOfBedEventScore;
 
-                LOGGER.info("    {}, sleep: {}, wakeup: {}, in_bed: {}, out_bed: {}",
+                LOGGER.debug("    {}, sleep: {}, wakeup: {}, in_bed: {}, out_bed: {}, val: {}",
                         d,
                         scoringFunction.getScore(datum, pdf).sleepEventScore,
                         scoringFunction.getScore(datum, pdf).wakeUpEventScore,
                         scoringFunction.getScore(datum, pdf).goToBedEventScore,
-                        scoringFunction.getScore(datum, pdf).outOfBedEventScore);
+                        scoringFunction.getScore(datum, pdf).outOfBedEventScore,
+                        datum.amplitude);
             }
             fallAsleepScores.add(new InternalScore(timestamp, sleepScore));
             wakeUpScores.add(new InternalScore(timestamp, wakeUpScore));
@@ -139,8 +140,8 @@ public class MotionScoreAlgorithm {
         final Optional<InternalScore> outOfBedScore = getHighestScore(outOfBedScores);
 
         // We always have data, no need to check score.isPresent()
-        final AmplitudeData fallAsleepData = this.dimensions.get(fallAsleepScore.get().timestamp).get(0);
-        final AmplitudeData wakeUpData = this.dimensions.get(wakeUpScore.get().timestamp).get(0);
+        final AmplitudeData fallAsleepData = this.dimensions.get(fallAsleepScore.get().timestamp).get(1);
+        final AmplitudeData wakeUpData = this.dimensions.get(wakeUpScore.get().timestamp).get(1);
         final AmplitudeData goToBedData = this.dimensions.get(goToBedScore.get().timestamp).get(0);
         final AmplitudeData outOfBedData = this.dimensions.get(outOfBedScore.get().timestamp).get(0);
 
@@ -175,14 +176,6 @@ public class MotionScoreAlgorithm {
                     new DateTime(sleep.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleep.getOffsetMillis())));
             sleep = new Segment(goToBedScore.get().timestamp, goToBedScore.get().timestamp, goToBedData.offsetMillis);
 
-        }
-
-        // Heuristic fix: go to bed time can not be too off from fall asleep time
-        if(sleep.getStartTimestamp() - goToBed.getStartTimestamp() > 2 * DateTimeConstants.MILLIS_PER_HOUR){
-            LOGGER.warn("Go to bed {} 2 hours before fall asleep {}, sleep set to go to bed.",
-                    new DateTime(goToBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBed.getOffsetMillis())),
-                    new DateTime(sleep.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleep.getOffsetMillis())));
-            sleep = new Segment(goToBedScore.get().timestamp, goToBedScore.get().timestamp, goToBedData.offsetMillis);
         }
 
         // Heuristic fix: out of bed time can not be too off from last data point
