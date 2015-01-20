@@ -1,8 +1,8 @@
 package com.hello.suripu.algorithm.sleep.scores;
 
 import com.hello.suripu.algorithm.core.AmplitudeData;
+import com.hello.suripu.algorithm.pdf.LinearRankAscendingScoringFunction;
 import com.hello.suripu.algorithm.pdf.LinearRankDescendingScoringFunction;
-import com.hello.suripu.algorithm.pdf.RankPowerScoringFunction;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,24 +24,44 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
     @Override
     public Map<AmplitudeData, EventScores> getPDF(Collection<AmplitudeData> data) {
         final List<Long> timestamps = new ArrayList<>(data.size());
-        final List<Double> amplitudes = new ArrayList<>(data.size());
+        final List<Long> amplitudes = new ArrayList<>(data.size());
         for(final AmplitudeData amplitudeData:data){
-            timestamps.add(Long.valueOf(amplitudeData.timestamp));
-            amplitudes.add(Double.valueOf(amplitudeData.amplitude));
+            timestamps.add(amplitudeData.timestamp);
+            amplitudes.add((long)amplitudeData.amplitude);
         }
 
-        final LinearRankDescendingScoringFunction sleepTimeScoreFunction = new LinearRankDescendingScoringFunction(1d, 1d, new double[]{0d, 0.5d});  // sleep time should be desc
-        final Map<Long, Double> sleepTimePDF = sleepTimeScoreFunction.getPDF(timestamps);
+        final LinearRankDescendingScoringFunction sleepTimeScoreFunction =
+                new LinearRankDescendingScoringFunction(1d, 1d, new double[]{0d, 0.5d});  // sleep time should be desc
 
-        final RankPowerScoringFunction amplitudeScoringFunction = new RankPowerScoringFunction(this.motionMaxPower);
-        final Map<Double, Double> motionDensityRankPDF = amplitudeScoringFunction.getPDF(amplitudes);
+        final LinearRankAscendingScoringFunction wakeUpTimeScoreFunction =
+                new LinearRankAscendingScoringFunction(0d, 1d, new double[]{0.5d, 1.0d});  // sleep time should be desc
+
+        final Map<Long, Double> sleepTimePDF = sleepTimeScoreFunction.getPDF(timestamps);
+        final Map<Long, Double> wakeUpTimePDF = wakeUpTimeScoreFunction.getPDF(timestamps);
+
+        final LinearRankAscendingScoringFunction sleepMotionScoringFunction =
+                new LinearRankAscendingScoringFunction(1d, 1d, new double[]{0d, 1d});
+
+        final LinearRankDescendingScoringFunction wakeUpMotionScoringFunction =
+                new LinearRankDescendingScoringFunction(1d, 0d, new double[]{0d, 1d});
+
+        final Map<Long, Double> sleepMotionDensityRankPDF = sleepMotionScoringFunction.getPDF(amplitudes);
+        final Map<Long, Double> wakeUpMotionDensityRankPDF = wakeUpMotionScoringFunction.getPDF(amplitudes);
+
         final HashMap<AmplitudeData, EventScores> pdf = new HashMap<>();
 
         for(final AmplitudeData datum:data){
-            final double motionDensityScore = amplitudeScoringFunction.getScore(datum.amplitude, motionDensityRankPDF);
+            final double sleepMotionDensityScore = sleepMotionScoringFunction.getScore((long)datum.amplitude,
+                    sleepMotionDensityRankPDF);
             final double sleepTimeScore = sleepTimeScoreFunction.getScore(datum.timestamp, sleepTimePDF);
 
-            pdf.put(datum, new EventScores(motionDensityScore * sleepTimeScore, 1d, 1d));
+            final double wakeUpMotionDensityScore = wakeUpMotionScoringFunction.getScore((long)datum.amplitude,
+                    wakeUpMotionDensityRankPDF);
+            final double wakeUpTimeScore = wakeUpTimeScoreFunction.getScore(datum.timestamp, wakeUpTimePDF);
+
+            pdf.put(datum, new EventScores(Math.pow(sleepMotionDensityScore, this.motionMaxPower) * sleepTimeScore,
+                    Math.pow(wakeUpMotionDensityScore, this.motionMaxPower) * wakeUpTimeScore,
+                    1d, 1d));
         }
         return pdf;
     }
@@ -53,6 +73,6 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
         }
 
         // Not found, keep fall asleep score as it is, ground the wake up and go to bed scores.
-        return new EventScores(0d, 1d, 1d);
+        return new EventScores(0d, 0d, 1d, 1d);
     }
 }

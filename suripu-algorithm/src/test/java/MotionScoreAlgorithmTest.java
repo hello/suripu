@@ -112,7 +112,7 @@ public class MotionScoreAlgorithmTest {
         final List<AmplitudeData> smoothedData = smoother.process(dataSource.getDataForDate(new DateTime(2014, 12, 02, 0, 0, DateTimeZone.UTC)));
 
         final ArrayList<SleepDataScoringFunction> scoringFunctions = new ArrayList<>();
-        scoringFunctions.add(new AmplitudeDataScoringFunction(10, new double[]{0.5d, 1d}));
+        scoringFunctions.add(new AmplitudeDataScoringFunction(10));
         scoringFunctions.add(new LightOutScoringFunction(firstLightOutTime, 3d));
 
         final Map<Long, List<AmplitudeData>> matrix = MotionScoreAlgorithm.createFeatureMatrix(smoothedData);
@@ -126,9 +126,9 @@ public class MotionScoreAlgorithmTest {
         }
         final MotionScoreAlgorithm algorithm = new MotionScoreAlgorithm(matrix, 2, smoothedData.size(), scoringFunctions);
         final List<Segment> sleepSegments = algorithm.getSleepEvents();
-        final Segment sleepSegment = sleepSegments.get(1);
+        //final Segment sleepSegment = sleepSegments.get(1);
         final Segment goToBedSegment = sleepSegments.get(0);
-        final Segment wakeUpSegment = sleepSegments.get(2);
+        final Segment outOfBedSegment = sleepSegments.get(3);
 
 
         // Out put from python script suripu_light_test.py:
@@ -138,14 +138,14 @@ public class MotionScoreAlgorithmTest {
         */
 
         final DateTime goToBedTime = new DateTime(goToBedSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBedSegment.getOffsetMillis()));
-        final DateTime sleepTime = new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis()));
-        final DateTime wakeUpTime = new DateTime(wakeUpSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis()));
+        //final DateTime sleepTime = new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis()));
+        final DateTime outOfBedTime = new DateTime(outOfBedSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBedSegment.getOffsetMillis()));
 
         final DateTime goToBedLocalUTC = new DateTime(goToBedTime.getYear(), goToBedTime.getMonthOfYear(), goToBedTime.getDayOfMonth(), goToBedTime.getHourOfDay(), goToBedTime.getMinuteOfHour(), DateTimeZone.UTC);
-        final DateTime sleepLocalUTC = new DateTime(sleepTime.getYear(), sleepTime.getMonthOfYear(), sleepTime.getDayOfMonth(), sleepTime.getHourOfDay(), sleepTime.getMinuteOfHour(), DateTimeZone.UTC);
-        final DateTime wakeUpLocalUTC = new DateTime(wakeUpTime.getYear(), wakeUpTime.getMonthOfYear(), wakeUpTime.getDayOfMonth(), wakeUpTime.getHourOfDay(), wakeUpTime.getMinuteOfHour(), DateTimeZone.UTC);
+        //final DateTime sleepLocalUTC = new DateTime(sleepTime.getYear(), sleepTime.getMonthOfYear(), sleepTime.getDayOfMonth(), sleepTime.getHourOfDay(), sleepTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime outOfBedLocalUTC = new DateTime(outOfBedTime.getYear(), outOfBedTime.getMonthOfYear(), outOfBedTime.getDayOfMonth(), outOfBedTime.getHourOfDay(), outOfBedTime.getMinuteOfHour(), DateTimeZone.UTC);
 
         assertThat(goToBedLocalUTC, is(new DateTime(2014, 12, 03, 1, 39, DateTimeZone.UTC)));
-        assertThat(wakeUpLocalUTC, is(new DateTime(2014, 12, 03, 7, 9, DateTimeZone.UTC)));
+        assertThat(outOfBedLocalUTC, is(new DateTime(2014, 12, 03, 7, 9, DateTimeZone.UTC)));
     }
 }

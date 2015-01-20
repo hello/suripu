@@ -37,7 +37,7 @@ public class LightOutScoringFunction implements SleepDataScoringFunction<Amplitu
 
             // since all scores are multiplied together and light out is just for go to bed detection
             // the other scores have to be 1.
-            lightOutPDF.put(datum, new EventScores(1d, 1d, sleepProbability));
+            lightOutPDF.put(datum, new EventScores(1d, 1d, sleepProbability, 1d));
         }
         return lightOutPDF;
     }
@@ -45,15 +45,9 @@ public class LightOutScoringFunction implements SleepDataScoringFunction<Amplitu
     @Override
     public EventScores getScore(final AmplitudeData data, final Map<AmplitudeData, EventScores> pdf) {
         if(pdf.containsKey(data)){
-            final EventScores eventScores = pdf.get(data);
-
-            // The benefit of adding weight is when we run into false positive the motion data
-            // wont get cut off.
-            return new EventScores(eventScores.sleepEventScore,
-                    eventScores.wakeUpEventScore,
-                    eventScores.goToBedEventScore);
+            return pdf.get(data);
         }
 
-        return new EventScores(1d, 1d, 1d);  // Not found, keep everything as it is.
+        return new EventScores(1d, 1d, 1d, 1d);  // Not found, keep everything as it is.
     }
 }

@@ -5,13 +5,17 @@ package com.hello.suripu.algorithm.sleep.scores;
  */
 public class EventScores {
     public final double goToBedEventScore;
+    public final double outOfBedEventScore;
+
     public final double sleepEventScore;
     public final double wakeUpEventScore;
 
-    public EventScores(final double sleepEventScore, final double wakeUpEventScore, final double goToBedEventScore){
+    public EventScores(final double sleepEventScore, final double wakeUpEventScore,
+                       final double goToBedEventScore, final double outOfBedEventScore){
         this.sleepEventScore = sleepEventScore;
         this.wakeUpEventScore = wakeUpEventScore;
         this.goToBedEventScore = goToBedEventScore;
+        this.outOfBedEventScore = outOfBedEventScore;
     }
 
 }
