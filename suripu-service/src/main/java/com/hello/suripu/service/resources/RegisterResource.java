@@ -140,7 +140,7 @@ public class RegisterResource extends BaseResource {
     private PairState getPillPairingState(final String senseId, final String pillId, final long accountId){
         final List<DeviceAccountPair> pillsPairedToCurrentAccount = this.deviceDAO.getPillsForAccountId(accountId);
         final List<DeviceAccountPair> accountsPairedToCurrentPill = this.deviceDAO.getLinkedAccountFromPillId(pillId);
-        if(pillsPairedToCurrentAccount.size() > 1 || accountsPairedToCurrentPill.size() > 1){  // This account already paired with multiple pills
+        if(pillsPairedToCurrentAccount.size() > 1){  // This account already paired with multiple pills
             LOGGER.warn("Account {} already paired with multiple pills. pills paired {}, accounts paired {}",
                     accountId,
                     pillsPairedToCurrentAccount.size(),
@@ -171,6 +171,14 @@ public class RegisterResource extends BaseResource {
                 LOGGER.error("Debug mode: account {} already paired with {} pills.", accountId, pillsPairedToCurrentAccount.size());
                 return PairState.PAIRING_VIOLATION;
             }
+        }
+
+        if(accountsPairedToCurrentPill.size() > 1){
+            LOGGER.warn("Account {} already paired with multiple pills. pills paired {}, accounts paired {}",
+                    accountId,
+                    pillsPairedToCurrentAccount.size(),
+                    accountsPairedToCurrentPill.size());
+            return PairState.PAIRING_VIOLATION;
         }
 
         // else:
