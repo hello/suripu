@@ -1,6 +1,10 @@
 package com.hello.suripu.algorithm.utils;
 
 import com.hello.suripu.algorithm.core.AmplitudeData;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -11,6 +15,7 @@ import java.util.Map;
  * Created by pangwu on 1/15/15.
  */
 public class MotionFeatures {
+    private final static Logger LOGGER = LoggerFactory.getLogger(MotionFeatures.class);
     public enum FeatureType{
         MAX_AMPLITUDE,
         DENSITY_DECADE_BACKTRACK_MAX_AMPLITUDE
@@ -82,6 +87,11 @@ public class MotionFeatures {
 
             final long timestamp = ampWindow.getLast().timestamp;
             final int offsetMillis = ampWindow.getLast().offsetMillis;
+
+            LOGGER.debug("{}, delta: {}, max_amp: {}",
+                    new DateTime(timestamp, DateTimeZone.forOffsetMillis(offsetMillis)),
+                    densityDecade,
+                    maxBackTrackAmplitude);
 
             if(!features.containsKey(FeatureType.MAX_AMPLITUDE)){
                 features.put(FeatureType.MAX_AMPLITUDE, new LinkedList<AmplitudeData>());

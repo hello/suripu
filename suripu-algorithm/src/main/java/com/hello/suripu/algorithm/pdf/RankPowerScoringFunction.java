@@ -11,6 +11,7 @@ import java.util.Map;
 /**
  * Created by pangwu on 12/16/14.
  */
+@Deprecated
 public class RankPowerScoringFunction implements ScoringFunction<Double, Double> {
     private final double maxPower;
     public RankPowerScoringFunction(final double maxPower){
