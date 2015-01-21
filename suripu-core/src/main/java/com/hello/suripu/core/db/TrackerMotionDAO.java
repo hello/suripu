@@ -202,6 +202,11 @@ public abstract class TrackerMotionDAO {
                 if (matcher.find()) {
                     LOGGER.debug("Dupe: Account {} Pill {} ts {}", trackerMotion.accountId, trackerMotion.trackerId, trackerMotion.timestamp);
                 }
+                LOGGER.error("Insert data for pill {}, account {}, ts {} failed, error {}",
+                        trackerMotion.trackerId,
+                        trackerMotion.accountId,
+                        trackerMotion.timestamp,
+                        exception.getMessage());
             }
             inserted++;
         }
