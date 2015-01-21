@@ -19,7 +19,7 @@ public class TrendGraph {
         tmpMap.put(TimePeriodType.OVER_TIME_1W, 7);
         tmpMap.put(TimePeriodType.OVER_TIME_2W, 14);
         tmpMap.put(TimePeriodType.OVER_TIME_1M, 30);
-        tmpMap.put(TimePeriodType.OVER_TIME_1M, 90);
+        tmpMap.put(TimePeriodType.OVER_TIME_3M, 90);
         tmpMap.put(TimePeriodType.OVER_TIME_ALL, 365);
         PERIOD_TYPE_DAYS = ImmutableMap.copyOf(tmpMap);
     }

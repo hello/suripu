@@ -140,7 +140,11 @@ public class RegisterResource extends BaseResource {
     private PairState getPillPairingState(final String senseId, final String pillId, final long accountId){
         final List<DeviceAccountPair> pillsPairedToCurrentAccount = this.deviceDAO.getPillsForAccountId(accountId);
         final List<DeviceAccountPair> accountsPairedToCurrentPill = this.deviceDAO.getLinkedAccountFromPillId(pillId);
-        if(pillsPairedToCurrentAccount.size() > 1 || accountsPairedToCurrentPill.size() > 1){  // This account already paired with multiple pills
+        if(pillsPairedToCurrentAccount.size() > 1){  // This account already paired with multiple pills
+            LOGGER.warn("Account {} already paired with multiple pills. pills paired {}, accounts paired {}",
+                    accountId,
+                    pillsPairedToCurrentAccount.size(),
+                    accountsPairedToCurrentPill.size());
             return PairState.PAIRING_VIOLATION;
         }
 
@@ -159,9 +163,22 @@ public class RegisterResource extends BaseResource {
             if(pillsPairedToCurrentAccount.size() == 0 /* && accountsPairedToCurrentPill.size() >= 0 */ /* 2nd condition actually not needed */){
                 return PairState.NOT_PAIRED;
             }else{
+                for(final DeviceAccountPair pill:pillsPairedToCurrentAccount){
+                    if(pill.externalDeviceId.equals(pillId)){
+                        return PairState.PAIRED_WITH_CURRENT_ACCOUNT;
+                    }
+                }
                 LOGGER.error("Debug mode: account {} already paired with {} pills.", accountId, pillsPairedToCurrentAccount.size());
                 return PairState.PAIRING_VIOLATION;
             }
+        }
+
+        if(accountsPairedToCurrentPill.size() > 1){
+            LOGGER.warn("Account {} already paired with multiple pills. pills paired {}, accounts paired {}",
+                    accountId,
+                    pillsPairedToCurrentAccount.size(),
+                    accountsPairedToCurrentPill.size());
+            return PairState.PAIRING_VIOLATION;
         }
 
         // else:
@@ -173,6 +190,11 @@ public class RegisterResource extends BaseResource {
             // account already paired with a pill, only one pill is allowed
             LOGGER.error("Account {} already paired with pill {}", accountId, pillsPairedToCurrentAccount.get(0).externalDeviceId);
         }
+
+        LOGGER.warn("Paired failed for account {}. pills paired {}, accounts paired {}",
+                accountId,
+                pillsPairedToCurrentAccount.size(),
+                accountsPairedToCurrentPill.size());
         return PairState.PAIRING_VIOLATION;
 
     }

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.binders.BindTrackerMotion;
 import com.hello.suripu.core.db.mappers.GroupedTrackerMotionMapper;
 import com.hello.suripu.core.db.mappers.TrackerMotionMapper;
+import com.hello.suripu.core.db.mappers.TrackerMotionOffsetMillisMapper;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -57,6 +58,9 @@ public abstract class TrackerMotionDAO {
             "MIN(id) as id, " +
             "MAX(tracker_id) as tracker_id, " +
             "ROUND(AVG(svm_no_gravity)) as svm_no_gravity, " +
+            "ROUND(AVG(motion_range)) AS motion_range, " +
+            "ROUND(AVG(kickoff_counts)) AS kickoff_counts, " +
+            "ROUND(AVG(on_duration)) AS on_duration, " +
             "date_trunc('hour', ts) + (CAST(date_part('minute', ts) AS integer) / :slot_duration) * :slot_duration * interval '1 min' AS ts_bucket, " +
             "MAX(offset_millis) as offset_millis " +
             "FROM tracker_motion_master " +
@@ -93,11 +97,10 @@ public abstract class TrackerMotionDAO {
     @SqlUpdate("DELETE FROM tracker_motion_master WHERE tracker_id = :tracker_id")
     public abstract Integer deleteDataTrackerID(@Bind("tracker_id") Long trackerID);
 
-    @RegisterMapper(GroupedTrackerMotionMapper.class)
+    @RegisterMapper(TrackerMotionOffsetMillisMapper.class)
     @SqlQuery("SELECT MAX(id) AS id, " +
             "MAX(account_id) AS account_id, " +
             "MAX(tracker_id) AS tracker_id, " +
-            "MAX(svm_no_gravity) AS svm_no_gravity, " +
             "MIN(ts) AS ts, " +
             "offset_millis, " +
             "MIN(local_utc_ts) AS ts_bucket from tracker_motion_master " +
@@ -199,6 +202,11 @@ public abstract class TrackerMotionDAO {
                 if (matcher.find()) {
                     LOGGER.debug("Dupe: Account {} Pill {} ts {}", trackerMotion.accountId, trackerMotion.trackerId, trackerMotion.timestamp);
                 }
+                LOGGER.error("Insert data for pill {}, account {}, ts {} failed, error {}",
+                        trackerMotion.trackerId,
+                        trackerMotion.accountId,
+                        trackerMotion.timestamp,
+                        exception.getMessage());
             }
             inserted++;
         }

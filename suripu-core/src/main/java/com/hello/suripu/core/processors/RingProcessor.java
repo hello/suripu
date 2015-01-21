@@ -77,7 +77,7 @@ public class RingProcessor {
                                                                final RingTimeDAODynamoDB ringTimeDAODynamoDB,
                                                                final TrackerMotionDAO trackerMotionDAO,
                                                                final String morpheusId,
-                                                               final DateTime currentTimeNoAligned,
+                                                               final DateTime currentTimeNotAligned,
                                                                final int smartAlarmProcessAheadInMinutes,
                                                                final int slidingWindowSizeInMinutes,
                                                                final float lightSleepThreshold,
@@ -105,7 +105,7 @@ public class RingProcessor {
 
             final List<Alarm> alarms = userInfo.alarmList;
             final DateTime currentUserLocalTime = Alarm.Utils.alignToMinuteGranularity(
-                    currentTimeNoAligned.withZone(userInfo.timeZone.get()));
+                    currentTimeNotAligned.withZone(userInfo.timeZone.get()));
 
             RingTime nextRingTimeFromTemplate = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarms, currentUserLocalTime.getMillis(), userInfo.timeZone.get());
 
