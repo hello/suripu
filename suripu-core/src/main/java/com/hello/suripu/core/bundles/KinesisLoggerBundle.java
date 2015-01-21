@@ -35,6 +35,7 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
         private final String topic;
         private final Integer bufferSize;
         private final String origin;
+        private final Boolean isProduction;
 
 
         public KinesisAppender(
@@ -47,6 +48,7 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
             this.origin = loggerConfiguration.origin();
             this.batch = LoggingProtos.BatchLogMessage.newBuilder();
             this.batch.setAppVersion(appVersion);
+            this.isProduction = loggerConfiguration.isProduction();
         }
 
         private MessageFormatter formatter;
@@ -88,7 +90,7 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
                     .setLevel(eventObject.getLevel().toInteger())
                     .setOrigin(origin)
                     .setTs(DateTime.now().getMillis())
-                    .setProduction(false)  // TODO: configure this
+                    .setProduction(isProduction)
                     .build();
             batch.addMessages(logMessage);
         }

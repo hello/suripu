@@ -40,7 +40,7 @@ public class AggregateScore implements Comparable<AggregateScore> {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(Score.class)
+        return Objects.toStringHelper(AggregateScore.class)
                 .add("account", accountId)
                 .add("score", score)
                 .add("date", date)

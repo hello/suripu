@@ -1,5 +1,6 @@
 package com.hello.suripu.core.db;
 
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
@@ -26,8 +27,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.db.util.Compression;
-import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -52,7 +53,7 @@ import java.util.Map;
 public class EventDAODynamoDB {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(EventDAODynamoDB.class);
-    private final AmazonDynamoDBClient dynamoDBClient;
+    private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
 
     public static final String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
@@ -71,7 +72,7 @@ public class EventDAODynamoDB {
     public final String JSON_CHARSET = "UTF-8";
 
 
-    public EventDAODynamoDB(final AmazonDynamoDBClient dynamoDBClient, final String tableName){
+    public EventDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
 

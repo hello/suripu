@@ -11,6 +11,7 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
+import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.FeatureStore;
@@ -111,10 +112,9 @@ public final class PillScoreWorkerCommand extends ConfiguredCommand<PillScoreWor
 
         final KeyStore keyStore = new KeyStoreDynamoDB(dynamoDB, configuration.getDynamoDBKeyStoreConfiguration().getTableName(), new byte[16], 120);
 
-
-        final AmazonDynamoDBClient featureDynamoDB = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
+        final AmazonDynamoDB featureDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
         final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
-        featureDynamoDB.setEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
         final FeatureStore featureStore = new FeatureStore(featureDynamoDB, "features", featureNamespace);
 
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);

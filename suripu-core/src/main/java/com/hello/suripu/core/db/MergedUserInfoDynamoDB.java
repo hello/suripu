@@ -1,6 +1,7 @@
 package com.hello.suripu.core.db;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeAction;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
@@ -41,7 +42,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.Color;
+import java.awt.*;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -57,7 +58,7 @@ import java.util.Map;
 public class MergedUserInfoDynamoDB {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(MergedUserInfoDynamoDB.class);
-    private final AmazonDynamoDBClient dynamoDBClient;
+    private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
 
     public static final String MORPHEUS_ID_ATTRIBUTE_NAME = "device_id";
@@ -84,7 +85,7 @@ public class MergedUserInfoDynamoDB {
     private static int MAX_CALL_COUNT = 3;
     public static final int MAX_ALARM_COUNT = 7;
 
-    public MergedUserInfoDynamoDB(final AmazonDynamoDBClient dynamoDBClient, final String tableName){
+    public MergedUserInfoDynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
     }
