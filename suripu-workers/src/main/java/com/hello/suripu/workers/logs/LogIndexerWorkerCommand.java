@@ -2,13 +2,14 @@ package com.hello.suripu.workers.logs;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibConfiguration;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
+import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
@@ -48,10 +49,10 @@ public class LogIndexerWorkerCommand extends ConfiguredCommand<LogIndexerWorkerC
         kinesisConfig.withKinesisEndpoint(configuration.getKinesisEndpoint());
         kinesisConfig.withInitialPositionInStream(InitialPositionInStream.LATEST);
 
-        final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
+        final AmazonDynamoDB featureDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
         final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
-        dynamoDBClient.setEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
-        final FeatureStore featureStore = new FeatureStore(dynamoDBClient, "features", featureNamespace);
+        final FeatureStore featureStore = new FeatureStore(featureDynamoDB, "features", featureNamespace);
 
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);

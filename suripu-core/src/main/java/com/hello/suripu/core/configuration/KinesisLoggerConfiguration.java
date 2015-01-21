@@ -36,4 +36,8 @@ public class KinesisLoggerConfiguration {
     public String origin() {
         return origin;
     }
+
+    @JsonProperty("production")
+    private Boolean isProduction = false;
+    public Boolean isProduction() {return isProduction;}
 }

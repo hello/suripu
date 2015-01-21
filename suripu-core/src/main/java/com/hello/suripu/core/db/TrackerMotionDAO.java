@@ -79,7 +79,7 @@ public abstract class TrackerMotionDAO {
     public abstract Integer insertTrackerMotion(@BindTrackerMotion TrackerMotion trackerMotion);
 
 
-    @SqlBatch("INSERT INTO tracker_motion_master (account_id, tracker_id, svm_no_gravity, ts, offset_millis, local_utc_ts) " +
+    @SqlBatch("INSERT INTO tracker_motion_master (account_id, tracker_id, svm_no_gravity, ts, offset_millis, local_utc_ts, motion_range, kickoff_counts, on_duration_seconds) " +
             "VALUES(:account_ids, :tracker_ids, :svm_no_gravity, :ts, :offset_millis, :local_utc_ts, :motion_range, :kickoff_counts, :on_duration_seconds);")
     public abstract void batchInsert(
             @Bind("account_ids") List<Long> accountIDs,
@@ -202,6 +202,11 @@ public abstract class TrackerMotionDAO {
                 if (matcher.find()) {
                     LOGGER.debug("Dupe: Account {} Pill {} ts {}", trackerMotion.accountId, trackerMotion.trackerId, trackerMotion.timestamp);
                 }
+                LOGGER.error("Insert data for pill {}, account {}, ts {} failed, error {}",
+                        trackerMotion.trackerId,
+                        trackerMotion.accountId,
+                        trackerMotion.timestamp,
+                        exception.getMessage());
             }
             inserted++;
         }
