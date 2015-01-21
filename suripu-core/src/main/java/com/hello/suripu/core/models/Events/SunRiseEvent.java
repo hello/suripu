@@ -2,6 +2,7 @@ package com.hello.suripu.core.models.Events;
 
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SleepSegment;
+import com.hello.suripu.core.message.English;
 
 /**
  * Created by pangwu on 11/22/14.
@@ -17,7 +18,7 @@ public class SunRiseEvent extends Event {
     }
 
     @Override
-    public String getDescription(){ return ""; }
+    public String getDescription(){ return English.SUNRISE_MESSAGE; }
 
     /*
     * Let's don't put the setters in the base class, because not all events has those properties.

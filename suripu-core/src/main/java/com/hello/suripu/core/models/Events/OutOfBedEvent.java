@@ -2,6 +2,7 @@ package com.hello.suripu.core.models.Events;
 
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SleepSegment;
+import com.hello.suripu.core.message.English;
 
 /**
  * Created by pangwu on 11/24/14.
@@ -13,7 +14,7 @@ public class OutOfBedEvent extends Event {
 
     @Override
     public String getDescription() {
-        return "";
+        return English.OUT_OF_BED_MESSAGE;
     }
 
     @Override

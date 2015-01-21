@@ -2,6 +2,7 @@ package com.hello.suripu.core.models.Events;
 
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SleepSegment;
+import com.hello.suripu.core.message.English;
 
 /**
  * Created by pangwu on 11/24/14.
@@ -19,7 +20,7 @@ public class SleepMotionEvent extends Event {
 
     @Override
     public String getDescription() {
-        return "Toss and turns";
+        return English.SLEEP_MOTION_MESSAGE;
     }
 
     @Override
