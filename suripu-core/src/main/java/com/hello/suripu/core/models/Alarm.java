@@ -296,7 +296,7 @@ public class Alarm {
             final Set<Integer> alarmDays = new HashSet<Integer>();
             for(final Alarm alarm: alarms){
                 if(!alarm.isEnabled) {
-                    return AlarmStatus.OK;
+                    continue;
                 }
 
                 if(!alarm.isRepeated){
