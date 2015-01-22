@@ -54,7 +54,7 @@ public class English {
     // Humidity Conditions
     public final static String LOW_HUMIDITY_MESSAGE = "It’s **pretty dry** in here.";
     public final static String HIGH_HUMIDITY_MESSAGE = "It’s **pretty hot** in here.";
-    public final static String IDEAL_HUMIDITY_MESSAGE = "Temperature is **just right**.";
+    public final static String IDEAL_HUMIDITY_MESSAGE = "Humidity is **just right**.";
 
     // Particulates Conditions (Air Quality)
     public final static String VERY_HIGH_PARTICULATES_MESSAGE = "AQI is at an **UNHEALTHY** level.";
