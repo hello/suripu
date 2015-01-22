@@ -78,6 +78,7 @@ public class QuestionProcessorTest {
                 .withCheckSkipsNum(CHECK_SKIP_NUM)
                 .withQuestions(questionResponseDAO);
 
+        when(questionResponseDAO.getBaseAndRecentResponses(ACCOUNT_ID_PASS, Question.FREQUENCY.ONE_TIME.toSQLString(), oneWeekAgo)).thenReturn(ImmutableList.copyOf(Collections.EMPTY_LIST));
         this.questionProcessor = builder.build();
     }
 
