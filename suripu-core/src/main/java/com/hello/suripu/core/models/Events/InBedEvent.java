@@ -12,7 +12,7 @@ public class InBedEvent extends Event {
     private String message;
 
     public InBedEvent(long startTimestamp, long endTimestamp, int timezoneOffset) {
-        super(Type.SLEEP, startTimestamp, endTimestamp, timezoneOffset);
+        super(Type.IN_BED, startTimestamp, endTimestamp, timezoneOffset);
         this.message = English.IN_BED_MESSAGE;
     }
 
