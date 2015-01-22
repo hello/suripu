@@ -85,6 +85,8 @@ public class Bucketing {
                 sensorValue = (float) DataUtils.convertRawDustCountsToAQI(deviceData.ambientDustMax, deviceData.firmwareVersion);
             } else if (sensorName.equals("light")) {
                 sensorValue = (float) deviceData.ambientLight;
+            } else if (sensorName.equals("sound")) {
+                sensorValue = DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB);
             } else {
                 LOGGER.warn("Sensor {} is not supported for account_id: {}. Returning early", sensorName);
                 return Optional.absent();

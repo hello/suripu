@@ -42,6 +42,9 @@ public @interface BindDeviceData {
                     q.bind("firmware_version", model.firmwareVersion);
                     q.bind("wave_count", model.waveCount);
                     q.bind("hold_count", model.holdCount);
+                    q.bind("audio_num_disturbances", model.audioNumDisturbances);
+                    q.bind("audio_peak_disturbances_db", model.audioPeakDisturbancesDB);
+                    q.bind("audio_peak_background_db", model.audioPeakBackgroundDB);
                 }
             };
         }

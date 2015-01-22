@@ -166,7 +166,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                     }
 
                     final DateTimeZone userTimeZone = timeZoneOptional.get();
-                    
+
                     final DeviceData.Builder builder = new DeviceData.Builder()
                             .withAccountId(pair.accountId)
                             .withDeviceId(pair.internalDeviceId)
@@ -184,10 +184,12 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                             .withDateTimeUTC(periodicDataSampleDateTime)
                             .withFirmwareVersion(periodicData.getFirmwareVersion())
                             .withWaveCount(periodicData.hasWaveCount() ? periodicData.getWaveCount() : 0)
-                            .withHoldCount(periodicData.hasHoldCount() ? periodicData.getHoldCount() : 0);
+                            .withHoldCount(periodicData.hasHoldCount() ? periodicData.getHoldCount() : 0)
+                            .withAudioNumDisturbances(periodicData.hasAudioNumDisturbances() ? periodicData.getAudioNumDisturbances() : 0)
+                            .withAudioPeakDisturbancesDB(periodicData.hasAudioPeakDisturbanceEnergyDb() ? periodicData.getAudioPeakDisturbanceEnergyDb() : 0)
+                            .withAudioPeakBackgroundDB(periodicData.hasAudioPeakBackgroundEnergyDb() ? periodicData.getAudioPeakBackgroundEnergyDb() : 0);
 
                     final DeviceData deviceData = builder.build();
-                    dataForDevice.add(deviceData);
                 }
             }
             activeSenses.put(deviceName, batchPeriodicDataWorker.getReceivedAt());
