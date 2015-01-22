@@ -30,18 +30,21 @@ public class English {
     public final static String LOADING_HUMIDITY_MESSAGE = "Waiting for data.";
     public final static String LOADING_PARTICULATES_MESSAGE = "Waiting for data.";
     public final static String LOADING_LIGHT_MESSAGE = "Waiting for data.";
+    public final static String LOADING_SOUND_MESSAGE = "Waiting for data.";
 
     // Unknown States
     public final static String UNKNOWN_TEMPERATURE_MESSAGE = "Could not retrieve a recent temperature reading";
     public final static String UNKNOWN_HUMIDITY_MESSAGE = "Could not retrieve a recent humidity reading";
     public final static String UNKNOWN_PARTICULATES_MESSAGE = "Could not retrieve a recent particulates reading";
     public final static String UNKNOWN_LIGHT_MESSAGE = "Could not retrieve a recent light reading";
+    public final static String UNKNOWN_SOUND_MESSAGE = "Could not retrieve a recent sound reading";
 
     // Advices
     public final static String TEMPERATURE_ADVICE_MESSAGE = "You sleep better when temperature is between **XX%s** and **YY%s**.";
     public final static String HUMIDITY_ADVICE_MESSAGE = "You sleep better when humidity is between **XX** and **YY**.";
     public final static String PARTICULATES_ADVICE_MESSAGE = "You sleep better when particulates are below **XX**.";
     public final static String LIGHT_ADVICE_MESSAGE = "A pitch-black room is usually better";
+    public final static String SOUND_ADVICE_MESSAGE = "You sleep better your room is quiet";
 
     // Temperature Conditions
     public final static String LOW_TEMPERATURE_MESSAGE = "It’s **pretty cold** in here.";
@@ -61,5 +64,7 @@ public class English {
     // Light Conditions
     public final static String IDEAL_LIGHT_MESSAGE = "Light level is **just right**";
 
+    // Sound Conditions
+    public final static String IDEAL_SOUND_MESSAGE = "Sound level is **just right**";
     /* END Current Room State Declaration */
 }
