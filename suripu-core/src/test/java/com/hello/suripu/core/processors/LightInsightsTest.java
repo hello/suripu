@@ -30,11 +30,11 @@ public class LightInsightsTest {
         final DateTime timestamp = DateTime.now(DateTimeZone.UTC).withHourOfDay(19).withMinuteOfHour(0);
         final int offsetMillis = -28800000;
         final List<DeviceData> data = new ArrayList<>();
-        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light, 0, 0, timestamp, offsetMillis, 1, 1, 1));
-        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light + 1, 0, 0, timestamp.withMinuteOfHour(10), offsetMillis, 1, 1, 1));
-        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light + 1, 0, 0, timestamp.withMinuteOfHour(30), offsetMillis, 1, 1, 1));
-        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light, 0, 0, timestamp.withMinuteOfHour(45), offsetMillis, 1, 1, 1));
-        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, zeroLight, 0, 0, timestamp.withHourOfDay(21), offsetMillis, 1, 1, 1));
+        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light, 0, 0, timestamp, offsetMillis, 1, 1, 1, 0, 0, 0));
+        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light + 1, 0, 0, timestamp.withMinuteOfHour(10), offsetMillis, 1, 1, 1, 0, 0, 0));
+        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light + 1, 0, 0, timestamp.withMinuteOfHour(30), offsetMillis, 1, 1, 1, 0, 0, 0));
+        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light, 0, 0, timestamp.withMinuteOfHour(45), offsetMillis, 1, 1, 1, 0, 0, 0));
+        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, zeroLight, 0, 0, timestamp.withHourOfDay(21), offsetMillis, 1, 1, 1, 0, 0, 0));
 
         final Optional<InsightCard> insightCardOptional = Lights.processLightData(accountId, data, new LightData());
         if (insightCardOptional.isPresent()) {
@@ -53,11 +53,11 @@ public class LightInsightsTest {
         final DateTime timestamp = DateTime.now(DateTimeZone.UTC).withHourOfDay(19).withMinuteOfHour(0);
         final int offsetMillis = -28800000;
         final List<DeviceData> data = new ArrayList<>();
-        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light, 0, 0, timestamp, offsetMillis, 1, 1, 1));
-        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light + 1, 0, 0, timestamp.withMinuteOfHour(10), offsetMillis, 1, 1, 1));
-        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light + 1, 0, 0, timestamp.withMinuteOfHour(30), offsetMillis, 1, 1, 1));
-        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light, 0, 0, timestamp.withMinuteOfHour(45), offsetMillis, 1, 1, 1));
-        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, zeroLight, 0, 0, timestamp.withHourOfDay(21), offsetMillis, 1, 1, 1));
+        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light, 0, 0, timestamp, offsetMillis, 1, 1, 1, 0, 0, 0));
+        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light + 1, 0, 0, timestamp.withMinuteOfHour(10), offsetMillis, 1, 1, 1, 0, 0, 0));
+        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light + 1, 0, 0, timestamp.withMinuteOfHour(30), offsetMillis, 1, 1, 1, 0, 0, 0));
+        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light, 0, 0, timestamp.withMinuteOfHour(45), offsetMillis, 1, 1, 1, 0, 0, 0));
+        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, zeroLight, 0, 0, timestamp.withHourOfDay(21), offsetMillis, 1, 1, 1, 0, 0, 0));
 
         final Optional<InsightCard> insightCardOptional = Lights.processLightData(accountId, data, new LightData());
         if (insightCardOptional.isPresent()) {

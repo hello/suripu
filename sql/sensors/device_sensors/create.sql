@@ -97,6 +97,10 @@ ALTER TABLE device_sensors_master ADD COLUMN firmware_version INTEGER DEFAULT 0;
 ALTER TABLE device_sensors_master ADD COLUMN wave_count INTEGER DEFAULT 0;
 ALTER TABLE device_sensors_master ADD COLUMN hold_count INTEGER DEFAULT 0;
 
+-- add sound data (01/21/2015)
+ALTER TABLE device_sensors_master ADD COLUMN audio_num_disturbances INTEGER DEFAULT 0;
+ALTER TABLE device_sensors_master ADD COLUMN audio_peak_disturbances_db INTEGER DEFAULT 0; -- converted to DB
+ALTER TABLE device_sensors_master ADD COLUMN audio_peak_background_db INTEGER DEFAULT 0;
 
 -- Trigger function for master insert
 CREATE OR REPLACE FUNCTION device_sensors_master_insert_function() RETURNS TRIGGER LANGUAGE plpgsql AS
