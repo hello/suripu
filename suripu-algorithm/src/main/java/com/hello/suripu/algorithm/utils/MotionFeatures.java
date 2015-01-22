@@ -41,21 +41,19 @@ public class MotionFeatures {
                 densityCount++;
             }
 
-            if(densityWindow.size() == 1){
-                i++;
-                continue;
-            }
-
             if(densityWindow.size() > windowSizeInMinute){
                 if(densityWindow.getFirst().amplitude > 0){
                     densityCount--;
                 }
-                densityWindow.removeFirst();
+                ampWindow.add(densityWindow.removeFirst());
+                if(ampWindow.size() > windowSizeInMinute){
+                    ampWindow.removeFirst();
+                }
             }
 
 
-            if(densityBuffer1.size() == 0 || densityBuffer1.size() < windowSizeInMinute){
-                densityBuffer1.add(new AmplitudeData(densityWindow.getFirst().timestamp, densityCount, densityWindow.getFirst().offsetMillis));
+            if(densityBuffer1.size() < windowSizeInMinute){
+                densityBuffer1.add(new AmplitudeData(densityWindow.getLast().timestamp, densityCount, densityWindow.getLast().offsetMillis));
                 if(densityMax1 < densityCount){
                     densityMax1 = densityCount;
                 }
@@ -63,16 +61,10 @@ public class MotionFeatures {
                 continue;
             }
 
-            if(densityBuffer2.size() == 0 || densityBuffer2.size() < windowSizeInMinute){
-                densityBuffer2.add(new AmplitudeData(densityWindow.getFirst().timestamp, densityCount, densityWindow.getFirst().offsetMillis));
+            if(densityBuffer2.size() < windowSizeInMinute){
+                densityBuffer2.add(new AmplitudeData(densityWindow.getLast().timestamp, densityCount, densityWindow.getLast().offsetMillis));
                 if(densityMax2 < densityCount){
                     densityMax2 = densityCount;
-                }
-
-                ampWindow.add(rawData.get(i - windowSizeInMinute));
-
-                if(ampWindow.size() > windowSizeInMinute){
-                    ampWindow.removeFirst();
                 }
 
                 i++;

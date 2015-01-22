@@ -55,11 +55,11 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
         final HashMap<AmplitudeData, EventScores> pdf = new HashMap<>();
 
         for(final AmplitudeData datum:data){
-            final double sleepMotionDensityScore = sleepMotionScoringFunction.getScore((long)datum.amplitude,
+            final double sleepMotionDensityScore = datum.amplitude == 0 ? 0 : sleepMotionScoringFunction.getScore((long)datum.amplitude,
                     sleepMotionDensityRankPDF);
             final double sleepTimeScore = sleepTimeScoreFunction.getScore(datum.timestamp, sleepTimePDF);
 
-            final double wakeUpMotionDensityScore = wakeUpMotionScoringFunction.getScore((long)datum.amplitude,
+            final double wakeUpMotionDensityScore = datum.amplitude == 0 ? 0 : wakeUpMotionScoringFunction.getScore((long)datum.amplitude,
                     wakeUpMotionDensityRankPDF);
             final double wakeUpTimeScore = wakeUpTimeScoreFunction.getScore(datum.timestamp, wakeUpTimePDF);
 
