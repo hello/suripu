@@ -38,41 +38,48 @@ public abstract class DeviceDataDAO {
     private static final String AGGREGATE_SELECT_STRING_GROUPBY_TSBUCKET = "SELECT " +  // for queries using DeviceDataBucketMapper
             "MAX(account_id) AS account_id," +
             "MAX(device_id) AS device_id," +
-            "ROUND(MIN(ambient_temp)) as ambient_temp," +
-            "ROUND(AVG(ambient_light)) as ambient_light," +
-            "ROUND(AVG(ambient_light_variance)) as ambient_light_variance," +
-            "ROUND(AVG(ambient_light_peakiness)) as ambient_light_peakiness," +
-            "ROUND(AVG(ambient_humidity)) as ambient_humidity," +
-            "ROUND(AVG(ambient_air_quality)) as ambient_air_quality," +
-            "ROUND(AVG(ambient_air_quality_raw)) as ambient_air_quality_raw," +
-            "ROUND(AVG(ambient_dust_variance)) as ambient_dust_variance," +
-            "ROUND(AVG(ambient_dust_min)) as ambient_dust_min," +
-            "ROUND(MAX(ambient_dust_max)) as ambient_dust_max," +
-            "ROUND(MIN(offset_millis)) as offset_millis," +
-            "ROUND(MAX(firmware_version)) as firmware_version," +
-            "ROUND(MAX(wave_count)) as wave_count," +
-            "ROUND(MAX(hold_count)) as hold_count," +
+            "ROUND(MIN(ambient_temp)) AS ambient_temp," +
+            "ROUND(AVG(ambient_light)) AS ambient_light," +
+            "ROUND(AVG(ambient_light_variance)) AS ambient_light_variance," +
+            "ROUND(AVG(ambient_light_peakiness)) AS ambient_light_peakiness," +
+            "ROUND(AVG(ambient_humidity)) AS ambient_humidity," +
+            "ROUND(AVG(ambient_air_quality)) AS ambient_air_quality," +
+            "ROUND(AVG(ambient_air_quality_raw)) AS ambient_air_quality_raw," +
+            "ROUND(AVG(ambient_dust_variance)) AS ambient_dust_variance," +
+            "ROUND(AVG(ambient_dust_min)) AS ambient_dust_min," +
+            "ROUND(MAX(ambient_dust_max)) AS ambient_dust_max," +
+            "ROUND(MIN(offset_millis)) AS offset_millis," +
+            "ROUND(MAX(firmware_version)) AS firmware_version," +
+            "ROUND(MAX(wave_count)) AS wave_count," +
+            "ROUND(MAX(hold_count)) AS hold_count," +
+            "ROUND(MAX(audio_num_disturbances)) AS audio_num_disturbances," +
+            "ROUND(MAX(audio_peak_disturbances_db)) AS audio_peak_disturbances_db," +
+            "ROUND(MAX(audio_peak_background_db)) AS audio_peak_background_db," +
             "date_trunc('hour', ts) + (CAST(date_part('minute', ts) AS integer) / :slot_duration) * :slot_duration * interval '1 min' AS ts_bucket ";
 
     // TODO: Add wave_count, hold_count into table.
     @SqlUpdate("INSERT INTO device_sensors_master (account_id, device_id, ts, local_utc_ts, offset_millis, " +
             "ambient_temp, ambient_light, ambient_light_variance, ambient_light_peakiness, ambient_humidity, " +
             "ambient_air_quality, ambient_air_quality_raw, ambient_dust_variance, ambient_dust_min, ambient_dust_max, " +
-            "firmware_version, wave_count, hold_count) VALUES " +
+            "firmware_version, wave_count, hold_count, " +
+            "audio_num_disturbances, audio_peak_disturbances_db, audio_peak_background_db) VALUES " +
             "(:account_id, :device_id, :ts, :local_utc_ts, :offset_millis, " +
             ":ambient_temp, :ambient_light, :ambient_light_variance, :ambient_light_peakiness, :ambient_humidity, " +
             ":ambient_air_quality, :ambient_air_quality_raw, :ambient_dust_variance, :ambient_dust_min, :ambient_dust_max, " +
-            ":firmware_version, :wave_count, :hold_count)")
+            ":firmware_version, :wave_count, :hold_count, " +
+            ":audio_num_disturbances, :audio_peak_disturbances_db, :audio_peak_background_db)")
     public abstract void insert(@BindDeviceData final DeviceData deviceData);
 
     @SqlBatch("INSERT INTO device_sensors_master (account_id, device_id, ts, local_utc_ts, offset_millis, " +
             "ambient_temp, ambient_light, ambient_light_variance, ambient_light_peakiness, ambient_humidity, " +
             "ambient_air_quality, ambient_air_quality_raw, ambient_dust_variance, ambient_dust_min, ambient_dust_max, " +
-            "firmware_version, wave_count, hold_count) VALUES " +
+            "firmware_version, wave_count, hold_count, " +
+            "audio_num_disturbances, audio_peak_disturbances_db, audio_peak_background_db) VALUES " +
             "(:account_id, :device_id, :ts, :local_utc_ts, :offset_millis, " +
             ":ambient_temp, :ambient_light, :ambient_light_variance, :ambient_light_peakiness, :ambient_humidity, " +
             ":ambient_air_quality, :ambient_air_quality_raw, :ambient_dust_variance, :ambient_dust_min, :ambient_dust_max, " +
-            ":firmware_version, :wave_count, :hold_count);")
+            ":firmware_version, :wave_count, :hold_count, " +
+            ":audio_num_disturbances, :audio_peak_disturbances_db, :audio_peak_background_db);")
     public abstract void batchInsert(@BindDeviceData Iterator<DeviceData> deviceDataList);
 
     @RegisterMapper(DeviceDataMapper.class)
@@ -120,9 +127,6 @@ public abstract class DeviceDataDAO {
             @Bind("start_ts") DateTime start,
             @Bind("end_ts") DateTime end,
             @Bind("slot_duration") Integer slotDuration);
-
-    @SqlUpdate("INSERT INTO device_sound (device_id, amplitude, ts, offset_millis) VALUES(:device_id, :amplitude, :ts, :offset);")
-    public abstract void insertSound(@Bind("device_id") Long deviceId, @Bind("amplitude") float amplitude, @Bind("ts") DateTime ts, @Bind("offset") int offset);
 
     @RegisterMapper(DeviceDataMapper.class)
     @SqlQuery("SELECT * FROM device_sensors_master " +
@@ -378,6 +382,9 @@ public abstract class DeviceDataDAO {
             "ROUND(MAX(firmware_version)) as firmware_version," +
             "ROUND(MAX(wave_count)) as wave_count," +
             "ROUND(MAX(hold_count)) as hold_count," +
+            "ROUND(MAX(audio_num_disturbances)) AS audio_num_disturbances," +
+            "ROUND(MAX(audio_peak_disturbances_db)) AS audio_peak_disturbances_db," +
+            "ROUND(MAX(audio_peak_background_db)) AS audio_peak_background_db " +
             "FROM device_sensors_master " +
             "WHERE account_id = :account_id " +
             "AND local_utc_ts >= :start_ts AND local_utc_ts < :end_ts;")
