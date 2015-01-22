@@ -108,7 +108,7 @@ public interface DeviceDAO {
 
     @RegisterMapper(DeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
-    @SqlQuery("SELECT id, pill_id, fw_version as firmware_version, battery_level, last_updated as last_seen, uptime FROM pill_status WHERE pill_id = :pill_id ORDER BY id DESC LIMIT 1000;")
+    @SqlQuery("SELECT id, pill_id, fw_version as firmware_version, battery_level, last_updated as last_seen, uptime FROM pill_status WHERE pill_id = :pill_id AND last_updated is not null ORDER BY id DESC LIMIT 1000;")
     ImmutableList<DeviceStatus> pillStatusWithBatteryLevel(@Bind("pill_id") final Long pillId);
 
     //    @SqlQuery("SELECT * FROM pill_status WHERE pill_id = :pill_id;")
