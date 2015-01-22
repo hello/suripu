@@ -6,7 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class AccountPreference {
 
     public enum EnabledPreference {
-        ENHANCED_AUDIO("enhanced_audio");
+        ENHANCED_AUDIO("enhanced_audio"),
+        TEMP_CELCIUS("temp_celcius"),
+        TIME_TWENTY_FOUR_HOUR("time_twenty_four_hour");
 
         private String value;
         private EnabledPreference(final String value) {
