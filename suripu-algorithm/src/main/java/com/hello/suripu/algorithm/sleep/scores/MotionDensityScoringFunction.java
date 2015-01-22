@@ -3,8 +3,6 @@ package com.hello.suripu.algorithm.sleep.scores;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.pdf.LinearRankAscendingScoringFunction;
 import com.hello.suripu.algorithm.pdf.LinearRankDescendingScoringFunction;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +60,7 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
             final double wakeUpMotionDensityScore = datum.amplitude == 0 ? 0 : wakeUpMotionScoringFunction.getScore((long)datum.amplitude,
                     wakeUpMotionDensityRankPDF);
             final double wakeUpTimeScore = wakeUpTimeScoreFunction.getScore(datum.timestamp, wakeUpTimePDF);
-
+            /*
             LOGGER.debug("    density {}: st {}, wt {}, sl_r {}, wp_r {}, val {}",
                             new DateTime(datum.timestamp, DateTimeZone.forOffsetMillis(datum.offsetMillis)),
                             sleepTimeScore,
@@ -70,7 +68,7 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
                             sleepMotionDensityScore,
                             wakeUpMotionDensityScore,
                             datum.amplitude);
-
+            */
             pdf.put(datum, new EventScores(Math.pow(sleepMotionDensityScore, this.motionMaxPower) * sleepTimeScore,
                     Math.pow(wakeUpMotionDensityScore, this.motionMaxPower) * wakeUpTimeScore,
                     1d, 1d));

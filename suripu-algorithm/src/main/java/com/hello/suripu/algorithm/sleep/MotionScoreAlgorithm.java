@@ -101,17 +101,19 @@ public class MotionScoreAlgorithm {
 
                 final AmplitudeData datum = rawData.get(d).get(r);
                 timestamp = datum.timestamp;
+                /*
                 if(!printedTime){
                     LOGGER.debug("time {}: ", new DateTime(timestamp, DateTimeZone.forOffsetMillis(rawData.get(0).get(r).offsetMillis)));
                     printedTime = true;
                 }
+                */
                 final Map<AmplitudeData, EventScores> pdf = sleepScorePDFs.get(d);
                 final SleepDataScoringFunction<AmplitudeData> scoringFunction = this.scoringFunctions.get(d);
                 sleepScore *= scoringFunction.getScore(datum, pdf).sleepEventScore;
                 wakeUpScore *= scoringFunction.getScore(datum, pdf).wakeUpEventScore;
                 goToBedScore *= scoringFunction.getScore(datum, pdf).goToBedEventScore;
                 outOfBedScore *= scoringFunction.getScore(datum, pdf).outOfBedEventScore;
-
+                /*
                 LOGGER.debug("    {}, sleep: {}, wakeup: {}, in_bed: {}, out_bed: {}, val: {}",
                         d,
                         scoringFunction.getScore(datum, pdf).sleepEventScore,
@@ -119,6 +121,7 @@ public class MotionScoreAlgorithm {
                         scoringFunction.getScore(datum, pdf).goToBedEventScore,
                         scoringFunction.getScore(datum, pdf).outOfBedEventScore,
                         datum.amplitude);
+                        */
             }
             fallAsleepScores.add(new InternalScore(timestamp, sleepScore));
             wakeUpScores.add(new InternalScore(timestamp, wakeUpScore));
