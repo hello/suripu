@@ -28,14 +28,16 @@ public class LightOutScoringFunction implements SleepDataScoringFunction<Amplitu
         for(final AmplitudeData datum:data){
             double sleepProbability = 0d;
             if(datum.timestamp >= startTimestamp && datum.timestamp < lightOutTime.getMillis()){
-                sleepProbability = Double.valueOf(datum.timestamp - startTimestamp) / Double.valueOf(LOOK_BACK_TIME_MS);
-            }else if(datum.timestamp >= lightOutTime.getMillis() && datum.timestamp <= endTimestamp){
-                sleepProbability = Double.valueOf(endTimestamp - datum.timestamp) / Double.valueOf(LOOK_BACK_TIME_MS);
+                sleepProbability = 1d + this.modalityWeight * Double.valueOf(datum.timestamp - startTimestamp) / Double.valueOf(LOOK_BACK_TIME_MS);
             }
 
-            // since all scores are multiplied together and light out is just for fall asleep detection
-            // the wake up score has to be 1.
-            lightOutPDF.put(datum, new EventScores(sleepProbability, 1d));
+            if(datum.timestamp >= lightOutTime.getMillis() && datum.timestamp <= endTimestamp){
+                sleepProbability = 1d + this.modalityWeight * Double.valueOf(endTimestamp - datum.timestamp) / Double.valueOf(LOOK_BACK_TIME_MS);
+            }
+
+            // since all scores are multiplied together and light out is just for go to bed detection
+            // the other scores have to be 1.
+            lightOutPDF.put(datum, new EventScores(1d, 1d, sleepProbability, 1d));
         }
         return lightOutPDF;
     }
@@ -43,13 +45,9 @@ public class LightOutScoringFunction implements SleepDataScoringFunction<Amplitu
     @Override
     public EventScores getScore(final AmplitudeData data, final Map<AmplitudeData, EventScores> pdf) {
         if(pdf.containsKey(data)){
-            final EventScores eventScores = pdf.get(data);
-
-            // The benefit of adding weight is when we run into false positive the motion data
-            // wont get cut off.
-            return new EventScores(eventScores.sleepEventScore * this.modalityWeight + 1d, eventScores.wakeUpEventScore);
+            return pdf.get(data);
         }
 
-        return new EventScores(1d, 1d);  // Not found, keep everything as it is.
+        return new EventScores(1d, 1d, 1d, 1d);  // Not found, keep everything as it is.
     }
 }
