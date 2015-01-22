@@ -68,10 +68,10 @@ public class DeviceData {
     public final Integer audioNumDisturbances;
 
     @JsonProperty("audio_peak_disturbances_db")
-    public final Integer audioPeakDisturbancesDB; // convert to decibels, multiplied by 1000
+    public final Integer audioPeakDisturbancesDB; // already converted to decibels, multiplied by 1000
 
     @JsonProperty("audio_peak_background_db")
-    public final Integer audioPeakBackgroundDB; // convert to decibels, multiplied by 1000
+    public final Integer audioPeakBackgroundDB; // already converted to decibels, multiplied by 1000
 
     public DeviceData(
             final Long accountId,
