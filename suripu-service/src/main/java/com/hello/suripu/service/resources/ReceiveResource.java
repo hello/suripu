@@ -513,7 +513,7 @@ public class ReceiveResource extends BaseResource {
 
         final AudioControlProtos.AudioControl.Builder audioControl = AudioControlProtos.AudioControl
                 .newBuilder()
-                .setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.OFF)
+                .setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.ON)
                 .setAudioSaveFeatures(AudioControlProtos.AudioControl.AudioCaptureAction.OFF)
                 .setAudioSaveRawData(AudioControlProtos.AudioControl.AudioCaptureAction.OFF);
 
