@@ -15,7 +15,6 @@ import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,14 +83,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                     final int upTime = data.getUpTime();
                     final int firmwareVersion = data.getFirmwareVersion();
                     final DateTime lastUpdated = new DateTime(data.getTimestamp(), DateTimeZone.UTC);
-                    try {
-                        pillHeartBeatDAO.silentInsert(trackerMotion.trackerId, batteryLevel, upTime, firmwareVersion, lastUpdated);
-                    } catch (UnableToExecuteStatementException sqlEx){
-                        LOGGER.error("Save pill {} heartbeat at {} failed: {}",
-                                data.getPillId(),
-                                new DateTime(data.getTimestamp(), DateTimeZone.forOffsetMillis(data.getOffsetMillis())),
-                                sqlEx.getMessage());
-                    }
+                    pillHeartBeatDAO.silentInsert(trackerMotion.trackerId, batteryLevel, upTime, firmwareVersion, lastUpdated);
                 }
             } catch (InvalidProtocolBufferException e) {
                 LOGGER.error("Failed to decode protobuf: {}", e.getMessage());
