@@ -2,6 +2,7 @@ package com.hello.suripu.core.models.Events;
 
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SleepSegment;
+import com.hello.suripu.core.translations.English;
 
 /**
  * Created by pangwu on 11/24/14.
@@ -12,7 +13,7 @@ public class InBedEvent extends Event {
 
     public InBedEvent(long startTimestamp, long endTimestamp, int timezoneOffset) {
         super(Type.SLEEP, startTimestamp, endTimestamp, timezoneOffset);
-        this.message = "You went to bed";
+        this.message = English.IN_BED_MESSAGE;
     }
 
     public InBedEvent(long startTimestamp, long endTimestamp, int timezoneOffset, final String message) {
