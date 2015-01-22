@@ -190,6 +190,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                             .withAudioPeakBackgroundDB(periodicData.hasAudioPeakBackgroundEnergyDb() ? periodicData.getAudioPeakBackgroundEnergyDb() : 0);
 
                     final DeviceData deviceData = builder.build();
+                    dataForDevice.add(deviceData);
                 }
             }
             activeSenses.put(deviceName, batchPeriodicDataWorker.getReceivedAt());
