@@ -1,6 +1,6 @@
 package com.hello.suripu.core.models.Events;
 
-import com.hello.suripu.core.message.English;
+import com.hello.suripu.core.translations.English;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;

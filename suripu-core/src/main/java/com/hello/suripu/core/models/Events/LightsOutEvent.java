@@ -2,7 +2,7 @@ package com.hello.suripu.core.models.Events;
 
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SleepSegment;
-import com.hello.suripu.core.message.English;
+import com.hello.suripu.core.translations.English;
 
 public class LightsOutEvent extends Event {
     private String description = English.LIGHTS_OUT_MESSAGE;

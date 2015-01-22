@@ -2,7 +2,7 @@ package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.hello.suripu.core.message.English;
+import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DataUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;

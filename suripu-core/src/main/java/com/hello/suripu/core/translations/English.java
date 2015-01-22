@@ -1,4 +1,4 @@
-package com.hello.suripu.core.message;
+package com.hello.suripu.core.translations;
 
 
 public class English {
