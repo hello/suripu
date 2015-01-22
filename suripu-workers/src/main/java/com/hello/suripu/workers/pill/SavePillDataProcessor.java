@@ -78,12 +78,12 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                     }
                 }
 
-                if(data.hasBatteryLevel() && trackerMotion != null){
+                if(data.hasBatteryLevel()){
                     final int batteryLevel = data.getBatteryLevel();
                     final int upTime = data.getUpTime();
                     final int firmwareVersion = data.getFirmwareVersion();
                     final DateTime lastUpdated = new DateTime(data.getTimestamp(), DateTimeZone.UTC);
-                    pillHeartBeatDAO.silentInsert(trackerMotion.trackerId, batteryLevel, upTime, firmwareVersion, lastUpdated);
+                    pillHeartBeatDAO.silentInsert(data.getPillIdLong(), batteryLevel, upTime, firmwareVersion, lastUpdated);
                 }
             } catch (InvalidProtocolBufferException e) {
                 LOGGER.error("Failed to decode protobuf: {}", e.getMessage());
