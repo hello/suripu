@@ -548,6 +548,7 @@ public class ReceiveResource extends BaseResource {
                 }
             }
 
+            LOGGER.info("{} batch size set to {}", deviceName, responseBuilder.getBatchSize());
             responseBuilder.setAudioControl(audioControl);
             setPillColors(userInfoList, responseBuilder);
         }else{
