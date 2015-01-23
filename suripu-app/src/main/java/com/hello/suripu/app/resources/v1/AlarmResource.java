@@ -197,7 +197,7 @@ public class AlarmResource {
                 "Drops",
                 "Twinkle",
                 "Silver",
-                "Hightlights",
+                "Highlights",
                 "Ripple",
                 "Sway"
         );
