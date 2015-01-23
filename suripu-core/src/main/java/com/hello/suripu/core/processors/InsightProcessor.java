@@ -96,7 +96,6 @@ public class InsightProcessor {
                 insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref);
                 break;
             default:
-                insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
                 break; // TODO: rm debug, lights insight is all we have
         }
 

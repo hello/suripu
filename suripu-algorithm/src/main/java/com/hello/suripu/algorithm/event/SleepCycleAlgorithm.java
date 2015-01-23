@@ -105,8 +105,12 @@ public class SleepCycleAlgorithm {
      * @return
      */
     public static DateTime getSmartAlarmTimeUTC(final List<Segment> sleepCycles,
-                                         long dataCollectionMoment, long alarmDeadlineUTC){
+                                         long dataCollectionMoment, long minAlarmTimeUTC, long alarmDeadlineUTC){
 
+        if(minAlarmTimeUTC >= alarmDeadlineUTC){
+            return new DateTime(alarmDeadlineUTC);
+        }
+        
         final Segment lastCycle = sleepCycles.get(sleepCycles.size() - 1);
         long deepSleepMoment = lastCycle.getEndTimestamp() + 20 * DateTimeConstants.MILLIS_PER_MINUTE;
 
@@ -127,7 +131,9 @@ public class SleepCycleAlgorithm {
             long nextLightSleepMoment = lastCycle.getEndTimestamp() + cycleNumberInTheMiddle * sleepCycleLength;
             LOGGER.info("User already in deep sleep. Next light sleep moment: " + new DateTime(nextLightSleepMoment));
 
-            if(nextLightSleepMoment > dataCollectionMoment && nextLightSleepMoment < alarmDeadlineUTC){
+            // the smart alarm should happens at least 10 minutes later, so sense will have enough time to retrieve it
+            if(nextLightSleepMoment >= minAlarmTimeUTC &&
+                    nextLightSleepMoment < alarmDeadlineUTC){
                 smartAlarmTime = new DateTime(nextLightSleepMoment, DateTimeZone.UTC);
             }else {
                 smartAlarmTime = smartAlarmTime.minusMinutes(5).plusMinutes(random.nextInt(5) + 1);

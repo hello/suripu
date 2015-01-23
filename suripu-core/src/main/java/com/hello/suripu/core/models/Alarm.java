@@ -296,7 +296,7 @@ public class Alarm {
             final Set<Integer> alarmDays = new HashSet<Integer>();
             for(final Alarm alarm: alarms){
                 if(!alarm.isEnabled) {
-                    return AlarmStatus.OK;
+                    continue;
                 }
 
                 if(!alarm.isRepeated){
@@ -375,6 +375,10 @@ public class Alarm {
             return ImmutableList.copyOf(newAlarmList);
         }
 
+        public static DateTime alignToMinuteGranularity(final DateTime currentLocalTime){
+            return currentLocalTime.withSecondOfMinute(0).withMillisOfSecond(0);
+        }
+
         /**
          * Computes the next moment at which the alarm should ring
          * @param alarms list of alarm templates
@@ -390,7 +394,7 @@ public class Alarm {
             }
 
             final ArrayList<RingTime> possibleRings = new ArrayList<RingTime>();
-            final DateTime currentLocalTime = new DateTime(currentTimestampUTC, timeZone).withSecondOfMinute(0).withMillisOfSecond(0);
+            final DateTime currentLocalTime = alignToMinuteGranularity(new DateTime(currentTimestampUTC, timeZone));
             for(final Alarm alarm:alarms){
                 if(!alarm.isEnabled){
                     continue;

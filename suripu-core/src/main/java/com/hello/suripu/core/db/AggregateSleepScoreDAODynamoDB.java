@@ -1,5 +1,6 @@
 package com.hello.suripu.core.db;
 
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
@@ -37,7 +38,7 @@ import java.util.Set;
 public class AggregateSleepScoreDAODynamoDB {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(AggregateSleepScoreDAODynamoDB.class);
-    private final AmazonDynamoDBClient dynamoDBClient;
+    private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
     private final String version;
     public final Set<String> targetAttributes;
@@ -53,7 +54,7 @@ public class AggregateSleepScoreDAODynamoDB {
 
     public static final String DEFAULT_SCORE_TYPE = "sleep";
 
-    public AggregateSleepScoreDAODynamoDB(final AmazonDynamoDBClient dynamoDBClient, final String tableName, final String version) {
+    public AggregateSleepScoreDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName, final String version) {
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName + "_" + version;
         this.version = version;

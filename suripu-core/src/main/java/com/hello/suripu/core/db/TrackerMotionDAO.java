@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.binders.BindTrackerMotion;
 import com.hello.suripu.core.db.mappers.GroupedTrackerMotionMapper;
 import com.hello.suripu.core.db.mappers.TrackerMotionMapper;
+import com.hello.suripu.core.db.mappers.TrackerMotionOffsetMillisMapper;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -57,6 +58,9 @@ public abstract class TrackerMotionDAO {
             "MIN(id) as id, " +
             "MAX(tracker_id) as tracker_id, " +
             "ROUND(AVG(svm_no_gravity)) as svm_no_gravity, " +
+            "ROUND(AVG(motion_range)) AS motion_range, " +
+            "ROUND(AVG(kickoff_counts)) AS kickoff_counts, " +
+            "ROUND(AVG(on_duration)) AS on_duration, " +
             "date_trunc('hour', ts) + (CAST(date_part('minute', ts) AS integer) / :slot_duration) * :slot_duration * interval '1 min' AS ts_bucket, " +
             "MAX(offset_millis) as offset_millis " +
             "FROM tracker_motion_master " +
@@ -70,30 +74,33 @@ public abstract class TrackerMotionDAO {
                                                    @Bind("slot_duration") Integer slotDuration);
 
     @SingleValueResult(Integer.class)
-    @SqlUpdate("INSERT INTO tracker_motion_master (account_id, tracker_id, svm_no_gravity, ts, offset_millis, local_utc_ts) " +
-            "VALUES(:account_id, :tracker_id, :svm_no_gravity, :ts, :offset_millis, :local_utc_ts);")
+    @SqlUpdate("INSERT INTO tracker_motion_master (account_id, tracker_id, svm_no_gravity, ts, offset_millis, local_utc_ts, motion_range, kickoff_counts, on_duration_seconds) " +
+            "VALUES(:account_id, :tracker_id, :svm_no_gravity, :ts, :offset_millis, :local_utc_ts, :motion_range, :kickoff_counts, :on_duration_seconds);")
     public abstract Integer insertTrackerMotion(@BindTrackerMotion TrackerMotion trackerMotion);
 
 
-    @SqlBatch("INSERT INTO tracker_motion_master (account_id, tracker_id, svm_no_gravity, ts, offset_millis, local_utc_ts) " +
-            "VALUES(:account_ids, :tracker_ids, :svm_no_gravity, :ts, :offset_millis, :local_utc_ts);")
+    @SqlBatch("INSERT INTO tracker_motion_master (account_id, tracker_id, svm_no_gravity, ts, offset_millis, local_utc_ts, motion_range, kickoff_counts, on_duration_seconds) " +
+            "VALUES(:account_ids, :tracker_ids, :svm_no_gravity, :ts, :offset_millis, :local_utc_ts, :motion_range, :kickoff_counts, :on_duration_seconds);")
     public abstract void batchInsert(
             @Bind("account_ids") List<Long> accountIDs,
             @Bind("tracker_ids") List<Long> trackerIDs,
             @Bind("svm_no_gravity") List<Integer> pillValues,
             @Bind("ts") List<DateTime> timestamps,
             @Bind("offset_millis") List<Integer> offsets,
-            @Bind("local_utc_ts") List<DateTime> local_utc
+            @Bind("local_utc_ts") List<DateTime> local_utc,
+            @Bind("motion_range") List<Long> motionRanges,
+            @Bind("kickoff_counts") List<Long> kickoffCountsList,
+            @Bind("on_duration_seconds") List<Long> onDurationSecondsList
+
             );
 
     @SqlUpdate("DELETE FROM tracker_motion_master WHERE tracker_id = :tracker_id")
     public abstract Integer deleteDataTrackerID(@Bind("tracker_id") Long trackerID);
 
-    @RegisterMapper(GroupedTrackerMotionMapper.class)
+    @RegisterMapper(TrackerMotionOffsetMillisMapper.class)
     @SqlQuery("SELECT MAX(id) AS id, " +
             "MAX(account_id) AS account_id, " +
             "MAX(tracker_id) AS tracker_id, " +
-            "MAX(svm_no_gravity) AS svm_no_gravity, " +
             "MIN(ts) AS ts, " +
             "offset_millis, " +
             "MIN(local_utc_ts) AS ts_bucket from tracker_motion_master " +
@@ -115,6 +122,9 @@ public abstract class TrackerMotionDAO {
         final List<Integer> offsets = new ArrayList<>();
         final List<DateTime> local_utc_ts = new ArrayList<>();
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
+        final List<Long> motionRanges = new ArrayList<>();
+        final List<Long> kickoffCounts = new ArrayList<>();
+        final List<Long> onDurationSeconds = new ArrayList<>();
 
         int totalInserted = 0;
         int numIterations = 0;
@@ -130,6 +140,9 @@ public abstract class TrackerMotionDAO {
             values.add(trackerMotion.value);
             rawTimestamps.add(trackerMotion.timestamp);
             offsets.add(trackerMotion.offsetMillis);
+            motionRanges.add(trackerMotion.motionRange);
+            kickoffCounts.add(trackerMotion.kickOffCounts);
+            onDurationSeconds.add(trackerMotion.onDurationInSeconds);
 
             final DateTime ts = new DateTime(trackerMotion.timestamp, DateTimeZone.UTC);
             timestamps.add(ts);
@@ -145,7 +158,7 @@ public abstract class TrackerMotionDAO {
             numIterations++;
             int inserted = 0;
             try {
-                this.batchInsert(accountIDs, trackerIDs, values, timestamps, offsets, local_utc_ts);
+                this.batchInsert(accountIDs, trackerIDs, values, timestamps, offsets, local_utc_ts, motionRanges, kickoffCounts, onDurationSeconds);
                 inserted = accountIDs.size();
             } catch (UnableToExecuteStatementException exception) {
                 LOGGER.warn("Batch insert fails, duplicate records!");
@@ -189,6 +202,11 @@ public abstract class TrackerMotionDAO {
                 if (matcher.find()) {
                     LOGGER.debug("Dupe: Account {} Pill {} ts {}", trackerMotion.accountId, trackerMotion.trackerId, trackerMotion.timestamp);
                 }
+                LOGGER.error("Insert data for pill {}, account {}, ts {} failed, error {}",
+                        trackerMotion.trackerId,
+                        trackerMotion.accountId,
+                        trackerMotion.timestamp,
+                        exception.getMessage());
             }
             inserted++;
         }

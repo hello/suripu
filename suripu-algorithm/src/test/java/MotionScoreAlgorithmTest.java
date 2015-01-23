@@ -2,15 +2,14 @@ import com.google.common.base.Optional;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.AmplitudeDataPreprocessor;
 import com.hello.suripu.algorithm.core.Segment;
+import com.hello.suripu.algorithm.pdf.LinearRankAscendingScoringFunction;
+import com.hello.suripu.algorithm.pdf.LinearRankDescendingScoringFunction;
+import com.hello.suripu.algorithm.pdf.RankPowerScoringFunction;
 import com.hello.suripu.algorithm.sleep.InternalScore;
 import com.hello.suripu.algorithm.sleep.MotionScoreAlgorithm;
-import com.hello.suripu.algorithm.sleep.SleepDetectionAlgorithm;
 import com.hello.suripu.algorithm.sleep.scores.AmplitudeDataScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.LightOutScoringFunction;
-import com.hello.suripu.algorithm.sleep.scores.MotionScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.SleepDataScoringFunction;
-import com.hello.suripu.algorithm.sleep.scores.SleepTimeScoringFunction;
-import com.hello.suripu.algorithm.sleep.scores.WakeUpTimeScoringFunction;
 import com.hello.suripu.algorithm.utils.MaxAmplitudeAggregator;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -36,24 +35,24 @@ public class MotionScoreAlgorithmTest {
         tsArray.add(now.getMillis());
         tsArray.add(now.plusMinutes(1).getMillis());
         tsArray.add(now.plusMinutes(2).getMillis());
-        final WakeUpTimeScoringFunction wakeUpTimeScoringFunction = new WakeUpTimeScoringFunction(0);
+        final LinearRankAscendingScoringFunction linearRankAscendingScoringFunction = new LinearRankAscendingScoringFunction(0d, 1d, new double[]{0d, 1d});
 
-        Map<Long, Double> rankingMap = wakeUpTimeScoringFunction.getPDF(tsArray);
+        Map<Long, Double> rankingMap = linearRankAscendingScoringFunction.getPDF(tsArray);
         assertThat(rankingMap.size(), is(3));
         assertThat(rankingMap.get(now.getMillis()), is(0d));
         assertThat(rankingMap.get(now.plusMinutes(1).getMillis()), is(1d / tsArray.size()));
         assertThat(rankingMap.get(now.plusMinutes(2).getMillis()), is(2d / tsArray.size()));
-        assertThat(wakeUpTimeScoringFunction.getScore(0L, rankingMap), is(0d));
+        assertThat(linearRankAscendingScoringFunction.getScore(0L, rankingMap), is(0d));
 
         // Test order by DESC
-        final SleepTimeScoringFunction sleepTimeScoringFunction = new SleepTimeScoringFunction();
-        rankingMap = sleepTimeScoringFunction.getPDF(tsArray);
+        final LinearRankDescendingScoringFunction linearRankDescendingScoringFunction = new LinearRankDescendingScoringFunction(1d, 0, new double[]{0d, 1d});
+        rankingMap = linearRankDescendingScoringFunction.getPDF(tsArray);
         assertThat(rankingMap.size(), is(3));
-        assertThat(rankingMap.get(now.getMillis()), is(2d / tsArray.size()));
-        assertThat(rankingMap.get(now.plusMinutes(1).getMillis()), is(1d / tsArray.size()));
-        assertThat(rankingMap.get(now.plusMinutes(2).getMillis()), is(0d / tsArray.size()));
+        assertThat(rankingMap.get(now.getMillis()), is(3d / tsArray.size()));
+        assertThat(rankingMap.get(now.plusMinutes(1).getMillis()), is(2d / tsArray.size()));
+        assertThat(rankingMap.get(now.plusMinutes(2).getMillis()), is(1d / tsArray.size()));
 
-        assertThat(sleepTimeScoringFunction.getScore(0L, rankingMap), is(0d));
+        assertThat(linearRankDescendingScoringFunction.getScore(0L, rankingMap), is(0d));
 
     }
 
@@ -81,20 +80,20 @@ public class MotionScoreAlgorithmTest {
         ampArray.add(startAmplitude + 1);
         ampArray.add(startAmplitude + 2);
 
-        final MotionScoringFunction motionScoringFunction = new MotionScoringFunction(10);
-        Map<Double, Double> pdf = motionScoringFunction.getPDF(ampArray);
+        final RankPowerScoringFunction rankPowerScoringFunction = new RankPowerScoringFunction(10);
+        Map<Double, Double> pdf = rankPowerScoringFunction.getPDF(ampArray);
 
         // We should expect a linear result
-        assertThat(motionScoringFunction.getScore(startAmplitude, pdf),
+        assertThat(rankPowerScoringFunction.getScore(startAmplitude, pdf),
                 is(Math.pow(0, 10)));
-        assertThat(motionScoringFunction.getScore(startAmplitude + 1, pdf),
+        assertThat(rankPowerScoringFunction.getScore(startAmplitude + 1, pdf),
                 is(Math.pow(1d / 3, 10)));
-        assertThat(motionScoringFunction.getScore(startAmplitude + 2, pdf),
+        assertThat(rankPowerScoringFunction.getScore(startAmplitude + 2, pdf),
                 is(Math.pow(2d / 3, 10)));
 
 
         // Test something not exists in the ranking map
-        assertThat(motionScoringFunction.getScore(0d, pdf), is(0d));
+        assertThat(rankPowerScoringFunction.getScore(0d, pdf), is(0d));
     }
 
 
@@ -113,10 +112,10 @@ public class MotionScoreAlgorithmTest {
         final List<AmplitudeData> smoothedData = smoother.process(dataSource.getDataForDate(new DateTime(2014, 12, 02, 0, 0, DateTimeZone.UTC)));
 
         final ArrayList<SleepDataScoringFunction> scoringFunctions = new ArrayList<>();
-        scoringFunctions.add(new AmplitudeDataScoringFunction(10, 0.5));
+        scoringFunctions.add(new AmplitudeDataScoringFunction());
         scoringFunctions.add(new LightOutScoringFunction(firstLightOutTime, 3d));
 
-        final Map<Long, List<AmplitudeData>> matrix = MotionScoreAlgorithm.getMatrix(smoothedData);
+        final Map<Long, List<AmplitudeData>> matrix = MotionScoreAlgorithm.createFeatureMatrix(smoothedData);
         for(final Long timestamp:matrix.keySet()){
             final List<AmplitudeData> dataVector = matrix.get(timestamp);
             if(timestamp < firstLightOutTime.getMillis()){
@@ -125,8 +124,11 @@ public class MotionScoreAlgorithmTest {
                 dataVector.add(new AmplitudeData(timestamp, 1d, dataVector.get(0).offsetMillis));
             }
         }
-        final SleepDetectionAlgorithm algorithm = new MotionScoreAlgorithm(matrix, 2, smoothedData.size(), scoringFunctions);
-        final Segment sleepSegment = algorithm.getSleepPeriod(new DateTime(2014, 12, 02, 0, 0, DateTimeZone.UTC));
+        final MotionScoreAlgorithm algorithm = new MotionScoreAlgorithm(matrix, 2, smoothedData.size(), scoringFunctions);
+        final List<Segment> sleepSegments = algorithm.getSleepEvents();
+        //final Segment sleepSegment = sleepSegments.get(1);
+        final Segment goToBedSegment = sleepSegments.get(0);
+        final Segment outOfBedSegment = sleepSegments.get(3);
 
 
         // Out put from python script suripu_light_test.py:
@@ -135,12 +137,15 @@ public class MotionScoreAlgorithmTest {
         wake up at 2014-12-03 07:09:00, prob: 0.0924221378596, amp: 518
         */
 
-        final DateTime sleepTime = new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis()));
-        final DateTime wakeUpTime = new DateTime(sleepSegment.getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis()));
-        final DateTime sleepLocalUTC = new DateTime(sleepTime.getYear(), sleepTime.getMonthOfYear(), sleepTime.getDayOfMonth(), sleepTime.getHourOfDay(), sleepTime.getMinuteOfHour(), DateTimeZone.UTC);
-        final DateTime wakeUpLocalUTC = new DateTime(wakeUpTime.getYear(), wakeUpTime.getMonthOfYear(), wakeUpTime.getDayOfMonth(), wakeUpTime.getHourOfDay(), wakeUpTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime goToBedTime = new DateTime(goToBedSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBedSegment.getOffsetMillis()));
+        //final DateTime sleepTime = new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis()));
+        final DateTime outOfBedTime = new DateTime(outOfBedSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBedSegment.getOffsetMillis()));
 
-        assertThat(sleepLocalUTC, is(new DateTime(2014, 12, 03, 1, 39, DateTimeZone.UTC)));
-        assertThat(wakeUpLocalUTC, is(new DateTime(2014, 12, 03, 7, 9, DateTimeZone.UTC)));
+        final DateTime goToBedLocalUTC = new DateTime(goToBedTime.getYear(), goToBedTime.getMonthOfYear(), goToBedTime.getDayOfMonth(), goToBedTime.getHourOfDay(), goToBedTime.getMinuteOfHour(), DateTimeZone.UTC);
+        //final DateTime sleepLocalUTC = new DateTime(sleepTime.getYear(), sleepTime.getMonthOfYear(), sleepTime.getDayOfMonth(), sleepTime.getHourOfDay(), sleepTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime outOfBedLocalUTC = new DateTime(outOfBedTime.getYear(), outOfBedTime.getMonthOfYear(), outOfBedTime.getDayOfMonth(), outOfBedTime.getHourOfDay(), outOfBedTime.getMinuteOfHour(), DateTimeZone.UTC);
+
+        assertThat(goToBedLocalUTC, is(new DateTime(2014, 12, 03, 1, 39, DateTimeZone.UTC)));
+        assertThat(outOfBedLocalUTC, is(new DateTime(2014, 12, 03, 7, 9, DateTimeZone.UTC)));
     }
 }

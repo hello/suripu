@@ -3,7 +3,6 @@ package com.hello.suripu.service.models;
 import com.hello.suripu.service.configuration.SenseUploadConfiguration;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,21 +15,12 @@ public class UploadSettings {
     private static final Long SUSTAINED_TIME_BETWEEN_NOW_AND_NEXT_ALARM = 60*60*1000L;  // milliseconds
     private static final Integer FASTEST_UPLOAD_INTERVAL = 1; // This must be 1 minutes or Sense will miss alarm.
 
-    public static Integer getUploadInterval(final DateTime userLocalDateTime, final SenseUploadConfiguration senseUploadConfiguration, final Long userNextAlarmTimestampMillis) {
-        final Integer adjustedUploadIntervalInMinutes = adjustUploadIntervalInMinutes(
-            DateTime.now(DateTimeZone.UTC).getMillis(),
-            computeUploadIntervalPerUserPerSetting(userLocalDateTime, senseUploadConfiguration),
-            userNextAlarmTimestampMillis
-        );
-        LOGGER.debug("Adjusted Upload Interval in Minutes: {}", adjustedUploadIntervalInMinutes);
-        return adjustedUploadIntervalInMinutes;
-    }
 
     public static Integer computeUploadIntervalPerUserPerSetting(final DateTime userLocalDateTime, final SenseUploadConfiguration senseUploadConfiguration) {
 
         final Integer hourOfDay = userLocalDateTime.getHourOfDay();
 
-        LOGGER.debug("User Current DateTime: {}", userLocalDateTime);
+        //LOGGER.debug("User Current DateTime: {}", userLocalDateTime);
 
         // Non peak times are the times whose hours are within the range defined in configuration
         Boolean isNonPeak = hourOfDay >= senseUploadConfiguration.getNonPeakHourLowerBound() && hourOfDay <= senseUploadConfiguration.getNonPeakHourUpperBound();
@@ -54,7 +44,7 @@ public class UploadSettings {
             return standardUploadIntervalInMinutes;
         }
 
-        Long timeUntilNextAlarmMillis = userNextAlarmTimestampMillis - currentTimestampMillis;
+        final Long timeUntilNextAlarmMillis = userNextAlarmTimestampMillis - currentTimestampMillis;
 
         if (timeUntilNextAlarmMillis <= ALLOWABLE_TIME_BETWEEN_NOW_AND_NEXT_ALARM) {
             return FASTEST_UPLOAD_INTERVAL;

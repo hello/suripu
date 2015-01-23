@@ -72,13 +72,12 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
         }
 
         LOGGER.info("Processing {} unique senseIds.", senseIds.size());
-        final DateTime currentTime = DateTime.now().withSecondOfMinute(0).withMillisOfSecond(0);
         for(final String senseId : senseIds) {
             RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                     this.ringTimeDAODynamoDB,
                     this.trackerMotionDAO,
                     senseId,
-                    currentTime,
+                    DateTime.now(),
                     this.configuration.getProcessAheadTimeInMinutes(),
                     this.configuration.getAggregateWindowSizeInMinute(),
                     this.configuration.getLightSleepThreshold(),

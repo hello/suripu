@@ -8,6 +8,7 @@ import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.scores.EventScores;
 import com.hello.suripu.algorithm.sleep.scores.SleepDataScoringFunction;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Created by pangwu on 12/14/14.
  */
-public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
+public class MotionScoreAlgorithm {
     private final static Logger LOGGER = LoggerFactory.getLogger(MotionScoreAlgorithm.class);
     private final List<SleepDataScoringFunction> scoringFunctions = new ArrayList<>();
     private final Map<Long, List<AmplitudeData>> dimensions;
@@ -30,7 +31,6 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
     private final int rowCount;
 
     public MotionScoreAlgorithm(final Map<Long, List<AmplitudeData>> dataMatrix, final int dimensionCount, final int rowCount, final List<SleepDataScoringFunction> scoringFunctions){
-        super(null, 0);
 
         checkNotNull(dataMatrix, "dataMatrix cannot be null");
         if(scoringFunctions.size() != dimensionCount){
@@ -53,9 +53,9 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
         return Optional.of(copy.get(0));
     }
 
-    @Override
-    public Segment getSleepPeriod(final DateTime dateOfTheNightLocalUTC) throws AlgorithmException {
+    public List<Segment> getSleepEvents() throws AlgorithmException {
         final List<List<AmplitudeData>> rawData = new ArrayList<>();
+        long timestampOfLastData = 0;
 
         for(int i = 0; i < this.dimensionCount; i++){
             rawData.add(new ArrayList<AmplitudeData>());
@@ -72,12 +72,17 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
                 checkNotNull(sensorData, "Unaligned data");
                 rawData.get(k).add(sensorData);
             }
+            if(timestamp > timestampOfLastData){
+                timestampOfLastData = timestamp;
+            }
         }
         // Step 2: generate ranking position
         final List<Map<AmplitudeData, EventScores>> sleepScorePDFs = new ArrayList<>();
 
         final ArrayList<InternalScore> fallAsleepScores = new ArrayList<>();
         final ArrayList<InternalScore> wakeUpScores = new ArrayList<>();
+        final ArrayList<InternalScore> goToBedScores = new ArrayList<>();
+        final ArrayList<InternalScore> outOfBedScores = new ArrayList<>();
 
         for(int i = 0; i < this.dimensionCount; i++){
             sleepScorePDFs.add(this.scoringFunctions.get(i).getPDF(rawData.get(i)));
@@ -86,49 +91,131 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
         for(int r = 0; r < this.rowCount; r++){
             double sleepScore = 1d;
             double wakeUpScore = 1d;
+            double goToBedScore = 1d;
+            double outOfBedScore = 1d;
+
             long timestamp = 0;
+            boolean printedTime = false;
+
             for(int d = 0; d < this.dimensionCount; d++){
 
                 final AmplitudeData datum = rawData.get(d).get(r);
                 timestamp = datum.timestamp;
+                /*
+                if(!printedTime){
+                    LOGGER.debug("time {}: ", new DateTime(timestamp, DateTimeZone.forOffsetMillis(rawData.get(0).get(r).offsetMillis)));
+                    printedTime = true;
+                }
+                */
                 final Map<AmplitudeData, EventScores> pdf = sleepScorePDFs.get(d);
                 final SleepDataScoringFunction<AmplitudeData> scoringFunction = this.scoringFunctions.get(d);
                 sleepScore *= scoringFunction.getScore(datum, pdf).sleepEventScore;
                 wakeUpScore *= scoringFunction.getScore(datum, pdf).wakeUpEventScore;
-                //LOGGER.info("ds: {}, dw: {}", scoringFunction.getScore(datum, pdf).sleepEventScore, scoringFunction.getScore(datum, pdf).wakeUpEventScore);
+                goToBedScore *= scoringFunction.getScore(datum, pdf).goToBedEventScore;
+                outOfBedScore *= scoringFunction.getScore(datum, pdf).outOfBedEventScore;
+                /*
+                LOGGER.debug("    {}, sleep: {}, wakeup: {}, in_bed: {}, out_bed: {}, val: {}",
+                        d,
+                        scoringFunction.getScore(datum, pdf).sleepEventScore,
+                        scoringFunction.getScore(datum, pdf).wakeUpEventScore,
+                        scoringFunction.getScore(datum, pdf).goToBedEventScore,
+                        scoringFunction.getScore(datum, pdf).outOfBedEventScore,
+                        datum.amplitude);
+                        */
             }
             fallAsleepScores.add(new InternalScore(timestamp, sleepScore));
             wakeUpScores.add(new InternalScore(timestamp, wakeUpScore));
-            LOGGER.info("time {}, sleep_prob {}, wake up prob {}, amp {}",
-                    new DateTime(timestamp, DateTimeZone.forOffsetMillis(rawData.get(0).get(r).offsetMillis)),
+            goToBedScores.add(new InternalScore(timestamp, goToBedScore));
+            outOfBedScores.add(new InternalScore(timestamp, outOfBedScore));
+
+            LOGGER.debug("goto_bed_prob {}, sleep_prob {}, wake up prob {}, out_bed_prob {}\n",
+                    goToBedScore,
                     sleepScore,
                     wakeUpScore,
-                    rawData.get(0).get(r).amplitude);
+                    outOfBedScore);
         }
 
         // Step 4: Pick the highest sleep and wake up scores, sleep and wake up detected.
         final Optional<InternalScore> wakeUpScore = getHighestScore(wakeUpScores);
         final Optional<InternalScore> fallAsleepScore = getHighestScore(fallAsleepScores);
+        final Optional<InternalScore> goToBedScore = getHighestScore(goToBedScores);
+        final Optional<InternalScore> outOfBedScore = getHighestScore(outOfBedScores);
 
         // We always have data, no need to check score.isPresent()
-        final AmplitudeData fallAsleepData = this.dimensions.get(fallAsleepScore.get().timestamp).get(0);
-        final AmplitudeData wakeUpData = this.dimensions.get(wakeUpScore.get().timestamp).get(0);
+        final AmplitudeData fallAsleepData = this.dimensions.get(fallAsleepScore.get().timestamp).get(1);
+        final AmplitudeData wakeUpData = this.dimensions.get(wakeUpScore.get().timestamp).get(1);
+        final AmplitudeData goToBedData = this.dimensions.get(goToBedScore.get().timestamp).get(0);
+        final AmplitudeData outOfBedData = this.dimensions.get(outOfBedScore.get().timestamp).get(0);
 
+
+        LOGGER.info("Prob go to bed time: {}, score {}, amp {}", new DateTime(goToBedData.timestamp,
+                        DateTimeZone.forOffsetMillis(goToBedData.offsetMillis)),
+                goToBedScore.get().score,
+                goToBedData.amplitude);
         LOGGER.info("Prob fall asleep time: {}, score {}, amp {}", new DateTime(fallAsleepData.timestamp,
-                DateTimeZone.forOffsetMillis(fallAsleepData.offsetMillis)),
+                    DateTimeZone.forOffsetMillis(fallAsleepData.offsetMillis)),
                 fallAsleepScore.get().score,
                 fallAsleepData.amplitude);
         LOGGER.info("Prob wake up time: {}, score {}, amp {}", new DateTime(wakeUpData.timestamp,
-                DateTimeZone.forOffsetMillis(wakeUpData.offsetMillis)),
+                    DateTimeZone.forOffsetMillis(wakeUpData.offsetMillis)),
                 wakeUpScore.get().score,
                 wakeUpData.amplitude);
+        LOGGER.info("Prob out of bed time: {}, score {}, amp {}", new DateTime(outOfBedData.timestamp,
+                    DateTimeZone.forOffsetMillis(outOfBedData.offsetMillis)),
+                outOfBedScore.get().score,
+                outOfBedData.amplitude);
 
-        return new Segment(fallAsleepScore.get().timestamp, wakeUpScore.get().timestamp, fallAsleepData.offsetMillis);
+        final ArrayList<Segment> sleepEvents = new ArrayList<>();
+        Segment goToBed = new Segment(goToBedScore.get().timestamp, goToBedScore.get().timestamp, goToBedData.offsetMillis);
+        Segment sleep = new Segment(fallAsleepScore.get().timestamp, fallAsleepScore.get().timestamp, fallAsleepData.offsetMillis);
+        Segment wakeUp = new Segment(wakeUpScore.get().timestamp, wakeUpScore.get().timestamp, wakeUpData.offsetMillis);
+        Segment outOfBed = new Segment(outOfBedScore.get().timestamp, outOfBedScore.get().timestamp, outOfBedData.offsetMillis);
+
+        // Heuristic fix
+        if(sleep.getStartTimestamp() < goToBed.getStartTimestamp()){
+            LOGGER.warn("Go to bed {} later the fall asleep {}, sleep set to go to bed.",
+                    new DateTime(goToBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBed.getOffsetMillis())),
+                    new DateTime(sleep.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleep.getOffsetMillis())));
+            sleep = new Segment(goToBedScore.get().timestamp, goToBedScore.get().timestamp, goToBedData.offsetMillis);
+
+        }
+
+        // Heuristic fix: out of bed time can not be too off from last data point
+        if(timestampOfLastData - outOfBed.getStartTimestamp() >= 3 * DateTimeConstants.MILLIS_PER_HOUR){
+            LOGGER.warn("Out of bed detected at {}, more than last data at {}, event set to last data time.",
+                    new DateTime(wakeUp.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUp.getOffsetMillis())),
+                    new DateTime(timestampOfLastData, DateTimeZone.forOffsetMillis(wakeUp.getOffsetMillis())));
+            outOfBed = new Segment(timestampOfLastData, timestampOfLastData, wakeUp.getOffsetMillis());
+        }
+
+        // Heuristic fix: wake up time can not be too off from out of bed time
+        if(outOfBed.getStartTimestamp() - wakeUp.getStartTimestamp() > 2 * DateTimeConstants.MILLIS_PER_HOUR){
+            LOGGER.warn("Wake up detected at {}, way too far from out of bed at {}, event set to out of bed time.",
+                    new DateTime(wakeUp.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUp.getOffsetMillis())),
+                    new DateTime(outOfBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBed.getOffsetMillis())));
+            wakeUp = new Segment(outOfBed.getStartTimestamp(), outOfBed.getEndTimestamp(), outOfBed.getOffsetMillis());
+        }
+
+        // Heuristic fix: wake up time is later than out of bed, use out of bed because it looks
+        // for the most significant motion
+        if(wakeUp.getStartTimestamp() > outOfBed.getStartTimestamp()){
+            LOGGER.warn("Wake up later than out of bed, wake up {}, out of bed {}, use out of bed as wake up.",
+                    new DateTime(wakeUp.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUp.getOffsetMillis())),
+                    new DateTime(outOfBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBed.getOffsetMillis())));
+            wakeUp = new Segment(outOfBed.getStartTimestamp(), outOfBed.getEndTimestamp(), outOfBed.getOffsetMillis());
+        }
+
+        sleepEvents.add(goToBed);
+        sleepEvents.add(sleep);
+        sleepEvents.add(wakeUp);
+        sleepEvents.add(outOfBed);
+
+        return sleepEvents;
     }
 
-    public static Map<Long, List<AmplitudeData>> getMatrix(final List<AmplitudeData> smoothedMotion){
+    public static Map<Long, List<AmplitudeData>> createFeatureMatrix(final List<AmplitudeData> firstFeatureDimension){
         final Map<Long, List<AmplitudeData>> matrix = new LinkedHashMap<>();
-        for(final AmplitudeData motion:smoothedMotion){
+        for(final AmplitudeData motion:firstFeatureDimension){
             if(!matrix.containsKey(motion.timestamp)){
                 matrix.put(motion.timestamp, new ArrayList<AmplitudeData>());
             }
@@ -136,5 +223,23 @@ public class MotionScoreAlgorithm extends SleepDetectionAlgorithm {
         }
 
         return matrix;
+    }
+
+    public static int addToFeatureMatrix(final Map<Long, List<AmplitudeData>> featureMatrix, final List<AmplitudeData> additionalFeature){
+
+        int dimension = 0;
+        for(final AmplitudeData feature:additionalFeature){
+            if(!featureMatrix.containsKey(feature.timestamp)){
+                LOGGER.error("feature not aligned on {}", feature.timestamp);
+                throw new AlgorithmException("feature not aligned on " + new DateTime(feature.timestamp, DateTimeZone.forOffsetMillis(feature.offsetMillis)));
+            }
+            featureMatrix.get(feature.timestamp).add(feature);
+
+            if(dimension == 0) {
+                dimension = featureMatrix.get(feature.timestamp).size();
+            }
+        }
+
+        return dimension;
     }
 }

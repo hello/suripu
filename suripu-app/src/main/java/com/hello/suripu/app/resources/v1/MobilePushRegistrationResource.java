@@ -29,7 +29,7 @@ import javax.ws.rs.core.Response;
 public class MobilePushRegistrationResource {
 
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(TimelineResource.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MobilePushRegistrationResource.class);
     private final NotificationSubscriptionsDAO notificationSubscriptionsDAO;
     private final MobilePushNotificationProcessor pushNotificationProcessor;
     private final AccountDAO accountDAO;

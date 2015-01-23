@@ -97,6 +97,13 @@ public interface DeviceDAO {
     @SqlUpdate("UPDATE account_device_map SET active = FALSE, last_updated = NOW() WHERE device_id = :device_id and active = TRUE;")
     Integer unregisterSense(@Bind("device_id") final String id);
 
+
+    @SqlUpdate("DELETE FROM account_tracker_map WHERE device_id = :device_id and account_id = :account_id;")
+    Integer deletePillPairing(@Bind("device_id") final String id, @Bind("account_id") Long accountId);
+
+    @SqlUpdate("DELETE FROM account_device_map WHERE device_id = :device_id and account_id = :account_id;")
+    Integer deleteSensePairing(@Bind("device_id") final String senseId, @Bind("account_id") Long accountId);
+
     @SqlUpdate("UPDATE account_device_map SET active = FALSE, last_updated = NOW() WHERE device_id = :device_id AND account_id =:account_id AND active = TRUE;")
     Integer unregisterSenseByUser(@Bind("device_id") final String id, @Bind("account_id") final Long accountId);
 
@@ -108,7 +115,7 @@ public interface DeviceDAO {
 
     @RegisterMapper(DeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
-    @SqlQuery("SELECT id, pill_id, fw_version as firmware_version, battery_level, last_updated as last_seen, uptime FROM pill_status WHERE pill_id = :pill_id ORDER BY id DESC LIMIT 1000;")
+    @SqlQuery("SELECT id, pill_id, fw_version as firmware_version, battery_level, last_updated as last_seen, uptime FROM pill_status WHERE pill_id = :pill_id AND last_updated is not null ORDER BY id DESC LIMIT 1000;")
     ImmutableList<DeviceStatus> pillStatusWithBatteryLevel(@Bind("pill_id") final Long pillId);
 
     //    @SqlQuery("SELECT * FROM pill_status WHERE pill_id = :pill_id;")
