@@ -104,8 +104,7 @@ public class RingProcessor {
 
 
             final List<Alarm> alarms = userInfo.alarmList;
-            final DateTime currentUserLocalTime = Alarm.Utils.alignToMinuteGranularity(
-                    currentTimeNotAligned.withZone(userInfo.timeZone.get()));
+            final DateTime currentUserLocalTime = Alarm.Utils.alignToMinuteGranularity(currentTimeNotAligned.withZone(userInfo.timeZone.get()));
 
             RingTime nextRingTimeFromTemplate = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarms, currentUserLocalTime.getMillis(), userInfo.timeZone.get());
 

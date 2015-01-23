@@ -328,8 +328,7 @@ public class ReceiveResource extends BaseResource {
         try {
             nextRegularRingTimeOptional = Optional.of(RingProcessor.getNextRingTimeFromAlarmTemplateForSense(userInfoFromThatDevice,
                     deviceId,
-                    Alarm.Utils.alignToMinuteGranularity(
-                            DateTime.now().withZone(userTimeZoneOptional.get()))));
+                    Alarm.Utils.alignToMinuteGranularity(DateTime.now().withZone(userTimeZoneOptional.get()))));
         }catch (Exception ex){
             LOGGER.error("Get next regular ring time for device {} failed: {}", deviceId, ex.getMessage());
         }
@@ -437,110 +436,107 @@ public class ReceiveResource extends BaseResource {
 
         }
 
+        final Optional<DateTimeZone> userTimeZone = getUserTimeZone(userInfoList);
+        if(userTimeZone.isPresent()) {
+            final DateTime now = Alarm.Utils.alignToMinuteGranularity(DateTime.now().withZone(userTimeZone.get()));
+            final RingTime nextRingTime = getNextRingTime(deviceName, userInfoList);
 
-        final DateTime now = DateTime.now().withSecondOfMinute(0).withMillisOfSecond(0);
-        final RingTime nextRingTime = getNextRingTime(deviceName, userInfoList);
-
-        // Start generate protobuf for alarm
-        int ringOffsetFromNowInSecond = -1;
-        int ringDurationInMS = 2 * DateTimeConstants.MILLIS_PER_MINUTE;
-        if(!nextRingTime.isEmpty()) {
-            ringOffsetFromNowInSecond = (int) ((nextRingTime.actualRingTimeUTC - now.getMillis()) / DateTimeConstants.MILLIS_PER_SECOND);
-        }
-
-        int soundId = 0;
-        if(nextRingTime.soundIds != null && nextRingTime.soundIds.length > 0){
-            soundId = (int)nextRingTime.soundIds[0];
-        }
-        final OutputProtos.SyncResponse.Alarm.Builder alarmBuilder = OutputProtos.SyncResponse.Alarm.newBuilder()
-                .setStartTime((int)(nextRingTime.actualRingTimeUTC / DateTimeConstants.MILLIS_PER_SECOND))
-                .setEndTime((int)((nextRingTime.actualRingTimeUTC + ringDurationInMS) / DateTimeConstants.MILLIS_PER_SECOND))
-                .setRingDurationInSecond(ringDurationInMS / DateTimeConstants.MILLIS_PER_SECOND)
-                .setRingtoneId(soundId)
-                .setRingtonePath(Alarm.Utils.getSoundPathFromSoundId(soundId))
-                .setRingOffsetFromNowInSecond(ringOffsetFromNowInSecond);
-        responseBuilder.setAlarm(alarmBuilder.build());
-        // End generate protobuf for alarm
-
-        final String firmwareFeature = String.format("firmware_release_%s", firmwareVersion);
-        final List<String> groups = groupFlipper.getGroups(deviceName);
-        if(featureFlipper.deviceFeatureActive(firmwareFeature, deviceName, groups)) {
-            LOGGER.debug("Feature is active!");
-        }
-
-        if(featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceName, groups)) {
-            LOGGER.warn("Always OTA is on for device: ", deviceName);
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName,
-                    FeatureFlipper.ALWAYS_OTA_RELEASE, firmwareVersion);
-            LOGGER.warn("{} files added to syncResponse to be downloaded", fileDownloadList.size());
-            responseBuilder.addAllFiles(fileDownloadList);
-        } else if (featureFlipper.deviceFeatureActive(FeatureFlipper.FORCE_EVT_OTA_UPDATE, deviceName, groups) && deviceName.length() == 12) {
-
-            LOGGER.warn("Forcing OTA for EVT units: ", deviceName);
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName,
-                    "pang-fire-fighting", firmwareVersion);
-            LOGGER.warn("{} files added to syncResponse to be downloaded", fileDownloadList.size());
-            responseBuilder.addAllFiles(fileDownloadList);
-
-        } else {
-            // groups take precedence over feature
-            boolean canOTA = false;
-            if(batch.hasUptimeInSecond()){
-                canOTA = (batch.getUptimeInSecond() > 20 * DateTimeConstants.SECONDS_PER_MINUTE);
+            // Start generate protobuf for alarm
+            int ringOffsetFromNowInSecond = -1;
+            int ringDurationInMS = 2 * DateTimeConstants.MILLIS_PER_MINUTE;
+            if (!nextRingTime.isEmpty()) {
+                ringOffsetFromNowInSecond = (int) ((nextRingTime.actualRingTimeUTC - now.getMillis()) / DateTimeConstants.MILLIS_PER_SECOND);
             }
 
-            if(groups.contains("chris-dev") || groups.contains("video-photoshoot") || groups.contains("victor")){
-                canOTA = true;
+            int soundId = 0;
+            if (nextRingTime.soundIds != null && nextRingTime.soundIds.length > 0) {
+                soundId = (int) nextRingTime.soundIds[0];
+            }
+            final OutputProtos.SyncResponse.Alarm.Builder alarmBuilder = OutputProtos.SyncResponse.Alarm.newBuilder()
+                    .setStartTime((int) (nextRingTime.actualRingTimeUTC / DateTimeConstants.MILLIS_PER_SECOND))
+                    .setEndTime((int) ((nextRingTime.actualRingTimeUTC + ringDurationInMS) / DateTimeConstants.MILLIS_PER_SECOND))
+                    .setRingDurationInSecond(ringDurationInMS / DateTimeConstants.MILLIS_PER_SECOND)
+                    .setRingtoneId(soundId)
+                    .setRingtonePath(Alarm.Utils.getSoundPathFromSoundId(soundId))
+                    .setRingOffsetFromNowInSecond(ringOffsetFromNowInSecond);
+            responseBuilder.setAlarm(alarmBuilder.build());
+            // End generate protobuf for alarm
+
+
+            final String firmwareFeature = String.format("firmware_release_%s", firmwareVersion);
+            final List<String> groups = groupFlipper.getGroups(deviceName);
+            if (featureFlipper.deviceFeatureActive(firmwareFeature, deviceName, groups)) {
+                LOGGER.debug("Feature is active!");
             }
 
-            if (!groups.isEmpty() && canOTA) {
-                // TODO check for sense uptime instead and do not OTA if it was just plugged in
-
-                LOGGER.debug("DeviceId {} belongs to groups: {}", deviceName, groups);
-                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName, groups.get(0), firmwareVersion);
-                LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+            if (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceName, groups)) {
+                LOGGER.warn("Always OTA is on for device: ", deviceName);
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName,
+                        FeatureFlipper.ALWAYS_OTA_RELEASE, firmwareVersion);
+                LOGGER.warn("{} files added to syncResponse to be downloaded", fileDownloadList.size());
                 responseBuilder.addAllFiles(fileDownloadList);
             } else {
+                // groups take precedence over feature
+                boolean canOTA = false;
+                if (batch.hasUptimeInSecond()) {
+                    canOTA = (batch.getUptimeInSecond() > 20 * DateTimeConstants.SECONDS_PER_MINUTE);
+                }
 
-                if (featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceName, groups)) {
-                    LOGGER.debug("Feature release is active!");
-                    final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName, FeatureFlipper.OTA_RELEASE, firmwareVersion);
+                if (groups.contains("chris-dev") || groups.contains("video-photoshoot") || groups.contains("victor")) {
+                    canOTA = true;
+                }
+
+                if (!groups.isEmpty() && canOTA) {
+                    // TODO check for sense uptime instead and do not OTA if it was just plugged in
+
+                    LOGGER.debug("DeviceId {} belongs to groups: {}", deviceName, groups);
+                    final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName, groups.get(0), firmwareVersion);
                     LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
                     responseBuilder.addAllFiles(fileDownloadList);
+                } else {
+
+                    if (featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceName, groups)) {
+                        LOGGER.debug("Feature release is active!");
+                        final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName, FeatureFlipper.OTA_RELEASE, firmwareVersion);
+                        LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+                        responseBuilder.addAllFiles(fileDownloadList);
+                    }
                 }
             }
-        }
 
-        final AudioControlProtos.AudioControl.Builder audioControl = AudioControlProtos.AudioControl
-                .newBuilder()
-                .setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.ON)
-                .setAudioSaveFeatures(AudioControlProtos.AudioControl.AudioCaptureAction.OFF)
-                .setAudioSaveRawData(AudioControlProtos.AudioControl.AudioCaptureAction.OFF);
+            final AudioControlProtos.AudioControl.Builder audioControl = AudioControlProtos.AudioControl
+                    .newBuilder()
+                    .setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.ON)
+                    .setAudioSaveFeatures(AudioControlProtos.AudioControl.AudioCaptureAction.OFF)
+                    .setAudioSaveRawData(AudioControlProtos.AudioControl.AudioCaptureAction.OFF);
 
-        if(featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_ON_AUDIO, deviceName, groups)) {
-            audioControl.setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
-            audioControl.setAudioSaveFeatures(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
-            audioControl.setAudioSaveRawData(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
-        }
-
-
-        if(featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceName, groups)) {
-            responseBuilder.setBatchSize(1);
-        } else {
-            final DateTimeZone userTimeZone = getUserTimeZone(userInfoList);
-            final Long userNextAlarmTimestamp = nextRingTime.expectedRingTimeUTC; // This must be expected time, not actual.
-
-            final Integer uploadInterval = UploadSettings.getUploadInterval(
-                    Alarm.Utils.alignToMinuteGranularity(now.withZone(userTimeZone)),
-                    senseUploadConfiguration,
-                    userNextAlarmTimestamp);
-            responseBuilder.setBatchSize(uploadInterval);
-            if(groups.contains("chris-dev")){
-                responseBuilder.setBatchSize(1);
+            if (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_ON_AUDIO, deviceName, groups)) {
+                audioControl.setAudioCaptureAction(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
+                audioControl.setAudioSaveFeatures(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
+                audioControl.setAudioSaveRawData(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
             }
+
+
+            if (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceName, groups)) {
+                responseBuilder.setBatchSize(1);
+            } else {
+                final Long userNextAlarmTimestamp = nextRingTime.expectedRingTimeUTC; // This must be expected time, not actual.
+
+                final Integer uploadInterval = UploadSettings.getUploadInterval(
+                        Alarm.Utils.alignToMinuteGranularity(now.withZone(userTimeZone.get())),
+                        senseUploadConfiguration,
+                        userNextAlarmTimestamp);
+                responseBuilder.setBatchSize(uploadInterval);
+                if (groups.contains("chris-dev")) {
+                    responseBuilder.setBatchSize(1);
+                }
+            }
+
+            responseBuilder.setAudioControl(audioControl);
+            setPillColors(userInfoList, responseBuilder);
+        }else{
+            LOGGER.error("NO TIMEZONE IS A BIG DEAL.");
         }
-        responseBuilder.setAudioControl(audioControl);
-        setPillColors(userInfoList, responseBuilder);
 
 
         final OutputProtos.SyncResponse syncResponse = responseBuilder.build();
@@ -702,13 +698,13 @@ public class ReceiveResource extends BaseResource {
         return signedResponse.get();
     }
 
-    private DateTimeZone getUserTimeZone(List<UserInfo> userInfoList) {
+    private Optional<DateTimeZone> getUserTimeZone(List<UserInfo> userInfoList) {
         DateTimeZone userTimeZone = DateTimeZone.getDefault();
         for(final UserInfo info: userInfoList){
             if(info.timeZone.isPresent()){
-                userTimeZone = info.timeZone.get();
+                return info.timeZone;
             }
         }
-        return userTimeZone;
+        return Optional.absent();
     }
 }
