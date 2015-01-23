@@ -275,8 +275,8 @@ public class RingProcessor {
     }
 
     public static boolean shouldTriggerSmartAlarmProcessing(final DateTime now, final DateTime nextRegularRingTime, final int smartAlarmProcessAheadInMinutes){
-        return now.plusMinutes(smartAlarmProcessAheadInMinutes).isAfter(nextRegularRingTime) ||
-                now.plusMinutes(smartAlarmProcessAheadInMinutes).isEqual(nextRegularRingTime);
+        return (!now.plusMinutes(smartAlarmProcessAheadInMinutes).isBefore(nextRegularRingTime)) &&
+                (!now.isAfter(nextRegularRingTime.minusMinutes(5)));  // Don't process smart alarm when it is too close to expected ring time
     }
 
     public static RingTime processNextSmartRingTimeForUser(final long accountId,

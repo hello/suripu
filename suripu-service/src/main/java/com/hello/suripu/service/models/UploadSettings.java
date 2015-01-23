@@ -46,10 +46,6 @@ public class UploadSettings {
 
         final Long timeUntilNextAlarmMillis = userNextAlarmTimestampMillis - currentTimestampMillis;
 
-        if(timeUntilNextAlarmMillis <= 2 * DateTimeConstants.MILLIS_PER_MINUTE){
-            return (int)(timeUntilNextAlarmMillis / DateTimeConstants.MILLIS_PER_MINUTE) + 1;
-        }
-
         if (timeUntilNextAlarmMillis <= ALLOWABLE_TIME_BETWEEN_NOW_AND_NEXT_ALARM) {
             return FASTEST_UPLOAD_INTERVAL;
         }
