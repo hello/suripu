@@ -29,7 +29,7 @@ public class DeviceData {
     public final int ambientAirQuality;
 
     @JsonProperty("ambient_air_quality_raw")
-    public final int ambientAirQualityRaw;
+    public final int ambientAirQualityRaw;  // raw counts
 
     @JsonProperty("ambient_dust_variance")
     public final int ambientDustVariance;
@@ -41,7 +41,7 @@ public class DeviceData {
     public final int ambientDustMax;
 
     @JsonProperty("ambient_light")
-    public final int ambientLight;
+    public final int ambientLight;  // raw counts when inserting to DB, lux when retrieved from DB
 
     @JsonProperty("ambient_light_variance")
     public final int ambientLightVariance;
@@ -64,6 +64,15 @@ public class DeviceData {
     @JsonProperty("hold_count")
     public final Integer holdCount;
 
+    @JsonProperty("audio_num_disturbances")
+    public final Integer audioNumDisturbances;
+
+    @JsonProperty("audio_peak_disturbances_db")
+    public final Integer audioPeakDisturbancesDB; // already converted to decibels, multiplied by 1000
+
+    @JsonProperty("audio_peak_background_db")
+    public final Integer audioPeakBackgroundDB; // already converted to decibels, multiplied by 1000
+
     public DeviceData(
             final Long accountId,
             final Long deviceId,
@@ -81,7 +90,10 @@ public class DeviceData {
             final Integer offsetMillis,
             final Integer firmwareVersion,
             final Integer waveCount,
-            final Integer holdCount) {
+            final Integer holdCount,
+            final Integer audioNumDisturbances,
+            final Integer audioPeakDisturbancesDB,
+            final Integer audioPeakBackgroundDB) {
         this.accountId = accountId;
         this.deviceId = deviceId;
         this.ambientTemperature = ambientTemperature;
@@ -99,6 +111,9 @@ public class DeviceData {
         this.firmwareVersion = firmwareVersion;
         this.waveCount = waveCount;
         this.holdCount = holdCount;
+        this.audioNumDisturbances = audioNumDisturbances;
+        this.audioPeakBackgroundDB = audioPeakBackgroundDB;
+        this.audioPeakDisturbancesDB = audioPeakDisturbancesDB;
 
         checkNotNull(this.accountId, "Account id can not be null");
         checkNotNull(this.deviceId, "Device id can not be null");
@@ -134,6 +149,9 @@ public class DeviceData {
         private Integer firmwareVersion;
         private Integer waveCount;
         private Integer holdCount;
+        private Integer audioNumDisturbances = 0;
+        private Integer audioPeakDisturbancesDB = 0;
+        private Integer audioPeakBackgroundDB = 0;
 
         public Builder withAccountId(final Long accountId){
             this.accountId = accountId;
@@ -221,11 +239,29 @@ public class DeviceData {
             return this;
         }
 
+        public Builder withAudioNumDisturbances(final Integer audioNumDisturbances) {
+            this.audioNumDisturbances = audioNumDisturbances;
+            return this;
+        }
+
+        public Builder withAudioPeakDisturbancesDB(final Integer audioPeakDisturbancesDB) {
+            final float decibelValue = DataUtils.convertAudioRawToDB(audioPeakDisturbancesDB);
+            this.audioPeakDisturbancesDB = DataUtils.floatToDbIntAudioDecibels(decibelValue);
+            return this;
+        }
+
+        public Builder withAudioPeakBackgroundDB(final Integer audioPeakBackgroundDB) {
+            final float decibelValue = DataUtils.convertAudioRawToDB(audioPeakBackgroundDB);
+            this.audioPeakBackgroundDB = DataUtils.floatToDbIntAudioDecibels(decibelValue);
+            return this;
+        }
+
         public DeviceData build(){
             return new DeviceData(this.accountId, this.deviceId, this.ambientTemperature, this.ambientHumidity,
                     this.ambientAirQuality, this.ambientAirQualityRaw, this.ambientDustVariance, this.ambientDustMin, this.ambientDustMax,
                     this.ambientLight, this.ambientLightVariance, this.ambientLightPeakiness, this.dateTimeUTC, this.offsetMillis,
-                    this.firmwareVersion, this.waveCount, this.holdCount);
+                    this.firmwareVersion, this.waveCount, this.holdCount,
+                    this.audioNumDisturbances, this.audioPeakDisturbancesDB, this.audioPeakBackgroundDB);
         }
 
 
@@ -251,6 +287,8 @@ public class DeviceData {
                 .add("firmware_version", firmwareVersion)
                 .add("wave_count", waveCount)
                 .add("hold_count", holdCount)
+                .add(("audio_num_disturbances"), audioNumDisturbances)
+                .add(("audio_peak_disturbances_db"), audioPeakDisturbancesDB)
                 .toString();
     }
 }

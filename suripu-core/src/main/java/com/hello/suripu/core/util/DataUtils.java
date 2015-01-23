@@ -9,7 +9,8 @@ import org.slf4j.LoggerFactory;
 public class DataUtils{
     private static final Logger LOGGER = LoggerFactory.getLogger(DataUtils.class);
     private static final float MAX_DUST_ANALOG_VALUE = 4096;
-    public static final float DUST_FLOAT_TO_INT_MULTIPLIER = 1000000;
+    public static final float DUST_FLOAT_TO_INT_MULTIPLIER = 1000000f;
+    public static final float AUDIO_FLOAT_TO_INT_MULTIPLIER = 1000.0f; // 3 decimal places
 
     // AQI ranges from 0 to 500;
     // see http://www.sparetheair.com/publications/AQI_Lookup_Table-PM25.pdf
@@ -44,7 +45,7 @@ public class DataUtils{
 
     public static int floatToDbIntDust (final float value) { return  (int) (value * DUST_FLOAT_TO_INT_MULTIPLIER);}
 
-    public static float dbIntToFloatDust(final int valueFromDB) {return valueFromDB / DUST_FLOAT_TO_INT_MULTIPLIER;}
+    public static float dbIntToFloatDust(final int valueFromDB) {return ((float)valueFromDB) / DUST_FLOAT_TO_INT_MULTIPLIER;}
 
     public static int convertRawDustCountsToAQI(final int rawCount, final int firmwareVersion) {
         final float dustDensity = convertDustDataFromCountsToDensity(rawCount, firmwareVersion);
@@ -94,4 +95,13 @@ public class DataUtils{
         final float internalIntensity = ((float) rawCount / maxCount) * maxLux;
         return (int) (whiteMultiplier * internalIntensity);
     }
+
+    public static float convertAudioRawToDB(final int rawAudioValue) {
+        return ((float) rawAudioValue) / 1024.0f;
+    }
+
+    public static int floatToDbIntAudioDecibels(final float value) { return (int) (value * AUDIO_FLOAT_TO_INT_MULTIPLIER); }
+
+    public static float dbIntToFloatAudioDecibels(final int valueFromDatabase) { return ((float) valueFromDatabase) / AUDIO_FLOAT_TO_INT_MULTIPLIER; }
+
 }

@@ -37,7 +37,10 @@ public class DeviceDataBucketMapper implements ResultSetMapper<DeviceData>{
                 r.getInt("offset_millis"),
                 r.getInt("firmware_version"),
                 r.getInt("wave_count"),
-                r.getInt("hold_count")
+                r.getInt("hold_count"),
+                r.getInt("audio_num_disturbances"),
+                r.getInt("audio_peak_disturbances_db"),
+                r.getInt("audio_peak_background_db")
         );
         return deviceData;
     }

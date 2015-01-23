@@ -146,20 +146,22 @@ public class TimelineProcessor {
             final List<Event> sleepEvents = TimelineUtils.getSleepEvents(targetDate, trackerMotions, lightOutTimeOptional, 15);
             final SleepEvent sleepEvent = (SleepEvent) sleepEvents.get(1);
             final WakeupEvent wakeupEvent = (WakeupEvent) sleepEvents.get(2);
+
+            final InBedEvent inBedEvent = (InBedEvent) sleepEvents.get(0);
+            final OutOfBedEvent outOfBedEvent = (OutOfBedEvent) sleepEvents.get(sleepEvents.size() - 1);
+
             sleepSegment = new Segment(sleepEvent.getStartTimestamp(),
                     wakeupEvent.getStartTimestamp(),
                     wakeupEvent.getTimezoneOffset());
 
             if(sleepSegment.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
-
-                final InBedEvent inBedFromAwakeDetection = (InBedEvent) sleepEvents.get(0);
-                final OutOfBedEvent outOfBedFromAwakeDetection = (OutOfBedEvent) sleepEvents.get(sleepEvents.size() - 1);
-
-                // TODO: don't use sleep/awake until we have tune the algorithm....
-                events.add(inBedFromAwakeDetection);
-                events.add(outOfBedFromAwakeDetection);
                 events.add(sleepEvent);
                 events.add(wakeupEvent);
+            }
+
+            if(outOfBedEvent.getStartTimestamp() - inBedEvent.getStartTimestamp() > 3 * DateTimeConstants.MILLIS_PER_HOUR){
+                events.add(inBedEvent);
+                events.add(outOfBedEvent);
             }
 
             LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",

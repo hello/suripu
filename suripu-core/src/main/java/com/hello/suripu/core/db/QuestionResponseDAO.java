@@ -111,6 +111,23 @@ public interface QuestionResponseDAO {
                                                       @Bind("frequency") String frequency,
                                                       @Bind("one_week_ago") DateTime oneWeekAgo);
 
+    @RegisterMapper(RecentResponseMapper.class)
+    @SqlQuery("SELECT R.account_id AS account_id, " +
+            "R.question_id AS question_id, " +
+            "0 AS response_id, " +
+            "R.skip AS skip, " +
+            "R.account_question_id AS account_question_id, " +
+            "AQ.created_local_utc_ts as ask_time, " +
+            "R.question_freq AS question_freq " +
+            "FROM responses R " +
+            "LEFT OUTER JOIN account_questions AQ ON AQ.id = R.account_question_id " +
+            "WHERE R.account_id = :account_id AND " +
+            "(question_freq = CAST(:frequency AS FREQUENCY_TYPE) OR R.created >= :one_week_ago) " +
+            "ORDER by R.id;")
+    ImmutableList<Response> getBaseAndRecentResponses(@Bind("account_id") long accountId,
+                                                     @Bind("frequency") String frequency,
+                                                     @Bind("one_week_ago") DateTime oneWeekAgo);
+
     //TODO: optimize
     @SqlQuery("SELECT question_id FROM responses WHERE account_id = :account_id AND question_id <= 3")
     List<Integer> getAnsweredOnboardingQuestions(@Bind("account_id") long accountId);

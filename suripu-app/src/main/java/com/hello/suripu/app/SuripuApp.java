@@ -42,6 +42,7 @@ import com.hello.suripu.app.resources.v1.TimeZoneResource;
 import com.hello.suripu.app.resources.v1.TimelineResource;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
+import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
@@ -175,8 +176,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         clientConfiguration.withMaxErrorRetry(1);
 
         final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
-        final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider, clientConfiguration);
-        dynamoDBClient.setEndpoint(configuration.getEventDBConfiguration().getEndpoint());
+        final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
+
+        final AmazonDynamoDB eventDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getEventDBConfiguration().getEndpoint());
 
         final AmazonSNSClient snsClient = new AmazonSNSClient(awsCredentialsProvider, clientConfiguration);
         final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider, clientConfiguration);
@@ -185,26 +187,29 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final String eventTableName = configuration.getEventDBConfiguration().getTableName();
 
-        final EventDAODynamoDB eventDAODynamoDB = new EventDAODynamoDB(dynamoDBClient, eventTableName);
+        final EventDAODynamoDB eventDAODynamoDB = new EventDAODynamoDB(eventDynamoDBClient, eventTableName);
+
+        final AmazonDynamoDB alarmDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getAlarmDBConfiguration().getEndpoint());
         final AlarmDAODynamoDB alarmDAODynamoDB = new AlarmDAODynamoDB(
-                dynamoDBClient, configuration.getAlarmDBConfiguration().getTableName()
+                alarmDynamoDBClient, configuration.getAlarmDBConfiguration().getTableName()
         );
 
+        final AmazonDynamoDB timezoneHistoryDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTimeZoneHistoryDBConfiguration().getEndpoint());
         final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(
-                dynamoDBClient, configuration.getTimeZoneHistoryDBConfiguration().getTableName()
+                timezoneHistoryDynamoDBClient, configuration.getTimeZoneHistoryDBConfiguration().getTableName()
         );
 
+        final AmazonDynamoDB mergedUserInfoDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getUserInfoDynamoDBConfiguration().getEndpoint());
         final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(
-                dynamoDBClient, configuration.getUserInfoDynamoDBConfiguration().getTableName()
+                mergedUserInfoDynamoDBClient, configuration.getUserInfoDynamoDBConfiguration().getTableName()
         );
 
+        final AmazonDynamoDB insightsDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getInsightsDynamoDBConfiguration().getEndpoint());
         final InsightsDAODynamoDB insightsDAODynamoDB = new InsightsDAODynamoDB(
-                dynamoDBClient, configuration.getInsightsDynamoDBConfiguration().getTableName());
+                insightsDynamoDBClient, configuration.getInsightsDynamoDBConfiguration().getTableName());
 
-        // for localhost debug, may need to point to prod to get data
-        final AmazonDynamoDBClient dynamoDBScoreClient = new AmazonDynamoDBClient(awsCredentialsProvider, clientConfiguration);
+        final AmazonDynamoDB dynamoDBScoreClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepScoreDBConfiguration().getEndpoint());
 
-        dynamoDBScoreClient.setEndpoint(configuration.getSleepScoreDBConfiguration().getEndpoint());
         final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB = new AggregateSleepScoreDAODynamoDB(
                 dynamoDBScoreClient,
                 configuration.getSleepScoreDBConfiguration().getTableName(),
@@ -213,8 +218,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final JedisPool jedisPool = new JedisPool("localhost", 6379);
         final ImmutableMap<String, String> arns = ImmutableMap.copyOf(configuration.getPushNotificationsConfiguration().getArns());
-        final AmazonDynamoDB notificationsDynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider, clientConfiguration);
-        notificationsDynamoDBClient.setEndpoint(configuration.getNotificationsDBConfiguration().getEndpoint());
+
+        final AmazonDynamoDB notificationsDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getNotificationsDBConfiguration().getEndpoint());
 
         final NotificationSubscriptionsDAO subscriptionDAO = new DynamoDBNotificationSubscriptionDAO(
                 notificationsDynamoDBClient,
@@ -224,8 +229,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         );
 
         final MobilePushNotificationProcessor mobilePushNotificationProcessor = new MobilePushNotificationProcessor(snsClient, subscriptionDAO);
-        
-        final TeamStore teamStore = new TeamStore(dynamoDBClient, "teams");
+
+        final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
+        final TeamStore teamStore = new TeamStore(teamStoreDBClient, "teams");
 
         final ImmutableMap<QueueName, String> streams = ImmutableMap.copyOf(configuration.getKinesisConfiguration().getStreams());
         final KinesisLoggerFactory kinesisLoggerFactory = new KinesisLoggerFactory(kinesisClient, streams);
@@ -262,22 +268,24 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addProvider(new OAuthProvider(new OAuthAuthenticator(accessTokenStore), "protected-resources", activityLogger));
 
         final String namespace = (configuration.getDebug()) ? "dev" : "prod";
-        dynamoDBClient.setEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
-        final FeatureStore featureStore = new FeatureStore(dynamoDBClient, "features", namespace);
+        final AmazonDynamoDB featuresDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
+        final FeatureStore featureStore = new FeatureStore(featuresDynamoDBClient, "features", namespace);
 
 
         final RolloutAppModule module = new RolloutAppModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(module);
 
+        final AmazonDynamoDB senseKeyStoreDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getSenseKeyStoreDynamoDBConfiguration().getEndpoint());
         final KeyStore senseKeyStore = new KeyStoreDynamoDB(
-                dynamoDBClient,
+                senseKeyStoreDynamoDBClient,
                 configuration.getSenseKeyStoreDynamoDBConfiguration().getTableName(),
                 "1234567891234567".getBytes(), // TODO: REMOVE THIS WHEN WE ARE NOT SUPPOSED TO HAVE A DEFAULT KEY
                 120 // 2 minutes for cache
         );
 
+        final AmazonDynamoDB pillKeyStoreDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getPillKeyStoreDynamoDBConfiguration().getEndpoint());
         final KeyStore pillKeyStore = new KeyStoreDynamoDB(
-                dynamoDBClient,
+                pillKeyStoreDynamoDBClient,
                 configuration.getPillKeyStoreDynamoDBConfiguration().getTableName(),
                 "9876543219876543".getBytes(), // TODO: REMOVE THIS WHEN WE ARE NOT SUPPOSED TO HAVE A DEFAULT KEY
                 120 // 2 minutes for cache

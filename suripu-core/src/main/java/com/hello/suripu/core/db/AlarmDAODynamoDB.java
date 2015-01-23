@@ -1,5 +1,6 @@
 package com.hello.suripu.core.db;
 
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
@@ -40,7 +41,7 @@ import java.util.Set;
 public class AlarmDAODynamoDB {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(AlarmDAODynamoDB.class);
-    private final AmazonDynamoDBClient dynamoDBClient;
+    private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
 
     public static final String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
@@ -52,7 +53,7 @@ public class AlarmDAODynamoDB {
     public static final int MAX_ALARM_COUNT = 7;
 
 
-    public AlarmDAODynamoDB(final AmazonDynamoDBClient dynamoDBClient, final String tableName){
+    public AlarmDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
     }

@@ -2,6 +2,7 @@ package com.hello.suripu.workers.insights;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream;
@@ -10,6 +11,7 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
+import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
@@ -136,9 +138,13 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
         kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
 
         // setup dynamoDB clients
-        final AmazonDynamoDBClient dynamoDB = new AmazonDynamoDBClient(awsCredentialsProvider);
-        dynamoDB.setEndpoint(configuration.getInsightsDynamoDB().getEndpoint());
-        final InsightsDAODynamoDB insightsDAODynamoDB = new InsightsDAODynamoDB(dynamoDB, configuration.getInsightsDynamoDB().getTableName());
+        final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
+        final AmazonDynamoDB featureDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
+        final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
+        final FeatureStore featureStore = new FeatureStore(featureDynamoDB, "features", featureNamespace);
+
+        final AmazonDynamoDB insightsDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(configuration.getInsightsDynamoDB().getEndpoint());
+        final InsightsDAODynamoDB insightsDAODynamoDB = new InsightsDAODynamoDB(insightsDynamoDB, configuration.getInsightsDynamoDB().getTableName());
 
         final AmazonDynamoDBClient dynamoDBScoreClient = new AmazonDynamoDBClient(awsCredentialsProvider);
         dynamoDBScoreClient.setEndpoint(configuration.getSleepScoreDynamoDB().getEndpoint());
@@ -147,11 +153,6 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
                 configuration.getSleepScoreDynamoDB().getTableName(),
                 configuration.getSleepScoreVersion()
         );
-
-        final AmazonDynamoDBClient featureDynamoDB = new AmazonDynamoDBClient(awsCredentialsProvider);
-        final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
-        featureDynamoDB.setEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
-        final FeatureStore featureStore = new FeatureStore(featureDynamoDB, "features", featureNamespace);
 
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);

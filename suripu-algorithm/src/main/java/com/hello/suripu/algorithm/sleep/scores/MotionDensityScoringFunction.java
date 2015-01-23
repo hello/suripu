@@ -3,8 +3,6 @@ package com.hello.suripu.algorithm.sleep.scores;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.pdf.LinearRankAscendingScoringFunction;
 import com.hello.suripu.algorithm.pdf.LinearRankDescendingScoringFunction;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,12 +66,13 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
                 final double sleepTimeScore = sleepTimeScoreFunction.getScore(datum.timestamp, sleepTimePDF);
                 pdf.put(datum, new EventScores(Math.pow(sleepMotionDensityScore, this.motionMaxPower) * sleepTimeScore,
                         1d, 1d, 1d));
-
+                /*
                 LOGGER.debug("    density {}: t {}, sl_r {}, wup 0, val {}",
                         new DateTime(datum.timestamp, DateTimeZone.forOffsetMillis(datum.offsetMillis)),
                         sleepTimeScore,
                         sleepMotionDensityScore,
                         datum.amplitude);
+                        */
             }
 
             if(this.type == ScoreType.WAKE_UP) {
@@ -82,11 +81,13 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
                 final double wakeUpTimeScore = wakeUpTimeScoreFunction.getScore(datum.timestamp, wakeUpTimePDF);
                 pdf.put(datum, new EventScores(1d,
                         Math.pow(wakeUpMotionDensityScore, this.motionMaxPower) * wakeUpTimeScore, 1d, 1d));
+                /*
                 LOGGER.debug("    density {}: t {}, sl_r 0, wup {}, val {}",
                         new DateTime(datum.timestamp, DateTimeZone.forOffsetMillis(datum.offsetMillis)),
                         wakeUpTimeScore,
                         wakeUpMotionDensityScore,
                         datum.amplitude);
+                        */
             }
 
         }

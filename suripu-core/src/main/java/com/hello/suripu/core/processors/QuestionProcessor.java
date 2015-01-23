@@ -300,7 +300,7 @@ public class QuestionProcessor {
         final List<Question> questions = new ArrayList<>();
 
         // from DB, get answered base-questions and other answered questions from the past week
-        final Set<Integer> addedIds = this.getUserAnsweredQuestionIds(accountId);
+        final Set<Integer> addedIds = this.getUserAnsweredQuestionIds(accountId, today, true);
 
         // add questions that has already been selected
         addedIds.addAll(seenIds);
@@ -353,7 +353,7 @@ public class QuestionProcessor {
         final List<Question> questions = new ArrayList<>();
 
         // from DB, get answered base-questions and other answered questions from the past week
-        final Set<Integer> addedIds = this.getUserAnsweredQuestionIds(accountId);
+        final Set<Integer> addedIds = this.getUserAnsweredQuestionIds(accountId, today, false);
 
         // add questions that has already been selected
         addedIds.addAll(seenIds);
@@ -460,11 +460,28 @@ public class QuestionProcessor {
     /**
      * Get ids of base questions answered, and recently answered questions (one week)
      */
-    private Set<Integer> getUserAnsweredQuestionIds (final Long accountId) {
+    private Set<Integer> getUserAnsweredQuestionIds (final Long accountId, final DateTime today, final Boolean newbie) {
         final DateTime oneWeekAgo = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(7);
-        final List<Integer> baseIds = this.questionResponseDAO.getBaseAndRecentAnsweredQuestionIds(accountId, Question.FREQUENCY.ONE_TIME.toSQLString(), oneWeekAgo);
-        final Set<Integer> uniqueIds = new HashSet<>(baseIds);
-        LOGGER.debug("User has seen {} base questions", baseIds.size());
+
+//        final List<Integer> baseIds = this.questionResponseDAO.getBaseAndRecentAnsweredQuestionIds(accountId, Question.FREQUENCY.ONE_TIME.toSQLString(), oneWeekAgo);
+//        final Set<Integer> uniqueIds = new HashSet<>(baseIds);
+
+        final Integer newbieQuestionId = this.availableQuestionIds.get(Question.FREQUENCY.DAILY).get(0);
+
+        final ImmutableList<Response> recentResponses = this.questionResponseDAO.getBaseAndRecentResponses(accountId, Question.FREQUENCY.ONE_TIME.toSQLString(), oneWeekAgo);
+
+        final Set<Integer> uniqueIds = new HashSet<>();
+        for (final Response response : recentResponses) {
+            if (newbie && response.questionId == newbieQuestionId) {
+                // check that we haven't asked this daily question for this user yet
+                if (response.askTime.isBefore(today)) {
+                    continue;
+                }
+            }
+            uniqueIds.add(response.questionId);
+        }
+
+        LOGGER.debug("User has seen {} base questions", recentResponses.size());
         return uniqueIds;
     }
 
