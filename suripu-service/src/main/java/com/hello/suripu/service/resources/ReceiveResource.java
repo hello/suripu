@@ -438,14 +438,20 @@ public class ReceiveResource extends BaseResource {
 
         final Optional<DateTimeZone> userTimeZone = getUserTimeZone(userInfoList);
         if(userTimeZone.isPresent()) {
-            final DateTime now = Alarm.Utils.alignToMinuteGranularity(DateTime.now().withZone(userTimeZone.get()));
             final RingTime nextRingTime = getNextRingTime(deviceName, userInfoList);
+
+            // WARNING: now must generated after getNextRingTime, because that function can take a long time.
+            final DateTime now = Alarm.Utils.alignToMinuteGranularity(DateTime.now().withZone(userTimeZone.get()));
 
             // Start generate protobuf for alarm
             int ringOffsetFromNowInSecond = -1;
             int ringDurationInMS = 2 * DateTimeConstants.MILLIS_PER_MINUTE;
             if (!nextRingTime.isEmpty()) {
                 ringOffsetFromNowInSecond = (int) ((nextRingTime.actualRingTimeUTC - now.getMillis()) / DateTimeConstants.MILLIS_PER_SECOND);
+                if(ringOffsetFromNowInSecond < 0){
+                    // The ring time process took too much time, force the alarm take off immediately
+                    ringOffsetFromNowInSecond = 1;
+                }
             }
 
             int soundId = 0;
@@ -521,13 +527,20 @@ public class ReceiveResource extends BaseResource {
                 responseBuilder.setBatchSize(1);
             } else {
                 final Long userNextAlarmTimestamp = nextRingTime.expectedRingTimeUTC; // This must be expected time, not actual.
-
+                // Alter upload cycles based on date-time
                 final Integer uploadInterval = UploadSettings.computeUploadIntervalPerUserPerSetting(now, senseUploadConfiguration);
-                final Integer adjustedUploadInterval = UploadSettings.adjustUploadIntervalInMinutes(now.getMillis(), uploadInterval, userNextAlarmTimestamp);
-
                 responseBuilder.setBatchSize(uploadInterval);
+
+                // Boost upload cycle based on expected alarm deadline.
+                final Integer adjustedUploadInterval = UploadSettings.adjustUploadIntervalInMinutes(now.getMillis(), uploadInterval, userNextAlarmTimestamp);
                 if(adjustedUploadInterval < uploadInterval){
                     responseBuilder.setBatchSize(adjustedUploadInterval);
+                }
+
+                // Prolong upload cycle so Sense can safely pass ring time
+                if(now.getMillis() - nextRingTime.actualRingTimeUTC <= 2 * DateTimeConstants.MILLIS_PER_MINUTE){
+                    final int uploadCycleThatPassRingTime = ringOffsetFromNowInSecond / DateTimeConstants.SECONDS_PER_MINUTE + 1;
+                    responseBuilder.setBatchSize(uploadCycleThatPassRingTime);
                 }
 
                 if (groups.contains("chris-dev")) {
