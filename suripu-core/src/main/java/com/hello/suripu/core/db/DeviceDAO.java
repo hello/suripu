@@ -98,7 +98,7 @@ public interface DeviceDAO {
     Integer unregisterSense(@Bind("device_id") final String id);
 
 
-    @SqlUpdate("UPDATE account_tracker_map WHERE device_id = :device_id and account_id = :account_id;")
+    @SqlUpdate("DELETE FROM account_tracker_map WHERE device_id = :device_id and account_id = :account_id;")
     Integer deletePillPairing(@Bind("device_id") final String id, @Bind("account_id") Long accountId);
 
     @SqlUpdate("DELETE FROM account_device_map WHERE device_id = :device_id and account_id = :account_id;")
