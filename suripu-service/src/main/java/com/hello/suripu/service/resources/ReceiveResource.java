@@ -522,11 +522,14 @@ public class ReceiveResource extends BaseResource {
             } else {
                 final Long userNextAlarmTimestamp = nextRingTime.expectedRingTimeUTC; // This must be expected time, not actual.
 
-                final Integer uploadInterval = UploadSettings.getUploadInterval(
-                        Alarm.Utils.alignToMinuteGranularity(now.withZone(userTimeZone.get())),
-                        senseUploadConfiguration,
-                        userNextAlarmTimestamp);
+                final Integer uploadInterval = UploadSettings.computeUploadIntervalPerUserPerSetting(now, senseUploadConfiguration);
+                final Integer adjustedUploadInterval = UploadSettings.adjustUploadIntervalInMinutes(now.getMillis(), uploadInterval, userNextAlarmTimestamp);
+
                 responseBuilder.setBatchSize(uploadInterval);
+                if(adjustedUploadInterval < uploadInterval){
+                    responseBuilder.setBatchSize(adjustedUploadInterval);
+                }
+
                 if (groups.contains("chris-dev")) {
                     responseBuilder.setBatchSize(1);
                 }
