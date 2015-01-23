@@ -18,11 +18,13 @@ public class MotionFeatures {
     private final static Logger LOGGER = LoggerFactory.getLogger(MotionFeatures.class);
     public enum FeatureType{
         MAX_AMPLITUDE,
-        DENSITY_DECADE_BACKTRACK_MAX_AMPLITUDE
+        DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE,
+        DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE
     }
     public static Map<FeatureType, List<AmplitudeData>> generateTimestampAlignedFeatures(final List<AmplitudeData> rawData, final int windowSizeInMinute){
         final LinkedList<AmplitudeData> densityWindow = new LinkedList<>();
-        final LinkedList<AmplitudeData> ampWindow = new LinkedList<>();
+        final LinkedList<AmplitudeData> backTrackAmpWindow = new LinkedList<>();
+        final LinkedList<AmplitudeData> forwardAmpWindow = new LinkedList<>();
 
         LinkedList<AmplitudeData> densityBuffer1 = new LinkedList<>();
         LinkedList<AmplitudeData> densityBuffer2 = new LinkedList<>();
@@ -45,9 +47,9 @@ public class MotionFeatures {
                 if(densityWindow.getFirst().amplitude > 0){
                     densityCount--;
                 }
-                ampWindow.add(densityWindow.removeFirst());
-                if(ampWindow.size() > windowSizeInMinute){
-                    ampWindow.removeFirst();
+                backTrackAmpWindow.add(densityWindow.removeFirst());
+                if(backTrackAmpWindow.size() > windowSizeInMinute){
+                    backTrackAmpWindow.removeFirst();
                 }
             }
 
@@ -67,34 +69,46 @@ public class MotionFeatures {
                     densityMax2 = densityCount;
                 }
 
+                forwardAmpWindow.add(datum);
+                if(forwardAmpWindow.size() > windowSizeInMinute){
+                    forwardAmpWindow.removeFirst();
+                }
+
                 i++;
                 continue;
             }
 
             // Compute density decade feature
-            final double densityDecade = densityMax1 - densityMax2;
+            final double densityDrop = densityMax1 - densityMax2;
+            final double densityIncrease = densityMax2 - densityMax1;
 
             // compute aggregated max motion backtrack amplitude feature.
-            final double maxBackTrackAmplitude = NumericalUtils.getMaxAmplitude(ampWindow);
+            final double maxBackTrackAmplitude = NumericalUtils.getMaxAmplitude(backTrackAmpWindow);
+            final double maxForwardAmplitude = NumericalUtils.getMaxAmplitude(forwardAmpWindow);
 
-            final long timestamp = ampWindow.getLast().timestamp;
-            final int offsetMillis = ampWindow.getLast().offsetMillis;
+            final long timestamp = backTrackAmpWindow.getLast().timestamp;
+            final int offsetMillis = backTrackAmpWindow.getLast().offsetMillis;
 
             LOGGER.debug("{}, delta: {}, max_amp: {}",
                     new DateTime(timestamp, DateTimeZone.forOffsetMillis(offsetMillis)),
-                    densityDecade,
+                    densityDrop,
                     maxBackTrackAmplitude);
 
             if(!features.containsKey(FeatureType.MAX_AMPLITUDE)){
                 features.put(FeatureType.MAX_AMPLITUDE, new LinkedList<AmplitudeData>());
             }
 
-            if(!features.containsKey(FeatureType.DENSITY_DECADE_BACKTRACK_MAX_AMPLITUDE)){
-                features.put(FeatureType.DENSITY_DECADE_BACKTRACK_MAX_AMPLITUDE, new LinkedList<AmplitudeData>());
+            if(!features.containsKey(FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE)){
+                features.put(FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE, new LinkedList<AmplitudeData>());
+            }
+
+            if(!features.containsKey(FeatureType.DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE)){
+                features.put(FeatureType.DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE, new LinkedList<AmplitudeData>());
             }
 
             features.get(FeatureType.MAX_AMPLITUDE).add(new AmplitudeData(timestamp, maxBackTrackAmplitude, offsetMillis));
-            features.get(FeatureType.DENSITY_DECADE_BACKTRACK_MAX_AMPLITUDE).add(new AmplitudeData(timestamp, maxBackTrackAmplitude * densityDecade, offsetMillis));
+            features.get(FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE).add(new AmplitudeData(timestamp, maxBackTrackAmplitude * densityDrop, offsetMillis));
+            features.get(FeatureType.DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE).add(new AmplitudeData(timestamp, maxForwardAmplitude * densityIncrease, offsetMillis));
 
             densityBuffer1 = densityBuffer2;
             densityBuffer2 = new LinkedList<>();
