@@ -20,7 +20,7 @@ public class UploadSettings {
 
         final Integer hourOfDay = userLocalDateTime.getHourOfDay();
 
-        LOGGER.debug("User Current DateTime: {}", userLocalDateTime);
+        //LOGGER.debug("User Current DateTime: {}", userLocalDateTime);
 
         // Non peak times are the times whose hours are within the range defined in configuration
         Boolean isNonPeak = hourOfDay >= senseUploadConfiguration.getNonPeakHourLowerBound() && hourOfDay <= senseUploadConfiguration.getNonPeakHourUpperBound();

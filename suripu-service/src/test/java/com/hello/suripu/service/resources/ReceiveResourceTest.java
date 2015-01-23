@@ -81,10 +81,22 @@ public class ReceiveResourceTest {
             final DateTime current = new DateTime(random.nextLong());
             final RingTime nextRingTime = new RingTime(actualRingTime, actualRingTime, new long[0], false);
             final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, current, senseUploadConfiguration);
-            if(uploadCycle > senseUploadConfiguration.getLongInterval()){
-                int u = 0;
-            }
             assertThat(uploadCycle <= senseUploadConfiguration.getLongInterval(), is(true));
+        }
+    }
+
+    @Test
+    public void testComputePassRingTimeUploadIntervalRandomNow(){
+
+        final Random random = new Random(DateTime.now().getMillis());
+
+        for(int i = 1; i < DateTimeConstants.MINUTES_PER_DAY; i++) {
+            final long actualRingTime = DateTime.now().plusMinutes(i).withSecondOfMinute(0).withMillisOfSecond(0).getMillis();
+
+            final DateTime current = new DateTime(random.nextLong());
+            final RingTime nextRingTime = new RingTime(actualRingTime, actualRingTime, new long[0], false);
+            final int uploadCycle = ReceiveResource.computePassRingTimeUploadInterval(nextRingTime, current, 10);
+            assertThat(uploadCycle <= 10, is(true));
         }
     }
 }
