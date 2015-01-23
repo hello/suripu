@@ -376,7 +376,7 @@ public class Alarm {
         }
 
         public static DateTime alignToMinuteGranularity(final DateTime currentLocalTime){
-            return currentLocalTime;
+            return currentLocalTime.withSecondOfMinute(0).withMillisOfSecond(0);
         }
 
         /**
