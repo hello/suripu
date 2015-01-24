@@ -333,7 +333,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 .withLightData(new LightData());
         final InsightProcessor insightProcessor = insightBuilder.build();
 
-        environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO, deviceDataDAO, deviceDAO, insightProcessor));
+        environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO, deviceDataDAO, deviceDAO, insightProcessor, sleepLabelDAO));
 
         final AmazonDynamoDB prefsClient = new AmazonDynamoDBClient(awsCredentialsProvider, clientConfiguration);
         prefsClient.setEndpoint(configuration.getPreferencesDBConfiguration().getEndpoint());
