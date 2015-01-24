@@ -277,6 +277,7 @@ public class ReceiveResource extends BaseResource {
     }
 
 
+    @Timed
     private RingTime getNextRingTime(final String deviceId, final List<UserInfo> userInfoFromThatDevice){
         RingTime nextRingTimeFromWorker = RingTime.createEmpty();
         RingTime nextRingTime = RingTime.createEmpty();
@@ -371,7 +372,7 @@ public class ReceiveResource extends BaseResource {
                 }
             }
 
-            LOGGER.debug("Next ring time: {}", new DateTime(nextRingTime.actualRingTimeUTC, userTimeZoneOptional.get()));
+            LOGGER.debug("{} next ring time: {}", new DateTime(nextRingTime.actualRingTimeUTC, userTimeZoneOptional.get()));
 
 
         }
