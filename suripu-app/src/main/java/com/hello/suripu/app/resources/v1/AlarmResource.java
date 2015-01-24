@@ -66,7 +66,8 @@ public class AlarmResource {
         final List<DeviceAccountPair> deviceAccountMap = this.deviceDAO.getDeviceAccountMapFromAccountId(token.accountId);
         if(deviceAccountMap.size() == 0){
             LOGGER.error("User {} tries to retrieve alarm without paired with a Morpheus.", token.accountId);
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(
+                    new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), "Please make sure your Sense is paired to your account before setting your alarm.")).build());
         }
 
         try {
@@ -88,7 +89,8 @@ public class AlarmResource {
             final UserInfo userInfo = alarmInfoOptional.get();
             if(!userInfo.timeZone.isPresent()){
                 LOGGER.error("User {} tries to get alarm without having a time zone.", token.accountId);
-                throw new WebApplicationException(Response.Status.BAD_REQUEST);
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(
+                        new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), "Please update your timezone and try again.")).build());
             }
 
             final DateTimeZone userTimeZone = userInfo.timeZone.get();
@@ -96,13 +98,15 @@ public class AlarmResource {
             final Alarm.Utils.AlarmStatus status = Alarm.Utils.isValidAlarms(smartAlarms, DateTime.now(), userTimeZone);
             if(!status.equals(Alarm.Utils.AlarmStatus.OK)){
                 LOGGER.error("Invalid alarm for user {} device {}", token.accountId, userInfo.deviceId);
-                throw new WebApplicationException(Response.Status.CONFLICT);
+                throw new WebApplicationException(Response.status(Response.Status.CONFLICT).entity(
+                        new JsonError(Response.Status.CONFLICT.getStatusCode(), "We could not save your changes, please try again.")).build());
             }
 
             return smartAlarms;
         }catch (AmazonServiceException awsException){
             LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
+                    new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Please try again.")).build());
         }
 
     }
@@ -171,7 +175,8 @@ public class AlarmResource {
 
         }catch (AmazonServiceException awsException){
             LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
+                    new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Please try again.")).build());
         }
 
     }
