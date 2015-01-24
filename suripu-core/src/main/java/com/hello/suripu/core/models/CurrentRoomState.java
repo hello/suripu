@@ -10,7 +10,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@JsonPropertyOrder({"temperature", "particulates", "light", "humidity", "sound"})
+@JsonPropertyOrder({"temperature", "humidity", "particulates", "light", "sound"})
 public class CurrentRoomState {
 
 
@@ -42,7 +42,8 @@ public class CurrentRoomState {
             UNKNOWN(0),
             IDEAL(1),
             WARNING(2),
-            ALERT(3);
+            ALERT(3),
+            IDEAL_EXCLUDING_LIGHT(4);
 
             private final int value;
 

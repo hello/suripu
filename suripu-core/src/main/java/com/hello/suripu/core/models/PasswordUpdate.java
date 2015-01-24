@@ -14,6 +14,11 @@ public class PasswordUpdate {
             @JsonProperty("current_password") final String currentPassword,
             @JsonProperty("new_password") final String newPassword) {
         this.currentPassword = currentPassword;
-        this.newPassword = PasswordUtil.encrypt(newPassword);
+        this.newPassword = newPassword;
+    }
+
+
+    public static PasswordUpdate encrypt(final PasswordUpdate passwordUpdate) {
+        return new PasswordUpdate(passwordUpdate.currentPassword, PasswordUtil.encrypt(passwordUpdate.newPassword));
     }
 }
