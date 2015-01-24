@@ -129,7 +129,15 @@ public class AccountResource {
     public void password(
             @Scope({OAuthScope.USER_EXTENDED}) final AccessToken accessToken,
             @Valid final PasswordUpdate passwordUpdate) {
-        if(!accountDAO.updatePassword(accessToken.accountId, passwordUpdate)) {
+
+        final Optional<Registration.RegistrationError> error = Registration.validatePassword(passwordUpdate.newPassword);
+        if(error.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(
+                    new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), error.get().toString())).build());
+        }
+
+        final PasswordUpdate encrypted = PasswordUpdate.encrypt(passwordUpdate);
+        if(!accountDAO.updatePassword(accessToken.accountId, encrypted)) {
             throw new WebApplicationException(Response.Status.CONFLICT);
         };
         // TODO: remove all tokens for this user
@@ -145,6 +153,12 @@ public class AccountResource {
             @Valid final Account account) {
 
         final Account accountWithId = Account.withId(account, accessToken.accountId);
+        final Optional<Registration.RegistrationError> error = Registration.validateEmail(accountWithId.email);
+        if(error.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(
+                    new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), error.get().toString())).build());
+        }
+
         final Optional<Account> accountOptional = accountDAO.updateEmail(accountWithId);
         if(!accountOptional.isPresent()) {
             throw new WebApplicationException(Response.Status.CONFLICT);
@@ -168,7 +182,6 @@ public class AccountResource {
         throw new WebApplicationException(Response.Status.NOT_FOUND);
     }
 
-
     @Timed
     @GET
     @Path("/recent")
@@ -177,13 +190,5 @@ public class AccountResource {
 
         final List<Account> accounts = accountDAO.getRecent();
         return accounts;
-    }
-
-    // TEMP ENDPOINT FOR ROB
-    @GET
-    @Path("/account/delete")
-    public Response deleteAccount() {
-        accountDAO.delete("kaitlyn@hello.is");
-        return Response.ok().build();
     }
 }
