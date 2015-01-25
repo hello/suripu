@@ -140,7 +140,7 @@ sense_upload_configuration:
   non_peak_hour_lower_bound: 9
   non_peak_hour_upper_bound: 20
   week_days_only: true
-  long_interval: 2
+  long_interval: 5
   short_interval: 2
 
 kinesis_logger:
