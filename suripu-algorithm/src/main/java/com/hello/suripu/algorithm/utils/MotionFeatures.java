@@ -31,12 +31,8 @@ public class MotionFeatures {
 
         final HashMap<FeatureType, List<AmplitudeData>> features = new HashMap<>();
 
-        int densityMax1 = 0;
-        int densityMax2 = 0;
-
         int densityCount = 0;
-
-        int i = 0;
+        
         for(final AmplitudeData datum:rawData){
             densityWindow.add(datum);
             if(datum.amplitude > 0){
@@ -56,66 +52,56 @@ public class MotionFeatures {
 
             if(densityBuffer1.size() < windowSizeInMinute){
                 densityBuffer1.add(new AmplitudeData(densityWindow.getLast().timestamp, densityCount, densityWindow.getLast().offsetMillis));
-                if(densityMax1 < densityCount){
-                    densityMax1 = densityCount;
-                }
-                i++;
                 continue;
             }
 
-            if(densityBuffer2.size() < windowSizeInMinute){
-                densityBuffer2.add(new AmplitudeData(densityWindow.getLast().timestamp, densityCount, densityWindow.getLast().offsetMillis));
-                if(densityMax2 < densityCount){
-                    densityMax2 = densityCount;
+            densityBuffer2.add(new AmplitudeData(densityWindow.getLast().timestamp, densityCount, densityWindow.getLast().offsetMillis));
+
+            forwardAmpWindow.add(datum);
+            if(forwardAmpWindow.size() > windowSizeInMinute){
+                forwardAmpWindow.removeFirst();
+            }
+
+            if(densityBuffer2.size() == windowSizeInMinute){
+                // Compute density decade feature
+                double densityMax1 = NumericalUtils.getMaxAmplitude(densityBuffer1);
+                double densityMax2 = NumericalUtils.getMaxAmplitude(densityBuffer2);
+
+                final double densityDrop = densityMax1 - densityMax2;
+                final double densityIncrease = densityMax2 - densityMax1;
+
+                // compute aggregated max motion backtrack amplitude feature.
+                final double maxBackTrackAmplitude = NumericalUtils.getMaxAmplitude(backTrackAmpWindow);
+                final double maxForwardAmplitude = NumericalUtils.getMaxAmplitude(forwardAmpWindow);
+
+                final long timestamp = backTrackAmpWindow.getLast().timestamp;
+                final int offsetMillis = backTrackAmpWindow.getLast().offsetMillis;
+
+                LOGGER.debug("{}, delta: {}, max_amp: {}",
+                        new DateTime(timestamp, DateTimeZone.forOffsetMillis(offsetMillis)),
+                        densityDrop,
+                        maxBackTrackAmplitude);
+
+                if(!features.containsKey(FeatureType.MAX_AMPLITUDE)){
+                    features.put(FeatureType.MAX_AMPLITUDE, new LinkedList<AmplitudeData>());
                 }
 
-                forwardAmpWindow.add(datum);
-                if(forwardAmpWindow.size() > windowSizeInMinute){
-                    forwardAmpWindow.removeFirst();
+                if(!features.containsKey(FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE)){
+                    features.put(FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE, new LinkedList<AmplitudeData>());
                 }
 
-                i++;
-                continue;
+                if(!features.containsKey(FeatureType.DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE)){
+                    features.put(FeatureType.DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE, new LinkedList<AmplitudeData>());
+                }
+
+                features.get(FeatureType.MAX_AMPLITUDE).add(new AmplitudeData(timestamp, maxBackTrackAmplitude, offsetMillis));
+                features.get(FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE).add(new AmplitudeData(timestamp, maxBackTrackAmplitude * densityDrop, offsetMillis));
+                features.get(FeatureType.DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE).add(new AmplitudeData(timestamp, maxForwardAmplitude * densityIncrease, offsetMillis));
+
+                densityBuffer1.add(densityBuffer2.removeFirst());
+                densityBuffer1.removeFirst();
             }
 
-            // Compute density decade feature
-            final double densityDrop = densityMax1 - densityMax2;
-            final double densityIncrease = densityMax2 - densityMax1;
-
-            // compute aggregated max motion backtrack amplitude feature.
-            final double maxBackTrackAmplitude = NumericalUtils.getMaxAmplitude(backTrackAmpWindow);
-            final double maxForwardAmplitude = NumericalUtils.getMaxAmplitude(forwardAmpWindow);
-
-            final long timestamp = backTrackAmpWindow.getLast().timestamp;
-            final int offsetMillis = backTrackAmpWindow.getLast().offsetMillis;
-
-            LOGGER.debug("{}, delta: {}, max_amp: {}",
-                    new DateTime(timestamp, DateTimeZone.forOffsetMillis(offsetMillis)),
-                    densityDrop,
-                    maxBackTrackAmplitude);
-
-            if(!features.containsKey(FeatureType.MAX_AMPLITUDE)){
-                features.put(FeatureType.MAX_AMPLITUDE, new LinkedList<AmplitudeData>());
-            }
-
-            if(!features.containsKey(FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE)){
-                features.put(FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE, new LinkedList<AmplitudeData>());
-            }
-
-            if(!features.containsKey(FeatureType.DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE)){
-                features.put(FeatureType.DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE, new LinkedList<AmplitudeData>());
-            }
-
-            features.get(FeatureType.MAX_AMPLITUDE).add(new AmplitudeData(timestamp, maxBackTrackAmplitude, offsetMillis));
-            features.get(FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE).add(new AmplitudeData(timestamp, maxBackTrackAmplitude * densityDrop, offsetMillis));
-            features.get(FeatureType.DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE).add(new AmplitudeData(timestamp, maxForwardAmplitude * densityIncrease, offsetMillis));
-
-            densityBuffer1 = densityBuffer2;
-            densityBuffer2 = new LinkedList<>();
-            densityMax1 = densityMax2;
-            densityMax2 = 0;
-
-            i++;
         }
 
         return features;
