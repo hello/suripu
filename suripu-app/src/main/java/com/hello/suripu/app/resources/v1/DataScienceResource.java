@@ -4,8 +4,10 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.DataScience.UserLabel;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Sample;
@@ -22,8 +24,10 @@ import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -44,17 +48,20 @@ public class DataScienceResource {
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
     private final InsightProcessor insightProcessor;
+    private final SleepLabelDAO sleepLabelDAO;
 
     public DataScienceResource(final AccountDAO accountDAO,
                                final TrackerMotionDAO trackerMotionDAO,
                                final DeviceDataDAO deviceDataDAO,
                                final DeviceDAO deviceDAO,
-                               final InsightProcessor insightProcessor) {
+                               final InsightProcessor insightProcessor,
+                               final SleepLabelDAO sleepLabelDAO) {
         this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.insightProcessor = insightProcessor;
+        this.sleepLabelDAO = sleepLabelDAO;
     }
 
     @GET
@@ -154,12 +161,39 @@ public class DataScienceResource {
             LOGGER.debug("Account {} not found", email);
             return Optional.absent();
         }
+
         final Account account = accountOptional.get();
         if (!account.id.isPresent()) {
             LOGGER.debug("ID not found for account {}", email);
             return Optional.absent();
         }
         return account.id;
+    }
+
+    @POST
+    @Path("/label")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void label(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                      @Valid final UserLabel label) {
+
+        final Optional<Account> accountOptional = accountDAO.getByEmail(label.email);
+        if (!accountOptional.isPresent()) {
+            LOGGER.debug("Account {} not found", accessToken.accountId);
+            return;
+        }
+
+        UserLabel.UserLabelType userLabel = UserLabel.UserLabelType.fromString(label.labelString);
+
+        final DateTime nightDate = DateTime.parse(label.night, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                .withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
+
+        final DateTime labelTimestampUTC = new DateTime(label.ts, DateTimeZone.UTC);
+
+        sleepLabelDAO.insertUserLabel(accountOptional.get().id.get(),
+                label.email, userLabel.toString().toLowerCase(),
+                nightDate, labelTimestampUTC, labelTimestampUTC.plusMillis(label.tzOffsetMillis),
+                label.tzOffsetMillis);
+
     }
 
 }

@@ -31,7 +31,7 @@ public class UploadSettings {
             isNonPeak = isNonPeak && (dayOfWeek != DateTimeConstants.SATURDAY && dayOfWeek != DateTimeConstants.SUNDAY);
         }
 
-        // Non peak hours trigger short upload interval, peak hours trigger long upload interval
+        // Non peak hours trigger long upload interval, peak hours trigger short upload interval
         if (isNonPeak) {
             return senseUploadConfiguration.getLongInterval();
         }

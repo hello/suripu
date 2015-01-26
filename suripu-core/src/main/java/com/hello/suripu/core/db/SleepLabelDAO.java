@@ -62,4 +62,17 @@ public interface SleepLabelDAO extends Transactional<SleepLabelDAO> {
                               @Bind("sleep_at_utc") DateTime sleep_at,
                               @Bind("wakeup_at_utc") DateTime wakeup_at);
 
+    @GetGeneratedKeys
+    @SqlUpdate("INSERT INTO user_labels (account_id, email, label, night_date, utc_ts, local_utc_ts, tz_offset) " +
+            "VALUES (:account_id, :email, CAST(:label AS USER_LABEL_TYPE), :night_date, " +
+            ":utc_ts, :local_utc_ts, :tz_offset)")
+    Long insertUserLabel(@Bind("account_id") long accountId,
+                         @Bind("email") String email,
+                         @Bind("label") String label,
+                         @Bind("night_date") DateTime nightDate,
+                         @Bind("utc_ts") DateTime UTCTimestamp,
+                         @Bind("local_utc_ts") DateTime localUTCTimestamp,
+                         @Bind("tz_offset") int tzOffset
+                         );
+
 }
