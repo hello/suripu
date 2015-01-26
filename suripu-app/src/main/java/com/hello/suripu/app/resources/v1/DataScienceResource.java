@@ -173,21 +173,23 @@ public class DataScienceResource {
     @POST
     @Path("/label")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void label(@Scope(OAuthScope.SENSORS_BASIC) final AccessToken accessToken,
+    public void label(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
                       @Valid final UserLabel label) {
 
-        final Optional<Account> accountOptional = accountDAO.getById(accessToken.accountId);
+        final Optional<Account> accountOptional = accountDAO.getByEmail(label.email);
         if (!accountOptional.isPresent()) {
             LOGGER.debug("Account {} not found", accessToken.accountId);
             return;
         }
 
         UserLabel.UserLabelType userLabel = UserLabel.UserLabelType.fromString(label.labelString);
+
         final DateTime nightDate = DateTime.parse(label.night, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
+
         final DateTime labelTimestampUTC = new DateTime(label.ts, DateTimeZone.UTC);
 
-        sleepLabelDAO.insertUserLabel(accessToken.accountId,
+        sleepLabelDAO.insertUserLabel(accountOptional.get().id.get(),
                 label.email, userLabel.toString().toLowerCase(),
                 nightDate, labelTimestampUTC, labelTimestampUTC.plusMillis(label.tzOffsetMillis),
                 label.tzOffsetMillis);

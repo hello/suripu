@@ -199,11 +199,15 @@ CREATE TABLE account_location (
 GRANT ALL PRIVILEGES ON account_location TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE account_location_id_seq TO ingress_user;
 
+-- for data science-y stuff
+
 CREATE TYPE USER_LABEL_TYPE AS ENUM ('make_bed', 'went_to_bed', 'fall_asleep',
-    'awake', 'out_of_bed',
+    'awake', 'out_of_bed', 'awake_in_bed',
     'sound_disturbance', 'got_up_at_night', 'other_disturbance');
 
--- for data science-y stuff
+
+-- table to save user-annotation for timeline
+
 CREATE TABLE user_labels (
     id SERIAL PRIMARY KEY,
     account_id BIGINT,
@@ -218,3 +222,4 @@ CREATE TABLE user_labels (
 
 GRANT ALL PRIVILEGES ON user_labels TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE user_labels_id_seq TO ingress_user;
+CREATE INDEX user_labels_account_id_night ON user_labels(account_id, night_date);

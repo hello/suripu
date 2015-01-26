@@ -14,9 +14,10 @@ public class UserLabel {
         FALL_ASLEEP(2),
         AWAKE(3),
         OUT_OF_BED(4),
-        SOUND_DISTURBANCE(5),
-        GOT_UP_AT_NIGHT(6),
-        OTHER_DISTURBANCE(7);
+        AWAKE_IN_BED(5),
+        SOUND_DISTURBANCE(6),
+        GOT_UP_AT_NIGHT(7),
+        OTHER_DISTURBANCE(8);
 
         private int value;
         private UserLabelType (final int value) {this.value = value;}
