@@ -36,6 +36,7 @@ public class KeyStoreDynamoDB implements KeyStore {
 
     private final static String DEVICE_ID_ATTRIBUTE_NAME = "device_id";
     private final static String AES_KEY_ATTRIBUTE_NAME = "aes_key";
+    private final static String DEFAULT_FACTORY_DEVICE_ID = "0000000000000000";
 
     private final byte[] DEFAULT_AES_KEY;
 
@@ -104,6 +105,11 @@ public class KeyStoreDynamoDB implements KeyStore {
     }
 
     private Optional<byte[]> getRemotely(final String deviceId) {
+        if(DEFAULT_FACTORY_DEVICE_ID.equals(deviceId)) {
+            LOGGER.warn("Device not properly provisioned, got {} as a deviceId", deviceId);
+            return Optional.absent();
+        }
+
         final HashMap<String, AttributeValue> key = new HashMap<String, AttributeValue>();
         key.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
         final GetItemRequest getItemRequest = new GetItemRequest()
