@@ -135,7 +135,7 @@ public interface DeviceDAO {
 
     @RegisterMapper(DeviceAccountPairMapper.class)
     @SingleValueResult(DeviceAccountPair.class)
-    @SqlQuery("SELECT * FROM account_tracker_map WHERE device_id LIKE '%'||:pill_id||'%' AND active = TRUE ORDER BY id;")
+    @SqlQuery("SELECT * FROM account_tracker_map WHERE device_id LIKE '%'||:pill_id||'%' AND active = TRUE ORDER BY id LIMIT 10;")
     ImmutableList<DeviceAccountPair> getPillsByPillIdHint(@Bind("pill_id") final String pillId);
 
 }
