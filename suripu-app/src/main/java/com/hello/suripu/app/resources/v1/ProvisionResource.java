@@ -15,8 +15,10 @@ import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 @Path("/v1/provision")
 public class ProvisionResource {
@@ -54,19 +56,29 @@ public class ProvisionResource {
 
 
     @POST
+    @Path("{serial_number}")
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.TEXT_PLAIN)
-    public String decrypt(final byte[] body) throws Exception {
+    public Response decrypt(@PathParam("serial_number") final String serialNumber, final byte[] body) throws Exception {
 
-        final Optional<SenseProvision> sense = keyStoreUtils.decrypt(body);
-        if(sense.isPresent()) {
-            final SenseProvision senseProvision = sense.get();
-            senseKeyStore.put(senseProvision.deviceIdHex, senseProvision.aesKeyHex, "PCH");
-            final StringBuilder sb = new StringBuilder();
-            sb.append("OK\n");
-            sb.append(sense.get().deviceIdHex + "\n");
-            return sb.toString();
+        try{
+            final Optional<SenseProvision> sense = keyStoreUtils.decrypt(body);
+            if(!sense.isPresent()) {
+                return Response.status(Response.Status.BAD_REQUEST).entity("KO").type(MediaType.TEXT_PLAIN).build();
+            }
+
+            if(sense.isPresent()) {
+                final SenseProvision senseProvision = sense.get();
+                senseKeyStore.put(senseProvision.deviceIdHex, senseProvision.aesKeyHex, serialNumber);
+                final StringBuilder sb = new StringBuilder();
+                sb.append("OK\n");
+                sb.append(sense.get().deviceIdHex + "\n");
+                return Response.ok().entity(sb.toString()).type(MediaType.TEXT_PLAIN).build();
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception while provisioning Sense: {}", e.getMessage());
+            LOGGER.error("Body was : {}", body);
         }
-        return "KO";
+        return Response.serverError().entity("KO").type(MediaType.TEXT_PLAIN).build();
     }
 }
