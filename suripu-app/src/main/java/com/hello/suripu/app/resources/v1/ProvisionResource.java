@@ -15,6 +15,7 @@ import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -55,9 +56,10 @@ public class ProvisionResource {
 
 
     @POST
+    @Path("{serial_number}")
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.TEXT_PLAIN)
-    public Response decrypt(final byte[] body) throws Exception {
+    public Response decrypt(@PathParam("serial_number") final String serialNumber, final byte[] body) throws Exception {
 
         try{
             final Optional<SenseProvision> sense = keyStoreUtils.decrypt(body);
@@ -67,7 +69,7 @@ public class ProvisionResource {
 
             if(sense.isPresent()) {
                 final SenseProvision senseProvision = sense.get();
-                senseKeyStore.put(senseProvision.deviceIdHex, senseProvision.aesKeyHex, "PCH");
+                senseKeyStore.put(senseProvision.deviceIdHex, senseProvision.aesKeyHex, serialNumber);
                 final StringBuilder sb = new StringBuilder();
                 sb.append("OK\n");
                 sb.append(sense.get().deviceIdHex + "\n");
