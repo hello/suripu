@@ -345,7 +345,13 @@ public class ReceiveResource extends BaseResource {
                 if (nextRingTimeFromTemplate.expectedRingTimeUTC == nextRingTimeFromWorker.expectedRingTimeUTC) {
                     // on-the-fly and ring from worker are from the same alarm, use the one from worker
                     // since it is "smart"
-                    nextRingTime = nextRingTimeFromWorker;
+                    final DateTime now = Alarm.Utils.alignToMinuteGranularity(DateTime.now().withZone(userTimeZoneOptional.get()));
+                    if(now.isAfter(nextRingTimeFromWorker.actualRingTimeUTC)){
+                        // The smart alarm already took off, do not ring twice!
+                        nextRingTime = RingTime.createEmpty();
+                    }else {
+                        nextRingTime = nextRingTimeFromWorker;
+                    }
                 }
 
                 if (nextRingTimeFromTemplate.expectedRingTimeUTC > nextRingTimeFromWorker.expectedRingTimeUTC) {
