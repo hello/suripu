@@ -132,4 +132,10 @@ public interface DeviceDAO {
             @Bind("device_id") final String deviceId,
             @Bind("max_devices") final Long maxDevices
     );
+
+    @RegisterMapper(DeviceAccountPairMapper.class)
+    @SingleValueResult(DeviceAccountPair.class)
+    @SqlQuery("SELECT * FROM account_tracker_map WHERE device_id LIKE '%'||:pill_id||'%' AND active = TRUE ORDER BY id;")
+    ImmutableList<DeviceAccountPair> getPillsByPillIdHint(@Bind("pill_id") final String pillId);
+
 }

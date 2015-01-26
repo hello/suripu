@@ -395,7 +395,7 @@ public class DeviceResources {
     @Timed
     @Path("/pill/{email}/status")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<DeviceStatus> getPillStatus(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+    public List<DeviceStatus> getPillStatusByEmail(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                             @PathParam("email") final String email) {
         LOGGER.debug("Fetching pill status for user = {}", email);
         final Optional<Long> accountId = getAccountIdByEmail(email);
@@ -411,6 +411,26 @@ public class DeviceResources {
         }
         return pillStatuses;
     }
+
+
+    @GET
+    @Timed
+    @Path("/pill/id/{pill_id}/status")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<DeviceStatus> getPillStatusByPillId(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                   @PathParam("pill_id") final String pillId) {
+        LOGGER.debug("Fetching pill status for pill like {}", pillId);
+
+        final List<DeviceStatus> pillStatuses = new ArrayList<>();
+        final ImmutableList<DeviceAccountPair> pills = deviceDAO.getPillsByPillIdHint(pillId);
+
+        for (final DeviceAccountPair pill : pills) {
+            LOGGER.debug("{}", pill.internalDeviceId);
+            pillStatuses.addAll(deviceDAO.pillStatusWithBatteryLevel(pill.internalDeviceId));
+        }
+        return pillStatuses;
+    }
+
 
     @GET
     @Timed
