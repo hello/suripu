@@ -6,20 +6,32 @@ package com.hello.suripu.core.models.Insights.Message;
 public class SleepMotionMsgEN {
 
     public static Text moreMovement(final int numNights, final int greater, final float diff, final float perc) {
+        String firstSentence = String.format("Out of the last %d nights, you moved on average **%.1f%% more** than our average users ",
+                numNights, Math.abs(diff));
+
+        if (numNights == greater) {
+            firstSentence += "during all nights. ";
+        } else {
+            firstSentence = String.format("%d of the nights. ", greater);
+        }
+
         return new Text("Hey Big Mover",
-                String.format("Out of the last %d nights, you moved more than our average users in %d of the nights, ",
-                        numNights, greater) +
-                        String.format("with an overall of average **+%0.1f%%**. ", diff) +
-                        String.format("About %0.1%% of your sleep are considered agitated sleep.", perc)
+                firstSentence + String.format("About %.1f%% of your sleep period consist of agitated sleep.", perc)
         );
     }
 
     public static Text lessMovement(final int numNights, final int lesser, final float diff, final float perc) {
+        String firstSentence = String.format("Out of the last %d nights, you moved on average **%.1f%% less** than our average users ",
+                numNights, Math.abs(diff));
+
+        if (numNights == lesser) {
+             firstSentence += "during all nights. ";
+        } else {
+            firstSentence = String.format("%d of the nights. ", lesser);
+        }
+
         return new Text("Still as the Night",
-                String.format("Out of the last %d nights, you moved less than our average users in %d of the nights",
-                        numNights, lesser) +
-                        String.format("with an overall of average **+%0.1f%%**. ", diff) +
-                        String.format("About %0.1%% of your sleep are considered agitated sleep.", perc)
+                firstSentence + String.format("About %.1f%% of your sleep period consist of agitated sleep.", perc)
         );
     }
 
@@ -32,8 +44,7 @@ public class SleepMotionMsgEN {
         }
 
         return new Text("Just Right", String.format("In each of the last %d nights, ", numNights) +
-                String.format("we notice that you only move %0.1f%% %s our average Sense user. ",
-                        diff, description) +
-                String.format("About %0.1%% of your sleep are considered agitated sleep.", perc));
+                String.format("we notice that you only move **%.1f %% %s** our average Sense user. ", diff, description) +
+                String.format("About %.1f%% of your sleep period consist of agitated sleep.", perc));
     }
 }

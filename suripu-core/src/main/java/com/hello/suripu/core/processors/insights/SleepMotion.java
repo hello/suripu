@@ -119,16 +119,18 @@ public class SleepMotion {
             }
         }
 
-        final Text text;
+        Text text;
         if (Math.abs(overallDiff) >= SIGNIFICANT_DIFF) {
             if (overallDiff > 0) {
-                text = SleepMotionMsgEN.moreMovement(numDays, greater, overallDiff, averageMotionPercentage);
+                text = SleepMotionMsgEN.moreMovement(numDays, greater, overallDiff, averageMotionPercentage * 100.0f);
             } else {
-                text = SleepMotionMsgEN.lessMovement(numDays, lesser, overallDiff, averageMotionPercentage);
+                text = SleepMotionMsgEN.lessMovement(numDays, lesser, overallDiff, averageMotionPercentage * 100.0f);
             }
         } else {
-            text = SleepMotionMsgEN.equalMovement(numDays, overallDiff, averageMotionPercentage);
+            text = SleepMotionMsgEN.equalMovement(numDays, overallDiff, averageMotionPercentage * 100.0f);
         }
+
+        text = SleepMotionMsgEN.moreMovement(numDays, lesser, overallDiff, averageMotionPercentage * 100.0f);
 
         return Optional.of(new InsightCard(accountId, text.title, text.message,
                 InsightCard.Category.SLEEP_QUALITY, InsightCard.TimePeriod.RECENTLY,

@@ -5,12 +5,14 @@ import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
+import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
+import com.hello.suripu.core.processors.insights.SleepMotion;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -37,6 +39,7 @@ public class InsightProcessor {
     private final TrackerMotionDAO trackerMotionDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
+    private final SleepScoreDAO scoreDAO;
     private final LightData lightData;
     private final AccountInfoProcessor accountInfoProcessor;
 
@@ -46,6 +49,7 @@ public class InsightProcessor {
                             final TrackerMotionDAO trackerMotionDAO,
                             final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
                             final InsightsDAODynamoDB insightsDAODynamoDB,
+                            final SleepScoreDAO scoreDAO,
                             final AccountInfoProcessor accountInfoProcessor,
                             final LightData lightData
                             ) {
@@ -55,6 +59,7 @@ public class InsightProcessor {
         this.trackerMotionDAO = trackerMotionDAO;
         this.scoreDAODynamoDB = scoreDAODynamoDB;
         this.insightsDAODynamoDB = insightsDAODynamoDB;
+        this.scoreDAO = scoreDAO;
         this.lightData = lightData;
         this.accountInfoProcessor = accountInfoProcessor;
     }
@@ -95,6 +100,8 @@ public class InsightProcessor {
                 final AccountInfo.SleepTempType tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
                 insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref);
                 break;
+            case 4:
+                insightCardOptional = SleepMotion.getInsights(accountId, deviceId, trendsInsightsDAO, scoreDAO, true);
             default:
                 break; // TODO: rm debug, lights insight is all we have
         }
@@ -131,6 +138,8 @@ public class InsightProcessor {
             this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.LIGHT);
         } else if (!recentCategories.contains(InsightCard.Category.TEMPERATURE)) {
             this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.TEMPERATURE);
+        } else if (!recentCategories.contains(InsightCard.Category.SLEEP_QUALITY)) {
+            this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.SLEEP_QUALITY);
         }
     }
 
@@ -143,6 +152,8 @@ public class InsightProcessor {
         } else if (category == InsightCard.Category.TEMPERATURE) {
             final AccountInfo.SleepTempType tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
             insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref);
+        } else if (category == InsightCard.Category.SLEEP_QUALITY) {
+            insightCardOptional = SleepMotion.getInsights(accountId, deviceId, trendsInsightsDAO, scoreDAO, false);
         }
 
         if (insightCardOptional.isPresent()) {
@@ -181,6 +192,7 @@ public class InsightProcessor {
         private TrackerMotionDAO trackerMotionDAO;
         private AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
         private InsightsDAODynamoDB insightsDAODynamoDB;
+        private SleepScoreDAO scoreDAO;
         private LightData lightData;
         private AccountInfoProcessor accountInfoProcessor;
 
@@ -190,13 +202,18 @@ public class InsightProcessor {
             return this;
         }
 
-        public Builder withTrackerMotionDAOs(final TrackerMotionDAO trackerMotionDAO) {
+        public Builder withTrackerMotionDAO(final TrackerMotionDAO trackerMotionDAO) {
             this.trackerMotionDAO = trackerMotionDAO;
             return this;
         }
 
-        public Builder withInsightsDAOs(final TrendsInsightsDAO trendsInsightsDAO) {
+        public Builder withInsightsDAO(final TrendsInsightsDAO trendsInsightsDAO) {
             this.trendsInsightsDAO = trendsInsightsDAO;
+            return this;
+        }
+
+        public Builder withSleepScoreDAO(final SleepScoreDAO scoreDAO) {
+            this.scoreDAO = scoreDAO;
             return this;
         }
 
@@ -221,6 +238,7 @@ public class InsightProcessor {
                     trendsInsightsDAO,
                     trackerMotionDAO,
                     scoreDAODynamoDB, insightsDAODynamoDB,
+                    scoreDAO,
                     accountInfoProcessor,
                     lightData);
         }
