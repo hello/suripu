@@ -188,12 +188,12 @@ VALUES ('How often do you experience insomnia?',
 '{"Frequently", "Occasionally", "Rarely", "Never"}', null, 'anytime');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
-VALUES ('Have you been diagnose with any sleep disorders?',
+VALUES ('Have you been diagnosed with any sleep disorders?',
 'EN', 'one_time', 'choice',
 '{"Yes", "No"}', null, 'anytime');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
-VALUES ('Have you ever wake up gasping for breath?',
+VALUES ('Have you ever woken up gasping for breath?',
 'EN', 'one_time', 'choice',
 '{"Yes", "No", "Sometimes"}', null, 'anytime');
 
