@@ -27,8 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.db.util.Compression;
-import com.hello.suripu.core.models.Event;
-import com.hello.suripu.core.util.DateTimeUtil;
+import com.hello.suripu.core.models.Timeline;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -41,7 +40,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -50,18 +48,19 @@ import java.util.Map;
 /**
  * Created by pangwu on 6/5/14.
  */
-public class EventDAODynamoDB {
+public class TimelineDAODynamoDB {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(EventDAODynamoDB.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(TimelineDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
 
     public static final String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
 
     public static final String TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME = "target_date_of_night";
-    public static final String DATA_BLOB_ATTRIBUTE_NAME = "events_data";
+    public static final String DATA_BLOB_ATTRIBUTE_NAME = "timelines";
 
-    public static final String COMPRESS_TYPE_ARRTIBUTE_NAME = "compression_type";
+    public static final String COMPRESS_TYPE_ATTRIBUTE_NAME = "compression_type";
+    public static final String UPDATED_AT_ATTRIBUTE_NAME = "updated_at";
 
 
     private final int MAX_CALL_COUNT = 5;
@@ -72,34 +71,34 @@ public class EventDAODynamoDB {
     public final String JSON_CHARSET = "UTF-8";
 
 
-    public EventDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
+    public TimelineDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
 
     }
 
     @Timed
-    public ImmutableList<Event> getEventsForDate(long accountId, final DateTime date){
+    public ImmutableList<Timeline> getTimelinesForDate(long accountId, final DateTime targetDateOfNightLocalUTC){
         final Collection<DateTime> convertedParam = new ArrayList<DateTime>();
-        convertedParam.add(date);
-        final ImmutableMap<DateTime, ImmutableList<Event>> result = this.getEventsForDates(accountId, convertedParam);
-        return result.get(date);
+        convertedParam.add(targetDateOfNightLocalUTC);
+        final ImmutableMap<DateTime, ImmutableList<Timeline>> result = this.getTimelinesForDates(accountId, convertedParam);
+        return result.get(targetDateOfNightLocalUTC);
     }
 
     @Timed
-    public ImmutableMap<DateTime, ImmutableList<Event>> getEventsForDates(long accountId, final Collection<DateTime> dates){
-        final Map<String, DateTime> dateToStringMapping = new HashMap<String, DateTime>();
+    public ImmutableMap<DateTime, ImmutableList<Timeline>> getTimelinesForDates(long accountId, final Collection<DateTime> dates){
+        final Map<Long, DateTime> dateToStringMapping = new HashMap<>();
         for(final DateTime date:dates){
-            dateToStringMapping.put(date.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), date);
+            dateToStringMapping.put(date.getMillis(), date);
         }
 
-        final Collection<String> dateStrings = dateToStringMapping.keySet();
-        final ImmutableMap<String, ImmutableList<Event>> data = this.getEventsForDateStrings(accountId, dateStrings);
+        final Collection<Long> datesInMillis = dateToStringMapping.keySet();
+        final ImmutableMap<Long, ImmutableList<Timeline>> data = this.getTimelinesForDatesImpl(accountId, datesInMillis);
 
-        final Map<DateTime, ImmutableList<Event>> finalResultMap = new HashMap<DateTime, ImmutableList<Event>>();
-        for(final String dateString:data.keySet()){
-            if(dateToStringMapping.containsKey(dateString)){
-                finalResultMap.put(dateToStringMapping.get(dateString), data.get(dateString));
+        final Map<DateTime, ImmutableList<Timeline>> finalResultMap = new HashMap<>();
+        for(final Long dateInMillis:data.keySet()){
+            if(dateToStringMapping.containsKey(dateInMillis)){
+                finalResultMap.put(dateToStringMapping.get(dateInMillis), data.get(dateInMillis));
             }
         }
 
@@ -109,25 +108,25 @@ public class EventDAODynamoDB {
     /*
     * Get events for maybe not consecutive days, internal use only
      */
-    private ImmutableMap<String, ImmutableList<Event>> getEventsForDateStrings(long accountId, final Collection<String> dateStrings){
-        if(dateStrings.size() > MAX_REQUEST_DAYS){
-            LOGGER.warn("Request too large for events, num of days requested: {}, accountId: {}, table: {}", dateStrings.size(), accountId, this.tableName);
+    private ImmutableMap<Long, ImmutableList<Timeline>> getTimelinesForDatesImpl(long accountId, final Collection<Long> datesInMillis){
+        if(datesInMillis.size() > MAX_REQUEST_DAYS){
+            LOGGER.warn("Request too large for events, num of days requested: {}, accountId: {}, table: {}", datesInMillis.size(), accountId, this.tableName);
             throw new RuntimeException("Request too many days event.");
         }
 
-        final Map<String, ImmutableList<Event>> finalResult = new HashMap<String, ImmutableList<Event>>();
+        final Map<Long, ImmutableList<Timeline>> finalResult = new HashMap<>();
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
 
-        final String[] sortedDateStrings = dateStrings.toArray(new String[0]);
-        Arrays.sort(sortedDateStrings);
+        final Long[] sortedDateMillis = datesInMillis.toArray(new Long[0]);
+        Arrays.sort(sortedDateMillis);
 
-        final String startDateString = sortedDateStrings[0];
-        final String endDateString = sortedDateStrings[sortedDateStrings.length - 1];
+        final Long startDateMillis = sortedDateMillis[0];
+        final Long endDateMillis = sortedDateMillis[sortedDateMillis.length - 1];
 
         final Condition selectDateCondition = new Condition()
                 .withComparisonOperator(ComparisonOperator.BETWEEN.toString())
-                .withAttributeValueList(new AttributeValue().withS(startDateString),
-                        new AttributeValue().withS(endDateString));
+                .withAttributeValueList(new AttributeValue().withN(String.valueOf(startDateMillis)),
+                        new AttributeValue().withN(String.valueOf(endDateMillis)));
 
 
         queryConditions.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, selectDateCondition);
@@ -141,9 +140,11 @@ public class EventDAODynamoDB {
         Map<String, AttributeValue> lastEvaluatedKey = null;
         final Collection<String> targetAttributeSet = new HashSet<String>();
         Collections.addAll(targetAttributeSet,
+                ACCOUNT_ID_ATTRIBUTE_NAME,
                 TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME,
                 DATA_BLOB_ATTRIBUTE_NAME,
-                COMPRESS_TYPE_ARRTIBUTE_NAME);
+                UPDATED_AT_ATTRIBUTE_NAME,
+                COMPRESS_TYPE_ATTRIBUTE_NAME);
 
 
         int loopCount = 0;
@@ -171,18 +172,19 @@ public class EventDAODynamoDB {
                     continue;
                 }
 
-                final String dateString = item.get(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME).getS();
-                final ArrayList<Event> eventsWithAllTypes = new ArrayList<Event>();
+                final Long dateInMillis = Long.valueOf(item.get(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME).getN());
+                final ArrayList<Timeline> eventsWithAllTypes = new ArrayList<>();
 
                 final ByteBuffer byteBuffer = item.get(DATA_BLOB_ATTRIBUTE_NAME).getB();
                 final byte[] compressed = byteBuffer.array();
 
-                final Compression.CompressionType compressionType = Compression.CompressionType.fromInt(Integer.valueOf(item.get(COMPRESS_TYPE_ARRTIBUTE_NAME).getN()));
+                final Compression.CompressionType compressionType = Compression.CompressionType.fromInt(Integer.valueOf(item.get(COMPRESS_TYPE_ATTRIBUTE_NAME).getN()));
 
 
                 try {
                     final byte[] decompressed = Compression.decompress(compressed, compressionType);
-                    final List<Event> eventList = mapper.readValue(decompressed, new TypeReference<List<Event>>() {});
+                    final String jsonString = new String(decompressed, JSON_CHARSET);
+                    final List<Timeline> eventList = mapper.readValue(jsonString, new TypeReference<List<Timeline>>() {});
                     eventsWithAllTypes.addAll(eventList);
 
                 }catch (JsonParseException jpe){
@@ -205,7 +207,7 @@ public class EventDAODynamoDB {
                             ioe.getMessage());
                 }
 
-                finalResult.put(dateString, ImmutableList.copyOf(eventsWithAllTypes));
+                finalResult.put(dateInMillis, ImmutableList.copyOf(eventsWithAllTypes));
 
             }
 
@@ -217,15 +219,15 @@ public class EventDAODynamoDB {
 
         if(lastEvaluatedKey != null){
             // We still have something not fetched. Request still too large!
-            LOGGER.warn("Request too large for events, num of days requested: {}, accountId: {}, tableName: {}", dateStrings.size(), accountId, this.tableName);
+            LOGGER.warn("Request too large for events, num of days requested: {}, accountId: {}, tableName: {}", datesInMillis.size(), accountId, this.tableName);
             throw new RuntimeException("Request too many days event.");
 
         }
 
         // Fill the non-exist days with empty lists
-        for(final String dateString:dateStrings){
-            if(!finalResult.containsKey(dateString)){
-                finalResult.put(dateString, ImmutableList.copyOf(Collections.<Event>emptyList()));
+        for(final Long dateInMillis:datesInMillis){
+            if(!finalResult.containsKey(dateInMillis)){
+                finalResult.put(dateInMillis, ImmutableList.copyOf(Collections.<Timeline>emptyList()));
             }
         }
 
@@ -234,24 +236,24 @@ public class EventDAODynamoDB {
 
 
     @Timed
-    public void setEventsForDate(long accountId, final DateTime dateOfTheNight, final List<Event> data){
-        final Map<DateTime, List<Event>> convertedParam = new HashMap<DateTime, List<Event>>();
-        convertedParam.put(dateOfTheNight, data);
-        setEventsForDates(accountId, convertedParam);
+    public void saveTimelinesForDate(long accountId, final DateTime dateOfTheNightLocalUTC, final List<Timeline> data){
+        final Map<DateTime, List<Timeline>> convertedParam = new HashMap<>();
+        convertedParam.put(dateOfTheNightLocalUTC, data);
+        saveTimelinesForDates(accountId, convertedParam);
     }
 
     @Timed
-    public void setEventsForDates(long accountId, final Map<DateTime, List<Event>> data){
-        final Map<String, List<Event>> dataWithStringDates = new HashMap<String, List<Event>>();
+    public void saveTimelinesForDates(long accountId, final Map<DateTime, List<Timeline>> data){
+        final Map<Long, List<Timeline>> dataWithStringDates = new HashMap<>();
 
-        for(final DateTime dateOfTheNight:data.keySet()){
-            dataWithStringDates.put(dateOfTheNight.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), data.get(dateOfTheNight));
+        for(final DateTime dateOfTheNightLocalUTC:data.keySet()){
+            dataWithStringDates.put(dateOfTheNightLocalUTC.getMillis(), data.get(dateOfTheNightLocalUTC));
         }
 
-        setEventsForStringDates(accountId, dataWithStringDates);
+        setTimelinesForDatesLong(accountId, dataWithStringDates);
     }
 
-    private void setEventsForStringDates(long accountId, final Map<String, List<Event>> data){
+    private void setTimelinesForDatesLong(long accountId, final Map<Long, List<Timeline>> data){
         if(data.size() == 0){
             LOGGER.info("Empty motion data for account_id = {}", accountId);
             return;
@@ -266,33 +268,31 @@ public class EventDAODynamoDB {
 
         long currentBatchSize = 0;
 
-        for(final String targetDateOfNight:data.keySet()) {
+        for(final Long targetDateOfNightLocalUTC:data.keySet()) {
 
-            final List<Event> events = data.get(targetDateOfNight);
-            final Event[] rawEventsArrayWithAllTypes = events.toArray(new Event[0]);
-            Arrays.sort(rawEventsArrayWithAllTypes, new Comparator<Event>() {
-                @Override
-                public int compare(Event o1, Event o2) {
-                    return Long.compare(o1.getStartTimestamp(), o2.getStartTimestamp());
-                }
-            });
-
-
+            final List<Timeline> timelines = data.get(targetDateOfNightLocalUTC);
             final ObjectMapper mapper = new ObjectMapper();
 
             try {
-                final String jsonEventList = mapper.writeValueAsString(rawEventsArrayWithAllTypes);
+                final String jsonEventList = mapper.writeValueAsString(timelines);
 
-                final HashMap<String, AttributeValue> item = new HashMap<String, AttributeValue>();
+                final HashMap<String, AttributeValue> item = new HashMap<>();
                 item.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
-                item.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new AttributeValue().withS(targetDateOfNight));
-                item.put(COMPRESS_TYPE_ARRTIBUTE_NAME, new AttributeValue().withN(
-                        String.valueOf(Compression.CompressionType.BZIP2.getValue())));
+                item.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(targetDateOfNightLocalUTC)));
+                item.put(UPDATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(DateTime.now().getMillis())));
+
+
+                final int compressType = Compression.CompressionType.NONE.getValue();
+                item.put(COMPRESS_TYPE_ATTRIBUTE_NAME, new AttributeValue().withN(
+                        String.valueOf(compressType)));
 
                 // final ByteBuffer byteBuffer = ByteBuffer.wrap(builder.build().toByteArray());
 
-                final byte[] compressedData = Compression.bzip2Compress(jsonEventList.getBytes(JSON_CHARSET));
+                final byte[] compressedData = Compression.compress(jsonEventList.getBytes(JSON_CHARSET),
+                        Compression.CompressionType.fromInt(compressType));
                 final ByteBuffer byteBuffer = ByteBuffer.wrap(compressedData);
+                byteBuffer.position(0);
+
                 item.put(DATA_BLOB_ATTRIBUTE_NAME, new AttributeValue().withB(byteBuffer));
 
 
@@ -318,19 +318,19 @@ public class EventDAODynamoDB {
                 LOGGER.error("Serialize events for account {}, night {} failed: {}",
                         accountId,
                         //type,
-                        targetDateOfNight,
+                        targetDateOfNightLocalUTC,
                         jpe.getMessage());
             }catch (UnsupportedEncodingException uee) {
                 LOGGER.error("Serialize events for account {}, night {} failed: {}",
                         accountId,
                         //type,
-                        targetDateOfNight,
+                        targetDateOfNightLocalUTC,
                         uee.getMessage());
             }catch (IOException ioe){
                 LOGGER.error("Compress events for account {}, night {} failed: {}",
                         accountId,
                         //type,
-                        targetDateOfNight,
+                        targetDateOfNightLocalUTC,
                         ioe.getMessage());
             }
 
@@ -373,13 +373,13 @@ public class EventDAODynamoDB {
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(
-                new KeySchemaElement().withAttributeName(EventDAODynamoDB.ACCOUNT_ID_ATTRIBUTE_NAME).withKeyType(KeyType.HASH),
-                new KeySchemaElement().withAttributeName(EventDAODynamoDB.TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME).withKeyType(KeyType.RANGE)
+                new KeySchemaElement().withAttributeName(TimelineDAODynamoDB.ACCOUNT_ID_ATTRIBUTE_NAME).withKeyType(KeyType.HASH),
+                new KeySchemaElement().withAttributeName(TimelineDAODynamoDB.TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME).withKeyType(KeyType.RANGE)
         );
 
         request.withAttributeDefinitions(
-                new AttributeDefinition().withAttributeName(EventDAODynamoDB.ACCOUNT_ID_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.N),
-                new AttributeDefinition().withAttributeName(EventDAODynamoDB.TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.S)
+                new AttributeDefinition().withAttributeName(TimelineDAODynamoDB.ACCOUNT_ID_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.N),
+                new AttributeDefinition().withAttributeName(TimelineDAODynamoDB.TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.N)
 
         );
 

@@ -33,7 +33,7 @@ import java.util.List;
  * Created by pangwu on 1/9/15.
  */
 public class RecreatePillColorCommand extends ConfiguredCommand<SuripuAppConfiguration> {
-    private final static Logger LOGGER = LoggerFactory.getLogger(RecreateEventsCommand.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(RecreatePillColorCommand.class);
 
     public RecreatePillColorCommand(){
         super("gen_colors", "Recreate pill colors from DeviceDAO");
