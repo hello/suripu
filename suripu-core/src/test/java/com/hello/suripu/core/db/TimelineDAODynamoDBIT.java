@@ -124,7 +124,7 @@ public class TimelineDAODynamoDBIT {
         final Map<DateTime, List<Timeline>> dateTimelinesMap = new HashMap<>();
         dateTimelinesMap.put(startOfDay1, timelinesForDay1);
         dateTimelinesMap.put(startOfDay2, timelinesForDay2);
-        this.timelineDAODynamoDB.setTimelinesForDates(accountId, dateTimelinesMap);
+        this.timelineDAODynamoDB.saveTimelinesForDates(accountId, dateTimelinesMap);
 
         final Map<DateTime, ImmutableList<Timeline>> actual = this.timelineDAODynamoDB.getTimelinesForDates(accountId, dateTimelinesMap.keySet());
 
@@ -167,7 +167,7 @@ public class TimelineDAODynamoDBIT {
         final Map<DateTime, List<Timeline>> dateTimelinesMap = new HashMap<>();
         dateTimelinesMap.put(startOfDay1, timelinesForDay1);
         dateTimelinesMap.put(startOfDay2, timelinesForDay2);
-        this.timelineDAODynamoDB.setTimelinesForDates(accountId, dateTimelinesMap);
+        this.timelineDAODynamoDB.saveTimelinesForDates(accountId, dateTimelinesMap);
         final HashSet<DateTime> queryDates = new HashSet<>();
         queryDates.add(startOfDay1);
 

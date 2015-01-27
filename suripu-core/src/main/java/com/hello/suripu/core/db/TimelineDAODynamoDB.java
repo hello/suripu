@@ -236,14 +236,14 @@ public class TimelineDAODynamoDB {
 
 
     @Timed
-    public void setTimelinesForDate(long accountId, final DateTime dateOfTheNightLocalUTC, final List<Timeline> data){
+    public void saveTimelinesForDate(long accountId, final DateTime dateOfTheNightLocalUTC, final List<Timeline> data){
         final Map<DateTime, List<Timeline>> convertedParam = new HashMap<>();
         convertedParam.put(dateOfTheNightLocalUTC, data);
-        setTimelinesForDates(accountId, convertedParam);
+        saveTimelinesForDates(accountId, convertedParam);
     }
 
     @Timed
-    public void setTimelinesForDates(long accountId, final Map<DateTime, List<Timeline>> data){
+    public void saveTimelinesForDates(long accountId, final Map<DateTime, List<Timeline>> data){
         final Map<Long, List<Timeline>> dataWithStringDates = new HashMap<>();
 
         for(final DateTime dateOfTheNightLocalUTC:data.keySet()){

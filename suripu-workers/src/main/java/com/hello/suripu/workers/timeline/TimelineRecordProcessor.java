@@ -85,7 +85,7 @@ public class TimeLineRecordProcessor extends HelloBaseRecordProcessor {
                         targetDateLocalUTC.toString(DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT)));
 
                 try{
-                    this.timelineDAODynamoDB.setTimelinesForDate(accountId, targetDateLocalUTC, timelines);
+                    this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC, timelines);
                     LOGGER.info("Timeline at {} saved for account {}.", targetDateLocalUTC, accountId);
                 }catch (AmazonServiceException aex){
                     LOGGER.error("AWS error, save timeline for account {} failed, error {}", accountId, aex.getMessage());
