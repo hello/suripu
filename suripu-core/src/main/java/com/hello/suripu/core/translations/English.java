@@ -21,7 +21,7 @@ public class English {
     /* END Events Declaration */
 
 
-    /* BEGIN Current Room State Declaration */
+    /* BEGIN Room State Declaration */
 
     // Be careful with changing the markdown & string specifiers i.e. **XX%s**, it could break the code
 
@@ -47,28 +47,50 @@ public class English {
     public final static String SOUND_ADVICE_MESSAGE = "You sleep better when your room is quiet";
 
     // Temperature Conditions
+    public final static String LOW_TEMPERATURE_PRE_SLEEP_MESSAGE = "It was **pretty cold** in here.";
+    public final static String HIGH_TEMPERATURE_PRE_SLEEP_MESSAGE = "It was **pretty hot** in here.";
+    public final static String IDEAL_TEMPERATURE_PRE_SLEEP_MESSAGE = "The temperature was **just right**.";
+
     public final static String LOW_TEMPERATURE_MESSAGE = "It’s **pretty cold** in here.";
     public final static String HIGH_TEMPERATURE_MESSAGE = "It’s **pretty hot** in here.";
-    public final static String IDEAL_TEMPERATURE_MESSAGE = "Temperature is **just right**.";
+    public final static String IDEAL_TEMPERATURE_MESSAGE = "The temperature is **just right**.";
 
     // Humidity Conditions
+    public final static String LOW_HUMIDITY_PRE_SLEEP_MESSAGE = "It was **pretty dry** in here.";
+    public final static String HIGH_HUMIDITY_PRE_SLEEP_MESSAGE = "It was**pretty humid** in here.";
+    public final static String IDEAL_HUMIDITY_PRE_SLEEP_MESSAGE = "The humidity was **just right**.";
+
     public final static String LOW_HUMIDITY_MESSAGE = "It’s **pretty dry** in here.";
     public final static String HIGH_HUMIDITY_MESSAGE = "It’s **pretty humid** in here.";
-    public final static String IDEAL_HUMIDITY_MESSAGE = "Humidity is **just right**.";
+    public final static String IDEAL_HUMIDITY_MESSAGE = "The humidity is **just right**.";
 
     // Particulates Conditions (Air Quality)
+    public final static String VERY_HIGH_PARTICULATES_PRE_SLEEP_MESSAGE = "AQI was at an **UNHEALTHY** level.";
+    public final static String HIGH_PARTICULATES_PRE_SLEEP_MESSAGE = "AQI was **moderately high**.";
+    public final static String IDEAL_PARTICULATES_PRE_SLEEP_MESSAGE = "The particulates level was **just right** last night.";
+
     public final static String VERY_HIGH_PARTICULATES_MESSAGE = "AQI is at an **UNHEALTHY** level.";
     public final static String HIGH_PARTICULATES_MESSAGE = "AQI is **moderately high**.";
-    public final static String IDEAL_PARTICULATES_MESSAGE = "Particulates level is **just right**.";
+    public final static String IDEAL_PARTICULATES_MESSAGE = "The particulates level is **just right**.";
 
     // Light Conditions.
-    public final static String IDEAL_LIGHT_MESSAGE = "Light level is **perfect**.";
-    public final static String WARNING_LIGHT_MESSAGE = "Light level is **higher** than ideal.";
-    public final static String ALERT_LIGHT_MESSAGE = "Light level is **way too high**.";
+    public final static String IDEAL_LIGHT_PRE_SLEEP_MESSAGE = "The light level was **perfect**.";
+    public final static String WARNING_LIGHT_PRE_SLEEP_MESSAGE = "The light level was **higher** than ideal.";
+    public final static String ALERT_LIGHT_PRE_SLEEP_MESSAGE = "The light level was **way too high**.";
+
+    public final static String IDEAL_LIGHT_MESSAGE = "The light level is **perfect**.";
+    public final static String WARNING_LIGHT_MESSAGE = "The light level is **higher** than ideal.";
+    public final static String ALERT_LIGHT_MESSAGE = "The light level is **way too high**.";
 
     // Sound Conditions
-    public final static String IDEAL_SOUND_MESSAGE = "Sound level is **just right**";
+    public final static String IDEAL_SOUND_PRE_SLEEP_MESSAGE = "Your room's sound level was **just right**";
+    public final static String WARNING_SOUND_PRE_SLEEP_MESSAGE = "Your room was **a little noisy**.";
+    public final static String ALERT_SOUND_PRE_SLEEP_MESSAGE = "Your room was **too noisy**.";
+
+    public final static String IDEAL_SOUND_MESSAGE = "The sound level is **just right**";
     public final static String WARNING_SOUND_MESSAGE = "Your room is **a little noisy**.";
     public final static String ALERT_SOUND_MESSAGE = "Your room is **too noisy**.";
+
     /* END Current Room State Declaration */
+
 }

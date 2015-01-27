@@ -38,13 +38,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.Set;
 
 public class TimelineUtils {
 
@@ -526,52 +523,25 @@ public class TimelineUtils {
         final DateTime sleepDateTime = new DateTime(sleepTimestampUTC, DateTimeZone.UTC);
 
         avgTemp /= num;
-        final CurrentRoomState.State temperatureState = CurrentRoomState.getTemperatureState(avgTemp, sleepDateTime, CurrentRoomState.DEFAULT_TEMP_UNIT);
+        final CurrentRoomState.State temperatureState = CurrentRoomState.getTemperatureState(avgTemp, sleepDateTime, CurrentRoomState.DEFAULT_TEMP_UNIT, true);
         generatedInsights.add(new Insight(Sensor.TEMPERATURE, temperatureState.condition, temperatureState.message));
 
         avgHumidity /= num;
-        final CurrentRoomState.State humidityState = CurrentRoomState.getHumidityState(avgHumidity, sleepDateTime);
+        final CurrentRoomState.State humidityState = CurrentRoomState.getHumidityState(avgHumidity, sleepDateTime, true);
         generatedInsights.add(new Insight(Sensor.HUMIDITY, humidityState.condition, humidityState.message));
 
         avgParticulate /= num;
-        final CurrentRoomState.State particulateState = CurrentRoomState.getParticulatesState(avgParticulate, sleepDateTime);
+        final CurrentRoomState.State particulateState = CurrentRoomState.getParticulatesState(avgParticulate, sleepDateTime, true);
         generatedInsights.add(new Insight(Sensor.PARTICULATES, particulateState.condition, particulateState.message));
 
         avgLight /= num;
-        final CurrentRoomState.State lightState = CurrentRoomState.getLightState(avgLight, sleepDateTime);
+        final CurrentRoomState.State lightState = CurrentRoomState.getLightState(avgLight, sleepDateTime, true);
         generatedInsights.add(new Insight(Sensor.LIGHT, lightState.condition, lightState.message));
 
         avgSound /= num;
-        final CurrentRoomState.State soundState = CurrentRoomState.getSoundState(avgSound, sleepDateTime);
+        final CurrentRoomState.State soundState = CurrentRoomState.getSoundState(avgSound, sleepDateTime, true);
         generatedInsights.add(new Insight(Sensor.SOUND, soundState.condition, soundState.message));
 
-
-        return generatedInsights;
-    }
-
-    public static List<Insight> generateRandomInsights(int seed) {
-        final Random r = new Random(seed);
-        final List<Insight> insights = new ArrayList<>();
-
-        insights.add(new Insight(Sensor.TEMPERATURE, CurrentRoomState.State.Condition.ALERT, "[placeholder] Temperature was very low."));
-        insights.add(new Insight(Sensor.SOUND, CurrentRoomState.State.Condition.IDEAL, "The sound levels were perfect for sleep."));
-        insights.add(new Insight(Sensor.HUMIDITY, CurrentRoomState.State.Condition.WARNING, "Humidity was a little too high for ideal sleep conditions"));
-        insights.add(new Insight(Sensor.PARTICULATES, CurrentRoomState.State.Condition.IDEAL, "The air quality was ideal"));
-        insights.add(new Insight(Sensor.LIGHT, CurrentRoomState.State.Condition.WARNING, "It was a little bright for sleep"));
-
-        final Set<Sensor> sensors = new HashSet<>();
-        final List<Insight> generatedInsights = new ArrayList<>();
-
-        final int n = r.nextInt(insights.size());
-        LOGGER.trace("n = {}", n);
-        for(int i =0; i < n; i++) {
-            final int pick = r.nextInt(insights.size());
-            final Insight temp = insights.get(pick);
-            if(!sensors.contains(temp.sensor)) {
-                generatedInsights.add(temp);
-                sensors.add(temp.sensor);
-            }
-        }
 
         return generatedInsights;
     }
