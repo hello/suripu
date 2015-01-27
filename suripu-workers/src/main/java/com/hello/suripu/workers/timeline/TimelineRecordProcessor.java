@@ -32,21 +32,21 @@ import java.util.Set;
 /**
  * Created by pangwu on 1/26/15.
  */
-public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
-    private final static Logger LOGGER = LoggerFactory.getLogger(TimelineRecordProcessor.class);
+public class TimeLineRecordProcessor extends HelloBaseRecordProcessor {
+    private final static Logger LOGGER = LoggerFactory.getLogger(TimeLineRecordProcessor.class);
     private final TimelineProcessor timelineProcessor;
-    private final TimelineWorkerConfiguration configuration;
+    private final TimeLineWorkerConfiguration configuration;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
     private final DeviceDAO deviceDAO;
 
-    public TimelineRecordProcessor(final TimelineProcessor timelineProcessor,
+    public TimeLineRecordProcessor(final TimelineProcessor timelineProcessor,
                                    final DeviceDAO deviceDAO,
                                    final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                    final RingTimeDAODynamoDB ringTimeDAODynamoDB,
                                    final TimelineDAODynamoDB timelineDAODynamoDB,
-                                   final TimelineWorkerConfiguration configuration){
+                                   final TimeLineWorkerConfiguration configuration){
 
         this.timelineProcessor = timelineProcessor;
         this.configuration = configuration;
