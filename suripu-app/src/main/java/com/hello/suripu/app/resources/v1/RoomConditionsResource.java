@@ -8,6 +8,7 @@ import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -27,6 +28,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.Map;
 
 @Path("/v1/room")
 public class RoomConditionsResource {
@@ -236,6 +238,16 @@ public class RoomConditionsResource {
     }
 
 
+    @Timed
+    @GET
+    @Path("/all_sensors/week")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<Sensor, List<Sample>> getAllSensorsLastWeek(
+            @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
+            @QueryParam("from") Long queryEndTimestampInLocalUTC) {
+
+        return retrieveAllSensorsWeekData(accessToken.accountId, queryEndTimestampInLocalUTC);
+    }
 
     /*
     * This is the correct implementation of get the last 24 hours' data
@@ -263,10 +275,33 @@ public class RoomConditionsResource {
         }
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceId.get(), slotDurationInMinutes,
-                sensor);
+                accessToken.accountId, deviceId.get(), slotDurationInMinutes, sensor);
     }
 
+    @Timed
+    @GET
+    @Path("/all_sensors/24hours")
+    @Produces(MediaType.APPLICATION_JSON)
+    public  Map<Sensor, List<Sample>> getAllSensorsLast24hours(
+            @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
+            @PathParam("sensor") String sensor,
+            @QueryParam("from_utc") Long queryEndTimestampUTC) {
+
+        validateQueryRange(queryEndTimestampUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
+
+        final int slotDurationInMinutes = 5;
+        final long queryStartTimeUTC = new DateTime(queryEndTimestampUTC, DateTimeZone.UTC).minusHours(24).getMillis();
+
+
+        // get latest device_id connected to this account
+        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
+        if(!deviceId.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
+
+        return deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
+                accessToken.accountId, deviceId.get(), slotDurationInMinutes);
+    }
 
     /*
     * This is the correct implementation of get the last 24 hours' data
@@ -396,4 +431,28 @@ public class RoomConditionsResource {
                 accountId, deviceId.get(), slotDurationInMinutes,
                 sensor);
     }
+
+    private Map<Sensor, List<Sample>> retrieveAllSensorsWeekData(final Long accountId, final Long queryEndTimestampInUTC) {
+
+        final int slotDurationInMinutes = 60;
+        //final int  queryDurationInHours = 24 * 7; // 7 days
+
+        /*
+        * Again, the same problem:
+        * We have to minutes one week instead of 7*24 hours, for the same reason that one week can be more/less than 7 * 24 hours
+         */
+        final long queryStartTimeInUTC = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC).minusWeeks(1).getMillis();
+
+        validateQueryRange(queryEndTimestampInUTC, DateTime.now(), accountId, allowedRangeInSeconds);
+
+        // get latest device_id connected to this account
+        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
+        if(!deviceId.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
+
+        return deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeInUTC, queryEndTimestampInUTC,
+                accountId, deviceId.get(), slotDurationInMinutes);
+    }
+
 }

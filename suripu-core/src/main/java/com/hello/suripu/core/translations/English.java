@@ -61,8 +61,10 @@ public class English {
     public final static String HIGH_PARTICULATES_MESSAGE = "AQI is **moderately high**.";
     public final static String IDEAL_PARTICULATES_MESSAGE = "Particulates level is **just right**.";
 
-    // Light Conditions
-    public final static String IDEAL_LIGHT_MESSAGE = "Light level is **just right**";
+    // Light Conditions.
+    public final static String IDEAL_LIGHT_MESSAGE = "Light level is **perfect**.";
+    public final static String ALERT_LIGHT_MESSAGE = "Light level is **a little highert** than the ideal";
+    public final static String WARNING_LIGHT_MESSAGE = "Light level is **way too high**.";
 
     // Sound Conditions
     public final static String IDEAL_SOUND_MESSAGE = "Sound level is **just right**";
