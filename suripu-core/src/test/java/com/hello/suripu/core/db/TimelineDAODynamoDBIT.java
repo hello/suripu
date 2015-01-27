@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -142,6 +143,44 @@ public class TimelineDAODynamoDBIT {
                 assertThat(actual.get(targetDay).get(0).score, is(90));
                 assertThat(actual.get(targetDay).get(0).message, is("test2"));
             }
+
+        }
+
+
+
+    }
+
+
+    @Test
+    public void testSetTwoDaysButOnlyGetOne(){
+        final DateTime startOfDay1 = DateTime.now().withTimeAtStartOfDay();
+        final ArrayList<Timeline> timelinesForDay1 = new ArrayList<>();
+
+        timelinesForDay1.add(this.timeline1);
+        long accountId = 1;
+
+
+        final DateTime startOfDay2 = startOfDay1.plusDays(1);
+        final ArrayList<Timeline> timelinesForDay2 = new ArrayList<>();
+        timelinesForDay2.add(this.timeline2);
+
+        final Map<DateTime, List<Timeline>> dateTimelinesMap = new HashMap<>();
+        dateTimelinesMap.put(startOfDay1, timelinesForDay1);
+        dateTimelinesMap.put(startOfDay2, timelinesForDay2);
+        this.timelineDAODynamoDB.setTimelinesForDates(accountId, dateTimelinesMap);
+        final HashSet<DateTime> queryDates = new HashSet<>();
+        queryDates.add(startOfDay1);
+
+        final Map<DateTime, ImmutableList<Timeline>> actual = this.timelineDAODynamoDB.getTimelinesForDates(accountId, queryDates);
+
+        assertThat(actual.size(), is(1));
+        for(final DateTime targetDay:actual.keySet()){
+            assertThat(actual.get(targetDay).size(), is(1));
+
+
+            assertThat(targetDay, is(startOfDay1));
+            assertThat(actual.get(targetDay).get(0).score, is(80));
+            assertThat(actual.get(targetDay).get(0).message, is("test1"));
 
         }
 
