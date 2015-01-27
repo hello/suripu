@@ -235,9 +235,9 @@ public class CurrentRoomState {
 
     public static State getLightState(final float light, final DateTime dataTimestampUTC) {
         if (light > 8.0) {
-            return new State(light, English.IDEAL_LIGHT_MESSAGE, English.LIGHT_ADVICE_MESSAGE, State.Condition.ALERT, dataTimestampUTC, State.Unit.LUX);
+            return new State(light, English.ALERT_LIGHT_MESSAGE, English.LIGHT_ADVICE_MESSAGE, State.Condition.ALERT, dataTimestampUTC, State.Unit.LUX);
         } else if (light > 2.0) {
-            return new State(light, English.IDEAL_LIGHT_MESSAGE, English.LIGHT_ADVICE_MESSAGE, State.Condition.WARNING, dataTimestampUTC, State.Unit.LUX);
+            return new State(light, English.WARNING_LIGHT_MESSAGE, English.LIGHT_ADVICE_MESSAGE, State.Condition.WARNING, dataTimestampUTC, State.Unit.LUX);
         } else {
             return new State(light, English.IDEAL_LIGHT_MESSAGE, English.LIGHT_ADVICE_MESSAGE, State.Condition.IDEAL, dataTimestampUTC, State.Unit.LUX);
         }
