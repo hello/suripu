@@ -47,10 +47,10 @@ import java.util.UUID;
 /**
  * Created by pangwu on 9/23/14.
  */
-public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfiguration> {
-    private final static Logger LOGGER = LoggerFactory.getLogger(TimelineWorkerCommand.class);
+public class TTimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfiguration> {
+    private final static Logger LOGGER = LoggerFactory.getLogger(TTimelineWorkerCommand.class);
 
-    public TimelineWorkerCommand(String name, String description) {
+    public TTimelineWorkerCommand(String name, String description) {
         super(name, description);
     }
 
