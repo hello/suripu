@@ -12,7 +12,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by pangwu on 1/26/15.
  */
-public class TimeLineWorkerConfiguration extends WorkerConfiguration {
+public class TimelineWorkerConfiguration extends WorkerConfiguration {
     @Valid
     @NotNull
     @Max(1000)

@@ -11,21 +11,21 @@ import com.hello.suripu.core.processors.TimelineProcessor;
 /**
  * Created by pangwu on 9/23/14.
  */
-public class TimeLineRecordProcessorFactory implements IRecordProcessorFactory {
+public class TimelineRecordProcessorFactory implements IRecordProcessorFactory {
 
     private final TimelineProcessor timelineProcessor;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
-    private final TimeLineWorkerConfiguration configuration;
+    private final TimelineWorkerConfiguration configuration;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
     private final DeviceDAO deviceDAO;
 
-    public TimeLineRecordProcessorFactory(final TimelineProcessor timelineProcessor,
+    public TimelineRecordProcessorFactory(final TimelineProcessor timelineProcessor,
                                           final DeviceDAO deviceDAO,
                                           final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                           final RingTimeDAODynamoDB ringTimeDAODynamoDB,
                                           final TimelineDAODynamoDB timelineDAODynamoDB,
-                                          final TimeLineWorkerConfiguration configuration) {
+                                          final TimelineWorkerConfiguration configuration) {
         this.timelineProcessor = timelineProcessor;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.configuration = configuration;
@@ -37,7 +37,7 @@ public class TimeLineRecordProcessorFactory implements IRecordProcessorFactory {
 
     @Override
     public IRecordProcessor createProcessor() {
-        return new TimeLineRecordProcessor(this.timelineProcessor,
+        return new TimelineRecordProcessor(this.timelineProcessor,
                 this.deviceDAO,
                 this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,

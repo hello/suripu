@@ -47,15 +47,15 @@ import java.util.UUID;
 /**
  * Created by pangwu on 9/23/14.
  */
-public class TimeLineWorkerCommand extends ConfiguredCommand<TimeLineWorkerConfiguration> {
-    private final static Logger LOGGER = LoggerFactory.getLogger(TimeLineWorkerCommand.class);
+public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfiguration> {
+    private final static Logger LOGGER = LoggerFactory.getLogger(TimelineWorkerCommand.class);
 
-    public TimeLineWorkerCommand(String name, String description) {
+    public TimelineWorkerCommand(String name, String description) {
         super(name, description);
     }
 
     @Override
-    public void run(final Bootstrap<TimeLineWorkerConfiguration> bootstrap, final Namespace namespace, final TimeLineWorkerConfiguration configuration) throws Exception {
+    public void run(final Bootstrap<TimelineWorkerConfiguration> bootstrap, final Namespace namespace, final TimelineWorkerConfiguration configuration) throws Exception {
 
 
         final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
@@ -147,7 +147,7 @@ public class TimeLineWorkerCommand extends ConfiguredCommand<TimeLineWorkerConfi
         kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
 
 
-        final IRecordProcessorFactory factory = new TimeLineRecordProcessorFactory(timelineProcessor,
+        final IRecordProcessorFactory factory = new TimelineRecordProcessorFactory(timelineProcessor,
                 deviceDAO,
                 mergedUserInfoDynamoDB,
                 ringTimeDAODynamoDB,
