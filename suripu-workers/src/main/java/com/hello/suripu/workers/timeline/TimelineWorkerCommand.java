@@ -20,8 +20,6 @@ import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
-import com.hello.suripu.core.db.KeyStore;
-import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
@@ -148,18 +146,10 @@ public class TimeLineWorkerCommand extends ConfiguredCommand<TimeLineWorkerConfi
         kinesisConfig.withKinesisEndpoint(configuration.getKinesisEndpoint());
         kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
 
-        final AmazonDynamoDB pillKeyStoreDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getPillKeyStoreDynamoDBConfiguration().getEndpoint());
-        final KeyStore pillKeyStore = new KeyStoreDynamoDB(
-                pillKeyStoreDynamoDBClient,
-                configuration.getPillKeyStoreDynamoDBConfiguration().getTableName(),
-                "9876543219876543".getBytes(), // TODO: REMOVE THIS WHEN WE ARE NOT SUPPOSED TO HAVE A DEFAULT KEY
-                120 // 2 minutes for cache
-        );
 
         final IRecordProcessorFactory factory = new TimeLineRecordProcessorFactory(timelineProcessor,
                 mergedUserInfoDynamoDB,
                 ringTimeDAODynamoDB,
-                pillKeyStore,
                 timelineDAODynamoDB,
                 configuration);
         final Worker worker = new Worker(factory, kinesisConfig);

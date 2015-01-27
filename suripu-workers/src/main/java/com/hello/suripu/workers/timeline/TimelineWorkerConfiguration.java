@@ -115,13 +115,6 @@ public class TimeLineWorkerConfiguration extends WorkerConfiguration {
         return this.sleepScoreVersion;
     }
 
-
-    @Valid
-    @NotNull
-    @JsonProperty("pill_key_store_dynamo_db")
-    private DynamoDBConfiguration pillKeyStoreDynamoDBConfiguration;
-    public DynamoDBConfiguration getPillKeyStoreDynamoDBConfiguration() { return pillKeyStoreDynamoDBConfiguration; }
-
     @Valid
     @NotNull
     @JsonProperty("timeline_db")

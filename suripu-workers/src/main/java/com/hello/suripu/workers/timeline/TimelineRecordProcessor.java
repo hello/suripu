@@ -4,10 +4,8 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
-import com.google.common.base.Optional;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.InputProtos;
-import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
@@ -36,18 +34,15 @@ public class TimeLineRecordProcessor extends HelloBaseRecordProcessor {
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
-    private final KeyStore pillKeyStore;
 
     public TimeLineRecordProcessor(final TimelineProcessor timelineProcessor,
                                    final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                    final RingTimeDAODynamoDB ringTimeDAODynamoDB,
-                                   final KeyStore pillKeyStore,
                                    final TimelineDAODynamoDB timelineDAODynamoDB,
                                    final TimeLineWorkerConfiguration configuration){
 
         this.timelineProcessor = timelineProcessor;
         this.configuration = configuration;
-        this.pillKeyStore = pillKeyStore;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
@@ -66,12 +61,7 @@ public class TimeLineRecordProcessor extends HelloBaseRecordProcessor {
         for (final Record record : list) {
             try {
                 final InputProtos.PillDataKinesis data = InputProtos.PillDataKinesis.parseFrom(record.getData().array());
-                final Optional<byte[]> decryptionKey = pillKeyStore.get(data.getPillId());
-                //TODO: Get the actual decryption key.
-                if(!decryptionKey.isPresent()) {
-                    LOGGER.error("Missing decryption key for pill: {}", data.getPillId());
-                    continue;
-                }
+
 
                 if(data.hasEncryptedData()){
                     if(!accountTargetDatesMap.containsKey(data.getAccountIdLong())){
