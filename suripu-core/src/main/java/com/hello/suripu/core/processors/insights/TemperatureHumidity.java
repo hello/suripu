@@ -7,6 +7,7 @@ import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.TemperatureMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
+import com.hello.suripu.core.preferences.AccountPreference;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -31,7 +32,10 @@ public class TemperatureHumidity {
     private static final int TEMP_START_HOUR = 23; // 11pm
     private static final int TEMP_END_HOUR = 6; // 6am
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final AccountInfo.SleepTempType tempPref) {
+    public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId,
+                                                    final DeviceDataDAO deviceDataDAO,
+                                                    final AccountInfo.SleepTempType tempPref,
+                                                    final AccountPreference.TemperatureUnit tempUnit) {
         final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withHourOfDay(TEMP_END_HOUR); // today 6am
         final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.RECENT_DAYS).withHourOfDay(TEMP_START_HOUR); // 11pm three days ago
 
@@ -39,11 +43,13 @@ public class TemperatureHumidity {
         final List<DeviceData> sensorData = deviceDataDAO.getBetweenByLocalHourAggregateBySlotDuration(accountId, deviceId, queryStartTime,
                 queryEndTime, TEMP_START_HOUR, TEMP_END_HOUR, slotDuration);
 
-        final Optional<InsightCard> card = processData(accountId, sensorData, tempPref);
+        final Optional<InsightCard> card = processData(accountId, sensorData, tempPref, tempUnit);
         return card;
     }
 
-    public static Optional<InsightCard> processData(final Long accountId, final List<DeviceData> data, final AccountInfo.SleepTempType tempPref) {
+    public static Optional<InsightCard> processData(final Long accountId, final List<DeviceData> data,
+                                                    final AccountInfo.SleepTempType tempPref,
+                                                    final AccountPreference.TemperatureUnit tempUnit) {
 
         if (data.isEmpty()) {
             return Optional.absent();
@@ -81,10 +87,6 @@ public class TemperatureHumidity {
             sleeperMsg = TemperatureMsgEN.TEMP_SLEEPER_MSG_HOT;
         }
 
-        final int idealMinC = fahrenheitToCelsius((double) idealMinF);
-        final int idealMaxC = fahrenheitToCelsius((double) idealMaxF);
-
-
         /* Possible cases
                     min                       max
                     |------ ideal range ------|
@@ -98,17 +100,28 @@ public class TemperatureHumidity {
          */
 
         // todo: edits
+        int minTemp = minTempF;
+        int maxTemp = maxTempF;
+        int idealMin = idealMinF;
+        int idealMax = idealMaxF;
+        if (tempUnit == AccountPreference.TemperatureUnit.CELSIUS) {
+            minTemp = fahrenheitToCelsius((double) minTempF);
+            maxTemp = fahrenheitToCelsius((double) maxTempF);
+            idealMin = fahrenheitToCelsius((double) idealMinF);
+            idealMax = fahrenheitToCelsius((double) idealMaxF);
+        }
+
         Text text;
-        final String commonMsg = TemperatureMsgEN.getCommonMsg(minTempF, minTempC, maxTempF, maxTempC);
+        final String commonMsg = TemperatureMsgEN.getCommonMsg(minTemp, maxTemp, tempUnit.toString());
 
         if (idealMinF <= minTempF && maxTempF <= idealMaxF) {
             text = TemperatureMsgEN.getTempMsgPerfect(commonMsg, sleeperMsg);
 
         } else if (maxTempF < idealMinF) {
-            text = TemperatureMsgEN.getTempMsgTooCold(commonMsg, idealMinF, idealMinC);
+            text = TemperatureMsgEN.getTempMsgTooCold(commonMsg, idealMin, tempUnit.toString());
 
         } else if (minTempF > idealMaxF) {
-            text = TemperatureMsgEN.getTempMsgTooHot(commonMsg, idealMaxF, idealMaxC);
+            text = TemperatureMsgEN.getTempMsgTooHot(commonMsg, idealMax, tempUnit.toString());
 
         } else if (minTempF < idealMinF && maxTempF <= idealMaxF) {
             text = TemperatureMsgEN.getTempMsgCool(commonMsg);
@@ -118,7 +131,7 @@ public class TemperatureHumidity {
 
         } else {
             // both min and max are outside of ideal range
-            text = TemperatureMsgEN.getTempMsgBad(commonMsg, sleeperMsg, idealMinF, idealMinC, idealMaxF, idealMaxC);
+            text = TemperatureMsgEN.getTempMsgBad(commonMsg, sleeperMsg, idealMin, idealMax, tempUnit.toString());
         }
 
         return Optional.of(new InsightCard(accountId, text.title, text.message,

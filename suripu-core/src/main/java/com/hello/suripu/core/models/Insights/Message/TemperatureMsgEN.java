@@ -1,10 +1,14 @@
 package com.hello.suripu.core.models.Insights.Message;
 
+import com.hello.suripu.core.preferences.AccountPreference;
+
 /**
  * Created by kingshy on 1/12/15.
  */
 public class TemperatureMsgEN {
 
+    private static final String CELSIUS = AccountPreference.TemperatureUnit.CELSIUS.toString();
+    public static final String DEGREE = "\u00b0";
     public static final String DEGREE_C = "\u00b0C";
     public static final String DEGREE_F = "\u00b0F";
 
@@ -12,10 +16,8 @@ public class TemperatureMsgEN {
     public static final String TEMP_SLEEPER_MSG_COLD = "for a cold sleeper";
     public static final String TEMP_SLEEPER_MSG_HOT = "for a warm sleeper";
 
-    public static final String getCommonMsg(final int minTempF, final int minTempC,
-                                            final int maxTempF, final int maxTempC) {
-        return String.format("Your bedroom's temperature during your sleep ranges from %d°F (%d°C) to %d°F (%d°C). ",
-                minTempF, minTempC, maxTempF, maxTempC);
+    public static final String getCommonMsg(final int minTemp, final int maxTemp, final String unit) {
+        return String.format("Your bedroom's temperature during your sleep ranges from %d°%s to %d°%s. ", minTemp, unit, maxTemp, unit);
     }
 
     public static Text getTempMsgPerfect(final String commonMsg, final String sleeperMsg) {
@@ -24,17 +26,17 @@ public class TemperatureMsgEN {
                 "Sense will continue to monitor your sleeping temperature and alert you of any changes.");
     }
 
-    public static Text getTempMsgTooCold(final String commonMsg, final int tempF, final int tempC) {
+    public static Text getTempMsgTooCold(final String commonMsg, final int temperature, final String unit) {
         return new Text("It's Freezing in Here", commonMsg +
                 "It's **too cold** for sleeping.\n\n" +
-                String.format("Try turning up the thermostat to a minimum of %d°F (%d°C). ", tempF, tempC) +
+                String.format("Try turning up the thermostat to a minimum of %d°%s. ", temperature, unit) +
                 "Alternatively, you could use a thicker blanket, or put on more layers before you go to bed.");
     }
 
-    public static Text getTempMsgTooHot(final String commonMsg, final int tempF, final int tempC) {
+    public static Text getTempMsgTooHot(final String commonMsg, final int temperature, final String unit) {
         return new Text("It's Hot in Here", commonMsg +
                 "It's **too warm** for ideal sleep.\n\n" +
-                String.format("Try lowering the thermostat to %d°F (%d°C). ", tempF, tempC) +
+                String.format("Try lowering the thermostat to %d°%s, or use a fan. ", temperature, unit) +
                 "You can also open the windows to let in some cool air.");
     }
 
@@ -51,11 +53,10 @@ public class TemperatureMsgEN {
     }
 
     public static Text getTempMsgBad(final String commonMsg, final String sleeperMsg,
-                                     final int minTempF, final int minTempC,
-                                     final int maxTempF, final int maxTempC) {
+                                     final int minTemp, final int maxTemp, final String unit) {
         return new Text("Wild Temperature Swing!", commonMsg +
                 "The **temperature swing** in your bedroom is too large. The ideal temperature " +
-                sleeperMsg + " is between" +
-                String.format("%d°F (%d°C) to %d°F (%d°C).", minTempF, minTempC, maxTempF, maxTempC));
+                sleeperMsg + " is between " +
+                String.format("%d°%s to %d°%s.", minTemp, unit, maxTemp, unit));
     }
 }
