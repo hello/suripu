@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.util.DataUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -101,6 +102,47 @@ public class Bucketing {
         return Optional.of(map);
     }
 
+    public static Optional<Map<Sensor, Map<Long, Sample>>> populateMapAll(final List<DeviceData> deviceDataList) {
+
+        if(deviceDataList == null) {
+            LOGGER.error("deviceDataList is null for all sensors");
+            return Optional.absent();
+        }
+
+        if(deviceDataList.isEmpty()) {
+            return Optional.absent();
+        }
+
+        final Map<Sensor, Map<Long, Sample>> map = new HashMap<>();
+        for (Sensor sensor : Sensor.values()) {
+            final Map<Long, Sample> values = new HashMap<>();
+            map.put(sensor, values);
+        }
+
+        for(final DeviceData deviceData: deviceDataList) {
+
+            final Long newKey = deviceData.dateTimeUTC.getMillis();
+
+            final float humidityValue = DeviceData.dbIntToFloat(deviceData.ambientHumidity);
+            map.get(Sensor.HUMIDITY).put(newKey, new Sample(newKey, humidityValue, deviceData.offsetMillis));
+
+            final float temperatureValue = DeviceData.dbIntToFloat(deviceData.ambientTemperature);
+            map.get(Sensor.TEMPERATURE).put(newKey, new Sample(newKey, temperatureValue, deviceData.offsetMillis));
+
+            final float particulatesValue = (float) DataUtils.convertRawDustCountsToAQI(deviceData.ambientDustMax, deviceData.firmwareVersion);
+            map.get(Sensor.PARTICULATES).put(newKey, new Sample(newKey, particulatesValue, deviceData.offsetMillis));
+
+            final float lightValue = (float) deviceData.ambientLight;
+            map.get(Sensor.LIGHT).put(newKey, new Sample(newKey, lightValue, deviceData.offsetMillis));
+
+            final float soundValue = DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB);
+            map.get(Sensor.SOUND).put(newKey, new Sample(newKey, soundValue, deviceData.offsetMillis));
+
+            LOGGER.trace("Overriding {}", newKey);
+        }
+
+        return Optional.of(map);
+    }
     /**
      * Generates a map with every bucket containing empty sample
      * @param numberOfBuckets
