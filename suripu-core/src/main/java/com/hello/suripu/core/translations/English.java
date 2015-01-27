@@ -44,7 +44,7 @@ public class English {
     public final static String HUMIDITY_ADVICE_MESSAGE = "You sleep better when humidity is between **XX** and **YY**.";
     public final static String PARTICULATES_ADVICE_MESSAGE = "You sleep better when particulates are below **XX**.";
     public final static String LIGHT_ADVICE_MESSAGE = "A pitch-black room is usually better";
-    public final static String SOUND_ADVICE_MESSAGE = "You sleep better your room is quiet";
+    public final static String SOUND_ADVICE_MESSAGE = "You sleep better when your room is quiet";
 
     // Temperature Conditions
     public final static String LOW_TEMPERATURE_MESSAGE = "It’s **pretty cold** in here.";
@@ -63,10 +63,12 @@ public class English {
 
     // Light Conditions.
     public final static String IDEAL_LIGHT_MESSAGE = "Light level is **perfect**.";
-    public final static String ALERT_LIGHT_MESSAGE = "Light level is **a little highert** than the ideal";
-    public final static String WARNING_LIGHT_MESSAGE = "Light level is **way too high**.";
+    public final static String WARNING_LIGHT_MESSAGE = "Light level is *higher** than ideal.";
+    public final static String ALERT_LIGHT_MESSAGE = "Light level is **way too high**.";
 
     // Sound Conditions
     public final static String IDEAL_SOUND_MESSAGE = "Sound level is **just right**";
+    public final static String WARNING_SOUND_MESSAGE = "Your room is **a little noisy**.";
+    public final static String ALERT_SOUND_MESSAGE = "Your room is **too noisy**.";
     /* END Current Room State Declaration */
 }
