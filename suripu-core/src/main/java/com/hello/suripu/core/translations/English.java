@@ -63,7 +63,7 @@ public class English {
 
     // Light Conditions.
     public final static String IDEAL_LIGHT_MESSAGE = "Light level is **perfect**.";
-    public final static String WARNING_LIGHT_MESSAGE = "Light level is *higher** than ideal.";
+    public final static String WARNING_LIGHT_MESSAGE = "Light level is **higher** than ideal.";
     public final static String ALERT_LIGHT_MESSAGE = "Light level is **way too high**.";
 
     // Sound Conditions
