@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 public class CurrentRoomState {
 
 
-    private final static String DEFAULT_TEMP_UNIT = "c";
+    public final static String DEFAULT_TEMP_UNIT = "c";
     private static final Logger LOGGER = LoggerFactory.getLogger(CurrentRoomState.class);
 
     public static class State {
@@ -108,6 +108,7 @@ public class CurrentRoomState {
                                                final int firmwareVersion,
                                                final DateTime referenceTime,
                                                final Integer thresholdInMinutes) {
+
         final float humidity = DeviceData.dbIntToFloat(rawHumidity);
         final float temperature = DeviceData.dbIntToFloat(rawTemperature);
         final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(rawDustMax, firmwareVersion));
@@ -122,64 +123,21 @@ public class CurrentRoomState {
                                                      final Integer thresholdInMinutes,
                                                      final String tempUnit) {
 
-        State temperatureState;
-        State humidityState;
-        State particulatesState;
-        State lightState;
-        State soundState;
 
         LOGGER.debug("temp = {}, humidity = {}, particulates = {}", temperature, humidity, particulatesAQI);
 
-
-        final String idealTempConditions = String.format(English.TEMPERATURE_ADVICE_MESSAGE, tempUnit, tempUnit);
-        final String idealHumidityConditions = English.HUMIDITY_ADVICE_MESSAGE;
-        final String idealParticulatesConditions = English.PARTICULATES_ADVICE_MESSAGE;
-
         if(referenceTime.minusMinutes(thresholdInMinutes).getMillis() > dataTimestampUTC.getMillis()) {
-
             LOGGER.warn("{} is too old, not returning anything", dataTimestampUTC);
-            temperatureState = new State(temperature, English.UNKNOWN_TEMPERATURE_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.CELCIUS);
-            humidityState = new State(humidity, English.UNKNOWN_HUMIDITY_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.PERCENT);
-            particulatesState = new State(particulatesAQI, English.UNKNOWN_PARTICULATES_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.AQI);
-            lightState = new State(light, English.UNKNOWN_LIGHT_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.LUX);
-            soundState = new State(sound, English.UNKNOWN_SOUND_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.DB);
-            final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState, lightState, soundState);
+            final CurrentRoomState roomState = dataTooOld(temperature, humidity, particulatesAQI, light, sound, dataTimestampUTC);
             return roomState;
         }
 
-        // Global ideal range: 60 -- 72, less than 54 = too cold, above 75= too warm
-
-        // Temp
-        if (temperature  < 15.0) {
-            temperatureState = new State(temperature, English.LOW_TEMPERATURE_MESSAGE, idealTempConditions, State.Condition.ALERT, dataTimestampUTC, State.Unit.CELCIUS);
-        } else if (temperature > 30.0) {
-            temperatureState = new State(temperature, English.HIGH_TEMPERATURE_MESSAGE, idealTempConditions, State.Condition.ALERT, dataTimestampUTC, State.Unit.CELCIUS);
-        } else { // temp >= 60 && temp <= 72
-            temperatureState = new State(temperature, English.IDEAL_TEMPERATURE_MESSAGE, idealTempConditions, State.Condition.IDEAL, dataTimestampUTC, State.Unit.CELCIUS);
-        }
-
-        // Humidity
-        if (humidity  < 30.0) {
-            humidityState = new State(humidity, English.LOW_HUMIDITY_MESSAGE, idealHumidityConditions, State.Condition.WARNING, dataTimestampUTC, State.Unit.PERCENT);
-        } else if (humidity > 60.0) {
-            humidityState = new State(humidity, English.HIGH_HUMIDITY_MESSAGE, idealHumidityConditions, State.Condition.WARNING, dataTimestampUTC, State.Unit.PERCENT);
-        } else { // humidity >= 30 && humidity<= 60
-            humidityState = new State(humidity, English.IDEAL_HUMIDITY_MESSAGE, idealHumidityConditions, State.Condition.IDEAL, dataTimestampUTC, State.Unit.PERCENT);
-        }
-
-
-        // Air Quality - see http://www.sparetheair.com/aqi.cfm
-        if (particulatesAQI <= 50.0) {
-            particulatesState = new State(particulatesAQI, English.IDEAL_PARTICULATES_MESSAGE, idealParticulatesConditions, State.Condition.IDEAL, dataTimestampUTC, State.Unit.AQI);
-        } else if (particulatesAQI <= 300.0) {
-            particulatesState = new State(particulatesAQI, English.HIGH_PARTICULATES_MESSAGE, idealParticulatesConditions, State.Condition.WARNING, dataTimestampUTC, State.Unit.AQI);
-        } else {
-            particulatesState = new State(particulatesAQI, English.VERY_HIGH_PARTICULATES_MESSAGE, idealParticulatesConditions, State.Condition.ALERT, dataTimestampUTC, State.Unit.AQI);
-        }
-
-
-        lightState = new State(light, English.IDEAL_LIGHT_MESSAGE, English.LIGHT_ADVICE_MESSAGE, State.Condition.IDEAL, dataTimestampUTC, State.Unit.LUX);
-        soundState = new State(sound, English.IDEAL_SOUND_MESSAGE, English.SOUND_ADVICE_MESSAGE, State.Condition.IDEAL, dataTimestampUTC, State.Unit.DB);
+        // get states
+        final State temperatureState = getTemperatureState(temperature, dataTimestampUTC, tempUnit);
+        final State humidityState = getHumidityState(humidity, dataTimestampUTC);
+        final State particulatesState = getParticulatesState(particulatesAQI, dataTimestampUTC);
+        final State lightState = getLightState(light, dataTimestampUTC);
+        final State soundState = getSoundState(sound, dataTimestampUTC);
 
         final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState, lightState, soundState);
         return roomState;
@@ -221,4 +179,75 @@ public class CurrentRoomState {
 
         return roomState;
     }
+
+    public static CurrentRoomState dataTooOld(final float temperature, final float humidity,
+                                              final float particulatesAQI, final float light, final float sound,
+                                              final DateTime dataTimestampUTC) {
+        final CurrentRoomState roomState = new CurrentRoomState(
+                new State(temperature, English.UNKNOWN_TEMPERATURE_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.CELCIUS),
+                new State(humidity, English.UNKNOWN_HUMIDITY_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.PERCENT),
+                new State(particulatesAQI, English.UNKNOWN_PARTICULATES_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.AQI),
+                new State(light, English.UNKNOWN_LIGHT_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.LUX),
+                new State(sound, English.UNKNOWN_SOUND_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.DB)
+        );
+        return roomState;
+    }
+
+    public static State getTemperatureState(final float temperature, final DateTime dataTimestampUTC,  final String tempUnit) {
+        // Global ideal range: 60 -- 72, less than 54 = too cold, above 75= too warm
+        // TODO: personalize
+        final String idealTempConditions = String.format(English.TEMPERATURE_ADVICE_MESSAGE, tempUnit, tempUnit);
+
+        if (temperature  < 15.0) {
+            return new State(temperature, English.LOW_TEMPERATURE_MESSAGE, idealTempConditions, State.Condition.ALERT, dataTimestampUTC, State.Unit.CELCIUS);
+        } else if (temperature > 30.0) {
+            return new State(temperature, English.HIGH_TEMPERATURE_MESSAGE, idealTempConditions, State.Condition.ALERT, dataTimestampUTC, State.Unit.CELCIUS);
+        } else { // temp >= 60 && temp <= 72
+            return new State(temperature, English.IDEAL_TEMPERATURE_MESSAGE, idealTempConditions, State.Condition.IDEAL, dataTimestampUTC, State.Unit.CELCIUS);
+        }
+    }
+
+    public static State getHumidityState(final float humidity, final DateTime dataTimestampUTC) {
+        final String idealHumidityConditions = English.HUMIDITY_ADVICE_MESSAGE;
+
+        if (humidity  < 30.0) {
+            return new State(humidity, English.LOW_HUMIDITY_MESSAGE, idealHumidityConditions, State.Condition.WARNING, dataTimestampUTC, State.Unit.PERCENT);
+        } else if (humidity > 60.0) {
+            return new State(humidity, English.HIGH_HUMIDITY_MESSAGE, idealHumidityConditions, State.Condition.WARNING, dataTimestampUTC, State.Unit.PERCENT);
+        } else { // humidity >= 30 && humidity<= 60
+            return new State(humidity, English.IDEAL_HUMIDITY_MESSAGE, idealHumidityConditions, State.Condition.IDEAL, dataTimestampUTC, State.Unit.PERCENT);
+        }
+
+    }
+
+    public static State getParticulatesState(final float particulatesAQI, final DateTime dataTimestampUTC) {
+        // see http://www.sparetheair.com/aqi.cfm
+        final String idealParticulatesConditions = English.PARTICULATES_ADVICE_MESSAGE;
+
+        if (particulatesAQI <= 50.0) {
+            return new State(particulatesAQI, English.IDEAL_PARTICULATES_MESSAGE, idealParticulatesConditions, State.Condition.IDEAL, dataTimestampUTC, State.Unit.AQI);
+        } else if (particulatesAQI <= 300.0) {
+            return new State(particulatesAQI, English.HIGH_PARTICULATES_MESSAGE, idealParticulatesConditions, State.Condition.WARNING, dataTimestampUTC, State.Unit.AQI);
+        } else {
+            return new State(particulatesAQI, English.VERY_HIGH_PARTICULATES_MESSAGE, idealParticulatesConditions, State.Condition.ALERT, dataTimestampUTC, State.Unit.AQI);
+        }
+    }
+
+    public static State getLightState(final float light, final DateTime dataTimestampUTC) {
+        if (light > 8.0) {
+            return new State(light, English.IDEAL_LIGHT_MESSAGE, English.LIGHT_ADVICE_MESSAGE, State.Condition.ALERT, dataTimestampUTC, State.Unit.LUX);
+        } else if (light > 2.0) {
+            return new State(light, English.IDEAL_LIGHT_MESSAGE, English.LIGHT_ADVICE_MESSAGE, State.Condition.WARNING, dataTimestampUTC, State.Unit.LUX);
+        } else {
+            return new State(light, English.IDEAL_LIGHT_MESSAGE, English.LIGHT_ADVICE_MESSAGE, State.Condition.IDEAL, dataTimestampUTC, State.Unit.LUX);
+        }
+    }
+
+    // TODO -- find right levels
+    public static State getSoundState(final float sound, final DateTime dataTimestampUTC) {
+        final State soundState = new State(sound, English.IDEAL_SOUND_MESSAGE, English.SOUND_ADVICE_MESSAGE, State.Condition.IDEAL, dataTimestampUTC, State.Unit.DB);
+        return soundState;
+    }
+
+
 }

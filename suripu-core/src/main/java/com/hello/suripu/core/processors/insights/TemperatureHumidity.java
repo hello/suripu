@@ -26,6 +26,10 @@ public class TemperatureHumidity {
 
     private static final int IDEAL_TEMP_MIN = 60;
     private static final int IDEAL_TEMP_MAX = 70;
+
+    private static final int IDEAL_TEMP_MIN_CELSIUS = fahrenheitToCelsius(60.0);
+    private static final int IDEAL_TEMP_MAX_CELSIUS = fahrenheitToCelsius(70.0);
+
     private static final int COLD_TEMP_ADJUST = 3; // adjust for cold sleeper
     private static final int HOT_TEMP_ADJUST = 5; // adjust for hot sleeper
 

@@ -57,6 +57,7 @@ public class TimelineUtils {
     public static final Integer LOWEST_SLEEP_DEPTH = 10;
     public static final long MINUTE_IN_MILLIS = 60000;
 
+    private static final long PRESLEEP_WINDOW_IN_MILLIS = 900000; // 15 mins
     private static final int LIGHTS_OUT_START_THRESHOLD = 19; // 7pm local time
     private static final int LIGHTS_OUT_END_THRESHOLD = 4; // 4am local time
 
@@ -486,8 +487,65 @@ public class TimelineUtils {
 
     }
 
-    public static List<Insight> generatePresleepInsights(final Long accountId, final DateTime sleepTimeLocal) {
+    public static List<Insight> generatePreSleepInsights(final Map<Sensor, List<Sample>> sensorData, final long sleepTimestamp) {
+
         final List<Insight> generatedInsights = new ArrayList<>();
+
+        int startIndex = 0;
+        int endIndex = 0;
+        final long startTimestamp = sleepTimestamp - PRESLEEP_WINDOW_IN_MILLIS;
+        for (Sample sample : sensorData.get(Sensor.TEMPERATURE)) {
+            if (sample.dateTime < startTimestamp) {
+                startIndex++;
+            }
+
+            endIndex++;
+
+            if (sample.dateTime > sleepTimestamp) {
+                break;
+            }
+        }
+
+
+        float avgTemp = 0.0f;
+        float avgHumidity = 0.0f;
+        float avgParticulate = 0.0f;
+        float avgLight = 0.0f;
+        float avgSound = 0.0f;
+        float num = 0.0f;
+        for (int i = startIndex; i < endIndex; i++) {
+
+            avgTemp += sensorData.get(Sensor.TEMPERATURE).get(i).value;
+            avgHumidity += sensorData.get(Sensor.HUMIDITY).get(i).value;
+            avgParticulate += sensorData.get(Sensor.PARTICULATES).get(i).value;
+            avgLight += sensorData.get(Sensor.LIGHT).get(i).value;
+            avgSound += sensorData.get(Sensor.SOUND).get(i).value;
+            num++;
+        }
+
+        final DateTime sleepDateTime = new DateTime(sleepTimestamp, DateTimeZone.UTC);
+
+        avgTemp /= num;
+        final CurrentRoomState.State temperatureState = CurrentRoomState.getTemperatureState(avgTemp, sleepDateTime, CurrentRoomState.DEFAULT_TEMP_UNIT);
+        generatedInsights.add(new Insight(Sensor.TEMPERATURE, temperatureState.condition, temperatureState.message));
+
+        avgHumidity /= num;
+        final CurrentRoomState.State humidityState = CurrentRoomState.getHumidityState(avgHumidity, sleepDateTime);
+        generatedInsights.add(new Insight(Sensor.HUMIDITY, humidityState.condition, humidityState.message));
+
+        avgParticulate /= num;
+        final CurrentRoomState.State particulateState = CurrentRoomState.getParticulatesState(avgParticulate, sleepDateTime);
+        generatedInsights.add(new Insight(Sensor.PARTICULATES, particulateState.condition, particulateState.message));
+
+        avgLight /= num;
+        final CurrentRoomState.State lightState = CurrentRoomState.getLightState(avgLight, sleepDateTime);
+        generatedInsights.add(new Insight(Sensor.LIGHT, lightState.condition, lightState.message));
+
+        avgSound /= num;
+        final CurrentRoomState.State soundState = CurrentRoomState.getSoundState(avgSound, sleepDateTime);
+        generatedInsights.add(new Insight(Sensor.SOUND, soundState.condition, soundState.message));
+
+
         return generatedInsights;
     }
 

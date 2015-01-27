@@ -23,6 +23,7 @@ import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.Timeline;
@@ -40,8 +41,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class TimelineProcessor {
 
@@ -116,14 +119,15 @@ public class TimelineProcessor {
         //TODO: get light data by the minute, compute lights out
         Optional<DateTime> lightOutTimeOptional = Optional.absent();
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
+        final Map<Sensor, List<Sample>> sensorData = new HashMap<>();
         if (deviceId.isPresent()) {
             final int slotDurationMins = 1;
 
-            final List<Sample> senseData = deviceDataDAO.generateTimeSeriesByLocalTime(targetDate.getMillis(),
-                    endDate.getMillis(), accountId, deviceId.get(), slotDurationMins, "light");
-            LOGGER.info("Light data size {}", senseData.size());
-            if (senseData.size() > 0) {
-                final List<Event> lightEvents = TimelineUtils.getLightEvents(senseData);
+            sensorData.putAll(deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(targetDate.getMillis(),
+                    endDate.getMillis(), accountId, deviceId.get(), slotDurationMins));
+            LOGGER.info("Light data size {}", sensorData.get(Sensor.LIGHT).size());
+            if (sensorData.get(Sensor.LIGHT).size() > 0) {
+                final List<Event> lightEvents = TimelineUtils.getLightEvents(sensorData.get(Sensor.LIGHT));
                 if (lightEvents.size() > 0) {
                     events.addAll(lightEvents);
                     lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
@@ -268,7 +272,8 @@ public class TimelineProcessor {
         LOGGER.debug("Score for account_id = {} is {}", accountId, sleepScore);
 
 
-        final List<Insight> insights = TimelineUtils.generateRandomInsights(targetDate.getDayOfMonth());
+        final List<Insight> insights = TimelineUtils.generatePreSleepInsights(sensorData, sleepStats.sleepTime);
+
         final Timeline timeline = new Timeline(sleepScore, timeLineMessage, date, reversed, insights);
         final List<Timeline> timelines = new ArrayList<>();
         timelines.add(timeline);
