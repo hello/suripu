@@ -24,8 +24,6 @@ import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -81,7 +79,7 @@ public class KeyStoreDynamoDB implements KeyStore {
     }
 
     @Override
-    public DeviceKeyStoreRecord getKeyStoreRecord(String deviceId) {
+    public Optional<DeviceKeyStoreRecord> getKeyStoreRecord(String deviceId) {
         return getRecordRemotely(deviceId);
     }
 
@@ -166,10 +164,10 @@ public class KeyStoreDynamoDB implements KeyStore {
         return result;
     }
 
-    private DeviceKeyStoreRecord getRecordRemotely(final String deviceId) {
+    private Optional<DeviceKeyStoreRecord> getRecordRemotely(final String deviceId) {
         if(DEFAULT_FACTORY_DEVICE_ID.equals(deviceId)) {
             LOGGER.warn("Device not properly provisioned, got {} as a deviceId", deviceId);
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
+            return Optional.absent();
         }
 
         final HashMap<String, AttributeValue> key = new HashMap<String, AttributeValue>();
@@ -183,13 +181,13 @@ public class KeyStoreDynamoDB implements KeyStore {
         LOGGER.info("getItemResult = {}", getItemResult.toString());
         if(getItemResult.getItem() == null || !getItemResult.getItem().containsKey(AES_KEY_ATTRIBUTE_NAME)) {
             LOGGER.warn("Did not find anything for device_id = {}", deviceId);
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
+            return Optional.absent();
         }
 
         final String aesKey = getItemResult.getItem().get(AES_KEY_ATTRIBUTE_NAME).getS();
         final String metadata = getItemResult.getItem().get(METADATA).getS();
 
-        return new DeviceKeyStoreRecord(censorKey(aesKey), metadata);
+        return Optional.of(new DeviceKeyStoreRecord(censorKey(aesKey), metadata));
     }
 
     private String censorKey(final String key) {

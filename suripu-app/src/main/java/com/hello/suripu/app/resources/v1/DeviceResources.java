@@ -436,7 +436,11 @@ public class DeviceResources {
     @Produces(MediaType.APPLICATION_JSON)
     public DeviceKeyStoreRecord getKeyHintForSense(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                       @PathParam("sense_id") final String senseId) {
-        return senseKeyStore.getKeyStoreRecord(senseId);
+        final Optional<DeviceKeyStoreRecord> senseKeyStoreRecord = senseKeyStore.getKeyStoreRecord(senseId);
+        if (!senseKeyStoreRecord.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity("This sense has not been properly provisioned!").build());
+        }
+        return senseKeyStoreRecord.get();
     }
 
     @GET
@@ -445,6 +449,10 @@ public class DeviceResources {
     @Produces(MediaType.APPLICATION_JSON)
     public DeviceKeyStoreRecord getKeyHintForPill(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                                   @PathParam("pill_id") final String pillId) {
-        return pillKeyStore.getKeyStoreRecord(pillId);
+        final Optional<DeviceKeyStoreRecord> pillKeyStoreRecord = pillKeyStore.getKeyStoreRecord(pillId);
+        if (!pillKeyStoreRecord.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity("This pill has not been properly provisioned!").build());
+        }
+        return pillKeyStoreRecord.get();
     }
 }
