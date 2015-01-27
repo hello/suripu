@@ -110,7 +110,7 @@ insights_db:
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
-    pill_data : test-pill-suripu
+    batch_pill_data : batch_pill_data
 
 app_name: TimelineWorker
 
@@ -155,11 +155,6 @@ user_info_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: alarm_info
-
-pill_key_store_dynamo_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: pill_key_store
 
 # remember to update version when changing score methods
 # v0.1: pure movement

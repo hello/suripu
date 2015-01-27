@@ -83,7 +83,7 @@ insights_db:
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
-      pill_data : test-pill-suripu
+      batch_pill_data : batch_pill_data
 
 app_name: TimelineWorkerDev
 
@@ -136,10 +136,6 @@ sleep_score_version: v_0_1
 score_threshold : 15 # minutes bucket for sleep-scores
 
 aggregate_window_size_min: 10
-pill_key_store_dynamo_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: pill_key_store
 
 timeline_db:
     endpoint : http://localhost:7777

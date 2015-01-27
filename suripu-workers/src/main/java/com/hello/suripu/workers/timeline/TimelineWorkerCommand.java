@@ -148,6 +148,7 @@ public class TimeLineWorkerCommand extends ConfiguredCommand<TimeLineWorkerConfi
 
 
         final IRecordProcessorFactory factory = new TimeLineRecordProcessorFactory(timelineProcessor,
+                deviceDAO,
                 mergedUserInfoDynamoDB,
                 ringTimeDAODynamoDB,
                 timelineDAODynamoDB,
