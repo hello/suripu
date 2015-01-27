@@ -3,6 +3,7 @@ package com.hello.suripu.core.preferences;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.AttributeValueUpdate;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
@@ -10,8 +11,8 @@ import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
-import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
 import com.google.common.collect.Maps;
 
 import java.util.Map;
@@ -34,15 +35,20 @@ public class AccountPreferencesDynamoDB implements AccountPreferencesDAO {
 
     @Override
     public AccountPreference put(final Long accountId, final AccountPreference preference) {
-        final PutItemRequest putItemRequest = new PutItemRequest();
-        putItemRequest.addItemEntry(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(accountId.toString()));
-
-        putItemRequest.addItemEntry(preference.key.toString(), new AttributeValue().withBOOL(preference.enabled));
-        putItemRequest.setTableName(tableName);
-        dynamoDB.putItem(putItemRequest);
+        final UpdateItemRequest updateItemRequest = new UpdateItemRequest();
+//        final PutItemRequest putItemRequest = new PutItemRequest();
+//        putItemRequest.addItemEntry(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(accountId.toString()));
+//
+//        putItemRequest.addItemEntry(preference.key.toString(), new AttributeValue().withBOOL(preference.enabled));
+//        putItemRequest.setTableName(tableName);
+//        dynamoDB.putItem(putItemRequest);
+        updateItemRequest.addKeyEntry(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(accountId.toString()));
+        final AttributeValueUpdate update = new AttributeValueUpdate();
+        update.setValue(new AttributeValue().withBOOL(preference.enabled));
+        updateItemRequest.addAttributeUpdatesEntry(preference.key.toString(), update);
+        updateItemRequest.setTableName(tableName);
+        dynamoDB.updateItem(updateItemRequest);
         return preference;
-
-
     }
 
     @Override

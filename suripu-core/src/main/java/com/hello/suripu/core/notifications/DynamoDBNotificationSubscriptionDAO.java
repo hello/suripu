@@ -163,7 +163,6 @@ public class DynamoDBNotificationSubscriptionDAO implements NotificationSubscrip
 
         // TODO: catch exceptions when creating endpoint fails
         final CreatePlatformEndpointResult result = amazonSNSClient.createPlatformEndpoint(request);
-
         final MobilePushRegistration m = MobilePushRegistration.withEndpointForAccount(
                 mobilePushRegistration,
                 result.getEndpointArn(),
