@@ -1,6 +1,5 @@
 package com.hello.suripu.core.db.util;
 
-import com.amazonaws.services.cloudfront.model.InvalidArgumentException;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 
@@ -9,6 +8,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -22,8 +22,10 @@ import java.util.zip.GZIPOutputStream;
 public class Compression {
 
     public static enum CompressionType{
-        GZIP(0),
-        BZIP2(1);
+        UNKNOWN(0),
+        NONE(1),
+        GZIP(2),
+        BZIP2(3);
 
         private int value;
         private CompressionType(int value){
@@ -32,12 +34,14 @@ public class Compression {
 
         public static CompressionType fromInt(int value){
             switch (value){
-                case 0:
-                    return GZIP;
                 case 1:
+                    return NONE;
+                case 2:
+                    return GZIP;
+                case 3:
                     return BZIP2;
                 default:
-                    throw new InvalidArgumentException("Invalid value.");
+                    return UNKNOWN;
             }
         }
 
@@ -58,6 +62,9 @@ public class Compression {
             case BZIP2:
                 zipStream = new BZip2CompressorOutputStream(byteStream);
                 break;
+            case NONE:
+                byteStream.close();
+                return Arrays.copyOf(rawData, rawData.length);
             default:
                 zipStream = new GZIPOutputStream(byteStream);
                 break;
@@ -92,6 +99,9 @@ public class Compression {
         InputStream unzipStream = null;
 
         switch (type){
+            case NONE:
+                byteStream.close();
+                return Arrays.copyOf(compressed, compressed.length);
             case GZIP:
                 unzipStream = new GZIPInputStream(byteStream);
                 break;

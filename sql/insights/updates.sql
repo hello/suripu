@@ -99,3 +99,6 @@ DELETE FROM response_choices WHERE id = 34;
 UPDATE questions set responses = '{"Reading/Listen to music", "Use tablet/phone/computer", "Watch TV", "Others", "None of the above"}',
 responses_ids = '{29, 30, 31, 32, 33}' WHERE id = 9;
 
+-- grammar!!
+update questions SET question_text = 'Have you ever woken up gasping for breath?' where id = 13;
+update questions set question_text = 'Have you been diagnosed with any sleep disorders?' where id = 12;

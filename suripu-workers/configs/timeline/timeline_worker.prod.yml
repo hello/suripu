@@ -1,12 +1,11 @@
-metrics_enabled: true
 debug: false
+metrics_enabled: false
 graphite:
   host: carbon.hostedgraphite.com
   api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
   reporting_interval_in_seconds: 30
   include_metrics:
-    - org.skife
-    - xx-responses
+    - com.yammer
     - com.hello
 
 sensors_db:
@@ -108,21 +107,14 @@ insights_db:
   # the maximum lifetime of an idle connection
   closeConnectionIfIdleFor: 1 minute
 
-# to allow queries with clocks out of sync
-# 12 * 3600s = 43200 sec -> 12h window
-allowed_query_range_seconds: 43200
+kinesis:
+  endpoint : https://kinesis.us-east-1.amazonaws.com
+  streams :
+    batch_pill_data : batch_pill_data
 
-http:
+app_name: TimelineWorker
 
-  # The port on which the HTTP server listens for service requests.
-  # Because Java cannot drop privileges in a POSIX system, these
-  # ports cannot be in the range 1-1024. A port value of 0 will
-  # make the OS use an arbitrary unused port.
-  port: 9999
-
-  # The port on which the HTTP server listens for administrative
-  # requests. Subject to the same limitations as "port".
-  adminPort: 9998
+max_records: 1000
 
 # Logging settings.
 logging:
@@ -134,13 +126,13 @@ logging:
   loggers:
 
     # Sets the level for 'com.example.app' to DEBUG.
-    com.hello.suripu: DEBUG
+    com.hello.suripu.workers: DEBUG
 
 
-event_db:
+ring_time_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: event
+  table_name: ring_time
 
 timezone_history_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
@@ -152,37 +144,14 @@ alarm_db:
   region: us-east-1
   table_name: alarm
 
-kinesis_logger:
-  stream_name: logs
-  enabled : true
-  buffer_size: 100
-  origin: suripu-app
+features_db:
+    endpoint : http://dynamodb.us-east-1.amazonaws.com
+    region: us-east-1
+    table_name: features
 
-score_threshold : 15 # minutes bucket for sleep-scores
+aggregate_window_size_min: 10
 
-push_notifications:
-  arns:
-    ios: arn:aws:sns:us-east-1:053216739513:app/APNS/hello-sense-ios-dev
-    android: arn:aws:sns:us-east-1:053216739513:app/GCM/hello-sense-android-dev
-
-  table_name: notifications #deprecate later
-
-notifications_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: notifications
-
-preferences_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: preferences
-
-ring_time_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: ring_time
-
-alarm_info_db:
+user_info_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: alarm_info
@@ -194,45 +163,7 @@ sleep_score_db:
     region: us-east-1
     table_name: sleep_score
 sleep_score_version: v_0_1
-
-features_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: features
-
-teams_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: teams
-
-insights_dynamo_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: insights
-
-sense_key_store_dynamo_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: key_store
-
-pill_key_store_dynamo_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: pill_key_store
-
-kinesis:
-  endpoint : https://kinesis.us-east-1.amazonaws.com
-  streams :
-    pill_data : test-pill-suripu
-    audio_features : audio_features
-    activity_stream : activity_stream
-    registrations: registrations
-    encode_audio : encode_audio
-    batch_pill_data : batch_pill_data
-    sense_sensors_data : sense_sensors_data
-
-question_configs:
-  num_skips : 5
+score_threshold : 15 # minutes bucket for sleep-scores
 
 timeline_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com

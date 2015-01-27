@@ -4,7 +4,6 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -14,7 +13,6 @@ import com.google.common.collect.ImmutableMap;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.app.cli.CreateDynamoDBTables;
-import com.hello.suripu.app.cli.RecreateEventsCommand;
 import com.hello.suripu.app.cli.RecreatePillColorCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.modules.RolloutAppModule;
@@ -25,7 +23,6 @@ import com.hello.suripu.app.resources.v1.AppCheckinResource;
 import com.hello.suripu.app.resources.v1.ApplicationResource;
 import com.hello.suripu.app.resources.v1.DataScienceResource;
 import com.hello.suripu.app.resources.v1.DeviceResources;
-import com.hello.suripu.app.resources.v1.EventResource;
 import com.hello.suripu.app.resources.v1.FeaturesResource;
 import com.hello.suripu.app.resources.v1.FeedbackResource;
 import com.hello.suripu.app.resources.v1.FirmwareResource;
@@ -53,7 +50,6 @@ import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
-import com.hello.suripu.core.db.EventDAODynamoDB;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
@@ -65,11 +61,9 @@ import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
+import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
-import com.hello.suripu.core.notifications.DynamoDBNotificationSubscriptionDAO;
-import com.hello.suripu.core.notifications.MobilePushNotificationProcessor;
-import com.hello.suripu.core.notifications.NotificationSubscriptionsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.firmware.FirmwareUpdateDAO;
@@ -77,14 +71,17 @@ import com.hello.suripu.core.firmware.FirmwareUpdateStore;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
+import com.hello.suripu.core.notifications.DynamoDBNotificationSubscriptionDAO;
+import com.hello.suripu.core.notifications.MobilePushNotificationProcessor;
+import com.hello.suripu.core.notifications.NotificationSubscriptionsDAO;
 import com.hello.suripu.core.oauth.OAuthAuthenticator;
 import com.hello.suripu.core.oauth.OAuthProvider;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
-import com.hello.suripu.core.processors.AccountInfoProcessor;
-import com.hello.suripu.core.processors.InsightProcessor;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
+import com.hello.suripu.core.processors.AccountInfoProcessor;
+import com.hello.suripu.core.processors.InsightProcessor;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.util.CustomJSONExceptionMapper;
@@ -123,7 +120,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
     @Override
     public void initialize(final Bootstrap<SuripuAppConfiguration> bootstrap) {
         bootstrap.addBundle(new DBIExceptionsBundle());
-        bootstrap.addCommand(new RecreateEventsCommand());
         bootstrap.addCommand(new CreateDynamoDBTables());
         bootstrap.addCommand(new RecreatePillColorCommand());
         bootstrap.addBundle(new KinesisLoggerBundle<SuripuAppConfiguration>() {
@@ -188,7 +184,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final String eventTableName = configuration.getEventDBConfiguration().getTableName();
 
-        final EventDAODynamoDB eventDAODynamoDB = new EventDAODynamoDB(eventDynamoDBClient, eventTableName);
+        final TimelineDAODynamoDB timelineDAODynamoDB = new TimelineDAODynamoDB(eventDynamoDBClient, eventTableName);
 
         final AmazonDynamoDB alarmDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getAlarmDBConfiguration().getEndpoint());
         final AlarmDAODynamoDB alarmDAODynamoDB = new AlarmDAODynamoDB(
@@ -297,7 +293,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new ApplicationResource(applicationStore));
         environment.addResource(new SleepLabelResource(sleepLabelDAO));
         environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
-        environment.addResource(new EventResource(eventDAODynamoDB));
         environment.addResource(new DeviceResources(deviceDAO, accountDAO, mergedUserInfoDynamoDB, jedisPool, senseKeyStore, pillKeyStore));
         final KeyStoreUtils keyStoreUtils = KeyStoreUtils.build(amazonS3, "hello-secure","hello-pvt.pem");
         environment.addResource(new ProvisionResource(senseKeyStore, pillKeyStore, keyStoreUtils));
@@ -326,20 +321,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 .withMapping(questionResponseDAO);
         final AccountInfoProcessor accountInfoProcessor = builder.build();
 
-        final InsightProcessor.Builder insightBuilder = new InsightProcessor.Builder()
-                .withSenseDAOs(deviceDataDAO, deviceDAO)
-                .withTrackerMotionDAO(trackerMotionDAO)
-                .withInsightsDAO(trendsInsightsDAO)
-                .withDynamoDBDAOs(aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB)
-                .withSleepScoreDAO(sleepScoreDAO)
-                .withAccountInfoProcessor(accountInfoProcessor)
-                .withLightData(new LightData());
-        final InsightProcessor insightProcessor = insightBuilder.build();
-
-        environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO, deviceDataDAO, deviceDAO, insightProcessor, sleepLabelDAO));
-
-        final AmazonDynamoDB prefsClient = new AmazonDynamoDBClient(awsCredentialsProvider, clientConfiguration);
-        prefsClient.setEndpoint(configuration.getPreferencesDBConfiguration().getEndpoint());
+        final AmazonDynamoDB prefsClient = dynamoDBClientFactory.getForEndpoint(configuration.getPreferencesDBConfiguration().getEndpoint());
         final AccountPreferencesDAO accountPreferencesDAO = new AccountPreferencesDynamoDB(prefsClient, configuration.getPreferencesDBConfiguration().getTableName());
         environment.addResource(new AccountPreferencesResource(accountPreferencesDAO));
 
@@ -347,6 +329,20 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);
         final FirmwareUpdateStore firmwareUpdateStore = new FirmwareUpdateStore(firmwareUpdateDAO, s3Client, "hello-firmware");
         environment.addResource(new FirmwareResource(firmwareUpdateStore, "hello-firmware", amazonS3)); // TODO: move logic from resource to FirmwareUpdateStore
+
+        final InsightProcessor.Builder insightBuilder = new InsightProcessor.Builder()
+                .withSenseDAOs(deviceDataDAO, deviceDAO)
+                .withTrackerMotionDAO(trackerMotionDAO)
+                .withInsightsDAO(trendsInsightsDAO)
+                .withDynamoDBDAOs(aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB)
+                .withSleepScoreDAO(sleepScoreDAO)
+                .withPreferencesDAO(accountPreferencesDAO)
+                .withAccountInfoProcessor(accountInfoProcessor)
+                .withLightData(new LightData());
+        final InsightProcessor insightProcessor = insightBuilder.build();
+
+        environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO, deviceDataDAO, deviceDAO, insightProcessor, sleepLabelDAO));
+
 
         LOGGER.debug("{}", DateTime.now(DateTimeZone.UTC).getMillis());
 

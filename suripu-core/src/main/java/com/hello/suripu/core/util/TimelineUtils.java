@@ -38,13 +38,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.Set;
 
 public class TimelineUtils {
 
@@ -57,6 +54,7 @@ public class TimelineUtils {
     public static final Integer LOWEST_SLEEP_DEPTH = 10;
     public static final long MINUTE_IN_MILLIS = 60000;
 
+    private static final long PRESLEEP_WINDOW_IN_MILLIS = 900000; // 15 mins
     private static final int LIGHTS_OUT_START_THRESHOLD = 19; // 7pm local time
     private static final int LIGHTS_OUT_END_THRESHOLD = 4; // 4am local time
 
@@ -476,39 +474,74 @@ public class TimelineUtils {
 
         if (reportSleepDuration) {
             // report sleep duration
-            return String.format("You slept for a total of **%.1f hours**, soundly for %.1f hours, (%d%%) and moved %d times",
+            return String.format("You slept for a total of **%.1f hours**, soundly for %.1f hours (%d%%), and moved %d times",
                     sleepDurationInHours, soundDurationInHours, percentageOfSoundSleep, sleepStats.numberOfMotionEvents);
         }
 
         // report in-bed time
-        return String.format("You were in bed for a total of **%.1f hours**, slept soundly for %.1f hours, (%d%%) and moved %d times",
+        return String.format("You were in bed for a total of **%.1f hours**, slept soundly for %.1f hours (%d%%), and moved %d times",
                 sleepDurationInHours, soundDurationInHours, percentageOfSoundSleep, sleepStats.numberOfMotionEvents);
 
     }
 
-    public static List<Insight> generateRandomInsights(int seed) {
-        final Random r = new Random(seed);
-        final List<Insight> insights = new ArrayList<>();
+    public static List<Insight> generatePreSleepInsights(final Map<Sensor, List<Sample>> sensorData, final long sleepTimestampUTC) {
 
-        insights.add(new Insight(Sensor.TEMPERATURE, CurrentRoomState.State.Condition.ALERT, "[placeholder] Temperature was very low."));
-        insights.add(new Insight(Sensor.SOUND, CurrentRoomState.State.Condition.IDEAL, "The sound levels were perfect for sleep."));
-        insights.add(new Insight(Sensor.HUMIDITY, CurrentRoomState.State.Condition.WARNING, "Humidity was a little too high for ideal sleep conditions"));
-        insights.add(new Insight(Sensor.PARTICULATES, CurrentRoomState.State.Condition.IDEAL, "The air quality was ideal"));
-        insights.add(new Insight(Sensor.LIGHT, CurrentRoomState.State.Condition.WARNING, "It was a little bright for sleep"));
-
-        final Set<Sensor> sensors = new HashSet<>();
         final List<Insight> generatedInsights = new ArrayList<>();
 
-        final int n = r.nextInt(insights.size());
-        LOGGER.trace("n = {}", n);
-        for(int i =0; i < n; i++) {
-            final int pick = r.nextInt(insights.size());
-            final Insight temp = insights.get(pick);
-            if(!sensors.contains(temp.sensor)) {
-                generatedInsights.add(temp);
-                sensors.add(temp.sensor);
+        int startIndex = 0;
+        int endIndex = 0;
+        final long startTimestamp = sleepTimestampUTC - PRESLEEP_WINDOW_IN_MILLIS;
+        for (Sample sample : sensorData.get(Sensor.TEMPERATURE)) {
+            if (sample.dateTime < startTimestamp) {
+                startIndex++;
+            }
+
+            endIndex++;
+
+            if (sample.dateTime > sleepTimestampUTC) {
+                break;
             }
         }
+
+
+        float avgTemp = 0.0f;
+        float avgHumidity = 0.0f;
+        float avgParticulate = 0.0f;
+        float avgLight = 0.0f;
+        float avgSound = 0.0f;
+        float num = 0.0f;
+        for (int i = startIndex; i < endIndex; i++) {
+
+            avgTemp += sensorData.get(Sensor.TEMPERATURE).get(i).value;
+            avgHumidity += sensorData.get(Sensor.HUMIDITY).get(i).value;
+            avgParticulate += sensorData.get(Sensor.PARTICULATES).get(i).value;
+            avgLight += sensorData.get(Sensor.LIGHT).get(i).value;
+            avgSound += sensorData.get(Sensor.SOUND).get(i).value;
+            num++;
+        }
+
+        final DateTime sleepDateTime = new DateTime(sleepTimestampUTC, DateTimeZone.UTC);
+
+        avgTemp /= num;
+        final CurrentRoomState.State temperatureState = CurrentRoomState.getTemperatureState(avgTemp, sleepDateTime, CurrentRoomState.DEFAULT_TEMP_UNIT, true);
+        generatedInsights.add(new Insight(Sensor.TEMPERATURE, temperatureState.condition, temperatureState.message));
+
+        avgHumidity /= num;
+        final CurrentRoomState.State humidityState = CurrentRoomState.getHumidityState(avgHumidity, sleepDateTime, true);
+        generatedInsights.add(new Insight(Sensor.HUMIDITY, humidityState.condition, humidityState.message));
+
+        avgParticulate /= num;
+        final CurrentRoomState.State particulateState = CurrentRoomState.getParticulatesState(avgParticulate, sleepDateTime, true);
+        generatedInsights.add(new Insight(Sensor.PARTICULATES, particulateState.condition, particulateState.message));
+
+        avgLight /= num;
+        final CurrentRoomState.State lightState = CurrentRoomState.getLightState(avgLight, sleepDateTime, true);
+        generatedInsights.add(new Insight(Sensor.LIGHT, lightState.condition, lightState.message));
+
+        avgSound /= num;
+        final CurrentRoomState.State soundState = CurrentRoomState.getSoundState(avgSound, sleepDateTime, true);
+        generatedInsights.add(new Insight(Sensor.SOUND, soundState.condition, soundState.message));
+
 
         return generatedInsights;
     }
@@ -598,8 +631,9 @@ public class TimelineUtils {
 
             if (segmentType == LightSegment.Type.LIGHTS_OUT) {
                 // create light on and lights out event
-                final LightEvent event = new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, "Lights on");
-                events.add(event);
+                // remove light on for now.
+//                final LightEvent event = new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, "Lights on");
+//                events.add(event);
 
                 final long endTimestamp = segment.endTimestamp - smoothingDegree * MINUTE_IN_MILLIS;
                 events.add(new LightsOutEvent(endTimestamp, endTimestamp + MINUTE_IN_MILLIS, offsetMillis));

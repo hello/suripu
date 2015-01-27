@@ -5,9 +5,24 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class AccountPreference {
 
+    public enum TemperatureUnit {
+        CELSIUS("C"),
+        FAHRENHEIT("F");
+        private String value;
+        private TemperatureUnit(final String value) { this.value = value;}
+
+        @Override
+        public String toString() {
+            if (this == CELSIUS) {
+                return "C";
+            }
+            return "F";
+        }
+    }
+
     public enum EnabledPreference {
         ENHANCED_AUDIO("enhanced_audio"),
-        TEMP_CELCIUS("temp_celcius"),
+        TEMP_CELSIUS("temp_celsius"),
         TIME_TWENTY_FOUR_HOUR("time_twenty_four_hour");
 
         private String value;
@@ -16,7 +31,7 @@ public class AccountPreference {
         }
 
         @JsonCreator
-        public EnabledPreference fromString(final String value) {
+        public static EnabledPreference fromString(final String value) {
             for(EnabledPreference pref: EnabledPreference.values()) {
                 if(pref.value.equalsIgnoreCase(value)) {
                     return pref;
@@ -37,7 +52,7 @@ public class AccountPreference {
     public AccountPreference(
             @JsonProperty("pref") final EnabledPreference key,
             @JsonProperty("enabled") final Boolean enabled) {
-        this.key = key;
-        this.enabled = enabled;
+        this.key = key; // EnabledPreference.fromString(key);
+        this.enabled =  enabled;
     }
 }
