@@ -486,6 +486,11 @@ public class TimelineUtils {
 
     }
 
+    public static List<Insight> generatePresleepInsights(final Long accountId, final DateTime sleepTimeLocal) {
+        final List<Insight> generatedInsights = new ArrayList<>();
+        return generatedInsights;
+    }
+
     public static List<Insight> generateRandomInsights(int seed) {
         final Random r = new Random(seed);
         final List<Insight> insights = new ArrayList<>();
@@ -598,8 +603,9 @@ public class TimelineUtils {
 
             if (segmentType == LightSegment.Type.LIGHTS_OUT) {
                 // create light on and lights out event
-                final LightEvent event = new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, "Lights on");
-                events.add(event);
+                // remove light on for now.
+//                final LightEvent event = new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, "Lights on");
+//                events.add(event);
 
                 final long endTimestamp = segment.endTimestamp - smoothingDegree * MINUTE_IN_MILLIS;
                 events.add(new LightsOutEvent(endTimestamp, endTimestamp + MINUTE_IN_MILLIS, offsetMillis));

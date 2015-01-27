@@ -326,17 +326,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 .withMapping(questionResponseDAO);
         final AccountInfoProcessor accountInfoProcessor = builder.build();
 
-        final InsightProcessor.Builder insightBuilder = new InsightProcessor.Builder()
-                .withSenseDAOs(deviceDataDAO, deviceDAO)
-                .withTrackerMotionDAOs(trackerMotionDAO)
-                .withInsightsDAOs(trendsInsightsDAO)
-                .withDynamoDBDAOs(aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB)
-                .withAccountInfoProcessor(accountInfoProcessor)
-                .withLightData(new LightData());
-        final InsightProcessor insightProcessor = insightBuilder.build();
-
-        environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO, deviceDataDAO, deviceDAO, insightProcessor, sleepLabelDAO));
-
         final AmazonDynamoDB prefsClient = new AmazonDynamoDBClient(awsCredentialsProvider, clientConfiguration);
         prefsClient.setEndpoint(configuration.getPreferencesDBConfiguration().getEndpoint());
         final AccountPreferencesDAO accountPreferencesDAO = new AccountPreferencesDynamoDB(prefsClient, configuration.getPreferencesDBConfiguration().getTableName());
@@ -346,6 +335,19 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);
         final FirmwareUpdateStore firmwareUpdateStore = new FirmwareUpdateStore(firmwareUpdateDAO, s3Client, "hello-firmware");
         environment.addResource(new FirmwareResource(firmwareUpdateStore, "hello-firmware", amazonS3)); // TODO: move logic from resource to FirmwareUpdateStore
+
+        final InsightProcessor.Builder insightBuilder = new InsightProcessor.Builder()
+                .withSenseDAOs(deviceDataDAO, deviceDAO)
+                .withTrackerMotionDAOs(trackerMotionDAO)
+                .withInsightsDAOs(trendsInsightsDAO)
+                .withDynamoDBDAOs(aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB)
+                .withPreferencesDAO(accountPreferencesDAO)
+                .withAccountInfoProcessor(accountInfoProcessor)
+                .withLightData(new LightData());
+        final InsightProcessor insightProcessor = insightBuilder.build();
+
+        environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO, deviceDataDAO, deviceDAO, insightProcessor, sleepLabelDAO));
+
 
         LOGGER.debug("{}", DateTime.now(DateTimeZone.UTC).getMillis());
 

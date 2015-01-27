@@ -9,6 +9,8 @@ import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Insights.InsightCard;
+import com.hello.suripu.core.preferences.AccountPreference;
+import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
@@ -21,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -37,6 +40,7 @@ public class InsightProcessor {
     private final TrackerMotionDAO trackerMotionDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
+    private final AccountPreferencesDAO preferencesDAO;
     private final LightData lightData;
     private final AccountInfoProcessor accountInfoProcessor;
 
@@ -46,6 +50,7 @@ public class InsightProcessor {
                             final TrackerMotionDAO trackerMotionDAO,
                             final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
                             final InsightsDAODynamoDB insightsDAODynamoDB,
+                            final AccountPreferencesDAO preferencesDAO,
                             final AccountInfoProcessor accountInfoProcessor,
                             final LightData lightData
                             ) {
@@ -55,6 +60,7 @@ public class InsightProcessor {
         this.trackerMotionDAO = trackerMotionDAO;
         this.scoreDAODynamoDB = scoreDAODynamoDB;
         this.insightsDAODynamoDB = insightsDAODynamoDB;
+        this.preferencesDAO = preferencesDAO;
         this.lightData = lightData;
         this.accountInfoProcessor = accountInfoProcessor;
     }
@@ -93,7 +99,8 @@ public class InsightProcessor {
                 break;
             case 2:
                 final AccountInfo.SleepTempType tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
-                insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref);
+                final AccountPreference.TemperatureUnit tempUnit = this.getTemperatureUnitString(accountId);
+                insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref, tempUnit);
                 break;
             default:
                 break; // TODO: rm debug, lights insight is all we have
@@ -142,7 +149,8 @@ public class InsightProcessor {
             insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
         } else if (category == InsightCard.Category.TEMPERATURE) {
             final AccountInfo.SleepTempType tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
-            insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref);
+            final AccountPreference.TemperatureUnit tempUnit = this.getTemperatureUnitString(accountId);
+            insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref, tempUnit);
         }
 
         if (insightCardOptional.isPresent()) {
@@ -171,6 +179,18 @@ public class InsightProcessor {
         return duration.toStandardDays().getDays();
     }
 
+    private AccountPreference.TemperatureUnit getTemperatureUnitString(final Long accountId) {
+        final Map<AccountPreference.EnabledPreference, Boolean> preferences = this.preferencesDAO.get(accountId);
+        if (preferences.containsKey(AccountPreference.EnabledPreference.TEMP_CELSIUS)) {
+            final Boolean isCelsius = preferences.get(AccountPreference.EnabledPreference.TEMP_CELSIUS);
+            if (isCelsius) {
+                return AccountPreference.TemperatureUnit.CELSIUS;
+            }
+        }
+        // set default to fahrenheit for now. TODO: Use location
+        return AccountPreference.TemperatureUnit.FAHRENHEIT;
+    }
+
     /**
      * Builder class, too many variables to initialize in the constructor
      */
@@ -181,6 +201,7 @@ public class InsightProcessor {
         private TrackerMotionDAO trackerMotionDAO;
         private AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
         private InsightsDAODynamoDB insightsDAODynamoDB;
+        private AccountPreferencesDAO preferencesDAO;
         private LightData lightData;
         private AccountInfoProcessor accountInfoProcessor;
 
@@ -206,6 +227,10 @@ public class InsightProcessor {
             return this;
         }
 
+        public Builder withPreferencesDAO(final AccountPreferencesDAO preferencesDAO) {
+            this.preferencesDAO = preferencesDAO;
+            return this;
+        }
         public Builder withAccountInfoProcessor(final AccountInfoProcessor processor) {
             this.accountInfoProcessor = processor;
             return this;
@@ -221,6 +246,7 @@ public class InsightProcessor {
                     trendsInsightsDAO,
                     trackerMotionDAO,
                     scoreDAODynamoDB, insightsDAODynamoDB,
+                    preferencesDAO,
                     accountInfoProcessor,
                     lightData);
         }

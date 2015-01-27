@@ -15,7 +15,8 @@ public class AccountPreferenceTest {
     @Test
     public void testSerialization() throws IOException {
         final ObjectMapper mapper = new ObjectMapper();
-        final AccountPreference pref = new AccountPreference(AccountPreference.EnabledPreference.ENHANCED_AUDIO, Boolean.FALSE);
+        //final AccountPreference pref = new AccountPreference("ENHANCED_AUDIO", Boolean.FALSE);
+        final AccountPreference pref = new AccountPreference(AccountPreference.EnabledPreference.TEMP_CELSIUS, Boolean.FALSE);
         final String prefString = mapper.writeValueAsString(pref);
 
         final AccountPreference preference = mapper.readValue(prefString, AccountPreference.class);
