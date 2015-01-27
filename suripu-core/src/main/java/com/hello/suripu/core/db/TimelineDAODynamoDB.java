@@ -78,11 +78,11 @@ public class TimelineDAODynamoDB {
     }
 
     @Timed
-    public ImmutableList<Timeline> getTimelinesForDate(long accountId, final DateTime date){
+    public ImmutableList<Timeline> getTimelinesForDate(long accountId, final DateTime targetDateOfNightLocalUTC){
         final Collection<DateTime> convertedParam = new ArrayList<DateTime>();
-        convertedParam.add(date);
+        convertedParam.add(targetDateOfNightLocalUTC);
         final ImmutableMap<DateTime, ImmutableList<Timeline>> result = this.getTimelinesForDates(accountId, convertedParam);
-        return result.get(date);
+        return result.get(targetDateOfNightLocalUTC);
     }
 
     @Timed
@@ -236,9 +236,9 @@ public class TimelineDAODynamoDB {
 
 
     @Timed
-    public void setEventsForDate(long accountId, final DateTime dateOfTheNight, final List<Timeline> data){
+    public void setTimelinesForDate(long accountId, final DateTime dateOfTheNightLocalUTC, final List<Timeline> data){
         final Map<DateTime, List<Timeline>> convertedParam = new HashMap<>();
-        convertedParam.put(dateOfTheNight, data);
+        convertedParam.put(dateOfTheNightLocalUTC, data);
         setTimelinesForDates(accountId, convertedParam);
     }
 

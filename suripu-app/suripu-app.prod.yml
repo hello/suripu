@@ -231,6 +231,10 @@ kinesis:
     batch_pill_data : batch_pill_data
     sense_sensors_data : sense_sensors_data
 
-
 question_configs:
   num_skips : 5
+
+timeline_db:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: timeline

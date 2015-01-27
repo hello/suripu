@@ -26,6 +26,7 @@ import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
+import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
@@ -113,6 +114,11 @@ public class TimeLineWorkerCommand extends ConfiguredCommand<TimeLineWorkerConfi
                 configuration.getSleepScoreVersion()
         );
 
+        final AmazonDynamoDB dynamoDBTimelineClient = dynamoDBClientFactory.getForEndpoint(configuration.getTimelineDBConfiguration().getEndpoint());
+        final TimelineDAODynamoDB timelineDAODynamoDB = new TimelineDAODynamoDB(
+                dynamoDBTimelineClient,
+                configuration.getTimelineDBConfiguration().getTableName());
+
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
@@ -154,6 +160,7 @@ public class TimeLineWorkerCommand extends ConfiguredCommand<TimeLineWorkerConfi
                 mergedUserInfoDynamoDB,
                 ringTimeDAODynamoDB,
                 pillKeyStore,
+                timelineDAODynamoDB,
                 configuration);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();

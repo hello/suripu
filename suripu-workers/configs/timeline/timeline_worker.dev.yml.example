@@ -140,3 +140,8 @@ pill_key_store_dynamo_db:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: pill_key_store
+
+timeline_db:
+    endpoint : http://localhost:7777
+    region: us-east-1
+    table_name: timeline

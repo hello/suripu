@@ -1,5 +1,6 @@
 package com.hello.suripu.workers.timeline;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
@@ -9,6 +10,7 @@ import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
+import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.util.DateTimeUtil;
@@ -33,12 +35,14 @@ public class TimeLineRecordProcessor extends HelloBaseRecordProcessor {
     private final TimeLineWorkerConfiguration configuration;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
+    private final TimelineDAODynamoDB timelineDAODynamoDB;
     private final KeyStore pillKeyStore;
 
     public TimeLineRecordProcessor(final TimelineProcessor timelineProcessor,
                                    final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                    final RingTimeDAODynamoDB ringTimeDAODynamoDB,
                                    final KeyStore pillKeyStore,
+                                   final TimelineDAODynamoDB timelineDAODynamoDB,
                                    final TimeLineWorkerConfiguration configuration){
 
         this.timelineProcessor = timelineProcessor;
@@ -46,6 +50,7 @@ public class TimeLineRecordProcessor extends HelloBaseRecordProcessor {
         this.pillKeyStore = pillKeyStore;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
+        this.timelineDAODynamoDB = timelineDAODynamoDB;
 
     }
 
@@ -88,6 +93,15 @@ public class TimeLineRecordProcessor extends HelloBaseRecordProcessor {
             for(final DateTime targetDateLocalUTC:accountTargetDatesMap.get(accountId)) {
                 final List<Timeline> timelines = this.timelineProcessor.retrieveTimelines(accountId,
                         targetDateLocalUTC.toString(DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT)));
+
+                try{
+                    this.timelineDAODynamoDB.setTimelinesForDate(accountId, targetDateLocalUTC, timelines);
+                    LOGGER.info("Timeline at {} saved for account {}.", targetDateLocalUTC, accountId);
+                }catch (AmazonServiceException aex){
+                    LOGGER.error("AWS error, save timeline for account {} failed, error {}", accountId, aex.getMessage());
+                }catch (Exception ex){
+                    LOGGER.error("Save timeline for account {} failed, error {}", accountId, ex.getMessage());
+                }
             }
         }
     }

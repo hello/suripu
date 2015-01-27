@@ -169,3 +169,8 @@ sleep_score_db:
     table_name: sleep_score
 sleep_score_version: v_0_1
 score_threshold : 15 # minutes bucket for sleep-scores
+
+timeline_db:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: timeline

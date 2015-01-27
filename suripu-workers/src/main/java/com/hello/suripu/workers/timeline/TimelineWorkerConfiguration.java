@@ -121,4 +121,12 @@ public class TimeLineWorkerConfiguration extends WorkerConfiguration {
     @JsonProperty("pill_key_store_dynamo_db")
     private DynamoDBConfiguration pillKeyStoreDynamoDBConfiguration;
     public DynamoDBConfiguration getPillKeyStoreDynamoDBConfiguration() { return pillKeyStoreDynamoDBConfiguration; }
+
+    @Valid
+    @NotNull
+    @JsonProperty("timeline_db")
+    private DynamoDBConfiguration timelineDBConfiguration;
+    public DynamoDBConfiguration getTimelineDBConfiguration(){
+        return this.timelineDBConfiguration;
+    }
 }
