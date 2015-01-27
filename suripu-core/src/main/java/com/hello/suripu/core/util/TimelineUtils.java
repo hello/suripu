@@ -476,12 +476,12 @@ public class TimelineUtils {
 
         if (reportSleepDuration) {
             // report sleep duration
-            return String.format("You slept for a total of **%.1f hours**, soundly for %.1f hours, (%d%%) and moved %d times",
+            return String.format("You slept for a total of **%.1f hours**, soundly for %.1f hours (%d%%), and moved %d times",
                     sleepDurationInHours, soundDurationInHours, percentageOfSoundSleep, sleepStats.numberOfMotionEvents);
         }
 
         // report in-bed time
-        return String.format("You were in bed for a total of **%.1f hours**, slept soundly for %.1f hours, (%d%%) and moved %d times",
+        return String.format("You were in bed for a total of **%.1f hours**, slept soundly for %.1f hours (%d%%), and moved %d times",
                 sleepDurationInHours, soundDurationInHours, percentageOfSoundSleep, sleepStats.numberOfMotionEvents);
 
     }
