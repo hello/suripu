@@ -486,6 +486,11 @@ public class TimelineUtils {
 
     }
 
+    public static List<Insight> generatePresleepInsights(final Long accountId, final DateTime sleepTimeLocal) {
+        final List<Insight> generatedInsights = new ArrayList<>();
+        return generatedInsights;
+    }
+
     public static List<Insight> generateRandomInsights(int seed) {
         final Random r = new Random(seed);
         final List<Insight> insights = new ArrayList<>();
