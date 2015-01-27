@@ -1,9 +1,11 @@
 package com.hello.suripu.core.models;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 import com.hello.suripu.core.util.EventTypeSerializer;
 import com.hello.suripu.core.util.EventUtil;
@@ -41,10 +43,10 @@ public class SleepSegment implements Comparable {
     private final Event event;
 
     @JsonProperty("id")
-    final public Long id;
+    public final Long id;
 
     @JsonProperty("sensors")
-    final public List<SensorReading> sensors;
+    public final List<SensorReading> sensors;
 
     @JsonProperty("sleep_depth")
     public Integer getSleepDepth(){
@@ -88,6 +90,26 @@ public class SleepSegment implements Comparable {
         return this.event;
     }
 
+
+    @JsonCreator
+    public SleepSegment(@JsonProperty("id") final Long id,
+                        @JsonProperty("sensors") final List<SensorReading> sensors,
+                        @JsonProperty("sleep_depth") final int sleepDepth,
+                        @JsonProperty("sound") final SoundInfo soundInfo,
+                        @JsonProperty("timestamp") final long timestamp,
+                        @JsonProperty("duration") final long duration,
+                        @JsonProperty("offset_millis") final int offsetMillis,
+                        @JsonProperty("event_type") final Event.Type type,
+                        @JsonProperty("message") final String message){
+        this.id = id;
+        this.sensors = sensors;
+        this.event = Event.createFromType(type,
+                timestamp, timestamp + duration, offsetMillis,
+                message == null ? Optional.<String>absent() : Optional.of(message),
+                soundInfo == null ? Optional.<SoundInfo>absent() : Optional.of(soundInfo),
+                Optional.of(sleepDepth));
+
+    }
 
     public SleepSegment(final Long id,
                         final Event event,

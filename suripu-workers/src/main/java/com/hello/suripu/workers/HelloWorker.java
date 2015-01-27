@@ -7,6 +7,7 @@ import com.hello.suripu.workers.logs.LogIndexerWorkerCommand;
 import com.hello.suripu.workers.pill.PillWorkerCommand;
 import com.hello.suripu.workers.pillscorer.PillScoreWorkerCommand;
 import com.hello.suripu.workers.sense.SenseSaveWorkerCommand;
+import com.hello.suripu.workers.timeline.TimeLineWorkerCommand;
 import com.yammer.dropwizard.config.Bootstrap;
 
 import java.util.TimeZone;
@@ -26,6 +27,7 @@ public class HelloWorker extends Worker<HelloWorkerConfiguration> {
         bootstrap.addCommand(new AlarmWorkerCommand("smart_alarm", "Start smart alarm worker"));
         bootstrap.addCommand(new LogIndexerWorkerCommand("index_logs", "Indexes logs from Kinesis stream into searchify index"));
         bootstrap.addCommand(new InsightsGeneratorWorkerCommand("insights_generator", "generate insights for users"));
+        bootstrap.addCommand(new TimeLineWorkerCommand("timeline", "generate timeline for users"));
     }
 
 }
