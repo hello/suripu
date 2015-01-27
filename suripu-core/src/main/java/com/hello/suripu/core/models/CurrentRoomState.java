@@ -243,10 +243,16 @@ public class CurrentRoomState {
         }
     }
 
-    // TODO -- find right levels
     public static State getSoundState(final float sound, final DateTime dataTimestampUTC) {
-        final State soundState = new State(sound, English.IDEAL_SOUND_MESSAGE, English.SOUND_ADVICE_MESSAGE, State.Condition.IDEAL, dataTimestampUTC, State.Unit.DB);
-        return soundState;
+        // see http://www.noisehelp.com/noise-level-chart.html
+        if (sound > 90.0) {
+            // lawn mower
+            return new State(sound, English.IDEAL_SOUND_MESSAGE, English.SOUND_ADVICE_MESSAGE, State.Condition.ALERT, dataTimestampUTC, State.Unit.DB);
+        } else if (sound > 40.0) {
+            return new State(sound, English.IDEAL_SOUND_MESSAGE, English.SOUND_ADVICE_MESSAGE, State.Condition.WARNING, dataTimestampUTC, State.Unit.DB);
+        } else {
+            return new State(sound, English.IDEAL_SOUND_MESSAGE, English.SOUND_ADVICE_MESSAGE, State.Condition.IDEAL, dataTimestampUTC, State.Unit.DB);
+        }
     }
 
 

@@ -487,13 +487,13 @@ public class TimelineUtils {
 
     }
 
-    public static List<Insight> generatePreSleepInsights(final Map<Sensor, List<Sample>> sensorData, final long sleepTimestamp) {
+    public static List<Insight> generatePreSleepInsights(final Map<Sensor, List<Sample>> sensorData, final long sleepTimestampUTC) {
 
         final List<Insight> generatedInsights = new ArrayList<>();
 
         int startIndex = 0;
         int endIndex = 0;
-        final long startTimestamp = sleepTimestamp - PRESLEEP_WINDOW_IN_MILLIS;
+        final long startTimestamp = sleepTimestampUTC - PRESLEEP_WINDOW_IN_MILLIS;
         for (Sample sample : sensorData.get(Sensor.TEMPERATURE)) {
             if (sample.dateTime < startTimestamp) {
                 startIndex++;
@@ -501,7 +501,7 @@ public class TimelineUtils {
 
             endIndex++;
 
-            if (sample.dateTime > sleepTimestamp) {
+            if (sample.dateTime > sleepTimestampUTC) {
                 break;
             }
         }
@@ -523,7 +523,7 @@ public class TimelineUtils {
             num++;
         }
 
-        final DateTime sleepDateTime = new DateTime(sleepTimestamp, DateTimeZone.UTC);
+        final DateTime sleepDateTime = new DateTime(sleepTimestampUTC, DateTimeZone.UTC);
 
         avgTemp /= num;
         final CurrentRoomState.State temperatureState = CurrentRoomState.getTemperatureState(avgTemp, sleepDateTime, CurrentRoomState.DEFAULT_TEMP_UNIT);
