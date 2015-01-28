@@ -1,16 +1,39 @@
 package com.hello.suripu.core.notifications;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.MobilePushRegistration;
-import com.hello.suripu.core.oauth.AccessToken;
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 
-import java.util.List;
-
+@RegisterMapper(MobilePushRegistrationMapper.class)
 public interface NotificationSubscriptionsDAO {
 
-    public Optional<MobilePushRegistration> getSubscription(final Long accountId, final String deviceToken);
-    public List<MobilePushRegistration> getSubscriptions(final Long accountId);
-    public void subscribe(final Long accountId, final MobilePushRegistration mobilePushRegistration);
-    public boolean unsubscribe(final Long accountId, final String deviceToken);
-    public boolean unsubscribe(final AccessToken accessToken);
+    @SingleValueResult
+    @SqlQuery("SELECT * FROM notifications_subscriptions WHERE account_id = :account_id AND device_token = :device_token")
+    public Optional<MobilePushRegistration> getSubscription(@Bind("account_id") final Long accountId, @Bind("device_token") final String deviceToken);
+
+
+    @SingleValueResult
+    @SqlQuery("SELECT * FROM notifications_subscriptions WHERE device_token = :device_token")
+    public Optional<MobilePushRegistration> getSubscription(@Bind("device_token") final String deviceToken);
+
+
+    @SqlQuery("SELECT * FROM notifications_subscriptions WHERE account_id = :account_id")
+    public ImmutableList<MobilePushRegistration> getSubscriptions(@Bind("account_id") final Long accountId);
+
+    @SqlQuery("SELECT * FROM notifications_subscriptions WHERE device_token = :device_token")
+    public ImmutableList<MobilePushRegistration> getSubscriptionsByDeviceToken(@Bind("device_token") final String deviceToken);
+
+    @SqlUpdate("INSERT INTO notifications_subscriptions (account_id, os, version, app_version, device_token, oauth_token, endpoint, created_at_utc) VALUES(:account_id, :os, :version, :app_version, :device_token, :oauth_token, :endpoint, now())")
+    public void subscribe(final Long accountId, @BindMobilePushRegistration final MobilePushRegistration mobilePushRegistration);
+
+    @SqlUpdate("DELETE FROM notifications_subscriptions WHERE account_id = :account_id AND device_token = :device_token;")
+    public Integer unsubscribe(@Bind("account_id") final Long accountId, @Bind("device_token") final String deviceToken);
+
+    @SqlUpdate("DELETE FROM notifications_subscriptions WHERE access_token = :access_token")
+    public Integer unsubscribe(final String accessToken);
 }
