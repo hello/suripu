@@ -6,6 +6,7 @@ import com.google.common.io.Resources;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
+import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.SleepEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
@@ -241,5 +242,90 @@ public class TimelineUtilsTest {
         assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 5, 1, 57, DateTimeZone.UTC)));
         assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 5, 8, 16, DateTimeZone.UTC)));
         assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 5, 8, 16, DateTimeZone.UTC)));
+    }
+
+    @Test
+    public void testInsertOneMinuteEvent(){
+        final ArrayList<Event> events = new ArrayList<>();
+
+        final DateTime now = DateTime.now();
+        events.add(new NullEvent(now.getMillis(), now.plusMinutes(2).getMillis(), 0, 0));
+
+        List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+                new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0, 0));
+        assertThat(inserted.size(), is(2));
+        assertThat(inserted.get(0).getType(), is(Event.Type.MOTION));
+        assertThat(inserted.get(0).getStartTimestamp(), is(now.getMillis()));
+        assertThat(inserted.get(1).getStartTimestamp(), is(inserted.get(0).getEndTimestamp()));
+    }
+
+    @Test
+    public void testInsertOneMinuteEventReplace(){
+        final ArrayList<Event> events = new ArrayList<>();
+
+        final DateTime now = DateTime.now();
+        events.add(new NullEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0, 0));
+
+        List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+                new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0, 0));
+        assertThat(inserted.size(), is(1));
+        assertThat(inserted.get(0).getType(), is(Event.Type.MOTION));
+        assertThat(inserted.get(0).getStartTimestamp(), is(now.getMillis()));
+    }
+
+    @Test
+    public void testInsertOneMinuteEventNoReplace(){
+        final ArrayList<Event> events = new ArrayList<>();
+
+        final DateTime now = DateTime.now();
+        events.add(new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0, 0));
+
+        List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+                new NullEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0, 0));
+        assertThat(inserted.size(), is(1));
+        assertThat(inserted.get(0).getType(), is(Event.Type.MOTION));
+        assertThat(inserted.get(0).getStartTimestamp(), is(now.getMillis()));
+    }
+
+
+    @Test
+    public void testInsertOneMinuteEventAddToHead(){
+        final ArrayList<Event> events = new ArrayList<>();
+
+        final DateTime now = DateTime.now();
+        events.add(new MotionEvent(now.getMillis(), now.plusMinutes(3).getMillis(), 0, 0));
+
+        List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+                new NullEvent(now.minusMinutes(1).getMillis(), now.getMillis(), 0, 0));
+        assertThat(inserted.size(), is(2));
+        assertThat(inserted.get(0).getType(), is(Event.Type.NONE));
+        assertThat(inserted.get(0).getStartTimestamp(), is(now.minusMinutes(1).getMillis()));
+        assertThat(inserted.get(1).getType(), is(Event.Type.MOTION));
+        assertThat(inserted.get(1).getStartTimestamp(), is(now.getMillis()));
+
+
+        inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+                new NullEvent(now.plusMinutes(1).getMillis(), now.plusMinutes(2).getMillis(), 0, 0));
+        assertThat(inserted.size(), is(2));
+        assertThat(inserted.get(0).getType(), is(Event.Type.MOTION));
+        assertThat(inserted.get(0).getStartTimestamp(), is(now.getMillis()));
+        assertThat(inserted.get(1).getType(), is(Event.Type.NONE));
+        assertThat(inserted.get(1).getStartTimestamp(), is(now.plusMinutes(1).getMillis()));
+    }
+
+    @Test
+    public void testInsertOneMinuteEventAppendToEnd(){
+        final ArrayList<Event> events = new ArrayList<>();
+
+        final DateTime now = DateTime.now();
+        events.add(new MotionEvent(now.getMillis(), now.plusMinutes(3).getMillis(), 0, 0));
+
+        List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+                new NullEvent(now.plusMinutes(3).getMillis(), now.plusMinutes(4).getMillis(), 0, 0));
+        assertThat(inserted.size(), is(2));
+        assertThat(inserted.get(0).getType(), is(Event.Type.MOTION));
+        assertThat(inserted.get(0).getStartTimestamp(), is(now.getMillis()));
+        assertThat(inserted.get(1).getType(), is(Event.Type.NONE));
+        assertThat(inserted.get(1).getStartTimestamp(), is(now.plusMinutes(3).getMillis()));
     }
 }

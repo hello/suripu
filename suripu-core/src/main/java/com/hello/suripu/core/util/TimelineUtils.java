@@ -192,19 +192,19 @@ public class TimelineUtils {
 
     }
 
-    public static List<Event> removeMotionEventsOutsideSleepPeriod(final List<Event> events){
-        boolean isSleeping = false;
+    public static List<Event> removeMotionEventsOutsideBedPeriod(final List<Event> events){
+        boolean isInBed = false;
         final LinkedList<Event> newEventList = new LinkedList<>();
         for(final Event event:events){
-            if(isSleeping == false && event.getType() == Event.Type.SLEEP){
-                isSleeping = true;
+            if(isInBed == false && event.getType() == Event.Type.IN_BED){
+                isInBed = true;
             }
 
-            if(isSleeping && event.getType() == Event.Type.WAKE_UP){
-                isSleeping = false;
+            if(isInBed && event.getType() == Event.Type.OUT_OF_BED){
+                isInBed = false;
             }
 
-            if(isSleeping == false && event.getType() == Event.Type.MOTION){
+            if(isInBed == false && event.getType() == Event.Type.MOTION){
                 newEventList.add(new NullEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth()));
             }else{
                 newEventList.add(event);
@@ -212,6 +212,115 @@ public class TimelineUtils {
         }
 
         return newEventList;
+    }
+
+
+    public static List<Event> insertOneMinuteDurationEvents(final List<Event> eventList, final Event sleepEvent){
+        final ArrayList<Event> result =  new ArrayList<>();
+        boolean inserted = false;
+        for(final Event event:eventList){
+            if(!(event.getStartTimestamp() <= sleepEvent.getStartTimestamp() &&
+                    event.getEndTimestamp() >= sleepEvent.getEndTimestamp())) {
+                result.add(event);
+                continue;
+            }
+            final long startToHere = sleepEvent.getStartTimestamp() - event.getStartTimestamp();
+            final long hereToEnd = event.getEndTimestamp() - sleepEvent.getEndTimestamp();
+
+            if(startToHere == 0 && hereToEnd == 0){
+                if(sleepEvent.getType().getValue() > event.getType().getValue()) {
+                    LOGGER.debug("Replace {} event by {} event", event.getType(), sleepEvent.getType());
+                    result.add(sleepEvent);
+                    inserted = true;
+                    continue;
+                }
+                result.add(event);
+                continue;
+            }
+
+            // s > 0, e > 0
+            // s = 0, e > 0
+            // s > 0, e = 0
+            if(startToHere > 0 && hereToEnd > 0){
+                result.add(Event.extend(event, event.getStartTimestamp() + startToHere, sleepEvent.getStartTimestamp(), event.getSleepDepth()));
+                result.add(sleepEvent);
+                inserted = true;
+                result.add(Event.extend(event, sleepEvent.getEndTimestamp(), event.getEndTimestamp(), event.getSleepDepth()));
+                continue;
+            }
+
+            // s = 0, e > 0
+            // s > 0, e = 0
+            if(startToHere == 0 && hereToEnd > 0){
+                result.add(sleepEvent);
+                inserted = true;
+                result.add(Event.extend(event, sleepEvent.getEndTimestamp(), event.getEndTimestamp(), event.getSleepDepth()));
+                continue;
+            }
+
+            // s > 0, e = 0
+            if(startToHere > 0 && hereToEnd == 0){
+                result.add(Event.extend(event, event.getStartTimestamp() + startToHere, sleepEvent.getStartTimestamp(), event.getSleepDepth()));
+                result.add(sleepEvent);
+                inserted = true;
+                continue;
+            }
+
+        }
+
+        if(!inserted){
+            if(sleepEvent.getEndTimestamp() <= eventList.get(0).getStartTimestamp()){
+                result.add(0, sleepEvent);
+            }
+
+            if(sleepEvent.getStartTimestamp() >= eventList.get(eventList.size() - 1).getEndTimestamp()){
+                result.add(sleepEvent);
+            }
+        }
+        return result;
+    }
+
+    public static List<Event> smoothEvents(final List<Event> eventList){
+        if(eventList.size() == 0){
+            return eventList;
+        }
+
+        final ArrayList<Event> result = new ArrayList<>();
+        Event firstEventOfThatType = null;
+        Event lastEventOfThatType = null;
+        int maxSleepDepth = 0;
+
+        for(final Event event:eventList){
+            if(event.getType() == Event.Type.MOTION){
+                if(firstEventOfThatType == null){
+                    firstEventOfThatType = event;
+                    lastEventOfThatType = event;
+                    maxSleepDepth = event.getSleepDepth();
+                    continue;
+                }
+
+                lastEventOfThatType = event;
+                if(event.getSleepDepth() > maxSleepDepth){
+                    maxSleepDepth = event.getSleepDepth();
+                }
+                continue;
+            }
+
+            if(lastEventOfThatType != null){
+                final Event smoothedEvent = Event.extend(firstEventOfThatType, firstEventOfThatType.getStartTimestamp(), lastEventOfThatType.getEndTimestamp(), maxSleepDepth);
+                result.add(smoothedEvent);
+            }
+            result.add(event);
+            firstEventOfThatType = null;
+            lastEventOfThatType = null;
+        }
+
+        if(lastEventOfThatType != null){
+            final Event smoothedEvent = Event.extend(firstEventOfThatType, firstEventOfThatType.getStartTimestamp(), lastEventOfThatType.getEndTimestamp(), maxSleepDepth);
+            result.add(smoothedEvent);
+        }
+
+        return result;
     }
 
     public static List<Event> generateAlignedSegmentsByTypeWeight(final List<Event> eventList,

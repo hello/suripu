@@ -14,9 +14,7 @@ import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.Event;
-import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
-import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.SleepEvent;
 import com.hello.suripu.core.models.Events.SunRiseEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
@@ -115,6 +113,7 @@ public class TimelineProcessor {
         }
 
         final List<Event> events = new LinkedList<>();
+        final ArrayList<Event> sleepEvents = new ArrayList<>();
 
         //TODO: get light data by the minute, compute lights out
         Optional<DateTime> lightOutTimeOptional = Optional.absent();
@@ -151,22 +150,16 @@ public class TimelineProcessor {
         Optional<Segment> sleepSegment = Optional.absent();
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
-            final List<Event> sleepEvents = TimelineUtils.getSleepEvents(targetDate, trackerMotions, lightOutTimeOptional, 15);
-            final SleepEvent sleepEvent = (SleepEvent) sleepEvents.get(1);
-            final WakeupEvent wakeupEvent = (WakeupEvent) sleepEvents.get(2);
-
-            final InBedEvent inBedEvent = (InBedEvent) sleepEvents.get(0);
-            final OutOfBedEvent outOfBedEvent = (OutOfBedEvent) sleepEvents.get(sleepEvents.size() - 1);
+            final List<Event> sleepEventsFromAlgorithm = TimelineUtils.getSleepEvents(targetDate, trackerMotions, lightOutTimeOptional, 15);
+            final SleepEvent sleepEvent = (SleepEvent) sleepEventsFromAlgorithm.get(1);
+            final WakeupEvent wakeupEvent = (WakeupEvent) sleepEventsFromAlgorithm.get(2);
 
             if(wakeupEvent.getStartTimestamp() - sleepEvent.getStartTimestamp() > 3 * DateTimeConstants.MILLIS_PER_HOUR){
                 sleepSegment = Optional.of(new Segment(sleepEvent.getStartTimestamp(),
                         wakeupEvent.getStartTimestamp(),
                         wakeupEvent.getTimezoneOffset()));
 
-                events.add(sleepEvent);
-                events.add(wakeupEvent);
-                events.add(inBedEvent);
-                events.add(outOfBedEvent);
+                sleepEvents.addAll(sleepEventsFromAlgorithm);
                 LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
                         new DateTime(sleepSegment.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.get().getOffsetMillis())),
                         new DateTime(sleepSegment.get().getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.get().getOffsetMillis())));
@@ -228,8 +221,14 @@ public class TimelineProcessor {
         final List<Event> mergedEvents = TimelineUtils.generateAlignedSegmentsByTypeWeight(events, DateTimeConstants.MILLIS_PER_MINUTE, 15, false);
         final List<Event> convertedEvents = TimelineUtils.convertLightMotionToNone(mergedEvents, threshold);
         writeMotionMetrics(this.motionEventDistribution, convertedEvents);
-        final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideSleepPeriod(convertedEvents);
-
+        final List<Event> smoothedEvents = TimelineUtils.smoothEvents(convertedEvents);
+        List<Event> eventsWithSleepEvents = smoothedEvents;
+        if(sleepSegment.isPresent()) {
+            for (final Event sleepEvent : sleepEvents){
+                eventsWithSleepEvents = TimelineUtils.insertOneMinuteDurationEvents(eventsWithSleepEvents, sleepEvent);
+            }
+        }
+        final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(eventsWithSleepEvents);
         List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(cleanedUpEvents);
 
         final int lightSleepThreshold = 70; // todo: configurable
