@@ -148,7 +148,7 @@ public class TimelineProcessor {
         final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);
         events.addAll(motionEvents);
 
-        Segment sleepSegment = null;
+        Optional<Segment> sleepSegment = Optional.absent();
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
             final List<Event> sleepEvents = TimelineUtils.getSleepEvents(targetDate, trackerMotions, lightOutTimeOptional, 15);
@@ -158,23 +158,21 @@ public class TimelineProcessor {
             final InBedEvent inBedEvent = (InBedEvent) sleepEvents.get(0);
             final OutOfBedEvent outOfBedEvent = (OutOfBedEvent) sleepEvents.get(sleepEvents.size() - 1);
 
-            sleepSegment = new Segment(sleepEvent.getStartTimestamp(),
-                    wakeupEvent.getStartTimestamp(),
-                    wakeupEvent.getTimezoneOffset());
+            if(wakeupEvent.getStartTimestamp() - sleepEvent.getStartTimestamp() > 3 * DateTimeConstants.MILLIS_PER_HOUR){
+                sleepSegment = Optional.of(new Segment(sleepEvent.getStartTimestamp(),
+                        wakeupEvent.getStartTimestamp(),
+                        wakeupEvent.getTimezoneOffset()));
 
-            if(sleepSegment.getDuration() > 3 * DateTimeConstants.MILLIS_PER_HOUR) {
                 events.add(sleepEvent);
                 events.add(wakeupEvent);
-            }
-
-            if(outOfBedEvent.getStartTimestamp() - inBedEvent.getStartTimestamp() > 3 * DateTimeConstants.MILLIS_PER_HOUR){
                 events.add(inBedEvent);
                 events.add(outOfBedEvent);
+                LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
+                        new DateTime(sleepSegment.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.get().getOffsetMillis())),
+                        new DateTime(sleepSegment.get().getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.get().getOffsetMillis())));
             }
 
-            LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
-                    new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis())),
-                    new DateTime(sleepSegment.getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis())));
+
         }catch (Exception ex){
             LOGGER.error("Generate sleep period from Awake Detection Algorithm failed: {}", ex.getMessage());
         }
@@ -185,8 +183,8 @@ public class TimelineProcessor {
             LOGGER.debug("partner account {}", optionalPartnerAccountId.get());
             // get tracker motions for partner, query time is in UTC, not local_utc
             DateTime startTime = new DateTime(events.get(0).getStartTimestamp(), DateTimeZone.UTC);
-            if(sleepSegment != null){
-                startTime = new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.UTC);
+            if(sleepSegment.isPresent()){
+                startTime = new DateTime(sleepSegment.get().getStartTimestamp(), DateTimeZone.UTC);
             }
             final DateTime endTime = new DateTime(events.get(events.size() - 1).getStartTimestamp(), DateTimeZone.UTC);
 
@@ -200,11 +198,11 @@ public class TimelineProcessor {
         // add sunrise data
         final String sunRiseQueryDateString = targetDate.plusDays(1).toString(DateTimeFormat.forPattern("yyyy-MM-dd"));
         final Optional<DateTime> sunrise = sunData.sunrise(sunRiseQueryDateString); // day + 1
-        if(sunrise.isPresent() && sleepSegment != null) {
+        if(sunrise.isPresent() && sleepSegment.isPresent()) {
             final long sunRiseMillis = sunrise.get().getMillis();
             final SunRiseEvent sunriseEvent = new SunRiseEvent(sunRiseMillis,
                     sunRiseMillis + DateTimeConstants.MILLIS_PER_MINUTE,
-                    sleepSegment.getOffsetMillis(), 0, null);
+                    sleepSegment.get().getOffsetMillis(), 0, null);
 
             // TODO: ADD Feature flipper here
 //            if(feature.userFeatureActive(FeatureFlipper.SOUND_INFO_TIMELINE, accountId, new ArrayList<String>())) {

@@ -413,12 +413,12 @@ public class TimelineUtils {
                 inBedTime = segment.getTimestamp();
             }
 
-            if(segment.getType() == Event.Type.IN_BED && sleepStarted == false){
+            if(segment.getType() == Event.Type.SLEEP && sleepStarted == false){
                 sleepStarted = true;
                 sleepTime = segment.getTimestamp();
             }
 
-            if(segment.getType() == Event.Type.OUT_OF_BED && sleepStarted == true){  //On purpose dangling case, if no wakeup present
+            if(segment.getType() == Event.Type.WAKE_UP && sleepStarted == true){  //On purpose dangling case, if no wakeup present
                 sleepStarted = false;
                 wakeTime = segment.getTimestamp();
             }
