@@ -8,6 +8,7 @@ import com.hello.suripu.workers.pill.S3RecordProcessor;
 import com.hello.suripu.workers.pill.SavePillDataProcessor;
 import com.hello.suripu.workers.pillscorer.PillScoreProcessor;
 import com.hello.suripu.workers.sense.SenseSaveProcessor;
+import com.hello.suripu.workers.timeline.TimelineRecordProcessor;
 import com.librato.rollout.RolloutAdapter;
 import com.librato.rollout.RolloutClient;
 import dagger.Module;
@@ -25,6 +26,7 @@ import javax.inject.Singleton;
         PillScoreProcessor.class,
         SenseSaveProcessor.class,
         InsightsGenerator.class,
+        TimelineRecordProcessor.class
 })
 public class WorkerRolloutModule {
     private final FeatureStore featureStore;
