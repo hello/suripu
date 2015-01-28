@@ -1,13 +1,11 @@
-metrics_enabled : false
 debug: true
-
+metrics_enabled: false
 graphite:
   host: carbon.hostedgraphite.com
   api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
   reporting_interval_in_seconds: 30
   include_metrics:
-    - org.skife
-    - xx-responses
+    - com.yammer
     - com.hello
 
 sensors_db:
@@ -27,27 +25,6 @@ sensors_db:
   properties:
     charSet: UTF-8
 
-  # the maximum amount of time to wait on an empty pool before throwing an exception
-  maxWaitForConnection: 1s
-
-  # the SQL query to run when validating a connection's liveness
-  validationQuery: "/* MyService Health Check */ SELECT 1"
-
-  # the minimum number of connections to keep open
-  minSize: 8
-
-  # the maximum number of connections to keep open
-  maxSize: 32
-
-  # whether or not idle connections should be validated
-  checkConnectionWhileIdle: false
-
-  # how long a connection must be held before it can be validated
-  checkConnectionHealthWhenIdleFor: 10s
-
-  # the maximum lifetime of an idle connection
-  closeConnectionIfIdleFor: 1 minute
-
 common_db:
   # the name of your JDBC driver
   driverClass: org.postgresql.Driver
@@ -56,10 +33,10 @@ common_db:
   user: your postgresql username
 
   # the password
-  password: your postgresql password
+  password: hello ingress user
 
   # the JDBC URL
-  url: jdbc:postgresql://localhost:5432/[your postgresql username]
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
 
   # any properties specific to your JDBC driver:
   properties:
@@ -86,6 +63,32 @@ common_db:
   # the maximum lifetime of an idle connection
   closeConnectionIfIdleFor: 1 minute
 
+insights_db:
+  # the name of your JDBC driver
+  driverClass: org.postgresql.Driver
+
+  # the username
+  user: tim
+
+  # the password
+  password: hello ingress user
+
+  # the JDBC URL
+  url: jdbc:postgresql://localhost:5432/bingo
+
+  # any properties specific to your JDBC driver:
+  properties:
+    charSet: UTF-8
+
+kinesis:
+  endpoint : https://kinesis.us-east-1.amazonaws.com
+  streams :
+      batch_pill_data : batch_pill_data
+
+app_name: TimelineWorkerDev
+
+max_records: 1000
+
 # Logging settings.
 logging:
 
@@ -96,41 +99,7 @@ logging:
   loggers:
 
     # Sets the level for 'com.example.app' to DEBUG.
-    com.hello.suripu: DEBUG
-
-http:
-    port: 5555
-    adminPort: 5556
-
-dynamodb:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: key_store
-
-kinesis:
-  endpoint : https://kinesis.us-east-1.amazonaws.com
-  streams :
-    pill_data : test-pill-suripu
-    audio_features : audio_features
-    activity_stream : activity_stream
-    registrations: registrations
-    encode_audio: encode_audio
-    batch_pill_data : batch_pill_data
-    sense_sensors_data : sense_sensors_data
-
-
-audio_bucket_name : hello-data
-
-timezone_history_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: timezone_history
-
-
-alarm_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: alarm
+    com.hello.suripu.workers: DEBUG
 
 
 ring_time_db:
@@ -138,26 +107,37 @@ ring_time_db:
   region: us-east-1
   table_name: ring_time
 
-alarm_info_db:
+timezone_history_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: timezone_history
+
+alarm_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: alarm
+
+user_info_db:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: alarm_info
 
-sense_logs:
-    private_url : http://:G3KvEnaw2bDdQc@d7q83.api.searchify.com
-    index_name : sense-logs
+features_db:
+    endpoint : http://localhost:7777
+    region: us-east-1
+    table_name: features
 
-room_conditions: 1
+# remember to update version when changing score methods
+sleep_score_db:
+    endpoint : http://localhost:7777
+    region: us-east-1
+    table_name: sleep_score
+sleep_score_version: v_0_1
+score_threshold : 15 # minutes bucket for sleep-scores
 
-sense_upload_configuration:
-  non_peak_hour_lower_bound: 9
-  non_peak_hour_upper_bound: 20
-  week_days_only: true
-  long_interval: 5
-  short_interval: 3
+aggregate_window_size_min: 10
 
-kinesis_logger:
-  stream_name: logs
-  enabled : false
-  buffer_size: 100
-  origin: suripu-service
+timeline_db:
+    endpoint : http://localhost:7777
+    region: us-east-1
+    table_name: timeline

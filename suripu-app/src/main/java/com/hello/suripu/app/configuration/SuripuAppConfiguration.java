@@ -241,4 +241,12 @@ public class SuripuAppConfiguration extends Configuration {
     private DynamoDBConfiguration pillKeyStoreDynamoDBConfiguration;
     public DynamoDBConfiguration getPillKeyStoreDynamoDBConfiguration() { return pillKeyStoreDynamoDBConfiguration; }
 
+    @Valid
+    @NotNull
+    @JsonProperty("timeline_db")
+    private DynamoDBConfiguration timelineDBConfiguration;
+    public DynamoDBConfiguration getTimelineDBConfiguration(){
+        return this.timelineDBConfiguration;
+    }
+
 }

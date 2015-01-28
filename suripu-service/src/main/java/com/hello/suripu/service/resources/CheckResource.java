@@ -46,7 +46,8 @@ public class CheckResource {
         final Optional<byte[]> keyBytes = senseKeyStore.get(senseId);
         if(!keyBytes.isPresent()) {
             LOGGER.warn("Could not find keys for senseId = {}", senseId);
-            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity("not found").type(MediaType.TEXT_PLAIN_TYPE).build());
+            // DO not leak that the device id exists or not. return forbidden
+            throw new WebApplicationException(Response.status(Response.Status.FORBIDDEN).entity("").type(MediaType.TEXT_PLAIN_TYPE).build());
         }
 
         final SignedMessage signedMessage = SignedMessage.parse(body);

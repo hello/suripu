@@ -145,8 +145,8 @@ public class DeviceResources {
     @Timed
     @Path("/pill/{pill_id}")
     public void unregisterPill(@Scope(OAuthScope.DEVICE_INFORMATION_WRITE) final AccessToken accessToken,
-                               @PathParam("pill_id") String pillId) {
-        final Integer numRows = deviceDAO.unregisterTracker(pillId);
+                               @PathParam("pill_id") String externalPillId) {
+        final Integer numRows = deviceDAO.deletePillPairing(externalPillId, accessToken.accountId);
         if(numRows == 0) {
             LOGGER.warn("Did not find active pill to unregister");
         }
@@ -160,10 +160,10 @@ public class DeviceResources {
         final String senseId = sensePairedWithAccount.get(0).externalDeviceId;
 
         try {
-            this.mergedUserInfoDynamoDB.deletePillColor(senseId, accessToken.accountId, pillId);
+            this.mergedUserInfoDynamoDB.deletePillColor(senseId, accessToken.accountId, externalPillId);
         }catch (Exception ex){
             LOGGER.error("Delete pill {}'s color from user info table for sense {} and account {} failed: {}",
-                    pillId,
+                    externalPillId,
                     senseId,
                     accessToken.accountId,
                     ex.getMessage());
@@ -175,7 +175,7 @@ public class DeviceResources {
     @Path("/sense/{sense_id}")
     public void unregisterSense(@Scope(OAuthScope.DEVICE_INFORMATION_WRITE) final AccessToken accessToken,
                                @PathParam("sense_id") String senseId) {
-        final Integer numRows = deviceDAO.unregisterSense(senseId);
+        final Integer numRows = deviceDAO.deleteSensePairing(senseId, accessToken.accountId);
         final Optional<UserInfo> alarmInfoOptional = this.mergedUserInfoDynamoDB.unlinkAccountToDevice(accessToken.accountId, senseId);
 
         // WARNING: Shall we throw error if the dynamoDB unlink fail?
@@ -395,7 +395,7 @@ public class DeviceResources {
     @Timed
     @Path("/pill/{email}/status")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<DeviceStatus> getPillStatus(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+    public List<DeviceStatus> getPillStatusByEmail(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                             @PathParam("email") final String email) {
         LOGGER.debug("Fetching pill status for user = {}", email);
         final Optional<Long> accountId = getAccountIdByEmail(email);
@@ -411,6 +411,26 @@ public class DeviceResources {
         }
         return pillStatuses;
     }
+
+
+    @GET
+    @Timed
+    @Path("/pill/id/{pill_id}/status")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<DeviceStatus> getPillStatusByPillId(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                   @PathParam("pill_id") final String pillId) {
+        LOGGER.debug("Fetching pill status for pill like {}", pillId);
+
+        final List<DeviceStatus> pillStatuses = new ArrayList<>();
+        final ImmutableList<DeviceAccountPair> pills = deviceDAO.getPillsByPillIdHint(pillId);
+
+        for (final DeviceAccountPair pill : pills) {
+            LOGGER.debug("{}", pill.internalDeviceId);
+            pillStatuses.addAll(deviceDAO.pillStatusWithBatteryLevel(pill.internalDeviceId));
+        }
+        return pillStatuses;
+    }
+
 
     @GET
     @Timed

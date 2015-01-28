@@ -277,6 +277,7 @@ public class ReceiveResource extends BaseResource {
     }
 
 
+    @Timed
     private RingTime getNextRingTime(final String deviceId, final List<UserInfo> userInfoFromThatDevice){
         RingTime nextRingTimeFromWorker = RingTime.createEmpty();
         RingTime nextRingTime = RingTime.createEmpty();
@@ -344,7 +345,13 @@ public class ReceiveResource extends BaseResource {
                 if (nextRingTimeFromTemplate.expectedRingTimeUTC == nextRingTimeFromWorker.expectedRingTimeUTC) {
                     // on-the-fly and ring from worker are from the same alarm, use the one from worker
                     // since it is "smart"
-                    nextRingTime = nextRingTimeFromWorker;
+                    final DateTime now = Alarm.Utils.alignToMinuteGranularity(DateTime.now().withZone(userTimeZoneOptional.get()));
+                    if(now.isAfter(nextRingTimeFromWorker.actualRingTimeUTC)){
+                        // The smart alarm already took off, do not ring twice!
+                        nextRingTime = RingTime.createEmpty();
+                    }else {
+                        nextRingTime = nextRingTimeFromWorker;
+                    }
                 }
 
                 if (nextRingTimeFromTemplate.expectedRingTimeUTC > nextRingTimeFromWorker.expectedRingTimeUTC) {
@@ -371,7 +378,7 @@ public class ReceiveResource extends BaseResource {
                 }
             }
 
-            LOGGER.debug("Next ring time: {}", new DateTime(nextRingTime.actualRingTimeUTC, userTimeZoneOptional.get()));
+            LOGGER.debug("{} next ring time: {}", new DateTime(nextRingTime.actualRingTimeUTC, userTimeZoneOptional.get()));
 
 
         }
@@ -523,31 +530,16 @@ public class ReceiveResource extends BaseResource {
             }
 
 
-            if (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceName, groups)) {
+            if (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceName, groups) || groups.contains("chris-dev")) {
                 responseBuilder.setBatchSize(1);
             } else {
-                final Long userNextAlarmTimestamp = nextRingTime.expectedRingTimeUTC; // This must be expected time, not actual.
-                // Alter upload cycles based on date-time
-                final Integer uploadInterval = UploadSettings.computeUploadIntervalPerUserPerSetting(now, senseUploadConfiguration);
-                responseBuilder.setBatchSize(uploadInterval);
 
-                // Boost upload cycle based on expected alarm deadline.
-                final Integer adjustedUploadInterval = UploadSettings.adjustUploadIntervalInMinutes(now.getMillis(), uploadInterval, userNextAlarmTimestamp);
-                if(adjustedUploadInterval < uploadInterval){
-                    responseBuilder.setBatchSize(adjustedUploadInterval);
-                }
+                final int uploadCycle = computeNextUploadInterval(nextRingTime, now, this.senseUploadConfiguration);
+                responseBuilder.setBatchSize(uploadCycle);
 
-                // Prolong upload cycle so Sense can safely pass ring time
-                if(now.getMillis() - nextRingTime.actualRingTimeUTC <= 2 * DateTimeConstants.MILLIS_PER_MINUTE){
-                    final int uploadCycleThatPassRingTime = ringOffsetFromNowInSecond / DateTimeConstants.SECONDS_PER_MINUTE + 1;
-                    responseBuilder.setBatchSize(uploadCycleThatPassRingTime);
-                }
-
-                if (groups.contains("chris-dev")) {
-                    responseBuilder.setBatchSize(1);
-                }
             }
 
+            LOGGER.info("{} batch size set to {}", deviceName, responseBuilder.getBatchSize());
             responseBuilder.setAudioControl(audioControl);
             setPillColors(userInfoList, responseBuilder);
         }else{
@@ -569,6 +561,39 @@ public class ReceiveResource extends BaseResource {
         }
 
         return signedResponse.get();
+    }
+
+
+    public static int computeNextUploadInterval(final RingTime nextRingTime, final DateTime now, final SenseUploadConfiguration senseUploadConfiguration){
+        int uploadInterval = 1;
+        final Long userNextAlarmTimestamp = nextRingTime.expectedRingTimeUTC; // This must be expected time, not actual.
+        // Alter upload cycles based on date-time
+        uploadInterval = UploadSettings.computeUploadIntervalPerUserPerSetting(now, senseUploadConfiguration);
+
+        // Boost upload cycle based on expected alarm deadline.
+        final Integer adjustedUploadInterval = UploadSettings.adjustUploadIntervalInMinutes(now.getMillis(), uploadInterval, userNextAlarmTimestamp);
+        if(adjustedUploadInterval < uploadInterval){
+            uploadInterval = adjustedUploadInterval;
+        }
+
+        // Prolong upload cycle so Sense can safely pass ring time
+        uploadInterval = computePassRingTimeUploadInterval(nextRingTime, now, uploadInterval);
+
+        /*if(uploadInterval > senseUploadConfiguration.getLongInterval()){
+            uploadInterval = senseUploadConfiguration.getLongInterval();
+        }*/
+
+        return uploadInterval;
+    }
+
+    public static int computePassRingTimeUploadInterval(final RingTime nextRingTime, final DateTime now, final int adjustedUploadCycle){
+        final int ringTimeOffsetFromNowMillis = (int)(nextRingTime.actualRingTimeUTC - now.getMillis());
+        if(ringTimeOffsetFromNowMillis <= 2 * DateTimeConstants.MILLIS_PER_MINUTE && ringTimeOffsetFromNowMillis > 0){
+            final int uploadCycleThatPassRingTime = ringTimeOffsetFromNowMillis / DateTimeConstants.MILLIS_PER_MINUTE + 1;
+            return uploadCycleThatPassRingTime;
+        }
+
+        return adjustedUploadCycle;
     }
 
 

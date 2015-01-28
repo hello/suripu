@@ -97,6 +97,13 @@ public interface DeviceDAO {
     @SqlUpdate("UPDATE account_device_map SET active = FALSE, last_updated = NOW() WHERE device_id = :device_id and active = TRUE;")
     Integer unregisterSense(@Bind("device_id") final String id);
 
+
+    @SqlUpdate("DELETE FROM account_tracker_map WHERE device_id = :device_id and account_id = :account_id;")
+    Integer deletePillPairing(@Bind("device_id") final String id, @Bind("account_id") Long accountId);
+
+    @SqlUpdate("DELETE FROM account_device_map WHERE device_id = :device_id and account_id = :account_id;")
+    Integer deleteSensePairing(@Bind("device_id") final String senseId, @Bind("account_id") Long accountId);
+
     @SqlUpdate("UPDATE account_device_map SET active = FALSE, last_updated = NOW() WHERE device_id = :device_id AND account_id =:account_id AND active = TRUE;")
     Integer unregisterSenseByUser(@Bind("device_id") final String id, @Bind("account_id") final Long accountId);
 
@@ -132,4 +139,10 @@ public interface DeviceDAO {
             @Bind("device_id") final String deviceId,
             @Bind("max_devices") final Long maxDevices
     );
+
+    @RegisterMapper(DeviceAccountPairMapper.class)
+    @SingleValueResult(DeviceAccountPair.class)
+    @SqlQuery("SELECT * FROM account_tracker_map WHERE device_id LIKE '%'||:pill_id||'%' ORDER BY id LIMIT 10;")
+    ImmutableList<DeviceAccountPair> getPillsByPillIdHint(@Bind("pill_id") final String pillId);
+
 }

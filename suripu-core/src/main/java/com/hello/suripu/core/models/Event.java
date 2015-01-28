@@ -1,6 +1,8 @@
 package com.hello.suripu.core.models;
 
+import com.amazonaws.services.cloudfront.model.InvalidArgumentException;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.LightEvent;
 import com.hello.suripu.core.models.Events.LightsOutEvent;
@@ -181,6 +183,73 @@ public abstract class Event {
                 return new LightsOutEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
             default:
                 return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+
+        }
+    }
+
+    public static Event createFromType(final Type type,
+                                       final long startTimestamp, final long endTimestamp, final int offsetMillis,
+                                       final Optional<String> messageOptional,
+                                       final Optional<SleepSegment.SoundInfo> soundInfoOptional,
+                                       final Optional<Integer> sleepDepth){
+        switch (type){
+            case MOTION:
+                if(!sleepDepth.isPresent()){
+                    throw new InvalidArgumentException("sleepDepth required.");
+                }
+                return new MotionEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
+            case SLEEP_MOTION:
+                if(!sleepDepth.isPresent()){
+                    throw new InvalidArgumentException("sleepDepth required.");
+                }
+                return new SleepMotionEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
+            case SLEEP:
+                if(!messageOptional.isPresent()){
+                    throw new InvalidArgumentException("message required.");
+                }
+                return new SleepEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
+            case WAKE_UP:
+                return new WakeupEvent(startTimestamp, endTimestamp, offsetMillis);
+            case IN_BED:
+                if(!messageOptional.isPresent()){
+                    throw new InvalidArgumentException("message required.");
+                }
+                return new InBedEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
+            case OUT_OF_BED:
+                return new OutOfBedEvent(startTimestamp, endTimestamp, offsetMillis);
+            case NONE:
+                if(!sleepDepth.isPresent()){
+                    throw new InvalidArgumentException("sleepDepth required.");
+                }
+                return new NullEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
+            case SUNRISE:
+                if(!sleepDepth.isPresent()){
+                    throw new InvalidArgumentException("sleepDepth required.");
+                }
+                return new SunRiseEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get(),
+                        soundInfoOptional.isPresent() ? soundInfoOptional.get(): null);
+            case SUNSET:
+                if(!sleepDepth.isPresent()){
+                    throw new InvalidArgumentException("sleepDepth required.");
+                }
+                return new SunSetEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
+            case PARTNER_MOTION:
+                if(!sleepDepth.isPresent()){
+                    throw new InvalidArgumentException("sleepDepth required.");
+                }
+                return new PartnerMotionEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
+            case LIGHT:
+                if(!messageOptional.isPresent()){
+                    throw new InvalidArgumentException("message required.");
+                }
+                return new LightEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
+            case LIGHTS_OUT:
+                return new LightsOutEvent(startTimestamp, endTimestamp, offsetMillis);
+            default:
+                if(!sleepDepth.isPresent()){
+                    throw new InvalidArgumentException("sleepDepth required.");
+                }
+                return new NullEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
 
         }
     }
