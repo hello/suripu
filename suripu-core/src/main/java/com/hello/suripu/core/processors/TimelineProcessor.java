@@ -120,17 +120,21 @@ public class TimelineProcessor {
         Optional<DateTime> lightOutTimeOptional = Optional.absent();
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
         final Map<Sensor, List<Sample>> sensorData = new HashMap<>();
+
         if (deviceId.isPresent()) {
             final int slotDurationMins = 1;
 
             sensorData.putAll(deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(targetDate.getMillis(),
                     endDate.getMillis(), accountId, deviceId.get(), slotDurationMins));
-            LOGGER.info("Light data size {}", sensorData.get(Sensor.LIGHT).size());
-            if (sensorData.get(Sensor.LIGHT).size() > 0) {
-                final List<Event> lightEvents = TimelineUtils.getLightEvents(sensorData.get(Sensor.LIGHT));
-                if (lightEvents.size() > 0) {
-                    events.addAll(lightEvents);
-                    lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
+
+            if (sensorData.containsKey(Sensor.LIGHT)) {
+                LOGGER.info("Light data size {}", sensorData.get(Sensor.LIGHT).size());
+                if (sensorData.get(Sensor.LIGHT).size() > 0) {
+                    final List<Event> lightEvents = TimelineUtils.getLightEvents(sensorData.get(Sensor.LIGHT));
+                    if (lightEvents.size() > 0) {
+                        events.addAll(lightEvents);
+                        lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
+                    }
                 }
             }
         }

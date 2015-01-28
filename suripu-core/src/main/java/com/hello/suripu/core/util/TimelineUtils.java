@@ -488,6 +488,10 @@ public class TimelineUtils {
 
         final List<Insight> generatedInsights = new ArrayList<>();
 
+        if (sensorData.isEmpty()) {
+            return generatedInsights;
+        }
+
         int startIndex = 0;
         int endIndex = 0;
         final long startTimestamp = sleepTimestampUTC - PRESLEEP_WINDOW_IN_MILLIS;
@@ -503,6 +507,12 @@ public class TimelineUtils {
             }
         }
 
+//        Map<Sensor, Integer> counts = new HashMap<>();
+//        Map<Sensor, Float> averages = new HashMap<>();
+//        for (Sensor sensor : sensorData.keySet()) {
+//            counts.put(sensor, 0);
+//            averages.put(sensor, 0.0f);
+//        }
 
         float avgTemp = 0.0f;
         float avgHumidity = 0.0f;
@@ -512,6 +522,14 @@ public class TimelineUtils {
         float num = 0.0f;
         for (int i = startIndex; i < endIndex; i++) {
 
+//            for (Sensor sensor : averages.keySet()) {
+//                final float average = averages.get(sensor) + sensorData.get(sensor).get(i).value;
+//                averages.put(sensor, average);
+//
+//                final int count = counts.get(sensor) + 1;
+//                counts.put(sensor, count);
+//
+//            }
             avgTemp += sensorData.get(Sensor.TEMPERATURE).get(i).value;
             avgHumidity += sensorData.get(Sensor.HUMIDITY).get(i).value;
             avgParticulate += sensorData.get(Sensor.PARTICULATES).get(i).value;
