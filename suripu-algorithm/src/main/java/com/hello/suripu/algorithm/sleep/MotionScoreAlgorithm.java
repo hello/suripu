@@ -8,7 +8,6 @@ import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.scores.EventScores;
 import com.hello.suripu.algorithm.sleep.scores.SleepDataScoringFunction;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -172,40 +171,6 @@ public class MotionScoreAlgorithm {
         Segment sleep = new Segment(fallAsleepScore.get().timestamp, fallAsleepScore.get().timestamp, fallAsleepData.offsetMillis);
         Segment wakeUp = new Segment(wakeUpScore.get().timestamp, wakeUpScore.get().timestamp, wakeUpData.offsetMillis);
         Segment outOfBed = new Segment(outOfBedScore.get().timestamp, outOfBedScore.get().timestamp, outOfBedData.offsetMillis);
-
-        // Heuristic fix
-        if(sleep.getStartTimestamp() < goToBed.getStartTimestamp()){
-            LOGGER.warn("Go to bed {} later the fall asleep {}, sleep set to go to bed.",
-                    new DateTime(goToBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBed.getOffsetMillis())),
-                    new DateTime(sleep.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleep.getOffsetMillis())));
-            sleep = new Segment(goToBedScore.get().timestamp, goToBedScore.get().timestamp, goToBedData.offsetMillis);
-
-        }
-
-        // Heuristic fix: out of bed time can not be too off from last data point
-        if(timestampOfLastData - outOfBed.getStartTimestamp() >= 3 * DateTimeConstants.MILLIS_PER_HOUR){
-            LOGGER.warn("Out of bed detected at {}, more than last data at {}, event set to last data time.",
-                    new DateTime(wakeUp.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUp.getOffsetMillis())),
-                    new DateTime(timestampOfLastData, DateTimeZone.forOffsetMillis(wakeUp.getOffsetMillis())));
-            outOfBed = new Segment(timestampOfLastData, timestampOfLastData, wakeUp.getOffsetMillis());
-        }
-
-        // Heuristic fix: wake up time can not be too off from out of bed time
-        if(outOfBed.getStartTimestamp() - wakeUp.getStartTimestamp() > 2 * DateTimeConstants.MILLIS_PER_HOUR){
-            LOGGER.warn("Wake up detected at {}, way too far from out of bed at {}, event set to out of bed time.",
-                    new DateTime(wakeUp.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUp.getOffsetMillis())),
-                    new DateTime(outOfBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBed.getOffsetMillis())));
-            wakeUp = new Segment(outOfBed.getStartTimestamp(), outOfBed.getEndTimestamp(), outOfBed.getOffsetMillis());
-        }
-
-        // Heuristic fix: wake up time is later than out of bed, use out of bed because it looks
-        // for the most significant motion
-        if(wakeUp.getStartTimestamp() > outOfBed.getStartTimestamp()){
-            LOGGER.warn("Wake up later than out of bed, wake up {}, out of bed {}, use out of bed as wake up.",
-                    new DateTime(wakeUp.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUp.getOffsetMillis())),
-                    new DateTime(outOfBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBed.getOffsetMillis())));
-            wakeUp = new Segment(outOfBed.getStartTimestamp(), outOfBed.getEndTimestamp(), outOfBed.getOffsetMillis());
-        }
 
         sleepEvents.add(goToBed);
         sleepEvents.add(sleep);

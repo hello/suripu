@@ -21,7 +21,9 @@ public class MotionFeatures {
     public enum FeatureType{
         MAX_AMPLITUDE,
         DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE,
-        DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE
+        DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE,
+        MAX_NO_MOTION_PERIOD,
+        MAX_MOTION_PERIOD
     }
 
     public static Map<FeatureType, List<AmplitudeData>> aggregateData(final Map<FeatureType, List<AmplitudeData>> rawFeatures, final int windowSize){
@@ -47,6 +49,8 @@ public class MotionFeatures {
                     case MAX_AMPLITUDE:
                     case DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE:
                     case DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE:
+                    case MAX_NO_MOTION_PERIOD:
+                    case MAX_MOTION_PERIOD:
                         final double aggregatedMaxAmplitude = NumericalUtils.getMaxAmplitude(window);
                         aggregatedDimension.add(new AmplitudeData(timestamp, aggregatedMaxAmplitude, offsetMillis));
                         break;
@@ -61,6 +65,8 @@ public class MotionFeatures {
                     case MAX_AMPLITUDE:
                     case DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE:
                     case DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE:
+                    case MAX_NO_MOTION_PERIOD:
+                    case MAX_MOTION_PERIOD:
                         final double aggregatedMaxAmplitude = NumericalUtils.getMaxAmplitude(window);
                         aggregatedDimension.add(new AmplitudeData(timestamp, aggregatedMaxAmplitude, offsetMillis));
                         break;
@@ -82,7 +88,8 @@ public class MotionFeatures {
         final HashMap<FeatureType, List<AmplitudeData>> features = new HashMap<>();
 
         int densityCount = 0;
-        int motionSpreadCount = 0;
+        int maxNoMotionPeriodCount = 0;
+        int maxMotionPeriodCount = 0;
         
         for(final AmplitudeData datum:rawData){
             densityWindow.add(datum);
@@ -145,19 +152,33 @@ public class MotionFeatures {
                     features.put(FeatureType.DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE, new LinkedList<AmplitudeData>());
                 }
 
+                if(!features.containsKey(FeatureType.MAX_MOTION_PERIOD)){
+                    features.put(FeatureType.MAX_MOTION_PERIOD, new LinkedList<AmplitudeData>());
+                }
+
+                if(!features.containsKey(FeatureType.MAX_NO_MOTION_PERIOD)){
+                    features.put(FeatureType.MAX_NO_MOTION_PERIOD, new LinkedList<AmplitudeData>());
+                }
+
                 features.get(FeatureType.MAX_AMPLITUDE).add(new AmplitudeData(timestamp, maxBackTrackAmplitude, offsetMillis));
 
-                final double combinedBackward = maxBackTrackAmplitude * densityDrop * (1 + motionSpreadCount);
+                final double combinedBackward = maxBackTrackAmplitude * densityDrop * (1d + maxMotionPeriodCount);
                 features.get(FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE).add(new AmplitudeData(timestamp, combinedBackward, offsetMillis));
 
-                final double combinedForward = maxForwardAmplitude * densityIncrease * (1 + motionSpreadCount);
+                final double combinedForward = maxForwardAmplitude * densityIncrease * 1d / (1d + maxNoMotionPeriodCount);
                 features.get(FeatureType.DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE).add(new AmplitudeData(timestamp, combinedForward, offsetMillis));
 
+                features.get(FeatureType.MAX_MOTION_PERIOD).add(new AmplitudeData(timestamp, maxMotionPeriodCount, offsetMillis));
+                features.get(FeatureType.MAX_NO_MOTION_PERIOD).add(new AmplitudeData(timestamp, maxNoMotionPeriodCount, offsetMillis));
+
                 if(densityMax1 == 0){
-                    motionSpreadCount = 0;
+                    maxMotionPeriodCount = 0;
+                    maxNoMotionPeriodCount++;
                 }else{
-                    motionSpreadCount++;
+                    maxMotionPeriodCount++;
+                    maxNoMotionPeriodCount = 0;
                 }
+
                 densityBuffer1.add(densityBuffer2.removeFirst());
                 densityBuffer1.removeFirst();
 
