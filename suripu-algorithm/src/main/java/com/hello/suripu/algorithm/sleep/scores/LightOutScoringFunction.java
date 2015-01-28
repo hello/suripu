@@ -26,7 +26,7 @@ public class LightOutScoringFunction implements SleepDataScoringFunction<Amplitu
         final long startTimestamp = lightOutTime.getMillis() - LOOK_BACK_TIME_MS;
         final long endTimestamp = lightOutTime.getMillis() + LOOK_BACK_TIME_MS;
         for(final AmplitudeData datum:data){
-            double sleepProbability = 0d;
+            double sleepProbability = 1d;
             if(datum.timestamp >= startTimestamp && datum.timestamp < lightOutTime.getMillis()){
                 sleepProbability = 1d + this.modalityWeight * Double.valueOf(datum.timestamp - startTimestamp) / Double.valueOf(LOOK_BACK_TIME_MS);
             }

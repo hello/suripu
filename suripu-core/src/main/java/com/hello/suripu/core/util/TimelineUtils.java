@@ -192,19 +192,19 @@ public class TimelineUtils {
 
     }
 
-    public static List<Event> removeMotionEventsOutsideSleepPeriod(final List<Event> events){
-        boolean isSleeping = false;
+    public static List<Event> removeMotionEventsOutsideBedPeriod(final List<Event> events){
+        boolean isInBed = false;
         final LinkedList<Event> newEventList = new LinkedList<>();
         for(final Event event:events){
-            if(isSleeping == false && event.getType() == Event.Type.SLEEP){
-                isSleeping = true;
+            if(isInBed == false && event.getType() == Event.Type.IN_BED){
+                isInBed = true;
             }
 
-            if(isSleeping && event.getType() == Event.Type.WAKE_UP){
-                isSleeping = false;
+            if(isInBed && event.getType() == Event.Type.OUT_OF_BED){
+                isInBed = false;
             }
 
-            if(isSleeping == false && event.getType() == Event.Type.MOTION){
+            if(isInBed == false && event.getType() == Event.Type.MOTION){
                 newEventList.add(new NullEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth()));
             }else{
                 newEventList.add(event);
@@ -212,6 +212,115 @@ public class TimelineUtils {
         }
 
         return newEventList;
+    }
+
+
+    public static List<Event> insertOneMinuteDurationEvents(final List<Event> eventList, final Event sleepEvent){
+        final ArrayList<Event> result =  new ArrayList<>();
+        boolean inserted = false;
+        for(final Event event:eventList){
+            if(!(event.getStartTimestamp() <= sleepEvent.getStartTimestamp() &&
+                    event.getEndTimestamp() >= sleepEvent.getEndTimestamp())) {
+                result.add(event);
+                continue;
+            }
+            final long startToHere = sleepEvent.getStartTimestamp() - event.getStartTimestamp();
+            final long hereToEnd = event.getEndTimestamp() - sleepEvent.getEndTimestamp();
+
+            if(startToHere == 0 && hereToEnd == 0){
+                if(sleepEvent.getType().getValue() > event.getType().getValue()) {
+                    LOGGER.debug("Replace {} event by {} event", event.getType(), sleepEvent.getType());
+                    result.add(sleepEvent);
+                    inserted = true;
+                    continue;
+                }
+                result.add(event);
+                continue;
+            }
+
+            // s > 0, e > 0
+            // s = 0, e > 0
+            // s > 0, e = 0
+            if(startToHere > 0 && hereToEnd > 0){
+                result.add(Event.extend(event, event.getStartTimestamp() + startToHere, sleepEvent.getStartTimestamp(), event.getSleepDepth()));
+                result.add(sleepEvent);
+                inserted = true;
+                result.add(Event.extend(event, sleepEvent.getEndTimestamp(), event.getEndTimestamp(), event.getSleepDepth()));
+                continue;
+            }
+
+            // s = 0, e > 0
+            // s > 0, e = 0
+            if(startToHere == 0 && hereToEnd > 0){
+                result.add(sleepEvent);
+                inserted = true;
+                result.add(Event.extend(event, sleepEvent.getEndTimestamp(), event.getEndTimestamp(), event.getSleepDepth()));
+                continue;
+            }
+
+            // s > 0, e = 0
+            if(startToHere > 0 && hereToEnd == 0){
+                result.add(Event.extend(event, event.getStartTimestamp() + startToHere, sleepEvent.getStartTimestamp(), event.getSleepDepth()));
+                result.add(sleepEvent);
+                inserted = true;
+                continue;
+            }
+
+        }
+
+        if(!inserted){
+            if(sleepEvent.getEndTimestamp() <= eventList.get(0).getStartTimestamp()){
+                result.add(0, sleepEvent);
+            }
+
+            if(sleepEvent.getStartTimestamp() >= eventList.get(eventList.size() - 1).getEndTimestamp()){
+                result.add(sleepEvent);
+            }
+        }
+        return result;
+    }
+
+    public static List<Event> smoothEvents(final List<Event> eventList){
+        if(eventList.size() == 0){
+            return eventList;
+        }
+
+        final ArrayList<Event> result = new ArrayList<>();
+        Event firstEventOfThatType = null;
+        Event lastEventOfThatType = null;
+        int maxSleepDepth = 0;
+
+        for(final Event event:eventList){
+            if(event.getType() == Event.Type.MOTION){
+                if(firstEventOfThatType == null){
+                    firstEventOfThatType = event;
+                    lastEventOfThatType = event;
+                    maxSleepDepth = event.getSleepDepth();
+                    continue;
+                }
+
+                lastEventOfThatType = event;
+                if(event.getSleepDepth() > maxSleepDepth){
+                    maxSleepDepth = event.getSleepDepth();
+                }
+                continue;
+            }
+
+            if(lastEventOfThatType != null){
+                final Event smoothedEvent = Event.extend(firstEventOfThatType, firstEventOfThatType.getStartTimestamp(), lastEventOfThatType.getEndTimestamp(), maxSleepDepth);
+                result.add(smoothedEvent);
+            }
+            result.add(event);
+            firstEventOfThatType = null;
+            lastEventOfThatType = null;
+        }
+
+        if(lastEventOfThatType != null){
+            final Event smoothedEvent = Event.extend(firstEventOfThatType, firstEventOfThatType.getStartTimestamp(), lastEventOfThatType.getEndTimestamp(), maxSleepDepth);
+            result.add(smoothedEvent);
+        }
+
+        return result;
     }
 
     public static List<Event> generateAlignedSegmentsByTypeWeight(final List<Event> eventList,
@@ -413,12 +522,12 @@ public class TimelineUtils {
                 inBedTime = segment.getTimestamp();
             }
 
-            if(segment.getType() == Event.Type.IN_BED && sleepStarted == false){
+            if(segment.getType() == Event.Type.SLEEP && sleepStarted == false){
                 sleepStarted = true;
                 sleepTime = segment.getTimestamp();
             }
 
-            if(segment.getType() == Event.Type.OUT_OF_BED && sleepStarted == true){  //On purpose dangling case, if no wakeup present
+            if(segment.getType() == Event.Type.WAKE_UP && sleepStarted == true){  //On purpose dangling case, if no wakeup present
                 sleepStarted = false;
                 wakeTime = segment.getTimestamp();
             }
@@ -688,23 +797,27 @@ public class TimelineUtils {
         final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions);
         final List<AmplitudeData> dataWithGapFilled = dataSource.getDataForDate(targetDateLocalUTC.withTimeAtStartOfDay());
 
-        final Map<MotionFeatures.FeatureType, List<AmplitudeData>> motionFeatures = MotionFeatures.generateTimestampAlignedFeatures(dataWithGapFilled, smoothWindowSizeInMinutes);
-
-        LOGGER.info("smoothed data size {}", motionFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE).size());
+        final int featureWindowSizeInMinutes = smoothWindowSizeInMinutes;
+        final Map<MotionFeatures.FeatureType, List<AmplitudeData>> motionFeatures = MotionFeatures.generateTimestampAlignedFeatures(dataWithGapFilled, featureWindowSizeInMinutes);
+        final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures = MotionFeatures.aggregateData(motionFeatures, smoothWindowSizeInMinutes);
+        LOGGER.info("smoothed data size {}", aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE).size());
 
         final ArrayList<SleepDataScoringFunction> scoringFunctions = new ArrayList<>();
 
         int featureDimension = 1;
 
-        final Map<Long, List<AmplitudeData>> matrix = MotionScoreAlgorithm.createFeatureMatrix(motionFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE));
+        final Map<Long, List<AmplitudeData>> matrix = MotionScoreAlgorithm.createFeatureMatrix(aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE));
         scoringFunctions.add(new AmplitudeDataScoringFunction());
 
-        featureDimension = MotionScoreAlgorithm.addToFeatureMatrix(matrix, motionFeatures.get(MotionFeatures.FeatureType.DENSITY_DECADE_BACKTRACK_MAX_AMPLITUDE));
-        scoringFunctions.add(new MotionDensityScoringFunction());
+        featureDimension = MotionScoreAlgorithm.addToFeatureMatrix(matrix, aggregatedFeatures.get(MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE));
+        scoringFunctions.add(new MotionDensityScoringFunction(MotionDensityScoringFunction.ScoreType.SLEEP));
+
+        featureDimension = MotionScoreAlgorithm.addToFeatureMatrix(matrix, aggregatedFeatures.get(MotionFeatures.FeatureType.DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE));
+        scoringFunctions.add(new MotionDensityScoringFunction(MotionDensityScoringFunction.ScoreType.WAKE_UP));
 
         if(lightOutTimeOptional.isPresent()) {
             final LinkedList<AmplitudeData> lightFeature = new LinkedList<>();
-            for (final AmplitudeData amplitudeData : motionFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE)) {
+            for (final AmplitudeData amplitudeData : aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE)) {
                 // Pad the light data
                 lightFeature.add(new AmplitudeData(amplitudeData.timestamp, 0, amplitudeData.offsetMillis));
 
@@ -720,7 +833,7 @@ public class TimelineUtils {
 
         final MotionScoreAlgorithm sleepDetectionAlgorithm = new MotionScoreAlgorithm(matrix,
                 featureDimension,  // modality
-                motionFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE).size(),  // num of data.
+                aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE).size(),  // num of data.
                 scoringFunctions);
 
         final List<Segment> segments = sleepDetectionAlgorithm.getSleepEvents();
@@ -747,9 +860,108 @@ public class TimelineUtils {
                 outOfBedSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
                 outOfBedSegment.getOffsetMillis()));
 
-        return events;
+        return sleepEventsHeuristicFix(events, aggregatedFeatures);
 
     }
 
+
+    public static boolean hasLongQuietPeriod(final long startTimestamp, final long endTimestamp, final List<AmplitudeData> cumulatedQietCounts, final int thresholdCount){
+        double maxCount = 0;
+        for(final AmplitudeData cumulatedQuietCount:cumulatedQietCounts){
+            if(cumulatedQuietCount.timestamp >= startTimestamp && cumulatedQuietCount.timestamp <= endTimestamp){
+                if(cumulatedQuietCount.amplitude > maxCount){
+                    maxCount = cumulatedQuietCount.amplitude;
+                }
+            }
+        }
+
+        return maxCount >= thresholdCount;
+    }
+
+    public static List<Event> sleepEventsHeuristicFix(final List<Event> sleepEvents, final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features){
+        final InBedEvent goToBed = (InBedEvent) sleepEvents.get(0);
+        final SleepEvent sleep = (SleepEvent) sleepEvents.get(1);
+        final WakeupEvent wakeUp = (WakeupEvent) sleepEvents.get(2);
+        final OutOfBedEvent outOfBed = (OutOfBedEvent) sleepEvents.get(3);
+
+        final ArrayList<Event> fixedSleepEvents = new ArrayList<>();
+        fixedSleepEvents.add(goToBed);
+        fixedSleepEvents.add(sleep);
+        fixedSleepEvents.add(wakeUp);
+        fixedSleepEvents.add(outOfBed);
+
+        // Heuristic fix
+        if(sleep.getStartTimestamp() < goToBed.getStartTimestamp()) {
+
+
+            if (hasLongQuietPeriod(sleep.getStartTimestamp(), goToBed.getStartTimestamp(),
+                    features.get(MotionFeatures.FeatureType.MAX_NO_MOTION_PERIOD), 60)) {
+                LOGGER.warn("Go to bed {} later the fall asleep {}, go to bed set to sleep.",
+                        new DateTime(goToBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBed.getTimezoneOffset())),
+                        new DateTime(sleep.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleep.getTimezoneOffset())));
+
+                fixedSleepEvents.set(0, new InBedEvent(sleep.getStartTimestamp() - DateTimeConstants.MILLIS_PER_MINUTE,
+                        sleep.getEndTimestamp() - DateTimeConstants.MILLIS_PER_MINUTE,
+                        sleep.getTimezoneOffset()));
+            }else{
+                LOGGER.warn("Go to bed {} later the fall asleep {}, sleep set to go to bed due to a lot motion detected in between.",
+                        new DateTime(goToBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBed.getTimezoneOffset())),
+                        new DateTime(sleep.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleep.getTimezoneOffset())));
+
+                fixedSleepEvents.set(1, new SleepEvent(goToBed.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                        goToBed.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                        goToBed.getTimezoneOffset()));
+            }
+
+        }
+
+        // Heuristic fix: wake up time is later than out of bed, use out of bed because it looks
+        // for the most significant motion
+        if(wakeUp.getStartTimestamp() > outOfBed.getStartTimestamp()){
+                // Huge spike before motion+spikes, has motion in between
+                // already wake up?
+            LOGGER.warn("Wake up later than out of bed, wake up {}, out of bed {}, swap.",
+                    new DateTime(wakeUp.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUp.getTimezoneOffset())),
+                    new DateTime(outOfBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBed.getTimezoneOffset())));
+            fixedSleepEvents.set(2, new WakeupEvent(outOfBed.getStartTimestamp(),
+                    outOfBed.getEndTimestamp(),
+                    outOfBed.getTimezoneOffset()));
+
+            fixedSleepEvents.set(3, new OutOfBedEvent(wakeUp.getStartTimestamp(),
+                    wakeUp.getEndTimestamp(),
+                    wakeUp.getTimezoneOffset()));
+
+        }
+
+
+        // Heuristic fix: out of bed time can not be too off from last data point
+        final List<AmplitudeData> maxAmplitude = features.get(MotionFeatures.FeatureType.MAX_AMPLITUDE);
+        final long timestampOfLastData = maxAmplitude.get(maxAmplitude.size() - 1).timestamp;
+        if(timestampOfLastData - outOfBed.getStartTimestamp() >= 3 * DateTimeConstants.MILLIS_PER_HOUR &&
+                hasLongQuietPeriod(outOfBed.getStartTimestamp(), timestampOfLastData,
+                        features.get(MotionFeatures.FeatureType.MAX_NO_MOTION_PERIOD), 60) == false){
+            LOGGER.warn("Out of bed detected at {}, more than last data at {}, event set to last data time.",
+                    new DateTime(outOfBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBed.getTimezoneOffset())),
+                    new DateTime(timestampOfLastData, DateTimeZone.forOffsetMillis(outOfBed.getTimezoneOffset())));
+            fixedSleepEvents.set(3, new OutOfBedEvent(timestampOfLastData, timestampOfLastData, outOfBed.getTimezoneOffset()));
+        }
+
+
+        // Heuristic fix: out of bed time can not be too off from wake up time
+        if(hasLongQuietPeriod(wakeUp.getStartTimestamp(), outOfBed.getStartTimestamp(),
+                features.get(MotionFeatures.FeatureType.MAX_NO_MOTION_PERIOD), 60) && wakeUp.getStartTimestamp() < outOfBed.getStartTimestamp()){
+
+            LOGGER.warn("out of bed detected at {}, way too far from wake up at {}, event set to wake up time.",
+                    new DateTime(outOfBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBed.getTimezoneOffset())),
+                    new DateTime(wakeUp.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUp.getTimezoneOffset())));
+            fixedSleepEvents.set(3, new OutOfBedEvent(wakeUp.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                    wakeUp.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                    wakeUp.getTimezoneOffset()));
+        }
+
+
+
+        return fixedSleepEvents;
+    }
 
 }

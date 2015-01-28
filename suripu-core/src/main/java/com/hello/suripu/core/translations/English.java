@@ -11,12 +11,12 @@ public class English {
     public final static String LIGHTS_OUT_MESSAGE = "";
     public final static String MOTION_MESSAGE = "Motion detected";
     public final static String NULL_MESSAGE = "";
-    public final static String OUT_OF_BED_MESSAGE = "";
+    public final static String OUT_OF_BED_MESSAGE = "You got out of bed";
     public final static String PARTNER_MOTION_MESSAGE = "Your partner kicked you at";
     public final static String SLEEP_MOTION_MESSAGE = "Toss and turns";
     public final static String SUNRISE_MESSAGE = "";
     public final static String SUNSET_MESSAGE = "";
-    public final static String WAKE_UP_MESSAGE = "";
+    public final static String WAKE_UP_MESSAGE = "You woke up";
 
     /* END Events Declaration */
 
