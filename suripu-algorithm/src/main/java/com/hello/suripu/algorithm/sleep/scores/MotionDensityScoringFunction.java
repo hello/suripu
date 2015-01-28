@@ -100,7 +100,6 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
             return pdf.get(data);
         }
 
-        // Not found, keep fall asleep score as it is, ground the wake up and go to bed scores.
         if(this.type == ScoreType.SLEEP) {
             return new EventScores(0d, 1d, 1d, 1d);
         }
