@@ -890,6 +890,18 @@ public class TimelineUtils {
         fixedSleepEvents.add(wakeUp);
         fixedSleepEvents.add(outOfBed);
 
+        if(sleep.getStartTimestamp() == goToBed.getStartTimestamp()){
+            fixedSleepEvents.set(1, new SleepEvent(sleep.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                    sleep.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                    sleep.getTimezoneOffset()));
+        }
+
+        if(wakeUp.getStartTimestamp() == outOfBed.getStartTimestamp()){
+            fixedSleepEvents.set(3, new OutOfBedEvent(outOfBed.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                    outOfBed.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                    outOfBed.getTimezoneOffset()));
+        }
+
         // Heuristic fix
         if(sleep.getStartTimestamp() < goToBed.getStartTimestamp()) {
 
