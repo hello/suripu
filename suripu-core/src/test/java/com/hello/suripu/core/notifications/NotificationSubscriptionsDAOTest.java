@@ -1,7 +1,9 @@
 package com.hello.suripu.core.notifications;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Resources;
 import com.hello.suripu.core.db.mappers.AccountMapper;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.models.MobilePushRegistration;
@@ -15,6 +17,7 @@ import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 
+import java.net.URL;
 import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -29,8 +32,8 @@ public class NotificationSubscriptionsDAOTest {
     @Before
     public void setUp() throws Exception
     {
-        final String createTableQuery = "CREATE TABLE notifications_subscriptions (id SERIAL, account_id BIGINT, os VARCHAR(10), version VARCHAR(10), app_version VARCHAR(10), device_token VARCHAR, endpoint VARCHAR, oauth_token VARCHAR, created_at_utc TIMESTAMP);";
-
+        final URL url = Resources.getResource("sql/notifications.sql");
+        final String createTableQuery = Resources.toString(url, Charsets.UTF_8);
         final JdbcDataSource ds = new JdbcDataSource();
         ds.setURL("jdbc:h2:mem:" + UUID.randomUUID());
         dbi = new DBI(ds);
@@ -41,9 +44,6 @@ public class NotificationSubscriptionsDAOTest {
         handle = dbi.open();
 
         handle.execute(createTableQuery);
-
-        final String index = "create unique index uniq_device on notifications_subscriptions (oauth_token);";
-        handle.execute(index);
         dao = dbi.onDemand(NotificationSubscriptionsDAO.class);
     }
 
@@ -84,8 +84,8 @@ public class NotificationSubscriptionsDAOTest {
         final Long accountId = 123L;
         final String oauthToken = "XXXX";
         final String secondOauthToken = "YYYY";
-        final MobilePushRegistration registration = MobilePushRegistration.create(accountId, "ios", "xxx", "yyy", "123456789", oauthToken, "arn:aws:sns:us-east-1:053216739513:endpoint/APNS/hello-sense-ios-dev/e65fb9b1-9fd5-3555-bc81-03196726c5bc");
-        final MobilePushRegistration anotherRegistration = MobilePushRegistration.create(accountId, "ios", "xxx", "yyy", "123456789", secondOauthToken, "arn:aws:sns:us-east-1:053216739513:endpoint/APNS/hello-sense-ios-dev/e65fb9b1-9fd5-3555-bc81-03196726c5bc");
+        final MobilePushRegistration registration = MobilePushRegistration.create(accountId, "ios", "xxx", "yyy", "test-1", oauthToken, "arn:aws:sns:us-east-1:053216739513:endpoint/APNS/hello-sense-ios-dev/e65fb9b1-9fd5-3555-bc81-03196726c5bc");
+        final MobilePushRegistration anotherRegistration = MobilePushRegistration.create(accountId, "ios", "xxx", "yyy", "test-2", secondOauthToken, "arn:aws:sns:us-east-1:053216739513:endpoint/APNS/hello-sense-ios-dev/e65fb9b1-9fd5-3555-bc81-03196726c5bc");
         dao.subscribe(accountId, registration);
         dao.subscribe(accountId, anotherRegistration);
         final ImmutableList<MobilePushRegistration> registrations = dao.getSubscriptions(accountId);
