@@ -896,6 +896,14 @@ public class TimelineUtils {
 
             if (hasLongQuietPeriod(sleep.getStartTimestamp(), goToBed.getStartTimestamp(),
                     features.get(MotionFeatures.FeatureType.MAX_NO_MOTION_PERIOD), 60)) {
+                LOGGER.warn("Go to bed {} later the fall asleep {}, sleep set to go to bed.",
+                        new DateTime(goToBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBed.getTimezoneOffset())),
+                        new DateTime(sleep.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleep.getTimezoneOffset())));
+
+                fixedSleepEvents.set(1, new SleepEvent(goToBed.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                        goToBed.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                        goToBed.getTimezoneOffset()));
+            }else{
                 LOGGER.warn("Go to bed {} later the fall asleep {}, go to bed set to sleep.",
                         new DateTime(goToBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBed.getTimezoneOffset())),
                         new DateTime(sleep.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleep.getTimezoneOffset())));
@@ -903,14 +911,6 @@ public class TimelineUtils {
                 fixedSleepEvents.set(0, new InBedEvent(sleep.getStartTimestamp() - DateTimeConstants.MILLIS_PER_MINUTE,
                         sleep.getEndTimestamp() - DateTimeConstants.MILLIS_PER_MINUTE,
                         sleep.getTimezoneOffset()));
-            }else{
-                LOGGER.warn("Go to bed {} later the fall asleep {}, sleep set to go to bed due to a lot motion detected in between.",
-                        new DateTime(goToBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBed.getTimezoneOffset())),
-                        new DateTime(sleep.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleep.getTimezoneOffset())));
-
-                fixedSleepEvents.set(1, new SleepEvent(goToBed.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                        goToBed.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                        goToBed.getTimezoneOffset()));
             }
 
         }
