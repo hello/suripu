@@ -76,7 +76,7 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
                             pillIdTargetDatesMap.put(pillData.getDeviceId(), new HashSet<DateTime>());
                         }
 
-                        final DateTime targetDateUTC = new DateTime(pillData.getTimestamp(), DateTimeZone.UTC);
+                        final DateTime targetDateUTC = new DateTime(pillData.getTimestamp() * 1000L, DateTimeZone.UTC);
                         pillIdTargetDatesMap.get(pillData.getDeviceId()).add(targetDateUTC);
                     }
                 }
