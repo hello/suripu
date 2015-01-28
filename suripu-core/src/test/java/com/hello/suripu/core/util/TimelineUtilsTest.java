@@ -302,15 +302,7 @@ public class TimelineUtilsTest {
         assertThat(inserted.get(0).getStartTimestamp(), is(now.minusMinutes(1).getMillis()));
         assertThat(inserted.get(1).getType(), is(Event.Type.MOTION));
         assertThat(inserted.get(1).getStartTimestamp(), is(now.getMillis()));
-
-
-        inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
-                new NullEvent(now.plusMinutes(1).getMillis(), now.plusMinutes(2).getMillis(), 0, 0));
-        assertThat(inserted.size(), is(2));
-        assertThat(inserted.get(0).getType(), is(Event.Type.MOTION));
-        assertThat(inserted.get(0).getStartTimestamp(), is(now.getMillis()));
-        assertThat(inserted.get(1).getType(), is(Event.Type.NONE));
-        assertThat(inserted.get(1).getStartTimestamp(), is(now.plusMinutes(1).getMillis()));
+        
     }
 
     @Test

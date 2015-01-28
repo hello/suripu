@@ -18,11 +18,13 @@ import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.hello.suripu.core.models.DeviceKeyStoreRecord;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -37,6 +39,7 @@ public class KeyStoreDynamoDB implements KeyStore {
     private final static String DEVICE_ID_ATTRIBUTE_NAME = "device_id";
     private final static String AES_KEY_ATTRIBUTE_NAME = "aes_key";
     private final static String DEFAULT_FACTORY_DEVICE_ID = "0000000000000000";
+    private final static String METADATA = "metadata";
 
     private final byte[] DEFAULT_AES_KEY;
 
@@ -73,6 +76,11 @@ public class KeyStoreDynamoDB implements KeyStore {
 //
 //        return Optional.absent();
         return getRemotely(deviceId);
+    }
+
+    @Override
+    public Optional<DeviceKeyStoreRecord> getKeyStoreRecord(String deviceId) {
+        return getRecordRemotely(deviceId);
     }
 
     @Override
@@ -154,5 +162,37 @@ public class KeyStoreDynamoDB implements KeyStore {
 
         final CreateTableResult result = dynamoDBClient.createTable(request);
         return result;
+    }
+
+    private Optional<DeviceKeyStoreRecord> getRecordRemotely(final String deviceId) {
+        if(DEFAULT_FACTORY_DEVICE_ID.equals(deviceId)) {
+            LOGGER.warn("Device not properly provisioned, got {} as a deviceId", deviceId);
+            return Optional.absent();
+        }
+
+        final HashMap<String, AttributeValue> key = new HashMap<String, AttributeValue>();
+        key.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
+        final GetItemRequest getItemRequest = new GetItemRequest()
+                .withTableName(keyStoreTableName)
+                .withKey(key);
+
+        final GetItemResult getItemResult = dynamoDBClient.getItem(getItemRequest);
+
+        LOGGER.info("getItemResult = {}", getItemResult.toString());
+        if(getItemResult.getItem() == null || !getItemResult.getItem().containsKey(AES_KEY_ATTRIBUTE_NAME)) {
+            LOGGER.warn("Did not find anything for device_id = {}", deviceId);
+            return Optional.absent();
+        }
+
+        final String aesKey = getItemResult.getItem().get(AES_KEY_ATTRIBUTE_NAME).getS();
+        final String metadata = getItemResult.getItem().get(METADATA).getS();
+
+        return Optional.of(new DeviceKeyStoreRecord(censorKey(aesKey), metadata));
+    }
+
+    private String censorKey(final String key) {
+        char[] censoredParts = new char[key.length() - 8];
+        Arrays.fill(censoredParts, 'x');
+        return new StringBuilder(key).replace(4, key.length() - 4, new String(censoredParts)).toString();
     }
 }
