@@ -145,7 +145,13 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
             for(final DateTime targetDateLocalUTC:targetDatesLocalUTC){
                 final List<Timeline> timelines = this.timelineProcessor.retrieveTimelines(accountId,
                         targetDateLocalUTC.toString(DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT)));
-
+                try {
+                    LOGGER.warn("Sleeping for 1 sec");
+                    Thread.sleep(1000);
+                } catch (InterruptedException e1) {
+                    LOGGER.warn("Thread sleep interrupted");
+                }
+                
                 try{
                     this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC, timelines);
                     LOGGER.info("Timeline at {} saved for account {}.", targetDateLocalUTC, accountId);
