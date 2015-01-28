@@ -13,6 +13,7 @@ import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.AggregateScore;
+import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
@@ -22,7 +23,6 @@ import com.hello.suripu.core.models.Events.SunRiseEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.Insights.TrendGraph;
-import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
@@ -41,10 +41,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 public class TimelineProcessor {
 
@@ -116,34 +114,35 @@ public class TimelineProcessor {
 
         final List<Event> events = new LinkedList<>();
 
-        //TODO: get light data by the minute, compute lights out
-        Optional<DateTime> lightOutTimeOptional = Optional.absent();
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
-        final Map<Sensor, List<Sample>> sensorData = new HashMap<>();
+        // get all sensor data, used for light and sound disturbances, and presleep-insights
+        Optional<AllSensorSampleList> optionalSensorData = Optional.absent();
 
+        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
         if (deviceId.isPresent()) {
             final int slotDurationMins = 1;
 
-            sensorData.putAll(deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(targetDate.getMillis(),
-                    endDate.getMillis(), accountId, deviceId.get(), slotDurationMins));
+            optionalSensorData = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
+                    targetDate.getMillis(), endDate.getMillis(),
+                    accountId, deviceId.get(), slotDurationMins);
+        }
 
-            if (sensorData.containsKey(Sensor.LIGHT)) {
-                LOGGER.info("Light data size {}", sensorData.get(Sensor.LIGHT).size());
-                if (sensorData.get(Sensor.LIGHT).size() > 0) {
-                    final List<Event> lightEvents = TimelineUtils.getLightEvents(sensorData.get(Sensor.LIGHT));
-                    if (lightEvents.size() > 0) {
-                        events.addAll(lightEvents);
-                        lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
-                    }
-                }
+        // compute lights-out events
+        Optional<DateTime> lightOutTimeOptional = Optional.absent();
+        if (optionalSensorData.isPresent()) {
+            final List<Event> lightEvents = TimelineUtils.getLightEvents(optionalSensorData.get().getData(Sensor.LIGHT));
+
+            if (lightEvents.size() > 0) {
+                events.addAll(lightEvents);
+                lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
             }
         }
 
         if(lightOutTimeOptional.isPresent()){
             LOGGER.info("Light out at {}", lightOutTimeOptional.get());
-        }else{
+        } else {
             LOGGER.info("No light out");
         }
+
         // create sleep-motion segments
         final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);
         events.addAll(motionEvents);
@@ -276,7 +275,7 @@ public class TimelineProcessor {
         LOGGER.debug("Score for account_id = {} is {}", accountId, sleepScore);
 
 
-        final List<Insight> insights = TimelineUtils.generatePreSleepInsights(sensorData, sleepStats.sleepTime);
+        final List<Insight> insights = TimelineUtils.generatePreSleepInsights(optionalSensorData, sleepStats.sleepTime);
 
         final Timeline timeline = new Timeline(sleepScore, timeLineMessage, date, reversed, insights);
         final List<Timeline> timelines = new ArrayList<>();

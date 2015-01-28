@@ -12,6 +12,7 @@ import com.hello.suripu.algorithm.sleep.scores.LightOutScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.MotionDensityScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.SleepDataScoringFunction;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
+import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.InBedEvent;
@@ -484,18 +485,23 @@ public class TimelineUtils {
 
     }
 
-    public static List<Insight> generatePreSleepInsights(final Map<Sensor, List<Sample>> sensorData, final long sleepTimestampUTC) {
+    public static List<Insight> generatePreSleepInsights(Optional<AllSensorSampleList> optionalSensorData, final long sleepTimestampUTC) {
+
+        if (!optionalSensorData.isPresent()) {
+            return Collections.EMPTY_LIST;
+        }
 
         final List<Insight> generatedInsights = new ArrayList<>();
 
-        if (sensorData.isEmpty()) {
-            return generatedInsights;
-        }
+        final AllSensorSampleList sensorData = optionalSensorData.get();
+
+
+        final List<Sample> lightSamples = sensorData.getData(Sensor.LIGHT);
 
         int startIndex = 0;
         int endIndex = 0;
         final long startTimestamp = sleepTimestampUTC - PRESLEEP_WINDOW_IN_MILLIS;
-        for (Sample sample : sensorData.get(Sensor.TEMPERATURE)) {
+        for (Sample sample : lightSamples) {
             if (sample.dateTime < startTimestamp) {
                 startIndex++;
             }
@@ -530,11 +536,11 @@ public class TimelineUtils {
 //                counts.put(sensor, count);
 //
 //            }
-            avgTemp += sensorData.get(Sensor.TEMPERATURE).get(i).value;
-            avgHumidity += sensorData.get(Sensor.HUMIDITY).get(i).value;
-            avgParticulate += sensorData.get(Sensor.PARTICULATES).get(i).value;
-            avgLight += sensorData.get(Sensor.LIGHT).get(i).value;
-            avgSound += sensorData.get(Sensor.SOUND).get(i).value;
+            avgTemp += sensorData.getData(Sensor.TEMPERATURE).get(i).value;
+            avgHumidity += sensorData.getData(Sensor.HUMIDITY).get(i).value;
+            avgParticulate += sensorData.getData(Sensor.PARTICULATES).get(i).value;
+            avgLight += sensorData.getData(Sensor.LIGHT).get(i).value;
+            avgSound += sensorData.getData(Sensor.SOUND).get(i).value;
             num++;
         }
 
@@ -618,7 +624,13 @@ public class TimelineUtils {
         return Optional.absent();
     }
 
-    public static List<Event> getLightEvents(final List<Sample> lightData) {
+    public static List<Event> getLightEvents(List<Sample> lightData) {
+
+        if (lightData.size() == 0) {
+            return Collections.EMPTY_LIST;
+        }
+
+        LOGGER.debug("Light samples size: {}", lightData.size());
 
         final LinkedList<AmplitudeData> lightAmplitudeData = new LinkedList<>();
         for (final Sample sample : lightData) {

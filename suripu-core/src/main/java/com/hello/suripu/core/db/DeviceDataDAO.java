@@ -7,6 +7,8 @@ import com.hello.suripu.core.db.mappers.DeviceDataBucketMapper;
 import com.hello.suripu.core.db.mappers.DeviceDataMapper;
 import com.hello.suripu.core.db.util.Bucketing;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
+import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.AllSensorSampleMap;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
@@ -365,7 +367,7 @@ public abstract class DeviceDataDAO {
 
     // used by timeline
     @Timed
-    public Map<Sensor, List<Sample>> generateTimeSeriesByLocalTimeAllSensors(
+    public Optional<AllSensorSampleList> generateTimeSeriesByLocalTimeAllSensors(
             final Long queryStartTimestampInLocalUTC,
             final Long queryEndTimestampInLocalUTC,
             final Long accountId,
@@ -383,15 +385,14 @@ public abstract class DeviceDataDAO {
         final List<DeviceData> rows = getBetweenByLocalTimeAggregateBySlotDuration(accountId, deviceId, queryStartTime, queryEndTime, slotDurationInMinutes);
         LOGGER.debug("Retrieved {} rows from database", rows.size());
 
-        final Map<Sensor, List<Sample>> sensorData = new HashMap<>();
         if(rows.size() == 0) {
-            return sensorData;
+            return Optional.absent();
         }
 
-        final Optional<Map<Sensor, Map<Long, Sample>>> optionalPopulatedMapAll = Bucketing.populateMapAll(rows);
+        final Optional<AllSensorSampleMap> optionalPopulatedMapAll = Bucketing.populateMapAll(rows);
 
         if(!optionalPopulatedMapAll.isPresent()) {
-            return sensorData;
+            return Optional.absent();
         }
 
         // create buckets with keys in UTC-Time
@@ -431,27 +432,29 @@ public abstract class DeviceDataDAO {
 
         final int numberOfBuckets= (int) ((absoluteIntervalMS / DateTimeConstants.MILLIS_PER_MINUTE) / slotDurationInMinutes + 1);
 
-        for (Sensor sensor : optionalPopulatedMapAll.get().keySet()) {
+        final AllSensorSampleList sensorDataResults = new AllSensorSampleList();
+
+        for (Sensor sensor : Sensor.values()) {
             LOGGER.debug("Processing sensor {}", sensor.toString());
-            final Map<Long, Sample> sensorMap = optionalPopulatedMapAll.get().get(sensor);
+            final Optional<Map<Long, Sample>> optionalSensorMap = optionalPopulatedMapAll.get().getData(sensor);
+            if (optionalSensorMap.isPresent()) {
+                Map<Long, Sample> sensorMap = optionalSensorMap.get();
 
-            // create empty map
-            final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes);
-            LOGGER.debug("Empty Map size = {}", map.size());
+                final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes);
+                LOGGER.debug("Empty Map size = {}", map.size());
 
-            // Override map with values from DB
-            final Map<Long, Sample> merged = Bucketing.mergeResults(map, sensorMap);
+                // Override map with values from DB
+                final Map<Long, Sample> merged = Bucketing.mergeResults(map, sensorMap);
 
-            LOGGER.debug("New map size = {}", merged.size());
+                LOGGER.debug("New map size = {}", merged.size());
 
-            final List<Sample> sortedList = Bucketing.sortResults(merged, startOffsetMillis);
+                final List<Sample> sortedList = Bucketing.sortResults(merged, startOffsetMillis);
+                sensorDataResults.setData(sensor, sortedList);
 
-            sensorData.put(sensor, sortedList);
-
+            }
         }
 
-
-        return sensorData;
+        return Optional.of(sensorDataResults);
     }
 
     @Timed
@@ -479,7 +482,7 @@ public abstract class DeviceDataDAO {
             return sensorData;
         }
 
-        final Optional<Map<Sensor, Map<Long, Sample>>> optionalPopulatedMapAll = Bucketing.populateMapAll(rows);
+        final Optional<Map<Sensor, Map<Long, Sample>>> optionalPopulatedMapAll = Optional.absent(); //Bucketing.populateMapAll(rows);
 
         if(!optionalPopulatedMapAll.isPresent()) {
             return sensorData;
