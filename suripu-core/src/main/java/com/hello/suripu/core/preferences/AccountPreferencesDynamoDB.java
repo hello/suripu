@@ -20,10 +20,6 @@ import java.util.Map;
 public class AccountPreferencesDynamoDB implements AccountPreferencesDAO {
 
     private final static String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
-    private final static String ENHANCED_AUDIO_ATTRIBUTE_NAME = "enhanced_audio";
-    private final static String TEMPERATURE_UNITS_ATTRIBUTE_NAME = "temp_celsius";
-    private final static String TIME_ATTRIBUTE_NAME = "time_twenty_four_hour";
-
 
     private final AmazonDynamoDB dynamoDB;
     private final String tableName;
