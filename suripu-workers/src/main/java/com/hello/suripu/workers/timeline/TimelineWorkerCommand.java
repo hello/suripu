@@ -69,6 +69,8 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
         sensorsDB.registerArgumentFactory(new JodaArgumentFactory());
         sensorsDB.registerContainerFactory(new OptionalContainerFactory());
         sensorsDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
+        sensorsDB.registerContainerFactory(new ImmutableListContainerFactory());
+        sensorsDB.registerContainerFactory(new ImmutableSetContainerFactory());
 
 
         commonDB.registerArgumentFactory(new JodaArgumentFactory());
@@ -80,9 +82,11 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
         insightsDB.registerArgumentFactory(new JodaArgumentFactory());
         insightsDB.registerContainerFactory(new OptionalContainerFactory());
         insightsDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
+        insightsDB.registerContainerFactory(new ImmutableListContainerFactory());
+        insightsDB.registerContainerFactory(new ImmutableSetContainerFactory());
 
         final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
-        final DeviceDAO deviceDAO = sensorsDB.onDemand(DeviceDAO.class);
+        final DeviceDAO deviceDAO = commonDB.onDemand(DeviceDAO.class);
 
         final SleepLabelDAO sleepLabelDAO = commonDB.onDemand(SleepLabelDAO.class);
         final SleepScoreDAO sleepScoreDAO = commonDB.onDemand(SleepScoreDAO.class);
