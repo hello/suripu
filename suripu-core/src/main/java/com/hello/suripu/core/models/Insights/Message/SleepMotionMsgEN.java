@@ -12,7 +12,7 @@ public class SleepMotionMsgEN {
         if (numNights == greater) {
             firstSentence += "during all nights. ";
         } else {
-            firstSentence = String.format("%d of the nights. ", greater);
+            firstSentence = String.format("on %d of the nights. ", greater);
         }
 
         return new Text("Hey Big Mover",
@@ -27,7 +27,7 @@ public class SleepMotionMsgEN {
         if (numNights == lesser) {
              firstSentence += "during all nights. ";
         } else {
-            firstSentence = String.format("%d of the nights. ", lesser);
+            firstSentence = String.format("on %d of the nights. ", lesser);
         }
 
         return new Text("Still as the Night",
@@ -38,13 +38,13 @@ public class SleepMotionMsgEN {
     public static Text equalMovement(final int numNights, final float diff, final float perc) {
         String description;
         if (diff > 0) {
-            description = "more than";
+            description = "more";
         } else {
-            description = "less than";
+            description = "less";
         }
 
         return new Text("Just Right", String.format("In each of the last %d nights, ", numNights) +
-                String.format("we notice that you only move **%.1f %% %s** our average Sense user. ", diff, description) +
+                String.format("we notice that you only move **%.1f %% %s** than the average Sense user. ", diff, description) +
                 String.format("About %.1f%% of your sleep period consist of agitated sleep.", perc));
     }
 }

@@ -124,8 +124,8 @@ public class DataScienceResource {
                 return;
             }
 
-//            insightProcessor.generateInsights(accountId, accountOptional.get().created);
-            insightProcessor.generateInsightsByCategory(accountId, deviceIdOptional.get(), category);
+            insightProcessor.generateInsights(accountId, accountOptional.get().created);
+//            insightProcessor.generateInsightsByCategory(accountId, deviceIdOptional.get(), category);
         }
     }
 
