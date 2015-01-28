@@ -124,7 +124,10 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
                 continue;
             }
 
-            for(final DateTime targetDateUTC:pillIdTargetDatesMap.get(accountId)) {
+            final Set<DateTime> dates = pillIdTargetDatesMap.get(pillId);
+            final HashSet<DateTime> targetDatesLocalUTC = new HashSet<>();
+
+            for(final DateTime targetDateUTC:dates) {
 
                 DateTime targetDateLocalUTC = targetDateUTC.plusMillis(
                         dateTimeZoneOptional.get().getOffset(targetDateUTC.getMillis()))
@@ -134,6 +137,12 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
                 if(targetDateLocalTime.getHourOfDay() < 20){
                     targetDateLocalUTC = targetDateLocalUTC.minusDays(1);
                 }
+
+                targetDatesLocalUTC.add(targetDateLocalUTC);
+
+            }
+
+            for(final DateTime targetDateLocalUTC:targetDatesLocalUTC){
                 final List<Timeline> timelines = this.timelineProcessor.retrieveTimelines(accountId,
                         targetDateLocalUTC.toString(DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT)));
 
