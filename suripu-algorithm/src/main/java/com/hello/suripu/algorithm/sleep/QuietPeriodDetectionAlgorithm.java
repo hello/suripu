@@ -29,6 +29,7 @@ import java.util.List;
  * with PAD_EARLY for fall asleep period detection and PAD_LATE for awake period detection.
  *
  */
+@Deprecated
 public class QuietPeriodDetectionAlgorithm extends SleepDetectionAlgorithm {
 
     public QuietPeriodDetectionAlgorithm(final DataSource<AmplitudeData> dataSource, final int smoothWindowSizeMillis){

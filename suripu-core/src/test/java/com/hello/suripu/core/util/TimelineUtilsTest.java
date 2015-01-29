@@ -3,6 +3,7 @@ package com.hello.suripu.core.util;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.io.Resources;
+import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
@@ -164,7 +165,8 @@ public class TimelineUtilsTest {
         final List<Event> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 17, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 Optional.of(new DateTime(1421575200000L, DateTimeZone.UTC)),
-                10);
+                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                true);
         final SleepEvent sleepSegment = (SleepEvent) sleepEvents.get(1);
         final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0);
         final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2);
@@ -214,7 +216,8 @@ public class TimelineUtilsTest {
         final List<Event> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 24, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 Optional.of(new DateTime(1422181740000L, DateTimeZone.UTC)),
-                10);
+                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                true);
         final SleepEvent sleepSegment = (SleepEvent) sleepEvents.get(1);
         final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0);
         final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2);
@@ -266,7 +269,8 @@ public class TimelineUtilsTest {
         final List<Event> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 04, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 Optional.of(new DateTime(1420445760000L, DateTimeZone.UTC)),
-                10);
+                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                true);
         final SleepEvent sleepSegment = (SleepEvent) sleepEvents.get(1);
         final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0);
         final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2);

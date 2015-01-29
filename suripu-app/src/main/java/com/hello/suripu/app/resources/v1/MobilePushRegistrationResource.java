@@ -2,11 +2,11 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
-import com.hello.suripu.core.notifications.HelloPushMessage;
-import com.hello.suripu.core.notifications.MobilePushNotificationProcessor;
-import com.hello.suripu.core.notifications.NotificationSubscriptionsDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.MobilePushRegistration;
+import com.hello.suripu.core.notifications.HelloPushMessage;
+import com.hello.suripu.core.notifications.MobilePushNotificationProcessor;
+import com.hello.suripu.core.notifications.NotificationSubscriptionDAOWrapper;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -30,15 +30,15 @@ public class MobilePushRegistrationResource {
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MobilePushRegistrationResource.class);
-    private final NotificationSubscriptionsDAO notificationSubscriptionsDAO;
+    private final NotificationSubscriptionDAOWrapper notificationSubscriptionDAOWrapper;
     private final MobilePushNotificationProcessor pushNotificationProcessor;
     private final AccountDAO accountDAO;
 
     public MobilePushRegistrationResource(
-            final NotificationSubscriptionsDAO notificationSubscriptionsDAO,
+            final NotificationSubscriptionDAOWrapper notificationSubscriptionDAOWrapper,
             final MobilePushNotificationProcessor pushNotificationProcessor,
             final AccountDAO accountDAO) {
-        this.notificationSubscriptionsDAO = notificationSubscriptionsDAO;
+        this.notificationSubscriptionDAOWrapper = notificationSubscriptionDAOWrapper;
         this.pushNotificationProcessor = pushNotificationProcessor;
         this.accountDAO = accountDAO;
     }
@@ -51,7 +51,8 @@ public class MobilePushRegistrationResource {
                                final @Valid MobilePushRegistration mobilePushRegistration) {
 
         LOGGER.debug("{}", mobilePushRegistration);
-        notificationSubscriptionsDAO.subscribe(accessToken.accountId, mobilePushRegistration);
+        final MobilePushRegistration mobilePushRegistrationWithOauthToken = MobilePushRegistration.withOauthToken(mobilePushRegistration, accessToken.serializeAccessToken());
+        notificationSubscriptionDAOWrapper.subscribe(accessToken.accountId, mobilePushRegistrationWithOauthToken);
     }
 
     @DELETE
@@ -62,7 +63,7 @@ public class MobilePushRegistrationResource {
             @Scope(OAuthScope.PUSH_NOTIFICATIONS) final AccessToken accessToken,
             @Valid MobilePushRegistration mobilePushRegistration) {
 
-        boolean deleted = notificationSubscriptionsDAO.unsubscribe(accessToken.accountId, mobilePushRegistration.deviceToken);
+        boolean deleted = notificationSubscriptionDAOWrapper.unsubscribe(accessToken.accountId, mobilePushRegistration.deviceToken);
         if(!deleted) {
             LOGGER.warn("{} Was not successfully deleted for account = {}", mobilePushRegistration.deviceToken, accessToken.accountId);
         }

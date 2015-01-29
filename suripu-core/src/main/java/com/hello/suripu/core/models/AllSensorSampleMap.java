@@ -35,6 +35,28 @@ public class AllSensorSampleMap {
         this.particulates.put(dateTime, new Sample(dateTime, particulates, offsetMillis));
     }
 
+    public void setSampleMap(final Sensor sensor, final Map<Long, Sample> sampleMap) {
+        switch (sensor) {
+            case LIGHT:
+                this.light.putAll(sampleMap);
+                break;
+            case SOUND:
+                this.sound.putAll(sampleMap);
+                break;
+            case HUMIDITY:
+                this.humidity.putAll(sampleMap);
+                break;
+            case TEMPERATURE:
+                this.temperature.putAll(sampleMap);
+                break;
+            case PARTICULATES:
+                this.particulates.putAll(sampleMap);
+                break;
+            default:
+                break;
+        }
+    }
+
     public Optional<Map<Long, Sample>> getData(final Sensor sensor) {
         switch (sensor) {
             case LIGHT:

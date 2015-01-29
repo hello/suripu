@@ -59,6 +59,8 @@ public class TimelineUtils {
     private static final int LIGHTS_OUT_START_THRESHOLD = 19; // 7pm local time
     private static final int LIGHTS_OUT_END_THRESHOLD = 4; // 4am local time
 
+
+
     public static List<Event> convertLightMotionToNone(final List<Event> eventList, final int thresholdSleepDepth){
         final LinkedList<Event> convertedEvents = new LinkedList<>();
         for(final Event event:eventList){
@@ -289,35 +291,36 @@ public class TimelineUtils {
         final ArrayList<Event> result = new ArrayList<>();
         Event firstEventOfThatType = null;
         Event lastEventOfThatType = null;
-        int maxSleepDepth = 0;
+        int minSleepDepth = Integer.MAX_VALUE;
 
         for(final Event event:eventList){
             if(event.getType() == Event.Type.MOTION){
                 if(firstEventOfThatType == null){
                     firstEventOfThatType = event;
                     lastEventOfThatType = event;
-                    maxSleepDepth = event.getSleepDepth();
+                    minSleepDepth = event.getSleepDepth();
                     continue;
                 }
 
                 lastEventOfThatType = event;
-                if(event.getSleepDepth() > maxSleepDepth){
-                    maxSleepDepth = event.getSleepDepth();
+                if(event.getSleepDepth() < minSleepDepth){
+                    minSleepDepth = event.getSleepDepth();
                 }
                 continue;
             }
 
             if(lastEventOfThatType != null){
-                final Event smoothedEvent = Event.extend(firstEventOfThatType, firstEventOfThatType.getStartTimestamp(), lastEventOfThatType.getEndTimestamp(), maxSleepDepth);
+                final Event smoothedEvent = Event.extend(firstEventOfThatType, firstEventOfThatType.getStartTimestamp(), lastEventOfThatType.getEndTimestamp(), minSleepDepth);
                 result.add(smoothedEvent);
             }
             result.add(event);
             firstEventOfThatType = null;
             lastEventOfThatType = null;
+            minSleepDepth = Integer.MAX_VALUE;
         }
 
         if(lastEventOfThatType != null){
-            final Event smoothedEvent = Event.extend(firstEventOfThatType, firstEventOfThatType.getStartTimestamp(), lastEventOfThatType.getEndTimestamp(), maxSleepDepth);
+            final Event smoothedEvent = Event.extend(firstEventOfThatType, firstEventOfThatType.getStartTimestamp(), lastEventOfThatType.getEndTimestamp(), minSleepDepth);
             result.add(smoothedEvent);
         }
 
@@ -584,13 +587,12 @@ public class TimelineUtils {
 
         if (reportSleepDuration) {
             // report sleep duration
-            return String.format("You slept for a total of **%.1f hours**, soundly for %.1f hours (%d%%), and moved %d times",
-                    sleepDurationInHours, soundDurationInHours, percentageOfSoundSleep, sleepStats.numberOfMotionEvents);
+            return String.format("You were asleep for **%.1f hours**, and sleeping soundly for %.1f hours.",
+                    sleepDurationInHours, soundDurationInHours);
         }
 
         // report in-bed time
-        return String.format("You were in bed for a total of **%.1f hours**, slept soundly for %.1f hours (%d%%), and moved %d times",
-                sleepDurationInHours, soundDurationInHours, percentageOfSoundSleep, sleepStats.numberOfMotionEvents);
+        return String.format("You were in bed for **%.1f hours**", sleepDurationInHours);
 
     }
 
@@ -805,12 +807,13 @@ public class TimelineUtils {
     public static List<Event> getSleepEvents(final DateTime targetDateLocalUTC,
                                          final List<TrackerMotion> trackerMotions,
                                          final Optional<DateTime> lightOutTimeOptional,
-                                         final int smoothWindowSizeInMinutes){
+                                         final int smoothWindowSizeInMinutes,
+                                         final boolean debugMode){
         final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions);
         final List<AmplitudeData> dataWithGapFilled = dataSource.getDataForDate(targetDateLocalUTC.withTimeAtStartOfDay());
 
         final int featureWindowSizeInMinutes = smoothWindowSizeInMinutes;
-        final Map<MotionFeatures.FeatureType, List<AmplitudeData>> motionFeatures = MotionFeatures.generateTimestampAlignedFeatures(dataWithGapFilled, featureWindowSizeInMinutes);
+        final Map<MotionFeatures.FeatureType, List<AmplitudeData>> motionFeatures = MotionFeatures.generateTimestampAlignedFeatures(dataWithGapFilled, featureWindowSizeInMinutes, debugMode);
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures = MotionFeatures.aggregateData(motionFeatures, smoothWindowSizeInMinutes);
         LOGGER.info("smoothed data size {}", aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE).size());
 
@@ -848,7 +851,7 @@ public class TimelineUtils {
                 aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE).size(),  // num of data.
                 scoringFunctions);
 
-        final List<Segment> segments = sleepDetectionAlgorithm.getSleepEvents();
+        final List<Segment> segments = sleepDetectionAlgorithm.getSleepEvents(debugMode);
         final ArrayList<Event> events = new ArrayList<>();
         final Segment goToBedSegment = segments.get(0);
         final Segment fallAsleepSegment = segments.get(1);

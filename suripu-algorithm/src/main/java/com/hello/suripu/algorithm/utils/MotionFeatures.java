@@ -18,6 +18,8 @@ import java.util.Map;
  */
 public class MotionFeatures {
     private final static Logger LOGGER = LoggerFactory.getLogger(MotionFeatures.class);
+    public static final int MOTION_AGGREGATE_WINDOW_IN_MINUTES = 10;
+
     public enum FeatureType{
         MAX_AMPLITUDE,
         DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE,
@@ -77,7 +79,9 @@ public class MotionFeatures {
         return aggregatedData;
     }
 
-    public static Map<FeatureType, List<AmplitudeData>> generateTimestampAlignedFeatures(final List<AmplitudeData> rawData, final int windowSizeInMinute){
+    public static Map<FeatureType, List<AmplitudeData>> generateTimestampAlignedFeatures(final List<AmplitudeData> rawData,
+                                                                                         final int windowSizeInMinute,
+                                                                                         final boolean debugMode){
         final LinkedList<AmplitudeData> densityWindow = new LinkedList<>();
         final LinkedList<AmplitudeData> backTrackAmpWindow = new LinkedList<>();
         final LinkedList<AmplitudeData> forwardAmpWindow = new LinkedList<>();
@@ -135,10 +139,12 @@ public class MotionFeatures {
                 final long timestamp = backTrackAmpWindow.getLast().timestamp;
                 final int offsetMillis = backTrackAmpWindow.getLast().offsetMillis;
 
-                LOGGER.debug("{}, delta: {}, max_amp: {}",
-                        new DateTime(timestamp, DateTimeZone.forOffsetMillis(offsetMillis)),
-                        densityDrop,
-                        maxBackTrackAmplitude);
+                if(debugMode) {
+                    LOGGER.debug("{}, delta: {}, max_amp: {}",
+                            new DateTime(timestamp, DateTimeZone.forOffsetMillis(offsetMillis)),
+                            densityDrop,
+                            maxBackTrackAmplitude);
+                }
 
                 if(!features.containsKey(FeatureType.MAX_AMPLITUDE)){
                     features.put(FeatureType.MAX_AMPLITUDE, new LinkedList<AmplitudeData>());
