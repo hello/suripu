@@ -18,7 +18,6 @@ import java.util.Map;
  */
 public class MotionFeatures {
     private final static Logger LOGGER = LoggerFactory.getLogger(MotionFeatures.class);
-    public static boolean debugMode = false;
     public static final int MOTION_AGGREGATE_WINDOW_IN_MINUTES = 10;
 
     public enum FeatureType{
@@ -80,7 +79,9 @@ public class MotionFeatures {
         return aggregatedData;
     }
 
-    public static Map<FeatureType, List<AmplitudeData>> generateTimestampAlignedFeatures(final List<AmplitudeData> rawData, final int windowSizeInMinute){
+    public static Map<FeatureType, List<AmplitudeData>> generateTimestampAlignedFeatures(final List<AmplitudeData> rawData,
+                                                                                         final int windowSizeInMinute,
+                                                                                         final boolean debugMode){
         final LinkedList<AmplitudeData> densityWindow = new LinkedList<>();
         final LinkedList<AmplitudeData> backTrackAmpWindow = new LinkedList<>();
         final LinkedList<AmplitudeData> forwardAmpWindow = new LinkedList<>();

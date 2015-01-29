@@ -3,7 +3,6 @@ package com.hello.suripu.core.util;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.io.Resources;
-import com.hello.suripu.algorithm.sleep.MotionScoreAlgorithm;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.InBedEvent;
@@ -17,8 +16,6 @@ import org.hamcrest.core.Is;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -35,18 +32,6 @@ import static org.hamcrest.Matchers.is;
  * Created by pangwu on 12/18/14.
  */
 public class TimelineUtilsTest {
-
-    @Before
-    public void setUp(){
-        MotionScoreAlgorithm.debugMode = true;
-        MotionFeatures.debugMode = true;
-    }
-
-    @After
-    public void cleanUp(){
-        MotionScoreAlgorithm.debugMode = false;
-        MotionFeatures.debugMode = false;
-    }
 
     @Test
     public void testMerge() {
@@ -180,7 +165,8 @@ public class TimelineUtilsTest {
         final List<Event> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 17, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 Optional.of(new DateTime(1421575200000L, DateTimeZone.UTC)),
-                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES);
+                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                true);
         final SleepEvent sleepSegment = (SleepEvent) sleepEvents.get(1);
         final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0);
         final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2);
@@ -230,7 +216,8 @@ public class TimelineUtilsTest {
         final List<Event> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 24, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 Optional.of(new DateTime(1422181740000L, DateTimeZone.UTC)),
-                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES);
+                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                true);
         final SleepEvent sleepSegment = (SleepEvent) sleepEvents.get(1);
         final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0);
         final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2);
@@ -282,7 +269,8 @@ public class TimelineUtilsTest {
         final List<Event> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 04, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 Optional.of(new DateTime(1420445760000L, DateTimeZone.UTC)),
-                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES);
+                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                true);
         final SleepEvent sleepSegment = (SleepEvent) sleepEvents.get(1);
         final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0);
         final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2);

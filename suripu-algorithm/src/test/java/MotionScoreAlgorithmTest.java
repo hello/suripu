@@ -15,8 +15,6 @@ import com.hello.suripu.algorithm.utils.MotionFeatures;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -30,18 +28,6 @@ import static org.hamcrest.Matchers.is;
  * Created by pangwu on 12/14/14.
  */
 public class MotionScoreAlgorithmTest {
-
-    @Before
-    public void setUp(){
-        MotionScoreAlgorithm.debugMode = true;
-        MotionFeatures.debugMode = true;
-    }
-
-    @After
-    public void cleanUp(){
-        MotionScoreAlgorithm.debugMode = false;
-        MotionFeatures.debugMode = false;
-    }
 
     @Test
     public void testLinearScoringFunction(){
@@ -140,7 +126,7 @@ public class MotionScoreAlgorithmTest {
             }
         }
         final MotionScoreAlgorithm algorithm = new MotionScoreAlgorithm(matrix, 2, smoothedData.size(), scoringFunctions);
-        final List<Segment> sleepSegments = algorithm.getSleepEvents();
+        final List<Segment> sleepSegments = algorithm.getSleepEvents(true);
         //final Segment sleepSegment = sleepSegments.get(1);
         final Segment goToBedSegment = sleepSegments.get(0);
         final Segment outOfBedSegment = sleepSegments.get(3);
