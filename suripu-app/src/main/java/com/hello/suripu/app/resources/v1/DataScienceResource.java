@@ -16,6 +16,7 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.InsightProcessor;
+import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.yammer.metrics.annotation.Timed;
@@ -45,7 +46,7 @@ import java.util.List;
  * Created by pangwu on 12/1/14.
  */
 @Path("/v1/datascience")
-public class DataScienceResource {
+public class DataScienceResource extends BaseResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataScienceResource.class);
     private final AccountDAO accountDAO;
     private final TrackerMotionDAO trackerMotionDAO;
@@ -103,7 +104,7 @@ public class DataScienceResource {
         }
 
         final List<Sample> senseData = deviceDataDAO.generateTimeSeriesByLocalTime(targetDate.getMillis(),
-                endDate.getMillis(), accessToken.accountId, internalSenseIdOptional.get(), 1, "light");
+                endDate.getMillis(), accessToken.accountId, internalSenseIdOptional.get(), 1, "light", missingDataDefaultValue(accessToken.accountId));
 
         final List<Event> lightEvents = TimelineUtils.getLightEvents(senseData);
 
@@ -205,7 +206,7 @@ public class DataScienceResource {
         }
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceId.get(), slotDurationInMinutes, sensor);
+                accountId, deviceId.get(), slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId));
     }
 
 

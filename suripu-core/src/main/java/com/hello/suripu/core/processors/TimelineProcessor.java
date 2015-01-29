@@ -89,7 +89,7 @@ public class TimelineProcessor {
     }
 
 
-    public List<Timeline> retrieveTimelines(Long accountId, String date) {
+    public List<Timeline> retrieveTimelines(final Long accountId, final String date, Integer missingDataDefaultValue) {
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withHourOfDay(20);
         final DateTime endDate = targetDate.plusHours(16);
@@ -123,7 +123,7 @@ public class TimelineProcessor {
 
             optionalSensorData = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
                     targetDate.getMillis(), endDate.getMillis(),
-                    accountId, deviceId.get(), slotDurationMins);
+                    accountId, deviceId.get(), slotDurationMins, missingDataDefaultValue);
         }
 
         // compute lights-out events

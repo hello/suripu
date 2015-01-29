@@ -227,7 +227,8 @@ public abstract class DeviceDataDAO {
             final Long accountId,
             final Long deviceId,
             final int slotDurationInMinutes,
-            final String sensor) {
+            final String sensor,
+            final Integer missingDataDefaultValue) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC);
@@ -283,7 +284,7 @@ public abstract class DeviceDataDAO {
 
         final int numberOfBuckets= (int) ((absoluteIntervalMS / DateTimeConstants.MILLIS_PER_MINUTE) / slotDurationInMinutes + 1);
 
-        final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes);
+        final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes, missingDataDefaultValue);
 
         LOGGER.trace("Map size = {}", map.size());
 
@@ -311,7 +312,8 @@ public abstract class DeviceDataDAO {
             final Long accountId,
             final Long deviceId,
             final int slotDurationInMinutes,
-            final String sensor) {
+            final String sensor,
+            final Integer missingDataDefaultValue) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC);
@@ -344,7 +346,7 @@ public abstract class DeviceDataDAO {
         final long absoluteIntervalMS = queryEndTimestampInUTC - queryStartTimestampInUTC;
         final int numberOfBuckets= (int) ((absoluteIntervalMS / DateTimeConstants.MILLIS_PER_MINUTE) / slotDurationInMinutes + 1);
 
-        final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes);
+        final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes, missingDataDefaultValue);
 
         LOGGER.trace("Map size = {}", map.size());
 
@@ -371,7 +373,8 @@ public abstract class DeviceDataDAO {
             final Long queryEndTimestampInLocalUTC,
             final Long accountId,
             final Long deviceId,
-            final int slotDurationInMinutes) {
+            final int slotDurationInMinutes,
+            final Integer missingDataDefaultValue) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC);
@@ -437,9 +440,9 @@ public abstract class DeviceDataDAO {
             LOGGER.trace("Processing sensor {}", sensor.toString());
             final Optional<Map<Long, Sample>> optionalSensorMap = optionalPopulatedMapAll.get().getData(sensor);
             if (optionalSensorMap.isPresent()) {
-                Map<Long, Sample> sensorMap = optionalSensorMap.get();
+                final Map<Long, Sample> sensorMap = optionalSensorMap.get();
 
-                final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes);
+                final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes, missingDataDefaultValue);
                 LOGGER.trace("Empty Map size = {}", map.size());
 
                 // Override map with values from DB
@@ -463,7 +466,8 @@ public abstract class DeviceDataDAO {
             final Long queryEndTimestampInUTC,
             final Long accountId,
             final Long deviceId,
-            final int slotDurationInMinutes) {
+            final int slotDurationInMinutes,
+            final Integer missingDataDefaultValue) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC);
@@ -517,7 +521,7 @@ public abstract class DeviceDataDAO {
 
             final Map<Long, Sample> sensorMap = optionalSensorMap.get();
 
-            final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes);
+            final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes, missingDataDefaultValue);
             LOGGER.trace("Map size = {}", map.size());
 
             // Override map with values from DB

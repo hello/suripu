@@ -13,6 +13,7 @@ import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.resources.BaseResource;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -33,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 @Path("/v1/room")
-public class RoomConditionsResource {
+public class RoomConditionsResource extends BaseResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RoomConditionsResource.class);
     private final AccountDAO accountDAO;
@@ -123,7 +124,7 @@ public class RoomConditionsResource {
         }
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceId.get(), slotDurationInMinutes, sensor);
+                accessToken.accountId, deviceId.get(), slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId));
     }
 
     @Timed
@@ -147,8 +148,8 @@ public class RoomConditionsResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        Optional<AllSensorSampleList> optionalData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceId.get(), slotDurationInMinutes);
+        final Optional<AllSensorSampleList> optionalData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
+                accessToken.accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId));
 
         if (!optionalData.isPresent()) {
             return Collections.emptyMap();
@@ -178,8 +179,8 @@ public class RoomConditionsResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        Optional<AllSensorSampleList> optionalData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceId.get(), slotDurationInMinutes);
+        final Optional<AllSensorSampleList> optionalData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
+                accessToken.accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId));
         if (!optionalData.isPresent()) {
             return Collections.emptyMap();
         }
@@ -244,7 +245,7 @@ public class RoomConditionsResource {
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accessToken.accountId, deviceId.get(), slotDurationInMinutes,
-                sensor);
+                sensor, missingDataDefaultValue(accessToken.accountId));
     }
 
 
@@ -302,7 +303,7 @@ public class RoomConditionsResource {
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accountId, deviceId.get(), slotDurationInMinutes,
-                sensor);
+                sensor, missingDataDefaultValue(accountId));
     }
 
     @Timed
@@ -350,7 +351,7 @@ public class RoomConditionsResource {
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
                 accessToken.accountId, deviceId.get(), slotDurationInMinutes,
-                sensor);
+                sensor, missingDataDefaultValue(accessToken.accountId));
     }
 
     /*
@@ -382,7 +383,7 @@ public class RoomConditionsResource {
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
                 accountId, deviceId.get(), slotDurationInMinutes,
-                sensor);
+                sensor, missingDataDefaultValue(accountId));
     }
 
     private Optional<Long> getAccountIdByEmail(final String email) {
@@ -439,7 +440,7 @@ public class RoomConditionsResource {
         }
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceId.get(), slotDurationInMinutes, sensor);
+                accountId, deviceId.get(), slotDurationInMinutes, sensor, missingDataDefaultValue(accountId));
 
     }
 
@@ -466,7 +467,7 @@ public class RoomConditionsResource {
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accountId, deviceId.get(), slotDurationInMinutes,
-                sensor);
+                sensor, missingDataDefaultValue(accountId));
     }
 
     private Map<Sensor, List<Sample>> retrieveAllSensorsWeekData(final Long accountId, final Long queryEndTimestampInUTC) {
@@ -488,8 +489,8 @@ public class RoomConditionsResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        Optional<AllSensorSampleList> optionalData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceId.get(), slotDurationInMinutes);
+        final Optional<AllSensorSampleList> optionalData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeInUTC, queryEndTimestampInUTC,
+                accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accountId));
 
         if (!optionalData.isPresent()) {
             return Collections.emptyMap();
@@ -497,5 +498,4 @@ public class RoomConditionsResource {
 
         return optionalData.get().getData();
     }
-
 }

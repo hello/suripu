@@ -81,7 +81,7 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
                     this.configuration.getProcessAheadTimeInMinutes(),
                     this.configuration.getAggregateWindowSizeInMinute(),
                     this.configuration.getLightSleepThreshold(),
-                    feature
+                    flipper
             );
         }
 
