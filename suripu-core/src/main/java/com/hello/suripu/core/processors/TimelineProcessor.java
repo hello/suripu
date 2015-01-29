@@ -152,7 +152,8 @@ public class TimelineProcessor {
         try {
             final List<Event> sleepEventsFromAlgorithm = TimelineUtils.getSleepEvents(targetDate,
                     trackerMotions, lightOutTimeOptional,
-                    MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES);
+                    MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                    false);
             final SleepEvent sleepEvent = (SleepEvent) sleepEventsFromAlgorithm.get(1);
             final WakeupEvent wakeupEvent = (WakeupEvent) sleepEventsFromAlgorithm.get(2);
 

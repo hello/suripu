@@ -808,12 +808,13 @@ public class TimelineUtils {
     public static List<Event> getSleepEvents(final DateTime targetDateLocalUTC,
                                          final List<TrackerMotion> trackerMotions,
                                          final Optional<DateTime> lightOutTimeOptional,
-                                         final int smoothWindowSizeInMinutes){
+                                         final int smoothWindowSizeInMinutes,
+                                         final boolean debugMode){
         final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions);
         final List<AmplitudeData> dataWithGapFilled = dataSource.getDataForDate(targetDateLocalUTC.withTimeAtStartOfDay());
 
         final int featureWindowSizeInMinutes = smoothWindowSizeInMinutes;
-        final Map<MotionFeatures.FeatureType, List<AmplitudeData>> motionFeatures = MotionFeatures.generateTimestampAlignedFeatures(dataWithGapFilled, featureWindowSizeInMinutes);
+        final Map<MotionFeatures.FeatureType, List<AmplitudeData>> motionFeatures = MotionFeatures.generateTimestampAlignedFeatures(dataWithGapFilled, featureWindowSizeInMinutes, debugMode);
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures = MotionFeatures.aggregateData(motionFeatures, smoothWindowSizeInMinutes);
         LOGGER.info("smoothed data size {}", aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE).size());
 
@@ -851,7 +852,7 @@ public class TimelineUtils {
                 aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE).size(),  // num of data.
                 scoringFunctions);
 
-        final List<Segment> segments = sleepDetectionAlgorithm.getSleepEvents();
+        final List<Segment> segments = sleepDetectionAlgorithm.getSleepEvents(debugMode);
         final ArrayList<Event> events = new ArrayList<>();
         final Segment goToBedSegment = segments.get(0);
         final Segment fallAsleepSegment = segments.get(1);

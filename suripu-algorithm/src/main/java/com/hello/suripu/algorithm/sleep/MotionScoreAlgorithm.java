@@ -28,7 +28,6 @@ public class MotionScoreAlgorithm {
     private final Map<Long, List<AmplitudeData>> dimensions;
     private final int dimensionCount;
     private final int rowCount;
-    public static boolean debugMode = false;
 
     public MotionScoreAlgorithm(final Map<Long, List<AmplitudeData>> dataMatrix, final int dimensionCount, final int rowCount,
                                 final List<SleepDataScoringFunction> scoringFunctions){
@@ -54,7 +53,7 @@ public class MotionScoreAlgorithm {
         return Optional.of(copy.get(0));
     }
 
-    public List<Segment> getSleepEvents() throws AlgorithmException {
+    public List<Segment> getSleepEvents(final boolean debugMode) throws AlgorithmException {
         final List<List<AmplitudeData>> rawData = new ArrayList<>();
         long timestampOfLastData = 0;
 
