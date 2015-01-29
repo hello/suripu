@@ -1,5 +1,7 @@
 package com.hello.suripu.core.models;
 
+import com.google.common.collect.Lists;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -11,8 +13,10 @@ public class AllSensorSampleList {
     private final List<Sample> light;
     private final List<Sample> sound;
     private final List<Sample> humidity;
-    private final List<Sample>temperature;
+    private final List<Sample> temperature;
     private final List<Sample> particulates;
+
+    private final List<Sensor> sensors;
 
     public AllSensorSampleList() {
         this.light = new ArrayList<>();
@@ -20,20 +24,32 @@ public class AllSensorSampleList {
         this.humidity = new ArrayList<>();
         this.temperature = new ArrayList<>();
         this.particulates = new ArrayList<>();
+        sensors = Lists.newArrayList(
+                Sensor.LIGHT,
+                Sensor.HUMIDITY,
+                Sensor.PARTICULATES,
+                Sensor.SOUND,
+                Sensor.TEMPERATURE);
+
     }
 
     public void setData(final Sensor sensor, final List<Sample> values) {
         switch (sensor) {
             case LIGHT:
                 this.light.addAll(values);
+                break;
             case SOUND:
                 this.sound.addAll(values);
+                break;
             case HUMIDITY:
                 this.humidity.addAll(values);
+                break;
             case TEMPERATURE:
                 this.temperature.addAll(values);
+                break;
             case PARTICULATES:
                 this.particulates.addAll(values);
+                break;
             default:
                 break;
         }
@@ -41,47 +57,21 @@ public class AllSensorSampleList {
     }
 
     public List<Sensor> getAvailableSensors() {
-        final List<Sensor> sensors = new ArrayList<>();
-        sensors.add(Sensor.LIGHT);
-        sensors.add(Sensor.HUMIDITY);
-        sensors.add(Sensor.PARTICULATES);
-        sensors.add(Sensor.SOUND);
-        sensors.add(Sensor.TEMPERATURE);
-        return sensors;
-    }
-
-    public void setLight(final List<Sample> values) {
-        this.light.addAll(values);
-    }
-
-    public void setSound(final List<Sample> values) {
-        this.sound.addAll(values);
-    }
-
-    public void setHumidity(final List<Sample> values) {
-        this.humidity.addAll(values);
-    }
-
-    public void setTemperature(final List<Sample> values) {
-        this.temperature.addAll(values);
-    }
-
-    public void setParticulates(final List<Sample> values) {
-        this.particulates.addAll(values);
+        return this.sensors;
     }
 
     public List<Sample> getData(final Sensor sensor) {
         switch (sensor) {
             case LIGHT:
-                    return this.light;
+                return this.light;
             case SOUND:
-                    return this.sound;
+                return this.sound;
             case HUMIDITY:
-                    return this.humidity;
+                return this.humidity;
             case TEMPERATURE:
-                    return this.temperature;
+                return this.temperature;
             case PARTICULATES:
-                    return this.particulates;
+                return this.particulates;
             default:
                 return Collections.EMPTY_LIST;
         }
