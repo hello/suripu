@@ -4,6 +4,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.core.Segment;
+import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -150,7 +151,9 @@ public class TimelineProcessor {
         Optional<Segment> sleepSegment = Optional.absent();
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
-            final List<Event> sleepEventsFromAlgorithm = TimelineUtils.getSleepEvents(targetDate, trackerMotions, lightOutTimeOptional, 10);
+            final List<Event> sleepEventsFromAlgorithm = TimelineUtils.getSleepEvents(targetDate,
+                    trackerMotions, lightOutTimeOptional,
+                    MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES);
             final SleepEvent sleepEvent = (SleepEvent) sleepEventsFromAlgorithm.get(1);
             final WakeupEvent wakeupEvent = (WakeupEvent) sleepEventsFromAlgorithm.get(2);
 

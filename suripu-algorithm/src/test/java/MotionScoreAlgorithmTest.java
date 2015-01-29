@@ -11,9 +11,12 @@ import com.hello.suripu.algorithm.sleep.scores.AmplitudeDataScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.LightOutScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.SleepDataScoringFunction;
 import com.hello.suripu.algorithm.utils.MaxAmplitudeAggregator;
+import com.hello.suripu.algorithm.utils.MotionFeatures;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -27,6 +30,18 @@ import static org.hamcrest.Matchers.is;
  * Created by pangwu on 12/14/14.
  */
 public class MotionScoreAlgorithmTest {
+
+    @Before
+    public void setUp(){
+        MotionScoreAlgorithm.debugMode = true;
+        MotionFeatures.debugMode = true;
+    }
+
+    @After
+    public void cleanUp(){
+        MotionScoreAlgorithm.debugMode = false;
+        MotionFeatures.debugMode = false;
+    }
 
     @Test
     public void testLinearScoringFunction(){
@@ -108,7 +123,7 @@ public class MotionScoreAlgorithmTest {
         // Raw data count 791
         assertThat(dataSource.getDataForDate(new DateTime(2014, 12, 02, 0, 0, DateTimeZone.UTC)).size(), is(791));
 
-        final AmplitudeDataPreprocessor smoother = new MaxAmplitudeAggregator(10 * DateTimeConstants.MILLIS_PER_MINUTE);
+        final AmplitudeDataPreprocessor smoother = new MaxAmplitudeAggregator(MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES * DateTimeConstants.MILLIS_PER_MINUTE);
         final List<AmplitudeData> smoothedData = smoother.process(dataSource.getDataForDate(new DateTime(2014, 12, 02, 0, 0, DateTimeZone.UTC)));
 
         final ArrayList<SleepDataScoringFunction> scoringFunctions = new ArrayList<>();
