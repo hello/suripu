@@ -504,6 +504,7 @@ public abstract class DeviceDataDAO {
         final int numberOfBuckets= (int) ((absoluteIntervalMS / DateTimeConstants.MILLIS_PER_MINUTE) / slotDurationInMinutes + 1);
 
         final AllSensorSampleList sensorDataResults = new AllSensorSampleList();
+        final AllSensorSampleMap mergedMaps = new AllSensorSampleMap();
 
         for (Sensor sensor : Sensor.values()) {
             LOGGER.trace("Processing sensor {}", sensor.toString());
@@ -520,12 +521,14 @@ public abstract class DeviceDataDAO {
             LOGGER.trace("Map size = {}", map.size());
 
             // Override map with values from DB
-            final Map<Long, Sample> merged = Bucketing.mergeResults(map, sensorMap);
+            mergedMaps.setSampleMap(sensor, Bucketing.mergeResults(map, sensorMap));
 
-            LOGGER.trace("New map size = {}", merged.size());
+            if (mergedMaps.getData(sensor).isPresent()) {
+                LOGGER.trace("New map size = {}", mergedMaps.getData(sensor).get().size());
+                final List<Sample> sortedList = Bucketing.sortResults(mergedMaps.getData(sensor).get(), currentOffsetMillis);
+                sensorDataResults.setData(sensor, sortedList);
+            }
 
-            final List<Sample> sortedList = Bucketing.sortResults(merged, currentOffsetMillis);
-            sensorDataResults.setData(sensor, sortedList);
         }
 
         return Optional.of(sensorDataResults);
