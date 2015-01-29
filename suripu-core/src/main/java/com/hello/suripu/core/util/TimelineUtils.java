@@ -890,28 +890,28 @@ public class TimelineUtils {
         fixedSleepEvents.add(wakeUp);
         fixedSleepEvents.add(outOfBed);
 
+        if(sleep.getStartTimestamp() == goToBed.getStartTimestamp()){
+            fixedSleepEvents.set(1, new SleepEvent(sleep.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                    sleep.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                    sleep.getTimezoneOffset()));
+        }
+
+        if(wakeUp.getStartTimestamp() == outOfBed.getStartTimestamp()){
+            fixedSleepEvents.set(3, new OutOfBedEvent(outOfBed.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                    outOfBed.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                    outOfBed.getTimezoneOffset()));
+        }
+
         // Heuristic fix
         if(sleep.getStartTimestamp() < goToBed.getStartTimestamp()) {
 
+            LOGGER.warn("Go to bed {} later then fall asleep {}, sleep set to go to bed.",
+                    new DateTime(goToBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBed.getTimezoneOffset())),
+                    new DateTime(sleep.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleep.getTimezoneOffset())));
 
-            if (hasLongQuietPeriod(sleep.getStartTimestamp(), goToBed.getStartTimestamp(),
-                    features.get(MotionFeatures.FeatureType.MAX_NO_MOTION_PERIOD), 60)) {
-                LOGGER.warn("Go to bed {} later the fall asleep {}, sleep set to go to bed.",
-                        new DateTime(goToBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBed.getTimezoneOffset())),
-                        new DateTime(sleep.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleep.getTimezoneOffset())));
-
-                fixedSleepEvents.set(1, new SleepEvent(goToBed.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                        goToBed.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                        goToBed.getTimezoneOffset()));
-            }else{
-                LOGGER.warn("Go to bed {} later the fall asleep {}, go to bed set to sleep.",
-                        new DateTime(goToBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBed.getTimezoneOffset())),
-                        new DateTime(sleep.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleep.getTimezoneOffset())));
-
-                fixedSleepEvents.set(0, new InBedEvent(sleep.getStartTimestamp() - DateTimeConstants.MILLIS_PER_MINUTE,
-                        sleep.getEndTimestamp() - DateTimeConstants.MILLIS_PER_MINUTE,
-                        sleep.getTimezoneOffset()));
-            }
+            fixedSleepEvents.set(1, new SleepEvent(goToBed.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                    goToBed.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                    goToBed.getTimezoneOffset()));
 
         }
 
