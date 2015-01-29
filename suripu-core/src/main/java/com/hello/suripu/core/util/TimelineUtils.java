@@ -291,35 +291,36 @@ public class TimelineUtils {
         final ArrayList<Event> result = new ArrayList<>();
         Event firstEventOfThatType = null;
         Event lastEventOfThatType = null;
-        int maxSleepDepth = 0;
+        int minSleepDepth = Integer.MAX_VALUE;
 
         for(final Event event:eventList){
             if(event.getType() == Event.Type.MOTION){
                 if(firstEventOfThatType == null){
                     firstEventOfThatType = event;
                     lastEventOfThatType = event;
-                    maxSleepDepth = event.getSleepDepth();
+                    minSleepDepth = event.getSleepDepth();
                     continue;
                 }
 
                 lastEventOfThatType = event;
-                if(event.getSleepDepth() > maxSleepDepth){
-                    maxSleepDepth = event.getSleepDepth();
+                if(event.getSleepDepth() < minSleepDepth){
+                    minSleepDepth = event.getSleepDepth();
                 }
                 continue;
             }
 
             if(lastEventOfThatType != null){
-                final Event smoothedEvent = Event.extend(firstEventOfThatType, firstEventOfThatType.getStartTimestamp(), lastEventOfThatType.getEndTimestamp(), maxSleepDepth);
+                final Event smoothedEvent = Event.extend(firstEventOfThatType, firstEventOfThatType.getStartTimestamp(), lastEventOfThatType.getEndTimestamp(), minSleepDepth);
                 result.add(smoothedEvent);
             }
             result.add(event);
             firstEventOfThatType = null;
             lastEventOfThatType = null;
+            minSleepDepth = Integer.MAX_VALUE;
         }
 
         if(lastEventOfThatType != null){
-            final Event smoothedEvent = Event.extend(firstEventOfThatType, firstEventOfThatType.getStartTimestamp(), lastEventOfThatType.getEndTimestamp(), maxSleepDepth);
+            final Event smoothedEvent = Event.extend(firstEventOfThatType, firstEventOfThatType.getStartTimestamp(), lastEventOfThatType.getEndTimestamp(), minSleepDepth);
             result.add(smoothedEvent);
         }
 
