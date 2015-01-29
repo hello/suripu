@@ -1,5 +1,6 @@
 package com.hello.suripu.core.processors;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -11,6 +12,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
+import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.AggregateScore;
@@ -42,6 +44,8 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class TimelineProcessor {
 
@@ -89,7 +93,41 @@ public class TimelineProcessor {
     }
 
 
-    public List<Timeline> retrieveTimelines(final Long accountId, final String date, Integer missingDataDefaultValue) {
+    public List<List<Timeline>> batchProcessTimelines(final Map<Long, Set<DateTime>> groupedAccountIdTargetDateLocalUTC,
+                                                      final Map<Long, Integer> accountIdDefaultSensorValues,
+                                                      final long sleepBetweenEachProcessMillis,
+                                                      final TimelineDAODynamoDB timelineDAODynamoDB){
+        final ArrayList<List<Timeline>> batchedResult = new ArrayList<>();
+        for(final Long accountId:groupedAccountIdTargetDateLocalUTC.keySet()){
+            final Set<DateTime> targetDatesLocalUTC = groupedAccountIdTargetDateLocalUTC.get(accountId);
+            for(final DateTime targetDateLocalUTC:targetDatesLocalUTC) {
+
+                final List<Timeline> timelines = retrieveTimelines(accountId,
+                        targetDateLocalUTC.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT),
+                        accountIdDefaultSensorValues.get(accountId));
+                batchedResult.add(timelines);
+                try {
+                    Thread.sleep(sleepBetweenEachProcessMillis);
+                } catch (InterruptedException e) {
+                    LOGGER.error("Fail to sleep {} millis", sleepBetweenEachProcessMillis);
+                }
+
+
+                try {
+                    timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC, timelines);
+                    LOGGER.info("Timeline at {} saved for account {}.", targetDateLocalUTC, accountId);
+                } catch (AmazonServiceException aex) {
+                    LOGGER.error("AWS error, save timeline for account {} failed, error {}", accountId, aex.getMessage());
+                } catch (Exception ex) {
+                    LOGGER.error("Save timeline for account {} failed, error {}", accountId, ex.getMessage());
+                }
+            }
+        }
+        return batchedResult;
+    }
+
+
+    public List<Timeline> retrieveTimelines(final Long accountId, final String date, final Integer missingDataDefaultValue) {
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withHourOfDay(20);
         final DateTime endDate = targetDate.plusHours(16);
