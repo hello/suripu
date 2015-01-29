@@ -142,8 +142,8 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         final UUID accessTokenUUID = UUID.randomUUID();
         final UUID refreshTokenUUID = UUID.randomUUID();
 
-        LOGGER.debug("AccessToken String = {}", accessTokenUUID.toString());
-        LOGGER.debug("RefreshToken String = {}", refreshTokenUUID.toString());
+        LOGGER.trace("AccessToken String = {}", accessTokenUUID.toString());
+        LOGGER.trace("RefreshToken String = {}", refreshTokenUUID.toString());
 
 
         final AccessToken accessToken = new AccessToken.Builder()
@@ -171,8 +171,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         // Make sure we have all the permissions
         boolean valid = grantedScopes.containsAll(requiredScopes);
         if(!valid) {
-            LOGGER.debug("Required: {}", requiredScopes);
-            LOGGER.debug("Granted: {}", grantedScopes);
+            LOGGER.warn("Required: {}, granted: {}", requiredScopes, grantedScopes);
         }
 
         return valid;
@@ -225,11 +224,11 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
 
     private Boolean hasExpired(final AccessToken accessToken, DateTime now) {
         long diffInSeconds= (now.getMillis() - accessToken.createdAt.getMillis()) / 1000;
-        LOGGER.debug("Token = {} for account_id = {}", accessToken.serializeAccessToken(), accessToken.accountId);
-        LOGGER.debug("Token created at = {}", accessToken.createdAt);
-        LOGGER.debug("DiffInSeconds = {}", diffInSeconds);
+        LOGGER.trace("Token = {} for account_id = {}", accessToken.serializeAccessToken(), accessToken.accountId);
+        LOGGER.trace("Token created at = {}", accessToken.createdAt);
+        LOGGER.trace("DiffInSeconds = {}", diffInSeconds);
         if(diffInSeconds > expirationTimeInSeconds) {
-            LOGGER.warn("Token {} has expired {} seconds ago", accessToken.serializeAccessToken(), diffInSeconds);
+            LOGGER.warn("Token {} has expired {} seconds ago (accountId = {})", accessToken.serializeAccessToken(), diffInSeconds, accessToken.accountId);
             return true;
         }
 
