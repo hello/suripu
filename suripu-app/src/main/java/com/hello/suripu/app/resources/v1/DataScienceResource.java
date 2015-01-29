@@ -21,6 +21,7 @@ import com.hello.suripu.core.util.TimelineUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
+import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -200,7 +201,8 @@ public class DataScienceResource {
     @POST
     @Path("/batch_label")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void label(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+    @Produces(MediaType.APPLICATION_JSON)
+    public int label(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
                       @Valid final List<UserLabel> labels) {
 
         List<Long> accountIds = new ArrayList<>();
@@ -236,6 +238,14 @@ public class DataScienceResource {
             tzOffsets.add(label.tzOffsetMillis);
         }
 
-        sleepLabelDAO.batchInsertUserLabels(accountIds, emails, userLabels, nightDates, UTCTimestamps, localUTCTimestamps, tzOffsets);
+        int inserted = 0;
+        try {
+            sleepLabelDAO.batchInsertUserLabels(accountIds, emails, userLabels, nightDates, UTCTimestamps, localUTCTimestamps, tzOffsets);
+            inserted = accountIds.size();
+        } catch (UnableToExecuteStatementException exception) {
+            LOGGER.warn("Batch insert user labels fails for some reason");
+        }
+
+        return inserted;
     }
 }
