@@ -169,7 +169,7 @@ public class TimelineProcessor {
             }
 
 
-        }catch (Exception ex){
+        }catch (Exception ex){ //TODO : catch a more specific exception
             LOGGER.error("Generate sleep period from Awake Detection Algorithm failed: {}", ex.getMessage());
         }
 
