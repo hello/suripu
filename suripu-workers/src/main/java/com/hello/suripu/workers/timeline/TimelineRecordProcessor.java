@@ -142,9 +142,12 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
 
             }
 
-            for(final DateTime targetDateLocalUTC:targetDatesLocalUTC){
-                final List<Timeline> timelines = this.timelineProcessor.retrieveTimelines(accountId,
-                        targetDateLocalUTC.toString(DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT)));
+            for(final DateTime targetDateLocalUTC: targetDatesLocalUTC){
+                final String formattedDate = targetDateLocalUTC.toString(DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT));
+                final List<Timeline> timelines = this.timelineProcessor.retrieveTimelines(
+                        accountId,
+                        formattedDate,
+                        missingDataDefaultValue(accountId));
                 try {
                     LOGGER.warn("Sleeping for 1 sec");
                     Thread.sleep(1000);

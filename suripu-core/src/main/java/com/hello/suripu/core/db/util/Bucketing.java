@@ -3,6 +3,7 @@ package com.hello.suripu.core.db.util;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.AllSensorSampleMap;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
@@ -152,15 +153,15 @@ public class Bucketing {
      * @param slotDurationInMinutes
      * @return
      */
-    public static Map<Long, Sample>  generateEmptyMap(final int numberOfBuckets, final DateTime startDate, final int slotDurationInMinutes) {
+    public static Map<Long, Sample>  generateEmptyMap(final int numberOfBuckets, final DateTime startDate, final int slotDurationInMinutes, final int missingSampleDefaultValue) {
 
-        final Map<Long, Sample> map = new HashMap<>();
+        final Map<Long, Sample> map = Maps.newHashMap();
 
         for(int i = 0; i < numberOfBuckets; i++) {
             final Long key = startDate.minusMinutes(i * slotDurationInMinutes).getMillis();
             LOGGER.trace("Inserting {}", key);
 
-            map.put(key, new Sample(key, 0, null));
+            map.put(key, new Sample(key, missingSampleDefaultValue, null));
         }
 
         LOGGER.debug("Map size = {}", map.size());
