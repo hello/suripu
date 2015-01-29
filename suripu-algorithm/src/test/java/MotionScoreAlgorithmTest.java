@@ -11,6 +11,7 @@ import com.hello.suripu.algorithm.sleep.scores.AmplitudeDataScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.LightOutScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.SleepDataScoringFunction;
 import com.hello.suripu.algorithm.utils.MaxAmplitudeAggregator;
+import com.hello.suripu.algorithm.utils.MotionFeatures;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -108,7 +109,7 @@ public class MotionScoreAlgorithmTest {
         // Raw data count 791
         assertThat(dataSource.getDataForDate(new DateTime(2014, 12, 02, 0, 0, DateTimeZone.UTC)).size(), is(791));
 
-        final AmplitudeDataPreprocessor smoother = new MaxAmplitudeAggregator(10 * DateTimeConstants.MILLIS_PER_MINUTE);
+        final AmplitudeDataPreprocessor smoother = new MaxAmplitudeAggregator(MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES * DateTimeConstants.MILLIS_PER_MINUTE);
         final List<AmplitudeData> smoothedData = smoother.process(dataSource.getDataForDate(new DateTime(2014, 12, 02, 0, 0, DateTimeZone.UTC)));
 
         final ArrayList<SleepDataScoringFunction> scoringFunctions = new ArrayList<>();
@@ -125,7 +126,7 @@ public class MotionScoreAlgorithmTest {
             }
         }
         final MotionScoreAlgorithm algorithm = new MotionScoreAlgorithm(matrix, 2, smoothedData.size(), scoringFunctions);
-        final List<Segment> sleepSegments = algorithm.getSleepEvents();
+        final List<Segment> sleepSegments = algorithm.getSleepEvents(true);
         //final Segment sleepSegment = sleepSegments.get(1);
         final Segment goToBedSegment = sleepSegments.get(0);
         final Segment outOfBedSegment = sleepSegments.get(3);
