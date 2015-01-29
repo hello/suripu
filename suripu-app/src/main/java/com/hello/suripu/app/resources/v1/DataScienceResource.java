@@ -103,7 +103,7 @@ public class DataScienceResource extends BaseResource {
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
-        final List<Sample> senseData = deviceDataDAO.generateTimeSeriesByLocalTime(targetDate.getMillis(),
+        final List<Sample> senseData = deviceDataDAO.generateTimeSeriesByUTCTime(targetDate.getMillis(),
                 endDate.getMillis(), accessToken.accountId, internalSenseIdOptional.get(), 1, "light", missingDataDefaultValue(accessToken.accountId));
 
         final List<Event> lightEvents = TimelineUtils.getLightEvents(senseData);
