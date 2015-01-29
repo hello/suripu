@@ -83,11 +83,11 @@ public class English {
     public final static String ALERT_LIGHT_MESSAGE = "The light level is **way too high**.";
 
     // Sound Conditions
-    public final static String IDEAL_SOUND_PRE_SLEEP_MESSAGE = "Your room's sound level was **just right**";
+    public final static String IDEAL_SOUND_PRE_SLEEP_MESSAGE = "Your room's sound level was **just right**.";
     public final static String WARNING_SOUND_PRE_SLEEP_MESSAGE = "Your room was **a little noisy**.";
     public final static String ALERT_SOUND_PRE_SLEEP_MESSAGE = "Your room was **too noisy**.";
 
-    public final static String IDEAL_SOUND_MESSAGE = "The sound level is **just right**";
+    public final static String IDEAL_SOUND_MESSAGE = "The sound level is **just right**.";
     public final static String WARNING_SOUND_MESSAGE = "Your room is **a little noisy**.";
     public final static String ALERT_SOUND_MESSAGE = "Your room is **too noisy**.";
 

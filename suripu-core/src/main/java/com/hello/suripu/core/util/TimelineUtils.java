@@ -12,6 +12,7 @@ import com.hello.suripu.algorithm.sleep.scores.LightOutScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.MotionDensityScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.SleepDataScoringFunction;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
+import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.InBedEvent;
@@ -593,18 +594,21 @@ public class TimelineUtils {
 
     }
 
-    public static List<Insight> generatePreSleepInsights(final Map<Sensor, List<Sample>> sensorData, final long sleepTimestampUTC) {
+    public static List<Insight> generatePreSleepInsights(Optional<AllSensorSampleList> optionalSensorData, final long sleepTimestampUTC) {
+
+        if (!optionalSensorData.isPresent()) {
+            return Collections.EMPTY_LIST;
+        }
 
         final List<Insight> generatedInsights = new ArrayList<>();
 
-        if (sensorData.isEmpty()) {
-            return generatedInsights;
-        }
+        final AllSensorSampleList sensorData = optionalSensorData.get();
 
+        // find index for time period of interest
         int startIndex = 0;
         int endIndex = 0;
         final long startTimestamp = sleepTimestampUTC - PRESLEEP_WINDOW_IN_MILLIS;
-        for (Sample sample : sensorData.get(Sensor.TEMPERATURE)) {
+        for (Sample sample : sensorData.getData(Sensor.LIGHT)) {
             if (sample.dateTime < startTimestamp) {
                 startIndex++;
             }
@@ -616,59 +620,61 @@ public class TimelineUtils {
             }
         }
 
-//        Map<Sensor, Integer> counts = new HashMap<>();
-//        Map<Sensor, Float> averages = new HashMap<>();
-//        for (Sensor sensor : sensorData.keySet()) {
-//            counts.put(sensor, 0);
-//            averages.put(sensor, 0.0f);
-//        }
+        // initialize
+        Map<Sensor, Float> counts = new HashMap<>();
+        Map<Sensor, Float> sums = new HashMap<>();
+        for (Sensor sensor : sensorData.getAvailableSensors()) {
+            counts.put(sensor, 0.0f);
+            sums.put(sensor, 0.0f);
+        }
 
-        float avgTemp = 0.0f;
-        float avgHumidity = 0.0f;
-        float avgParticulate = 0.0f;
-        float avgLight = 0.0f;
-        float avgSound = 0.0f;
-        float num = 0.0f;
+        // add values
         for (int i = startIndex; i < endIndex; i++) {
+            for (Sensor sensor : sums.keySet()) {
+                final float average = sums.get(sensor) + sensorData.getData(sensor).get(i).value;
+                sums.put(sensor, average);
 
-//            for (Sensor sensor : averages.keySet()) {
-//                final float average = averages.get(sensor) + sensorData.get(sensor).get(i).value;
-//                averages.put(sensor, average);
-//
-//                final int count = counts.get(sensor) + 1;
-//                counts.put(sensor, count);
-//
-//            }
-            avgTemp += sensorData.get(Sensor.TEMPERATURE).get(i).value;
-            avgHumidity += sensorData.get(Sensor.HUMIDITY).get(i).value;
-            avgParticulate += sensorData.get(Sensor.PARTICULATES).get(i).value;
-            avgLight += sensorData.get(Sensor.LIGHT).get(i).value;
-            avgSound += sensorData.get(Sensor.SOUND).get(i).value;
-            num++;
+                final float count = counts.get(sensor) + 1.0f;
+                counts.put(sensor, count);
+            }
         }
 
         final DateTime sleepDateTime = new DateTime(sleepTimestampUTC, DateTimeZone.UTC);
 
-        avgTemp /= num;
-        final CurrentRoomState.State temperatureState = CurrentRoomState.getTemperatureState(avgTemp, sleepDateTime, CurrentRoomState.DEFAULT_TEMP_UNIT, true);
-        generatedInsights.add(new Insight(Sensor.TEMPERATURE, temperatureState.condition, temperatureState.message));
+        // compute average for each sensor, generate insights
+        for (Sensor sensor : counts.keySet()) {
+            if (counts.get(sensor) == 0.0f) {
+                continue;
+            }
 
-        avgHumidity /= num;
-        final CurrentRoomState.State humidityState = CurrentRoomState.getHumidityState(avgHumidity, sleepDateTime, true);
-        generatedInsights.add(new Insight(Sensor.HUMIDITY, humidityState.condition, humidityState.message));
+            final float average = sums.get(sensor) / counts.get(sensor);
+            Optional<CurrentRoomState.State> sensorState;
 
-        avgParticulate /= num;
-        final CurrentRoomState.State particulateState = CurrentRoomState.getParticulatesState(avgParticulate, sleepDateTime, true);
-        generatedInsights.add(new Insight(Sensor.PARTICULATES, particulateState.condition, particulateState.message));
+            switch(sensor) {
+                case LIGHT:
+                    sensorState = Optional.of(CurrentRoomState.getLightState(average, sleepDateTime, true));
+                    break;
+                case SOUND:
+                    sensorState = Optional.of(CurrentRoomState.getSoundState(average, sleepDateTime, true));
+                    break;
+                case HUMIDITY:
+                    sensorState = Optional.of(CurrentRoomState.getHumidityState(average, sleepDateTime, true));
+                    break;
+                case TEMPERATURE:
+                    sensorState = Optional.of(CurrentRoomState.getTemperatureState(average, sleepDateTime, CurrentRoomState.DEFAULT_TEMP_UNIT, true));
+                    break;
+                case PARTICULATES:
+                    sensorState = Optional.of(CurrentRoomState.getParticulatesState(average, sleepDateTime, true));
+                    break;
+                default:
+                    sensorState = Optional.absent();
+                    break;
+            }
 
-        avgLight /= num;
-        final CurrentRoomState.State lightState = CurrentRoomState.getLightState(avgLight, sleepDateTime, true);
-        generatedInsights.add(new Insight(Sensor.LIGHT, lightState.condition, lightState.message));
-
-        avgSound /= num;
-        final CurrentRoomState.State soundState = CurrentRoomState.getSoundState(avgSound, sleepDateTime, true);
-        generatedInsights.add(new Insight(Sensor.SOUND, soundState.condition, soundState.message));
-
+            if (sensorState.isPresent()) {
+                generatedInsights.add(new Insight(sensor, sensorState.get().condition, sensorState.get().message));
+            }
+        }
 
         return generatedInsights;
     }
@@ -727,7 +733,13 @@ public class TimelineUtils {
         return Optional.absent();
     }
 
-    public static List<Event> getLightEvents(final List<Sample> lightData) {
+    public static List<Event> getLightEvents(List<Sample> lightData) {
+
+        if (lightData.size() == 0) {
+            return Collections.EMPTY_LIST;
+        }
+
+        LOGGER.debug("Light samples size: {}", lightData.size());
 
         final LinkedList<AmplitudeData> lightAmplitudeData = new LinkedList<>();
         for (final Sample sample : lightData) {

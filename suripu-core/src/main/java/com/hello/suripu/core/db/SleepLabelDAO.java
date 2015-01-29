@@ -8,12 +8,15 @@ import org.joda.time.DateTime;
 import org.skife.jdbi.v2.TransactionIsolationLevel;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
+import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 import org.skife.jdbi.v2.sqlobject.customizers.TransactionIsolation;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+
+import java.util.List;
 
 
 @RegisterMapper(SleepLabelMapper.class)
@@ -75,4 +78,15 @@ public interface SleepLabelDAO extends Transactional<SleepLabelDAO> {
                          @Bind("tz_offset") int tzOffset
                          );
 
+    @SqlBatch("INSERT INTO user_labels (account_id, email, label, night_date, utc_ts, local_utc_ts, tz_offset) " +
+            "VALUES (:account_id, :email, CAST(:label AS USER_LABEL_TYPE), :night_date, " +
+                    ":utc_ts, :local_utc_ts, :tz_offset)")
+    void batchInsertUserLabels(@Bind("account_id") List<Long> accountId,
+                               @Bind("email") List<String> email,
+                               @Bind("label") List<String> label,
+                               @Bind("night_date") List<DateTime> nightDate,
+                               @Bind("utc_ts") List<DateTime> UTCTimestamp,
+                               @Bind("local_utc_ts") List<DateTime> localUTCTimestamp,
+                               @Bind("tz_offset") List<Integer> tzOffset
+    );
 }
