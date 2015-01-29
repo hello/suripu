@@ -28,8 +28,10 @@ public class MotionScoreAlgorithm {
     private final Map<Long, List<AmplitudeData>> dimensions;
     private final int dimensionCount;
     private final int rowCount;
+    public static boolean debugMode = false;
 
-    public MotionScoreAlgorithm(final Map<Long, List<AmplitudeData>> dataMatrix, final int dimensionCount, final int rowCount, final List<SleepDataScoringFunction> scoringFunctions){
+    public MotionScoreAlgorithm(final Map<Long, List<AmplitudeData>> dataMatrix, final int dimensionCount, final int rowCount,
+                                final List<SleepDataScoringFunction> scoringFunctions){
 
         checkNotNull(dataMatrix, "dataMatrix cannot be null");
         if(scoringFunctions.size() != dimensionCount){
@@ -100,12 +102,12 @@ public class MotionScoreAlgorithm {
 
                 final AmplitudeData datum = rawData.get(d).get(r);
                 timestamp = datum.timestamp;
-                /*
-                if(!printedTime){
+
+                if(!printedTime && debugMode){
                     LOGGER.debug("time {}: ", new DateTime(timestamp, DateTimeZone.forOffsetMillis(rawData.get(0).get(r).offsetMillis)));
                     printedTime = true;
                 }
-                */
+
 
                 final Map<AmplitudeData, EventScores> pdf = sleepScorePDFs.get(d);
                 final SleepDataScoringFunction<AmplitudeData> scoringFunction = this.scoringFunctions.get(d);
@@ -113,28 +115,29 @@ public class MotionScoreAlgorithm {
                 wakeUpScore *= scoringFunction.getScore(datum, pdf).wakeUpEventScore;
                 goToBedScore *= scoringFunction.getScore(datum, pdf).goToBedEventScore;
                 outOfBedScore *= scoringFunction.getScore(datum, pdf).outOfBedEventScore;
-                /*
-                LOGGER.debug("    {}, sleep: {}, wakeup: {}, in_bed: {}, out_bed: {}, val: {}",
-                        d,
-                        scoringFunction.getScore(datum, pdf).sleepEventScore,
-                        scoringFunction.getScore(datum, pdf).wakeUpEventScore,
-                        scoringFunction.getScore(datum, pdf).goToBedEventScore,
-                        scoringFunction.getScore(datum, pdf).outOfBedEventScore,
-                        datum.amplitude);
-                */
+
+                if(debugMode) {
+                    LOGGER.debug("    {}, sleep: {}, wakeup: {}, in_bed: {}, out_bed: {}, val: {}",
+                            d,
+                            scoringFunction.getScore(datum, pdf).sleepEventScore,
+                            scoringFunction.getScore(datum, pdf).wakeUpEventScore,
+                            scoringFunction.getScore(datum, pdf).goToBedEventScore,
+                            scoringFunction.getScore(datum, pdf).outOfBedEventScore,
+                            datum.amplitude);
+                }
             }
             fallAsleepScores.add(new InternalScore(timestamp, sleepScore));
             wakeUpScores.add(new InternalScore(timestamp, wakeUpScore));
             goToBedScores.add(new InternalScore(timestamp, goToBedScore));
             outOfBedScores.add(new InternalScore(timestamp, outOfBedScore));
 
-            /*
-            LOGGER.debug("goto_bed_prob {}, sleep_prob {}, wake up prob {}, out_bed_prob {}",
-                    goToBedScore,
-                    sleepScore,
-                    wakeUpScore,
-                    outOfBedScore);
-                    */
+            if(debugMode) {
+                LOGGER.debug("goto_bed_prob {}, sleep_prob {}, wake up prob {}, out_bed_prob {}",
+                        goToBedScore,
+                        sleepScore,
+                        wakeUpScore,
+                        outOfBedScore);
+            }
         }
 
         // Step 4: Pick the highest sleep and wake up scores, sleep and wake up detected.

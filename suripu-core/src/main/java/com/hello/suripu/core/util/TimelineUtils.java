@@ -59,6 +59,8 @@ public class TimelineUtils {
     private static final int LIGHTS_OUT_START_THRESHOLD = 19; // 7pm local time
     private static final int LIGHTS_OUT_END_THRESHOLD = 4; // 4am local time
 
+
+
     public static List<Event> convertLightMotionToNone(final List<Event> eventList, final int thresholdSleepDepth){
         final LinkedList<Event> convertedEvents = new LinkedList<>();
         for(final Event event:eventList){

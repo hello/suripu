@@ -29,6 +29,7 @@ import java.util.List;
  * 2) Maximizes the length of awake period.
  *
  */
+@Deprecated
 public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
     private final static Logger LOGGER = LoggerFactory.getLogger(AwakeDetectionAlgorithm.class);
 
