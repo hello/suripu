@@ -5,6 +5,8 @@ import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
@@ -15,6 +17,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +58,17 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
 
     @Override
     public void processRecords(final List<Record> list, final IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
-        final Map<String, Set<DateTime>> pillIdTargetDatesMap = BatchProcessUtils.groupRequestingPillIds(list);
+        final List<SenseCommandProtos.batched_pill_data> batchedPillData = new ArrayList<>();
+        for(final Record record:list){
+            try {
+                SenseCommandProtos.batched_pill_data dataBatch = SenseCommandProtos.batched_pill_data.parseFrom(record.getData().array());
+                batchedPillData.add(dataBatch);
+            } catch (InvalidProtocolBufferException e) {
+                LOGGER.error("Failed to decode protobuf: {}", e.getMessage());
+            }
+        }
+
+        final Map<String, Set<DateTime>> pillIdTargetDatesMap = BatchProcessUtils.groupRequestingPillIds(batchedPillData);
         final Map<Long, Set<DateTime>> groupedAccountIdTargetDateLocalUTCMap = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(pillIdTargetDatesMap,
                 this.deviceDAO,
                 this.mergedUserInfoDynamoDB);

@@ -1,8 +1,6 @@
 package com.hello.suripu.workers.timeline;
 
-import com.amazonaws.services.kinesis.model.Record;
 import com.google.common.base.Optional;
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
@@ -24,28 +22,21 @@ import java.util.Set;
 public class BatchProcessUtils {
     private final static Logger LOGGER = LoggerFactory.getLogger(BatchProcessUtils.class);
 
-    public static Map<String, Set<DateTime>> groupRequestingPillIds(final List<Record> list){
+    public static Map<String, Set<DateTime>> groupRequestingPillIds(final List<SenseCommandProtos.batched_pill_data> batchedPillData){
         final HashMap<String, Set<DateTime>> pillIdTargetDatesMap = new HashMap<>();
 
-        for (final Record record : list) {
-            try {
-                final SenseCommandProtos.batched_pill_data data = SenseCommandProtos.batched_pill_data.parseFrom(record.getData().array());
-
-                for(final SenseCommandProtos.pill_data pillData:data.getPillsList()) {
-                    if (pillData.hasMotionDataEntrypted()) {
-                        if (!pillIdTargetDatesMap.containsKey(pillData.getDeviceId())) {
-                            pillIdTargetDatesMap.put(pillData.getDeviceId(), new HashSet<DateTime>());
-                        }
-
-                        final DateTime targetDateUTC = new DateTime(pillData.getTimestamp() * 1000L, DateTimeZone.UTC);
-                        pillIdTargetDatesMap.get(pillData.getDeviceId()).add(targetDateUTC);
+        for (final SenseCommandProtos.batched_pill_data data : batchedPillData) {
+            for(final SenseCommandProtos.pill_data pillData:data.getPillsList()) {
+                if (pillData.hasMotionDataEntrypted()) {
+                    if (!pillIdTargetDatesMap.containsKey(pillData.getDeviceId())) {
+                        pillIdTargetDatesMap.put(pillData.getDeviceId(), new HashSet<DateTime>());
                     }
+
+                    final DateTime targetDateUTC = new DateTime(pillData.getTimestamp() * 1000L, DateTimeZone.UTC);
+                    pillIdTargetDatesMap.get(pillData.getDeviceId()).add(targetDateUTC);
                 }
-            } catch (InvalidProtocolBufferException e) {
-                LOGGER.error("Failed to decode protobuf: {}", e.getMessage());
-            } catch (IllegalArgumentException e) {
-                LOGGER.error("Failed to decrypted pill data {}, error: {}", record.getData().array(), e.getMessage());
             }
+
         }
 
         return pillIdTargetDatesMap;
