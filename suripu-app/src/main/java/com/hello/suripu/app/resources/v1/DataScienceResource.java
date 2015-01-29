@@ -35,6 +35,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -178,7 +179,7 @@ public class DataScienceResource {
 
         final Optional<Account> accountOptional = accountDAO.getByEmail(label.email);
         if (!accountOptional.isPresent()) {
-            LOGGER.debug("Account {} not found", accessToken.accountId);
+            LOGGER.debug("Account {} not found", label.email);
             return;
         }
 
@@ -196,4 +197,45 @@ public class DataScienceResource {
 
     }
 
+    @POST
+    @Path("/batch_label")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void label(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                      @Valid final List<UserLabel> labels) {
+
+        List<Long> accountIds = new ArrayList<>();
+        List<String> emails = new ArrayList<>();
+        List<String> userLabels = new ArrayList<>();
+        List<DateTime> nightDates = new ArrayList<>();
+        List<DateTime> UTCTimestamps = new ArrayList<>();
+        List<DateTime> localUTCTimestamps = new ArrayList<>();
+        List<Integer> tzOffsets = new ArrayList<>();
+
+        for (UserLabel label : labels) {
+            final Optional<Account> accountOptional = accountDAO.getByEmail(label.email);
+            if (!accountOptional.isPresent()) {
+                LOGGER.debug("Account {} not found", label.email);
+                continue;
+            }
+
+            final Long accountId = accountOptional.get().id.get();
+            accountIds.add(accountId);
+            emails.add(label.email);
+
+            UserLabel.UserLabelType userLabel = UserLabel.UserLabelType.fromString(label.labelString);
+            userLabels.add(userLabel.toString().toLowerCase());
+
+            final DateTime nightDate = DateTime.parse(label.night, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                    .withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
+            nightDates.add(nightDate);
+
+            final DateTime labelTimestampUTC = new DateTime(label.ts, DateTimeZone.UTC);
+            UTCTimestamps.add(labelTimestampUTC);
+            localUTCTimestamps.add(labelTimestampUTC.plusMillis(label.tzOffsetMillis));
+
+            tzOffsets.add(label.tzOffsetMillis);
+        }
+
+        sleepLabelDAO.batchInsertUserLabels(accountIds, emails, userLabels, nightDates, UTCTimestamps, localUTCTimestamps, tzOffsets);
+    }
 }
