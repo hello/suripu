@@ -60,7 +60,7 @@ public class MobilePushRegistration {
      * @param deviceToken
      * @param endpoint
      */
-    public MobilePushRegistration(final Long accountId, final String os, final String version, final String appVersion, final String deviceToken, final String oauthToken, final String endpoint) {
+    private MobilePushRegistration(final Long accountId, final String os, final String version, final String appVersion, final String deviceToken, final String oauthToken, final String endpoint) {
         this.accountId = Optional.fromNullable(accountId);
         this.os = os;
         this.version = version;
@@ -99,6 +99,22 @@ public class MobilePushRegistration {
      */
     public static MobilePushRegistration withOauthToken(final MobilePushRegistration m, final String oauthToken) {
         return new MobilePushRegistration(null, m.os, m.version, m.appVersion, m.deviceToken, oauthToken, null);
+    }
+
+
+    /**
+     * create
+     * @param accountId
+     * @param os
+     * @param version
+     * @param appVersion
+     * @param deviceToken
+     * @param oauthToken
+     * @param endpoint
+     * @return
+     */
+    public static MobilePushRegistration create(final Long accountId, final String os, final String version, final String appVersion, final String deviceToken, final String oauthToken, final String endpoint) {
+             return new MobilePushRegistration(accountId, os, version, appVersion, deviceToken, oauthToken,endpoint);
     }
 
     @Override
