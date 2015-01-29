@@ -2,7 +2,9 @@ package com.hello.suripu.core.models;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AllSensorSampleList {
 
@@ -37,6 +39,17 @@ public class AllSensorSampleList {
         }
 
     }
+
+    public List<Sensor> getAvailableSensors() {
+        final List<Sensor> sensors = new ArrayList<>();
+        sensors.add(Sensor.LIGHT);
+        sensors.add(Sensor.HUMIDITY);
+        sensors.add(Sensor.PARTICULATES);
+        sensors.add(Sensor.SOUND);
+        sensors.add(Sensor.TEMPERATURE);
+        return sensors;
+    }
+
     public void setLight(final List<Sample> values) {
         this.light.addAll(values);
     }
@@ -74,5 +87,13 @@ public class AllSensorSampleList {
         }
     }
 
-
+    public Map<Sensor, List<Sample>> getData() {
+        final Map<Sensor, List<Sample>> results = new HashMap<>();
+        results.put(Sensor.LIGHT, this.light);
+        results.put(Sensor.HUMIDITY, this.humidity);
+        results.put(Sensor.SOUND, this.sound);
+        results.put(Sensor.TEMPERATURE, this.temperature);
+        results.put(Sensor.PARTICULATES, this.particulates);
+        return results;
+    }
 }

@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -365,7 +364,7 @@ public abstract class DeviceDataDAO {
         return sortedList;
     }
 
-    // used by timeline
+    // used by timeline, query by local_utc_ts
     @Timed
     public Optional<AllSensorSampleList> generateTimeSeriesByLocalTimeAllSensors(
             final Long queryStartTimestampInLocalUTC,
@@ -457,8 +456,9 @@ public abstract class DeviceDataDAO {
         return Optional.of(sensorDataResults);
     }
 
+    // used by room conditions, query by utc_ts
     @Timed
-    public  Map<Sensor, List<Sample>> generateTimeSeriesByUTCTimeAllSensors(
+    public  Optional<AllSensorSampleList> generateTimeSeriesByUTCTimeAllSensors(
             final Long queryStartTimestampInUTC,
             final Long queryEndTimestampInUTC,
             final Long accountId,
@@ -476,16 +476,14 @@ public abstract class DeviceDataDAO {
         final List<DeviceData> rows = getBetweenByAbsoluteTimeAggregateBySlotDuration(accountId, deviceId, queryStartTime, queryEndTime, slotDurationInMinutes);
         LOGGER.debug("Retrieved {} rows from database", rows.size());
 
-        final Map<Sensor, List<Sample>> sensorData = new HashMap<>();
-
         if(rows.size() == 0) {
-            return sensorData;
+            return Optional.absent();
         }
 
-        final Optional<Map<Sensor, Map<Long, Sample>>> optionalPopulatedMapAll = Optional.absent(); //Bucketing.populateMapAll(rows);
+        final Optional<AllSensorSampleMap> optionalPopulatedMapAll = Bucketing.populateMapAll(rows);
 
         if(!optionalPopulatedMapAll.isPresent()) {
-            return sensorData;
+            return Optional.absent();
         }
 
 
@@ -505,9 +503,18 @@ public abstract class DeviceDataDAO {
         final long absoluteIntervalMS = queryEndTimestampInUTC - queryStartTimestampInUTC;
         final int numberOfBuckets= (int) ((absoluteIntervalMS / DateTimeConstants.MILLIS_PER_MINUTE) / slotDurationInMinutes + 1);
 
-        for (Sensor sensor : optionalPopulatedMapAll.get().keySet()) {
+        final AllSensorSampleList sensorDataResults = new AllSensorSampleList();
+
+        for (Sensor sensor : Sensor.values()) {
             LOGGER.debug("Processing sensor {}", sensor.toString());
-            final Map<Long, Sample> sensorMap = optionalPopulatedMapAll.get().get(sensor);
+
+            final Optional<Map<Long, Sample>> optionalSensorMap = optionalPopulatedMapAll.get().getData(sensor);
+
+            if (!optionalSensorMap.isPresent()) {
+                continue;
+            }
+
+            final Map<Long, Sample> sensorMap = optionalSensorMap.get();
 
             final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes);
             LOGGER.debug("Map size = {}", map.size());
@@ -518,10 +525,10 @@ public abstract class DeviceDataDAO {
             LOGGER.debug("New map size = {}", merged.size());
 
             final List<Sample> sortedList = Bucketing.sortResults(merged, currentOffsetMillis);
-            sensorData.put(sensor, sortedList);
+            sensorDataResults.setData(sensor, sortedList);
         }
 
-        return sensorData;
+        return Optional.of(sensorDataResults);
     }
 
 
