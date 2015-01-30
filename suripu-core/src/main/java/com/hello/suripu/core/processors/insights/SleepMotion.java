@@ -46,8 +46,31 @@ public class SleepMotion {
             return Optional.absent();
         }
 
-        final DateTime queryEndTime = new DateTime(sleepStats.get(size - 1).stats.wakeTime, DateTimeZone.UTC);
-        final DateTime queryStartTime = new DateTime(sleepStats.get(0).stats.sleepTime, DateTimeZone.UTC);
+        DateTime queryEndTime = DateTime.now(DateTimeZone.UTC);
+        DateTime queryStartTime = queryEndTime.minusDays(numDays);
+        Boolean foundStart = false;
+        Boolean foundEnd = false;
+        for (int i = 0; i < size; i++) {
+            if (!foundEnd) {
+                final long endWakeTime = sleepStats.get(size - (i+1)).stats.wakeTime;
+                if (endWakeTime > 0) {
+                    queryEndTime = new DateTime(endWakeTime, DateTimeZone.UTC);
+                    foundEnd = true;
+                }
+            }
+
+            if (!foundStart) {
+                final long startSleepTime = sleepStats.get(i).stats.sleepTime;
+                if (startSleepTime > 0) {
+                    queryStartTime = new DateTime(startSleepTime, DateTimeZone.UTC);
+                    foundStart = true;
+                }
+            }
+            if (foundStart && foundEnd) {
+                break;
+            }
+        }
+
         final List<SleepScore> motionData = scoreDAO.getByAccountBetweenDateBucket(accountId,queryStartTime, queryEndTime);
 
         // get sleep movement from sleep_score
@@ -129,8 +152,6 @@ public class SleepMotion {
         } else {
             text = SleepMotionMsgEN.equalMovement(numDays, overallDiff, averageMotionPercentage * 100.0f);
         }
-
-        text = SleepMotionMsgEN.moreMovement(numDays, lesser, overallDiff, averageMotionPercentage * 100.0f);
 
         return Optional.of(new InsightCard(accountId, text.title, text.message,
                 InsightCard.Category.SLEEP_QUALITY, InsightCard.TimePeriod.RECENTLY,
