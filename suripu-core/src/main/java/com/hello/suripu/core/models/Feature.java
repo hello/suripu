@@ -1,11 +1,13 @@
 package com.hello.suripu.core.models;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,15 +28,25 @@ public class Feature {
     @JsonProperty("percentage")
     public final Integer percentage;
 
+    @JsonCreator
     public Feature(
             @JsonProperty("name") final String name,
             @JsonProperty("ids") final Collection<String> ids,
             @JsonProperty("groups") final Collection<String> groups,
             @JsonProperty("percentage") final Integer percentage) {
-        this.name = name;
-        this.ids = ImmutableSet.copyOf(ids);
-        this.groups = ImmutableSet.copyOf(groups);
+        this.name = name.trim();
+        this.ids = ImmutableSet.copyOf(trimStringsInCollection(ids));
+        this.groups = ImmutableSet.copyOf(trimStringsInCollection(groups));
         this.percentage = percentage;
+    }
+
+    private static Collection<String> trimStringsInCollection(final Collection<String> strings) {
+        final List<String> cleanStrings = Lists.newArrayList();
+        for(String string : strings) {
+            cleanStrings.add(string.trim());
+        }
+
+        return cleanStrings;
     }
 
 
