@@ -54,7 +54,8 @@ public class RoomConditionsResource extends BaseResource {
     @GET
     @Path("/current")
     @Produces(MediaType.APPLICATION_JSON)
-    public CurrentRoomState current(@Scope({OAuthScope.SENSORS_BASIC}) final AccessToken token, @DefaultValue("c") @QueryParam("temp_unit") final String unit) {
+    public CurrentRoomState current(@Scope({OAuthScope.SENSORS_BASIC}) final AccessToken token,
+                                    @DefaultValue("c") @QueryParam("temp_unit") final String unit) {
 
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(token.accountId);
         if(!deviceId.isPresent()) {
@@ -136,7 +137,7 @@ public class RoomConditionsResource extends BaseResource {
             @PathParam("sensor") String sensor,
             @QueryParam("from_utc") Long queryEndTimestampUTC) {
 
-//        validateQueryRange(queryEndTimestampUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
+        validateQueryRange(queryEndTimestampUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
 
         final int slotDurationInMinutes = 5;
         final long queryStartTimeUTC = new DateTime(queryEndTimestampUTC, DateTimeZone.UTC).minusHours(24).getMillis();
