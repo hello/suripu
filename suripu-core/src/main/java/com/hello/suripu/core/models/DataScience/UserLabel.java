@@ -43,22 +43,32 @@ public class UserLabel {
     @JsonProperty("ts_utc")
     public final long ts;
 
+    @JsonProperty("duration_millis")
+    public final int durationMillis;
+
     @JsonProperty("label")
     public final String labelString;
 
     @JsonProperty("tz_offset")
     public final int tzOffsetMillis;
 
+    @JsonProperty("note")
+    public final String note;
+
     @JsonCreator
     public UserLabel(@JsonProperty("email") final String email,
                      @JsonProperty("night") final String night,
                      @JsonProperty("ts_utc") final long ts,
+                     @JsonProperty("duration_millis") final int durationMillis,
                      @JsonProperty("label") final String labelString,
-                     @JsonProperty("tz_offset") final int tzOffsetMillis) {
+                     @JsonProperty("tz_offset") final int tzOffsetMillis,
+                     @JsonProperty("note") final String note) {
         this.email = email;
         this.night = night;
         this.ts = ts;
+        this.durationMillis = durationMillis;
         this.labelString = labelString;
         this.tzOffsetMillis = tzOffsetMillis;
+        this.note = note;
     }
 }

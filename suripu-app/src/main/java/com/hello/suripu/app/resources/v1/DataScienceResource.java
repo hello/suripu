@@ -231,8 +231,8 @@ public class DataScienceResource extends BaseResource {
 
         sleepLabelDAO.insertUserLabel(optionalAccountId.get(),
                 label.email, userLabel.toString().toLowerCase(),
-                nightDate, labelTimestampUTC, labelTimestampUTC.plusMillis(label.tzOffsetMillis),
-                label.tzOffsetMillis);
+                nightDate, labelTimestampUTC, label.durationMillis, labelTimestampUTC.plusMillis(label.tzOffsetMillis),
+                label.tzOffsetMillis, label.note);
 
     }
 
@@ -248,8 +248,10 @@ public class DataScienceResource extends BaseResource {
         List<String> userLabels = new ArrayList<>();
         List<DateTime> nightDates = new ArrayList<>();
         List<DateTime> UTCTimestamps = new ArrayList<>();
+        List<Integer> durations = new ArrayList<>();
         List<DateTime> localUTCTimestamps = new ArrayList<>();
         List<Integer> tzOffsets = new ArrayList<>();
+        List<String> notes = new ArrayList<>();
 
         for (UserLabel label : labels) {
 
@@ -272,14 +274,18 @@ public class DataScienceResource extends BaseResource {
 
             final DateTime labelTimestampUTC = new DateTime(label.ts, DateTimeZone.UTC);
             UTCTimestamps.add(labelTimestampUTC);
+            durations.add(label.durationMillis);
             localUTCTimestamps.add(labelTimestampUTC.plusMillis(label.tzOffsetMillis));
 
             tzOffsets.add(label.tzOffsetMillis);
+
+            notes.add(label.note);
         }
 
         int inserted = 0;
         try {
-            sleepLabelDAO.batchInsertUserLabels(accountIds, emails, userLabels, nightDates, UTCTimestamps, localUTCTimestamps, tzOffsets);
+            sleepLabelDAO.batchInsertUserLabels(accountIds, emails, userLabels, nightDates,
+                    UTCTimestamps, durations, localUTCTimestamps, tzOffsets, notes);
             inserted = accountIds.size();
         } catch (UnableToExecuteStatementException exception) {
             LOGGER.warn("Batch insert user labels fails for some reason");
