@@ -293,4 +293,18 @@ public class DataScienceResource extends BaseResource {
 
         return inserted;
     }
+
+    @GET
+    @Path("/label/{email}/{night}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<UserLabel> getLabels(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                                     @PathParam("email") String email,
+                                     @PathParam("night") String night) {
+        final DateTime nightDate = DateTime.parse(night, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                .withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
+        LOGGER.debug("{} {}", email, nightDate);
+        return sleepLabelDAO.getUserLabelsByEmailAndNight(email, nightDate);
+
+    }
 }
