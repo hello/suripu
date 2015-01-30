@@ -144,6 +144,11 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                     continue;
                 }
 
+                // Grab FW version from Batch or periodic data for EVT units
+                final Integer firmwareVersion = (batchPeriodicDataWorker.getData().hasFirmwareVersion())
+                        ? batchPeriodicDataWorker.getData().getFirmwareVersion()
+                        : periodicData.getFirmwareVersion();
+
                 for (final DeviceAccountPair pair : deviceAccountPairs) {
                     Optional<DateTimeZone> timeZoneOptional = Optional.absent();
                     for(final UserInfo userInfo :deviceAccountInfoFromMergeTable){
@@ -182,7 +187,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                             .withAmbientLightPeakiness(periodicData.getLightTonality())
                             .withOffsetMillis(userTimeZone.getOffset(periodicDataSampleDateTime))
                             .withDateTimeUTC(periodicDataSampleDateTime)
-                            .withFirmwareVersion(periodicData.getFirmwareVersion())
+                            .withFirmwareVersion(firmwareVersion)
                             .withWaveCount(periodicData.hasWaveCount() ? periodicData.getWaveCount() : 0)
                             .withHoldCount(periodicData.hasHoldCount() ? periodicData.getHoldCount() : 0)
                             .withAudioNumDisturbances(periodicData.hasAudioNumDisturbances() ? periodicData.getAudioNumDisturbances() : 0)
