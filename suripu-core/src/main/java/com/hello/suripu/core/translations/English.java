@@ -40,7 +40,7 @@ public class English {
     // Unknown States
     public final static String UNKNOWN_TEMPERATURE_MESSAGE = "Could not retrieve the current temperature.";
     public final static String UNKNOWN_HUMIDITY_MESSAGE = "Could not retrieve the current humidity.";
-    public final static String UNKNOWN_PARTICULATES_MESSAGE = "Could not retrieve the current air quality.";
+    public final static String UNKNOWN_PARTICULATES_MESSAGE = "Could not retrieve current AQI.";
     public final static String UNKNOWN_LIGHT_MESSAGE = "Could not retrieve the current light level.";
     public final static String UNKNOWN_SOUND_MESSAGE = "Could not retrieve the current sound level.";
 
@@ -57,7 +57,7 @@ public class English {
             "People tend to sleep best when humidity is between **%d%%** and **%d%%**.",
             TemperatureHumidity.IDEAL_HUMIDITY_MIN, TemperatureHumidity.IDEAL_HUMIDITY_MAX);
 
-    public final static String PARTICULATES_ADVICE_MESSAGE = "The better the air quality in your bedroom, the better you sleep.";
+    public final static String PARTICULATES_ADVICE_MESSAGE = "The lower the AQI in your bedroom, the better you sleep.";
     public final static String LIGHT_ADVICE_MESSAGE = "For ideal sleep, your bedroom should be as dark as possible.";
     public final static String SOUND_ADVICE_MESSAGE = "For ideal sleep, your bedroom should be as quiet as possible.";
 
@@ -80,9 +80,9 @@ public class English {
     public final static String HIGH_PARTICULATES_PRE_SLEEP_MESSAGE = "AQI was **moderately high**.";
     public final static String IDEAL_PARTICULATES_PRE_SLEEP_MESSAGE = "The particulates level was **just right** last night.";
 
-    public final static String VERY_HIGH_PARTICULATES_MESSAGE = "Air quality is at an **unhealthy** level.";
-    public final static String HIGH_PARTICULATES_MESSAGE = "Air quality is **moderately high**.";
-    public final static String IDEAL_PARTICULATES_MESSAGE = "Air quality is **just right**.";
+    public final static String VERY_HIGH_PARTICULATES_MESSAGE = "AQI is at an **unhealthy** level.";
+    public final static String HIGH_PARTICULATES_MESSAGE = "AQI is **moderately high**.";
+    public final static String IDEAL_PARTICULATES_MESSAGE = "AQI is **just right**.";
 
     // Light Conditions.
     public final static String IDEAL_LIGHT_PRE_SLEEP_MESSAGE = "The light level was **perfect**.";
