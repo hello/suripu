@@ -315,8 +315,8 @@ public class TimelineProcessor {
 
 
         final List<Insight> insights = TimelineUtils.generatePreSleepInsights(optionalSensorData, sleepStats.sleepTime);
-
-        final Timeline timeline = new Timeline(sleepScore, timeLineMessage, date, reversed, insights);
+        List<SleepSegment>  reversedSegments = Lists.reverse(reversed);
+        final Timeline timeline = new Timeline(sleepScore, timeLineMessage, date, reversedSegments, insights);
         final List<Timeline> timelines = new ArrayList<>();
         timelines.add(timeline);
 
