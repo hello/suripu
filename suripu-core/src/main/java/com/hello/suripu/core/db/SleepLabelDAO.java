@@ -3,6 +3,8 @@ package com.hello.suripu.core.db;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.mappers.SleepLabelMapper;
+import com.hello.suripu.core.db.mappers.UserLabelMapper;
+import com.hello.suripu.core.models.DataScience.UserLabel;
 import com.hello.suripu.core.models.SleepLabel;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.TransactionIsolationLevel;
@@ -93,4 +95,10 @@ public interface SleepLabelDAO extends Transactional<SleepLabelDAO> {
                                @Bind("tz_offset") List<Integer> tzOffset,
                                @Bind("note") List<String> notes
     );
+
+    @RegisterMapper(UserLabelMapper.class)
+    @SqlQuery("SELECT * FROM user_labels " +
+              "WHERE email = :email AND night_date = :night_date")
+    List<UserLabel> getUserLabelsByEmailAndNight(@Bind("email") String email,
+                                                 @Bind("night_date") DateTime nightDate);
 }
