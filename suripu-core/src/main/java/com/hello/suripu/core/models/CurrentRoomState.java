@@ -194,10 +194,15 @@ public class CurrentRoomState {
     }
 
     public static State getTemperatureState(final float temperature, final DateTime dataTimestampUTC, final String tempUnit, final Boolean preSleep) {
-        // Global ideal range: 60 -- 72, less than 54 = too cold, above 75= too warm
-        // TODO: personalize
+        // Global ideal range: 60 -- 70, less than 54 = too cold, above 75= too warm
+        // TODO: personalize the range
 
-        final String idealTempConditions = String.format(English.TEMPERATURE_ADVICE_MESSAGE, tempUnit, tempUnit);
+        String idealTempConditions;
+        if (tempUnit.equals(DEFAULT_TEMP_UNIT)) {
+            idealTempConditions = String.format(English.TEMPERATURE_ADVICE_MESSAGE_C, tempUnit, tempUnit);
+        } else {
+            idealTempConditions = String.format(English.TEMPERATURE_ADVICE_MESSAGE_F, tempUnit, tempUnit);
+        }
 
         State.Condition condition = State.Condition.IDEAL;;
         String message = (preSleep) ? English.IDEAL_TEMPERATURE_PRE_SLEEP_MESSAGE: English.IDEAL_TEMPERATURE_MESSAGE;;
