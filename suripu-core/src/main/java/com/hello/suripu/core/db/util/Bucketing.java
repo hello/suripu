@@ -3,9 +3,10 @@ package com.hello.suripu.core.db.util;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hello.suripu.core.models.AllSensorSampleMap;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
-import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.util.DataUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -102,7 +103,7 @@ public class Bucketing {
         return Optional.of(map);
     }
 
-    public static Optional<Map<Sensor, Map<Long, Sample>>> populateMapAll(final List<DeviceData> deviceDataList) {
+    public static Optional<AllSensorSampleMap> populateMapAll(final List<DeviceData> deviceDataList) {
 
         if(deviceDataList == null) {
             LOGGER.error("deviceDataList is null for all sensors");
@@ -113,35 +114,37 @@ public class Bucketing {
             return Optional.absent();
         }
 
-        final Map<Sensor, Map<Long, Sample>> map = new HashMap<>();
-        for (Sensor sensor : Sensor.values()) {
-            final Map<Long, Sample> values = new HashMap<>();
-            map.put(sensor, values);
-        }
+        final AllSensorSampleMap populatedMap = new AllSensorSampleMap();
+
+//        final Map<Sensor, Map<Long, Sample>> map = new HashMap<>();
+//        for (Sensor sensor : Sensor.values()) {
+//            final Map<Long, Sample> values = new HashMap<>();
+//            map.put(sensor, values);
+//        }
 
         for(final DeviceData deviceData: deviceDataList) {
 
             final Long newKey = deviceData.dateTimeUTC.getMillis();
 
-            final float humidityValue = DeviceData.dbIntToFloat(deviceData.ambientHumidity);
-            map.get(Sensor.HUMIDITY).put(newKey, new Sample(newKey, humidityValue, deviceData.offsetMillis));
-
-            final float temperatureValue = DeviceData.dbIntToFloat(deviceData.ambientTemperature);
-            map.get(Sensor.TEMPERATURE).put(newKey, new Sample(newKey, temperatureValue, deviceData.offsetMillis));
-
-            final float particulatesValue = (float) DataUtils.convertRawDustCountsToAQI(deviceData.ambientDustMax, deviceData.firmwareVersion);
-            map.get(Sensor.PARTICULATES).put(newKey, new Sample(newKey, particulatesValue, deviceData.offsetMillis));
-
             final float lightValue = (float) deviceData.ambientLight;
-            map.get(Sensor.LIGHT).put(newKey, new Sample(newKey, lightValue, deviceData.offsetMillis));
-
             final float soundValue = DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB);
-            map.get(Sensor.SOUND).put(newKey, new Sample(newKey, soundValue, deviceData.offsetMillis));
+            final float humidityValue = DeviceData.dbIntToFloat(deviceData.ambientHumidity);
+            final float temperatureValue = DeviceData.dbIntToFloat(deviceData.ambientTemperature);
+            final float particulatesValue = (float) DataUtils.convertRawDustCountsToAQI(deviceData.ambientDustMax, deviceData.firmwareVersion);
+
+            populatedMap.addSample(newKey, deviceData.offsetMillis,
+                    lightValue, soundValue, humidityValue, temperatureValue, particulatesValue);
+
+//            map.get(Sensor.HUMIDITY).put(newKey, new Sample(newKey, humidityValue, deviceData.offsetMillis));
+//            map.get(Sensor.TEMPERATURE).put(newKey, new Sample(newKey, temperatureValue, deviceData.offsetMillis));
+//            map.get(Sensor.PARTICULATES).put(newKey, new Sample(newKey, particulatesValue, deviceData.offsetMillis));
+//            map.get(Sensor.LIGHT).put(newKey, new Sample(newKey, lightValue, deviceData.offsetMillis));
+//            map.get(Sensor.SOUND).put(newKey, new Sample(newKey, soundValue, deviceData.offsetMillis));
 
             LOGGER.trace("Overriding {}", newKey);
         }
 
-        return Optional.of(map);
+        return Optional.of(populatedMap);
     }
     /**
      * Generates a map with every bucket containing empty sample
@@ -150,15 +153,15 @@ public class Bucketing {
      * @param slotDurationInMinutes
      * @return
      */
-    public static Map<Long, Sample>  generateEmptyMap(final int numberOfBuckets, final DateTime startDate, final int slotDurationInMinutes) {
+    public static Map<Long, Sample>  generateEmptyMap(final int numberOfBuckets, final DateTime startDate, final int slotDurationInMinutes, final int missingSampleDefaultValue) {
 
-        final Map<Long, Sample> map = new HashMap<>();
+        final Map<Long, Sample> map = Maps.newHashMap();
 
         for(int i = 0; i < numberOfBuckets; i++) {
             final Long key = startDate.minusMinutes(i * slotDurationInMinutes).getMillis();
             LOGGER.trace("Inserting {}", key);
 
-            map.put(key, new Sample(key, 0, null));
+            map.put(key, new Sample(key, missingSampleDefaultValue, null));
         }
 
         LOGGER.debug("Map size = {}", map.size());

@@ -16,11 +16,18 @@ import java.util.Map;
  * Created by pangwu on 1/15/15.
  */
 public class MotionDensityScoringFunction implements SleepDataScoringFunction<AmplitudeData> {
+
+    public static enum ScoreType {
+        SLEEP,
+        WAKE_UP
+    }
     private final static Logger LOGGER = LoggerFactory.getLogger(MotionDensityScoringFunction.class);
     private final double motionMaxPower;
+    private final ScoreType type;
 
-    public MotionDensityScoringFunction(){
+    public MotionDensityScoringFunction(final ScoreType type){
         this.motionMaxPower = 10;
+        this.type = type;
     }
 
     @Override
@@ -44,8 +51,8 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
         final LinearRankAscendingScoringFunction sleepMotionScoringFunction =
                 new LinearRankAscendingScoringFunction(0d, 1d, new double[]{0d, 1d});
 
-        final LinearRankDescendingScoringFunction wakeUpMotionScoringFunction =
-                new LinearRankDescendingScoringFunction(1d, 0d, new double[]{0d, 1d});
+        final LinearRankAscendingScoringFunction wakeUpMotionScoringFunction =
+                new LinearRankAscendingScoringFunction(0d, 1d, new double[]{0d, 1d});
 
         final Map<Long, Double> sleepMotionDensityRankPDF = sleepMotionScoringFunction.getPDF(amplitudes);
         final Map<Long, Double> wakeUpMotionDensityRankPDF = wakeUpMotionScoringFunction.getPDF(amplitudes);
@@ -53,25 +60,36 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
         final HashMap<AmplitudeData, EventScores> pdf = new HashMap<>();
 
         for(final AmplitudeData datum:data){
-            final double sleepMotionDensityScore = datum.amplitude == 0 ? 0 : sleepMotionScoringFunction.getScore((long)datum.amplitude,
-                    sleepMotionDensityRankPDF);
-            final double sleepTimeScore = sleepTimeScoreFunction.getScore(datum.timestamp, sleepTimePDF);
+            if(type == ScoreType.SLEEP) {
+                final double sleepMotionDensityScore = datum.amplitude == 0 ? 0 : sleepMotionScoringFunction.getScore((long) datum.amplitude,
+                        sleepMotionDensityRankPDF);
+                final double sleepTimeScore = sleepTimeScoreFunction.getScore(datum.timestamp, sleepTimePDF);
+                pdf.put(datum, new EventScores(Math.pow(sleepMotionDensityScore, this.motionMaxPower) * sleepTimeScore,
+                        1d, 1d, 1d));
+                /*
+                LOGGER.debug("    density {}: t {}, sl_r {}, wup 0, val {}",
+                        new DateTime(datum.timestamp, DateTimeZone.forOffsetMillis(datum.offsetMillis)),
+                        sleepTimeScore,
+                        sleepMotionDensityScore,
+                        datum.amplitude);
+                        */
+            }
 
-            final double wakeUpMotionDensityScore = datum.amplitude == 0 ? 0 : wakeUpMotionScoringFunction.getScore((long)datum.amplitude,
-                    wakeUpMotionDensityRankPDF);
-            final double wakeUpTimeScore = wakeUpTimeScoreFunction.getScore(datum.timestamp, wakeUpTimePDF);
-            /*
-            LOGGER.debug("    density {}: st {}, wt {}, sl_r {}, wp_r {}, val {}",
-                            new DateTime(datum.timestamp, DateTimeZone.forOffsetMillis(datum.offsetMillis)),
-                            sleepTimeScore,
-                            wakeUpTimeScore,
-                            sleepMotionDensityScore,
-                            wakeUpMotionDensityScore,
-                            datum.amplitude);
-            */
-            pdf.put(datum, new EventScores(Math.pow(sleepMotionDensityScore, this.motionMaxPower) * sleepTimeScore,
-                    Math.pow(wakeUpMotionDensityScore, this.motionMaxPower) * wakeUpTimeScore,
-                    1d, 1d));
+            if(this.type == ScoreType.WAKE_UP) {
+                final double wakeUpMotionDensityScore = datum.amplitude == 0 ? 0 : wakeUpMotionScoringFunction.getScore((long) datum.amplitude,
+                        wakeUpMotionDensityRankPDF);
+                final double wakeUpTimeScore = wakeUpTimeScoreFunction.getScore(datum.timestamp, wakeUpTimePDF);
+                pdf.put(datum, new EventScores(1d,
+                        Math.pow(wakeUpMotionDensityScore, this.motionMaxPower) * wakeUpTimeScore, 1d, 1d));
+                /*
+                LOGGER.debug("    density {}: t {}, sl_r 0, wup {}, val {}",
+                        new DateTime(datum.timestamp, DateTimeZone.forOffsetMillis(datum.offsetMillis)),
+                        wakeUpTimeScore,
+                        wakeUpMotionDensityScore,
+                        datum.amplitude);
+                        */
+            }
+
         }
         return pdf;
     }
@@ -82,7 +100,10 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
             return pdf.get(data);
         }
 
-        // Not found, keep fall asleep score as it is, ground the wake up and go to bed scores.
-        return new EventScores(0d, 0d, 1d, 1d);
+        if(this.type == ScoreType.SLEEP) {
+            return new EventScores(0d, 1d, 1d, 1d);
+        }
+
+        return new EventScores(1d, 0d, 1d, 1d);
     }
 }

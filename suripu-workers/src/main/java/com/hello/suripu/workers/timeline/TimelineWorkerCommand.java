@@ -35,6 +35,8 @@ import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.db.ManagedDataSourceFactory;
+import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
+import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
 import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.skife.jdbi.v2.DBI;
@@ -67,14 +69,24 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
         sensorsDB.registerArgumentFactory(new JodaArgumentFactory());
         sensorsDB.registerContainerFactory(new OptionalContainerFactory());
         sensorsDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
+        sensorsDB.registerContainerFactory(new ImmutableListContainerFactory());
+        sensorsDB.registerContainerFactory(new ImmutableSetContainerFactory());
 
 
         commonDB.registerArgumentFactory(new JodaArgumentFactory());
         commonDB.registerContainerFactory(new OptionalContainerFactory());
         commonDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
+        commonDB.registerContainerFactory(new ImmutableListContainerFactory());
+        commonDB.registerContainerFactory(new ImmutableSetContainerFactory());
+
+        insightsDB.registerArgumentFactory(new JodaArgumentFactory());
+        insightsDB.registerContainerFactory(new OptionalContainerFactory());
+        insightsDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
+        insightsDB.registerContainerFactory(new ImmutableListContainerFactory());
+        insightsDB.registerContainerFactory(new ImmutableSetContainerFactory());
 
         final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
-        final DeviceDAO deviceDAO = sensorsDB.onDemand(DeviceDAO.class);
+        final DeviceDAO deviceDAO = commonDB.onDemand(DeviceDAO.class);
 
         final SleepLabelDAO sleepLabelDAO = commonDB.onDemand(SleepLabelDAO.class);
         final SleepScoreDAO sleepScoreDAO = commonDB.onDemand(SleepScoreDAO.class);
@@ -100,8 +112,7 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
         final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getRingTimeDBConfiguration().getEndpoint());
         final RingTimeDAODynamoDB ringTimeDAODynamoDB = new RingTimeDAODynamoDB(ringTimeDynamoDBClient, configuration.getRingTimeDBConfiguration().getTableName());
 
-        final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
-        final AmazonDynamoDB featureDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
+        final AmazonDynamoDB featureDynamoDB = dynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
         final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
         final FeatureStore featureStore = new FeatureStore(featureDynamoDB, "features", featureNamespace);
 
@@ -132,7 +143,7 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
         LOGGER.debug("{}", queueNames);
-        final String queueName = queueNames.get(QueueName.SENSE_SENSORS_DATA);
+        final String queueName = queueNames.get(QueueName.BATCH_PILL_DATA);
         LOGGER.info("\n\n\n!!! This worker is using the following queue: {} !!!\n\n\n", queueName);
 
 

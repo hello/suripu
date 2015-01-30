@@ -1,6 +1,7 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
+import com.hello.suripu.core.models.DeviceKeyStoreRecord;
 
 public interface KeyStore {
 
@@ -10,6 +11,7 @@ public interface KeyStore {
      * @return byte[]
      */
     Optional<byte[]> get(String deviceId);
+    Optional<DeviceKeyStoreRecord> getKeyStoreRecord(String deviceId);
 
 
     /**

@@ -71,8 +71,8 @@ import com.hello.suripu.core.firmware.FirmwareUpdateStore;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
-import com.hello.suripu.core.notifications.DynamoDBNotificationSubscriptionDAO;
 import com.hello.suripu.core.notifications.MobilePushNotificationProcessor;
+import com.hello.suripu.core.notifications.NotificationSubscriptionDAOWrapper;
 import com.hello.suripu.core.notifications.NotificationSubscriptionsDAO;
 import com.hello.suripu.core.oauth.OAuthAuthenticator;
 import com.hello.suripu.core.oauth.OAuthProvider;
@@ -93,6 +93,8 @@ import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.jdbi.DBIFactory;
+import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
+import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
 import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
 import com.yammer.dropwizard.jdbi.bundles.DBIExceptionsBundle;
 import com.yammer.metrics.Metrics;
@@ -146,6 +148,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         commonDB.registerArgumentFactory(new JodaArgumentFactory());
         commonDB.registerContainerFactory(new OptionalContainerFactory());
         commonDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
+        commonDB.registerContainerFactory(new ImmutableListContainerFactory());
+        commonDB.registerContainerFactory(new ImmutableSetContainerFactory());
 
         insightsDB.registerArgumentFactory(new JodaArgumentFactory());
         insightsDB.registerContainerFactory(new OptionalContainerFactory());
@@ -164,6 +168,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
         final QuestionResponseDAO questionResponseDAO = insightsDB.onDemand(QuestionResponseDAO.class);
         final FeedbackDAO feedbackDAO = commonDB.onDemand(FeedbackDAO.class);
+        final NotificationSubscriptionsDAO notificationSubscriptionsDAO = commonDB.onDemand(NotificationSubscriptionsDAO.class);
 
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
         final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
@@ -218,14 +223,13 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final AmazonDynamoDB notificationsDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getNotificationsDBConfiguration().getEndpoint());
 
-        final NotificationSubscriptionsDAO subscriptionDAO = new DynamoDBNotificationSubscriptionDAO(
-                notificationsDynamoDBClient,
-                configuration.getNotificationsDBConfiguration().getTableName(),
+        final NotificationSubscriptionDAOWrapper notificationSubscriptionDAOWrapper = NotificationSubscriptionDAOWrapper.create(
+                notificationSubscriptionsDAO,
                 snsClient,
                 arns
         );
 
-        final MobilePushNotificationProcessor mobilePushNotificationProcessor = new MobilePushNotificationProcessor(snsClient, subscriptionDAO);
+        final MobilePushNotificationProcessor mobilePushNotificationProcessor = new MobilePushNotificationProcessor(snsClient, notificationSubscriptionsDAO);
 
         final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
         final TeamStore teamStore = new TeamStore(teamStoreDBClient, "teams");
@@ -288,7 +292,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 120 // 2 minutes for cache
         );
 
-        environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, subscriptionDAO));
+        environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, notificationSubscriptionDAOWrapper));
         environment.addResource(new AccountResource(accountDAO));
         environment.addResource(new ApplicationResource(applicationStore));
         environment.addResource(new SleepLabelResource(sleepLabelDAO));
@@ -306,7 +310,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new TimeZoneResource(timeZoneHistoryDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO));
         environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO, amazonS3));
 
-        environment.addResource(new MobilePushRegistrationResource(subscriptionDAO, mobilePushNotificationProcessor, accountDAO));
+        environment.addResource(new MobilePushRegistrationResource(notificationSubscriptionDAOWrapper, mobilePushNotificationProcessor, accountDAO));
         environment.addResource(new FeaturesResource(featureStore));
 
         environment.addResource(new QuestionsResource(accountDAO, questionResponseDAO, timeZoneHistoryDAODynamoDB, configuration.getQuestionConfigs().getNumSkips()));

@@ -7,6 +7,8 @@ import com.hello.suripu.core.db.mappers.DeviceDataBucketMapper;
 import com.hello.suripu.core.db.mappers.DeviceDataMapper;
 import com.hello.suripu.core.db.util.Bucketing;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
+import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.AllSensorSampleMap;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
@@ -26,7 +28,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -209,100 +210,6 @@ public abstract class DeviceDataDAO {
         return inserted;
     }
 
-    /**
-     * Generate time serie for given sensor. Return empty list if no data
-     * @param queryStartTimestampInLocalUTC
-     * @param queryEndTimestampInLocalUTC
-     * @param accountId
-     * @param deviceId
-     * @param slotDurationInMinutes
-     * @param sensor
-     * @return
-     */
-    @Timed
-    public List<Sample> generateTimeSeriesByLocalTime(
-            final Long queryStartTimestampInLocalUTC,
-            final Long queryEndTimestampInLocalUTC,
-            final Long accountId,
-            final Long deviceId,
-            final int slotDurationInMinutes,
-            final String sensor) {
-
-        // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
-        final DateTime queryEndTime = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC);
-        final DateTime queryStartTime = new DateTime(queryStartTimestampInLocalUTC, DateTimeZone.UTC);
-
-        LOGGER.debug("Client utcTimeStamp : {} ({})", queryEndTimestampInLocalUTC, new DateTime(queryEndTimestampInLocalUTC));
-        LOGGER.debug("QueryEndTime: {} ({})", queryEndTime, queryEndTime.getMillis());
-        LOGGER.debug("QueryStartTime: {} ({})", queryStartTime, queryStartTime.getMillis());
-
-        final List<DeviceData> rows = getBetweenByLocalTimeAggregateBySlotDuration(accountId, deviceId, queryStartTime, queryEndTime, slotDurationInMinutes);
-        LOGGER.debug("Retrieved {} rows from database", rows.size());
-
-        if(rows.size() == 0) {
-            return new ArrayList<>();
-        }
-
-        // create buckets with keys in UTC-Time
-        final int endOffsetMillis = rows.get(rows.size() - 1).offsetMillis;
-        final int startOffsetMillis = rows.get(0).offsetMillis;
-
-
-        // final int numberOfBuckets= (queryDurationInHours * 60 / slotDurationInMinutes) + 1;   // This is wrong, duration in hours must come from actual data
-
-        // We cannot estimate time duration by from local time, because time zone can change between
-        // local start time and local end time. The only way to get interval is compute from absolute time.
-
-
-        final DateTime nowLocal = new DateTime(queryEndTime.getYear(),
-                queryEndTime.getMonthOfYear(),
-                queryEndTime.getDayOfMonth(),
-                queryEndTime.getHourOfDay(),
-                queryEndTime.getMinuteOfHour(),
-                DateTimeZone.forOffsetMillis(endOffsetMillis));
-
-        final DateTime startLocal = new DateTime(queryStartTime.getYear(),
-                queryStartTime.getMonthOfYear(),
-                queryStartTime.getDayOfMonth(),
-                queryStartTime.getHourOfDay(),
-                queryStartTime.getMinuteOfHour(),
-                DateTimeZone.forOffsetMillis(startOffsetMillis));
-
-        final long absoluteIntervalMS = nowLocal.getMillis() - startLocal.getMillis();
-        final DateTime now = new DateTime(nowLocal.getMillis(), DateTimeZone.UTC);
-
-        final int remainder = now.getMinuteOfHour() % slotDurationInMinutes;
-        final int minuteBucket = now.getMinuteOfHour() - remainder;
-        // if 4:36 -> bucket = 4:35
-
-        final DateTime nowRounded = now.minusMinutes(remainder);
-        LOGGER.debug("Current Offset Milis = {}", startOffsetMillis);
-        LOGGER.debug("Remainder = {}", remainder);
-        LOGGER.debug("Now (rounded) = {} ({})", nowRounded, nowRounded.getMillis());
-
-        final int numberOfBuckets= (int) ((absoluteIntervalMS / DateTimeConstants.MILLIS_PER_MINUTE) / slotDurationInMinutes + 1);
-
-        final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes);
-
-        LOGGER.debug("Map size = {}", map.size());
-
-
-        final Optional<Map<Long, Sample>> optionalPopulatedMap = Bucketing.populateMap(rows, sensor);
-
-        if(!optionalPopulatedMap.isPresent()) {
-            return Collections.EMPTY_LIST;
-        }
-
-        // Override map with values from DB
-        final Map<Long, Sample> merged = Bucketing.mergeResults(map, optionalPopulatedMap.get());
-
-        LOGGER.debug("New map size = {}", merged.size());
-
-        final List<Sample> sortedList = Bucketing.sortResults(merged, startOffsetMillis);
-        return sortedList;
-    }
-
-
     @Timed
     public List<Sample> generateTimeSeriesByUTCTime(
             final Long queryStartTimestampInUTC,
@@ -310,15 +217,16 @@ public abstract class DeviceDataDAO {
             final Long accountId,
             final Long deviceId,
             final int slotDurationInMinutes,
-            final String sensor) {
+            final String sensor,
+            final Integer missingDataDefaultValue) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC);
         final DateTime queryStartTime = new DateTime(queryStartTimestampInUTC, DateTimeZone.UTC);
 
-        LOGGER.debug("Client utcTimeStamp : {} ({})", queryEndTimestampInUTC, new DateTime(queryEndTimestampInUTC));
-        LOGGER.debug("QueryEndTime: {} ({})", queryEndTime, queryEndTime.getMillis());
-        LOGGER.debug("QueryStartTime: {} ({})", queryStartTime, queryStartTime.getMillis());
+        LOGGER.trace("Client utcTimeStamp : {} ({})", queryEndTimestampInUTC, new DateTime(queryEndTimestampInUTC));
+        LOGGER.trace("QueryEndTime: {} ({})", queryEndTime, queryEndTime.getMillis());
+        LOGGER.trace("QueryStartTime: {} ({})", queryStartTime, queryStartTime.getMillis());
 
         final List<DeviceData> rows = getBetweenByAbsoluteTimeAggregateBySlotDuration(accountId, deviceId, queryStartTime, queryEndTime, slotDurationInMinutes);
         LOGGER.debug("Retrieved {} rows from database", rows.size());
@@ -335,17 +243,17 @@ public abstract class DeviceDataDAO {
         // if 4:36 -> bucket = 4:35
 
         final DateTime nowRounded = now.minusMinutes(remainder);
-        LOGGER.debug("Current Offset Milis = {}", currentOffsetMillis);
-        LOGGER.debug("Remainder = {}", remainder);
-        LOGGER.debug("Now (rounded) = {} ({})", nowRounded, nowRounded.getMillis());
+        LOGGER.trace("Current Offset Milis = {}", currentOffsetMillis);
+        LOGGER.trace("Remainder = {}", remainder);
+        LOGGER.trace("Now (rounded) = {} ({})", nowRounded, nowRounded.getMillis());
 
 
         final long absoluteIntervalMS = queryEndTimestampInUTC - queryStartTimestampInUTC;
         final int numberOfBuckets= (int) ((absoluteIntervalMS / DateTimeConstants.MILLIS_PER_MINUTE) / slotDurationInMinutes + 1);
 
-        final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes);
+        final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes, missingDataDefaultValue);
 
-        LOGGER.debug("Map size = {}", map.size());
+        LOGGER.trace("Map size = {}", map.size());
 
 
         final Optional<Map<Long, Sample>> optionalPopulatedMap = Bucketing.populateMap(rows, sensor);
@@ -357,41 +265,41 @@ public abstract class DeviceDataDAO {
         // Override map with values from DB
         final Map<Long, Sample> merged = Bucketing.mergeResults(map, optionalPopulatedMap.get());
 
-        LOGGER.debug("New map size = {}", merged.size());
+        LOGGER.trace("New map size = {}", merged.size());
 
         final List<Sample> sortedList = Bucketing.sortResults(merged, currentOffsetMillis);
         return sortedList;
     }
 
-    // used by timeline
+    // used by timeline, query by local_utc_ts
     @Timed
-    public Map<Sensor, List<Sample>> generateTimeSeriesByLocalTimeAllSensors(
+    public Optional<AllSensorSampleList> generateTimeSeriesByLocalTimeAllSensors(
             final Long queryStartTimestampInLocalUTC,
             final Long queryEndTimestampInLocalUTC,
             final Long accountId,
             final Long deviceId,
-            final int slotDurationInMinutes) {
+            final int slotDurationInMinutes,
+            final Integer missingDataDefaultValue) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC);
         final DateTime queryStartTime = new DateTime(queryStartTimestampInLocalUTC, DateTimeZone.UTC);
 
-        LOGGER.debug("Client utcTimeStamp : {} ({})", queryEndTimestampInLocalUTC, new DateTime(queryEndTimestampInLocalUTC));
-        LOGGER.debug("QueryEndTime: {} ({})", queryEndTime, queryEndTime.getMillis());
-        LOGGER.debug("QueryStartTime: {} ({})", queryStartTime, queryStartTime.getMillis());
+        LOGGER.trace("Client utcTimeStamp : {} ({})", queryEndTimestampInLocalUTC, new DateTime(queryEndTimestampInLocalUTC));
+        LOGGER.trace("QueryEndTime: {} ({})", queryEndTime, queryEndTime.getMillis());
+        LOGGER.trace("QueryStartTime: {} ({})", queryStartTime, queryStartTime.getMillis());
 
         final List<DeviceData> rows = getBetweenByLocalTimeAggregateBySlotDuration(accountId, deviceId, queryStartTime, queryEndTime, slotDurationInMinutes);
         LOGGER.debug("Retrieved {} rows from database", rows.size());
 
-        final Map<Sensor, List<Sample>> sensorData = new HashMap<>();
         if(rows.size() == 0) {
-            return sensorData;
+            return Optional.absent();
         }
 
-        final Optional<Map<Sensor, Map<Long, Sample>>> optionalPopulatedMapAll = Bucketing.populateMapAll(rows);
+        final Optional<AllSensorSampleMap> optionalPopulatedMapAll = Bucketing.populateMapAll(rows);
 
         if(!optionalPopulatedMapAll.isPresent()) {
-            return sensorData;
+            return Optional.absent();
         }
 
         // create buckets with keys in UTC-Time
@@ -425,64 +333,66 @@ public abstract class DeviceDataDAO {
         // if 4:36 -> bucket = 4:35
 
         final DateTime nowRounded = now.minusMinutes(remainder);
-        LOGGER.debug("Current Offset Milis = {}", startOffsetMillis);
-        LOGGER.debug("Remainder = {}", remainder);
-        LOGGER.debug("Now (rounded) = {} ({})", nowRounded, nowRounded.getMillis());
+        LOGGER.trace("Current Offset Milis = {}", startOffsetMillis);
+        LOGGER.trace("Remainder = {}", remainder);
+        LOGGER.trace("Now (rounded) = {} ({})", nowRounded, nowRounded.getMillis());
 
         final int numberOfBuckets= (int) ((absoluteIntervalMS / DateTimeConstants.MILLIS_PER_MINUTE) / slotDurationInMinutes + 1);
 
-        for (Sensor sensor : optionalPopulatedMapAll.get().keySet()) {
-            LOGGER.debug("Processing sensor {}", sensor.toString());
-            final Map<Long, Sample> sensorMap = optionalPopulatedMapAll.get().get(sensor);
+        final AllSensorSampleList sensorDataResults = new AllSensorSampleList();
 
-            // create empty map
-            final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes);
-            LOGGER.debug("Empty Map size = {}", map.size());
+        for (final Sensor sensor : Sensor.values()) {
+            LOGGER.trace("Processing sensor {}", sensor.toString());
+            final Optional<Map<Long, Sample>> optionalSensorMap = optionalPopulatedMapAll.get().getData(sensor);
+            if (optionalSensorMap.isPresent()) {
+                final Map<Long, Sample> sensorMap = optionalSensorMap.get();
 
-            // Override map with values from DB
-            final Map<Long, Sample> merged = Bucketing.mergeResults(map, sensorMap);
+                final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes, missingDataDefaultValue);
+                LOGGER.trace("Empty Map size = {}", map.size());
 
-            LOGGER.debug("New map size = {}", merged.size());
+                // Override map with values from DB
+                final Map<Long, Sample> merged = Bucketing.mergeResults(map, sensorMap);
 
-            final List<Sample> sortedList = Bucketing.sortResults(merged, startOffsetMillis);
+                LOGGER.trace("New map size = {}", merged.size());
 
-            sensorData.put(sensor, sortedList);
+                final List<Sample> sortedList = Bucketing.sortResults(merged, startOffsetMillis);
+                sensorDataResults.setData(sensor, sortedList);
 
+            }
         }
 
-
-        return sensorData;
+        return Optional.of(sensorDataResults);
     }
 
+    // used by room conditions, query by utc_ts
     @Timed
-    public  Map<Sensor, List<Sample>> generateTimeSeriesByUTCTimeAllSensors(
+    public  Optional<AllSensorSampleList> generateTimeSeriesByUTCTimeAllSensors(
             final Long queryStartTimestampInUTC,
             final Long queryEndTimestampInUTC,
             final Long accountId,
             final Long deviceId,
-            final int slotDurationInMinutes) {
+            final int slotDurationInMinutes,
+            final Integer missingDataDefaultValue) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC);
         final DateTime queryStartTime = new DateTime(queryStartTimestampInUTC, DateTimeZone.UTC);
 
-        LOGGER.debug("Client utcTimeStamp : {} ({})", queryEndTimestampInUTC, new DateTime(queryEndTimestampInUTC));
-        LOGGER.debug("QueryEndTime: {} ({})", queryEndTime, queryEndTime.getMillis());
-        LOGGER.debug("QueryStartTime: {} ({})", queryStartTime, queryStartTime.getMillis());
+        LOGGER.trace("Client utcTimeStamp : {} ({})", queryEndTimestampInUTC, new DateTime(queryEndTimestampInUTC));
+        LOGGER.trace("QueryEndTime: {} ({})", queryEndTime, queryEndTime.getMillis());
+        LOGGER.trace("QueryStartTime: {} ({})", queryStartTime, queryStartTime.getMillis());
 
         final List<DeviceData> rows = getBetweenByAbsoluteTimeAggregateBySlotDuration(accountId, deviceId, queryStartTime, queryEndTime, slotDurationInMinutes);
-        LOGGER.debug("Retrieved {} rows from database", rows.size());
-
-        final Map<Sensor, List<Sample>> sensorData = new HashMap<>();
+        LOGGER.trace("Retrieved {} rows from database", rows.size());
 
         if(rows.size() == 0) {
-            return sensorData;
+            return Optional.absent();
         }
 
-        final Optional<Map<Sensor, Map<Long, Sample>>> optionalPopulatedMapAll = Bucketing.populateMapAll(rows);
+        final Optional<AllSensorSampleMap> optionalPopulatedMapAll = Bucketing.populateMapAll(rows);
 
         if(!optionalPopulatedMapAll.isPresent()) {
-            return sensorData;
+            return Optional.absent();
         }
 
 
@@ -494,31 +404,43 @@ public abstract class DeviceDataDAO {
         // if 4:36 -> bucket = 4:35
 
         final DateTime nowRounded = now.minusMinutes(remainder);
-        LOGGER.debug("Current Offset Milis = {}", currentOffsetMillis);
-        LOGGER.debug("Remainder = {}", remainder);
-        LOGGER.debug("Now (rounded) = {} ({})", nowRounded, nowRounded.getMillis());
+        LOGGER.trace("Current Offset Milis = {}", currentOffsetMillis);
+        LOGGER.trace("Remainder = {}", remainder);
+        LOGGER.trace("Now (rounded) = {} ({})", nowRounded, nowRounded.getMillis());
 
 
         final long absoluteIntervalMS = queryEndTimestampInUTC - queryStartTimestampInUTC;
         final int numberOfBuckets= (int) ((absoluteIntervalMS / DateTimeConstants.MILLIS_PER_MINUTE) / slotDurationInMinutes + 1);
 
-        for (Sensor sensor : optionalPopulatedMapAll.get().keySet()) {
-            LOGGER.debug("Processing sensor {}", sensor.toString());
-            final Map<Long, Sample> sensorMap = optionalPopulatedMapAll.get().get(sensor);
+        final AllSensorSampleList sensorDataResults = new AllSensorSampleList();
+        final AllSensorSampleMap mergedMaps = new AllSensorSampleMap();
 
-            final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes);
-            LOGGER.debug("Map size = {}", map.size());
+        for (Sensor sensor : Sensor.values()) {
+            LOGGER.trace("Processing sensor {}", sensor.toString());
+
+            final Optional<Map<Long, Sample>> optionalSensorMap = optionalPopulatedMapAll.get().getData(sensor);
+
+            if (!optionalSensorMap.isPresent()) {
+                continue;
+            }
+
+            final Map<Long, Sample> sensorMap = optionalSensorMap.get();
+
+            final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes, missingDataDefaultValue);
+            LOGGER.trace("Map size = {}", map.size());
 
             // Override map with values from DB
-            final Map<Long, Sample> merged = Bucketing.mergeResults(map, sensorMap);
+            mergedMaps.setSampleMap(sensor, Bucketing.mergeResults(map, sensorMap));
 
-            LOGGER.debug("New map size = {}", merged.size());
+            if (mergedMaps.getData(sensor).isPresent()) {
+                LOGGER.trace("New map size = {}", mergedMaps.getData(sensor).get().size());
+                final List<Sample> sortedList = Bucketing.sortResults(mergedMaps.getData(sensor).get(), currentOffsetMillis);
+                sensorDataResults.setData(sensor, sortedList);
+            }
 
-            final List<Sample> sortedList = Bucketing.sortResults(merged, currentOffsetMillis);
-            sensorData.put(sensor, sortedList);
         }
 
-        return sensorData;
+        return Optional.of(sensorDataResults);
     }
 
 

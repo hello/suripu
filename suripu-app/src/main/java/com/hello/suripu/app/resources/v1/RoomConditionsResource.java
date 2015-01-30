@@ -5,6 +5,7 @@ import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
@@ -12,6 +13,7 @@ import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.resources.BaseResource;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -27,11 +29,12 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 @Path("/v1/room")
-public class RoomConditionsResource {
+public class RoomConditionsResource extends BaseResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RoomConditionsResource.class);
     private final AccountDAO accountDAO;
@@ -51,7 +54,8 @@ public class RoomConditionsResource {
     @GET
     @Path("/current")
     @Produces(MediaType.APPLICATION_JSON)
-    public CurrentRoomState current(@Scope({OAuthScope.SENSORS_BASIC}) final AccessToken token, @DefaultValue("c") @QueryParam("temp_unit") final String unit) {
+    public CurrentRoomState current(@Scope({OAuthScope.SENSORS_BASIC}) final AccessToken token,
+                                    @DefaultValue("c") @QueryParam("temp_unit") final String unit) {
 
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(token.accountId);
         if(!deviceId.isPresent()) {
@@ -73,22 +77,117 @@ public class RoomConditionsResource {
 
     @Timed
     @GET
-    @Path("/admin/{email}/{sensor}/day")
+    @Path("/{sensor}/week")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Sample> getAdminLastDay(
-            @Scope({OAuthScope.ADMINISTRATION_READ}) AccessToken accessToken,
-            @PathParam("email") final String email,
+    public List<Sample> getLastWeek(
+            @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
             @PathParam("sensor") final String sensor,
-            @QueryParam("from") Long queryEndTimestampInUTC) {
+            @QueryParam("from") Long queryEndTimestampUTC) { // utc or local???
 
-        final Optional<Long> accountId = getAccountIdByEmail(email);
-        if (!accountId.isPresent()) {
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
-        }
-
-        return retrieveDayData(accountId.get(), sensor, queryEndTimestampInUTC);
+        return retrieveWeekData(accessToken.accountId, sensor, queryEndTimestampUTC);
     }
 
+
+    @Timed
+    @GET
+    @Path("/all_sensors/week")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<Sensor, List<Sample>> getAllSensorsLastWeek(
+            @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
+            @QueryParam("from_utc") Long queryEndTimestampUTC) {
+
+        return retrieveAllSensorsWeekData(accessToken.accountId, queryEndTimestampUTC);
+    }
+
+    /*
+    * This is the correct implementation of get the last 24 hours' data
+    * from the timestamp provided by the client.
+     */
+    @Timed
+    @GET
+    @Path("/{sensor}/24hours")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Sample> getLast24hours(
+            @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
+            @PathParam("sensor") String sensor,
+            @QueryParam("from_utc") Long queryEndTimestampUTC) {
+
+        validateQueryRange(queryEndTimestampUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
+
+        final int slotDurationInMinutes = 5;
+        final long queryStartTimeUTC = new DateTime(queryEndTimestampUTC, DateTimeZone.UTC).minusHours(24).getMillis();
+
+
+        // get latest device_id connected to this account
+        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
+        if(!deviceId.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
+
+        return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
+                accessToken.accountId, deviceId.get(), slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId));
+    }
+
+    @Timed
+    @GET
+    @Path("/all_sensors/24hours")
+    @Produces(MediaType.APPLICATION_JSON)
+    public  Map<Sensor, List<Sample>> getAllSensorsLast24hours(
+            @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
+            @PathParam("sensor") String sensor,
+            @QueryParam("from_utc") Long queryEndTimestampUTC) {
+
+        validateQueryRange(queryEndTimestampUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
+
+        final int slotDurationInMinutes = 5;
+        final long queryStartTimeUTC = new DateTime(queryEndTimestampUTC, DateTimeZone.UTC).minusHours(24).getMillis();
+
+
+        // get latest device_id connected to this account
+        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
+        if(!deviceId.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
+
+        final Optional<AllSensorSampleList> optionalData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
+                accessToken.accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId));
+
+        if (!optionalData.isPresent()) {
+            return Collections.emptyMap();
+        }
+
+        return optionalData.get().getData();
+    }
+
+    @Timed
+    @GET
+    @Path("/all_sensors/hours")
+    @Produces(MediaType.APPLICATION_JSON)
+    public  Map<Sensor, List<Sample>> getAllSensorsLastHours(
+            @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
+            @QueryParam("quantity") Integer quantity,
+            @QueryParam("from_utc") Long queryEndTimestampUTC) {
+
+        validateQueryRange(queryEndTimestampUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
+
+        final int slotDurationInMinutes = 5;
+        final long queryStartTimeUTC = new DateTime(queryEndTimestampUTC, DateTimeZone.UTC).minusHours(quantity).getMillis();
+
+
+        // get latest device_id connected to this account
+        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
+        if(!deviceId.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
+
+        final Optional<AllSensorSampleList> optionalData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
+                accessToken.accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId));
+        if (!optionalData.isPresent()) {
+            return Collections.emptyMap();
+        }
+
+        return optionalData.get().getData();
+    }
 
     /*
     * WARNING: This implementation will not giving out the data of last 24 hours.
@@ -147,7 +246,26 @@ public class RoomConditionsResource {
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accessToken.accountId, deviceId.get(), slotDurationInMinutes,
-                sensor);
+                sensor, missingDataDefaultValue(accessToken.accountId));
+    }
+
+
+    @Timed
+    @GET
+    @Path("/admin/{email}/{sensor}/day")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Sample> getAdminLastDay(
+            @Scope({OAuthScope.ADMINISTRATION_READ}) AccessToken accessToken,
+            @PathParam("email") final String email,
+            @PathParam("sensor") final String sensor,
+            @QueryParam("from") Long queryEndTimestampInUTC) {
+
+        final Optional<Long> accountId = getAccountIdByEmail(email);
+        if (!accountId.isPresent()) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        return retrieveDayData(accountId.get(), sensor, queryEndTimestampInUTC);
     }
 
     /*
@@ -186,26 +304,8 @@ public class RoomConditionsResource {
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accountId, deviceId.get(), slotDurationInMinutes,
-                sensor);
+                sensor, missingDataDefaultValue(accountId));
     }
-
-    /**
-     * Validates that the current request start range is within reasonable bounds
-     * @param clientUtcTimestamp
-     * @param nowForServer
-     * @param accountId
-     */
-    private void validateQueryRange(final Long clientUtcTimestamp, final DateTime nowForServer, final Long accountId, final long allowedRangeInSeconds) {
-        if (clientUtcTimestamp == null) {
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        }
-
-        if(Math.abs(clientUtcTimestamp - nowForServer.getMillis()) > allowedRangeInSeconds * 1000) {
-            LOGGER.warn("Invalid request, {} is too far off for account_id = {}", clientUtcTimestamp, accountId);
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);  // This should be FORBIDDEN
-        }
-    }
-
 
     @Timed
     @GET
@@ -223,84 +323,6 @@ public class RoomConditionsResource {
         }
 
         return retrieveWeekData(accountId.get(), sensor, queryEndTimestampInLocalUTC);
-    }
-
-    @Timed
-    @GET
-    @Path("/{sensor}/week")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Sample> getLastWeek(
-            @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
-            @PathParam("sensor") final String sensor,
-            @QueryParam("from") Long queryEndTimestampInLocalUTC) {
-
-        return retrieveWeekData(accessToken.accountId, sensor, queryEndTimestampInLocalUTC);
-    }
-
-
-    @Timed
-    @GET
-    @Path("/all_sensors/week")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Map<Sensor, List<Sample>> getAllSensorsLastWeek(
-            @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
-            @QueryParam("from") Long queryEndTimestampInLocalUTC) {
-
-        return retrieveAllSensorsWeekData(accessToken.accountId, queryEndTimestampInLocalUTC);
-    }
-
-    /*
-    * This is the correct implementation of get the last 24 hours' data
-    * from the timestamp provided by the client.
-     */
-    @Timed
-    @GET
-    @Path("/{sensor}/24hours")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Sample> getLast24hours(
-            @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
-            @PathParam("sensor") String sensor,
-            @QueryParam("from_utc") Long queryEndTimestampUTC) {
-
-        validateQueryRange(queryEndTimestampUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
-
-        final int slotDurationInMinutes = 5;
-        final long queryStartTimeUTC = new DateTime(queryEndTimestampUTC, DateTimeZone.UTC).minusHours(24).getMillis();
-
-
-        // get latest device_id connected to this account
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
-        if(!deviceId.isPresent()) {
-            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
-        }
-
-        return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceId.get(), slotDurationInMinutes, sensor);
-    }
-
-    @Timed
-    @GET
-    @Path("/all_sensors/24hours")
-    @Produces(MediaType.APPLICATION_JSON)
-    public  Map<Sensor, List<Sample>> getAllSensorsLast24hours(
-            @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
-            @PathParam("sensor") String sensor,
-            @QueryParam("from_utc") Long queryEndTimestampUTC) {
-
-        validateQueryRange(queryEndTimestampUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
-
-        final int slotDurationInMinutes = 5;
-        final long queryStartTimeUTC = new DateTime(queryEndTimestampUTC, DateTimeZone.UTC).minusHours(24).getMillis();
-
-
-        // get latest device_id connected to this account
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
-        if(!deviceId.isPresent()) {
-            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
-        }
-
-        return deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceId.get(), slotDurationInMinutes);
     }
 
     /*
@@ -330,7 +352,7 @@ public class RoomConditionsResource {
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
                 accessToken.accountId, deviceId.get(), slotDurationInMinutes,
-                sensor);
+                sensor, missingDataDefaultValue(accessToken.accountId));
     }
 
     /*
@@ -362,7 +384,7 @@ public class RoomConditionsResource {
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
                 accountId, deviceId.get(), slotDurationInMinutes,
-                sensor);
+                sensor, missingDataDefaultValue(accountId));
     }
 
     private Optional<Long> getAccountIdByEmail(final String email) {
@@ -378,6 +400,23 @@ public class RoomConditionsResource {
             return Optional.absent();
         }
         return account.id;
+    }
+
+    /**
+     * Validates that the current request start range is within reasonable bounds
+     * @param clientUtcTimestamp
+     * @param nowForServer
+     * @param accountId
+     */
+    private void validateQueryRange(final Long clientUtcTimestamp, final DateTime nowForServer, final Long accountId, final long allowedRangeInSeconds) {
+        if (clientUtcTimestamp == null) {
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        if(Math.abs(clientUtcTimestamp - nowForServer.getMillis()) > allowedRangeInSeconds * 1000) {
+            LOGGER.warn("Invalid request, {} is too far off for account_id = {}", clientUtcTimestamp, accountId);
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);  // This should be FORBIDDEN
+        }
     }
 
     private List<Sample> retrieveDayData(final Long accountId, final String sensor, final Long queryEndTimestampInUTC) {
@@ -402,7 +441,7 @@ public class RoomConditionsResource {
         }
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceId.get(), slotDurationInMinutes, sensor);
+                accountId, deviceId.get(), slotDurationInMinutes, sensor, missingDataDefaultValue(accountId));
 
     }
 
@@ -429,7 +468,7 @@ public class RoomConditionsResource {
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accountId, deviceId.get(), slotDurationInMinutes,
-                sensor);
+                sensor, missingDataDefaultValue(accountId));
     }
 
     private Map<Sensor, List<Sample>> retrieveAllSensorsWeekData(final Long accountId, final Long queryEndTimestampInUTC) {
@@ -451,8 +490,13 @@ public class RoomConditionsResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        return deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceId.get(), slotDurationInMinutes);
-    }
+        final Optional<AllSensorSampleList> optionalData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeInUTC, queryEndTimestampInUTC,
+                accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accountId));
 
+        if (!optionalData.isPresent()) {
+            return Collections.emptyMap();
+        }
+
+        return optionalData.get().getData();
+    }
 }
