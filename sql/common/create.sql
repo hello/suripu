@@ -223,3 +223,6 @@ CREATE TABLE user_labels (
 GRANT ALL PRIVILEGES ON user_labels TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE user_labels_id_seq TO ingress_user;
 CREATE INDEX user_labels_account_id_night ON user_labels(account_id, night_date);
+
+ALTER TABLE user_labels ADD COLUMN duration INT DEFAULT 0;
+ALTER TABLE user_labels ADD COLUMN note VARCHAR(255) DEFAULT "";

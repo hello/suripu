@@ -1,6 +1,8 @@
 package com.hello.suripu.core.translations;
 
 
+import com.hello.suripu.core.processors.insights.TemperatureHumidity;
+
 public class English {
 
     /* BEGIN Events Declaration */
@@ -43,8 +45,18 @@ public class English {
     public final static String UNKNOWN_SOUND_MESSAGE = "Could not retrieve the current sound level.";
 
     // Advice
-    public final static String TEMPERATURE_ADVICE_MESSAGE = "People tend to sleep best when temperature is between **XX%s** and **YY%s**.";
-    public final static String HUMIDITY_ADVICE_MESSAGE = "People tend to sleep best when humidity is between **XX** and **YY**.";
+    public final static String TEMPERATURE_ADVICE_MESSAGE_C = String.format(
+            "People tend to sleep best when temperature is between **%d°C** and **%d°C**.",
+            TemperatureHumidity.IDEAL_TEMP_MIN_CELSIUS, TemperatureHumidity.IDEAL_TEMP_MAX_CELSIUS);
+
+    public final static String TEMPERATURE_ADVICE_MESSAGE_F = String.format(
+            "People tend to sleep best when temperature is between **%d°F** and **%d°F**.",
+            TemperatureHumidity.IDEAL_TEMP_MIN, TemperatureHumidity.IDEAL_TEMP_MAX);
+
+    public final static String HUMIDITY_ADVICE_MESSAGE = String.format(
+            "People tend to sleep best when humidity is between **%d%%** and **%d%%**.",
+            TemperatureHumidity.IDEAL_HUMIDITY_MIN, TemperatureHumidity.IDEAL_HUMIDITY_MAX);
+
     public final static String PARTICULATES_ADVICE_MESSAGE = "The better the air quality in your bedroom, the better you sleep.";
     public final static String LIGHT_ADVICE_MESSAGE = "For ideal sleep, your bedroom should be as dark as possible.";
     public final static String SOUND_ADVICE_MESSAGE = "For ideal sleep, your bedroom should be as quiet as possible.";
