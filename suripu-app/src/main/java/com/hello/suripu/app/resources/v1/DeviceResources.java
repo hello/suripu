@@ -27,6 +27,9 @@ import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.util.JsonError;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
+import org.skife.jdbi.v2.Transaction;
+import org.skife.jdbi.v2.TransactionIsolationLevel;
+import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,7 +107,7 @@ public class DeviceResources {
     @Produces(MediaType.APPLICATION_JSON)
     public void registerPill(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final PillRegistration pillRegistration) {
         try {
-            final Long trackerId = deviceDAO.registerTracker(accessToken.accountId, pillRegistration.pillId);
+            final Long trackerId = deviceDAO.registerPill(accessToken.accountId, pillRegistration.pillId);
             LOGGER.info("Account {} registered pill {} with internal id = {}", accessToken.accountId, pillRegistration.pillId, trackerId);
 
             final List<DeviceAccountPair> sensePairedWithAccount = this.deviceDAO.getSensesForAccountId(accessToken.accountId);
@@ -188,19 +191,40 @@ public class DeviceResources {
 
     @DELETE
     @Timed
-    @Path("/sense/{sense_id}/user")
+    @Path("/sense/{sense_id}/all")
     public void unregisterSenseByUser(@Scope(OAuthScope.DEVICE_INFORMATION_WRITE) final AccessToken accessToken,
-                                @PathParam("sense_id") String senseId) {
-        final Integer numRows = deviceDAO.unregisterSenseByUser(senseId, accessToken.accountId);
-        final Optional<UserInfo> alarmInfoOptional = this.mergedUserInfoDynamoDB.unlinkAccountToDevice(accessToken.accountId, senseId);
+                                      @PathParam("sense_id") final String senseId) {
+        final List<UserInfo> pairedUsers = mergedUserInfoDynamoDB.getInfo(senseId);
 
-        // WARNING: Shall we throw error if the dynamoDB unlink fail?
-        if(numRows == 0) {
-            LOGGER.warn("Did not find active sense to unregister");
-        }
+        try {
+            this.deviceDAO.inTransaction(TransactionIsolationLevel.SERIALIZABLE, new Transaction<Void, DeviceDAO>() {
+                @Override
+                public Void inTransaction(final DeviceDAO transactional, final TransactionStatus status) throws Exception {
+                    for (final UserInfo userInfo : pairedUsers) {
+                        final Integer pillDeleted = transactional.deletePillPairingByAccount(userInfo.accountId);
+                        LOGGER.info("Factory reset delete {} Pills linked to account {}", pillDeleted, accessToken.accountId);
+                    }
 
-        if(!alarmInfoOptional.isPresent()){
-            LOGGER.warn("Cannot find device {} account {} pair in merge info table.", senseId, accessToken.accountId);
+                    final Integer accountUnlinked = transactional.unlinkAllAccountsPairedToSense(senseId);
+                    LOGGER.info("Factory reset delete {} accounts linked to Sense {}", accountUnlinked, accessToken.accountId);
+
+                    for (final UserInfo userInfo : pairedUsers) {
+                        try {
+                            mergedUserInfoDynamoDB.unlinkAccountToDevice(userInfo.accountId, userInfo.deviceId);
+                        } catch (AmazonServiceException awsEx) {
+                            LOGGER.error("Failed to unlink account {} from Sense {} in merge user info. error {}",
+                                    userInfo.accountId,
+                                    userInfo.deviceId,
+                                    awsEx.getErrorMessage());
+                        }
+                    }
+
+                    return null;
+                }
+            });
+        }catch (UnableToExecuteStatementException sqlExp){
+            LOGGER.error("Failed to factory reset Sense {}, error {}", senseId, sqlExp.getMessage());
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
