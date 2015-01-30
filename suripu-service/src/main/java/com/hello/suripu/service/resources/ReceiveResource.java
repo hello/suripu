@@ -163,7 +163,7 @@ public class ReceiveResource extends BaseResource {
 
         if(featureFlipper.deviceFeatureActive(FeatureFlipper.FORCE_HTTP_500, data.getDeviceId(), Collections.EMPTY_LIST)) {
             throw new WebApplicationException(Response.status(Response.Status.SERVICE_UNAVAILABLE)
-                    .entity((debug) ? error.get().message : "server unavailable")
+                    .entity("server unavailable")
                     .type(MediaType.TEXT_PLAIN_TYPE).build()
             );
         }
