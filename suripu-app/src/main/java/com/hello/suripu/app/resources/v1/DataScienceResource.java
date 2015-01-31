@@ -130,6 +130,7 @@ public class DataScienceResource extends BaseResource {
             }
 
             insightProcessor.generateInsights(accountId, accountOptional.get().created);
+//            insightProcessor.generateInsightsByCategory(accountId, deviceIdOptional.get(), category);
         }
     }
 
@@ -243,15 +244,15 @@ public class DataScienceResource extends BaseResource {
     public int label(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
                       @Valid final List<UserLabel> labels) {
 
-        List<Long> accountIds = new ArrayList<>();
-        List<String> emails = new ArrayList<>();
-        List<String> userLabels = new ArrayList<>();
-        List<DateTime> nightDates = new ArrayList<>();
-        List<DateTime> UTCTimestamps = new ArrayList<>();
-        List<Integer> durations = new ArrayList<>();
-        List<DateTime> localUTCTimestamps = new ArrayList<>();
-        List<Integer> tzOffsets = new ArrayList<>();
-        List<String> notes = new ArrayList<>();
+        final List<Long> accountIds = new ArrayList<>();
+        final List<String> emails = new ArrayList<>();
+        final List<String> userLabels = new ArrayList<>();
+        final List<DateTime> nightDates = new ArrayList<>();
+        final List<DateTime> UTCTimestamps = new ArrayList<>();
+        final List<Integer> durations = new ArrayList<>();
+        final List<DateTime> localUTCTimestamps = new ArrayList<>();
+        final List<Integer> tzOffsets = new ArrayList<>();
+        final List<String> notes = new ArrayList<>();
 
         for (UserLabel label : labels) {
 

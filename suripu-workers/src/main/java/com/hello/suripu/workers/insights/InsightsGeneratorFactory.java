@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.QuestionResponseDAO;
+import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.processors.AccountInfoProcessor;
@@ -25,7 +26,8 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
     private final TrendsInsightsDAO trendsInsightsDAO;
-    final QuestionResponseDAO questionResponseDAO;
+    private final QuestionResponseDAO questionResponseDAO;
+    private final SleepScoreDAO scoreDAO;
     private final LightData lightData;
 
     public InsightsGeneratorFactory(final AccountDAO accountDAO,
@@ -36,6 +38,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
                                     final InsightsDAODynamoDB insightsDAODynamoDB,
                                     final TrendsInsightsDAO trendsInsightsDAO,
                                     final QuestionResponseDAO questionResponseDAO,
+                                    final SleepScoreDAO scoreDAO,
                                     final LightData lightData) {
         this.accountDAO = accountDAO;
         this.deviceDataDAO = deviceDataDAO;
@@ -45,6 +48,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
         this.insightsDAODynamoDB = insightsDAODynamoDB;
         this.trendsInsightsDAO = trendsInsightsDAO;
         this.questionResponseDAO = questionResponseDAO;
+        this.scoreDAO = scoreDAO;
         this.lightData = lightData;
     }
 
@@ -57,9 +61,10 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
 
         final InsightProcessor.Builder insightBuilder = new InsightProcessor.Builder()
                 .withSenseDAOs(deviceDataDAO, deviceDAO)
-                .withTrackerMotionDAOs(trackerMotionDAO)
-                .withInsightsDAOs(trendsInsightsDAO)
+                .withTrackerMotionDAO(trackerMotionDAO)
+                .withInsightsDAO(trendsInsightsDAO)
                 .withDynamoDBDAOs(scoreDAODynamoDB, insightsDAODynamoDB)
+                .withSleepScoreDAO(scoreDAO)
                 .withAccountInfoProcessor(accountInfoProcessor)
                 .withLightData(lightData);
 

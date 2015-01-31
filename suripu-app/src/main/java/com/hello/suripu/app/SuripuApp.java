@@ -336,9 +336,10 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final InsightProcessor.Builder insightBuilder = new InsightProcessor.Builder()
                 .withSenseDAOs(deviceDataDAO, deviceDAO)
-                .withTrackerMotionDAOs(trackerMotionDAO)
-                .withInsightsDAOs(trendsInsightsDAO)
+                .withTrackerMotionDAO(trackerMotionDAO)
+                .withInsightsDAO(trendsInsightsDAO)
                 .withDynamoDBDAOs(aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB)
+                .withSleepScoreDAO(sleepScoreDAO)
                 .withPreferencesDAO(accountPreferencesDAO)
                 .withAccountInfoProcessor(accountInfoProcessor)
                 .withLightData(new LightData());
