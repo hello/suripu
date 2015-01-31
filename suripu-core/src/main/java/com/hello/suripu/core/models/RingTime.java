@@ -98,6 +98,7 @@ public class RingTime {
         }
 
         final RingTime convertedObject = (RingTime) other;
-        return Objects.equal(convertedObject.expectedRingTimeUTC, this.expectedRingTimeUTC);
+        return Objects.equal(convertedObject.expectedRingTimeUTC, this.expectedRingTimeUTC) &&
+                Objects.equal(convertedObject.fromSmartAlarm, this.fromSmartAlarm);
     }
 }
