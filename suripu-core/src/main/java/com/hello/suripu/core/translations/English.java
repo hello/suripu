@@ -18,7 +18,7 @@ public class English {
     public final static String MOTION_MESSAGE = "You were moving around quite a bit.";
     public final static String PARTNER_MOTION_MESSAGE = "Your partner was moving quite a bit.";
     public final static String SLEEP_MOTION_MESSAGE = "You were tossing and turning.";
-    public final static String ALARM_NORMAL_MESSAGE = "Your alarm rang at **XX%s**.";
+    public final static String ALARM_NORMAL_MESSAGE = "Your alarm rang at **%s**.";
     public final static String ALARM_SMART_MESSAGE = "Your Smart Alarm rang at **XX%s**.\nYou asked to be awoken by **YY%s**.";
     public final static String NULL_MESSAGE = "";
 

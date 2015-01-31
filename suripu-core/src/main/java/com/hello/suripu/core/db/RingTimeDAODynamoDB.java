@@ -18,6 +18,10 @@ import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.RingTime;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -30,6 +34,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by pangwu on 9/23/14.
@@ -146,6 +151,60 @@ public class RingTimeDAODynamoDB {
 
 
 
+    }
+
+
+    /**
+     * TODO: this is awfully similar to getNextRingTime. Probably needs refactoring.
+     * @param senseId
+     * @param evening
+     * @param morning
+     * @return
+     */
+    public List<RingTime> getRingTimesBetween(final String senseId, final DateTime evening, final DateTime morning) {
+        final Map<String, Condition> queryConditions = Maps.newHashMap();
+        final List<AttributeValue> values = Lists.newArrayList();
+        final String eveningMillis = String.valueOf(evening.getMillis());
+        final String morningMillis = String.valueOf(morning.getMillis());
+        LOGGER.debug("Evening: {} ({})", evening.toString(), evening.getMillis());
+        LOGGER.debug("Morning: {} ({})", morning.toString(), morning.getMillis());
+        values.add(new AttributeValue().withN(eveningMillis));
+        values.add(new AttributeValue().withN(morningMillis));
+
+        final Condition selectDateCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.BETWEEN.toString())
+                .withAttributeValueList(values);
+        queryConditions.put(CREATED_AT_ATTRIBUTE_NAME, selectDateCondition);
+
+
+        final Condition selectAccountIdCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withAttributeValueList(new AttributeValue().withS(senseId));
+        queryConditions.put(MORPHEUS_ID_ATTRIBUTE_NAME, selectAccountIdCondition);
+
+        final Set<String> targetAttributeSet = Sets.newHashSet(MORPHEUS_ID_ATTRIBUTE_NAME,RING_TIME_ATTRIBUTE_NAME, CREATED_AT_ATTRIBUTE_NAME);
+
+        final QueryRequest queryRequest = new QueryRequest(tableName).withKeyConditions(queryConditions)
+                .withAttributesToGet(targetAttributeSet)
+                .withLimit(5)
+                .withScanIndexForward(false);
+        final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
+
+        if(queryResult.getItems() == null){
+            return Collections.EMPTY_LIST;
+        }
+
+        final List<Map<String, AttributeValue>> items = queryResult.getItems();
+
+        final List<RingTime> ringTimes = Lists.newArrayList();
+        for(final Map<String, AttributeValue> item:items){
+            final Optional<RingTime> ringTime = Optional.fromNullable(ringTimeFromItemSet(senseId, targetAttributeSet, item));
+            if(ringTime.isPresent()) {
+                ringTimes.add(ringTime.get());
+            }
+        }
+
+        return ringTimes;
     }
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
