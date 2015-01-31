@@ -127,6 +127,40 @@ public abstract class Event {
         this.type = type;
     }
 
+    public static Event extend(final Event event, final long startTimestamp, final long endTimestamp){
+        switch (event.getType()){
+            case MOTION:
+                return new MotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+            case SLEEP_MOTION:
+                return new SleepMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+            case SLEEP:
+                return new SleepEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
+            case IN_BED:
+                return new InBedEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
+            case OUT_OF_BED:
+                return new OutOfBedEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+            case WAKE_UP:
+                return new WakeupEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+            case NONE:
+                return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+            case SUNRISE:
+                return new SunRiseEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth(), event.getSoundInfo());
+            case SUNSET:
+                return new SunSetEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+            case PARTNER_MOTION:
+                return new PartnerMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+            case LIGHT:
+                return new LightEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
+            case LIGHTS_OUT:
+                return new LightsOutEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+            case ALARM:
+                return new AlarmEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+            default:
+                return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+
+        }
+    }
+
     public static Event extend(final Event event, final long startTimestamp, final long endTimestamp, final int sleepDepth){
         switch (event.getType()){
             case MOTION:
