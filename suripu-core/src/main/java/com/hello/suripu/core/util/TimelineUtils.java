@@ -405,7 +405,7 @@ public class TimelineUtils {
                 final Event currentSlot = slots.get(objectSlotKey);
                 if(currentSlot.getType().getValue() < event.getType().getValue()){
                     // Replace the current segment in that slot with higher weight segment
-                    final Event replaceEvent = Event.extend(event, objectSlotKey.getMillis(), objectSlotKey.getMillis() + slotDurationMS);
+                    final Event replaceEvent = Event.extend(event, objectSlotKey.getMillis(), objectSlotKey.getMillis() + slotDurationMS, currentSlot.getSleepDepth());
                     slots.put(objectSlotKey, replaceEvent);
                     //LOGGER.debug("{} replaced to {}", currentSlot.getType(), event.getType());
                 }

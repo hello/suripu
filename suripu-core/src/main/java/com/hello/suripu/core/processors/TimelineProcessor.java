@@ -10,6 +10,7 @@ import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
@@ -17,13 +18,16 @@ import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.Events.AlarmEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.SleepEvent;
 import com.hello.suripu.core.models.Events.SunRiseEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.Insights.TrendGraph;
+import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
@@ -42,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +68,7 @@ public class TimelineProcessor {
     private final SunData sunData;
     private final AmazonS3 s3;
     private final String bucketName;
+    private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
     private final Histogram motionEventDistribution;
 
     public TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
@@ -76,7 +82,8 @@ public class TimelineProcessor {
                             final int dateBucketPeriod,
                             final SunData sunData,
                             final AmazonS3 s3,
-                            final String bucketName) {
+                            final String bucketName,
+                            final RingTimeDAODynamoDB ringTimeDAODynamoDB) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.accountDAO = accountDAO;
         this.deviceDAO = deviceDAO;
@@ -90,13 +97,15 @@ public class TimelineProcessor {
         this.s3 = s3;
         this.bucketName = bucketName;
         this.motionEventDistribution = Metrics.defaultRegistry().newHistogram(TimelineProcessor.class, "motion_event_distribution");
+        this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
     }
 
 
     public List<List<Timeline>> batchProcessTimelines(final Map<Long, Set<DateTime>> groupedAccountIdTargetDateLocalUTC,
                                                       final Map<Long, Integer> accountIdDefaultSensorValues,
                                                       final long sleepBetweenEachProcessMillis,
-                                                      final TimelineDAODynamoDB timelineDAODynamoDB){
+                                                      final TimelineDAODynamoDB timelineDAODynamoDB,
+                                                      final boolean hasAlarmInTimeline){
         final ArrayList<List<Timeline>> batchedResult = new ArrayList<>();
         for(final Long accountId:groupedAccountIdTargetDateLocalUTC.keySet()){
             final Set<DateTime> targetDatesLocalUTC = groupedAccountIdTargetDateLocalUTC.get(accountId);
@@ -104,7 +113,7 @@ public class TimelineProcessor {
 
                 final List<Timeline> timelines = retrieveTimelines(accountId,
                         targetDateLocalUTC.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT),
-                        accountIdDefaultSensorValues.get(accountId));
+                        accountIdDefaultSensorValues.get(accountId), hasAlarmInTimeline);
                 batchedResult.add(timelines);
                 try {
                     Thread.sleep(sleepBetweenEachProcessMillis);
@@ -127,7 +136,37 @@ public class TimelineProcessor {
     }
 
 
-    public List<Timeline> retrieveTimelines(final Long accountId, final String date, final Integer missingDataDefaultValue) {
+    private List<Event> getAlarmEvents(final Long accountId, final DateTime evening, final DateTime morning, final Integer offsetMillis) {
+
+        final List<DeviceAccountPair> pairs = deviceDAO.getDeviceAccountMapFromAccountId(accountId);
+        if(pairs.size() > 1) {
+            LOGGER.info("Account {} has several sense paired. Not displaying alarm event", accountId);
+            return Collections.EMPTY_LIST;
+        }
+        if(pairs.isEmpty()) {
+            LOGGER.warn("Account {} doesn’t have any Sense paired. ", accountId);
+            return Collections.EMPTY_LIST;
+        }
+        final String senseId = pairs.get(0).externalDeviceId;
+
+        final List<RingTime> ringTimes = ringTimeDAODynamoDB.getRingTimesBetween(senseId, evening, morning);
+
+        final List<Event> events = Lists.newArrayList();
+        for(final RingTime ringTime : ringTimes) {
+            final AlarmEvent event = (AlarmEvent) Event.createFromType(
+                    Event.Type.ALARM,
+                    ringTime.expectedRingTimeUTC,
+                    new DateTime(ringTime.expectedRingTimeUTC, DateTimeZone.UTC).plusMinutes(1).getMillis(),
+                    offsetMillis,
+                    Optional.<String>absent(),
+                    Optional.<SleepSegment.SoundInfo>absent(),
+                    Optional.<Integer>absent());
+            events.add(event);
+        }
+        return events;
+    }
+
+    public List<Timeline> retrieveTimelines(final Long accountId, final String date, final Integer missingDataDefaultValue, final Boolean hasAlarmInTimeline) {
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withHourOfDay(20);
         final DateTime endDate = targetDate.plusHours(16);
@@ -180,6 +219,12 @@ public class TimelineProcessor {
         } else {
             LOGGER.info("No light out");
         }
+
+        if(hasAlarmInTimeline) {
+            final List<Event> alarmEvents = getAlarmEvents(accountId, targetDate, endDate, trackerMotions.get(0).offsetMillis);
+            events.addAll(alarmEvents);
+        }
+
 
         // create sleep-motion segments
         final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);

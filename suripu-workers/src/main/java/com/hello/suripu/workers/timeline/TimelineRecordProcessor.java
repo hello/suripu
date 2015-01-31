@@ -93,7 +93,7 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
         this.timelineProcessor.batchProcessTimelines(groupedAccountIdTargetDateLocalUTCMap,
                 defaultValues,
                 1000,
-                this.timelineDAODynamoDB);
+                this.timelineDAODynamoDB, false);
     }
 
 
