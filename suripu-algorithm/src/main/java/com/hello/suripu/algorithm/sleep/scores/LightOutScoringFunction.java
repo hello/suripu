@@ -28,16 +28,20 @@ public class LightOutScoringFunction implements SleepDataScoringFunction<Amplitu
         for(final AmplitudeData datum:data){
             double sleepProbability = 1d;
             if(datum.timestamp >= startTimestamp && datum.timestamp < lightOutTime.getMillis()){
-                sleepProbability = 1d + this.modalityWeight * Double.valueOf(datum.timestamp - startTimestamp) / Double.valueOf(LOOK_BACK_TIME_MS);
+                sleepProbability = 1d + this.modalityWeight;
             }
 
             if(datum.timestamp >= lightOutTime.getMillis() && datum.timestamp <= endTimestamp){
-                sleepProbability = 1d + this.modalityWeight * Double.valueOf(endTimestamp - datum.timestamp) / Double.valueOf(LOOK_BACK_TIME_MS);
+                sleepProbability = 1d + this.modalityWeight;
+            }
+
+            if(datum.timestamp < startTimestamp){
+                sleepProbability = 0.001;
             }
 
             // since all scores are multiplied together and light out is just for go to bed detection
             // the other scores have to be 1.
-            lightOutPDF.put(datum, new EventScores(1d, 1d, sleepProbability, 1d));
+            lightOutPDF.put(datum, new EventScores(sleepProbability, 1d, sleepProbability, 1d));
         }
         return lightOutPDF;
     }

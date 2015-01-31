@@ -388,7 +388,7 @@ public class ReceiveResource extends BaseResource {
                 }
             }
 
-            LOGGER.debug("{} next ring time: {}", new DateTime(nextRingTime.actualRingTimeUTC, userTimeZoneOptional.get()));
+            LOGGER.debug("{} next ring time: {}", deviceId, new DateTime(nextRingTime.actualRingTimeUTC, userTimeZoneOptional.get()));
 
 
         }

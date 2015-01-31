@@ -920,13 +920,13 @@ public class TimelineUtils {
         // Heuristic fix
         if(sleep.getStartTimestamp() < goToBed.getStartTimestamp()) {
 
-            LOGGER.warn("Go to bed {} later then fall asleep {}, sleep set to go to bed.",
+            LOGGER.warn("Go to bed {} later then fall asleep {}, go to bed set to sleep.",
                     new DateTime(goToBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBed.getTimezoneOffset())),
                     new DateTime(sleep.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleep.getTimezoneOffset())));
 
-            fixedSleepEvents.set(1, new SleepEvent(goToBed.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                    goToBed.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                    goToBed.getTimezoneOffset()));
+            fixedSleepEvents.set(0, new InBedEvent(sleep.getStartTimestamp() - DateTimeConstants.MILLIS_PER_MINUTE,
+                    sleep.getEndTimestamp() - DateTimeConstants.MILLIS_PER_MINUTE,
+                    sleep.getTimezoneOffset()));
 
         }
 
@@ -935,15 +935,13 @@ public class TimelineUtils {
         if(wakeUp.getStartTimestamp() > outOfBed.getStartTimestamp()){
                 // Huge spike before motion+spikes, has motion in between
                 // already wake up?
-            LOGGER.warn("Wake up later than out of bed, wake up {}, out of bed {}, swap.",
+            LOGGER.warn("Wake up later than out of bed, wake up {}, out of bed {}, out of bed set to wake up.",
                     new DateTime(wakeUp.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUp.getTimezoneOffset())),
                     new DateTime(outOfBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBed.getTimezoneOffset())));
-            fixedSleepEvents.set(2, new WakeupEvent(outOfBed.getStartTimestamp(),
-                    outOfBed.getEndTimestamp(),
-                    outOfBed.getTimezoneOffset()));
 
-            fixedSleepEvents.set(3, new OutOfBedEvent(wakeUp.getStartTimestamp(),
-                    wakeUp.getEndTimestamp(),
+
+            fixedSleepEvents.set(3, new OutOfBedEvent(wakeUp.getEndTimestamp(),
+                    wakeUp.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                     wakeUp.getTimezoneOffset()));
 
         }

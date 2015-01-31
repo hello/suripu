@@ -168,16 +168,16 @@ public class MotionFeatures {
 
                 features.get(FeatureType.MAX_AMPLITUDE).add(new AmplitudeData(timestamp, maxBackTrackAmplitude, offsetMillis));
 
-                final double combinedBackward = maxBackTrackAmplitude * densityDrop * (1d + maxMotionPeriodCount);
+                final double combinedBackward = maxBackTrackAmplitude * densityDrop * Math.pow((1d + maxMotionPeriodCount), 3);
                 features.get(FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE).add(new AmplitudeData(timestamp, combinedBackward, offsetMillis));
 
-                final double combinedForward = maxForwardAmplitude * densityIncrease * 1d / (1d + maxNoMotionPeriodCount);
+                final double combinedForward = maxForwardAmplitude * densityIncrease * 1d / Math.pow((1d + maxNoMotionPeriodCount), 3);
                 features.get(FeatureType.DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE).add(new AmplitudeData(timestamp, combinedForward, offsetMillis));
 
                 features.get(FeatureType.MAX_MOTION_PERIOD).add(new AmplitudeData(timestamp, maxMotionPeriodCount, offsetMillis));
                 features.get(FeatureType.MAX_NO_MOTION_PERIOD).add(new AmplitudeData(timestamp, maxNoMotionPeriodCount, offsetMillis));
 
-                if(densityMax1 == 0){
+                if(densityMax1 < (double)windowSizeInMinute / 3.0){
                     maxMotionPeriodCount = 0;
                     maxNoMotionPeriodCount++;
                 }else{

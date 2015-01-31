@@ -26,7 +26,7 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
     private final ScoreType type;
 
     public MotionDensityScoringFunction(final ScoreType type){
-        this.motionMaxPower = 10;
+        this.motionMaxPower = 9;
         this.type = type;
     }
 
@@ -40,7 +40,7 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
         }
 
         final LinearRankDescendingScoringFunction sleepTimeScoreFunction =
-                new LinearRankDescendingScoringFunction(1d, 1d, new double[]{0d, 0.5d});  // sleep time should be desc
+                new LinearRankDescendingScoringFunction(1d, 0.5d, new double[]{0d, 0.7d});  // sleep time should be desc
 
         final LinearRankAscendingScoringFunction wakeUpTimeScoreFunction =
                 new LinearRankAscendingScoringFunction(0d, 1d, new double[]{0.5d, 1.0d});
