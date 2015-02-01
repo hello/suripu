@@ -3,7 +3,7 @@ package com.hello.suripu.algorithm.core;
 /**
  * Created by pangwu on 4/22/14.
  */
-public class AmplitudeData {
+public class AmplitudeData implements Comparable<AmplitudeData> {
     public final long timestamp;
     public final double amplitude;
     public final int offsetMillis;
@@ -12,5 +12,10 @@ public class AmplitudeData {
         this.timestamp = timestamp;
         this.amplitude = amplitude;
         this.offsetMillis = offsetMillis;
+    }
+
+    @Override
+    public int compareTo(final AmplitudeData o) {
+        return Double.compare(this.amplitude, o.amplitude);
     }
 }

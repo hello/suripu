@@ -1,17 +1,16 @@
 package com.hello.suripu.algorithm.pdf;
 
-import com.google.common.collect.Ordering;
 import com.hello.suripu.algorithm.core.ScoringFunction;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
  * Created by pangwu on 12/16/14.
  */
-public class LinearRankAscendingScoringFunction implements ScoringFunction<Long, Double> {
+public class LinearRankAscendingScoringFunction<T> implements ScoringFunction<T, Double> {
 
     private final double[] cutPercentages;
     private final double startScore;
@@ -24,21 +23,22 @@ public class LinearRankAscendingScoringFunction implements ScoringFunction<Long,
 
     }
     @Override
-    public Map<Long, Double> getPDF(final Collection<Long> data) {
-        List<Long> sortedCopy = Ordering.natural().immutableSortedCopy(data);
+    public Map<T, Double> getPDF(final Collection<T> data) {
+        final T[] sortedCopy = (T[])Arrays.copyOf(data.toArray(), data.size());
+        Arrays.sort(sortedCopy);
 
-        final LinkedHashMap<Long, Double> rankingPositions = new LinkedHashMap<>();
-        final double startCutBound = data.size() * this.cutPercentages[0];
-        final double endCutBound = data.size() * this.cutPercentages[1];
+        final LinkedHashMap<T, Double> rankingPositions = new LinkedHashMap<>();
+        final int startCutBound = (int) (data.size() * this.cutPercentages[0]);
+        final int endCutBound = (int) (data.size() * this.cutPercentages[1]);
 
         final int dataSize = data.size();
-        for(int i = 0; i < sortedCopy.size(); i++){
+        for(int i = 0; i < sortedCopy.length; i++){
             double score = 0;
             if(i >= startCutBound && i <= endCutBound){
                 score = Double.valueOf(i - startCutBound) / (endCutBound - startCutBound) * (this.endScore - this.startScore) + this.startScore;
             }
 
-            final Long value = sortedCopy.get(i);
+            final T value = sortedCopy[i];
             if(rankingPositions.containsKey(value)){
                 continue;
             }
@@ -48,7 +48,7 @@ public class LinearRankAscendingScoringFunction implements ScoringFunction<Long,
     }
 
     @Override
-    public Double getScore(final Long data, final Map<Long, Double> pdf) {
+    public Double getScore(final T data, final Map<T, Double> pdf) {
         if(pdf.containsKey(data)){
             return pdf.get(data);
         }

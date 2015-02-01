@@ -809,7 +809,7 @@ public class TimelineUtils {
                                          final Optional<DateTime> lightOutTimeOptional,
                                          final int smoothWindowSizeInMinutes,
                                          final boolean debugMode){
-        final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(trackerMotions);
+        final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(TrackerMotion.Utils.removeDuplicates(trackerMotions));
         final List<AmplitudeData> dataWithGapFilled = dataSource.getDataForDate(targetDateLocalUTC.withTimeAtStartOfDay());
 
         final int featureWindowSizeInMinutes = smoothWindowSizeInMinutes;
@@ -909,12 +909,16 @@ public class TimelineUtils {
             fixedSleepEvents.set(1, new SleepEvent(sleep.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                     sleep.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                     sleep.getTimezoneOffset()));
+            LOGGER.warn("Sleep {} has the same time with in bed, set to in bed +1 minute.",
+                    new DateTime(sleep.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleep.getTimezoneOffset())));
         }
 
         if(wakeUp.getStartTimestamp() == outOfBed.getStartTimestamp()){
             fixedSleepEvents.set(3, new OutOfBedEvent(outOfBed.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                     outOfBed.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                     outOfBed.getTimezoneOffset()));
+            LOGGER.warn("Out of bed {} has the same time with wake up, set to wake up +1 minute.",
+                    new DateTime(outOfBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBed.getTimezoneOffset())));
         }
 
         // Heuristic fix

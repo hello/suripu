@@ -44,13 +44,11 @@ public class MotionScoreAlgorithm {
 
 
     public static Optional<InternalScore> getHighestScore(final List<InternalScore> scores){
-        final List<InternalScore> copy = Ordering.natural().reverse().immutableSortedCopy(scores);
-
         if(scores.size() == 0){
             return Optional.absent();
         }
 
-        return Optional.of(copy.get(0));
+        return Optional.of(Ordering.natural().max(scores));
     }
 
     public List<Segment> getSleepEvents(final boolean debugMode) throws AlgorithmException {
@@ -116,9 +114,8 @@ public class MotionScoreAlgorithm {
                 outOfBedScore *= scoringFunction.getScore(datum, pdf).outOfBedEventScore;
 
                 if(debugMode) {
-                    LOGGER.debug("    {}: {}, sleep: {}, wakeup: {}, in_bed: {}, out_bed: {}, val: {}",
+                    LOGGER.debug("    {}: sleep: {}, wakeup: {}, in_bed: {}, out_bed: {}, val: {}",
                             scoringFunction.getClass().getSimpleName(),
-                            d,
                             scoringFunction.getScore(datum, pdf).sleepEventScore,
                             scoringFunction.getScore(datum, pdf).wakeUpEventScore,
                             scoringFunction.getScore(datum, pdf).goToBedEventScore,
