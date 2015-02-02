@@ -159,7 +159,7 @@ public class RingProcessor {
 
         LOGGER.info("Updating smart alarm for device {}, account {}", userInfo.deviceId, userInfo.accountId);
         
-        if (nextRingTimeFromWorker.equals(nextRingTimeFromTemplate) && nextRingTimeFromWorker.processed()) {
+        if (currentTime.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) == false && nextRingTimeFromWorker.processed()) {
             LOGGER.debug("Smart alarm already set to {} for device {}, account {}.",
                     new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),
                     userInfo.deviceId,
@@ -167,16 +167,15 @@ public class RingProcessor {
             return nextRingTimeFromWorker;
         }
 
+        // previous ring time from worker expired, next alarm is a non-smart alarm, should use none-smart next ring time.
         if(!nextRingTimeFromTemplate.fromSmartAlarm){
-            if(nextRingTimeFromWorker.expectedRingTimeUTC < nextRingTimeFromTemplate.expectedRingTimeUTC) {
-                // next ring time from worker expired, should use none-smart next ring time.
-                return nextRingTimeFromTemplate;
-            }
-
-            if(nextRingTimeFromTemplate.isEmpty()){
-                return nextRingTimeFromTemplate;
-            }
+            mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, nextRingTimeFromTemplate);
+            LOGGER.info("Device {} ring time updated to {}", userInfo.deviceId,
+                    new DateTime(nextRingTimeFromTemplate.actualRingTimeUTC, userInfo.timeZone.get()));
+            return nextRingTimeFromTemplate;
         }
+
+        // previous ring time from worker expired, next alarm is smart alarm, check if need to process next smart ring time.
 
         // currentRingTime.equals(nextRingTime) && currentRingTime.isSmart == false // next regular alarm generated, no pill data and not yet ring
         // currentRingTime.equals(nextRingTime) == false && currentRingTime.isSmart == false  // out-date last regular alarm due to no pill data
