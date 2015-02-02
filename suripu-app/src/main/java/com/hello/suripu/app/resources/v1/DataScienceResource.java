@@ -7,10 +7,12 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.DataScience.UserLabel;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -103,12 +105,21 @@ public class DataScienceResource extends BaseResource {
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
-        final List<Sample> senseData = deviceDataDAO.generateTimeSeriesByLocalUTCTime(targetDate.getMillis(),
-                endDate.getMillis(), accessToken.accountId, internalSenseIdOptional.get(), 1, "light", missingDataDefaultValue(accessToken.accountId));
+        Optional<AllSensorSampleList> optionalSensorData = Optional.absent();
 
-        final List<Event> lightEvents = TimelineUtils.getLightEvents(senseData);
+        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
+        if (deviceId.isPresent()) {
+            final int slotDurationMins = 1;
 
-        return lightEvents;
+            optionalSensorData = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
+                    targetDate.getMillis(), endDate.getMillis(),
+                    accessToken.accountId, deviceId.get(), slotDurationMins, missingDataDefaultValue(accessToken.accountId));
+            final List<Sample> lightData = optionalSensorData.get().getData(Sensor.LIGHT);
+            final List<Event> lightEvents = TimelineUtils.getLightEvents(lightData);
+            return lightEvents;
+        }
+
+        throw new WebApplicationException(Response.Status.NOT_FOUND);
     }
 
 
@@ -124,16 +135,19 @@ public class DataScienceResource extends BaseResource {
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
 
-        final Optional<Long> internalSenseIdOptional = this.deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
+        Optional<AllSensorSampleList> optionalSensorData = Optional.absent();
 
-        if(!internalSenseIdOptional.isPresent()){
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
+        if (deviceId.isPresent()) {
+            final int slotDurationMins = 1;
+
+            optionalSensorData = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
+                    targetDate.getMillis(), endDate.getMillis(),
+                    accessToken.accountId, deviceId.get(), slotDurationMins, missingDataDefaultValue(accessToken.accountId));
+            final List<Sample> data = optionalSensorData.get().getData(Sensor.valueOf(dataType));
+            return data;
         }
-
-        final List<Sample> senseData = deviceDataDAO.generateTimeSeriesByLocalUTCTime(targetDate.getMillis(),
-                endDate.getMillis(), accessToken.accountId, internalSenseIdOptional.get(), 1, dataType, missingDataDefaultValue(accessToken.accountId));
-
-        return senseData;
+        throw new WebApplicationException(Response.Status.NOT_FOUND);
     }
 
     // TODO: rm later. temporary endpoint to create insights
@@ -231,7 +245,7 @@ public class DataScienceResource extends BaseResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        return deviceDataDAO.generateTimeSeriesByLocalUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
+        return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accountId, deviceId.get(), slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId));
     }
 
