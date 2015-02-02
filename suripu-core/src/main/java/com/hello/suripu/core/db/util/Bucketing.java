@@ -135,9 +135,10 @@ public class Bucketing {
             final float humidityValue = DataUtils.dbIntToFloat(deviceData.ambientHumidity);
             final float temperatureValue = DataUtils.calibrateTemperature(deviceData.ambientTemperature);
             final float particulatesValue = (float) DataUtils.convertRawDustCountsToAQI(deviceData.ambientDustMax, deviceData.firmwareVersion);
+            final int waveCount = deviceData.waveCount;
 
             populatedMap.addSample(newKey, deviceData.offsetMillis,
-                    lightValue, soundValue, humidityValue, temperatureValue, particulatesValue);
+                    lightValue, soundValue, humidityValue, temperatureValue, particulatesValue, waveCount);
 
 //            map.get(Sensor.HUMIDITY).put(newKey, new Sample(newKey, humidityValue, deviceData.offsetMillis));
 //            map.get(Sensor.TEMPERATURE).put(newKey, new Sample(newKey, temperatureValue, deviceData.offsetMillis));
