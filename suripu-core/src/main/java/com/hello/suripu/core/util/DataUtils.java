@@ -12,7 +12,7 @@ public class DataUtils{
     public static final float DUST_FLOAT_TO_INT_MULTIPLIER = 1000000f;
     public static final float AUDIO_FLOAT_TO_INT_MULTIPLIER = 1000.0f; // 3 decimal places
     public static final float FLOAT_2_INT_MULTIPLIER = 100;
-    private static final float TEMPERATURE_CALIBRATION_FACTOR_IN_CELSIUS = 278;
+    private static final int TEMPERATURE_CALIBRATION_FACTOR_IN_CELSIUS = 278;
 
     // AQI ranges from 0 to 500;
     // see http://www.sparetheair.com/publications/AQI_Lookup_Table-PM25.pdf
@@ -107,7 +107,7 @@ public class DataUtils{
     public static float dbIntToFloatAudioDecibels(final int valueFromDatabase) { return ((float) valueFromDatabase) / AUDIO_FLOAT_TO_INT_MULTIPLIER; }
 
     public static float calibrateTemperature(final int valueFromDatabase) {
-        return valueFromDatabase - TEMPERATURE_CALIBRATION_FACTOR_IN_CELSIUS / FLOAT_2_INT_MULTIPLIER;
+        return dbIntToFloat(valueFromDatabase - TEMPERATURE_CALIBRATION_FACTOR_IN_CELSIUS);
     }
 
     public static int floatToDBInt(final float value){
