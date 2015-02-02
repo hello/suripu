@@ -40,7 +40,7 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
         }
 
         final LinearRankDescendingScoringFunction<Long> sleepTimeScoreFunction =
-                new LinearRankDescendingScoringFunction<>(1d, 0.5d, new double[]{0d, 0.7d});  // sleep time should be desc
+                new LinearRankDescendingScoringFunction<>(1d, 0.0d, new double[]{0d, 0.5d});  // sleep time should be desc
         final LinearRankAscendingScoringFunction<Double> sleepMotionScoringFunction =
                 new LinearRankAscendingScoringFunction<>(0d, 1d, new double[]{0d, 1d});
 
