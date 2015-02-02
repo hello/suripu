@@ -8,6 +8,7 @@ import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sensordata.LightEventsDetector;
 import com.hello.suripu.algorithm.sleep.MotionScoreAlgorithm;
 import com.hello.suripu.algorithm.sleep.scores.AmplitudeDataScoringFunction;
+import com.hello.suripu.algorithm.sleep.scores.LightOutCumulatedMotionMixScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.LightOutScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.MotionDensityScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.SleepDataScoringFunction;
@@ -844,6 +845,17 @@ public class TimelineUtils {
                         .withZone(DateTimeZone.forOffsetMillis(dataWithGapFilled.get(0).offsetMillis)));
             }
             scoringFunctions.add(new LightOutScoringFunction(lightOutTimeOptional.get(), 3d));
+
+            final LinkedList<AmplitudeData> lightAndCumulatedMotionFeature = new LinkedList<>();
+            for (final AmplitudeData amplitudeData : aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_MOTION_PERIOD)) {
+                // this is the magical light feature that can keep both magic and fix broken things.
+                lightAndCumulatedMotionFeature.add(new AmplitudeData(amplitudeData.timestamp,
+                        1d / (amplitudeData.amplitude + 0.3),  // Max can go 3 times as much as the original score
+                        amplitudeData.offsetMillis));
+
+            }
+            featureDimension = MotionScoreAlgorithm.addToFeatureMatrix(matrix, lightAndCumulatedMotionFeature);
+            scoringFunctions.add(new LightOutCumulatedMotionMixScoringFunction(lightOutTimeOptional.get()));
         }
 
         final MotionScoreAlgorithm sleepDetectionAlgorithm = new MotionScoreAlgorithm(matrix,
@@ -966,7 +978,9 @@ public class TimelineUtils {
 
         // Heuristic fix: out of bed time can not be too off from wake up time
         if(hasLongQuietPeriod(wakeUp.getStartTimestamp(), outOfBed.getStartTimestamp(),
-                features.get(MotionFeatures.FeatureType.MAX_NO_MOTION_PERIOD), 60) && wakeUp.getStartTimestamp() < outOfBed.getStartTimestamp()){
+                features.get(MotionFeatures.FeatureType.MAX_NO_MOTION_PERIOD), 60) &&
+                wakeUp.getStartTimestamp() < outOfBed.getStartTimestamp() &&
+                outOfBed.getStartTimestamp() - wakeUp.getStartTimestamp() > 2 * DateTimeConstants.MILLIS_PER_HOUR){
 
             LOGGER.warn("out of bed detected at {}, way too far from wake up at {}, event set to wake up time.",
                     new DateTime(outOfBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBed.getTimezoneOffset())),
