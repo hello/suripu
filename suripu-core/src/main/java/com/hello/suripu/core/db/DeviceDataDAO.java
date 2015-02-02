@@ -211,7 +211,7 @@ public abstract class DeviceDataDAO {
     }
 
     @Timed
-    public List<Sample> generateTimeSeriesByLocalUTCTime(
+    public List<Sample> generateTimeSeriesByUTCTime(
             final Long queryStartTimestampInUTC,
             final Long queryEndTimestampInUTC,
             final Long accountId,
@@ -220,7 +220,6 @@ public abstract class DeviceDataDAO {
             final String sensor,
             final Integer missingDataDefaultValue) {
 
-        // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC);
         final DateTime queryStartTime = new DateTime(queryStartTimestampInUTC, DateTimeZone.UTC);
 
