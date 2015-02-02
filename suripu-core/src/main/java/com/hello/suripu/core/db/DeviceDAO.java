@@ -39,6 +39,12 @@ public interface DeviceDAO {
     @SqlQuery("SELECT id FROM account_device_map WHERE account_id = :account_id AND active = TRUE ORDER BY id DESC LIMIT 1;")
     Optional<Long> getMostRecentSenseByAccountId(@Bind("account_id") Long accountId);
 
+
+    @SingleValueResult(DeviceAccountPair.class)
+    @RegisterMapper(DeviceAccountPairMapper.class)
+    @SqlQuery("SELECT * FROM account_device_map WHERE account_id = :account_id ORDER BY id DESC LIMIT 1;")
+    Optional<DeviceAccountPair> getMostRecentSensePairByAccountId(@Bind("account_id") Long accountId);
+
     @RegisterMapper(DeviceAccountPairMapper.class)
     @SqlQuery("SELECT * FROM account_device_map WHERE device_name = :device_name ORDER BY account_id ASC;")
     ImmutableList<DeviceAccountPair> getAccountIdsForDeviceId(@Bind("device_name") String deviceName);
@@ -145,5 +151,4 @@ public interface DeviceDAO {
     @SingleValueResult(DeviceAccountPair.class)
     @SqlQuery("SELECT * FROM account_tracker_map WHERE device_id LIKE '%'||:pill_id||'%' ORDER BY id LIMIT 10;")
     ImmutableList<DeviceAccountPair> getPillsByPillIdHint(@Bind("pill_id") final String pillId);
-
 }
