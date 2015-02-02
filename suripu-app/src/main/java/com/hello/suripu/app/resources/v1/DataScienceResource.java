@@ -90,7 +90,7 @@ public class DataScienceResource extends BaseResource {
     @Path("/light/{query_date_local_utc}")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Event> getLightOut(@Scope(OAuthScope.SENSORS_BASIC) final AccessToken accessToken,
-                                            @PathParam("query_date_local_utc") String date) {
+                                            @PathParam("query_date_local_utc") final String date) {
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withHourOfDay(20);
         final DateTime endDate = targetDate.plusHours(16);
@@ -103,12 +103,37 @@ public class DataScienceResource extends BaseResource {
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
-        final List<Sample> senseData = deviceDataDAO.generateTimeSeriesByUTCTime(targetDate.getMillis(),
+        final List<Sample> senseData = deviceDataDAO.generateTimeSeriesByLocalUTCTime(targetDate.getMillis(),
                 endDate.getMillis(), accessToken.accountId, internalSenseIdOptional.get(), 1, "light", missingDataDefaultValue(accessToken.accountId));
 
         final List<Event> lightEvents = TimelineUtils.getLightEvents(senseData);
 
         return lightEvents;
+    }
+
+
+    @GET
+    @Path("/sensors/{query_date_local_utc}/{type}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Sample> getSensors(@Scope(OAuthScope.SENSORS_BASIC) final AccessToken accessToken,
+                                   @PathParam("query_date_local_utc") final String date,
+                                   @PathParam("type") final String dataType) {
+        final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                .withZone(DateTimeZone.UTC).withHourOfDay(20);
+        final DateTime endDate = targetDate.plusHours(16);
+        LOGGER.debug("Target date: {}", targetDate);
+        LOGGER.debug("End date: {}", endDate);
+
+        final Optional<Long> internalSenseIdOptional = this.deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
+
+        if(!internalSenseIdOptional.isPresent()){
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        final List<Sample> senseData = deviceDataDAO.generateTimeSeriesByLocalUTCTime(targetDate.getMillis(),
+                endDate.getMillis(), accessToken.accountId, internalSenseIdOptional.get(), 1, dataType, missingDataDefaultValue(accessToken.accountId));
+
+        return senseData;
     }
 
     // TODO: rm later. temporary endpoint to create insights
@@ -206,7 +231,7 @@ public class DataScienceResource extends BaseResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
+        return deviceDataDAO.generateTimeSeriesByLocalUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accountId, deviceId.get(), slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId));
     }
 

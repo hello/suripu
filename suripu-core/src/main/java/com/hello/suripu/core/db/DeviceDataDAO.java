@@ -211,7 +211,7 @@ public abstract class DeviceDataDAO {
     }
 
     @Timed
-    public List<Sample> generateTimeSeriesByUTCTime(
+    public List<Sample> generateTimeSeriesByLocalUTCTime(
             final Long queryStartTimestampInUTC,
             final Long queryEndTimestampInUTC,
             final Long accountId,
