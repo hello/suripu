@@ -7,7 +7,7 @@ import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.core.models.Events.SleepEvent;
+import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.Timeline;
@@ -57,7 +57,7 @@ public class TimelineDAODynamoDBIT {
         final ArrayList<SleepSegment> sleepSegments = new ArrayList<>();
         final DateTime now = DateTime.now();
         sleepSegments.add(new SleepSegment(0L,
-                new SleepEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0),
+                new FallingAsleepEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0),
                 Collections.EMPTY_LIST));
 
         sleepSegments.add(new SleepSegment(1L,
@@ -71,7 +71,7 @@ public class TimelineDAODynamoDBIT {
 
         sleepSegments.clear();
         sleepSegments.add(new SleepSegment(2L,
-                new SleepEvent(now.plusDays(1).getMillis(), now.plusDays(1).plusMinutes(1).getMillis(), 0),
+                new FallingAsleepEvent(now.plusDays(1).getMillis(), now.plusDays(1).plusMinutes(1).getMillis(), 0),
                 Collections.EMPTY_LIST));
 
         sleepSegments.add(new SleepSegment(3L,

@@ -22,7 +22,7 @@ import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.AlarmEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
-import com.hello.suripu.core.models.Events.SleepEvent;
+import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.SunRiseEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
@@ -237,11 +237,11 @@ public class TimelineProcessor {
                     trackerMotions, lightOutTimeOptional,
                     MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                     false);
-            final SleepEvent sleepEvent = (SleepEvent) sleepEventsFromAlgorithm.get(1);
+            final FallingAsleepEvent fallingAsleepEvent = (FallingAsleepEvent) sleepEventsFromAlgorithm.get(1);
             final WakeupEvent wakeupEvent = (WakeupEvent) sleepEventsFromAlgorithm.get(2);
 
-            if(wakeupEvent.getStartTimestamp() - sleepEvent.getStartTimestamp() > 3 * DateTimeConstants.MILLIS_PER_HOUR){
-                sleepSegment = Optional.of(new Segment(sleepEvent.getStartTimestamp(),
+            if(wakeupEvent.getStartTimestamp() - fallingAsleepEvent.getStartTimestamp() > 3 * DateTimeConstants.MILLIS_PER_HOUR){
+                sleepSegment = Optional.of(new Segment(fallingAsleepEvent.getStartTimestamp(),
                         wakeupEvent.getStartTimestamp(),
                         wakeupEvent.getTimezoneOffset()));
 

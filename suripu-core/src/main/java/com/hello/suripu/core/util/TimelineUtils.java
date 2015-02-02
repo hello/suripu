@@ -22,7 +22,8 @@ import com.hello.suripu.core.models.Events.LightsOutEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
-import com.hello.suripu.core.models.Events.SleepEvent;
+import com.hello.suripu.core.models.Events.FallingAsleepEvent;
+import com.hello.suripu.core.models.Events.SleepingEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.Sample;
@@ -66,11 +67,11 @@ public class TimelineUtils {
         final LinkedList<Event> convertedEvents = new LinkedList<>();
         for(final Event event:eventList){
             if(event.getType() == Event.Type.MOTION && event.getSleepDepth() > thresholdSleepDepth){
-                final NullEvent nullEvent = new NullEvent(event.getStartTimestamp(),
+                final SleepingEvent sleepingEvent = new SleepingEvent(event.getStartTimestamp(),
                         event.getEndTimestamp(),
                         event.getTimezoneOffset(),
                         event.getSleepDepth());
-                convertedEvents.add(nullEvent);
+                convertedEvents.add(sleepingEvent);
             }else{
                 convertedEvents.add(event);
             }
@@ -689,7 +690,7 @@ public class TimelineUtils {
      * @param thresholdInMinutes
      * @return
      */
-    public static Optional<SleepEvent> getSleepEvent(final List<MotionEvent> sleepMotions, int thresholdInMinutes, int motionThreshold, final Optional<DateTime> sleepTimeThreshold) {
+    public static Optional<FallingAsleepEvent> getSleepEvent(final List<MotionEvent> sleepMotions, int thresholdInMinutes, int motionThreshold, final Optional<DateTime> sleepTimeThreshold) {
 
         if(sleepMotions.isEmpty()) {
             return Optional.absent();
@@ -726,7 +727,7 @@ public class TimelineUtils {
             if (diffInMinutes > thresholdInMinutes) {
                 if(map.containsKey(current.getMillis())) {
                     final MotionEvent motion = map.get(current.getMillis());
-                    return Optional.of(new SleepEvent(motion.getStartTimestamp(), motion.getEndTimestamp(), motion.getTimezoneOffset()));
+                    return Optional.of(new FallingAsleepEvent(motion.getStartTimestamp(), motion.getEndTimestamp(), motion.getTimezoneOffset()));
 
                 }
                 break;  // Get the first event
@@ -875,7 +876,7 @@ public class TimelineUtils {
                 goToBedSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
                 goToBedSegment.getOffsetMillis()));
 
-        events.add(new SleepEvent(fallAsleepSegment.getStartTimestamp(),
+        events.add(new FallingAsleepEvent(fallAsleepSegment.getStartTimestamp(),
                 fallAsleepSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
                 fallAsleepSegment.getOffsetMillis()));
 
@@ -907,7 +908,7 @@ public class TimelineUtils {
 
     public static List<Event> sleepEventsHeuristicFix(final List<Event> sleepEvents, final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features){
         final InBedEvent goToBed = (InBedEvent) sleepEvents.get(0);
-        final SleepEvent sleep = (SleepEvent) sleepEvents.get(1);
+        final FallingAsleepEvent sleep = (FallingAsleepEvent) sleepEvents.get(1);
         final WakeupEvent wakeUp = (WakeupEvent) sleepEvents.get(2);
         final OutOfBedEvent outOfBed = (OutOfBedEvent) sleepEvents.get(3);
 
@@ -918,7 +919,7 @@ public class TimelineUtils {
         fixedSleepEvents.add(outOfBed);
 
         if(sleep.getStartTimestamp() == goToBed.getStartTimestamp()){
-            fixedSleepEvents.set(1, new SleepEvent(sleep.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+            fixedSleepEvents.set(1, new FallingAsleepEvent(sleep.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                     sleep.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                     sleep.getTimezoneOffset()));
             LOGGER.warn("Sleep {} has the same time with in bed, set to in bed +1 minute.",
