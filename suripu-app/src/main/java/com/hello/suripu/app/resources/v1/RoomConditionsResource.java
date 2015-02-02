@@ -30,6 +30,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -156,7 +157,7 @@ public class RoomConditionsResource extends BaseResource {
             return Collections.emptyMap();
         }
 
-        return optionalData.get().getData();
+        return getDisplayData(optionalData.get().getAllData());
     }
 
     @Timed
@@ -186,7 +187,7 @@ public class RoomConditionsResource extends BaseResource {
             return Collections.emptyMap();
         }
 
-        return optionalData.get().getData();
+        return getDisplayData(optionalData.get().getAllData());
     }
 
     /*
@@ -497,6 +498,16 @@ public class RoomConditionsResource extends BaseResource {
             return Collections.emptyMap();
         }
 
-        return optionalData.get().getData();
+        return getDisplayData(optionalData.get().getAllData());
+    }
+
+    private static Map<Sensor, List<Sample>> getDisplayData(final Map<Sensor, List<Sample>> allSensorData){
+        final Map<Sensor, List<Sample>> displayData = new HashMap<>();
+        displayData.put(Sensor.LIGHT, allSensorData.get(Sensor.LIGHT));
+        displayData.put(Sensor.HUMIDITY, allSensorData.get(Sensor.HUMIDITY));
+        displayData.put(Sensor.SOUND, allSensorData.get(Sensor.SOUND));
+        displayData.put(Sensor.TEMPERATURE, allSensorData.get(Sensor.TEMPERATURE));
+        displayData.put(Sensor.PARTICULATES, allSensorData.get(Sensor.PARTICULATES));
+        return displayData;
     }
 }
