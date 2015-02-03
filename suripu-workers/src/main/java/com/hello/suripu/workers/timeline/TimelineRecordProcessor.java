@@ -75,6 +75,7 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
         final Map<Long, DateTime> groupedAccountIdTargetDateLocalUTCMap = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(pillIdTargetDatesMap,
                 DateTime.now().withZone(DateTimeZone.UTC),
                 this.configuration.getEarliestProcessTime(),
+                this.configuration.getLastProcessTime(),
                 this.deviceDAO,
                 this.mergedUserInfoDynamoDB);
 

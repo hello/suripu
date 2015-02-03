@@ -142,4 +142,14 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
     public Integer getEarliestProcessTime(){
         return this.earliestProcessTime;
     }
+
+    @Valid
+    @NotNull
+    @Min(10)
+    @Max(12)
+    @JsonProperty("end_process_time")
+    private Integer lastProcessTime;
+    public Integer getLastProcessTime(){
+        return this.lastProcessTime;
+    }
 }

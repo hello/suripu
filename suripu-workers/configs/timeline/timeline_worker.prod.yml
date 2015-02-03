@@ -172,3 +172,4 @@ timeline_db:
 
 max_no_motion_period_minutes: 90
 hour_of_day_trigger: 5
+end_process_time: 11
