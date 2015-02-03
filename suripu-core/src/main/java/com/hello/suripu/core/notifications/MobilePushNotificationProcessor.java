@@ -85,7 +85,7 @@ public class MobilePushNotificationProcessor {
         final Map<String, String> content = new HashMap<>();
         final Map<String, Object> appMessageMap = new HashMap<>();
 
-        content.put("body", message.body);
+        content.put("message", message.body);
         content.put("target", message.target);
         content.put("details", message.details);
 
