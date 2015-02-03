@@ -3,6 +3,7 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.hello.suripu.core.processors.insights.TemperatureHumidity;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DataUtils;
 import org.joda.time.DateTime;
@@ -207,12 +208,21 @@ public class CurrentRoomState {
         State.Condition condition = State.Condition.IDEAL;;
         String message = (preSleep) ? English.IDEAL_TEMPERATURE_PRE_SLEEP_MESSAGE: English.IDEAL_TEMPERATURE_MESSAGE;;
 
-        if (temperature  < 15.0) {
+        if (temperature > (float) TemperatureHumidity.ALERT_TEMP_MAX_CELSIUS) {
             condition = State.Condition.ALERT;
-            message = (preSleep) ? English.LOW_TEMPERATURE_PRE_SLEEP_MESSAGE : English.LOW_TEMPERATURE_MESSAGE;
-        } else if (temperature > 30.0) {
+            message = (preSleep) ? English.HIGH_TEMPERATURE_PRE_SLEEP_ALERT_MESSAGE: English.HIGH_TEMPERATURE_ALERT_MESSAGE;
+
+        } else if (temperature > (float) TemperatureHumidity.IDEAL_TEMP_MAX_CELSIUS) {
+            condition = State.Condition.WARNING;
+            message = (preSleep) ? English.HIGH_TEMPERATURE_PRE_SLEEP_WARNING_MESSAGE: English.HIGH_TEMPERATURE_WARNING_MESSAGE;
+
+        } else if (temperature  < (float) TemperatureHumidity.ALERT_TEMP_MIN_CELSIUS) {
             condition = State.Condition.ALERT;
-            message = (preSleep) ? English.HIGH_TEMPERATURE_PRE_SLEEP_MESSAGE : English.HIGH_TEMPERATURE_MESSAGE;
+            message = (preSleep) ? English.LOW_TEMPERATURE_PRE_SLEEP_ALERT_MESSAGE: English.LOW_TEMPERATURE_ALERT_MESSAGE;
+
+        } else if (temperature < (float) TemperatureHumidity.IDEAL_TEMP_MIN_CELSIUS) {
+            condition = State.Condition.WARNING;
+            message = (preSleep) ? English.LOW_TEMPERATURE_PRE_SLEEP_WARNING_MESSAGE: English.LOW_TEMPERATURE_WARNING_MESSAGE;
         }
 
         return new State(temperature, message, idealTempConditions, condition, dataTimestampUTC, State.Unit.CELCIUS);
