@@ -241,7 +241,7 @@ public class TimelineUtilsTest {
         final DateTime wakeUpLocalUTC = new DateTime(wakeUpTime.getYear(), wakeUpTime.getMonthOfYear(), wakeUpTime.getDayOfMonth(), wakeUpTime.getHourOfDay(), wakeUpTime.getMinuteOfHour(), DateTimeZone.UTC);
         final DateTime outOfBedLocalUTC = new DateTime(outOfBedTime.getYear(), outOfBedTime.getMonthOfYear(), outOfBedTime.getDayOfMonth(), outOfBedTime.getHourOfDay(), outOfBedTime.getMinuteOfHour(), DateTimeZone.UTC);
 
-        assertThat(goToBedLocalUTC, is(new DateTime(2015, 1, 27, 0, 28, DateTimeZone.UTC)));
+        assertThat(goToBedLocalUTC, is(new DateTime(2015, 1, 27, 0, 18, DateTimeZone.UTC)));
         assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 27, 0, 29, DateTimeZone.UTC)));
         assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 27, 8, 11, DateTimeZone.UTC)));
         assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 27, 8, 22, DateTimeZone.UTC)));
