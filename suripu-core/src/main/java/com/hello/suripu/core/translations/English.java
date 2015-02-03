@@ -117,7 +117,7 @@ public class English {
 
     public final static String LOW_TEMPERATURE_PRE_SLEEP_ALERT_MESSAGE = "It was **too cold** in your room.";
     public final static String HIGH_TEMPERATURE_PRE_SLEEP_ALERT_MESSAGE = "It was **too hot** in your room.";
-    public final static String IDEAL_TEMPERATURE_PRE_SLEEP_MESSAGE = "Temperature was **just right**.";
+    public final static String IDEAL_TEMPERATURE_PRE_SLEEP_MESSAGE = "The temperature was **just right**.";
 
     /* END Current Room State Declaration */
 
