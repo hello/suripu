@@ -27,7 +27,7 @@ public class BatchProcessUtils {
 
         for (final SenseCommandProtos.batched_pill_data data : batchedPillData) {
             for(final SenseCommandProtos.pill_data pillData:data.getPillsList()) {
-                if (pillData.hasMotionDataEntrypted()) {
+                if (pillData.hasUptime()) {  // Only triggered by heartbeat
                     if (!pillIdTargetDatesMap.containsKey(pillData.getDeviceId())) {
                         pillIdTargetDatesMap.put(pillData.getDeviceId(), new HashSet<DateTime>());
                     }
@@ -42,10 +42,11 @@ public class BatchProcessUtils {
         return pillIdTargetDatesMap;
     }
 
-    public static Map<Long, Set<DateTime>> groupAccountAndProcessDateLocalUTC(final Map<String, Set<DateTime>> groupedPillIdRequestDateUTC,
-                                                                              final DeviceDAO deviceDAO,
-                                                                              final MergedUserInfoDynamoDB mergedUserInfoDynamoDB){
-        final Map<Long, Set<DateTime>> targetDatesLocalUTC = new HashMap<>();
+    public static Map<Long, DateTime> groupAccountAndProcessDateLocalUTC(final Map<String, Set<DateTime>> groupedPillIdRequestDateUTC,
+                                                                         final DateTime currentTimeUTC,
+                                                                          final DeviceDAO deviceDAO,
+                                                                          final MergedUserInfoDynamoDB mergedUserInfoDynamoDB){
+        final Map<Long, DateTime> targetDatesLocalUTC = new HashMap<>();
         for(final String pillId:groupedPillIdRequestDateUTC.keySet()) {
 
             final List<DeviceAccountPair> accountsLinkedWithPill = deviceDAO.getLinkedAccountFromPillId(pillId);
@@ -83,26 +84,19 @@ public class BatchProcessUtils {
                 continue;
             }
 
-            if(!targetDatesLocalUTC.containsKey(accountId)) {
-                targetDatesLocalUTC.put(accountId, new HashSet<DateTime>());
+            final DateTime nowLocalTime = currentTimeUTC.withZone(dateTimeZoneOptional.get());
+            if(nowLocalTime.getHourOfDay() < 5){
+                continue;
             }
 
-            final Set<DateTime> targetDatesUTC = groupedPillIdRequestDateUTC.get(pillId);
+            final DateTime targetDateLocalUTC = nowLocalTime
+                    .withZone(DateTimeZone.UTC)
+                    .plusMillis(dateTimeZoneOptional.get().getOffset(nowLocalTime.getMillis()))
+                    .withTimeAtStartOfDay()
+                    .minusDays(1);
 
-            for (final DateTime targetDateUTC : targetDatesUTC) {
+            targetDatesLocalUTC.put(accountId, targetDateLocalUTC);
 
-                DateTime targetDateLocalUTC = targetDateUTC.plusMillis(
-                        dateTimeZoneOptional.get().getOffset(targetDateUTC.getMillis()))
-                        .withTimeAtStartOfDay();
-
-                final DateTime targetDateLocalTime = targetDateUTC.withZone(dateTimeZoneOptional.get());
-                if (targetDateLocalTime.getHourOfDay() < 20) {
-                    targetDateLocalUTC = targetDateLocalUTC.minusDays(1);
-                }
-
-                targetDatesLocalUTC.get(accountId).add(targetDateLocalUTC);
-
-            }
         }
 
         return targetDatesLocalUTC;

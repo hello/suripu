@@ -52,6 +52,10 @@ public abstract class TrackerMotionDAO {
                                                    @Bind("start_timestamp_local_utc") final DateTime startTimestampLocalUTC,
                                                    @Bind("end_timestamp_local_utc") final DateTime endTimestampLocalUTC);
 
+    @RegisterMapper(TrackerMotionMapper.class)
+    @SqlQuery("SELECT * FROM tracker_motion_master WHERE account_id = :account_id ORDER BY ts DESC LIMIT 1;")
+    public abstract TrackerMotion getLast(@Bind("account_id") long accountId);
+
 
     @RegisterMapper(GroupedTrackerMotionMapper.class)
     @SqlQuery("SELECT MAX(account_id) as account_id, " +

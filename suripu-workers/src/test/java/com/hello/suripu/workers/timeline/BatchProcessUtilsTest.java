@@ -55,25 +55,22 @@ public class BatchProcessUtilsTest {
 
         when(mergedUserInfoDynamoDB.getTimezone(sensId, accountId)).thenReturn(Optional.of(DateTimeZone.UTC));
 
-        final Map<Long, Set<DateTime>> groupedtargetDateLocalUTC = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(groupedPillIds,
+        final Map<Long, DateTime> groupedtargetDateLocalUTC = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(groupedPillIds,
+                new DateTime(2015, 1, 20, 20, 1, DateTimeZone.UTC),
                 this.deviceDAO,
                 this.mergedUserInfoDynamoDB);
 
-        final Set<DateTime> expected = new HashSet<>();
-        expected.add(new DateTime(2015, 1, 19, 0, 0, DateTimeZone.UTC));
-        expected.add(new DateTime(2015, 1, 20, 0, 0, DateTimeZone.UTC));
-
-        assertThat(groupedtargetDateLocalUTC.size(), is(1));
-        assertThat(groupedtargetDateLocalUTC.get(accountId).containsAll(expected), is(true));
+        assertThat(groupedtargetDateLocalUTC.containsKey(accountId), is(true));
+        assertThat(groupedtargetDateLocalUTC.get(accountId), is(new DateTime(2015, 1, 19, 0, 0, DateTimeZone.UTC)));
 
     }
 
 
     @Test
-    public void testGroupAccountAndProcessDateLocalUTCSameDay(){
+    public void testGroupAccountAndProcessDateLocalUTCTooEarlyToProcess(){
         final HashMap<String, Set<DateTime>> groupedPillIds = new HashMap<>();
-        final DateTime targetDate1 = new DateTime(2015, 1, 20, 7, 10, DateTimeZone.UTC);
-        final DateTime targetDate2 = new DateTime(2015, 1, 20, 9, 0, DateTimeZone.UTC);
+        final DateTime targetDate1 = new DateTime(2015, 1, 20, 4, 10, DateTimeZone.UTC);
+        final DateTime targetDate2 = new DateTime(2015, 1, 20, 3, 0, DateTimeZone.UTC);
         final HashSet<DateTime> targetDatesUTC = new HashSet<>();
         targetDatesUTC.add(targetDate1);
         targetDatesUTC.add(targetDate2);
@@ -94,15 +91,12 @@ public class BatchProcessUtilsTest {
 
         when(mergedUserInfoDynamoDB.getTimezone(sensId, accountId)).thenReturn(Optional.of(DateTimeZone.UTC));
 
-        final Map<Long, Set<DateTime>> groupedtargetDateLocalUTC = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(groupedPillIds,
+        final Map<Long, DateTime> groupedtargetDateLocalUTC = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(groupedPillIds,
+                new DateTime(2015, 1, 20, 4, 59, DateTimeZone.UTC),
                 this.deviceDAO,
                 this.mergedUserInfoDynamoDB);
 
-        final Set<DateTime> expected = new HashSet<>();
-        expected.add(new DateTime(2015, 1, 19, 0, 0, DateTimeZone.UTC));
-
-        assertThat(groupedtargetDateLocalUTC.size(), is(1));
-        assertThat(groupedtargetDateLocalUTC.get(accountId).containsAll(expected), is(true));
+        assertThat(groupedtargetDateLocalUTC.containsKey(accountId), is(false));
 
     }
 }

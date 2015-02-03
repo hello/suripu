@@ -1,5 +1,6 @@
 package com.hello.suripu.workers.timeline;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.InvalidStateException;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
@@ -11,14 +12,16 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
+import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.processors.TimelineProcessor;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -69,7 +72,8 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
         }
 
         final Map<String, Set<DateTime>> pillIdTargetDatesMap = BatchProcessUtils.groupRequestingPillIds(batchedPillData);
-        final Map<Long, Set<DateTime>> groupedAccountIdTargetDateLocalUTCMap = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(pillIdTargetDatesMap,
+        final Map<Long, DateTime> groupedAccountIdTargetDateLocalUTCMap = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(pillIdTargetDatesMap,
+                DateTime.now().withZone(DateTimeZone.UTC),
                 this.deviceDAO,
                 this.mergedUserInfoDynamoDB);
 
@@ -84,16 +88,32 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
         }
     }
 
-    private void batchProcess(final Map<Long, Set<DateTime>> groupedAccountIdTargetDateLocalUTCMap){
-        final Map<Long, Integer> defaultValues = new HashMap<>();
+    private void batchProcess(final Map<Long, DateTime> groupedAccountIdTargetDateLocalUTCMap){
         for(final Long accountId:groupedAccountIdTargetDateLocalUTCMap.keySet()) {
-            defaultValues.put(accountId, missingDataDefaultValue(accountId));
+            if(this.timelineProcessor.shouldProcessTimelineByWorker(accountId, DateTime.now())){
+                continue;
+            }
 
+            try {
+                final List<Timeline> timelines = this.timelineProcessor.retrieveTimelines(accountId,
+                        groupedAccountIdTargetDateLocalUTCMap.get(accountId).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT),
+                        missingDataDefaultValue(accountId),
+                        hasAlarmInTimeline(accountId));
+                this.timelineDAODynamoDB.saveTimelinesForDate(accountId,
+                        groupedAccountIdTargetDateLocalUTCMap.get(accountId),
+                        timelines);
+                LOGGER.info("Timeline saved for account {} at local utc {}",
+                        accountId,
+                        groupedAccountIdTargetDateLocalUTCMap.get(accountId).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT));
+
+                // TODO: Push notification here?
+            }catch (AmazonServiceException awsException){
+                LOGGER.error("Failed to generate timeline: {}", awsException.getErrorMessage());
+            }catch (Exception ex){
+                LOGGER.error("Failed to generate timeline. General error {}", ex.getMessage());
+            }
         }
-        this.timelineProcessor.batchProcessTimelines(groupedAccountIdTargetDateLocalUTCMap,
-                defaultValues,
-                1000,
-                this.timelineDAODynamoDB, false);
+
     }
 
 
