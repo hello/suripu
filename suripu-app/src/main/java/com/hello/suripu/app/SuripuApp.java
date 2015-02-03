@@ -57,6 +57,7 @@ import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.QuestionResponseDAO;
+import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TeamStore;
@@ -221,7 +222,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final JedisPool jedisPool = new JedisPool("localhost", 6379);
         final ImmutableMap<String, String> arns = ImmutableMap.copyOf(configuration.getPushNotificationsConfiguration().getArns());
 
-        final AmazonDynamoDB notificationsDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getNotificationsDBConfiguration().getEndpoint());
+        final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getRingTimeDBConfiguration().getEndpoint());
+        final RingTimeDAODynamoDB ringTimeDAODynamoDB = new RingTimeDAODynamoDB(ringTimeDynamoDBClient, configuration.getRingTimeDBConfiguration().getTableName());
 
         final NotificationSubscriptionDAOWrapper notificationSubscriptionDAOWrapper = NotificationSubscriptionDAOWrapper.create(
                 notificationSubscriptionsDAO,
@@ -304,7 +306,21 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new ScoresResource(trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), configuration.getSleepScoreVersion()));
 
         final SunData sunData = new SunData();
-        final TimelineProcessor timelineProcessor = new TimelineProcessor(trackerMotionDAO, accountDAO, deviceDAO, deviceDataDAO, sleepLabelDAO, sleepScoreDAO, trendsInsightsDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), sunData, amazonS3, "hello-audio");
+        final TimelineProcessor timelineProcessor = new TimelineProcessor(
+                trackerMotionDAO,
+                accountDAO,
+                deviceDAO,
+                deviceDataDAO,
+                sleepLabelDAO,
+                sleepScoreDAO,
+                trendsInsightsDAO,
+                aggregateSleepScoreDAODynamoDB,
+                configuration.getScoreThreshold(),
+                sunData,
+                amazonS3,
+                "hello-audio",
+                ringTimeDAODynamoDB);
+
         environment.addResource(new TimelineResource(accountDAO, timelineProcessor));
 
         environment.addResource(new TimeZoneResource(timeZoneHistoryDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO));
@@ -326,7 +342,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AccountInfoProcessor accountInfoProcessor = builder.build();
 
         final AmazonDynamoDB prefsClient = dynamoDBClientFactory.getForEndpoint(configuration.getPreferencesDBConfiguration().getEndpoint());
-        final AccountPreferencesDAO accountPreferencesDAO = new AccountPreferencesDynamoDB(prefsClient, configuration.getPreferencesDBConfiguration().getTableName());
+        final AccountPreferencesDAO accountPreferencesDAO = AccountPreferencesDynamoDB.create(prefsClient, configuration.getPreferencesDBConfiguration().getTableName());
         environment.addResource(new AccountPreferencesResource(accountPreferencesDAO));
 
         final FirmwareUpdateDAO firmwareUpdateDAO = commonDB.onDemand(FirmwareUpdateDAO.class);
@@ -336,9 +352,10 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final InsightProcessor.Builder insightBuilder = new InsightProcessor.Builder()
                 .withSenseDAOs(deviceDataDAO, deviceDAO)
-                .withTrackerMotionDAOs(trackerMotionDAO)
-                .withInsightsDAOs(trendsInsightsDAO)
+                .withTrackerMotionDAO(trackerMotionDAO)
+                .withInsightsDAO(trendsInsightsDAO)
                 .withDynamoDBDAOs(aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB)
+                .withSleepScoreDAO(sleepScoreDAO)
                 .withPreferencesDAO(accountPreferencesDAO)
                 .withAccountInfoProcessor(accountInfoProcessor)
                 .withLightData(new LightData());

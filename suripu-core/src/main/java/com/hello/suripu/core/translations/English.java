@@ -18,7 +18,7 @@ public class English {
     public final static String MOTION_MESSAGE = "You were moving around quite a bit.";
     public final static String PARTNER_MOTION_MESSAGE = "Your partner was moving quite a bit.";
     public final static String SLEEP_MOTION_MESSAGE = "You were tossing and turning.";
-    public final static String ALARM_NORMAL_MESSAGE = "Your alarm rang at **XX%s**.";
+    public final static String ALARM_NORMAL_MESSAGE = "Your alarm rang at **%s**.";
     public final static String ALARM_SMART_MESSAGE = "Your Smart Alarm rang at **XX%s**.\nYou asked to be awoken by **YY%s**.";
     public final static String NULL_MESSAGE = "";
 
@@ -40,7 +40,7 @@ public class English {
     // Unknown States
     public final static String UNKNOWN_TEMPERATURE_MESSAGE = "Could not retrieve the current temperature.";
     public final static String UNKNOWN_HUMIDITY_MESSAGE = "Could not retrieve the current humidity.";
-    public final static String UNKNOWN_PARTICULATES_MESSAGE = "Could not retrieve the current air quality.";
+    public final static String UNKNOWN_PARTICULATES_MESSAGE = "Could not retrieve current AQI.";
     public final static String UNKNOWN_LIGHT_MESSAGE = "Could not retrieve the current light level.";
     public final static String UNKNOWN_SOUND_MESSAGE = "Could not retrieve the current sound level.";
 
@@ -57,7 +57,7 @@ public class English {
             "People tend to sleep best when humidity is between **%d%%** and **%d%%**.",
             TemperatureHumidity.IDEAL_HUMIDITY_MIN, TemperatureHumidity.IDEAL_HUMIDITY_MAX);
 
-    public final static String PARTICULATES_ADVICE_MESSAGE = "The better the air quality in your bedroom, the better you sleep.";
+    public final static String PARTICULATES_ADVICE_MESSAGE = "The lower the AQI in your bedroom, the better you sleep.";
     public final static String LIGHT_ADVICE_MESSAGE = "For ideal sleep, your bedroom should be as dark as possible.";
     public final static String SOUND_ADVICE_MESSAGE = "For ideal sleep, your bedroom should be as quiet as possible.";
 

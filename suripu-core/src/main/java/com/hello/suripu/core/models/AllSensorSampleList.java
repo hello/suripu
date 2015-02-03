@@ -15,6 +15,7 @@ public class AllSensorSampleList {
     private final List<Sample> humidity;
     private final List<Sample> temperature;
     private final List<Sample> particulates;
+    private final List<Sample> waveCounts;
 
     private final List<Sensor> sensors;
 
@@ -24,12 +25,15 @@ public class AllSensorSampleList {
         this.humidity = new ArrayList<>();
         this.temperature = new ArrayList<>();
         this.particulates = new ArrayList<>();
+        this.waveCounts = new ArrayList<>();
+
         sensors = Lists.newArrayList(
                 Sensor.LIGHT,
                 Sensor.HUMIDITY,
                 Sensor.PARTICULATES,
                 Sensor.SOUND,
-                Sensor.TEMPERATURE);
+                Sensor.TEMPERATURE,
+                Sensor.WAVE_COUNT);
 
     }
 
@@ -49,6 +53,9 @@ public class AllSensorSampleList {
                 break;
             case PARTICULATES:
                 this.particulates.addAll(values);
+                break;
+            case WAVE_COUNT:
+                this.waveCounts.addAll(values);
                 break;
             default:
                 break;
@@ -72,18 +79,21 @@ public class AllSensorSampleList {
                 return this.temperature;
             case PARTICULATES:
                 return this.particulates;
+            case WAVE_COUNT:
+                return this.waveCounts;
             default:
                 return Collections.EMPTY_LIST;
         }
     }
 
-    public Map<Sensor, List<Sample>> getData() {
+    public Map<Sensor, List<Sample>> getAllData() {
         final Map<Sensor, List<Sample>> results = new HashMap<>();
         results.put(Sensor.LIGHT, this.light);
         results.put(Sensor.HUMIDITY, this.humidity);
         results.put(Sensor.SOUND, this.sound);
         results.put(Sensor.TEMPERATURE, this.temperature);
         results.put(Sensor.PARTICULATES, this.particulates);
+        results.put(Sensor.WAVE_COUNT, this.waveCounts);
         return results;
     }
 

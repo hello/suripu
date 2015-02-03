@@ -13,7 +13,8 @@ public class SleepStats {
     final public Integer fallAsleepTime;
 
     public SleepStats(final Integer soundSleepDurationInMinutes, final Integer lightSleepDurationInMinutes,
-                      final Integer sleepDurationInMinutes, final Integer numberOfMotionEvents,
+                      final Integer sleepDurationInMinutes,
+                      final Integer numberOfMotionEvents,
                       final Long sleepTime, final Long wakeTime, final Integer fallAsleepTime) {
         this.soundSleepDurationInMinutes = soundSleepDurationInMinutes;
         this.lightSleepDurationInMinutes = lightSleepDurationInMinutes;

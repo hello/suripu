@@ -6,6 +6,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.Alarm;
+import com.hello.suripu.core.models.AlarmSound;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.UserInfo;
 import org.joda.time.DateTime;
@@ -21,6 +22,7 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -181,6 +183,38 @@ public class MergedUserInfoDynamoDBIT {
         this.amazonDynamoDBClient.updateItem(updateItemRequest);
         final boolean updated = this.mergedUserInfoDynamoDB.setAlarms(deviceId, accountId, DateTime.now().getMillis(), new ArrayList<Alarm>(), DateTimeZone.UTC);
         assertThat(updated, is(false));
+    }
+
+
+    @Test
+    public void testUpdateAlarmShouldUpdateRingTime(){
+        final String senseId = "Sense";
+        final long accountId  = 1;
+
+        final DateTime now = DateTime.now();
+        final DateTime previousRing = now.plusHours(1);
+        this.mergedUserInfoDynamoDB.setRingTime(senseId, accountId, new RingTime(previousRing.minusMinutes(5).getMillis(),
+                previousRing.getMillis(), new long[0], true));
+        assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().actualRingTimeUTC,
+                is(previousRing.minusMinutes(5).getMillis()));
+        assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().fromSmartAlarm,
+                is(true));
+
+        final ArrayList<Alarm> alarms = new ArrayList<>();
+        final DateTime insertedAlarmRingTime = now.plusMinutes(10).withSecondOfMinute(0).withMillisOfSecond(0);
+
+        alarms.add(new Alarm(insertedAlarmRingTime.getYear(),
+                insertedAlarmRingTime.getMonthOfYear(),
+                insertedAlarmRingTime.getDayOfMonth(),
+                insertedAlarmRingTime.getHourOfDay(),
+                insertedAlarmRingTime.getMinuteOfHour(),
+                new HashSet<Integer>(), false, true, true, false, new AlarmSound(0, "Pluse")));
+        this.mergedUserInfoDynamoDB.setAlarms(senseId, accountId, alarms, DateTimeZone.getDefault());
+
+        assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().actualRingTimeUTC,
+                is(insertedAlarmRingTime.getMillis()));
+        assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().fromSmartAlarm,
+                is(false));
     }
 
 }
