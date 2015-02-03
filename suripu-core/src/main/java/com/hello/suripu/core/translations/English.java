@@ -80,13 +80,13 @@ public class English {
     public final static String IDEAL_HUMIDITY_MESSAGE = "Humidity is **just right**.";
 
     // Particulates Conditions (Air Quality)
-    public final static String VERY_HIGH_PARTICULATES_PRE_SLEEP_MESSAGE = "AQI was at an **UNHEALTHY** level.";
+    public final static String VERY_HIGH_PARTICULATES_PRE_SLEEP_MESSAGE = "AQI was at an **unhealthy** level.";
     public final static String HIGH_PARTICULATES_PRE_SLEEP_MESSAGE = "AQI was **moderately high**.";
     public final static String IDEAL_PARTICULATES_PRE_SLEEP_MESSAGE = "The particulates level was **just right** last night.";
 
-    public final static String VERY_HIGH_PARTICULATES_MESSAGE = "Air quality is at an **unhealthy** level.";
-    public final static String HIGH_PARTICULATES_MESSAGE = "Air quality is **moderately high**.";
-    public final static String IDEAL_PARTICULATES_MESSAGE = "Air quality is **just right**.";
+    public final static String VERY_HIGH_PARTICULATES_MESSAGE = "AQI is at an **unhealthy** level.";
+    public final static String HIGH_PARTICULATES_MESSAGE = "AQI is **moderately high**.";
+    public final static String IDEAL_PARTICULATES_MESSAGE = "AQI is **just right**.";
 
     // Light Conditions.
     public final static String IDEAL_LIGHT_PRE_SLEEP_MESSAGE = "The light level was **perfect**.";
