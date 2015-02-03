@@ -997,12 +997,29 @@ public class TimelineUtils {
             fixedSleepEvents.set(1, Optional.<Event>absent());
         }
 
-        if(Math.abs(wakeUp.getStartTimestamp() - outOfBed.getStartTimestamp()) > 90 * DateTimeConstants.MILLIS_PER_MINUTE){
-            LOGGER.warn("Wake up and out of bed off too much, out of bed {}, wake up {}, eliminate both.",
-                    new DateTime(outOfBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBed.getTimezoneOffset())),
-                    new DateTime(wakeUp.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUp.getTimezoneOffset())));
-            fixedSleepEvents.set(2, Optional.<Event>absent());
-            fixedSleepEvents.set(3, Optional.<Event>absent());
+        if(Math.abs(wakeUp.getStartTimestamp() - outOfBed.getStartTimestamp()) > 120 * DateTimeConstants.MILLIS_PER_MINUTE){
+
+
+            if(features.get(MotionFeatures.FeatureType.MAX_AMPLITUDE).size() > 0){
+                final List<AmplitudeData> motion = features.get(MotionFeatures.FeatureType.MAX_AMPLITUDE);
+                final long lastMotionTimestamp = motion.get(motion.size() - 1).timestamp;
+                if(Math.abs(outOfBed.getStartTimestamp() - lastMotionTimestamp) > 2 * DateTimeConstants.MILLIS_PER_HOUR){
+                    LOGGER.warn("Wake up and out of bed off too much, out of bed {}, wake up {}, eliminate both.",
+                            new DateTime(outOfBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBed.getTimezoneOffset())),
+                            new DateTime(wakeUp.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUp.getTimezoneOffset())));
+                    fixedSleepEvents.set(2, Optional.<Event>absent());
+                    fixedSleepEvents.set(3, Optional.<Event>absent());
+
+                }else{
+                    LOGGER.warn("Wake up and out of bed off too much, out of bed {}, wake up {}, eliminate wake up.",
+                            new DateTime(outOfBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBed.getTimezoneOffset())),
+                            new DateTime(wakeUp.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUp.getTimezoneOffset())));
+
+                    // The one more close to last motion is more likely to be correct
+                    fixedSleepEvents.set(2, Optional.<Event>absent());
+                }
+            }
+
         }
 
         if(fixedSleepEvents.get(0).isPresent() && fixedSleepEvents.get(3).isPresent() &&
