@@ -46,9 +46,9 @@ import static org.mockito.Mockito.when;
 /**
  * Created by pangwu on 9/24/14.
  */
-public class RingProcessorMultiUserTest {
+public class RingProcessorMultiUserIT {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(RingProcessorMultiUserTest.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(RingProcessorMultiUserIT.class);
 
     private RingTimeDAODynamoDB ringTimeDAODynamoDB;
     private BasicAWSCredentials awsCredentials;
