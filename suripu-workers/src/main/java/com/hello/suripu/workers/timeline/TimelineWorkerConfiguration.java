@@ -136,7 +136,7 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
     @Valid
     @NotNull
     @Min(5)
-    @Max(12)
+    @Max(24)
     @JsonProperty("hour_of_day_trigger")
     private Integer earliestProcessTime;
     public Integer getEarliestProcessTime(){
@@ -146,7 +146,7 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
     @Valid
     @NotNull
     @Min(10)
-    @Max(12)
+    @Max(24)
     @JsonProperty("end_process_time")
     private Integer lastProcessTime;
     public Integer getLastProcessTime(){
