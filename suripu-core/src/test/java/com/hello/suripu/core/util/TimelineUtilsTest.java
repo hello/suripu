@@ -2,14 +2,15 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
-import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.hamcrest.core.Is;
@@ -32,6 +33,39 @@ import static org.hamcrest.Matchers.is;
  * Created by pangwu on 12/18/14.
  */
 public class TimelineUtilsTest {
+
+
+    @Test
+    public void testConvertLightMotionToNone() {
+        final List<Event> events = Lists.newArrayList();
+        final DateTime now = DateTime.now();
+        events.add(new MotionEvent(now.getMillis(), now.getMillis() + DateTimeConstants.MILLIS_PER_MINUTE,0,5));
+        events.add(new MotionEvent(now.getMillis(), now.getMillis() + DateTimeConstants.MILLIS_PER_MINUTE,0,50));
+
+        final List<Event> filteredEvents = TimelineUtils.convertLightMotionToNone(events, 10);
+        assertThat(filteredEvents.size(), is(events.size()));
+        assertThat(filteredEvents.get(0).getType(), is(Event.Type.MOTION));
+        assertThat(filteredEvents.get(1).getType(), is(Event.Type.NONE));
+    }
+
+    @Test
+    public void testRemoveMotionEventsOutsideBedPeriod() {
+        final List<Event> events = Lists.newArrayList();
+        final DateTime now = DateTime.now();
+        events.add(new MotionEvent(now.getMillis(), now.getMillis() + DateTimeConstants.MILLIS_PER_MINUTE,0,5));
+        events.add(new InBedEvent(now.getMillis(), now.getMillis() + DateTimeConstants.MILLIS_PER_MINUTE,0));
+        events.add(new NullEvent(now.getMillis(), now.getMillis() + DateTimeConstants.MILLIS_PER_MINUTE,0,100));
+        events.add(new OutOfBedEvent(now.getMillis(), now.getMillis() + DateTimeConstants.MILLIS_PER_MINUTE,0));
+        events.add(new MotionEvent(now.getMillis(), now.getMillis() + DateTimeConstants.MILLIS_PER_MINUTE,0,10));
+        events.add(new MotionEvent(now.getMillis(), now.getMillis() + DateTimeConstants.MILLIS_PER_MINUTE,0,1));
+
+        final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events);
+        assertThat(filteredEvents.size(), is(events.size()));
+        assertThat(filteredEvents.get(0).getType(), is(Event.Type.NONE));
+        assertThat(filteredEvents.get(2).getType(), is(Event.Type.SLEEPING));
+        assertThat(filteredEvents.get(filteredEvents.size() - 1).getType(), is(Event.Type.NONE));
+
+    }
 
     @Test
     public void testMerge() {
