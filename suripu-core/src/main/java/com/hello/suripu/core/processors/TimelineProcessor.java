@@ -230,7 +230,7 @@ public class TimelineProcessor {
                         new DateTime(sleepSegmentOptional.get().getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegmentOptional.get().getOffsetMillis())));
             }
 
-            if(sleepEventsFromAlgorithm.get(0).isPresent() && sleepEventsFromAlgorithm.get(1).isPresent()){
+            if(sleepEventsFromAlgorithm.get(0).isPresent() && sleepEventsFromAlgorithm.get(3).isPresent()){
                 inBedSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.get(0).get().getStartTimestamp(),
                         sleepEventsFromAlgorithm.get(3).get().getStartTimestamp(),
                         sleepEventsFromAlgorithm.get(3).get().getTimezoneOffset()));
