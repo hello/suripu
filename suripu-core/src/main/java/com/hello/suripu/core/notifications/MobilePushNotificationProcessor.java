@@ -26,8 +26,6 @@ public class MobilePushNotificationProcessor {
     }
 
     public void push(final Long accountId, final HelloPushMessage pushMessage) {
-        final PublishRequest pr = new PublishRequest();
-        pr.setMessageStructure("json");
 
         final List<MobilePushRegistration> registrations = dao.getSubscriptions(accountId);
         for (final MobilePushRegistration reg : registrations) {
@@ -38,16 +36,16 @@ public class MobilePushNotificationProcessor {
                     LOGGER.info("Did not get any suitable message for {}", reg);
                     continue;
                 }
-
+                final PublishRequest pr = new PublishRequest();
+                pr.setMessageStructure("json");
                 pr.setMessage(message.get());
                 pr.setTargetArn(reg.endpoint.get());
+                try {
+                    sns.publish(pr);
+                } catch (Exception e) {
+                    LOGGER.error("Failed sending message : {}", e.getMessage());
+                }
             }
-        }
-
-        try {
-            sns.publish(pr);
-        } catch (Exception e) {
-            LOGGER.error("Failed sending message : {}", pr);
         }
     }
 
