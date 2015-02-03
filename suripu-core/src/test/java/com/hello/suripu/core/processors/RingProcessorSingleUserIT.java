@@ -1,5 +1,11 @@
 package com.hello.suripu.core.processors;
 
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
+import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
+import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -38,18 +44,22 @@ import static org.mockito.Mockito.when;
 /**
  * Created by pangwu on 9/24/14.
  */
-public class RingProcessorSingleUserTest {
+public class RingProcessorSingleUserIT {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(RingProcessorSingleUserTest.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(RingProcessorSingleUserIT.class);
 
     private final AlarmDAODynamoDB alarmDAODynamoDB = mock(AlarmDAODynamoDB.class);
 
-    private final RingTimeDAODynamoDB ringTimeDAODynamoDB = mock(RingTimeDAODynamoDB.class);
+    private RingTimeDAODynamoDB ringTimeDAODynamoDB;
+    private BasicAWSCredentials awsCredentials;
+    private AmazonDynamoDBClient amazonDynamoDBClient;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = mock(MergedUserInfoDynamoDB.class);
 
     private final TrackerMotionDAO trackerMotionDAO = mock(TrackerMotionDAO.class);
 
     private final String testDeviceId = "test morpheus";
+    private final String ringTimeTableName = "ringtime_test";
+
     private final List<UserInfo> userInfoList1 = new ArrayList<>();
     private final List<UserInfo> userInfoList2 = new ArrayList<>();
 
@@ -107,8 +117,23 @@ public class RingProcessorSingleUserTest {
         when(this.trackerMotionDAO.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
                 .thenReturn(ImmutableList.copyOf(motions));
 
-        when(this.ringTimeDAODynamoDB.getNextRingTime(testDeviceId))
-                .thenReturn(RingTime.createEmpty());
+        this.awsCredentials = new BasicAWSCredentials("FAKE_AWS_KEY", "FAKE_AWS_SECRET");
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+        clientConfiguration.setMaxErrorRetry(0);
+        this.amazonDynamoDBClient = new AmazonDynamoDBClient(this.awsCredentials, clientConfiguration);
+        this.amazonDynamoDBClient.setEndpoint("http://localhost:7777");
+
+        try {
+            RingTimeDAODynamoDB.createTable(ringTimeTableName, this.amazonDynamoDBClient);
+            this.ringTimeDAODynamoDB = new RingTimeDAODynamoDB(
+                    this.amazonDynamoDBClient,
+                    ringTimeTableName
+            );
+
+
+        }catch (ResourceInUseException rie){
+            LOGGER.warn("Can not create existing table");
+        }
 
     }
 
@@ -116,7 +141,14 @@ public class RingProcessorSingleUserTest {
     public void cleanUp(){
         this.userInfoList1.clear();
         this.userInfoList2.clear();
-        setUp();
+        //setUp();
+        final DeleteTableRequest deleteTableRequest = new DeleteTableRequest()
+                .withTableName(ringTimeTableName);
+        try {
+            this.amazonDynamoDBClient.deleteTable(deleteTableRequest);
+        }catch (ResourceNotFoundException ex){
+            LOGGER.warn("Can not delete non existing table");
+        }
     }
 
     @Test
@@ -383,7 +415,6 @@ public class RingProcessorSingleUserTest {
         // no alarm is set yet.
         // And pill has no data upload.
 
-        when(this.ringTimeDAODynamoDB.getNextRingTime(testDeviceId)).thenReturn(RingTime.createEmpty());
         final DateTime alarmDeadlineLocalUTC = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.UTC);
         final DateTime dataCollectionTimeLocalUTC = alarmDeadlineLocalUTC.minusMinutes(20);
         final DateTime startQueryTimeLocalUTC = dataCollectionTimeLocalUTC.minusHours(8);
@@ -414,7 +445,6 @@ public class RingProcessorSingleUserTest {
         // Test scenario when computation get triggered all the alarm is non-repeated and not expired.
         // pill has data.
 
-        when(this.ringTimeDAODynamoDB.getNextRingTime(testDeviceId)).thenReturn(RingTime.createEmpty());
         final List<Alarm> alarmList = new ArrayList<Alarm>();
         final HashSet<Integer> dayOfWeek = new HashSet<Integer>();
         dayOfWeek.add(DateTimeConstants.TUESDAY);
@@ -445,8 +475,6 @@ public class RingProcessorSingleUserTest {
         assertThat(actualRingTime.isEqual(deadline), is(true));
         assertThat(ringTime.processed(), is(false));
 
-        when(this.ringTimeDAODynamoDB.getNextRingTime(testDeviceId)).thenReturn(ringTime);
-
         // Minutes after smart alarm triggered but before deadline.
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
@@ -467,8 +495,6 @@ public class RingProcessorSingleUserTest {
     public void testNoneRepeatedAlarmOn_09_23_2014_InitWithNoData(){
         // Test scenario when computation get triggered all the alarm is non-repeated and not expired.
         // pill has no data.
-
-        when(this.ringTimeDAODynamoDB.getNextRingTime(testDeviceId)).thenReturn(RingTime.createEmpty());
         final List<Alarm> alarmList = new ArrayList<Alarm>();
         final HashSet<Integer> dayOfWeek = new HashSet<Integer>();
         dayOfWeek.add(DateTimeConstants.TUESDAY);
@@ -509,8 +535,6 @@ public class RingProcessorSingleUserTest {
     @Test
     public void testNoneRepeatedExpiredAlarmOn_09_23_2014_Init(){
         // Test scenario when computation get triggered all the alarm is non-repeated and expired.
-
-        when(this.ringTimeDAODynamoDB.getNextRingTime(testDeviceId)).thenReturn(RingTime.createEmpty());
         final List<Alarm> alarmList = new ArrayList<Alarm>();
         final HashSet<Integer> dayOfWeek = new HashSet<Integer>();
         dayOfWeek.add(DateTimeConstants.MONDAY);
@@ -588,12 +612,15 @@ public class RingProcessorSingleUserTest {
         final HashSet<Integer> dayOfWeek = new HashSet<Integer>();
         dayOfWeek.add(DateTimeConstants.TUESDAY);
 
+        // 1st alarm: 2014-09-23 08:20
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
                 false, true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
 
         final HashSet<Integer> dayOfWeek2 = new HashSet<Integer>();
         dayOfWeek2.add(DateTimeConstants.WEDNESDAY);
+
+        // 2nd alarm: 2014-09-24 09:20
         alarmList.add(new Alarm(2014, 9, 24, 9, 20, dayOfWeek2,
                 false, true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
@@ -611,6 +638,9 @@ public class RingProcessorSingleUserTest {
         DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
 
+        // 1st alarm: 2014-09-23 08:20
+        // 2nd alarm: 2014-09-24 09:20
+        // Now: 2014-9-23 07:20
         // Minutes before alarm triggered
         RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
@@ -626,8 +656,6 @@ public class RingProcessorSingleUserTest {
         assertThat(actualRingTime.isEqual(deadline), is(true));
         assertThat(ringTime.processed(), is(false));
 
-        when(this.ringTimeDAODynamoDB.getNextRingTime(testDeviceId)).thenReturn(ringTime);
-
         userInfo1 = this.userInfoList1.get(0);
         this.userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
                 userInfo1.alarmList,
@@ -636,6 +664,9 @@ public class RingProcessorSingleUserTest {
                 userInfo1.pillColor,
                 0));
 
+        // 1st alarm: 2014-09-23 08:20
+        // 2nd alarm: 2014-09-24 09:20
+        // Now: 2014-9-23 08:00
         // Minute that trigger smart alarm processing
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
@@ -659,20 +690,214 @@ public class RingProcessorSingleUserTest {
                 userInfo1.pillColor,
                 0));
 
+        // 1st alarm, smart: 2014-09-23 08:20
+        // 2nd alarm, smart: 2014-09-24 09:20
+        // Now: [actual ring time + 1 minute]
         // Minutes after smart alarm processing but before next smart alarm process triggered.
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
+                this.ringTimeDAODynamoDB,
+                this.trackerMotionDAO,
+                this.testDeviceId,
+                actualRingTime.plusMinutes(1),
+                20,
+                15,
+                0.2f,
+                null);
+
+        assertThat(ringTime.isEmpty(), is(true));
+
+        // 1st alarm, smart: 2014-09-23 08:20
+        // 2nd alarm, smart: 2014-09-24 09:20
+        // Now: 2014-9-23 08:21
+        // 1st smart alarm expected ring time past, but not yet reach teh processing time of 2nd
+        // smart alarm.
         deadline = new DateTime(2014, 9, 24, 9, 20, DateTimeZone.forID("America/Los_Angeles"));
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
-                new DateTime(2014, 9, 24, 7, 20, DateTimeZone.forID("America/Los_Angeles")),
+                new DateTime(2014, 9, 23, 8, 21, DateTimeZone.forID("America/Los_Angeles")),
                 20,
                 15,
                 0.2f,
                 null);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
+        assertThat(actualRingTime.equals(deadline), is(true));
+        assertThat(ringTime.processed(), is(false));
+    }
+
+
+
+    @Test
+    public void testAlarmTransitionByTimeAndUpdateAlarmInSmartAlarmRingTimeGap(){
+        // Test how alarm behave when time goes by.
+
+        final List<Alarm> alarmList = new ArrayList<Alarm>();
+        final HashSet<Integer> dayOfWeek = new HashSet<Integer>();
+        dayOfWeek.add(DateTimeConstants.TUESDAY);
+
+        // 1st alarm: 2014-09-23 08:20
+        alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
+                false, true, true, true,
+                new AlarmSound(100, "The Star Spangled Banner")));
+
+        final HashSet<Integer> dayOfWeek2 = new HashSet<Integer>();
+        dayOfWeek2.add(DateTimeConstants.WEDNESDAY);
+
+        // 2nd alarm: 2014-09-24 09:20
+        alarmList.add(new Alarm(2014, 9, 24, 9, 20, dayOfWeek2,
+                false, true, true, true,
+                new AlarmSound(100, "The Star Spangled Banner")));
+
+
+        UserInfo userInfo1 = this.userInfoList1.get(0);
+        this.userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
+                alarmList,
+                userInfo1.ringTime,
+                userInfo1.timeZone,
+                userInfo1.pillColor,
+                0));
+
+
+        DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
+        final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
+
+        // 1st alarm: 2014-09-23 08:20
+        // 2nd alarm: 2014-09-24 09:20
+        // Now: 2014-9-23 07:20
+        // Minutes before alarm triggered
+        RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
+                this.ringTimeDAODynamoDB,
+                this.trackerMotionDAO,
+                this.testDeviceId,
+                new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")),
+                20,
+                15,
+                0.2f,
+                null);
+
+        DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
+        assertThat(ringTime.processed(), is(false));
+
+        userInfo1 = this.userInfoList1.get(0);
+        this.userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
+                userInfo1.alarmList,
+                Optional.of(ringTime),
+                userInfo1.timeZone,
+                userInfo1.pillColor,
+                0));
+
+        // 1st alarm: 2014-09-23 08:20
+        // 2nd alarm: 2014-09-24 09:20
+        // Now: 2014-9-23 08:00
+        // Minute that trigger smart alarm processing
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
+                this.ringTimeDAODynamoDB,
+                this.trackerMotionDAO,
+                this.testDeviceId,
+                dataCollectionTime,
+                20,
+                15,
+                0.2f,
+                null);
+
+        actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
+        assertThat(actualRingTime.isBefore(deadline), is(true));
+        assertThat(ringTime.processed(), is(true));
+
+        userInfo1 = this.userInfoList1.get(0);
+        this.userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
+                userInfo1.alarmList,
+                Optional.of(ringTime),
+                userInfo1.timeZone,
+                userInfo1.pillColor,
+                0));
+
+        // 1st alarm, smart: 2014-09-23 08:20
+        // 2nd alarm, smart: 2014-09-24 09:20
+        // Now: [actual ring time + 1 minute]
+        // Minutes after smart alarm processing but before next smart alarm process triggered.
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
+                this.ringTimeDAODynamoDB,
+                this.trackerMotionDAO,
+                this.testDeviceId,
+                actualRingTime.plusMinutes(1),
+                20,
+                15,
+                0.2f,
+                null);
+
+        assertThat(ringTime.isEmpty(), is(true));
+
+
+        // And now, the user update his/her alarms!!!
+        userInfo1 = this.userInfoList1.get(0);
+        userInfo1.alarmList.add(new Alarm(2014, 9, 23, 10, 0, new HashSet<Integer>(), false, true, true, false, null));
+        this.userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
+                userInfo1.alarmList,
+                userInfo1.ringTime,  // Here we simulate no writing the temporary empty alarm into user info table.
+                userInfo1.timeZone,
+                userInfo1.pillColor,
+                0));
+
+        // 1st alarm, smart: 2014-09-23 08:20
+        // 2nd alarm, smart: 2014-09-24 09:20
+        // 3rd alarm, smart: 2014-09-23 10:00
+        // Now: [actual ring time + 2 minute]
+        // Minutes after smart alarm processing but before next smart alarm process triggered.
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
+                this.ringTimeDAODynamoDB,
+                this.trackerMotionDAO,
+                this.testDeviceId,
+                actualRingTime.plusMinutes(2),
+                20,
+                15,
+                0.2f,
+                null);
+
+        assertThat(ringTime.isEmpty(), is(true));
+
+
+        // 1st alarm, smart: 2014-09-23 08:20
+        // 2nd alarm, smart: 2014-09-24 09:20
+        // 3rd alarm, smart: 2014-09-23 10:00
+        // Now: [actual ring time + 2 minute]
+        // Minutes after smart alarm processing but before next smart alarm process triggered.
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
+                this.ringTimeDAODynamoDB,
+                this.trackerMotionDAO,
+                this.testDeviceId,
+                new DateTime(2014, 9, 23, 8, 21, DateTimeZone.forID("America/Los_Angeles")),
+                20,
+                15,
+                0.2f,
+                null);
+
+        actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
+        assertThat(actualRingTime.equals(new DateTime(2014, 9, 23, 10, 0, DateTimeZone.forID("America/Los_Angeles"))), is(true));
+        assertThat(ringTime.fromSmartAlarm, is(false));
+
+
+        // 1st alarm, smart: 2014-09-23 08:20
+        // 2nd alarm, smart: 2014-09-24 09:20
+        // Now: 2014-9-23 08:21
+        // 1st smart alarm expected ring time past, but not yet reach the processing time of 2nd
+        // smart alarm.
+        deadline = new DateTime(2014, 9, 24, 9, 20, DateTimeZone.forID("America/Los_Angeles"));
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
+                this.ringTimeDAODynamoDB,
+                this.trackerMotionDAO,
+                this.testDeviceId,
+                new DateTime(2014, 9, 23, 10, 1, DateTimeZone.forID("America/Los_Angeles")),
+                20,
+                15,
+                0.2f,
+                null);
+
+        actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
+        assertThat(actualRingTime.equals(deadline), is(true));
         assertThat(ringTime.processed(), is(false));
     }
 
