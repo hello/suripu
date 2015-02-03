@@ -29,7 +29,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -153,7 +152,7 @@ public class RoomConditionsResource extends BaseResource {
                 accessToken.accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId));
 
         if (!optionalData.isPresent()) {
-            return Collections.emptyMap();
+            return AllSensorSampleList.getEmptyData();
         }
 
         return optionalData.get().getData();
@@ -183,7 +182,7 @@ public class RoomConditionsResource extends BaseResource {
         final Optional<AllSensorSampleList> optionalData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
                 accessToken.accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId));
         if (!optionalData.isPresent()) {
-            return Collections.emptyMap();
+            return AllSensorSampleList.getEmptyData();
         }
 
         return optionalData.get().getData();
@@ -494,7 +493,7 @@ public class RoomConditionsResource extends BaseResource {
                 accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accountId));
 
         if (!optionalData.isPresent()) {
-            return Collections.emptyMap();
+            return AllSensorSampleList.getEmptyData();
         }
 
         return optionalData.get().getData();
