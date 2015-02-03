@@ -1,5 +1,11 @@
 package com.hello.suripu.core.processors;
 
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
+import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
+import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -44,7 +50,9 @@ public class RingProcessorMultiUserTest {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(RingProcessorMultiUserTest.class);
 
-    private final RingTimeDAODynamoDB ringTimeDAODynamoDB = mock(RingTimeDAODynamoDB.class);
+    private RingTimeDAODynamoDB ringTimeDAODynamoDB;
+    private BasicAWSCredentials awsCredentials;
+    private AmazonDynamoDBClient amazonDynamoDBClient;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = mock(MergedUserInfoDynamoDB.class);
 
     private final DeviceDAO deviceDAO = mock(DeviceDAO.class);
@@ -52,7 +60,7 @@ public class RingProcessorMultiUserTest {
 
     private final String testDeviceId = "test morpheus";
     private final List<UserInfo> userInfoList = new ArrayList<>();
-
+    private final String ringTimeTableName = "ringtime_test";
 
     @Before
     public void setUp(){
@@ -82,12 +90,37 @@ public class RingProcessorMultiUserTest {
         when(this.trackerMotionDAO.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
                 .thenReturn(ImmutableList.copyOf(motions));
 
+        this.awsCredentials = new BasicAWSCredentials("FAKE_AWS_KEY", "FAKE_AWS_SECRET");
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+        clientConfiguration.setMaxErrorRetry(0);
+        this.amazonDynamoDBClient = new AmazonDynamoDBClient(this.awsCredentials, clientConfiguration);
+        this.amazonDynamoDBClient.setEndpoint("http://localhost:7777");
+
+        try {
+            RingTimeDAODynamoDB.createTable(ringTimeTableName, this.amazonDynamoDBClient);
+            this.ringTimeDAODynamoDB = new RingTimeDAODynamoDB(
+                    this.amazonDynamoDBClient,
+                    ringTimeTableName
+            );
+
+
+        }catch (ResourceInUseException rie){
+            LOGGER.warn("Can not create existing table");
+        }
+
     }
 
     @After
     public void cleanUp(){
         this.userInfoList.clear();
-        setUp();
+        //setUp();
+        final DeleteTableRequest deleteTableRequest = new DeleteTableRequest()
+                .withTableName(ringTimeTableName);
+        try {
+            this.amazonDynamoDBClient.deleteTable(deleteTableRequest);
+        }catch (ResourceNotFoundException ex){
+            LOGGER.warn("Can not delete non existing table");
+        }
     }
 
 
@@ -317,7 +350,7 @@ public class RingProcessorMultiUserTest {
     }
 
 
-//    @Test
+    @Test
     public void testTwoRepeatedAlarmsFromDifferentUsersTransitionByTime(){
         // Test how two alarms from different users at the same day behave when time goes by.
 
