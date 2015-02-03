@@ -358,6 +358,7 @@ public class RingProcessorMultiUserTest {
         final HashSet<Integer> dayOfWeek = new HashSet<Integer>();
         dayOfWeek.add(DateTimeConstants.TUESDAY);
 
+        // 1st alarm, smart, 2014-09-23 8:20
         alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
                 true, true, true, true,
                 new AlarmSound(100, "The Star Spangled Banner")));
@@ -377,6 +378,8 @@ public class RingProcessorMultiUserTest {
         final List<Alarm> alarmList2 = new ArrayList<Alarm>();
         final HashSet<Integer> dayOfWeek2 = new HashSet<Integer>();
         dayOfWeek2.add(DateTimeConstants.TUESDAY);
+
+        // 1st alarm, smart, 2014-09-23 8:30
         alarmList2.add(new Alarm(2014, 9, 23, 8, 30, dayOfWeek2,
                 true, true, true, true,
                 new AlarmSound(101, "God Save the Queen")));
@@ -454,6 +457,9 @@ public class RingProcessorMultiUserTest {
         DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
 
+        // 1st alarm, smart, 2014-09-23 8:20
+        // 2nd alarm, smart, 2014-09-23 8:30
+        // Now: 2014-09-23 07:20
         // Minutes before alarm triggered
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
@@ -479,6 +485,9 @@ public class RingProcessorMultiUserTest {
                 0));
 
 
+        // 1st alarm, smart, 2014-09-23 8:20
+        // 2nd alarm, smart, 2014-09-23 8:30
+        // Now: 2014-09-23 8:00
         // Minute that trigger 1st smart alarm processing
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
@@ -503,6 +512,9 @@ public class RingProcessorMultiUserTest {
                 userInfo1.pillColor,
                 0));
 
+        // 1st alarm, smart, 2014-09-23 8:20 -- past
+        // 2nd alarm, smart, 2014-09-23 8:30
+        // Now: 2014-09-23 8:21
         // Minute that update 2nd alarm processing
         deadline = new DateTime(2014, 9, 23, 8, 30, DateTimeZone.forID("America/Los_Angeles"));
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
@@ -528,6 +540,9 @@ public class RingProcessorMultiUserTest {
                 userInfo2.pillColor,
                 0));
 
+        // 1st alarm, smart, 2014-09-23 8:20 -- past
+        // 2nd alarm, smart, 2014-09-23 8:30
+        // Now: 2014-09-23 8:22 -- within 10 minutes bound, do nothing
         // Minute that trigger 2nd smart alarm processing
         deadline = new DateTime(2014, 9, 23, 8, 30, DateTimeZone.forID("America/Los_Angeles"));
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
@@ -541,8 +556,8 @@ public class RingProcessorMultiUserTest {
                 null);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
-        assertThat(actualRingTime.isBefore(deadline), is(true));
-        assertThat(ringTime.processed(), is(true));
+        assertThat(actualRingTime.isEqual(deadline), is(true));
+        assertThat(ringTime.processed(), is(false));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
 
         userInfo2 = this.userInfoList.get(1);
@@ -554,6 +569,9 @@ public class RingProcessorMultiUserTest {
                 0));
 
 
+        // 1st alarm, smart, 2014-09-23 8:20 -- past
+        // 2nd alarm, smart, 2014-09-23 8:30 -- past
+        // Now: 2014-09-24 7:20
         // Minutes after smart alarm processing but before next smart alarm process triggered.
         // Since the alarm is only repeated on Tuesday, the next deadline will be next week.
         deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles")).plusWeeks(1);
@@ -569,7 +587,7 @@ public class RingProcessorMultiUserTest {
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
-        assertThat(ringTime.processed(), is(true));
+        assertThat(ringTime.processed(), is(false));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
     }
 
