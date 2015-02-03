@@ -23,7 +23,9 @@ public class AccountPreference {
     public enum EnabledPreference {
         ENHANCED_AUDIO("enhanced_audio"),
         TEMP_CELSIUS("temp_celsius"),
-        TIME_TWENTY_FOUR_HOUR("time_twenty_four_hour");
+        TIME_TWENTY_FOUR_HOUR("time_twenty_four_hour"),
+        PUSH_SCORE("push_score"),
+        PUSH_ALERT_CONDITIONS("push_alert_conditions");
 
         private String value;
         private EnabledPreference(final String value) {
@@ -32,7 +34,7 @@ public class AccountPreference {
 
         @JsonCreator
         public static EnabledPreference fromString(final String value) {
-            for(EnabledPreference pref: EnabledPreference.values()) {
+            for(final EnabledPreference pref: EnabledPreference.values()) {
                 if(pref.value.equalsIgnoreCase(value)) {
                     return pref;
                 }
