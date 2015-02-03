@@ -342,7 +342,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AccountInfoProcessor accountInfoProcessor = builder.build();
 
         final AmazonDynamoDB prefsClient = dynamoDBClientFactory.getForEndpoint(configuration.getPreferencesDBConfiguration().getEndpoint());
-        final AccountPreferencesDAO accountPreferencesDAO = new AccountPreferencesDynamoDB(prefsClient, configuration.getPreferencesDBConfiguration().getTableName());
+        final AccountPreferencesDAO accountPreferencesDAO = AccountPreferencesDynamoDB.create(prefsClient, configuration.getPreferencesDBConfiguration().getTableName());
         environment.addResource(new AccountPreferencesResource(accountPreferencesDAO));
 
         final FirmwareUpdateDAO firmwareUpdateDAO = commonDB.onDemand(FirmwareUpdateDAO.class);
