@@ -20,9 +20,7 @@ import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.AlarmEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
-import com.hello.suripu.core.models.Events.SleepEvent;
 import com.hello.suripu.core.models.Events.SunRiseEvent;
-import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.models.RingTime;
@@ -204,25 +202,38 @@ public class TimelineProcessor {
         final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);
         events.addAll(motionEvents);
 
-        Optional<Segment> sleepSegment = Optional.absent();
+        Optional<Segment> sleepSegmentOptional = Optional.absent();
+        Optional<Segment> inBedSegmentOptional = Optional.absent();
+
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
-            final List<Event> sleepEventsFromAlgorithm = TimelineUtils.getSleepEvents(targetDate,
+            final List<Optional<Event>> sleepEventsFromAlgorithm = TimelineUtils.getSleepEvents(targetDate,
                     trackerMotions, lightOutTimeOptional,
                     MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                    MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                    MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
                     false);
-            final SleepEvent sleepEvent = (SleepEvent) sleepEventsFromAlgorithm.get(1);
-            final WakeupEvent wakeupEvent = (WakeupEvent) sleepEventsFromAlgorithm.get(2);
 
-            if(wakeupEvent.getStartTimestamp() - sleepEvent.getStartTimestamp() > 3 * DateTimeConstants.MILLIS_PER_HOUR){
-                sleepSegment = Optional.of(new Segment(sleepEvent.getStartTimestamp(),
-                        wakeupEvent.getStartTimestamp(),
-                        wakeupEvent.getTimezoneOffset()));
+            for(final Optional<Event> sleepEventOptional:sleepEventsFromAlgorithm){
+                if(sleepEventOptional.isPresent()){
+                    sleepEvents.add(sleepEventOptional.get());
+                }
+            }
 
-                sleepEvents.addAll(sleepEventsFromAlgorithm);
+            if(sleepEventsFromAlgorithm.get(1).isPresent() && sleepEventsFromAlgorithm.get(2).isPresent()){
+                sleepSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.get(1).get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.get(2).get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.get(2).get().getTimezoneOffset()));
+
                 LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
-                        new DateTime(sleepSegment.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.get().getOffsetMillis())),
-                        new DateTime(sleepSegment.get().getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.get().getOffsetMillis())));
+                        new DateTime(sleepSegmentOptional.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegmentOptional.get().getOffsetMillis())),
+                        new DateTime(sleepSegmentOptional.get().getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegmentOptional.get().getOffsetMillis())));
+            }
+
+            if(sleepEventsFromAlgorithm.get(0).isPresent() && sleepEventsFromAlgorithm.get(1).isPresent()){
+                inBedSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.get(0).get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.get(3).get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.get(3).get().getTimezoneOffset()));
             }
 
 
@@ -236,8 +247,8 @@ public class TimelineProcessor {
             LOGGER.debug("partner account {}", optionalPartnerAccountId.get());
             // get tracker motions for partner, query time is in UTC, not local_utc
             DateTime startTime = new DateTime(events.get(0).getStartTimestamp(), DateTimeZone.UTC);
-            if(sleepSegment.isPresent()){
-                startTime = new DateTime(sleepSegment.get().getStartTimestamp(), DateTimeZone.UTC);
+            if(sleepSegmentOptional.isPresent()){
+                startTime = new DateTime(sleepSegmentOptional.get().getStartTimestamp(), DateTimeZone.UTC);
             }
             final DateTime endTime = new DateTime(events.get(events.size() - 1).getStartTimestamp(), DateTimeZone.UTC);
 
@@ -251,11 +262,11 @@ public class TimelineProcessor {
         // add sunrise data
         final String sunRiseQueryDateString = targetDate.plusDays(1).toString(DateTimeFormat.forPattern("yyyy-MM-dd"));
         final Optional<DateTime> sunrise = sunData.sunrise(sunRiseQueryDateString); // day + 1
-        if(sunrise.isPresent() && sleepSegment.isPresent()) {
+        if(sunrise.isPresent() && sleepSegmentOptional.isPresent()) {
             final long sunRiseMillis = sunrise.get().getMillis();
             final SunRiseEvent sunriseEvent = new SunRiseEvent(sunRiseMillis,
                     sunRiseMillis + DateTimeConstants.MILLIS_PER_MINUTE,
-                    sleepSegment.get().getOffsetMillis(), 0, null);
+                    sleepSegmentOptional.get().getOffsetMillis(), 0, null);
 
             // TODO: ADD Feature flipper here
 //            if(feature.userFeatureActive(FeatureFlipper.SOUND_INFO_TIMELINE, accountId, new ArrayList<String>())) {
@@ -283,7 +294,7 @@ public class TimelineProcessor {
         writeMotionMetrics(this.motionEventDistribution, convertedEvents);
         final List<Event> smoothedEvents = TimelineUtils.smoothEvents(convertedEvents);
         List<Event> eventsWithSleepEvents = smoothedEvents;
-        if(sleepSegment.isPresent()) {
+        if(sleepSegmentOptional.isPresent() || inBedSegmentOptional.isPresent()) {
             for (final Event sleepEvent : sleepEvents){
                 eventsWithSleepEvents = TimelineUtils.insertOneMinuteDurationEvents(eventsWithSleepEvents, sleepEvent);
             }

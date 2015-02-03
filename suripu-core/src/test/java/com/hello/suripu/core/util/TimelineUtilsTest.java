@@ -162,15 +162,17 @@ public class TimelineUtilsTest {
             ex.printStackTrace();
         }
 
-        final List<Event> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 17, 0, 0, DateTimeZone.UTC),
+        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 17, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 Optional.of(new DateTime(1421575200000L, DateTimeZone.UTC)),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
                 true);
-        final SleepEvent sleepSegment = (SleepEvent) sleepEvents.get(1);
-        final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0);
-        final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2);
-        final OutOfBedEvent outOfBedSegment = (OutOfBedEvent) sleepEvents.get(3);
+        final SleepEvent sleepSegment = (SleepEvent) sleepEvents.get(1).get();
+        final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
+        final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2).get();
+        final OutOfBedEvent outOfBedSegment = (OutOfBedEvent) sleepEvents.get(3).get();
 
         // Out put from python script suripu_sum.py:
         /*
@@ -191,8 +193,8 @@ public class TimelineUtilsTest {
 
         assertThat(goToBedLocalUTC, is(new DateTime(2015, 1, 18, 2, 9, DateTimeZone.UTC)));
         assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 18, 2, 20, DateTimeZone.UTC)));
-        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 18, 11, 19, DateTimeZone.UTC)));
-        assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 18, 11, 41, DateTimeZone.UTC)));
+        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 18, 11, 44, DateTimeZone.UTC)));
+        assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 18, 11, 45, DateTimeZone.UTC)));
     }
 
 
@@ -214,15 +216,17 @@ public class TimelineUtilsTest {
             ex.printStackTrace();
         }
 
-        final List<Event> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 26, 0, 0, DateTimeZone.UTC),
+        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 26, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 Optional.of(new DateTime(1422346440000L, DateTimeZone.UTC)),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
                 true);
-        final SleepEvent sleepSegment = (SleepEvent) sleepEvents.get(1);
-        final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0);
-        final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2);
-        final OutOfBedEvent outOfBedSegment = (OutOfBedEvent) sleepEvents.get(3);
+        final SleepEvent sleepSegment = (SleepEvent) sleepEvents.get(1).get();
+        final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
+        final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2).get();
+        final OutOfBedEvent outOfBedSegment = (OutOfBedEvent) sleepEvents.get(3).get();
 
         // Out put from python script suripu_sum.py:
         /*
@@ -243,8 +247,8 @@ public class TimelineUtilsTest {
 
         assertThat(goToBedLocalUTC, is(new DateTime(2015, 1, 27, 0, 18, DateTimeZone.UTC)));
         assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 27, 0, 29, DateTimeZone.UTC)));
-        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 27, 8, 11, DateTimeZone.UTC)));
-        assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 27, 8, 22, DateTimeZone.UTC)));
+        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 27, 8, 22, DateTimeZone.UTC)));
+        assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 27, 8, 23, DateTimeZone.UTC)));
     }
 
     @Test
@@ -265,15 +269,17 @@ public class TimelineUtilsTest {
             ex.printStackTrace();
         }
 
-        final List<Event> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 24, 0, 0, DateTimeZone.UTC),
+        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 24, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 Optional.of(new DateTime(1422181740000L, DateTimeZone.UTC)),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
                 true);
-        final SleepEvent sleepSegment = (SleepEvent) sleepEvents.get(1);
-        final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0);
-        final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2);
-        final OutOfBedEvent outOfBedSegment = (OutOfBedEvent) sleepEvents.get(3);
+        final SleepEvent sleepSegment = (SleepEvent) sleepEvents.get(1).get();
+        final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
+        final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2).get();
+        final OutOfBedEvent outOfBedSegment = (OutOfBedEvent) sleepEvents.get(3).get();
 
         // Out put from python script suripu_sum.py:
         /*
@@ -295,8 +301,8 @@ public class TimelineUtilsTest {
         assertThat(goToBedLocalUTC, is(new DateTime(2015, 1, 25, 2, 38, DateTimeZone.UTC)));
         //assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 25, 1, 43, DateTimeZone.UTC)));
         assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 25, 2, 49, DateTimeZone.UTC)));
-        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 25, 9, 25, DateTimeZone.UTC)));
-        assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 25, 9, 26, DateTimeZone.UTC)));
+        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 25, 9, 03, DateTimeZone.UTC)));
+        assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 25, 9, 25, DateTimeZone.UTC)));
     }
 
 
@@ -318,15 +324,17 @@ public class TimelineUtilsTest {
             ex.printStackTrace();
         }
 
-        final List<Event> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 04, 0, 0, DateTimeZone.UTC),
+        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 04, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 Optional.of(new DateTime(1420445760000L, DateTimeZone.UTC)),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
                 true);
-        final SleepEvent sleepSegment = (SleepEvent) sleepEvents.get(1);
-        final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0);
-        final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2);
-        final OutOfBedEvent outOfBedSegment = (OutOfBedEvent) sleepEvents.get(3);
+        final SleepEvent sleepSegment = (SleepEvent) sleepEvents.get(1).get();
+        final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
+        final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2).get();
+        final OutOfBedEvent outOfBedSegment = (OutOfBedEvent) sleepEvents.get(3).get();
 
         // Out put from python script suripu_sum.py:
         /*
@@ -350,8 +358,8 @@ public class TimelineUtilsTest {
          */
         assertThat(goToBedLocalUTC, is(new DateTime(2015, 1, 5, 0, 18, DateTimeZone.UTC)));
         assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 5, 0, 29, DateTimeZone.UTC)));
-        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 5, 8, 11, DateTimeZone.UTC)));
-        assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 5, 8, 16, DateTimeZone.UTC)));  //heuristic
+        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 5, 8, 16, DateTimeZone.UTC)));
+        assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 5, 8, 17, DateTimeZone.UTC)));  //heuristic
     }
 
     @Test

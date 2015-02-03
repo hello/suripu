@@ -81,7 +81,7 @@ public class AwakeDetectionAlgorithm extends SleepDetectionAlgorithm {
         final SleepThreshold wakeUpThreshold = selectThresholdOnAwakeSegments(sharpenWakeUpPeriodData, awakeThresholds, PaddingMode.PAD_EARLY);
 
 
-        //SleepThreshold selectedThreshold = SleepThresholdSelector.selectAverage(buffer);
+        //SleepThreshold selectedThreshold = SleepThresholdSelector.mean(buffer);
         final Segment sleepSegment = new Segment();
         sleepSegment.setStartTimestamp(rawData.get(0).timestamp);
         sleepSegment.setEndTimestamp(rawData.get(rawData.size() - 1).timestamp);

@@ -90,7 +90,7 @@ public class EventDetectionAlgorithm {
             if(buffer.size() == 0){
                 buffer.add(rawData.get(i));
             }else{
-                final double bufferMean = NumericalUtils.selectAverage(buffer);
+                final double bufferMean = NumericalUtils.mean(buffer);
                 final AmplitudeData current = rawData.get(i);
 
                 if(buffer.getLast().timestamp - buffer.getFirst().timestamp < getMeanCrossBufferWindowMillis()){

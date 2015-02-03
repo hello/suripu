@@ -20,13 +20,17 @@ import java.util.Map;
 public class MotionFeatures {
     private final static Logger LOGGER = LoggerFactory.getLogger(MotionFeatures.class);
     public static final int MOTION_AGGREGATE_WINDOW_IN_MINUTES = 10;
+    public static final int WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES = 15;
 
     public enum FeatureType{
         MAX_AMPLITUDE,
         DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE,
+        @Deprecated
         DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE,
+        @Deprecated
         MAX_NO_MOTION_PERIOD,
-        MAX_MOTION_PERIOD
+        MAX_MOTION_PERIOD,
+        DENSITY_BACKWARD_AVERAGE_AMPLITUDE
     }
 
     public static Map<FeatureType, List<AmplitudeData>> aggregateData(final Map<FeatureType, List<AmplitudeData>> rawFeatures, final int windowSize){
@@ -54,7 +58,8 @@ public class MotionFeatures {
                     case DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE:
                     case MAX_NO_MOTION_PERIOD:
                     case MAX_MOTION_PERIOD:
-                        final double aggregatedMaxAmplitude = NumericalUtils.getMaxAmplitude(window);
+                    case DENSITY_BACKWARD_AVERAGE_AMPLITUDE:
+                        final double aggregatedMaxAmplitude = Ordering.natural().max(window).amplitude;
                         aggregatedDimension.add(new AmplitudeData(timestamp, aggregatedMaxAmplitude, offsetMillis));
                         break;
                 }
@@ -70,7 +75,8 @@ public class MotionFeatures {
                     case DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE:
                     case MAX_NO_MOTION_PERIOD:
                     case MAX_MOTION_PERIOD:
-                        final double aggregatedMaxAmplitude = NumericalUtils.getMaxAmplitude(window);
+                    case DENSITY_BACKWARD_AVERAGE_AMPLITUDE:
+                        final double aggregatedMaxAmplitude = Ordering.natural().max(window).amplitude;
                         aggregatedDimension.add(new AmplitudeData(timestamp, aggregatedMaxAmplitude, offsetMillis));
                         break;
                 }
@@ -81,10 +87,12 @@ public class MotionFeatures {
     }
 
     public static Map<FeatureType, List<AmplitudeData>> generateTimestampAlignedFeatures(final List<AmplitudeData> rawData,
-                                                                                         final int windowSizeInMinute,
+                                                                                         final int sleepDetectionWindowSizeInMinute,
+                                                                                         final int awakeDetectionWindowSizeInMinute,
                                                                                          final boolean debugMode){
         final LinkedList<AmplitudeData> densityWindow = new LinkedList<>();
         final LinkedList<AmplitudeData> backTrackAmpWindow = new LinkedList<>();
+        final LinkedList<AmplitudeData> wakeUpAggregateWindow = new LinkedList<>();
         final LinkedList<AmplitudeData> forwardAmpWindow = new LinkedList<>();
 
         LinkedList<AmplitudeData> densityBuffer1 = new LinkedList<>();
@@ -93,27 +101,38 @@ public class MotionFeatures {
         final HashMap<FeatureType, List<AmplitudeData>> features = new HashMap<>();
 
         int densityCount = 0;
+        int wakeUpAggregateDensity = 0;
         int maxNoMotionPeriodCount = 0;
         int maxMotionPeriodCount = 0;
         
         for(final AmplitudeData datum:rawData){
             densityWindow.add(datum);
+            wakeUpAggregateWindow.add(datum);
+
             if(datum.amplitude > 0){
                 densityCount++;
+                wakeUpAggregateDensity++;
             }
 
-            if(densityWindow.size() > windowSizeInMinute){
+            if(densityWindow.size() > sleepDetectionWindowSizeInMinute){
                 if(densityWindow.getFirst().amplitude > 0){
                     densityCount--;
                 }
                 backTrackAmpWindow.add(densityWindow.removeFirst());
-                if(backTrackAmpWindow.size() > windowSizeInMinute){
+                if(backTrackAmpWindow.size() > sleepDetectionWindowSizeInMinute){
                     backTrackAmpWindow.removeFirst();
                 }
             }
 
+            if(wakeUpAggregateWindow.size() > awakeDetectionWindowSizeInMinute){
+                if(wakeUpAggregateWindow.getFirst().amplitude > 0){
+                    wakeUpAggregateDensity--;
+                }
+                wakeUpAggregateWindow.removeFirst();
+            }
 
-            if(densityBuffer1.size() < windowSizeInMinute){
+
+            if(densityBuffer1.size() < sleepDetectionWindowSizeInMinute){
                 densityBuffer1.add(new AmplitudeData(densityWindow.getLast().timestamp, densityCount, densityWindow.getLast().offsetMillis));
                 continue;
             }
@@ -121,11 +140,11 @@ public class MotionFeatures {
             densityBuffer2.add(new AmplitudeData(densityWindow.getLast().timestamp, densityCount, densityWindow.getLast().offsetMillis));
 
             forwardAmpWindow.add(datum);
-            if(forwardAmpWindow.size() > windowSizeInMinute){
+            if(forwardAmpWindow.size() > sleepDetectionWindowSizeInMinute){
                 forwardAmpWindow.removeFirst();
             }
 
-            if(densityBuffer2.size() == windowSizeInMinute){
+            if(densityBuffer2.size() == sleepDetectionWindowSizeInMinute){
                 // Compute density decade feature
                 final double densityMax1 = Ordering.natural().max(densityBuffer1).amplitude;
                 final double densityMax2 = Ordering.natural().max(densityBuffer2).amplitude;
@@ -134,8 +153,8 @@ public class MotionFeatures {
                 final double densityIncrease = densityMax2 - densityMax1;
 
                 // compute aggregated max motion backtrack amplitude feature.
-                final double maxBackTrackAmplitude = NumericalUtils.getMaxAmplitude(backTrackAmpWindow);
-                final double maxForwardAmplitude = NumericalUtils.getMaxAmplitude(forwardAmpWindow);
+                final double maxBackTrackAmplitude = Ordering.natural().max(backTrackAmpWindow).amplitude;
+                final double maxForwardAmplitude = Ordering.natural().max(forwardAmpWindow).amplitude;
 
                 final long timestamp = backTrackAmpWindow.getLast().timestamp;
                 final int offsetMillis = backTrackAmpWindow.getLast().offsetMillis;
@@ -160,6 +179,10 @@ public class MotionFeatures {
                     features.put(FeatureType.MAX_NO_MOTION_PERIOD, new LinkedList<AmplitudeData>());
                 }
 
+                if(!features.containsKey(FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE)){
+                    features.put(FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE, new LinkedList<AmplitudeData>());
+                }
+
                 features.get(FeatureType.MAX_AMPLITUDE).add(new AmplitudeData(timestamp, maxBackTrackAmplitude, offsetMillis));
 
                 final double combinedBackward = maxBackTrackAmplitude * densityDrop * Math.pow((1d + maxMotionPeriodCount), 3);
@@ -167,6 +190,9 @@ public class MotionFeatures {
 
                 final double combinedForward = maxForwardAmplitude * densityIncrease * 1d / Math.pow((1d + maxNoMotionPeriodCount), 3);
                 features.get(FeatureType.DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE).add(new AmplitudeData(timestamp, combinedForward, offsetMillis));
+
+                final double wakeUpFeature = wakeUpAggregateDensity * NumericalUtils.mean(wakeUpAggregateWindow);
+                features.get(FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE).add(new AmplitudeData(timestamp, wakeUpFeature, offsetMillis));
 
                 features.get(FeatureType.MAX_MOTION_PERIOD).add(new AmplitudeData(timestamp, maxMotionPeriodCount, offsetMillis));
                 features.get(FeatureType.MAX_NO_MOTION_PERIOD).add(new AmplitudeData(timestamp, maxNoMotionPeriodCount, offsetMillis));
@@ -185,7 +211,7 @@ public class MotionFeatures {
                             densityMax2);
                 }
 
-                if(densityMax1 < windowSizeInMinute / 3){
+                if(densityMax1 < sleepDetectionWindowSizeInMinute / 3){
                     maxMotionPeriodCount = 0;
                     maxNoMotionPeriodCount++;
                 }else{
