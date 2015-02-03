@@ -97,8 +97,12 @@ public class TimelineProcessor {
     }
 
     public boolean shouldProcessTimelineByWorker(final long accountId, final DateTime currentTime){
-        final TrackerMotion lastMotion = this.trackerMotionDAO.getLast(accountId);
-        if(currentTime.minusMinutes(90).isAfter(lastMotion.timestamp)){
+        final Optional<TrackerMotion> lastMotion = this.trackerMotionDAO.getLast(accountId);
+        if(!lastMotion.isPresent()){
+            return false;
+        }
+
+        if(currentTime.minusMinutes(90).isAfter(lastMotion.get().timestamp)){
             return true;
         }
         return false;
