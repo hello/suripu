@@ -7,6 +7,7 @@ import com.yammer.dropwizard.db.DatabaseConfiguration;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -121,5 +122,24 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
     private DynamoDBConfiguration timelineDBConfiguration;
     public DynamoDBConfiguration getTimelineDBConfiguration(){
         return this.timelineDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @Min(60)
+    @JsonProperty("max_no_motion_period_minutes")
+    private Integer maxNoMoitonPeriodInMinutes;
+    public Integer getMaxNoMoitonPeriodInMinutes(){
+        return this.maxNoMoitonPeriodInMinutes;
+    }
+
+    @Valid
+    @NotNull
+    @Min(5)
+    @Max(12)
+    @JsonProperty("hour_of_day_trigger")
+    private Integer earliestProcessTime;
+    public Integer getEarliestProcessTime(){
+        return this.earliestProcessTime;
     }
 }

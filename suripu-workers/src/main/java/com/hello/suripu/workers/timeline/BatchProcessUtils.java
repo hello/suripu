@@ -44,6 +44,7 @@ public class BatchProcessUtils {
 
     public static Map<Long, DateTime> groupAccountAndProcessDateLocalUTC(final Map<String, Set<DateTime>> groupedPillIdRequestDateUTC,
                                                                          final DateTime currentTimeUTC,
+                                                                         final Integer earliestProcessTime,
                                                                           final DeviceDAO deviceDAO,
                                                                           final MergedUserInfoDynamoDB mergedUserInfoDynamoDB){
         final Map<Long, DateTime> targetDatesLocalUTC = new HashMap<>();
@@ -85,7 +86,7 @@ public class BatchProcessUtils {
             }
 
             final DateTime nowLocalTime = currentTimeUTC.withZone(dateTimeZoneOptional.get());
-            if(nowLocalTime.getHourOfDay() < 5){
+            if(nowLocalTime.getHourOfDay() < earliestProcessTime){
                 continue;
             }
 

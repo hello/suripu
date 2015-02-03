@@ -74,6 +74,7 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
         final Map<String, Set<DateTime>> pillIdTargetDatesMap = BatchProcessUtils.groupRequestingPillIds(batchedPillData);
         final Map<Long, DateTime> groupedAccountIdTargetDateLocalUTCMap = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(pillIdTargetDatesMap,
                 DateTime.now().withZone(DateTimeZone.UTC),
+                this.configuration.getEarliestProcessTime(),
                 this.deviceDAO,
                 this.mergedUserInfoDynamoDB);
 
@@ -90,7 +91,9 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
 
     private void batchProcess(final Map<Long, DateTime> groupedAccountIdTargetDateLocalUTCMap){
         for(final Long accountId:groupedAccountIdTargetDateLocalUTCMap.keySet()) {
-            if(this.timelineProcessor.shouldProcessTimelineByWorker(accountId, DateTime.now())){
+            if(this.timelineProcessor.shouldProcessTimelineByWorker(accountId,
+                    this.configuration.getMaxNoMoitonPeriodInMinutes(),
+                    DateTime.now())){
                 continue;
             }
 

@@ -57,6 +57,7 @@ public class BatchProcessUtilsTest {
 
         final Map<Long, DateTime> groupedtargetDateLocalUTC = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(groupedPillIds,
                 new DateTime(2015, 1, 20, 20, 1, DateTimeZone.UTC),
+                5,
                 this.deviceDAO,
                 this.mergedUserInfoDynamoDB);
 
@@ -93,6 +94,7 @@ public class BatchProcessUtilsTest {
 
         final Map<Long, DateTime> groupedtargetDateLocalUTC = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(groupedPillIds,
                 new DateTime(2015, 1, 20, 4, 59, DateTimeZone.UTC),
+                5,
                 this.deviceDAO,
                 this.mergedUserInfoDynamoDB);
 

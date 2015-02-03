@@ -96,13 +96,15 @@ public class TimelineProcessor {
         this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
     }
 
-    public boolean shouldProcessTimelineByWorker(final long accountId, final DateTime currentTime){
+    public boolean shouldProcessTimelineByWorker(final long accountId,
+                                                 final int maxNoMotionPeriodInMinutes,
+                                                 final DateTime currentTime){
         final Optional<TrackerMotion> lastMotion = this.trackerMotionDAO.getLast(accountId);
         if(!lastMotion.isPresent()){
             return false;
         }
 
-        if(currentTime.minusMinutes(90).isAfter(lastMotion.get().timestamp)){
+        if(currentTime.minusMinutes(maxNoMotionPeriodInMinutes).isAfter(lastMotion.get().timestamp)){
             return true;
         }
         return false;
