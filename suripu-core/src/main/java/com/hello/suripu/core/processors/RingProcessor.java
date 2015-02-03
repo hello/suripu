@@ -189,6 +189,8 @@ public class RingProcessor {
                     userInfo.deviceId,
                     userInfo.accountId);
             if(nextRingTimeFromTemplate.equals(nextRingTimeFromWorker)) {
+                // DO NOT write this into merge user info table, it will mess up
+                // the states!
                 return RingTime.createEmpty();  // Let the alarm stay quiet
             }
 
