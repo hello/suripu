@@ -12,7 +12,7 @@ import java.util.List;
 public class NumericalUtils {
     public static ImmutableList<AmplitudeData> roofDataByAverage(final List<AmplitudeData> data){
 
-        double average = selectAverage(data);
+        double average = mean(data);
         final LinkedList<AmplitudeData> list = new LinkedList<AmplitudeData>();
 
         for(final AmplitudeData datum:data){
@@ -30,7 +30,7 @@ public class NumericalUtils {
 
     public static ImmutableList<AmplitudeData> zeroDataUnderAverage(final List<AmplitudeData> data){
 
-        double average = selectAverage(data);
+        double average = mean(data);
         final LinkedList<AmplitudeData> list = new LinkedList<AmplitudeData>();
 
         for(final AmplitudeData datum:data){
@@ -48,7 +48,7 @@ public class NumericalUtils {
     }
 
 
-    public static double selectAverage(final List<AmplitudeData> data){
+    public static double mean(final List<AmplitudeData> data){
 
         double average = 0.0;
         for(final AmplitudeData datum:data){
@@ -59,7 +59,7 @@ public class NumericalUtils {
 
     }
 
-
+    @Deprecated
     public static double getMaxAmplitude(final List<AmplitudeData> data){
         if(data.size() == 0){
             return -1;
