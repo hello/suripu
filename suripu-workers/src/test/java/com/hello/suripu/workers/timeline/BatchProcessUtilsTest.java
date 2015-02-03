@@ -31,7 +31,7 @@ public class BatchProcessUtilsTest {
     private MergedUserInfoDynamoDB mergedUserInfoDynamoDB = mock(MergedUserInfoDynamoDB.class);
 
     @Test
-    public void testGroupAccountAndProcessDateLocalUTC(){
+    public void testGroupAccountAndProcessDateLocalUTCTooLateToProcess(){
         final HashMap<String, Set<DateTime>> groupedPillIds = new HashMap<>();
         final DateTime targetDate1 = new DateTime(2015, 1, 20, 7, 10, DateTimeZone.UTC);
         final DateTime targetDate2 = new DateTime(2015, 1, 20, 20, 0, DateTimeZone.UTC);
@@ -58,6 +58,43 @@ public class BatchProcessUtilsTest {
         final Map<Long, DateTime> groupedtargetDateLocalUTC = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(groupedPillIds,
                 new DateTime(2015, 1, 20, 20, 1, DateTimeZone.UTC),
                 5,
+                11,
+                this.deviceDAO,
+                this.mergedUserInfoDynamoDB);
+
+        assertThat(groupedtargetDateLocalUTC.containsKey(accountId), is(false));
+
+    }
+
+    @Test
+    public void testGroupAccountAndProcessDateLocalUTCWithinProcessInterval(){
+        final HashMap<String, Set<DateTime>> groupedPillIds = new HashMap<>();
+        final DateTime targetDate1 = new DateTime(2015, 1, 20, 7, 10, DateTimeZone.UTC);
+        final DateTime targetDate2 = new DateTime(2015, 1, 20, 8, 0, DateTimeZone.UTC);
+        final HashSet<DateTime> targetDatesUTC = new HashSet<>();
+        targetDatesUTC.add(targetDate1);
+        targetDatesUTC.add(targetDate2);
+
+        final String pillId1 = "Pang's 911";
+        final String sensId = "Sense";
+        groupedPillIds.put(pillId1, targetDatesUTC);
+
+        final long accountId = 1L;
+        final List<DeviceAccountPair> deviceAccountPairsForPill = new ArrayList<>();
+        deviceAccountPairsForPill.add(new DeviceAccountPair(accountId, 2L, pillId1));
+
+        final List<DeviceAccountPair> deviceAccountPairsForSense = new ArrayList<>();
+        deviceAccountPairsForSense.add(new DeviceAccountPair(accountId, 3L, sensId));
+
+        when(deviceDAO.getLinkedAccountFromPillId(pillId1)).thenReturn(ImmutableList.copyOf(deviceAccountPairsForPill));
+        when(deviceDAO.getSensesForAccountId(accountId)).thenReturn(ImmutableList.copyOf(deviceAccountPairsForSense));
+
+        when(mergedUserInfoDynamoDB.getTimezone(sensId, accountId)).thenReturn(Optional.of(DateTimeZone.UTC));
+
+        final Map<Long, DateTime> groupedtargetDateLocalUTC = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(groupedPillIds,
+                new DateTime(2015, 1, 20, 10, 1, DateTimeZone.UTC),
+                5,
+                11,
                 this.deviceDAO,
                 this.mergedUserInfoDynamoDB);
 
@@ -95,6 +132,7 @@ public class BatchProcessUtilsTest {
         final Map<Long, DateTime> groupedtargetDateLocalUTC = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(groupedPillIds,
                 new DateTime(2015, 1, 20, 4, 59, DateTimeZone.UTC),
                 5,
+                11,
                 this.deviceDAO,
                 this.mergedUserInfoDynamoDB);
 
