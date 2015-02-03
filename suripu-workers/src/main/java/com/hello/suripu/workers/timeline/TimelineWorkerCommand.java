@@ -138,7 +138,8 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
                 configuration.getScoreThreshold(),
                 new SunData(),
                 amazonS3,
-                "hello-audio");
+                "hello-audio",
+                ringTimeDAODynamoDB);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 

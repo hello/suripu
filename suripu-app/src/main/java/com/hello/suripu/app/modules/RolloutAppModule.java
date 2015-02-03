@@ -1,5 +1,7 @@
 package com.hello.suripu.app.modules;
 
+import com.hello.suripu.app.resources.v1.DataScienceResource;
+import com.hello.suripu.app.resources.v1.RoomConditionsResource;
 import com.hello.suripu.app.resources.v1.TimelineResource;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.flipper.DynamoDBAdapter;
@@ -12,6 +14,8 @@ import javax.inject.Singleton;
 
 @Module(injects = {
         TimelineResource.class,
+        RoomConditionsResource.class,
+        DataScienceResource.class
 })
 public class RolloutAppModule {
     private final FeatureStore featureStore;

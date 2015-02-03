@@ -61,14 +61,13 @@ public class NumericalUtils {
 
 
     public static double getMaxAmplitude(final List<AmplitudeData> data){
-        double max = -1;
+        if(data.size() == 0){
+            return -1;
+        }
+        double max = data.get(0).amplitude;
         for(final AmplitudeData datum:data){
-            if(max == -1){
+            if(datum.amplitude > max) {
                 max = datum.amplitude;
-            }else{
-                if(datum.amplitude > max){
-                    max = datum.amplitude;
-                }
             }
         }
 

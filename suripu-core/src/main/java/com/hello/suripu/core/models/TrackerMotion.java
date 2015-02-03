@@ -16,6 +16,8 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 
 /**
@@ -402,6 +404,24 @@ public class TrackerMotion {
 
             return new PillPayloadV2(motionAmplitude, maxAccelerationRange, kickOffTimePerMinute, motionDurationInSecond);
 
+        }
+
+
+        public static List<TrackerMotion> removeDuplicates(final List<TrackerMotion> original){
+            final LinkedList<TrackerMotion> noDuplicateList = new LinkedList<>();
+            for(final TrackerMotion datum:original){
+                if(noDuplicateList.size() == 0){
+                    noDuplicateList.add(datum);
+                    continue;
+                }
+
+                if(noDuplicateList.getLast().timestamp == datum.timestamp){
+                    continue;
+                }
+                noDuplicateList.add(datum);
+            }
+
+            return noDuplicateList;
         }
     }
 }

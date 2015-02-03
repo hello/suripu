@@ -48,7 +48,8 @@ public class TimelineResource extends BaseResource {
             @Scope(OAuthScope.SLEEP_TIMELINE)final AccessToken accessToken,
             @PathParam("date") String date) {
 
-        return timelineProcessor.retrieveTimelines(accessToken.accountId, date);
+
+        return timelineProcessor.retrieveTimelines(accessToken.accountId, date, missingDataDefaultValue(accessToken.accountId), hasAlarmInTimeline(accessToken.accountId));
 
     }
 
@@ -64,7 +65,7 @@ public class TimelineResource extends BaseResource {
         if (!accountId.isPresent()) {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
-        return timelineProcessor.retrieveTimelines(accountId.get(), date);
+        return timelineProcessor.retrieveTimelines(accountId.get(), date, missingDataDefaultValue(accessToken.accountId), hasAlarmInTimeline(accountId.get()));
     }
 
     private Optional<Long> getAccountIdByEmail(final String email) {

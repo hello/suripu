@@ -11,3 +11,8 @@ CREATE TABLE notifications_subscriptions (
 );
 
 CREATE UNIQUE INDEX device_token ON notifications_subscriptions (device_token);
+
+-- WARNING: required for prod, but invalid for tests :(
+
+-- GRANT ALL PRIVILEGES ON notifications_subscriptions TO ingress_user;
+-- GRANT ALL PRIVILEGES ON SEQUENCE notifications_subscriptions_id_seq TO ingress_user;

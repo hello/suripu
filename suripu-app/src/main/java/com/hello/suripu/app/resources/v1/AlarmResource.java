@@ -117,7 +117,7 @@ public class AlarmResource {
     @Path("/{client_time_utc}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void setAlarms(@Scope({OAuthScope.ALARM_WRITE}) final AccessToken token,
+    public List<Alarm> setAlarms(@Scope({OAuthScope.ALARM_WRITE}) final AccessToken token,
                           @PathParam("client_time_utc") long clientTime,
                           final List<Alarm> alarms){
 
@@ -178,6 +178,8 @@ public class AlarmResource {
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
                     new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Please try again.")).build());
         }
+
+        return alarms;
 
     }
 

@@ -40,7 +40,7 @@ public class BucketingTest {
     @Test
     public void testEmptyMap() {
 
-        final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, startDate, slotDurationInMinutes);
+        final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, startDate, slotDurationInMinutes, 0);
 
         final Set<Long> keys = map.keySet();
         final Set<Long> timestamps = new HashSet<>();
@@ -56,7 +56,7 @@ public class BucketingTest {
 
     @Test
     public void testPopulateMap() {
-        final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, startDate, slotDurationInMinutes);
+        final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, startDate, slotDurationInMinutes, 0);
 
         final DeviceData deviceData = new DeviceData(999L, 111L, 222, 333, 444, 555, 0, 0, 0, 666, 777, 888, startDate, 0, 0, 0, 0, 0, 0, 0);
         final List<DeviceData> deviceDataList = new ArrayList<>();
@@ -66,7 +66,7 @@ public class BucketingTest {
         assertThat(populatedMap.isPresent(), is(true));
 
         assertThat(populatedMap.get().size(), is(1));
-        assertThat(populatedMap.get().get(startDate.getMillis()).value, is(2.22F)); // round(222/100)
+        assertThat(populatedMap.get().get(startDate.getMillis()).value, is(-0.56F)); // round(222/100)
 
     }
 
@@ -92,7 +92,7 @@ public class BucketingTest {
 
     @Test
     public void testMergeSubset() {
-        Map<Long, Sample> generated = Bucketing.generateEmptyMap(numberOfBuckets, startDate, slotDurationInMinutes);
+        Map<Long, Sample> generated = Bucketing.generateEmptyMap(numberOfBuckets, startDate, slotDurationInMinutes, 0);
         Map<Long, Sample> data = generateMap(startDate);
         Map<Long, Sample> merged = Bucketing.mergeResults(generated, data);
         assertThat(merged.size(), is(generated.size()));

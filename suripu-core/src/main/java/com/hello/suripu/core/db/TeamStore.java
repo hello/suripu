@@ -158,7 +158,7 @@ public class TeamStore {
         }
 
         members.addAll(attributes.get(MEMBERS_ATTRIBUTE_NAME).getSS());
-        final Team team = new Team(attributes.get(NAME_ATTRIBUTE_NAME).getS(), members);
+        final Team team = Team.create(attributes.get(NAME_ATTRIBUTE_NAME).getS(), members);
         return Optional.of(team);
     }
 
@@ -186,14 +186,6 @@ public class TeamStore {
         dynamoDB.updateItem(updateItemRequest);
     }
 
-    public static List<String> longsToStrings(final List<Long> ids) {
-        final List<String> newIds = new ArrayList<>();
-        for(final Long id : ids) {
-            newIds.add(String.valueOf(id));
-        }
-
-        return newIds;
-    }
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);

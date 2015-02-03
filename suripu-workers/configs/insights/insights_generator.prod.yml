@@ -28,10 +28,10 @@ common_db:
   validationQuery: "/* MyService Health Check */ SELECT 1"
 
   # the minimum number of connections to keep open
-  minSize: 8
+  minSize: 2
 
   # the maximum number of connections to keep open
-  maxSize: 32
+  maxSize: 4
 
   # whether or not idle connections should be validated
   checkConnectionWhileIdle: false
@@ -61,10 +61,10 @@ sensors_db:
   validationQuery: "/* MyService Health Check */ SELECT 1"
 
   # the minimum number of connections to keep open
-  minSize: 8
+  minSize: 2
 
   # the maximum number of connections to keep open
-  maxSize: 32
+  maxSize: 4
 
   # whether or not idle connections should be validated
   checkConnectionWhileIdle: false
@@ -94,10 +94,10 @@ insights_db:
   validationQuery: "/* MyService Health Check */ SELECT 1"
 
   # the minimum number of connections to keep open
-  minSize: 8
+  minSize: 2
 
   # the maximum number of connections to keep open
-  maxSize: 32
+  maxSize: 4
 
   # whether or not idle connections should be validated
   checkConnectionWhileIdle: false

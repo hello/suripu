@@ -51,6 +51,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -158,6 +159,15 @@ public class ReceiveResource extends BaseResource {
                     .type(MediaType.TEXT_PLAIN_TYPE).build()
             );
         }
+
+
+        if(featureFlipper.deviceFeatureActive(FeatureFlipper.FORCE_HTTP_500, data.getDeviceId(), Collections.EMPTY_LIST)) {
+            throw new WebApplicationException(Response.status(Response.Status.SERVICE_UNAVAILABLE)
+                    .entity("server unavailable")
+                    .type(MediaType.TEXT_PLAIN_TYPE).build()
+            );
+        }
+
 
         final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? "" : request.getHeader("X-Forwarded-For");
 
@@ -378,7 +388,7 @@ public class ReceiveResource extends BaseResource {
                 }
             }
 
-            LOGGER.debug("{} next ring time: {}", new DateTime(nextRingTime.actualRingTimeUTC, userTimeZoneOptional.get()));
+            LOGGER.debug("{} next ring time: {}", deviceId, new DateTime(nextRingTime.actualRingTimeUTC, userTimeZoneOptional.get()));
 
 
         }

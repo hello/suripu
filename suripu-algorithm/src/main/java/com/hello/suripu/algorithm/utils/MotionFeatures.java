@@ -1,5 +1,6 @@
 package com.hello.suripu.algorithm.utils;
 
+import com.google.common.collect.Ordering;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -126,8 +127,8 @@ public class MotionFeatures {
 
             if(densityBuffer2.size() == windowSizeInMinute){
                 // Compute density decade feature
-                final double densityMax1 = NumericalUtils.getMaxAmplitude(densityBuffer1);
-                final double densityMax2 = NumericalUtils.getMaxAmplitude(densityBuffer2);
+                final double densityMax1 = Ordering.natural().max(densityBuffer1).amplitude;
+                final double densityMax2 = Ordering.natural().max(densityBuffer2).amplitude;
 
                 final double densityDrop = densityMax1 - densityMax2;
                 final double densityIncrease = densityMax2 - densityMax1;
@@ -138,13 +139,6 @@ public class MotionFeatures {
 
                 final long timestamp = backTrackAmpWindow.getLast().timestamp;
                 final int offsetMillis = backTrackAmpWindow.getLast().offsetMillis;
-
-                if(debugMode) {
-                    LOGGER.debug("{}, delta: {}, max_amp: {}",
-                            new DateTime(timestamp, DateTimeZone.forOffsetMillis(offsetMillis)),
-                            densityDrop,
-                            maxBackTrackAmplitude);
-                }
 
                 if(!features.containsKey(FeatureType.MAX_AMPLITUDE)){
                     features.put(FeatureType.MAX_AMPLITUDE, new LinkedList<AmplitudeData>());
@@ -168,16 +162,30 @@ public class MotionFeatures {
 
                 features.get(FeatureType.MAX_AMPLITUDE).add(new AmplitudeData(timestamp, maxBackTrackAmplitude, offsetMillis));
 
-                final double combinedBackward = maxBackTrackAmplitude * densityDrop * (1d + maxMotionPeriodCount);
+                final double combinedBackward = maxBackTrackAmplitude * densityDrop * Math.pow((1d + maxMotionPeriodCount), 3);
                 features.get(FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE).add(new AmplitudeData(timestamp, combinedBackward, offsetMillis));
 
-                final double combinedForward = maxForwardAmplitude * densityIncrease * 1d / (1d + maxNoMotionPeriodCount);
+                final double combinedForward = maxForwardAmplitude * densityIncrease * 1d / Math.pow((1d + maxNoMotionPeriodCount), 3);
                 features.get(FeatureType.DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE).add(new AmplitudeData(timestamp, combinedForward, offsetMillis));
 
                 features.get(FeatureType.MAX_MOTION_PERIOD).add(new AmplitudeData(timestamp, maxMotionPeriodCount, offsetMillis));
                 features.get(FeatureType.MAX_NO_MOTION_PERIOD).add(new AmplitudeData(timestamp, maxNoMotionPeriodCount, offsetMillis));
 
-                if(densityMax1 == 0){
+                if(debugMode) {
+                    LOGGER.debug("{}, max_amp: {}, drop: {}, increase: {}, comb_bkwd: {}, comb_frwd: {}, last: {}, z_last {}, max1: {}, max2: {}",
+                            new DateTime(timestamp, DateTimeZone.forOffsetMillis(offsetMillis)),
+                            maxBackTrackAmplitude,
+                            densityDrop,
+                            densityIncrease,
+                            combinedBackward,
+                            combinedForward,
+                            maxMotionPeriodCount,
+                            maxNoMotionPeriodCount,
+                            densityMax1,
+                            densityMax2);
+                }
+
+                if(densityMax1 < windowSizeInMinute / 3){
                     maxMotionPeriodCount = 0;
                     maxNoMotionPeriodCount++;
                 }else{

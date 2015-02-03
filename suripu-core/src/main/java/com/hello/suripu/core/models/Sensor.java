@@ -8,7 +8,9 @@ public enum Sensor {
     HUMIDITY("humidity"),
     PARTICULATES("particulates"),
     SOUND("sound"),
-    LIGHT("light");
+    LIGHT("light"),
+    WAVE_COUNT("wave_count"),
+    HOLD_COUNT("hold_count");
 
 
     private String value;

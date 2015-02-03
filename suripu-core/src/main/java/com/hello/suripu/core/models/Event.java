@@ -3,6 +3,7 @@ package com.hello.suripu.core.models;
 import com.amazonaws.services.cloudfront.model.InvalidArgumentException;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
+import com.hello.suripu.core.models.Events.AlarmEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.LightEvent;
 import com.hello.suripu.core.models.Events.LightsOutEvent;
@@ -38,7 +39,8 @@ public abstract class Event {
         IN_BED(10),
         SLEEP(11),
         OUT_OF_BED(12),
-        WAKE_UP(13);
+        WAKE_UP(13),
+        ALARM(14);
 
         private int value;
 
@@ -82,6 +84,8 @@ public abstract class Event {
                     return OUT_OF_BED;
                 case 13:
                     return WAKE_UP;
+                case 14:
+                    return ALARM;
                 default:
                     return NONE;
             }
@@ -149,6 +153,8 @@ public abstract class Event {
                 return new LightEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
             case LIGHTS_OUT:
                 return new LightsOutEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+            case ALARM:
+                return new AlarmEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
             default:
                 return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
 
@@ -181,6 +187,8 @@ public abstract class Event {
                 return new LightEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
             case LIGHTS_OUT:
                 return new LightsOutEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+            case ALARM:
+                return new AlarmEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
             default:
                 return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
 
@@ -245,6 +253,8 @@ public abstract class Event {
                 return new LightEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
             case LIGHTS_OUT:
                 return new LightsOutEvent(startTimestamp, endTimestamp, offsetMillis);
+            case ALARM:
+                return new AlarmEvent(startTimestamp, endTimestamp, offsetMillis);
             default:
                 if(!sleepDepth.isPresent()){
                     throw new InvalidArgumentException("sleepDepth required.");

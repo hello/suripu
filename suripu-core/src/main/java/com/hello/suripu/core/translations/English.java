@@ -1,6 +1,8 @@
 package com.hello.suripu.core.translations;
 
 
+import com.hello.suripu.core.processors.insights.TemperatureHumidity;
+
 public class English {
 
     /* BEGIN Events Declaration */
@@ -16,7 +18,7 @@ public class English {
     public final static String MOTION_MESSAGE = "You were moving around quite a bit.";
     public final static String PARTNER_MOTION_MESSAGE = "Your partner was moving quite a bit.";
     public final static String SLEEP_MOTION_MESSAGE = "You were tossing and turning.";
-    public final static String ALARM_NORMAL_MESSAGE = "Your alarm rang at **XX%s**.";
+    public final static String ALARM_NORMAL_MESSAGE = "Your alarm rang at **%s**.";
     public final static String ALARM_SMART_MESSAGE = "Your Smart Alarm rang at **XX%s**.\nYou asked to be awoken by **YY%s**.";
     public final static String NULL_MESSAGE = "";
 
@@ -38,20 +40,34 @@ public class English {
     // Unknown States
     public final static String UNKNOWN_TEMPERATURE_MESSAGE = "Could not retrieve the current temperature.";
     public final static String UNKNOWN_HUMIDITY_MESSAGE = "Could not retrieve the current humidity.";
-    public final static String UNKNOWN_PARTICULATES_MESSAGE = "Could not retrieve the current air quality.";
+    public final static String UNKNOWN_PARTICULATES_MESSAGE = "Could not retrieve current AQI.";
     public final static String UNKNOWN_LIGHT_MESSAGE = "Could not retrieve the current light level.";
     public final static String UNKNOWN_SOUND_MESSAGE = "Could not retrieve the current sound level.";
 
     // Advice
-    public final static String TEMPERATURE_ADVICE_MESSAGE = "People tend to sleep best when temperature is between **XX%s** and **YY%s**.";
-    public final static String HUMIDITY_ADVICE_MESSAGE = "People tend to sleep best when humidity is between **XX** and **YY**.";
-    public final static String PARTICULATES_ADVICE_MESSAGE = "The better the air quality in your bedroom, the better you sleep.";
+    public final static String TEMPERATURE_ADVICE_MESSAGE_C = String.format(
+            "People tend to sleep best when temperature is between **%d°C** and **%d°C**.",
+            TemperatureHumidity.IDEAL_TEMP_MIN_CELSIUS, TemperatureHumidity.IDEAL_TEMP_MAX_CELSIUS);
+
+    public final static String TEMPERATURE_ADVICE_MESSAGE_F = String.format(
+            "People tend to sleep best when temperature is between **%d°F** and **%d°F**.",
+            TemperatureHumidity.IDEAL_TEMP_MIN, TemperatureHumidity.IDEAL_TEMP_MAX);
+
+    public final static String HUMIDITY_ADVICE_MESSAGE = String.format(
+            "People tend to sleep best when humidity is between **%d%%** and **%d%%**.",
+            TemperatureHumidity.IDEAL_HUMIDITY_MIN, TemperatureHumidity.IDEAL_HUMIDITY_MAX);
+
+    public final static String PARTICULATES_ADVICE_MESSAGE = "The lower the AQI in your bedroom, the better you sleep.";
     public final static String LIGHT_ADVICE_MESSAGE = "For ideal sleep, your bedroom should be as dark as possible.";
     public final static String SOUND_ADVICE_MESSAGE = "For ideal sleep, your bedroom should be as quiet as possible.";
 
     // Temperature Conditions
-    public final static String LOW_TEMPERATURE_MESSAGE = "It’s **pretty cold** in here.";
-    public final static String HIGH_TEMPERATURE_MESSAGE = "It’s **pretty hot** in here.";
+    public final static String LOW_TEMPERATURE_WARNING_MESSAGE = "It’s **pretty cold** in here.";
+    public final static String HIGH_TEMPERATURE_WARNING_MESSAGE = "It’s **pretty hot** in here.";
+
+    public final static String LOW_TEMPERATURE_ALERT_MESSAGE = "It’s **too cold** in here.";
+    public final static String HIGH_TEMPERATURE_ALERT_MESSAGE = "It’s **too hot** in here.";
+
     public final static String IDEAL_TEMPERATURE_MESSAGE = "The temperature is **just right**.";
 
     // Humidity Conditions
@@ -64,13 +80,13 @@ public class English {
     public final static String IDEAL_HUMIDITY_MESSAGE = "Humidity is **just right**.";
 
     // Particulates Conditions (Air Quality)
-    public final static String VERY_HIGH_PARTICULATES_PRE_SLEEP_MESSAGE = "AQI was at an **UNHEALTHY** level.";
+    public final static String VERY_HIGH_PARTICULATES_PRE_SLEEP_MESSAGE = "AQI was at an **unhealthy** level.";
     public final static String HIGH_PARTICULATES_PRE_SLEEP_MESSAGE = "AQI was **moderately high**.";
     public final static String IDEAL_PARTICULATES_PRE_SLEEP_MESSAGE = "The particulates level was **just right** last night.";
 
-    public final static String VERY_HIGH_PARTICULATES_MESSAGE = "Air quality is at an **unhealthy** level.";
-    public final static String HIGH_PARTICULATES_MESSAGE = "Air quality is **moderately high**.";
-    public final static String IDEAL_PARTICULATES_MESSAGE = "Air quality is **just right**.";
+    public final static String VERY_HIGH_PARTICULATES_MESSAGE = "AQI is at an **unhealthy** level.";
+    public final static String HIGH_PARTICULATES_MESSAGE = "AQI is **moderately high**.";
+    public final static String IDEAL_PARTICULATES_MESSAGE = "AQI is **just right**.";
 
     // Light Conditions.
     public final static String IDEAL_LIGHT_PRE_SLEEP_MESSAGE = "The light level was **perfect**.";
@@ -96,9 +112,12 @@ public class English {
     public final static String IDEAL_TEMPERATURE_MESSAGE_EXPANDED = "Your current room's temperature is **just right** for a good night's sleep.";
 
     // Temperature pre-sleep conditions
-    public final static String LOW_TEMPERATURE_PRE_SLEEP_MESSAGE = "It was **too cold** in your room.";
-    public final static String HIGH_TEMPERATURE_PRE_SLEEP_MESSAGE = "It was **too hot** in your room.";
-    public final static String IDEAL_TEMPERATURE_PRE_SLEEP_MESSAGE = "Temperature was **just right**.";
+    public final static String LOW_TEMPERATURE_PRE_SLEEP_WARNING_MESSAGE = "It was **pretty cold** in your room.";
+    public final static String HIGH_TEMPERATURE_PRE_SLEEP_WARNING_MESSAGE = "It was **pretty hot** in your room.";
+
+    public final static String LOW_TEMPERATURE_PRE_SLEEP_ALERT_MESSAGE = "It was **too cold** in your room.";
+    public final static String HIGH_TEMPERATURE_PRE_SLEEP_ALERT_MESSAGE = "It was **too hot** in your room.";
+    public final static String IDEAL_TEMPERATURE_PRE_SLEEP_MESSAGE = "The temperature was **just right**.";
 
     /* END Current Room State Declaration */
 
