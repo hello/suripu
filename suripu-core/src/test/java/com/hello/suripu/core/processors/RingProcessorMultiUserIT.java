@@ -512,11 +512,31 @@ public class RingProcessorMultiUserIT {
                 userInfo1.pillColor,
                 0));
 
+
+        // 1st alarm, smart, [actual ring returned above]
+        // 2nd alarm, smart, 2014-09-23 8:30
+        // Now: [1st alarm's actual ring + 1 minute]
+        // Minute 2nd alarm ring time
+        deadline = new DateTime(2014, 9, 23, 8, 30, DateTimeZone.forID("America/Los_Angeles"));
+        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
+                this.ringTimeDAODynamoDB,
+                this.trackerMotionDAO,
+                this.testDeviceId,
+                actualRingTime.plusMinutes(1),
+                20,
+                15,
+                0.2f,
+                null);
+        actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
+        assertThat(actualRingTime.isEqual(deadline), is(true));  // this is NOT empty because we have another user!
+        assertThat(ringTime.processed(), is(false));
+        assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
+
+
         // 1st alarm, smart, 2014-09-23 8:20 -- past
         // 2nd alarm, smart, 2014-09-23 8:30
         // Now: 2014-09-23 8:21
         // Minute that update 2nd alarm processing
-        deadline = new DateTime(2014, 9, 23, 8, 30, DateTimeZone.forID("America/Los_Angeles"));
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,

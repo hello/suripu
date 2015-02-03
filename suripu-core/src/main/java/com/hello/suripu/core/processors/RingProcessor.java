@@ -122,7 +122,9 @@ public class RingProcessor {
                             userInfo,
                             trackerMotionDAO, mergedUserInfoDynamoDB);
 
-                    ringTimes.add(nextRingTime);
+                    if(!nextRingTime.isEmpty()) {
+                        ringTimes.add(nextRingTime);
+                    }
                 } else {
                     LOGGER.info("Account {} not in smart alarm group.", userInfo.accountId);
                     ringTimes.add(nextRingTimeFromTemplate);
@@ -134,7 +136,9 @@ public class RingProcessor {
                         userInfo,
                         trackerMotionDAO, mergedUserInfoDynamoDB);
 
-                ringTimes.add(nextRingTime);
+                if(!nextRingTime.isEmpty()) {
+                    ringTimes.add(nextRingTime);
+                }
             }
 
         }
@@ -172,6 +176,23 @@ public class RingProcessor {
             mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, nextRingTimeFromTemplate);
             LOGGER.info("Device {} ring time updated to {}", userInfo.deviceId,
                     new DateTime(nextRingTimeFromTemplate.actualRingTimeUTC, userInfo.timeZone.get()));
+            return nextRingTimeFromTemplate;
+        }
+
+        // The previous smart alarm is expired, but not yet pass the expected ring time.
+        // We should return RingTime.empty because we don't want the alarm ring again during
+        // this period.
+        // We CANNOT just simply return nextRingTimeFromTemplate because they might be the same.
+        if (currentTime.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) && nextRingTimeFromWorker.processed()) {
+            LOGGER.debug("Smart alarm already set to {} for device {}, account {}.",
+                    new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),
+                    userInfo.deviceId,
+                    userInfo.accountId);
+            if(nextRingTimeFromTemplate.equals(nextRingTimeFromWorker)) {
+                return RingTime.createEmpty();  // Let the alarm stay quiet
+            }
+
+            // If the user update his/her alarm during this period, return the updated one from template
             return nextRingTimeFromTemplate;
         }
 
