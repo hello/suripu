@@ -62,8 +62,12 @@ public class English {
     public final static String SOUND_ADVICE_MESSAGE = "For ideal sleep, your bedroom should be as quiet as possible.";
 
     // Temperature Conditions
-    public final static String LOW_TEMPERATURE_MESSAGE = "It’s **pretty cold** in here.";
-    public final static String HIGH_TEMPERATURE_MESSAGE = "It’s **pretty hot** in here.";
+    public final static String LOW_TEMPERATURE_WARNING_MESSAGE = "It’s **pretty cold** in here.";
+    public final static String HIGH_TEMPERATURE_WARNING_MESSAGE = "It’s **pretty hot** in here.";
+
+    public final static String LOW_TEMPERATURE_ALERT_MESSAGE = "It’s **too cold** in here.";
+    public final static String HIGH_TEMPERATURE_ALERT_MESSAGE = "It’s **too hot** in here.";
+
     public final static String IDEAL_TEMPERATURE_MESSAGE = "The temperature is **just right**.";
 
     // Humidity Conditions
@@ -108,8 +112,11 @@ public class English {
     public final static String IDEAL_TEMPERATURE_MESSAGE_EXPANDED = "Your current room's temperature is **just right** for a good night's sleep.";
 
     // Temperature pre-sleep conditions
-    public final static String LOW_TEMPERATURE_PRE_SLEEP_MESSAGE = "It was **too cold** in your room.";
-    public final static String HIGH_TEMPERATURE_PRE_SLEEP_MESSAGE = "It was **too hot** in your room.";
+    public final static String LOW_TEMPERATURE_PRE_SLEEP_WARNING_MESSAGE = "It was **pretty cold** in your room.";
+    public final static String HIGH_TEMPERATURE_PRE_SLEEP_WARNING_MESSAGE = "It was **pretty hot** in your room.";
+
+    public final static String LOW_TEMPERATURE_PRE_SLEEP_ALERT_MESSAGE = "It was **too cold** in your room.";
+    public final static String HIGH_TEMPERATURE_PRE_SLEEP_ALERT_MESSAGE = "It was **too hot** in your room.";
     public final static String IDEAL_TEMPERATURE_PRE_SLEEP_MESSAGE = "Temperature was **just right**.";
 
     /* END Current Room State Declaration */

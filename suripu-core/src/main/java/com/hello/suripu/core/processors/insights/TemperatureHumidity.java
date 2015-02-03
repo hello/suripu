@@ -24,11 +24,18 @@ public class TemperatureHumidity {
 
     private static final double TEMP_MULTIPLIER = 100.0;
 
-    public static final int IDEAL_TEMP_MIN = 60;
-    public static final int IDEAL_TEMP_MAX = 70;
+    public static final int IDEAL_TEMP_MIN = 59;
+    public static final int IDEAL_TEMP_MAX = 73;
 
-    public static final int IDEAL_TEMP_MIN_CELSIUS = 16;
-    public static final int IDEAL_TEMP_MAX_CELSIUS = 21;
+    public static final int IDEAL_TEMP_MIN_CELSIUS = 15;
+    public static final int IDEAL_TEMP_MAX_CELSIUS = 23;
+
+    public static final int ALERT_TEMP_MIN = 55;
+    public static final int ALERT_TEMP_MAX = 79;
+
+    public static final int ALERT_TEMP_MIN_CELSIUS = 13;
+    public static final int ALERT_TEMP_MAX_CELSIUS = 26;
+
 
     public static final int IDEAL_HUMIDITY_MIN = 30;
     public static final int IDEAL_HUMIDITY_MAX = 60;
