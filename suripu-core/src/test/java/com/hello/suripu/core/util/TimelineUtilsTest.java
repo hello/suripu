@@ -190,7 +190,7 @@ public class TimelineUtilsTest {
         final DateTime outOfBedLocalUTC = new DateTime(outOfBedTime.getYear(), outOfBedTime.getMonthOfYear(), outOfBedTime.getDayOfMonth(), outOfBedTime.getHourOfDay(), outOfBedTime.getMinuteOfHour(), DateTimeZone.UTC);
 
         assertThat(goToBedLocalUTC, is(new DateTime(2015, 1, 18, 2, 9, DateTimeZone.UTC)));
-        assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 18, 6, 22, DateTimeZone.UTC)));
+        assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 18, 2, 20, DateTimeZone.UTC)));
         assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 18, 11, 19, DateTimeZone.UTC)));
         assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 18, 11, 41, DateTimeZone.UTC)));
     }
@@ -349,7 +349,7 @@ public class TimelineUtilsTest {
         Same thing, cannot deal with wake up at the middle of night. because we use light and time as a feature.
          */
         assertThat(goToBedLocalUTC, is(new DateTime(2015, 1, 5, 0, 18, DateTimeZone.UTC)));
-        assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 5, 1, 57, DateTimeZone.UTC)));
+        assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 5, 0, 29, DateTimeZone.UTC)));
         assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 5, 8, 11, DateTimeZone.UTC)));
         assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 5, 8, 16, DateTimeZone.UTC)));  //heuristic
     }

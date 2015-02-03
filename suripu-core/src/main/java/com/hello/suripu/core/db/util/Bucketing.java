@@ -80,9 +80,9 @@ public class Bucketing {
 
             float sensorValue = 0;
             if(sensorName.equals("humidity")) {
-                sensorValue = DeviceData.dbIntToFloat(deviceData.ambientHumidity);
+                sensorValue = DataUtils.dbIntToFloat(deviceData.ambientHumidity);
             } else if(sensorName.equals("temperature")) {
-                sensorValue = DeviceData.dbIntToFloat(deviceData.ambientTemperature);
+                sensorValue = DataUtils.calibrateTemperature(deviceData.ambientTemperature);
             } else if (sensorName.equals("particulates")) {
                 sensorValue = (float) DataUtils.convertRawDustCountsToAQI(deviceData.ambientDustMax, deviceData.firmwareVersion);
             } else if (sensorName.equals("light")) {
@@ -132,12 +132,13 @@ public class Bucketing {
 
             final float lightValue = (float) deviceData.ambientLight;
             final float soundValue = DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB);
-            final float humidityValue = DeviceData.dbIntToFloat(deviceData.ambientHumidity);
-            final float temperatureValue = DeviceData.dbIntToFloat(deviceData.ambientTemperature);
+            final float humidityValue = DataUtils.dbIntToFloat(deviceData.ambientHumidity);
+            final float temperatureValue = DataUtils.calibrateTemperature(deviceData.ambientTemperature);
             final float particulatesValue = (float) DataUtils.convertRawDustCountsToAQI(deviceData.ambientDustMax, deviceData.firmwareVersion);
+            final int waveCount = deviceData.waveCount;
 
             populatedMap.addSample(newKey, deviceData.offsetMillis,
-                    lightValue, soundValue, humidityValue, temperatureValue, particulatesValue);
+                    lightValue, soundValue, humidityValue, temperatureValue, particulatesValue, waveCount);
 
 //            map.get(Sensor.HUMIDITY).put(newKey, new Sample(newKey, humidityValue, deviceData.offsetMillis));
 //            map.get(Sensor.TEMPERATURE).put(newKey, new Sample(newKey, temperatureValue, deviceData.offsetMillis));
