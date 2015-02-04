@@ -288,7 +288,7 @@ public class ReceiveResource extends BaseResource {
 
 
     @Timed
-    private RingTime getNextRingTime(final String deviceId, final List<UserInfo> userInfoFromThatDevice){
+    public static RingTime getNextRingTime(final String deviceId, final List<UserInfo> userInfoFromThatDevice){
         RingTime nextRingTimeFromWorker = RingTime.createEmpty();
         RingTime nextRingTime = RingTime.createEmpty();
         Optional<DateTimeZone> userTimeZoneOptional = Optional.absent();
