@@ -64,4 +64,9 @@ public class SleepStats {
                 .add("time to fall asleep", sleepOnsetTimeMinutes)
                 .toString();
     }
+
+    @JsonIgnore
+    public boolean isFromNull(){
+        return Objects.equal(this.soundSleepDurationInMinutes, null);
+    }
 }

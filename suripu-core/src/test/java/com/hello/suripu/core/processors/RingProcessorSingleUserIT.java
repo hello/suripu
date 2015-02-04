@@ -58,7 +58,7 @@ public class RingProcessorSingleUserIT {
     private final TrackerMotionDAO trackerMotionDAO = mock(TrackerMotionDAO.class);
 
     private final String testDeviceId = "test morpheus";
-    private final String ringTimeTableName = "ringtime_test";
+    private final String ringTimeTableName = "ringtime_test2";
 
     private final List<UserInfo> userInfoList1 = new ArrayList<>();
     private final List<UserInfo> userInfoList2 = new ArrayList<>();

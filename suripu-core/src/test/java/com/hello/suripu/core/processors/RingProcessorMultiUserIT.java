@@ -518,6 +518,12 @@ public class RingProcessorMultiUserIT {
         // Now: [1st alarm's actual ring + 1 minute]
         // Minute 2nd alarm ring time
         deadline = new DateTime(2014, 9, 23, 8, 30, DateTimeZone.forID("America/Los_Angeles"));
+        when(this.trackerMotionDAO.getBetweenLocalUTC(2, startQueryTimeLocalUTC,
+                new DateTime(actualRingTime.getYear(), actualRingTime.getMonthOfYear(),
+                        actualRingTime.getDayOfMonth(), actualRingTime.getHourOfDay(),
+                        actualRingTime.getMinuteOfHour() + 1, 0, DateTimeZone.UTC)))
+                .thenReturn(ImmutableList.copyOf(motions1));
+
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,

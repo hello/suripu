@@ -210,7 +210,12 @@ public class RingProcessor {
         RingTime nextRingTime;
         // let's see if it is time to trigger the smart alarm processing.
 
-
+        LOGGER.debug("{} worker alarm {} for device {}, account {}. Next template alarm {}",
+                currentTime.withZone(userInfo.timeZone.get()),
+                new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),
+                userInfo.deviceId,
+                userInfo.accountId,
+                new DateTime(nextRingTimeFromTemplate.actualRingTimeUTC, userInfo.timeZone.get()));
         // Try to get smart alarm time.
         // Check if the current time is N min before next ring.
         final DateTime nextRegularRingTimeLocal = new DateTime(nextRingTimeFromTemplate.expectedRingTimeUTC, userInfo.timeZone.get());
