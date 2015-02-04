@@ -984,9 +984,7 @@ public class TimelineUtils {
                 LOGGER.warn("Wake up later than out of bed too much, wake up {}, out of bed {}, set out of bed as wake up and remove out of bed.",
                         new DateTime(wakeUp.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUp.getTimezoneOffset())),
                         new DateTime(outOfBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBed.getTimezoneOffset())));
-                fixedSleepEvents.set(2, Optional.of((Event) new WakeupEvent(outOfBed.getStartTimestamp(),
-                        outOfBed.getEndTimestamp(),
-                        outOfBed.getTimezoneOffset())));
+                
                 fixedSleepEvents.set(3, Optional.<Event>absent());
 
             }
