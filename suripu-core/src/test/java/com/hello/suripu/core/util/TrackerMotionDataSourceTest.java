@@ -78,7 +78,7 @@ public class TrackerMotionDataSourceTest {
 
     @Test
     public void testJavaCodeWorksTheSameAsPythonPrototype(){
-        final URL fixtureDBCSVFile = Resources.getResource("raw_pang_motion_2014_12_11.csv");
+        final URL fixtureDBCSVFile = Resources.getResource("fixtures/algorithm/raw_pang_motion_2014_12_11.csv");
         final List<TrackerMotion> dataFromDB = new LinkedList<>();
         try {
             final String csvString = Resources.toString(fixtureDBCSVFile, Charsets.UTF_8);
@@ -92,7 +92,7 @@ public class TrackerMotionDataSourceTest {
         }
 
 
-        final URL fixtureDataFromDataSourceCSVFile = Resources.getResource("pang_motion_2014_12_11_gap_filled.csv");
+        final URL fixtureDataFromDataSourceCSVFile = Resources.getResource("fixtures/algorithm/pang_motion_2014_12_11_gap_filled.csv");
         final List<AmplitudeData> expected = new LinkedList<>();
         try {
             final String csvString = Resources.toString(fixtureDataFromDataSourceCSVFile, Charsets.UTF_8);

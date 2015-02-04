@@ -67,7 +67,7 @@ public class RingProcessorMultiUserIT {
 
         when(this.mergedUserInfoDynamoDB.getInfo(testDeviceId)).thenReturn(userInfoList);
 
-        final URL url = Resources.getResource("pill_data_09_23_2014_pang.csv");
+        final URL url = Resources.getResource("fixtures/algorithm/pill_data_09_23_2014_pang.csv");
         final List<TrackerMotion> motions = new ArrayList<TrackerMotion>();
         try {
             final String csvString = Resources.toString(url, Charsets.UTF_8);
@@ -168,7 +168,7 @@ public class RingProcessorMultiUserIT {
                 Optional.<OutputProtos.SyncResponse.PillSettings>absent(),
                 0));
 
-        final URL url = Resources.getResource("pill_data_09_23_2014_pang.csv");
+        final URL url = Resources.getResource("fixtures/algorithm/pill_data_09_23_2014_pang.csv");
         final List<TrackerMotion> motions1 = new ArrayList<TrackerMotion>();
         final List<TrackerMotion> motions2 = new ArrayList<TrackerMotion>();
 
@@ -396,7 +396,7 @@ public class RingProcessorMultiUserIT {
                 0));
 
 
-        final URL url = Resources.getResource("pill_data_09_23_2014_pang.csv");
+        final URL url = Resources.getResource("fixtures/algorithm/pill_data_09_23_2014_pang.csv");
         final List<TrackerMotion> motions1 = new ArrayList<TrackerMotion>();
         final List<TrackerMotion> motions2 = new ArrayList<TrackerMotion>();
 
@@ -569,7 +569,7 @@ public class RingProcessorMultiUserIT {
                 this.ringTimeDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
-                new DateTime(2014, 9, 23, 8, 22, DateTimeZone.forID("America/Los_Angeles")),
+                new DateTime(2014, 9, 23, 8, 22, DateTimeZone.forID("America/Los_Angeles")),  // Data collection time in local
                 20,
                 15,
                 0.2f,

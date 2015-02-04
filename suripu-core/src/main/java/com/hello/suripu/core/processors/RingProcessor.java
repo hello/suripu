@@ -164,7 +164,8 @@ public class RingProcessor {
         LOGGER.info("Updating smart alarm for device {}, account {}", userInfo.deviceId, userInfo.accountId);
         
         if (currentTime.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) == false && nextRingTimeFromWorker.processed()) {
-            LOGGER.debug("Smart alarm already set to {} for device {}, account {}.",
+            LOGGER.debug("{} smart alarm already set to {} for device {}, account {}.",
+                    currentTime.withZone(userInfo.timeZone.get()),
                     new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),
                     userInfo.deviceId,
                     userInfo.accountId);
@@ -184,10 +185,12 @@ public class RingProcessor {
         // this period.
         // We CANNOT just simply return nextRingTimeFromTemplate because they might be the same.
         if (currentTime.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) && nextRingTimeFromWorker.processed()) {
-            LOGGER.debug("Smart alarm already set to {} for device {}, account {}.",
+            LOGGER.debug("{} smart alarm {} expired for device {}, account {}. Next alarm {}",
+                    currentTime.withZone(userInfo.timeZone.get()),
                     new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),
                     userInfo.deviceId,
-                    userInfo.accountId);
+                    userInfo.accountId,
+                    new DateTime(nextRingTimeFromTemplate.actualRingTimeUTC, userInfo.timeZone.get()));
             if(nextRingTimeFromTemplate.equals(nextRingTimeFromWorker)) {
                 // DO NOT write this into merge user info table, it will mess up
                 // the states!

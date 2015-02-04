@@ -19,7 +19,7 @@ import static org.hamcrest.Matchers.is;
 public class SleepDepthTest {
     @Test
     public void testPercentagePositionSleepDepth(){
-        final File csvFile = new File(FileUtils.getResourceFilePath("pill_data_12_06_2014_caroline.csv"));
+        final File csvFile = new File(FileUtils.getResourceFilePath("fixtures/algorithm/pill_data_12_06_2014_caroline.csv"));
 
 
         try {

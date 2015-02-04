@@ -180,7 +180,7 @@ public class TimelineUtilsTest {
 
     @Test
     public void testGetFullSleepEventsWeekEndSleepLate(){
-        final URL fixtureCSVFile = Resources.getResource("pang_motion_2015_01_17_raw.csv");
+        final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/pang_motion_2015_01_17_raw.csv");
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
         try {
             final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
@@ -235,7 +235,7 @@ public class TimelineUtilsTest {
 
     @Test
     public void testGetFullSleepEventsLightIsOnlyStrongIndicator(){
-        final URL fixtureCSVFile = Resources.getResource("ksg_motion_2015_01_26_raw.csv");
+        final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/ksg_motion_2015_01_26_raw.csv");
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
         try {
             final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
@@ -289,7 +289,7 @@ public class TimelineUtilsTest {
 
     @Test
     public void testGetFullSleepEventsBigMotionBeforeGetIntoBed(){
-        final URL fixtureCSVFile = Resources.getResource("pang_motion_2015_01_24_raw.csv");
+        final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/pang_motion_2015_01_24_raw.csv");
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
         try {
             final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
@@ -345,7 +345,7 @@ public class TimelineUtilsTest {
 
     @Test
     public void testGetFullSleepEventsCannotFallAsleepAfterInBed(){
-        final URL fixtureCSVFile = Resources.getResource("tim_motion_2015_01_04_raw.csv");
+        final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/tim_motion_2015_01_04_raw.csv");
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
         try {
             final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
@@ -404,7 +404,7 @@ public class TimelineUtilsTest {
 
     @Test
     public void testGetFullSleepEventsWeekend(){
-        final URL fixtureCSVFile = Resources.getResource("pang_motion_2015_02_01_raw.csv");
+        final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/pang_motion_2015_02_01_raw.csv");
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
         try {
             final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
