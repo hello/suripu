@@ -12,7 +12,7 @@ public class SleepMotionMsgEN {
         if (numNights == greater) {
             firstSentence += "during all nights. ";
         } else {
-            firstSentence = String.format("on %d of the nights. ", greater);
+            firstSentence += String.format("on %d of the nights. ", greater);
         }
 
         return new Text("Hey Big Mover",
@@ -27,7 +27,7 @@ public class SleepMotionMsgEN {
         if (numNights == lesser) {
              firstSentence += "during all nights. ";
         } else {
-            firstSentence = String.format("on %d of the nights. ", lesser);
+            firstSentence += String.format("on %d of the nights. ", lesser);
         }
 
         return new Text("Still as the Night",

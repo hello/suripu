@@ -26,24 +26,19 @@ public class SleepStats {
     final public Long wakeTime;
 
     @JsonProperty("time_to_sleep")
-    final public Integer computeFallAsleepTimeInMinutes() {
-        return 0; // TODO: FIX THIS.
-    }
-
-    @JsonIgnore
-    final public Integer fallAsleepTime;
+    final public Integer sleepOnsetTimeMinutes;
 
     public SleepStats(final Integer soundSleepDurationInMinutes, final Integer lightSleepDurationInMinutes,
                       final Integer sleepDurationInMinutes,
                       final Integer numberOfMotionEvents,
-                      final Long sleepTime, final Long wakeTime, final Integer fallAsleepTime) {
+                      final Long sleepTime, final Long wakeTime, final Integer sleepOnsetTimeMinutes) {
         this.soundSleepDurationInMinutes = soundSleepDurationInMinutes;
         this.lightSleepDurationInMinutes = lightSleepDurationInMinutes;
         this.sleepDurationInMinutes = sleepDurationInMinutes;
         this.numberOfMotionEvents = numberOfMotionEvents;
         this.sleepTime = sleepTime;
         this.wakeTime = wakeTime;
-        this.fallAsleepTime = fallAsleepTime;
+        this.sleepOnsetTimeMinutes = sleepOnsetTimeMinutes;
     }
 
 
@@ -52,9 +47,9 @@ public class SleepStats {
             @JsonProperty("sound_sleep") Integer soundSleepDurationInMinutes,
             @JsonProperty("total_sleep") Integer sleepDurationInMinutes,
             @JsonProperty("times_awake") Integer numberOfMotionEvents,
-            @JsonProperty("time_to_sleep") Integer fallAsleepTime) {
+            @JsonProperty("time_to_sleep") Integer sleepOnsetTimeMinutes) {
 
-        return new SleepStats(soundSleepDurationInMinutes,0,sleepDurationInMinutes,numberOfMotionEvents,0L,0L,fallAsleepTime);
+        return new SleepStats(soundSleepDurationInMinutes,0,sleepDurationInMinutes,numberOfMotionEvents,0L,0L,sleepOnsetTimeMinutes);
     }
 
     @Override
@@ -66,7 +61,7 @@ public class SleepStats {
                 .add("# of motion events", numberOfMotionEvents)
                 .add("sleep time", sleepTime)
                 .add("wake time", wakeTime)
-                .add("time to fall asleep", fallAsleepTime)
+                .add("time to fall asleep", sleepOnsetTimeMinutes)
                 .toString();
     }
 }

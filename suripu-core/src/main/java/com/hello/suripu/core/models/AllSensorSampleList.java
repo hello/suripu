@@ -96,4 +96,16 @@ public class AllSensorSampleList {
         results.put(Sensor.WAVE_COUNT, this.waveCounts);
         return results;
     }
+
+    public static Map<Sensor, List<Sample>> getEmptyData() {
+        final Map<Sensor, List<Sample>> results = new HashMap<>();
+        results.put(Sensor.LIGHT, Collections.EMPTY_LIST);
+        results.put(Sensor.HUMIDITY, Collections.EMPTY_LIST);
+        results.put(Sensor.SOUND, Collections.EMPTY_LIST);
+        results.put(Sensor.TEMPERATURE, Collections.EMPTY_LIST);
+        results.put(Sensor.PARTICULATES, Collections.EMPTY_LIST);
+        return results;
+
+    }
+
 }

@@ -518,7 +518,7 @@ public class TimelineUtils {
         Integer numberOfMotionEvents = 0;
         long sleepTime = 0L;
         Long wakeTime = 0L;
-        Integer fallAsleepTime = 0;
+        Integer sleepOnsetTimeMinutes = 0;
         long inBedTime = 0L;
 
         boolean sleepStarted = false;
@@ -567,7 +567,7 @@ public class TimelineUtils {
         final Integer inBedDurationInMinutes = Math.round(new Float(inBedDurationInSecs) / DateTimeConstants.SECONDS_PER_MINUTE);
 
         if (inBedTime > 0 && inBedTime < sleepTime) {
-            fallAsleepTime = (int) (sleepTime - inBedTime);
+            sleepOnsetTimeMinutes = (int) ((sleepTime - inBedTime)/MINUTE_IN_MILLIS);
         }
 
         final SleepStats sleepStats = new SleepStats(soundSleepDurationInMinutes,
@@ -576,7 +576,7 @@ public class TimelineUtils {
                 numberOfMotionEvents,
                 sleepTime,
                 wakeTime,
-                fallAsleepTime
+                sleepOnsetTimeMinutes
         );
         LOGGER.debug("Sleepstats = {}", sleepStats);
 
