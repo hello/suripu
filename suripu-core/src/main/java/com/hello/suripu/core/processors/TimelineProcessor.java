@@ -154,7 +154,7 @@ public class TimelineProcessor {
 
         if(trackerMotions.isEmpty()) {
             LOGGER.debug("No data for account_id = {} and day = {}", accountId, targetDate);
-            final Timeline timeline = new Timeline(0, "No sleep data recorded", date, new ArrayList<SleepSegment>(), new ArrayList<Insight>());
+            final Timeline timeline = Timeline.createEmpty();
             final List<Timeline> timelines = new ArrayList<>();
             timelines.add(timeline);
             return timelines;
@@ -346,7 +346,7 @@ public class TimelineProcessor {
 
         final List<Insight> insights = TimelineUtils.generatePreSleepInsights(optionalSensorData, sleepStats.sleepTime);
         List<SleepSegment>  reversedSegments = Lists.reverse(reversed);
-        final Timeline timeline = new Timeline(sleepScore, timeLineMessage, date, reversedSegments, insights);
+        final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, date, reversedSegments, insights, sleepStats);
         final List<Timeline> timelines = new ArrayList<>();
         timelines.add(timeline);
 
