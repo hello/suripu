@@ -29,13 +29,13 @@ public class Timeline {
     public final List<Insight> insights;
 
 
-    public Timeline(final Integer score,  final String message, final String date, final List<SleepSegment> events, final List<Insight> insights, final Optional<SleepStats> sleepStats) {
+    public Timeline(final Integer score,  final String message, final String date, final List<SleepSegment> events, final List<Insight> insights, final SleepStats sleepStats) {
         this.score = score;
         this.message = message;
         this.date = date;
         this.events = events;
         this.insights = insights;
-        this.statistics = sleepStats;
+        this.statistics = Optional.fromNullable(sleepStats);
     }
 
     @JsonCreator
@@ -45,7 +45,8 @@ public class Timeline {
                                   @JsonProperty("segments") final List<SleepSegment> events,
                                   @JsonProperty("insights")  final List<Insight> insights,
                                   @JsonProperty("statistics") final SleepStats sleepStats) {
-        return new Timeline(score, message, date, events, insights, Optional.fromNullable(sleepStats));
+        return new Timeline(score, message, date, events, insights,
+                (sleepStats == null || sleepStats.isFromNull()) ? null : sleepStats);
     }
 
 
