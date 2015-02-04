@@ -64,7 +64,7 @@ public class TrackerMotionDAOIT {
             this.deviceDAO = jdbi.onDemand(DeviceDAO.class);
             final String deviceName = "Test_" + String.valueOf(DateTime.now().getMillis() / 1000L);
             try {
-                final Long id = this.deviceDAO.registerTracker(this.ACCOUNT_ID, deviceName);
+                final Long id = this.deviceDAO.registerPill(this.ACCOUNT_ID, deviceName);
                 this.trackerID = id;
             } catch (UnableToExecuteStatementException exception) {
                 this.trackerID = this.BACKUP_TRACKER_ID;
@@ -83,7 +83,7 @@ public class TrackerMotionDAOIT {
         Integer deleted = this.trackerMotionDAO.deleteDataTrackerID(this.trackerID);
         Integer unregister = -1;
         if (this.trackerID != this.BACKUP_TRACKER_ID) {
-            unregister = this.deviceDAO.unregisterTracker(this.trackerID);
+            unregister = this.deviceDAO.unregisterPillByInternalPillId(this.trackerID);
         }
         LOGGER.debug("deleted tracker {}: {}, {}", this.trackerID, deleted, unregister);
     }
