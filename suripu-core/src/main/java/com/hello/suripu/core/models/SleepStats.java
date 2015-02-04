@@ -9,6 +9,7 @@ public class SleepStats {
 
     @JsonProperty("sound_sleep")
     final public Integer soundSleepDurationInMinutes;
+
     @JsonIgnore
     final public Integer lightSleepDurationInMinutes;
 
