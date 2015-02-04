@@ -3,6 +3,7 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.hello.suripu.core.processors.insights.TemperatureHumidity;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DataUtils;
 import org.joda.time.DateTime;
@@ -109,8 +110,8 @@ public class CurrentRoomState {
                                                final DateTime referenceTime,
                                                final Integer thresholdInMinutes) {
 
-        final float humidity = DeviceData.dbIntToFloat(rawHumidity);
-        final float temperature = DeviceData.dbIntToFloat(rawTemperature);
+        final float humidity = DataUtils.dbIntToFloat(rawHumidity);
+        final float temperature = DataUtils.calibrateTemperature(rawTemperature);
         final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(rawDustMax, firmwareVersion));
         final float sound = DataUtils.convertAudioRawToDB(rawSound);
         return fromTempHumidDust(temperature, humidity, particulatesAQI, rawLight, sound, new DateTime(timestamp, DateTimeZone.UTC), referenceTime, thresholdInMinutes, DEFAULT_TEMP_UNIT);
@@ -151,8 +152,8 @@ public class CurrentRoomState {
      */
     public static CurrentRoomState fromDeviceData(final DeviceData data, final DateTime referenceTime, final Integer thresholdInMinutes, final String tempUnit) {
 
-        final float temp = DeviceData.dbIntToFloat(data.ambientTemperature);
-        final float humidity = DeviceData.dbIntToFloat(data.ambientHumidity);
+        final float temp = DataUtils.calibrateTemperature(data.ambientTemperature);
+        final float humidity = DataUtils.dbIntToFloat(data.ambientHumidity);
         final float light = data.ambientLight; // dvt units values are already converted to lux
         final float sound = DataUtils.convertAudioRawToDB(data.audioPeakBackgroundDB);
         // max value is in raw counts, conversion needed
@@ -194,20 +195,34 @@ public class CurrentRoomState {
     }
 
     public static State getTemperatureState(final float temperature, final DateTime dataTimestampUTC, final String tempUnit, final Boolean preSleep) {
-        // Global ideal range: 60 -- 72, less than 54 = too cold, above 75= too warm
-        // TODO: personalize
+        // Global ideal range: 60 -- 70, less than 54 = too cold, above 75= too warm
+        // TODO: personalize the range
 
-        final String idealTempConditions = String.format(English.TEMPERATURE_ADVICE_MESSAGE, tempUnit, tempUnit);
+        String idealTempConditions;
+        if (tempUnit.equals(DEFAULT_TEMP_UNIT)) {
+            idealTempConditions = String.format(English.TEMPERATURE_ADVICE_MESSAGE_C, tempUnit, tempUnit);
+        } else {
+            idealTempConditions = String.format(English.TEMPERATURE_ADVICE_MESSAGE_F, tempUnit, tempUnit);
+        }
 
         State.Condition condition = State.Condition.IDEAL;;
         String message = (preSleep) ? English.IDEAL_TEMPERATURE_PRE_SLEEP_MESSAGE: English.IDEAL_TEMPERATURE_MESSAGE;;
 
-        if (temperature  < 15.0) {
+        if (temperature > (float) TemperatureHumidity.ALERT_TEMP_MAX_CELSIUS) {
             condition = State.Condition.ALERT;
-            message = (preSleep) ? English.LOW_TEMPERATURE_PRE_SLEEP_MESSAGE : English.LOW_TEMPERATURE_MESSAGE;
-        } else if (temperature > 30.0) {
+            message = (preSleep) ? English.HIGH_TEMPERATURE_PRE_SLEEP_ALERT_MESSAGE: English.HIGH_TEMPERATURE_ALERT_MESSAGE;
+
+        } else if (temperature > (float) TemperatureHumidity.IDEAL_TEMP_MAX_CELSIUS) {
+            condition = State.Condition.WARNING;
+            message = (preSleep) ? English.HIGH_TEMPERATURE_PRE_SLEEP_WARNING_MESSAGE: English.HIGH_TEMPERATURE_WARNING_MESSAGE;
+
+        } else if (temperature  < (float) TemperatureHumidity.ALERT_TEMP_MIN_CELSIUS) {
             condition = State.Condition.ALERT;
-            message = (preSleep) ? English.HIGH_TEMPERATURE_PRE_SLEEP_MESSAGE : English.HIGH_TEMPERATURE_MESSAGE;
+            message = (preSleep) ? English.LOW_TEMPERATURE_PRE_SLEEP_ALERT_MESSAGE: English.LOW_TEMPERATURE_ALERT_MESSAGE;
+
+        } else if (temperature < (float) TemperatureHumidity.IDEAL_TEMP_MIN_CELSIUS) {
+            condition = State.Condition.WARNING;
+            message = (preSleep) ? English.LOW_TEMPERATURE_PRE_SLEEP_WARNING_MESSAGE: English.LOW_TEMPERATURE_WARNING_MESSAGE;
         }
 
         return new State(temperature, message, idealTempConditions, condition, dataTimestampUTC, State.Unit.CELCIUS);

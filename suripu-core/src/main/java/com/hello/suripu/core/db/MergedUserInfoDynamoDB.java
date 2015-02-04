@@ -154,6 +154,9 @@ public class MergedUserInfoDynamoDB {
             items.put(MergedUserInfoDynamoDB.EXPECTED_RING_TIME_ATTRIBUTE_NAME, new AttributeValueUpdate()
                     .withAction(AttributeAction.PUT)
                     .withValue(new AttributeValue().withN(String.valueOf(updateRingTime.expectedRingTimeUTC))));
+            items.put(MergedUserInfoDynamoDB.IS_SMART_ALARM_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                    .withAction(AttributeAction.PUT)
+                    .withValue(new AttributeValue().withBOOL(updateRingTime.fromSmartAlarm)));
 
         } catch (JsonProcessingException e) {
             LOGGER.error("Deserialize alarmList error: {}", e.getMessage());

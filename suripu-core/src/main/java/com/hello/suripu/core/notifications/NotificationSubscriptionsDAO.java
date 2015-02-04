@@ -39,11 +39,11 @@ public interface NotificationSubscriptionsDAO {
     public Integer unsubscribe(@Bind("account_id") final Long accountId, @Bind("device_token") final String deviceToken);
 
     @SqlUpdate("DELETE FROM notifications_subscriptions WHERE access_token = :access_token")
-    public Integer unsubscribe(final String accessToken);
+    public Integer unsubscribe(@Bind("access_token") final String accessToken);
 
 
     @SqlUpdate("DELETE FROM notifications_subscriptions WHERE device_token = :device_token")
-    public Integer deleteByDeviceToken(final String deviceToken);
+    public Integer deleteByDeviceToken(@Bind("device_token") final String deviceToken);
 
 
 }

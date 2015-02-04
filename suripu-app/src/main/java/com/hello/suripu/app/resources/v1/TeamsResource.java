@@ -109,7 +109,7 @@ public class TeamsResource {
     public void deleteDevicesTeam(
             @Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
             @PathParam("team_name") final String teamName) {
-        final Team team = new Team(teamName, new HashSet<String>());
+        final Team team = Team.create(teamName, new HashSet<String>());
         teamStore.delete(team, TeamStore.Type.DEVICES);
     }
 
@@ -118,7 +118,7 @@ public class TeamsResource {
     public void deleteUsersTeam(
             @Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
             @PathParam("team_name") final String teamName) {
-        final Team team = new Team(teamName, new HashSet<String>());
+        final Team team = Team.create(teamName, new HashSet<String>());
         teamStore.delete(team, TeamStore.Type.USERS);
     }
 

@@ -29,7 +29,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -54,7 +54,8 @@ public class RoomConditionsResource extends BaseResource {
     @GET
     @Path("/current")
     @Produces(MediaType.APPLICATION_JSON)
-    public CurrentRoomState current(@Scope({OAuthScope.SENSORS_BASIC}) final AccessToken token, @DefaultValue("c") @QueryParam("temp_unit") final String unit) {
+    public CurrentRoomState current(@Scope({OAuthScope.SENSORS_BASIC}) final AccessToken token,
+                                    @DefaultValue("c") @QueryParam("temp_unit") final String unit) {
 
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(token.accountId);
         if(!deviceId.isPresent()) {
@@ -136,7 +137,7 @@ public class RoomConditionsResource extends BaseResource {
             @PathParam("sensor") String sensor,
             @QueryParam("from_utc") Long queryEndTimestampUTC) {
 
-//        validateQueryRange(queryEndTimestampUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
+        validateQueryRange(queryEndTimestampUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
 
         final int slotDurationInMinutes = 5;
         final long queryStartTimeUTC = new DateTime(queryEndTimestampUTC, DateTimeZone.UTC).minusHours(24).getMillis();
@@ -152,10 +153,10 @@ public class RoomConditionsResource extends BaseResource {
                 accessToken.accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId));
 
         if (!optionalData.isPresent()) {
-            return Collections.emptyMap();
+            return AllSensorSampleList.getEmptyData();
         }
 
-        return optionalData.get().getData();
+        return getDisplayData(optionalData.get().getAllData());
     }
 
     @Timed
@@ -182,10 +183,10 @@ public class RoomConditionsResource extends BaseResource {
         final Optional<AllSensorSampleList> optionalData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
                 accessToken.accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId));
         if (!optionalData.isPresent()) {
-            return Collections.emptyMap();
+            return AllSensorSampleList.getEmptyData();
         }
 
-        return optionalData.get().getData();
+        return getDisplayData(optionalData.get().getAllData());
     }
 
     /*
@@ -493,9 +494,19 @@ public class RoomConditionsResource extends BaseResource {
                 accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accountId));
 
         if (!optionalData.isPresent()) {
-            return Collections.emptyMap();
+            return AllSensorSampleList.getEmptyData();
         }
 
-        return optionalData.get().getData();
+        return getDisplayData(optionalData.get().getAllData());
+    }
+
+    private static Map<Sensor, List<Sample>> getDisplayData(final Map<Sensor, List<Sample>> allSensorData){
+        final Map<Sensor, List<Sample>> displayData = new HashMap<>();
+        displayData.put(Sensor.LIGHT, allSensorData.get(Sensor.LIGHT));
+        displayData.put(Sensor.HUMIDITY, allSensorData.get(Sensor.HUMIDITY));
+        displayData.put(Sensor.SOUND, allSensorData.get(Sensor.SOUND));
+        displayData.put(Sensor.TEMPERATURE, allSensorData.get(Sensor.TEMPERATURE));
+        displayData.put(Sensor.PARTICULATES, allSensorData.get(Sensor.PARTICULATES));
+        return displayData;
     }
 }

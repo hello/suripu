@@ -13,9 +13,12 @@ import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import java.util.Map;
+import java.util.Set;
 
 public class AccountPreferencesDynamoDB implements AccountPreferencesDAO {
 
@@ -23,11 +26,20 @@ public class AccountPreferencesDynamoDB implements AccountPreferencesDAO {
 
     private final AmazonDynamoDB dynamoDB;
     private final String tableName;
+    private final Set<AccountPreference.EnabledPreference> optOuts;
 
-    public AccountPreferencesDynamoDB(final AmazonDynamoDB amazonDynamoDB, final String tableName) {
+    private AccountPreferencesDynamoDB(final AmazonDynamoDB amazonDynamoDB, final String tableName, final Set<AccountPreference.EnabledPreference> optOuts) {
         this.dynamoDB = amazonDynamoDB;
         this.tableName = tableName;
+        this.optOuts = ImmutableSet.copyOf(optOuts);
     }
+
+
+    public static AccountPreferencesDynamoDB create(final AmazonDynamoDB amazonDynamoDB, final String tableName) {
+        final Set<AccountPreference.EnabledPreference> optOuts = Sets.newHashSet(AccountPreference.EnabledPreference.PUSH_SCORE, AccountPreference.EnabledPreference.PUSH_ALERT_CONDITIONS);
+        return new AccountPreferencesDynamoDB(amazonDynamoDB, tableName, optOuts);
+    }
+
 
     @Override
     public AccountPreference put(final Long accountId, final AccountPreference preference) {
@@ -54,13 +66,13 @@ public class AccountPreferencesDynamoDB implements AccountPreferencesDAO {
         getItemRequest.setTableName(tableName);
         final GetItemResult result = dynamoDB.getItem(getItemRequest);
 
-        return itemToPreferences(result.getItem());
+        return itemToPreferences(result.getItem(), optOuts);
     }
 
-    private Map<AccountPreference.EnabledPreference, Boolean> itemToPreferences(final Map<String, AttributeValue> item) {
+    public static Map<AccountPreference.EnabledPreference, Boolean> itemToPreferences(final Map<String, AttributeValue> item, final Set<AccountPreference.EnabledPreference> optOuts) {
         final Map<AccountPreference.EnabledPreference, Boolean> temp = Maps.newHashMap();
         for(final AccountPreference.EnabledPreference pref : AccountPreference.EnabledPreference.values()) {
-            temp.put(pref, Boolean.FALSE); // OPT IN
+            temp.put(pref, optOuts.contains(pref)); // TRUE if in opt outs otherwise it's opt-in so, FALSE by default
         }
 
         if(item == null || item.isEmpty()) {

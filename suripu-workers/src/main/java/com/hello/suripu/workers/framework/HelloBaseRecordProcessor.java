@@ -24,4 +24,8 @@ public abstract class HelloBaseRecordProcessor implements IRecordProcessor {
         boolean active = flipper.userFeatureActive(FeatureFlipper.MISSING_DATA_DEFAULT_VALUE, accountId, Collections.EMPTY_LIST);
         return (active) ? -1 : 0;
     }
+
+    protected Boolean hasAlarmInTimeline(final Long accountId) {
+        return flipper.userFeatureActive(FeatureFlipper.ALARM_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
+    }
 }

@@ -7,16 +7,16 @@ import com.hello.suripu.core.translations.English;
 /**
  * Created by pangwu on 11/24/14.
  */
-public class SleepEvent extends Event {
+public class FallingAsleepEvent extends Event {
 
     private String message;
 
-    public SleepEvent(long startTimestamp, long endTimestamp, int timezoneOffset) {
+    public FallingAsleepEvent(long startTimestamp, long endTimestamp, int timezoneOffset) {
         super(Type.SLEEP, startTimestamp, endTimestamp, timezoneOffset);
         this.message = English.FALL_ASLEEP_MESSAGE;
     }
 
-    public SleepEvent(long startTimestamp, long endTimestamp, int timezoneOffset, final String message) {
+    public FallingAsleepEvent(long startTimestamp, long endTimestamp, int timezoneOffset, final String message) {
         super(Type.SLEEP, startTimestamp, endTimestamp, timezoneOffset);
         this.message = message;
     }

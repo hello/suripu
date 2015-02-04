@@ -122,7 +122,9 @@ public class RingProcessor {
                             userInfo,
                             trackerMotionDAO, mergedUserInfoDynamoDB);
 
-                    ringTimes.add(nextRingTime);
+                    if(!nextRingTime.isEmpty()) {
+                        ringTimes.add(nextRingTime);
+                    }
                 } else {
                     LOGGER.info("Account {} not in smart alarm group.", userInfo.accountId);
                     ringTimes.add(nextRingTimeFromTemplate);
@@ -134,7 +136,9 @@ public class RingProcessor {
                         userInfo,
                         trackerMotionDAO, mergedUserInfoDynamoDB);
 
-                ringTimes.add(nextRingTime);
+                if(!nextRingTime.isEmpty()) {
+                    ringTimes.add(nextRingTime);
+                }
             }
 
         }
@@ -159,24 +163,45 @@ public class RingProcessor {
 
         LOGGER.info("Updating smart alarm for device {}, account {}", userInfo.deviceId, userInfo.accountId);
         
-        if (nextRingTimeFromWorker.equals(nextRingTimeFromTemplate) && nextRingTimeFromWorker.processed()) {
-            LOGGER.debug("Smart alarm already set to {} for device {}, account {}.",
+        if (currentTime.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) == false && nextRingTimeFromWorker.processed()) {
+            LOGGER.debug("{} smart alarm already set to {} for device {}, account {}.",
+                    currentTime.withZone(userInfo.timeZone.get()),
                     new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),
                     userInfo.deviceId,
                     userInfo.accountId);
             return nextRingTimeFromWorker;
         }
 
+        // previous ring time from worker expired, next alarm is a non-smart alarm, should use none-smart next ring time.
         if(!nextRingTimeFromTemplate.fromSmartAlarm){
-            if(nextRingTimeFromWorker.expectedRingTimeUTC < nextRingTimeFromTemplate.expectedRingTimeUTC) {
-                // next ring time from worker expired, should use none-smart next ring time.
-                return nextRingTimeFromTemplate;
+            mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, nextRingTimeFromTemplate);
+            LOGGER.info("Device {} ring time updated to {}", userInfo.deviceId,
+                    new DateTime(nextRingTimeFromTemplate.actualRingTimeUTC, userInfo.timeZone.get()));
+            return nextRingTimeFromTemplate;
+        }
+
+        // The previous smart alarm is expired, but not yet pass the expected ring time.
+        // We should return RingTime.empty because we don't want the alarm ring again during
+        // this period.
+        // We CANNOT just simply return nextRingTimeFromTemplate because they might be the same.
+        if (currentTime.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) && nextRingTimeFromWorker.processed()) {
+            LOGGER.debug("{} smart alarm {} expired for device {}, account {}. Next alarm {}",
+                    currentTime.withZone(userInfo.timeZone.get()),
+                    new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),
+                    userInfo.deviceId,
+                    userInfo.accountId,
+                    new DateTime(nextRingTimeFromTemplate.actualRingTimeUTC, userInfo.timeZone.get()));
+            if(nextRingTimeFromTemplate.equals(nextRingTimeFromWorker)) {
+                // DO NOT write this into merge user info table, it will mess up
+                // the states!
+                return RingTime.createEmpty();  // Let the alarm stay quiet
             }
 
-            if(nextRingTimeFromTemplate.isEmpty()){
-                return nextRingTimeFromTemplate;
-            }
+            // If the user update his/her alarm during this period, return the updated one from template
+            return nextRingTimeFromTemplate;
         }
+
+        // previous ring time from worker expired, next alarm is smart alarm, check if need to process next smart ring time.
 
         // currentRingTime.equals(nextRingTime) && currentRingTime.isSmart == false // next regular alarm generated, no pill data and not yet ring
         // currentRingTime.equals(nextRingTime) == false && currentRingTime.isSmart == false  // out-date last regular alarm due to no pill data
@@ -185,7 +210,12 @@ public class RingProcessor {
         RingTime nextRingTime;
         // let's see if it is time to trigger the smart alarm processing.
 
-
+        LOGGER.debug("{} worker alarm {} for device {}, account {}. Next template alarm {}",
+                currentTime.withZone(userInfo.timeZone.get()),
+                new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),
+                userInfo.deviceId,
+                userInfo.accountId,
+                new DateTime(nextRingTimeFromTemplate.actualRingTimeUTC, userInfo.timeZone.get()));
         // Try to get smart alarm time.
         // Check if the current time is N min before next ring.
         final DateTime nextRegularRingTimeLocal = new DateTime(nextRingTimeFromTemplate.expectedRingTimeUTC, userInfo.timeZone.get());

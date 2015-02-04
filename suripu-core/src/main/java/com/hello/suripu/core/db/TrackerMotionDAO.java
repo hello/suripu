@@ -1,5 +1,6 @@
 package com.hello.suripu.core.db;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.binders.BindTrackerMotion;
 import com.hello.suripu.core.db.mappers.GroupedTrackerMotionMapper;
@@ -51,6 +52,11 @@ public abstract class TrackerMotionDAO {
     public abstract ImmutableList<TrackerMotion> getBetweenLocalUTC(@Bind("account_id") long accountId,
                                                    @Bind("start_timestamp_local_utc") final DateTime startTimestampLocalUTC,
                                                    @Bind("end_timestamp_local_utc") final DateTime endTimestampLocalUTC);
+
+    @RegisterMapper(TrackerMotionMapper.class)
+    @SingleValueResult(TrackerMotion.class)
+    @SqlQuery("SELECT * FROM tracker_motion_master WHERE account_id = :account_id ORDER BY ts DESC LIMIT 1;")
+    public abstract Optional<TrackerMotion> getLast(@Bind("account_id") long accountId);
 
 
     @RegisterMapper(GroupedTrackerMotionMapper.class)

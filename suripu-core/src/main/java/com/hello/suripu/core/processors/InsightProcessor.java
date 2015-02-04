@@ -5,6 +5,7 @@ import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
+import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.AccountInfo;
@@ -13,6 +14,7 @@ import com.hello.suripu.core.preferences.AccountPreference;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
+import com.hello.suripu.core.processors.insights.SleepMotion;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -40,6 +42,7 @@ public class InsightProcessor {
     private final TrackerMotionDAO trackerMotionDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
+    private final SleepScoreDAO scoreDAO;
     private final AccountPreferencesDAO preferencesDAO;
     private final LightData lightData;
     private final AccountInfoProcessor accountInfoProcessor;
@@ -50,6 +53,7 @@ public class InsightProcessor {
                             final TrackerMotionDAO trackerMotionDAO,
                             final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
                             final InsightsDAODynamoDB insightsDAODynamoDB,
+                            final SleepScoreDAO scoreDAO,
                             final AccountPreferencesDAO preferencesDAO,
                             final AccountInfoProcessor accountInfoProcessor,
                             final LightData lightData
@@ -60,6 +64,7 @@ public class InsightProcessor {
         this.trackerMotionDAO = trackerMotionDAO;
         this.scoreDAODynamoDB = scoreDAODynamoDB;
         this.insightsDAODynamoDB = insightsDAODynamoDB;
+        this.scoreDAO = scoreDAO;
         this.preferencesDAO = preferencesDAO;
         this.lightData = lightData;
         this.accountInfoProcessor = accountInfoProcessor;
@@ -92,23 +97,28 @@ public class InsightProcessor {
      */
     private void generateNewUserInsights(final Long accountId, final Long deviceId, final int accountAge) {
 
-        Optional<InsightCard> insightCardOptional = Optional.absent();
+        final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
+
+        InsightCard.Category categoryToGenerate;
         switch (accountAge) {
             case 1:
-                insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
+                categoryToGenerate = InsightCard.Category.LIGHT;
                 break;
             case 2:
-                final AccountInfo.SleepTempType tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
-                final AccountPreference.TemperatureUnit tempUnit = this.getTemperatureUnitString(accountId);
-                insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref, tempUnit);
+                categoryToGenerate = InsightCard.Category.TEMPERATURE;
+                break;
+            case 3:
+                categoryToGenerate = InsightCard.Category.SOUND;
+                break;
+            case 4:
+                categoryToGenerate = InsightCard.Category.SLEEP_QUALITY;
                 break;
             default:
-                break; // TODO: rm debug, lights insight is all we have
+                return; // TODO: rm debug, lights insight is all we have
         }
 
-        if (insightCardOptional.isPresent()) {
-            // save to dynamo
-            this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
+        if (!recentCategories.contains(categoryToGenerate)) {
+            generateInsightsByCategory(accountId, deviceId, categoryToGenerate);
         }
     }
 
@@ -120,7 +130,7 @@ public class InsightProcessor {
 
         final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
 
-        // randomly select a card that hasn't been generated recently
+        // randomly select a card that hasn't been generated recently -- TODO when we have all categories
         final List<InsightCard.Category> eligibleCategories = new ArrayList<>();
         for (final InsightCard.Category category : InsightCard.Category.values()) {
             if (!recentCategories.contains(category)) {
@@ -138,6 +148,8 @@ public class InsightProcessor {
             this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.LIGHT);
         } else if (!recentCategories.contains(InsightCard.Category.TEMPERATURE)) {
             this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.TEMPERATURE);
+        } else if (!recentCategories.contains(InsightCard.Category.SLEEP_QUALITY)) {
+            this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.SLEEP_QUALITY);
         }
     }
 
@@ -147,15 +159,19 @@ public class InsightProcessor {
 
         if (category == InsightCard.Category.LIGHT) {
             insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
+
         } else if (category == InsightCard.Category.TEMPERATURE) {
             final AccountInfo.SleepTempType tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
             final AccountPreference.TemperatureUnit tempUnit = this.getTemperatureUnitString(accountId);
             insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref, tempUnit);
+
+        } else if (category == InsightCard.Category.SLEEP_QUALITY) {
+            insightCardOptional = SleepMotion.getInsights(accountId, deviceId, trendsInsightsDAO, scoreDAO, false);
         }
 
         if (insightCardOptional.isPresent()) {
             // save to dynamo
-            this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
+//            this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
         }
     }
 
@@ -201,6 +217,7 @@ public class InsightProcessor {
         private TrackerMotionDAO trackerMotionDAO;
         private AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
         private InsightsDAODynamoDB insightsDAODynamoDB;
+        private SleepScoreDAO scoreDAO;
         private AccountPreferencesDAO preferencesDAO;
         private LightData lightData;
         private AccountInfoProcessor accountInfoProcessor;
@@ -211,13 +228,18 @@ public class InsightProcessor {
             return this;
         }
 
-        public Builder withTrackerMotionDAOs(final TrackerMotionDAO trackerMotionDAO) {
+        public Builder withTrackerMotionDAO(final TrackerMotionDAO trackerMotionDAO) {
             this.trackerMotionDAO = trackerMotionDAO;
             return this;
         }
 
-        public Builder withInsightsDAOs(final TrendsInsightsDAO trendsInsightsDAO) {
+        public Builder withInsightsDAO(final TrendsInsightsDAO trendsInsightsDAO) {
             this.trendsInsightsDAO = trendsInsightsDAO;
+            return this;
+        }
+
+        public Builder withSleepScoreDAO(final SleepScoreDAO scoreDAO) {
+            this.scoreDAO = scoreDAO;
             return this;
         }
 
@@ -246,6 +268,7 @@ public class InsightProcessor {
                     trendsInsightsDAO,
                     trackerMotionDAO,
                     scoreDAODynamoDB, insightsDAODynamoDB,
+                    scoreDAO,
                     preferencesDAO,
                     accountInfoProcessor,
                     lightData);

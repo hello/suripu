@@ -27,10 +27,10 @@ sensors_db:
   validationQuery: "/* MyService Health Check */ SELECT 1"
 
   # the minimum number of connections to keep open
-  minSize: 8
+  minSize: 2
 
   # the maximum number of connections to keep open
-  maxSize: 32
+  maxSize: 8
 
   # whether or not idle connections should be validated
   checkConnectionWhileIdle: false
@@ -60,10 +60,10 @@ common_db:
   validationQuery: "/* MyService Health Check */ SELECT 1"
 
   # the minimum number of connections to keep open
-  minSize: 8
+  minSize: 2
 
   # the maximum number of connections to keep open
-  maxSize: 32
+  maxSize: 8
 
   # whether or not idle connections should be validated
   checkConnectionWhileIdle: false
@@ -93,10 +93,10 @@ insights_db:
   validationQuery: "/* MyService Health Check */ SELECT 1"
 
   # the minimum number of connections to keep open
-  minSize: 8
+  minSize: 2
 
   # the maximum number of connections to keep open
-  maxSize: 32
+  maxSize: 8
 
   # whether or not idle connections should be validated
   checkConnectionWhileIdle: false
@@ -114,7 +114,7 @@ kinesis:
 
 app_name: TimelineWorker
 
-max_records: 1000
+max_records: 20
 
 # Logging settings.
 logging:
@@ -169,3 +169,7 @@ timeline_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: timeline
+
+max_no_motion_period_minutes: 90
+hour_of_day_trigger: 5
+end_process_time: 11

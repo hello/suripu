@@ -21,6 +21,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.QuestionResponseDAO;
+import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
@@ -73,6 +74,7 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
         jdbi.registerArgumentFactory(new JodaArgumentFactory());
 
         final AccountDAO accountDAO = jdbi.onDemand(AccountDAOImpl.class);
+        final SleepScoreDAO scoreDAO = jdbi.onDemand(SleepScoreDAO.class);
 
         final ManagedDataSource sensorDataSource = managedDataSourceFactory.build(configuration.getSensorsDB());
         final DBI sensorDBI = new DBI(sensorDataSource);
@@ -169,6 +171,7 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
                 insightsDAODynamoDB,
                 trendsInsightsDAO,
                 questionResponseDAO,
+                scoreDAO,
                 lightData);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();

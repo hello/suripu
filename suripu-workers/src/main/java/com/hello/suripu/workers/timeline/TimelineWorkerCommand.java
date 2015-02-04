@@ -138,7 +138,8 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
                 configuration.getScoreThreshold(),
                 new SunData(),
                 amazonS3,
-                "hello-audio");
+                "hello-audio",
+                ringTimeDAODynamoDB);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
@@ -155,7 +156,7 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
                 workerId);
         kinesisConfig.withMaxRecords(configuration.getMaxRecords());
         kinesisConfig.withKinesisEndpoint(configuration.getKinesisEndpoint());
-        kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
+        kinesisConfig.withInitialPositionInStream(InitialPositionInStream.LATEST);
 
 
         final IRecordProcessorFactory factory = new TimelineRecordProcessorFactory(timelineProcessor,

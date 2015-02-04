@@ -118,6 +118,12 @@ public abstract class TrendsInsightsDAO {
                                                                                    @Bind("start_date") DateTime startDate,
                                                                                    @Bind("end_date") DateTime endDate);
 
+    @RegisterMapper(SleepStatsSampleMapper.class)
+    @SqlQuery("SELECT * FROM sleep_stats_time WHERE account_id = :account_id AND duration > 0" +
+            "ORDER BY local_utc_date LIMIT :days")
+    public abstract ImmutableList<SleepStatsSample> getAccountRecentSleepStats(@Bind("account_id") Long accountId,
+                                                                                     @Bind("days") int days);
+
     @SqlUpdate("INSERT INTO sleep_stats_time (account_id, duration, sound_sleep, light_sleep, motion, " +
             "sleep_time_utc, wake_time_utc, fall_asleep_time, " +
             "offset_millis, local_utc_date) VALUES (:account_id, :duration, :sound_sleep, :light_sleep, " +
@@ -181,7 +187,7 @@ public abstract class TrendsInsightsDAO {
                      stats.numberOfMotionEvents,
                      new DateTime(stats.sleepTime, DateTimeZone.UTC),
                      new DateTime(stats.wakeTime, DateTimeZone.UTC),
-                     stats.fallAsleepTime,
+                     stats.sleepOnsetTimeMinutes * 60000, // convert to millisecs for compatibility
                      offsetMillis, targetDate);
             rowCount += updateDayOfWeekData(accountId, stats.sleepDurationInMinutes, targetDate, offsetMillis, TrendGraph.DataType.SLEEP_DURATION);
         } catch (UnableToExecuteStatementException exception) {

@@ -10,7 +10,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class DeviceData {
 
-    public static final float FLOAT_2_INT_MULTIPLIER = 100;
+
 
 
     @JsonProperty("account_id")
@@ -119,14 +119,6 @@ public class DeviceData {
         checkNotNull(this.deviceId, "Device id can not be null");
         checkNotNull(this.dateTimeUTC, "DateTimeUTC can not be null");
         checkNotNull(this.offsetMillis,"Offset millis can not be null");
-    }
-
-    public static int floatToDBInt(final float value){
-        return (int)(value * FLOAT_2_INT_MULTIPLIER);
-    }
-
-    public static float dbIntToFloat(final int valueFromDB){
-        return valueFromDB / FLOAT_2_INT_MULTIPLIER;
     }
 
     public static float dbIntToFloatDust(final int valueFromDB) {return valueFromDB / DataUtils.DUST_FLOAT_TO_INT_MULTIPLIER;}
