@@ -94,7 +94,7 @@ public class RingProcessorSingleUserIT {
 
         when(this.mergedUserInfoDynamoDB.getInfo(testDeviceId)).thenReturn(userInfoList1);
 
-        final URL url = Resources.getResource("pill_data_09_23_2014_pang.csv");
+        final URL url = Resources.getResource("fixtures/algorithm/pill_data_09_23_2014_pang.csv");
         final List<TrackerMotion> motions = new ArrayList<TrackerMotion>();
         try {
             final String csvString = Resources.toString(url, Charsets.UTF_8);

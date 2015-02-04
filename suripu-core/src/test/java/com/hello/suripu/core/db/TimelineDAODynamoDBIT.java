@@ -132,7 +132,8 @@ public class TimelineDAODynamoDBIT {
         for(final DateTime targetDay:dateTimelinesMap.keySet()){
             assertThat(actual.containsKey(targetDay), is(Boolean.TRUE));
             assertThat(actual.get(targetDay).size(), is(1));
-
+            assertThat(actual.get(targetDay).get(0).statistics.isPresent(), is(false));
+            //assertThat(actual.get(targetDay).get(0).statistics.get(), is((SleepStats)null));
 
             if(targetDay.equals(startOfDay1)) {
                 assertThat(actual.get(targetDay).get(0).score, is(80));
@@ -179,6 +180,8 @@ public class TimelineDAODynamoDBIT {
 
 
             assertThat(targetDay, is(startOfDay1));
+            assertThat(actual.get(targetDay).get(0).statistics.isPresent(), is(false));
+            //assertThat(actual.get(targetDay).get(0).statistics.get(), is((SleepStats)null));
             assertThat(actual.get(targetDay).get(0).score, is(80));
             assertThat(actual.get(targetDay).get(0).message, is("test1"));
 
