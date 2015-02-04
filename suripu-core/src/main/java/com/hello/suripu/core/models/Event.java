@@ -1,6 +1,7 @@
 package com.hello.suripu.core.models;
 
 import com.amazonaws.services.cloudfront.model.InvalidArgumentException;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.Events.AlarmEvent;
@@ -57,6 +58,16 @@ public abstract class Event {
         public static Type fromInteger(int value){
             for(final Type type : Type.values()) {
                 if(type.value == value) {
+                    return type;
+                }
+            }
+            return NONE;
+        }
+
+        @JsonCreator
+        public static Type fromString(String value) {
+            for(final Type type : Type.values()) {
+                if(type.name().equalsIgnoreCase(value)) {
                     return type;
                 }
             }

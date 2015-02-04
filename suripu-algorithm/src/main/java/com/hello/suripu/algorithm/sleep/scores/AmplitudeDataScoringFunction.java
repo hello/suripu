@@ -36,7 +36,7 @@ public class AmplitudeDataScoringFunction implements SleepDataScoringFunction<Am
         final Map<Long, Double> outOfBedTimePDF = wakeUpTimeScoreFunction.getPDF(timestamps);
 
         final LinearRankDescendingScoringFunction<Long> goToBedTimeScoreFunction =
-                new LinearRankDescendingScoringFunction<>(1d, 0d, new double[]{0d, 1d});  // sleep time should be desc
+                new LinearRankDescendingScoringFunction<>(1d, 0d, new double[]{0d, 0.5d});  // sleep time should be desc
         final Map<Long, Double> goToBedTimePDF = goToBedTimeScoreFunction.getPDF(timestamps);
 
         final LinearRankAscendingScoringFunction<Long> amplitudeScoringFunction =

@@ -63,7 +63,7 @@ public class TimelineDAODynamoDBIT {
         sleepSegments.add(new SleepSegment(1L,
                 new WakeupEvent(now.plusHours(8).getMillis(), now.plusHours(8).plusMinutes(1).getMillis(), 0),
                 Collections.EMPTY_LIST));
-        this.timeline1 = new Timeline(80, "test1",
+        this.timeline1 = Timeline.create(80, "test1",
                 now.withTimeAtStartOfDay().toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT),
                 sleepSegments,
                 Collections.EMPTY_LIST);
@@ -77,7 +77,7 @@ public class TimelineDAODynamoDBIT {
         sleepSegments.add(new SleepSegment(3L,
                 new WakeupEvent(now.plusDays(1).plusHours(8).getMillis(), now.plusDays(1).plusHours(8).plusMinutes(1).getMillis(), 0),
                 Collections.EMPTY_LIST));
-        this.timeline2 = new Timeline(90, "test2",
+        this.timeline2 = Timeline.create(90, "test2",
                 now.plusDays(1).withTimeAtStartOfDay().toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT),
                 sleepSegments,
                 Collections.EMPTY_LIST);

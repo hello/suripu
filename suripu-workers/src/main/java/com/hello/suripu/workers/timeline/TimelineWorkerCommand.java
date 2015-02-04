@@ -156,7 +156,7 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
                 workerId);
         kinesisConfig.withMaxRecords(configuration.getMaxRecords());
         kinesisConfig.withKinesisEndpoint(configuration.getKinesisEndpoint());
-        kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
+        kinesisConfig.withInitialPositionInStream(InitialPositionInStream.LATEST);
 
 
         final IRecordProcessorFactory factory = new TimelineRecordProcessorFactory(timelineProcessor,
