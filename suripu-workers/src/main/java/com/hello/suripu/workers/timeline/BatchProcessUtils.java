@@ -50,7 +50,11 @@ public class BatchProcessUtils {
                                                                           final MergedUserInfoDynamoDB mergedUserInfoDynamoDB){
         final Map<Long, DateTime> targetDatesLocalUTC = new HashMap<>();
         for(final String pillId:groupedPillIdRequestDateUTC.keySet()) {
-
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             final List<DeviceAccountPair> accountsLinkedWithPill = deviceDAO.getLinkedAccountFromPillId(pillId);
             if (accountsLinkedWithPill.size() == 0) {
                 LOGGER.warn("No account linked with pill {}", pillId);
