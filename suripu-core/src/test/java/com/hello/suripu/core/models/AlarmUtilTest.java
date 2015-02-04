@@ -8,6 +8,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -61,20 +62,66 @@ public class AlarmUtilTest {
     public void testIsExpired(){
         final HashSet<Integer> dayOfWeek =  new HashSet<>();
         dayOfWeek.add(DateTime.now().getDayOfWeek());
-        final Alarm repeated = new Alarm(0,0,0,7,30,dayOfWeek,true, true, true, true, new AlarmSound(0, "god save the queen"));
+        /*
+        @JsonProperty("year") int year,
+                 @JsonProperty("month") int month,
+                 @JsonProperty("day_of_month") int day,
+                 @JsonProperty("hour")int hourOfDay,
+                 @JsonProperty("minute") int minuteOfHour,
+                 @JsonProperty("day_of_week") final Set<Integer> dayOfWeek,
+                 @JsonProperty("repeated") boolean isRepeated,
+                 @JsonProperty("enabled") boolean isEnabled,
+                 @JsonProperty("editable") boolean isEditable,
+                 @JsonProperty("smart") boolean isSmart,
+                 @JsonProperty("sound") final AlarmSound sound,
+                 @JsonProperty("id") final String id
+         */
+        final Alarm repeated = new Alarm.Builder()
+                .withYear(1900).withMonth(12).withDay(1)
+                .withHour(7).withMinute(30)
+                .withDayOfWeek(dayOfWeek)
+                .withIsRepeated(true).withIsEnabled(true).withIsEditable(true).withIsSmart(true)
+                .withAlarmSound(new AlarmSound(0, "god save the queen"))
+                .withId(UUID.randomUUID().toString())
+                .build();
+
         assertThat(Alarm.Utils.isAlarmExpired(repeated, DateTime.now(), DateTimeZone.getDefault()), is(false));
 
         final DateTime now = DateTime.now().withMillis(0);
-        Alarm nonRepeated = new Alarm(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), now.getHourOfDay(), now.getMinuteOfHour(), dayOfWeek, false, true, true, true, new AlarmSound(0, "god save the queen"));
+        final Alarm nonRepeated = new Alarm.Builder()
+                .withYear(now.getYear()).withMonth(now.getMonthOfYear()).withDay(now.getDayOfMonth())
+                .withHour(now.getHourOfDay()).withMinute(now.getMinuteOfHour())
+                .withDayOfWeek(dayOfWeek)
+                .withIsRepeated(false).withIsEnabled(true).withIsEditable(true).withIsSmart(true)
+                .withAlarmSound(new AlarmSound(0, "god save the queen"))
+                .withId(UUID.randomUUID().toString())
+                .build();
+
         assertThat(Alarm.Utils.isAlarmExpired(nonRepeated, now, DateTimeZone.getDefault()), is(false));
 
         final DateTime future = now.plusHours(1);
-        nonRepeated = new Alarm(future.getYear(), future.getMonthOfYear(), future.getDayOfMonth(), future.getHourOfDay(), future.getMinuteOfHour(), dayOfWeek, false, true, true,true,  new AlarmSound(0, "god save the queen"));
-        assertThat(Alarm.Utils.isAlarmExpired(nonRepeated, now, DateTimeZone.getDefault()), is(false));
+
+        final Alarm nonRepeatedFuture = new Alarm.Builder()
+                .withYear(future.getYear()).withMonth(future.getMonthOfYear()).withDay(future.getDayOfMonth())
+                .withHour(future.getHourOfDay()).withMinute(future.getMinuteOfHour())
+                .withDayOfWeek(dayOfWeek)
+                .withIsRepeated(false).withIsEnabled(true).withIsEditable(true).withIsSmart(true)
+                .withAlarmSound(new AlarmSound(0, "god save the queen"))
+                .withId(UUID.randomUUID().toString())
+                .build();
+
+        assertThat(Alarm.Utils.isAlarmExpired(nonRepeatedFuture, now, DateTimeZone.getDefault()), is(false));
 
         final DateTime past = now.minusHours(1);
-        nonRepeated = new Alarm(past.getYear(), past.getMonthOfYear(), past.getDayOfMonth(), past.getHourOfDay(), past.getMinuteOfHour(), dayOfWeek, false, true, true, true, new AlarmSound(0, "god save the queen"));
-        assertThat(Alarm.Utils.isAlarmExpired(nonRepeated, now, DateTimeZone.getDefault()), is(true));
+        final Alarm nonRepeatedPast = new Alarm.Builder()
+                .withYear(past.getYear()).withMonth(past.getMonthOfYear()).withDay(past.getDayOfMonth())
+                .withHour(past.getHourOfDay()).withMinute(past.getMinuteOfHour())
+                .withDayOfWeek(dayOfWeek)
+                .withIsRepeated(false).withIsEnabled(true).withIsEditable(true).withIsSmart(true)
+                .withAlarmSound(new AlarmSound(0, "god save the queen"))
+                .withId(UUID.randomUUID().toString())
+                .build();
+        assertThat(Alarm.Utils.isAlarmExpired(nonRepeatedPast, now, DateTimeZone.getDefault()), is(true));
 
 
     }
