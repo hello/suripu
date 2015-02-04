@@ -30,6 +30,8 @@ public class SleepMotion {
 
     private static float SIGNIFICANT_DIFF = 3.0f; // only differences greater than 3% is worth reporting (TODO)
 
+    private static int MIN_DAYS_REQUIRED = 3;
+
     public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final TrendsInsightsDAO trendsInsightsDAO, final SleepScoreDAO scoreDAO, final Boolean isNewUser) {
 
         int numDays = 14; // 2 weeks comparison
@@ -126,10 +128,15 @@ public class SleepMotion {
             return Optional.absent();
         }
 
+        final int numDays = percentages.size();
+
+        if (numDays < MIN_DAYS_REQUIRED) {
+            return  Optional.absent();
+        }
+
         final float averageMotionPercentage = (float) totMotion / (float) totDuration;
         final float overallDiff = (averageMotionPercentage - AVERAGE_SLEEP_PERC) / AVERAGE_SLEEP_PERC * 100.0f;
 
-        final int numDays = percentages.size();
         int greater = 0;
         int lesser = 0;
         for (final Float value : percentages) {
