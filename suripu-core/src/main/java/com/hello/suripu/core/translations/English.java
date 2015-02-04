@@ -121,4 +121,8 @@ public class English {
 
     /* END Current Room State Declaration */
 
+
+    // TIMELINE
+
+    public final static String TIMELINE_NO_SLEEP_DATA = "No sleep data recorded";
 }
