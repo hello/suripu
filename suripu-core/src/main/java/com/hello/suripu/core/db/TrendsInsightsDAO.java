@@ -187,7 +187,7 @@ public abstract class TrendsInsightsDAO {
                      stats.numberOfMotionEvents,
                      new DateTime(stats.sleepTime, DateTimeZone.UTC),
                      new DateTime(stats.wakeTime, DateTimeZone.UTC),
-                     stats.fallAsleepTime,
+                     stats.sleepOnsetTimeMillis,
                      offsetMillis, targetDate);
             rowCount += updateDayOfWeekData(accountId, stats.sleepDurationInMinutes, targetDate, offsetMillis, TrendGraph.DataType.SLEEP_DURATION);
         } catch (UnableToExecuteStatementException exception) {

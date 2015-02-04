@@ -10,19 +10,19 @@ public class SleepStats {
     final public Integer numberOfMotionEvents;
     final public Long sleepTime;
     final public Long wakeTime;
-    final public Integer fallAsleepTime;
+    final public Integer sleepOnsetTimeMillis;
 
     public SleepStats(final Integer soundSleepDurationInMinutes, final Integer lightSleepDurationInMinutes,
                       final Integer sleepDurationInMinutes,
                       final Integer numberOfMotionEvents,
-                      final Long sleepTime, final Long wakeTime, final Integer fallAsleepTime) {
+                      final Long sleepTime, final Long wakeTime, final Integer sleepOnsetTimeMillis) {
         this.soundSleepDurationInMinutes = soundSleepDurationInMinutes;
         this.lightSleepDurationInMinutes = lightSleepDurationInMinutes;
         this.sleepDurationInMinutes = sleepDurationInMinutes;
         this.numberOfMotionEvents = numberOfMotionEvents;
         this.sleepTime = sleepTime;
         this.wakeTime = wakeTime;
-        this.fallAsleepTime = fallAsleepTime;
+        this.sleepOnsetTimeMillis = sleepOnsetTimeMillis;
     }
 
     @Override
@@ -34,7 +34,7 @@ public class SleepStats {
                 .add("# of motion events", numberOfMotionEvents)
                 .add("sleep time", sleepTime)
                 .add("wake time", wakeTime)
-                .add("time to fall asleep", fallAsleepTime)
+                .add("time to fall asleep", sleepOnsetTimeMillis)
                 .toString();
     }
 }
