@@ -97,25 +97,28 @@ public class InsightProcessor {
      */
     private void generateNewUserInsights(final Long accountId, final Long deviceId, final int accountAge) {
 
-        Optional<InsightCard> insightCardOptional = Optional.absent();
+        final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
+
+        InsightCard.Category categoryToGenerate;
         switch (accountAge) {
             case 1:
-                insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
+                categoryToGenerate = InsightCard.Category.LIGHT;
                 break;
             case 2:
-                final AccountInfo.SleepTempType tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
-                final AccountPreference.TemperatureUnit tempUnit = this.getTemperatureUnitString(accountId);
-                insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref, tempUnit);
+                categoryToGenerate = InsightCard.Category.TEMPERATURE;
+                break;
+            case 3:
+                categoryToGenerate = InsightCard.Category.SOUND;
                 break;
             case 4:
-                insightCardOptional = SleepMotion.getInsights(accountId, deviceId, trendsInsightsDAO, scoreDAO, true);
+                categoryToGenerate = InsightCard.Category.SLEEP_QUALITY;
+                break;
             default:
-                break; // TODO: rm debug, lights insight is all we have
+                return; // TODO: rm debug, lights insight is all we have
         }
 
-        if (insightCardOptional.isPresent()) {
-            // save to dynamo
-            this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
+        if (!recentCategories.contains(categoryToGenerate)) {
+            generateInsightsByCategory(accountId, deviceId, categoryToGenerate);
         }
     }
 
@@ -127,7 +130,7 @@ public class InsightProcessor {
 
         final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
 
-        // randomly select a card that hasn't been generated recently
+        // randomly select a card that hasn't been generated recently -- TODO when we have all categories
         final List<InsightCard.Category> eligibleCategories = new ArrayList<>();
         for (final InsightCard.Category category : InsightCard.Category.values()) {
             if (!recentCategories.contains(category)) {
@@ -156,17 +159,19 @@ public class InsightProcessor {
 
         if (category == InsightCard.Category.LIGHT) {
             insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
+
         } else if (category == InsightCard.Category.TEMPERATURE) {
             final AccountInfo.SleepTempType tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
             final AccountPreference.TemperatureUnit tempUnit = this.getTemperatureUnitString(accountId);
             insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref, tempUnit);
+
         } else if (category == InsightCard.Category.SLEEP_QUALITY) {
             insightCardOptional = SleepMotion.getInsights(accountId, deviceId, trendsInsightsDAO, scoreDAO, false);
         }
 
         if (insightCardOptional.isPresent()) {
             // save to dynamo
-            this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
+//            this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
         }
     }
 
