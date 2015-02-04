@@ -22,13 +22,15 @@ import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.db.util.Compression;
 import com.hello.suripu.core.models.Timeline;
+import com.yammer.dropwizard.json.GuavaExtrasModule;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -71,11 +73,15 @@ public class TimelineDAODynamoDB {
 
     public final String JSON_CHARSET = "UTF-8";
 
+    private static ObjectMapper mapper = new ObjectMapper();
 
     public TimelineDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
 
+        mapper.registerModule(new GuavaModule());
+        mapper.registerModule(new GuavaExtrasModule());
+        mapper.registerModule(new JodaModule());
     }
 
     @Timed
@@ -149,8 +155,6 @@ public class TimelineDAODynamoDB {
 
 
         int loopCount = 0;
-        final ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         // Loop and construct queries..
         do{
@@ -273,7 +277,7 @@ public class TimelineDAODynamoDB {
         for(final Long targetDateOfNightLocalUTC:data.keySet()) {
 
             final List<Timeline> timelines = data.get(targetDateOfNightLocalUTC);
-            final ObjectMapper mapper = new ObjectMapper();
+
 
             try {
                 final String jsonEventList = mapper.writeValueAsString(timelines);

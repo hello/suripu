@@ -1,10 +1,12 @@
 package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+import com.yammer.dropwizard.json.GuavaExtrasModule;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -27,8 +29,9 @@ public class TimelineTest {
 
     @Before
     public void setUp() {
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
+        objectMapper.registerModule(new GuavaModule());
+        objectMapper.registerModule(new GuavaExtrasModule());
+        objectMapper.registerModule(new JodaModule());
     }
 
     @Test

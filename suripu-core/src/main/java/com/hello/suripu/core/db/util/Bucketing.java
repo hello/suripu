@@ -169,7 +169,7 @@ public class Bucketing {
             map.put(key, new Sample(key, missingSampleDefaultValue, null));
         }
 
-        LOGGER.debug("Map size = {}", map.size());
+        LOGGER.trace("Map size = {}", map.size());
 
 
         return map;
