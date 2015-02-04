@@ -12,8 +12,9 @@ import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.PartnerMotionEvent;
-import com.hello.suripu.core.models.Events.SleepEvent;
+import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.SleepMotionEvent;
+import com.hello.suripu.core.models.Events.SleepingEvent;
 import com.hello.suripu.core.models.Events.SunRiseEvent;
 import com.hello.suripu.core.models.Events.SunSetEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
@@ -28,20 +29,21 @@ public abstract class Event {
             public String toString() {return "";}
         },
         MOTION(0),
-        SLEEP_MOTION(1),
-        PARTNER_MOTION(2),
-        NOISE(3),
-        SNORING(4),
-        SLEEP_TALK(5),
-        LIGHT(6),
-        LIGHTS_OUT(7),
-        SUNSET(8),
-        SUNRISE(9),
-        IN_BED(10),
-        SLEEP(11),
-        OUT_OF_BED(12),
-        WAKE_UP(13),
-        ALARM(14);
+        SLEEPING(1),
+        SLEEP_MOTION(2),
+        PARTNER_MOTION(3),
+        NOISE(4),
+        SNORING(5),
+        SLEEP_TALK(6),
+        LIGHT(7),
+        LIGHTS_OUT(8),
+        SUNSET(9),
+        SUNRISE(10),
+        IN_BED(11),
+        SLEEP(12),
+        OUT_OF_BED(13),
+        WAKE_UP(14),
+        ALARM(15);
 
         private int value;
 
@@ -54,42 +56,12 @@ public abstract class Event {
         }
 
         public static Type fromInteger(int value){
-            switch (value){
-                case -1:
-                    return NONE;
-                case 0:
-                    return MOTION;
-                case 1:
-                    return SLEEP_MOTION;
-                case 2:
-                    return PARTNER_MOTION;
-                case 3:
-                    return NOISE;
-                case 4:
-                    return SNORING;
-                case 5:
-                    return SLEEP_TALK;
-                case 6:
-                    return LIGHT;
-                case 7:
-                    return LIGHTS_OUT;
-                case 8:
-                    return SUNSET;
-                case 9:
-                    return SUNRISE;
-                case 10:
-                    return IN_BED;
-                case 11:
-                    return SLEEP;
-                case 12:
-                    return OUT_OF_BED;
-                case 13:
-                    return WAKE_UP;
-                case 14:
-                    return ALARM;
-                default:
-                    return NONE;
+            for(final Type type : Type.values()) {
+                if(type.value == value) {
+                    return type;
+                }
             }
+            return NONE;
         }
 
         @JsonCreator
@@ -142,10 +114,12 @@ public abstract class Event {
         switch (event.getType()){
             case MOTION:
                 return new MotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
+            case SLEEPING:
+                return new SleepingEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
             case SLEEP_MOTION:
                 return new SleepMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
             case SLEEP:
-                return new SleepEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
+                return new FallingAsleepEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
             case IN_BED:
                 return new InBedEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
             case OUT_OF_BED:
@@ -179,7 +153,7 @@ public abstract class Event {
             case SLEEP_MOTION:
                 return new SleepMotionEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
             case SLEEP:
-                return new SleepEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
+                return new FallingAsleepEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getDescription());
             case WAKE_UP:
                 return new WakeupEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
             case IN_BED:
@@ -200,6 +174,8 @@ public abstract class Event {
                 return new LightsOutEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
             case ALARM:
                 return new AlarmEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+            case SLEEPING:
+                return new SleepingEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
             default:
                 return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
 
@@ -217,6 +193,11 @@ public abstract class Event {
                     throw new InvalidArgumentException("sleepDepth required.");
                 }
                 return new MotionEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
+            case SLEEPING:
+                if(!sleepDepth.isPresent()) {
+                    throw new InvalidArgumentException("sleepDepth required");
+                }
+                return new SleepingEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
             case SLEEP_MOTION:
                 if(!sleepDepth.isPresent()){
                     throw new InvalidArgumentException("sleepDepth required.");
@@ -226,7 +207,7 @@ public abstract class Event {
                 if(!messageOptional.isPresent()){
                     throw new InvalidArgumentException("message required.");
                 }
-                return new SleepEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
+                return new FallingAsleepEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
             case WAKE_UP:
                 return new WakeupEvent(startTimestamp, endTimestamp, offsetMillis);
             case IN_BED:

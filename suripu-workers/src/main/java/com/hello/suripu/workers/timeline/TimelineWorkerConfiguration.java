@@ -16,7 +16,7 @@ import javax.validation.constraints.NotNull;
 public class TimelineWorkerConfiguration extends WorkerConfiguration {
     @Valid
     @NotNull
-    @Max(1000)
+    @Max(20)
     @JsonProperty("max_records")
     private Integer maxRecords;
 

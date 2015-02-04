@@ -125,15 +125,17 @@ public class TimelineProcessor {
 
         final List<Event> events = Lists.newArrayList();
         for(final RingTime ringTime : ringTimes) {
-            final AlarmEvent event = (AlarmEvent) Event.createFromType(
-                    Event.Type.ALARM,
-                    ringTime.expectedRingTimeUTC,
-                    new DateTime(ringTime.expectedRingTimeUTC, DateTimeZone.UTC).plusMinutes(1).getMillis(),
-                    offsetMillis,
-                    Optional.<String>absent(),
-                    Optional.<SleepSegment.SoundInfo>absent(),
-                    Optional.<Integer>absent());
-            events.add(event);
+            if(ringTime.expectedRingTimeUTC > evening.getMillis() && ringTime.expectedRingTimeUTC < morning.getMillis()) {
+                final AlarmEvent event = (AlarmEvent) Event.createFromType(
+                        Event.Type.ALARM,
+                        ringTime.expectedRingTimeUTC,
+                        new DateTime(ringTime.expectedRingTimeUTC, DateTimeZone.UTC).plusMinutes(1).getMillis(),
+                        offsetMillis,
+                        Optional.<String>absent(),
+                        Optional.<SleepSegment.SoundInfo>absent(),
+                        Optional.<Integer>absent());
+                events.add(event);
+            }
         }
         return events;
     }
@@ -345,8 +347,9 @@ public class TimelineProcessor {
 
 
         final List<Insight> insights = TimelineUtils.generatePreSleepInsights(optionalSensorData, sleepStats.sleepTime);
-        List<SleepSegment>  reversedSegments = Lists.reverse(reversed);
+        final List<SleepSegment>  reversedSegments = Lists.reverse(reversed);
         final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, date, reversedSegments, insights, sleepStats);
+
         final List<Timeline> timelines = new ArrayList<>();
         timelines.add(timeline);
 

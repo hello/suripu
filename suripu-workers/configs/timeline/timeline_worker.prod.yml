@@ -114,7 +114,7 @@ kinesis:
 
 app_name: TimelineWorker
 
-max_records: 1000
+max_records: 20
 
 # Logging settings.
 logging:

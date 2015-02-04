@@ -16,13 +16,14 @@ import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.LightEvent;
 import com.hello.suripu.core.models.Events.LightsOutEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
-import com.hello.suripu.core.models.Events.SleepEvent;
+import com.hello.suripu.core.models.Events.SleepingEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.Sample;
@@ -65,7 +66,7 @@ public class TimelineUtils {
     public static List<Event> convertLightMotionToNone(final List<Event> eventList, final int thresholdSleepDepth){
         final LinkedList<Event> convertedEvents = new LinkedList<>();
         for(final Event event:eventList){
-            if(event.getType() == Event.Type.MOTION && event.getSleepDepth() > thresholdSleepDepth){
+            if(event.getType() == Event.Type.NONE || event.getSleepDepth() > thresholdSleepDepth && (event.getType() == Event.Type.MOTION)){
                 final NullEvent nullEvent = new NullEvent(event.getStartTimestamp(),
                         event.getEndTimestamp(),
                         event.getTimezoneOffset(),
@@ -200,7 +201,7 @@ public class TimelineUtils {
         boolean isInBed = false;
         final LinkedList<Event> newEventList = new LinkedList<>();
         for(final Event event:events){
-            if(isInBed == false && event.getType() == Event.Type.IN_BED){
+            if(!isInBed && event.getType() == Event.Type.IN_BED){
                 isInBed = true;
             }
 
@@ -208,9 +209,11 @@ public class TimelineUtils {
                 isInBed = false;
             }
 
-            if(isInBed == false && event.getType() == Event.Type.MOTION){
+            if(isInBed && (event.getType() == Event.Type.NONE)){
+                newEventList.add(new SleepingEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth()));
+            }else if(!isInBed && (event.getType() == Event.Type.MOTION)) {
                 newEventList.add(new NullEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth()));
-            }else{
+            } else {
                 newEventList.add(event);
             }
         }
@@ -697,7 +700,7 @@ public class TimelineUtils {
      * @param thresholdInMinutes
      * @return
      */
-    public static Optional<SleepEvent> getSleepEvent(final List<MotionEvent> sleepMotions, int thresholdInMinutes, int motionThreshold, final Optional<DateTime> sleepTimeThreshold) {
+    public static Optional<FallingAsleepEvent> getSleepEvent(final List<MotionEvent> sleepMotions, int thresholdInMinutes, int motionThreshold, final Optional<DateTime> sleepTimeThreshold) {
 
         if(sleepMotions.isEmpty()) {
             return Optional.absent();
@@ -734,7 +737,7 @@ public class TimelineUtils {
             if (diffInMinutes > thresholdInMinutes) {
                 if(map.containsKey(current.getMillis())) {
                     final MotionEvent motion = map.get(current.getMillis());
-                    return Optional.of(new SleepEvent(motion.getStartTimestamp(), motion.getEndTimestamp(), motion.getTimezoneOffset()));
+                    return Optional.of(new FallingAsleepEvent(motion.getStartTimestamp(), motion.getEndTimestamp(), motion.getTimezoneOffset()));
 
                 }
                 break;  // Get the first event
@@ -887,7 +890,7 @@ public class TimelineUtils {
                 goToBedSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
                 goToBedSegment.getOffsetMillis()));
 
-        events.add(new SleepEvent(fallAsleepSegment.getStartTimestamp(),
+        events.add(new FallingAsleepEvent(fallAsleepSegment.getStartTimestamp(),
                 fallAsleepSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
                 fallAsleepSegment.getOffsetMillis()));
 
@@ -917,11 +920,13 @@ public class TimelineUtils {
         return maxCount >= thresholdCount;
     }
 
+
     public static List<Optional<Event>> sleepEventsHeuristicFix(final List<Event> sleepEvents, final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features){
         final Event goToBed = sleepEvents.get(0);
         final Event sleep = sleepEvents.get(1);
         final Event wakeUp = sleepEvents.get(2);
         final Event outOfBed = sleepEvents.get(3);
+
 
         final ArrayList<Optional<Event>> fixedSleepEvents = new ArrayList<>();
         fixedSleepEvents.add(Optional.of(goToBed));
@@ -930,9 +935,8 @@ public class TimelineUtils {
         fixedSleepEvents.add(Optional.of(outOfBed));
 
         if(sleep.getStartTimestamp() == goToBed.getStartTimestamp()){
-            fixedSleepEvents.set(1, Optional.of((Event)new SleepEvent(sleep.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                    sleep.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
-                    sleep.getTimezoneOffset())));
+            fixedSleepEvents.set(1, Optional.of((Event) new FallingAsleepEvent(sleep.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                    sleep.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,  sleep.getTimezoneOffset())));
             LOGGER.warn("Sleep {} has the same time with in bed, set to in bed +1 minute.",
                     new DateTime(sleep.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleep.getTimezoneOffset())));
         }
