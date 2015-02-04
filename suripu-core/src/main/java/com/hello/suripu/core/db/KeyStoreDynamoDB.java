@@ -185,9 +185,11 @@ public class KeyStoreDynamoDB implements KeyStore {
         }
 
         final String aesKey = getItemResult.getItem().get(AES_KEY_ATTRIBUTE_NAME).getS();
-        final String metadata = getItemResult.getItem().get(METADATA).getS();
 
-        return Optional.of(new DeviceKeyStoreRecord(censorKey(aesKey), metadata));
+        if (!getItemResult.getItem().containsKey(METADATA)) {
+            return Optional.of(new DeviceKeyStoreRecord(censorKey(aesKey), "n/a"));
+        }
+        return Optional.of(new DeviceKeyStoreRecord(censorKey(aesKey), getItemResult.getItem().get(METADATA).getS()));
     }
 
     private String censorKey(final String key) {
