@@ -62,20 +62,7 @@ public class AlarmUtilTest {
     public void testIsExpired(){
         final HashSet<Integer> dayOfWeek =  new HashSet<>();
         dayOfWeek.add(DateTime.now().getDayOfWeek());
-        /*
-        @JsonProperty("year") int year,
-                 @JsonProperty("month") int month,
-                 @JsonProperty("day_of_month") int day,
-                 @JsonProperty("hour")int hourOfDay,
-                 @JsonProperty("minute") int minuteOfHour,
-                 @JsonProperty("day_of_week") final Set<Integer> dayOfWeek,
-                 @JsonProperty("repeated") boolean isRepeated,
-                 @JsonProperty("enabled") boolean isEnabled,
-                 @JsonProperty("editable") boolean isEditable,
-                 @JsonProperty("smart") boolean isSmart,
-                 @JsonProperty("sound") final AlarmSound sound,
-                 @JsonProperty("id") final String id
-         */
+
         final Alarm repeated = new Alarm.Builder()
                 .withYear(1900).withMonth(12).withDay(1)
                 .withHour(7).withMinute(30)
