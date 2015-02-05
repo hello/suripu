@@ -571,7 +571,7 @@ public class TimelineUtils {
 
             // I want to keep the final :)
             final long firstEventTimestamp = Math.max(sleepTimestampMillis, inBedTimestampMillis) == 0 ? sortedSegments.get(0).getTimestamp() : Math.max(sleepTimestampMillis, inBedTimestampMillis);
-            final long lastEventTimestamp = Math.min(wakeUpTimestampMillis, outBedTimestampMillis) == 0 ? sortedSegments.get(sortedSegments.size() - 1).getTimestamp() : Math.min(wakeUpTimestampMillis, outBedTimestampMillis);
+            final long lastEventTimestamp = Math.max(wakeUpTimestampMillis, outBedTimestampMillis) == 0 ? sortedSegments.get(sortedSegments.size() - 1).getTimestamp() : Math.max(wakeUpTimestampMillis, outBedTimestampMillis);
             if(lastEventTimestamp - firstEventTimestamp > 4 * DateTimeConstants.MILLIS_PER_HOUR){
                 inBedDurationInSecs = (int) ((lastEventTimestamp - firstEventTimestamp) / DateTimeConstants.MILLIS_PER_SECOND);
             }

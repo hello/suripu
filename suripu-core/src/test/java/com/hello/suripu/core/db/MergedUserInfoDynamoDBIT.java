@@ -90,8 +90,9 @@ public class MergedUserInfoDynamoDBIT {
     @Test
     public void testUpdateNotAppend(){
         final RingTime ringTime = new RingTime(DateTime.now().getMillis(), DateTime.now().getMillis(), new long[]{1L}, false);
+
+        this.mergedUserInfoDynamoDB.setTimeZone(this.deviceId, this.accountId, DateTimeZone.UTC);  // Timezone must set first, or ringtime will be reset
         this.mergedUserInfoDynamoDB.setRingTime(this.deviceId, this.accountId, ringTime);
-        this.mergedUserInfoDynamoDB.setTimeZone(this.deviceId, this.accountId, DateTimeZone.UTC);
         this.mergedUserInfoDynamoDB.setPillColor(this.deviceId, this.accountId, "Pang's Pill", new Color(0xFE, 0x00, 0x00));
 
         final List<UserInfo> userInfoList = this.mergedUserInfoDynamoDB.getInfo(this.deviceId);
@@ -215,6 +216,29 @@ public class MergedUserInfoDynamoDBIT {
                 is(insertedAlarmRingTime.getMillis()));
         assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().fromSmartAlarm,
                 is(false));
+    }
+
+    @Test
+    public void testUpdateTimeZoneShouldDeleteWorkerRingTime(){
+        final String senseId = "Sense";
+        final long accountId  = 1;
+
+        final DateTimeZone userTimeZone1 = DateTimeZone.forID("America/Los_Angeles");
+        this.mergedUserInfoDynamoDB.setTimeZone(senseId, accountId, userTimeZone1);
+        final DateTime now = DateTime.now();
+        final DateTime previousRing = now.plusHours(1);
+        this.mergedUserInfoDynamoDB.setRingTime(senseId, accountId, new RingTime(previousRing.minusMinutes(5).getMillis(),
+                previousRing.getMillis(), new long[0], true));
+        assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().actualRingTimeUTC,
+                is(previousRing.minusMinutes(5).getMillis()));
+        assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().fromSmartAlarm,
+                is(true));
+        assertThat(this.mergedUserInfoDynamoDB.getTimezone(senseId, accountId).get(), is(userTimeZone1));
+
+        final DateTimeZone userTimeZone2 = DateTimeZone.forID("Asia/Hong_Kong");
+        this.mergedUserInfoDynamoDB.setTimeZone(senseId, accountId, userTimeZone2);
+        assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().isEmpty(), is(true));
+        assertThat(this.mergedUserInfoDynamoDB.getTimezone(senseId, accountId).get(), is(userTimeZone2));
     }
 
 }
