@@ -51,11 +51,10 @@ public interface QuestionResponseDAO {
             "CAST(:frequency AS FREQUENCY_TYPE) AS question_freq, TRUE AS skip " +
             "WHERE EXISTS (SELECT id FROM account_questions WHERE id = :account_question_id\n" +
             "  AND account_id = :account_id)\n")
-    Long  insertSkippedQuestion(@Bind("account_id") long accountId,
+    Long insertSkippedQuestion(@Bind("account_id") long accountId,
                                  @Bind("question_id") Integer questionId,
                                  @Bind("account_question_id") Long accountQuestionId,
                                  @Bind("frequency") String frequency);
-
 
     @GetGeneratedKeys
     @SqlUpdate("INSERT INTO account_questions " +
@@ -71,7 +70,7 @@ public interface QuestionResponseDAO {
             "(:account_id, 1, :created_local, :expires_local), " +
             "(:account_id, 2, :created_local, :expires_local), " +
             "(:account_id, 3, :created_local, :expires_local)")
-    Long insertAccountOnBoardingQuestions(@Bind("account_id") long accountId,
+    void insertAccountOnBoardingQuestions(@Bind("account_id") long accountId,
                                @Bind("created_local") DateTime createdLocal,
                                @Bind("expires_local") DateTime expiresLocal);
 
@@ -81,7 +80,6 @@ public interface QuestionResponseDAO {
             "(SELECT account_question_id FROM responses) ORDER BY id DESC")
     ImmutableList<AccountQuestion> getAccountQuestions(@Bind("account_id") long accountId,
                                                        @Bind("expiration") DateTime expiration);
-
 
     // TODO need to optimize and create index
     @RegisterMapper(RecentResponseMapper.class)
