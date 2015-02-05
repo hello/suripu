@@ -155,7 +155,7 @@ public class RingTimeDAODynamoDB {
 
 
     /**
-     * TODO: this is awfully similar to getNextRingTime. Probably needs refactoring.
+     * TODO: this is awfully similar to getNextRingTimeForSense. Probably needs refactoring.
      * @param senseId
      * @param evening
      * @param morning
