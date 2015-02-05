@@ -415,7 +415,7 @@ public class RingProcessorMultiUserIT {
             LOGGER.error("Failed parsing CSV");
         }
 
-        final DateTime dataCollectionTimeLocalUTC = new DateTime(2014, 9, 23, 8, 21, DateTimeZone.UTC);
+        final DateTime dataCollectionTimeLocalUTC = new DateTime(2014, 9, 23, 8, 21, 0, 0, DateTimeZone.UTC);
         final DateTime startQueryTimeLocalUTC = dataCollectionTimeLocalUTC.minusHours(8);
 
         when(this.trackerMotionDAO.getBetweenLocalUTC(2, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
@@ -425,7 +425,7 @@ public class RingProcessorMultiUserIT {
                 .thenReturn(ImmutableList.copyOf(motions1));
 
 
-        final DateTime dataCollectionTimeLocalUTC1 = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.UTC);
+        final DateTime dataCollectionTimeLocalUTC1 = new DateTime(2014, 9, 23, 8, 0, 0, 0, DateTimeZone.UTC);
         final DateTime startQueryTimeLocalUTC1 = dataCollectionTimeLocalUTC1.minusHours(8);
 
         when(this.trackerMotionDAO.getBetweenLocalUTC(2, startQueryTimeLocalUTC1, dataCollectionTimeLocalUTC1))
@@ -436,7 +436,7 @@ public class RingProcessorMultiUserIT {
 
 
 
-        final DateTime dataCollectionTimeLocalUTC3 = new DateTime(2014, 9, 23, 8, 22, DateTimeZone.UTC);
+        final DateTime dataCollectionTimeLocalUTC3 = new DateTime(2014, 9, 23, 8, 22, 0, 0, DateTimeZone.UTC);
         final DateTime startQueryTimeLocalUTC3 = dataCollectionTimeLocalUTC3.minusHours(8);
 
         when(this.trackerMotionDAO.getBetweenLocalUTC(2, startQueryTimeLocalUTC3, dataCollectionTimeLocalUTC3))
@@ -455,7 +455,7 @@ public class RingProcessorMultiUserIT {
         when(this.deviceDAO.getAccountIdsForDeviceId(testDeviceId)).thenReturn(ImmutableList.copyOf(deviceAccountPairs));
 
         DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
-        final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
+        final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, 0, 0, DateTimeZone.forID("America/Los_Angeles"));
 
         // 1st alarm, smart, 2014-09-23 8:20
         // 2nd alarm, smart, 2014-09-23 8:30
@@ -472,7 +472,7 @@ public class RingProcessorMultiUserIT {
                 null);
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
-        assertThat(actualRingTime.isEqual(deadline), is(true));
+        assertThat(actualRingTime, is(deadline));
         assertThat(ringTime.processed(), is(false));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{100L}));
 
@@ -518,10 +518,11 @@ public class RingProcessorMultiUserIT {
         // Now: [1st alarm's actual ring + 1 minute]
         // Minute 2nd alarm ring time
         deadline = new DateTime(2014, 9, 23, 8, 30, DateTimeZone.forID("America/Los_Angeles"));
-        when(this.trackerMotionDAO.getBetweenLocalUTC(2, startQueryTimeLocalUTC,
-                new DateTime(actualRingTime.getYear(), actualRingTime.getMonthOfYear(),
-                        actualRingTime.getDayOfMonth(), actualRingTime.getHourOfDay(),
-                        actualRingTime.getMinuteOfHour() + 1, 0, DateTimeZone.UTC)))
+        final DateTime dataCollectionTimeLocalUTCAfterSmartRing = new DateTime(actualRingTime.getYear(), actualRingTime.getMonthOfYear(),
+                actualRingTime.getDayOfMonth(), actualRingTime.getHourOfDay(),
+                actualRingTime.getMinuteOfHour() + 1, 0, 0, DateTimeZone.UTC);
+        when(this.trackerMotionDAO.getBetweenLocalUTC(2, dataCollectionTimeLocalUTCAfterSmartRing.minusHours(8),
+                dataCollectionTimeLocalUTCAfterSmartRing))
                 .thenReturn(ImmutableList.copyOf(motions1));
 
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
@@ -533,9 +534,10 @@ public class RingProcessorMultiUserIT {
                 15,
                 0.2f,
                 null);
-        actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
-        assertThat(actualRingTime.isEqual(deadline), is(true));  // this is NOT empty because we have another user!
-        assertThat(ringTime.processed(), is(false));
+        final DateTime nextSmartRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
+        assertThat(nextSmartRingTime.isAfter(deadline), is(false));  // this is NOT empty because we have another user!
+        assertThat(nextSmartRingTime.isBefore(actualRingTime.plusMinutes(1)), is(false));
+        assertThat(ringTime.processed(), is(ringTime.actualRingTimeUTC != ringTime.expectedRingTimeUTC));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
 
 
@@ -554,7 +556,7 @@ public class RingProcessorMultiUserIT {
                 null);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
-        assertThat(actualRingTime.isEqual(deadline), is(true));
+        assertThat(actualRingTime, is(deadline));
         assertThat(ringTime.processed(), is(false));
         assertThat(Arrays.asList(ringTime.soundIds), containsInAnyOrder(new long[]{101L}));
 
