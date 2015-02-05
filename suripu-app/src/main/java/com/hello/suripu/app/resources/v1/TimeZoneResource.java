@@ -51,7 +51,7 @@ public class TimeZoneResource {
     public TimeZoneHistory setTimeZone(@Scope({OAuthScope.USER_BASIC}) final AccessToken token,
                                        final TimeZoneHistory timeZoneHistory){
 
-        final List<DeviceAccountPair> deviceAccountMap = this.deviceDAO.getDeviceAccountMapFromAccountId(token.accountId);
+        final List<DeviceAccountPair> deviceAccountMap = this.deviceDAO.getSensesForAccountId(token.accountId);
         if(deviceAccountMap.size() == 0){
             LOGGER.error("User {} tires to write timezone without connected to a Morpheus.", token.accountId);
 

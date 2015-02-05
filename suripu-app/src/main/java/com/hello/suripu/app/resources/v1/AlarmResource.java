@@ -63,7 +63,7 @@ public class AlarmResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<Alarm> getAlarms(@Scope({OAuthScope.ALARM_READ}) final AccessToken token){
         LOGGER.debug("Before getting device account map from account_id");
-        final List<DeviceAccountPair> deviceAccountMap = this.deviceDAO.getDeviceAccountMapFromAccountId(token.accountId);
+        final List<DeviceAccountPair> deviceAccountMap = this.deviceDAO.getSensesForAccountId(token.accountId);
         if(deviceAccountMap.size() == 0){
             LOGGER.error("User {} tries to retrieve alarm without paired with a Morpheus.", token.accountId);
             throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(
