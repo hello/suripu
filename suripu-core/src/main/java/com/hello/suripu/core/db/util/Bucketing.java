@@ -80,7 +80,7 @@ public class Bucketing {
 
             float sensorValue = 0;
             if(sensorName.equals("humidity")) {
-                sensorValue = DataUtils.dbIntToFloat(deviceData.ambientHumidity);
+                sensorValue = DataUtils.calibrateHumidity(deviceData.ambientTemperature, deviceData.ambientHumidity);
             } else if(sensorName.equals("temperature")) {
                 sensorValue = DataUtils.calibrateTemperature(deviceData.ambientTemperature);
             } else if (sensorName.equals("particulates")) {
@@ -120,31 +120,19 @@ public class Bucketing {
 
         final AllSensorSampleMap populatedMap = new AllSensorSampleMap();
 
-//        final Map<Sensor, Map<Long, Sample>> map = new HashMap<>();
-//        for (Sensor sensor : Sensor.values()) {
-//            final Map<Long, Sample> values = new HashMap<>();
-//            map.put(sensor, values);
-//        }
-
         for(final DeviceData deviceData: deviceDataList) {
 
             final Long newKey = deviceData.dateTimeUTC.getMillis();
 
             final float lightValue = (float) deviceData.ambientLight;
             final float soundValue = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB));
-            final float humidityValue = DataUtils.dbIntToFloat(deviceData.ambientHumidity);
+            final float humidityValue = DataUtils.calibrateHumidity(deviceData.ambientTemperature, deviceData.ambientHumidity);
             final float temperatureValue = DataUtils.calibrateTemperature(deviceData.ambientTemperature);
             final float particulatesValue = (float) DataUtils.convertRawDustCountsToAQI(deviceData.ambientDustMax, deviceData.firmwareVersion);
             final int waveCount = deviceData.waveCount;
 
             populatedMap.addSample(newKey, deviceData.offsetMillis,
                     lightValue, soundValue, humidityValue, temperatureValue, particulatesValue, waveCount);
-
-//            map.get(Sensor.HUMIDITY).put(newKey, new Sample(newKey, humidityValue, deviceData.offsetMillis));
-//            map.get(Sensor.TEMPERATURE).put(newKey, new Sample(newKey, temperatureValue, deviceData.offsetMillis));
-//            map.get(Sensor.PARTICULATES).put(newKey, new Sample(newKey, particulatesValue, deviceData.offsetMillis));
-//            map.get(Sensor.LIGHT).put(newKey, new Sample(newKey, lightValue, deviceData.offsetMillis));
-//            map.get(Sensor.SOUND).put(newKey, new Sample(newKey, soundValue, deviceData.offsetMillis));
 
             LOGGER.trace("Overriding {}", newKey);
         }

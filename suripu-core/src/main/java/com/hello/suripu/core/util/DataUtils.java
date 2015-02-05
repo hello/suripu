@@ -121,4 +121,26 @@ public class DataUtils{
     public static float calibrateAudio(final float backgroundDB, final float peakDB) {
         return Math.max(peakDB - 40, 0) + 25;
     }
+
+    private static double computeDewPoint(final double temperature, final double humidity) {
+        final double saturationVaporPressure = 6.11 * Math.pow(10.0, (7.5 * (temperature / (237.7 + temperature))));
+        final double actualVaporPressure = (humidity * saturationVaporPressure) / 100.0;
+        final double logVaporPressure = Math.log(actualVaporPressure);
+        return (-430.22 + 237.7 * logVaporPressure) / (-1.0 * logVaporPressure + 19.08);
+    }
+
+    private static double computeHumidity(final double temperature, final double dewPoint) {
+        final double saturationVaporPressure = 6.11 * Math.pow(10.0, (7.5 * (temperature / (237.7 + temperature))));
+        final double actualPressure = 6.11 * Math.pow(10.0, (7.5 * (dewPoint / (237.7 + dewPoint))));
+        return (actualPressure/saturationVaporPressure) * 100.0;
+    }
+
+    public static float calibrateHumidity(final int temperatureFromDB, final int humidityFromDB) {
+        // from http://www.gorhamschaffler.com/humidity_formulas.htm
+        final double temperature = (double) dbIntToFloat(temperatureFromDB); // celsius
+        final double dewPoint = computeDewPoint(temperature,  (double) dbIntToFloat(humidityFromDB));
+        final double adjustedTemperature = temperature - ((double) TEMPERATURE_CALIBRATION_FACTOR_IN_CELSIUS/FLOAT_2_INT_MULTIPLIER);
+        final double adjustedHumidity = computeHumidity(adjustedTemperature, dewPoint);
+        return (float) adjustedHumidity;
+    }
 }
