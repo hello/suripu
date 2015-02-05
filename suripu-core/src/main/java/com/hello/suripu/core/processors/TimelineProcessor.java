@@ -110,7 +110,7 @@ public class TimelineProcessor {
 
     private List<Event> getAlarmEvents(final Long accountId, final DateTime evening, final DateTime morning, final Integer offsetMillis) {
 
-        final List<DeviceAccountPair> pairs = deviceDAO.getDeviceAccountMapFromAccountId(accountId);
+        final List<DeviceAccountPair> pairs = deviceDAO.getSensesForAccountId(accountId);
         if(pairs.size() > 1) {
             LOGGER.info("Account {} has several sense paired. Not displaying alarm event", accountId);
             return Collections.EMPTY_LIST;

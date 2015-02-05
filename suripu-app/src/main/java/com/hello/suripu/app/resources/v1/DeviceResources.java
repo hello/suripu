@@ -256,7 +256,7 @@ public class DeviceResources {
             LOGGER.debug("ID not found for account {}", email);
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
-        final List<DeviceAccountPair> devices = deviceDAO.getDeviceAccountMapFromAccountId(accountId.get());
+        final List<DeviceAccountPair> devices = deviceDAO.getSensesForAccountId(accountId.get());
 
         final List<String> deviceIdList = new ArrayList<>();
         for (DeviceAccountPair pair: devices) {

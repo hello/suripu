@@ -89,7 +89,7 @@ public class TimeZoneResourceIT {
 
             final DeviceDAO deviceDAO = mock(DeviceDAO.class);
             this.deviceAccountPairs.add(new DeviceAccountPair(1L, 1L, "test morpheus"));
-            when(deviceDAO.getDeviceAccountMapFromAccountId(1L)).thenReturn(ImmutableList.copyOf(this.deviceAccountPairs));
+            when(deviceDAO.getSensesForAccountId(1L)).thenReturn(ImmutableList.copyOf(this.deviceAccountPairs));
 
             this.timeZoneResource = new TimeZoneResource(this.timeZoneHistoryDAODynamoDB,
                     mergedUserInfoDynamoDB, deviceDAO);

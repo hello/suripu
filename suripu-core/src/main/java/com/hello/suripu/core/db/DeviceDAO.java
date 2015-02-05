@@ -59,10 +59,6 @@ public interface DeviceDAO extends Transactional<DeviceDAO> {
             @Bind("device_name") String deviceName);
 
 
-    @RegisterMapper(DeviceAccountPairMapper.class)
-    @SqlQuery("SELECT * FROM account_device_map WHERE account_id = :account_id AND active = TRUE ORDER BY id DESC;")
-    ImmutableList<DeviceAccountPair> getDeviceAccountMapFromAccountId(@Bind("account_id") final Long accountId);
-
     @SingleValueResult(Long.class)
     @SqlQuery("SELECT account_id FROM account_device_map WHERE " +
             "account_id != :account_id AND device_name = " +
@@ -82,10 +78,6 @@ public interface DeviceDAO extends Transactional<DeviceDAO> {
     ImmutableList<DeviceAccountPair> getLinkedAccountFromPillId(@Bind("pill_id") String deviceId);
 
     @RegisterMapper(DeviceAccountPairMapper.class)
-    @SqlQuery("SELECT * FROM account_tracker_map WHERE account_id = :account_id;")
-    public abstract ImmutableList<DeviceAccountPair> getTrackerIds(@Bind("account_id") Long accountId);
-
-    @RegisterMapper(DeviceAccountPairMapper.class)
     @SqlQuery("SELECT * FROM account_tracker_map WHERE active = :is_active;")
     ImmutableList<DeviceAccountPair> getAllPills(@Bind("is_active") Boolean isActive);
 
@@ -100,13 +92,6 @@ public interface DeviceDAO extends Transactional<DeviceDAO> {
 
     @SqlUpdate("DELETE FROM account_tracker_map WHERE id = :id")
     Integer unregisterPillByInternalPillId(@Bind("id") Long id);
-
-    @SqlUpdate("UPDATE account_tracker_map SET active = FALSE, last_updated = NOW() WHERE device_id = :device_id and active = TRUE;")
-    Integer unregisterTracker(@Bind("device_id") final String id);
-
-    @SqlUpdate("UPDATE account_device_map SET active = FALSE, last_updated = NOW() WHERE device_id = :device_id and active = TRUE;")
-    Integer unregisterSense(@Bind("device_id") final String id);
-
 
     @SqlUpdate("DELETE FROM account_tracker_map WHERE device_id = :device_id and account_id = :account_id;")
     Integer deletePillPairing(@Bind("device_id") final String id, @Bind("account_id") Long accountId);
