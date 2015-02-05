@@ -299,7 +299,7 @@ public class TimelineProcessor {
         for (final Event sleepEvent : sleepEvents){
             eventsWithSleepEvents = TimelineUtils.insertOneMinuteDurationEvents(eventsWithSleepEvents, sleepEvent);
         }
-        
+
         final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(eventsWithSleepEvents);
         List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(cleanedUpEvents);
 

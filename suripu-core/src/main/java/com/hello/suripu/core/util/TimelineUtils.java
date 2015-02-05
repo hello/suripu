@@ -2,6 +2,7 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.LightSegment;
 import com.hello.suripu.algorithm.core.Segment;
@@ -514,47 +515,49 @@ public class TimelineUtils {
      * @return
      */
     public static SleepStats computeStats(final List<SleepSegment> segments, final int lightSleepThreshold) {
-        Integer soundSleepDuration = 0;
-        Integer lightSleepDuration = 0;
+        Integer soundSleepDurationInSecs = 0;
+        Integer lightSleepDurationInSecs = 0;
         int sleepDurationInSecs = 0;
         int inBedDurationInSecs = 0;
         Integer numberOfMotionEvents = 0;
-        long sleepTime = 0L;
-        Long wakeTime = 0L;
+        long sleepTimestampMillis = 0L;
+        long wakeUpTimestampMillis = 0L;
+        long outBedTimestampMillis = 0L;
         Integer sleepOnsetTimeMinutes = 0;
-        long inBedTime = 0L;
+        long inBedTimestampMillis = 0L;
 
         boolean sleepStarted = false;
         boolean inBedStarted = false;
 
         for(final SleepSegment segment : segments) {
             if (segment.getType() == Event.Type.IN_BED) {
-                inBedTime = segment.getTimestamp();
+                inBedTimestampMillis = segment.getTimestamp();
                 inBedStarted = true;
             }
 
             if(segment.getType() == Event.Type.SLEEP){
                 sleepStarted = true;
-                sleepTime = segment.getTimestamp();
+                sleepTimestampMillis = segment.getTimestamp();
             }
 
             if(segment.getType() == Event.Type.WAKE_UP && sleepStarted){  //On purpose dangling case, if no wakeup present
                 sleepStarted = false;
-                sleepDurationInSecs = (int) (segment.getTimestamp() - sleepTime) / DateTimeConstants.MILLIS_PER_SECOND;
+                sleepDurationInSecs = (int) (segment.getTimestamp() - sleepTimestampMillis) / DateTimeConstants.MILLIS_PER_SECOND;
             }
 
             if(segment.getType() == Event.Type.OUT_OF_BED && inBedStarted){
                 inBedStarted = false;
-                inBedDurationInSecs = (int) (segment.getTimestamp() - inBedTime) / DateTimeConstants.MILLIS_PER_SECOND;
+                outBedTimestampMillis = segment.getTimestamp();
+                inBedDurationInSecs = (int) (segment.getTimestamp() - inBedTimestampMillis) / DateTimeConstants.MILLIS_PER_SECOND;
             }
 
             if(!sleepStarted){
                 continue;
             }
             if (segment.getSleepDepth() >= lightSleepThreshold) {
-                soundSleepDuration += segment.getDurationInSeconds();
+                soundSleepDurationInSecs += segment.getDurationInSeconds();
             } else if(segment.getSleepDepth() >= 0 && segment.getSleepDepth() < lightSleepThreshold) {
-                lightSleepDuration += segment.getDurationInSeconds();
+                lightSleepDurationInSecs += segment.getDurationInSeconds();
             }
 
             if(segment.getType() == Event.Type.MOTION){
@@ -563,22 +566,32 @@ public class TimelineUtils {
             LOGGER.trace("duration in seconds = {}", segment.getDurationInSeconds());
         }
 
+        if(sleepDurationInSecs == 0 && inBedDurationInSecs == 0 && segments.size() > 0){
+            final List<SleepSegment> sortedSegments = Ordering.natural().sortedCopy(segments);
 
-        final Integer soundSleepDurationInMinutes = Math.round(new Float(soundSleepDuration) / DateTimeConstants.SECONDS_PER_MINUTE);
-        final Integer lightSleepDurationInMinutes = Math.round(new Float(lightSleepDuration) / DateTimeConstants.SECONDS_PER_MINUTE);
+            // I want to keep the final :)
+            final long firstEventTimestamp = Math.max(sleepTimestampMillis, inBedTimestampMillis) == 0 ? sortedSegments.get(0).getTimestamp() : Math.max(sleepTimestampMillis, inBedTimestampMillis);
+            final long lastEventTimestamp = Math.min(wakeUpTimestampMillis, outBedTimestampMillis) == 0 ? sortedSegments.get(sortedSegments.size() - 1).getTimestamp() : Math.min(wakeUpTimestampMillis, outBedTimestampMillis);
+            if(lastEventTimestamp - firstEventTimestamp > 4 * DateTimeConstants.MILLIS_PER_HOUR){
+                inBedDurationInSecs = (int) ((lastEventTimestamp - firstEventTimestamp) / DateTimeConstants.MILLIS_PER_SECOND);
+            }
+        }
+
+        final Integer soundSleepDurationInMinutes = Math.round(new Float(soundSleepDurationInSecs) / DateTimeConstants.SECONDS_PER_MINUTE);
+        final Integer lightSleepDurationInMinutes = Math.round(new Float(lightSleepDurationInSecs) / DateTimeConstants.SECONDS_PER_MINUTE);
         final Integer sleepDurationInMinutes = Math.round(new Float(sleepDurationInSecs) / DateTimeConstants.SECONDS_PER_MINUTE);
         final Integer inBedDurationInMinutes = Math.round(new Float(inBedDurationInSecs) / DateTimeConstants.SECONDS_PER_MINUTE);
 
-        if (inBedTime > 0 && inBedTime < sleepTime) {
-            sleepOnsetTimeMinutes = (int) ((sleepTime - inBedTime)/MINUTE_IN_MILLIS);
+        if (inBedTimestampMillis > 0 && inBedTimestampMillis < sleepTimestampMillis) {
+            sleepOnsetTimeMinutes = (int) ((sleepTimestampMillis - inBedTimestampMillis)/MINUTE_IN_MILLIS);
         }
 
         final SleepStats sleepStats = new SleepStats(soundSleepDurationInMinutes,
                 lightSleepDurationInMinutes,
                 sleepDurationInMinutes == 0 ? inBedDurationInMinutes : sleepDurationInMinutes,
                 numberOfMotionEvents,
-                sleepTime,
-                wakeTime,
+                sleepTimestampMillis,
+                wakeUpTimestampMillis,
                 sleepOnsetTimeMinutes
         );
         LOGGER.debug("Sleepstats = {}", sleepStats);
