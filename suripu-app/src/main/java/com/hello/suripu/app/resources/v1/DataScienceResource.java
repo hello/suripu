@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.JoinedSensorMinuteData;
 import com.hello.suripu.core.models.DataScience.UserLabel;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -357,5 +358,38 @@ public class DataScienceResource extends BaseResource {
         return sleepLabelDAO.getUserLabelsByEmail(email);
     }
 
+
+    // APIs for Benjo's analysis
+
+    @GET
+    @Path("/sensors/email/{email}/{ts}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<JoinedSensorMinuteData> getJoinedSensorDataByEmail(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                                   @PathParam("email") String email,
+                                                                   @PathParam("ts") Long ts) {
+        LOGGER.debug("Getting joined sensor minute data for {} after {}", email, ts);
+        final Optional<Account> account = accountDAO.getByEmail(email);
+        if (!account.isPresent()) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        LOGGER.debug("{}", account.get());
+        if (!account.get().id.isPresent()) {
+            throw new WebApplicationException(Response.Status.NOT_ACCEPTABLE);
+        }
+        LOGGER.debug("Getting joined sensor minute data for account ID {}", account.get().id.get());
+        return deviceDataDAO.getJoinedSensorData(account.get().id.get(), new DateTime(ts));
+    }
+
+    @GET
+    @Path("/sensors/account_id/{account_id}/{ts}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<JoinedSensorMinuteData> getJoinedSensorDataByAccountId(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                                    @PathParam("account_id") Long accountId,
+                                                                    @PathParam("ts") Long ts) {
+        LOGGER.debug("Getting joined sensor minute data for account id {} after {}", accountId, ts);
+
+        return deviceDataDAO.getJoinedSensorData(accountId, new DateTime(ts));
     }
 }

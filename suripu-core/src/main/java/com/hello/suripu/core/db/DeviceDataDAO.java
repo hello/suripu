@@ -3,12 +3,14 @@ package com.hello.suripu.core.db;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.binders.BindDeviceData;
+import com.hello.suripu.core.db.mappers.JoinedSensorMinuteDataMapper;
 import com.hello.suripu.core.db.mappers.DeviceDataBucketMapper;
 import com.hello.suripu.core.db.mappers.DeviceDataMapper;
 import com.hello.suripu.core.db.util.Bucketing;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.AllSensorSampleMap;
+import com.hello.suripu.core.models.JoinedSensorMinuteData;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
@@ -472,4 +474,29 @@ public abstract class DeviceDataDAO {
     public abstract Optional<DeviceData> getAverageForNight(@Bind("account_id") final Long accountId,
                                                             @Bind("start_ts") final DateTime targetDate,
                                                             @Bind("end_ts") final DateTime endDate);
+
+    @RegisterMapper(JoinedSensorMinuteDataMapper.class)
+    @SingleValueResult(JoinedSensorMinuteData.class)
+    @SqlQuery("SELECT " +
+            "device_sensors_master.account_id, " +
+            "device_sensors_master.ts, " +
+            "device_sensors_master.ambient_light, " +
+            "device_sensors_master.audio_peak_disturbances_db, " +
+            "device_sensors_master.audio_num_disturbances, " +
+            "tracker_motion_master.svm_no_gravity, " +
+            "tracker_motion_master.kickoff_counts " +
+            "FROM " +
+            "device_sensors_master " +
+            "LEFT OUTER JOIN tracker_motion_master ON " +
+            "device_sensors_master.account_id = tracker_motion_master.account_id " +
+            "AND " +
+            "device_sensors_master.ts = tracker_motion_master.ts " +
+            "WHERE " +
+            "device_sensors_master.ts > :start_ts " +
+            "AND " +
+            "device_sensors_master.account_id = :account_id " +
+            "ORDER BY " +
+            "device_sensors_master.account_id,device_sensors_master.ts;")
+    public abstract List<JoinedSensorMinuteData> getJoinedSensorData(@Bind("account_id") final Long accountId,
+                                                 @Bind("start_ts") final DateTime startDateTime);
 }
