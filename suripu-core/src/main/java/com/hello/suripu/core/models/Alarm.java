@@ -21,6 +21,9 @@ import java.util.Set;
  */
 public class Alarm {
 
+    @JsonProperty("id")
+    public String id = "";
+
     @JsonProperty("year")
     public final int year;
 
@@ -107,7 +110,8 @@ public class Alarm {
                  @JsonProperty("enabled") boolean isEnabled,
                  @JsonProperty("editable") boolean isEditable,
                  @JsonProperty("smart") boolean isSmart,
-                 @JsonProperty("sound") final AlarmSound sound){
+                 @JsonProperty("sound") final AlarmSound sound,
+                 @JsonProperty("id") final String id){
         this.dayOfWeek = dayOfWeek;
         this.hourOfDay = hourOfDay;
         this.minuteOfHour = minuteOfHour;
@@ -127,6 +131,7 @@ public class Alarm {
         this.isEditable = isEditable;
 
         this.isSmart = isSmart;
+        this.id = id;
 
         for(final Integer d:dayOfWeek){
             if(d < DateTimeConstants.MONDAY || d > DateTimeConstants.SUNDAY){
@@ -177,6 +182,7 @@ public class Alarm {
 
     public static class Builder{
 
+        private String id;
         private int year;
         private int month;
         private int day;
@@ -190,6 +196,7 @@ public class Alarm {
         private AlarmSound sound;
 
         public Builder(){
+            id = "";
             sound = null;
         }
 
@@ -262,6 +269,11 @@ public class Alarm {
             return this;
         }
 
+        @JsonProperty("id")
+        public Builder withId(String id){
+            this.id = id;
+            return this;
+        }
 
         public Alarm build(){
             return new Alarm(this.year, this.month, this.day, this.hourOfDay, this.minuteOfHour, this.dayOfWeek,
@@ -269,7 +281,7 @@ public class Alarm {
                     this.isEnabled,
                     this.isEditable,
                     this.isSmart,
-                    this.sound);
+                    this.sound, this.id);
         }
 
 
@@ -365,7 +377,8 @@ public class Alarm {
                             false,
                             alarm.isEditable,
                             alarm.isSmart,
-                            alarm.sound);
+                            alarm.sound,
+                            alarm.id);
                     newAlarmList.add(disabledAlarm);
                 }else{
                     newAlarmList.add(alarm);

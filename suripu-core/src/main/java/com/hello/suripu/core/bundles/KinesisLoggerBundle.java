@@ -9,7 +9,7 @@ import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.filter.Filter;
 import ch.qos.logback.core.spi.FilterReply;
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.handlers.AsyncHandler;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
 import com.amazonaws.services.kinesis.model.PutRecordRequest;
@@ -136,7 +136,7 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
 
         final KinesisLoggerConfiguration kinesisLoggerConfiguration = getConfiguration(configuration);
         if (kinesisLoggerConfiguration.isEnabled()) {
-            final AWSCredentialsProvider awsCredentialsProvider = new EnvironmentVariableCredentialsProvider();
+            final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
             final AmazonKinesisAsyncClient asyncClient = new AmazonKinesisAsyncClient(awsCredentialsProvider);
             final String appVersion = (getClass().getPackage().getImplementationVersion() == null) ? "0.0.0" : getClass().getPackage().getImplementationVersion();
             final Appender<ILoggingEvent> appender = new KinesisAppender(asyncClient, kinesisLoggerConfiguration, appVersion);

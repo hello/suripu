@@ -208,7 +208,7 @@ public class MergedUserInfoDynamoDBIT {
                 insertedAlarmRingTime.getDayOfMonth(),
                 insertedAlarmRingTime.getHourOfDay(),
                 insertedAlarmRingTime.getMinuteOfHour(),
-                new HashSet<Integer>(), false, true, true, false, new AlarmSound(0, "Pluse")));
+                new HashSet<Integer>(), false, true, true, false, new AlarmSound(0, "Pluse"), "id"));
         this.mergedUserInfoDynamoDB.setAlarms(senseId, accountId, alarms, DateTimeZone.getDefault());
 
         assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().actualRingTimeUTC,

@@ -66,8 +66,8 @@ public class AlarmResource {
         final List<DeviceAccountPair> deviceAccountMap = this.deviceDAO.getDeviceAccountMapFromAccountId(token.accountId);
         if(deviceAccountMap.size() == 0){
             LOGGER.error("User {} tries to retrieve alarm without paired with a Morpheus.", token.accountId);
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(
-                    new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), "Please make sure your Sense is paired to your account before setting your alarm.")).build());
+            throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(
+                    new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), "Please make sure your Sense is paired to your account before setting your alarm.")).build());
         }
 
         try {
