@@ -131,7 +131,7 @@ public class Bucketing {
             final Long newKey = deviceData.dateTimeUTC.getMillis();
 
             final float lightValue = (float) deviceData.ambientLight;
-            final float soundValue = DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB);
+            final float soundValue = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB));
             final float humidityValue = DataUtils.dbIntToFloat(deviceData.ambientHumidity);
             final float temperatureValue = DataUtils.calibrateTemperature(deviceData.ambientTemperature);
             final float particulatesValue = (float) DataUtils.convertRawDustCountsToAQI(deviceData.ambientDustMax, deviceData.firmwareVersion);
