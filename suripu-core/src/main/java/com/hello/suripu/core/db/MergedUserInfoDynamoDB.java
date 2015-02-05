@@ -95,6 +95,15 @@ public class MergedUserInfoDynamoDB {
         items.put(TIMEZONE_ID_ATTRIBUTE_NAME, new AttributeValueUpdate()
                 .withAction(AttributeAction.PUT)
                 .withValue(new AttributeValue().withS(timeZone.getID())));
+        items.put(ACTUAL_RING_TIME_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                .withAction(AttributeAction.PUT)
+                .withValue(new AttributeValue().withN(String.valueOf(RingTime.createEmpty().expectedRingTimeUTC))));
+        items.put(EXPECTED_RING_TIME_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                .withAction(AttributeAction.PUT)
+                .withValue(new AttributeValue().withN(String.valueOf(RingTime.createEmpty().expectedRingTimeUTC))));
+        items.put(IS_SMART_ALARM_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                .withAction(AttributeAction.PUT)
+                .withValue(new AttributeValue().withBOOL(RingTime.createEmpty().isEmpty())));
         return items;
     }
 
@@ -462,7 +471,7 @@ public class MergedUserInfoDynamoDB {
         final ObjectMapper mapper = new ObjectMapper();
         try {
             final long[] soundIds = mapper.readValue(soundArrayJSON, long[].class);
-            boolean isSmart = true;
+            boolean isSmart = false;
             if(item.containsKey(IS_SMART_ALARM_ATTRIBUTE_NAME)){
                isSmart = item.get(IS_SMART_ALARM_ATTRIBUTE_NAME).getBOOL();
             }
