@@ -98,7 +98,12 @@ public interface SleepLabelDAO extends Transactional<SleepLabelDAO> {
 
     @RegisterMapper(UserLabelMapper.class)
     @SqlQuery("SELECT * FROM user_labels " +
-              "WHERE email = :email AND night_date = :night_date")
+              "WHERE email = :email AND night_date = :night_date ORDER BY id DESC")
     List<UserLabel> getUserLabelsByEmailAndNight(@Bind("email") String email,
                                                  @Bind("night_date") DateTime nightDate);
+
+    @RegisterMapper(UserLabelMapper.class)
+    @SqlQuery("SELECT * FROM user_labels " +
+              "WHERE email = :email ORDER BY id DESC")
+    List<UserLabel> getUserLabelsByEmail(@Bind("email") String email);
 }
