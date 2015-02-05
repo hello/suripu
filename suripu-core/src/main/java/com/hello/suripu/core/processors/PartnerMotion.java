@@ -47,7 +47,7 @@ public class PartnerMotion {
 
             final MotionEvent myMotionEvent = myMotionEventsMap.get(partnerMotionEvent.getStartTimestamp());
             if(myMotionEvent == null){
-                LOGGER.debug("My motion not found at time {}",
+                LOGGER.trace("My motion not found at time {}",
                         new DateTime(partnerMotionEvent.getStartTimestamp(),
                                 DateTimeZone.forOffsetMillis(partnerMotionEvent.getTimezoneOffset())));
                 continue;
@@ -61,7 +61,7 @@ public class PartnerMotion {
                 continue;
             }
 
-            LOGGER.debug("user {}, partner {}", mySleepDepth, partnerSleepDepth);
+            LOGGER.trace("user depth {}, partner depth {}", mySleepDepth, partnerSleepDepth);
 
             // check if there's any user movement in the preceding minutes
             boolean noPriorMovement = true;
@@ -72,7 +72,7 @@ public class PartnerMotion {
                 }
 
                 if (myPriorMotionEvent.getSleepDepth() < ACCOUNT_DEPTH_THRESHOLD) {
-                    LOGGER.debug("{} prior movement {} {}", partnerMotionEvent.getStartTimestamp(), myPriorMotionEvent.getStartTimestamp(), myPriorMotionEvent.getSleepDepth());
+                    LOGGER.trace("{} prior movement {} {}", partnerMotionEvent.getStartTimestamp(), myPriorMotionEvent.getStartTimestamp(), myPriorMotionEvent.getSleepDepth());
                     noPriorMovement = false;
                     break;
                 }
@@ -89,7 +89,6 @@ public class PartnerMotion {
 
         }
 
-        //return TimelineUtils.categorizeSleepDepth(affectedSegments);  // normalized
         return ImmutableList.copyOf(affectedEvents);
     }
 }
