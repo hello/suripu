@@ -110,7 +110,7 @@ public class CurrentRoomState {
                                                final DateTime referenceTime,
                                                final Integer thresholdInMinutes) {
 
-        final float humidity = DataUtils.dbIntToFloat(rawHumidity);
+        final float humidity = DataUtils.calibrateHumidity(rawTemperature, rawHumidity);
         final float temperature = DataUtils.calibrateTemperature(rawTemperature);
         final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(rawDustMax, firmwareVersion));
         final float sound = DataUtils.calibrateAudio(DataUtils.convertAudioRawToDB(rawBackgroundNoise), DataUtils.convertAudioRawToDB(rawPeakNoise));
@@ -153,7 +153,7 @@ public class CurrentRoomState {
     public static CurrentRoomState fromDeviceData(final DeviceData data, final DateTime referenceTime, final Integer thresholdInMinutes, final String tempUnit) {
 
         final float temp = DataUtils.calibrateTemperature(data.ambientTemperature);
-        final float humidity = DataUtils.dbIntToFloat(data.ambientHumidity);
+        final float humidity = DataUtils.calibrateHumidity(data.ambientTemperature, data.ambientHumidity);
         final float light = data.ambientLight; // dvt units values are already converted to lux
         final float sound = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(data.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(data.audioPeakDisturbancesDB));
         // max value is in raw counts, conversion needed
