@@ -301,7 +301,7 @@ public class RegisterResource extends BaseResource {
                     LOGGER.warn("Attempting to pair pill {} to account {}", pillId, accountId);
                     final PairState pairState = getPillPairingState(senseId, pillId, accountId);
                     if (pairState == PairState.NOT_PAIRED) {
-                        this.deviceDAO.registerTracker(accountId, deviceId);
+                        this.deviceDAO.registerPill(accountId, deviceId);
                         LOGGER.warn("Registered pill {} to account {}", pillId, accountId);
                         this.setPillColor(senseId, accountId, deviceId);
                     }

@@ -88,7 +88,7 @@ public class Bucketing {
             } else if (sensorName.equals("light")) {
                 sensorValue = (float) deviceData.ambientLight;
             } else if (sensorName.equals("sound")) {
-                sensorValue = DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB);
+                sensorValue = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB));
             }else if(sensorName.equals("wave_count")) {
                 sensorValue = deviceData.waveCount;
             }else if(sensorName.equals("hold_count")) {
@@ -131,7 +131,7 @@ public class Bucketing {
             final Long newKey = deviceData.dateTimeUTC.getMillis();
 
             final float lightValue = (float) deviceData.ambientLight;
-            final float soundValue = DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB);
+            final float soundValue = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB));
             final float humidityValue = DataUtils.dbIntToFloat(deviceData.ambientHumidity);
             final float temperatureValue = DataUtils.calibrateTemperature(deviceData.ambientTemperature);
             final float particulatesValue = (float) DataUtils.convertRawDustCountsToAQI(deviceData.ambientDustMax, deviceData.firmwareVersion);
