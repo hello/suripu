@@ -296,11 +296,10 @@ public class TimelineProcessor {
         writeMotionMetrics(this.motionEventDistribution, convertedEvents);
         final List<Event> smoothedEvents = TimelineUtils.smoothEvents(convertedEvents);
         List<Event> eventsWithSleepEvents = smoothedEvents;
-        if(sleepSegmentOptional.isPresent() || inBedSegmentOptional.isPresent()) {
-            for (final Event sleepEvent : sleepEvents){
-                eventsWithSleepEvents = TimelineUtils.insertOneMinuteDurationEvents(eventsWithSleepEvents, sleepEvent);
-            }
+        for (final Event sleepEvent : sleepEvents){
+            eventsWithSleepEvents = TimelineUtils.insertOneMinuteDurationEvents(eventsWithSleepEvents, sleepEvent);
         }
+
         final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(eventsWithSleepEvents);
         List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(cleanedUpEvents);
 
