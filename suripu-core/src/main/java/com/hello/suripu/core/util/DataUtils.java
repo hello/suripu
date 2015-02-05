@@ -118,7 +118,7 @@ public class DataUtils{
         return valueFromDB / FLOAT_2_INT_MULTIPLIER;
     }
 
-    public static float calibrateAudio(final float background, final Integer peak) {
-        return Math.max(peak - 40, 0) + 25;
+    public static float calibrateAudio(final float backgroundDB, final float peakDB) {
+        return Math.max(peakDB - 40, 0) + 25;
     }
 }

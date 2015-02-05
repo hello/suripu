@@ -88,7 +88,7 @@ public class Bucketing {
             } else if (sensorName.equals("light")) {
                 sensorValue = (float) deviceData.ambientLight;
             } else if (sensorName.equals("sound")) {
-                sensorValue = DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB);
+                sensorValue = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB));
             }else if(sensorName.equals("wave_count")) {
                 sensorValue = deviceData.waveCount;
             }else if(sensorName.equals("hold_count")) {

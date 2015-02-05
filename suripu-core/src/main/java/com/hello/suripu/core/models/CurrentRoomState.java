@@ -113,7 +113,7 @@ public class CurrentRoomState {
         final float humidity = DataUtils.dbIntToFloat(rawHumidity);
         final float temperature = DataUtils.calibrateTemperature(rawTemperature);
         final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(rawDustMax, firmwareVersion));
-        final float sound = DataUtils.calibrateAudio(DataUtils.convertAudioRawToDB(rawBackgroundNoise), rawPeakNoise);
+        final float sound = DataUtils.calibrateAudio(DataUtils.convertAudioRawToDB(rawBackgroundNoise), DataUtils.convertAudioRawToDB(rawPeakNoise));
         return fromTempHumidDust(temperature, humidity, particulatesAQI, rawLight, sound, new DateTime(timestamp, DateTimeZone.UTC), referenceTime, thresholdInMinutes, DEFAULT_TEMP_UNIT);
 
     }
