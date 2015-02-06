@@ -397,7 +397,7 @@ public class DataScienceResource extends BaseResource {
     private Map<String, List<Sample>> getJoinedSensorData(final Long accountId, final Long ts) {
         LOGGER.debug("Getting joined sensor minute data for account id {} after {}", accountId, ts);
 
-        ImmutableList<TrackerMotion> motionData = trackerMotionDAO.getBetweenLocalUTC(
+        ImmutableList<TrackerMotion> motionData = trackerMotionDAO.getBetween(
                 accountId,
                 new DateTime(ts, DateTimeZone.UTC),
                 new DateTime(ts, DateTimeZone.UTC).plusDays(7)
@@ -414,7 +414,7 @@ public class DataScienceResource extends BaseResource {
                     .entity("This account does not have a sense recently").build());
         }
 
-        Optional<AllSensorSampleList> allSensorsData = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
+        Optional<AllSensorSampleList> allSensorsData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
                 new DateTime(ts, DateTimeZone.UTC).getMillis(),
                 new DateTime(ts, DateTimeZone.UTC).plusDays(7).getMillis(),
                 accountId,
