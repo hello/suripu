@@ -90,7 +90,7 @@ public class ProvisionResource {
 
 
     @GET
-    @Path("check/p/{serial_number}")
+    @Path("/check/p/{serial_number}")
     @Produces(MediaType.TEXT_PLAIN)
     public Response checkPillBySerialNumber(@PathParam("serial_number") final String serialNumber) {
         final Optional<PillProvision> pillProvisionOptional = pillProvisionDAO.getBySN(serialNumber);
