@@ -88,7 +88,7 @@ public class PillScoreProcessor extends HelloBaseRecordProcessor {
                         .withSecondOfMinute(0)
                         .withMillisOfSecond(0);
 
-                if(pillData.hasBatteryLevel()) {
+                if(!pillData.hasBatteryLevel()) {
 
                     final Optional<byte[]> optionalKeyBytes = keyStore.get(pillData.getDeviceId());
 
