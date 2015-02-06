@@ -81,7 +81,6 @@ public class TrackerMotion {
     public static TrackerMotion create(final SenseCommandProtos.pill_data pill_data, final DeviceAccountPair accountPair, final DateTimeZone timeZone, final byte[] encryptionKey) {
         final PillPayloadV2 payloadV2 = TrackerMotion.data(pill_data, encryptionKey);
         final Long timestampInMillis = Utils.convertTimestampInSecondsToTimestampInMillis(pill_data.getTimestamp());
-        // WARNING: we assume timeZone is present.
         final Integer timeZoneOffset = timeZone.getOffset(timestampInMillis);
 
         return new TrackerMotion(
