@@ -59,6 +59,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
             try {
                 final SenseCommandProtos.batched_pill_data batched_pill_data = SenseCommandProtos.batched_pill_data.parseFrom(record.getData().array());
                 for(final SenseCommandProtos.pill_data data : batched_pill_data.getPillsList()) {
+
                     final Optional<byte[]> decryptionKey = pillKeyStore.get(data.getDeviceId());
                     //TODO: Get the actual decryption key.
                     if(!decryptionKey.isPresent()) {
@@ -73,15 +74,11 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                     }
 
                     final DeviceAccountPair pair = optionalPair.get();
-
                     // Warning: mutable state!!!
                     Optional<UserInfo> userInfoOptional = mergedUserInfoDynamoDB.getInfo(batched_pill_data.getDeviceId(), pair.accountId);
-                    if(!userInfoOptional.isPresent()) {
-                        // TODO: query DB to find which Sense and query mergedUserInfo again.
-                    }
 
                     if(!userInfoOptional.isPresent()) {
-                        LOGGER.error("Missing UserInfo for account: {} and pill_id = {}", pair.accountId, pair.externalDeviceId);
+                        LOGGER.error("Missing UserInfo for account: {} and pill_id = {} and sense_id = {}", pair.accountId, pair.externalDeviceId, batched_pill_data.getDeviceId());
                         continue;
                     }
 
@@ -96,7 +93,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                     if(data.hasMotionDataEntrypted()){
                         final TrackerMotion trackerMotion = TrackerMotion.create(data, pair, timeZoneOptional.get(), decryptionKey.get());
                         trackerData.add(trackerMotion);
-                        LOGGER.debug("Tracker Data added for batch insert");
+                        LOGGER.debug("Tracker Data added for batch insert for pill_id = {}", pair.externalDeviceId);
                     }
 
                     if(data.hasBatteryLevel()){
@@ -115,10 +112,12 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
         }
 
         if (trackerData.size() > 0) {
+            LOGGER.info("About to batch insert: {} tracker motion samples", trackerData.size());
             this.trackerMotionDAO.batchInsertTrackerMotionData(trackerData, this.batchSize);
-
+            LOGGER.info("Finished batch insert: {} tracker motion samples", trackerData.size());
             try {
                 iRecordProcessorCheckpointer.checkpoint();
+                LOGGER.info("Successful checkpoint.");
             } catch (InvalidStateException e) {
                 LOGGER.error("checkpoint {}", e.getMessage());
             } catch (ShutdownException e) {

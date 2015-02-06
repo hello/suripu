@@ -223,7 +223,6 @@ pill_key_store_dynamo_db:
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
-    pill_data : test-pill-suripu
     audio_features : audio_features
     activity_stream : activity_stream
     registrations: registrations
