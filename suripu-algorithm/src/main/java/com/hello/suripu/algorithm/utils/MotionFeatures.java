@@ -50,7 +50,7 @@ public class MotionFeatures {
                     continue;
                 }
 
-                final long timestamp = window.getLast().timestamp;
+                final long timestamp = (window.getLast().timestamp  - window.getFirst().timestamp) / 2 + window.getFirst().timestamp;
                 final int offsetMillis = window.getLast().offsetMillis;
                 switch (featureType){
                     case MAX_AMPLITUDE:
@@ -67,7 +67,7 @@ public class MotionFeatures {
             }
 
             if(window.size() > 0){
-                final long timestamp = window.getLast().timestamp;
+                final long timestamp = (window.getLast().timestamp  - window.getFirst().timestamp) / 2 + window.getFirst().timestamp;
                 final int offsetMillis = window.getLast().offsetMillis;
                 switch (featureType){
                     case MAX_AMPLITUDE:
