@@ -51,15 +51,26 @@ public class TrackerMotionUtilTest {
 
         final byte[] encrypted = new byte[]{(byte)0xFE, (byte)0xD2, 0x70, 0x18};
         final byte[] expected = new byte[]{0x67, 0x5B, (byte)0xB0, 0x69};
-        try {
-            final byte[] actual = TrackerMotion.Utils.counterModeDecrypt(new byte[16], nonce, encrypted);
-            assertThat(actual, is(expected));
-
-        } catch (IllegalArgumentException e) {
-            LOGGER.error(e.getMessage());
-        }
+        final byte[] actual = TrackerMotion.Utils.counterModeDecrypt(new byte[16], nonce, encrypted);
+        assertThat(actual, is(expected));
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testBadAESDecrypt(){
+        // Nonce: 3D F9 53 77 85 CF BD C0
+        // Raw Payload: 67 5B B0 69
+        // AES: 04 00  bytes
+        // Encrypted Payload: 3D F9 53 77 85 CF BD C0 FE D2 70 18
+
+        final byte badByte = 0x00;
+        final byte[] nonce = new byte[]{badByte, (byte)0xF9, 0x53, 0x77,
+                (byte)0x85, (byte)0xCF, (byte)0xBD, (byte)0xC0};
+
+        final byte[] encrypted = new byte[]{(byte)0xFE, (byte)0xD2, 0x70, 0x18};
+        final byte[] expected = new byte[]{0x67, 0x5B, (byte)0xB0, 0x69};
+        final byte[] actual = TrackerMotion.Utils.counterModeDecrypt(new byte[16], nonce, encrypted);
+        assertThat(actual, is(expected));
+    }
 
     @Test
     public void testDecryptEncryptedPillData(){
@@ -80,18 +91,13 @@ public class TrackerMotionUtilTest {
             LOGGER.error(e.getMessage());
         }
 
+        final TrackerMotion.PillPayloadV2 payloadV2 = TrackerMotion.Utils.encryptedToRaw(new byte[16], encrypted);
 
-        long actual = -1;
-        try {
-            actual = TrackerMotion.Utils.encryptedToRaw(new byte[16], encrypted);
-
-
-        } catch (IllegalArgumentException e) {
-            LOGGER.error(e.getMessage());
-        }
-
-        assertThat(actual, is(expectedLong));
+        assertThat(payloadV2.maxAmplitude, is(expectedLong));
     }
+
+
+
 
     // F4 A1 F4 34 0D BF 59 9A 91 C6 1F 72 40 64 E6 50
 
@@ -116,6 +122,7 @@ public class TrackerMotionUtilTest {
         }
 
         byte[] key = Hex.decodeHex("F4A1F4340DBF599A91C61F724064E650".toCharArray());
-        long   actual = TrackerMotion.Utils.encryptedToRaw(key, encrypted);
+        TrackerMotion.PillPayloadV2 payloadV2 = TrackerMotion.Utils.encryptedToRaw(key, encrypted);
+        assertThat(payloadV2.maxAmplitude == 0, is(false));
     }
 }

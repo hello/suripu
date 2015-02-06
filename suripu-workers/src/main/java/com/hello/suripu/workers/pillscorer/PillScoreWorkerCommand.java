@@ -17,8 +17,8 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.SleepScoreDAO;
-import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
@@ -93,7 +93,7 @@ public final class PillScoreWorkerCommand extends ConfiguredCommand<PillScoreWor
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
         LOGGER.debug("{}", queueNames);
-        final String queueName = queueNames.get(QueueName.PILL_DATA);
+        final String queueName = queueNames.get(QueueName.BATCH_PILL_DATA);
         LOGGER.info("\n\n\n!!! This worker is using the following queue: {} !!!\n\n\n", queueName);
 
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
@@ -120,23 +120,17 @@ public final class PillScoreWorkerCommand extends ConfiguredCommand<PillScoreWor
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
-        final AmazonDynamoDB tzDynamoDB = new AmazonDynamoDBClient(awsCredentialsProvider);
-        tzDynamoDB.setEndpoint(configuration.getTimezoneHistoryConfiguration().getEndpoint());
-
-        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDB = new TimeZoneHistoryDAODynamoDB(
-                tzDynamoDB,
-                configuration.getTimezoneHistoryConfiguration().getTableName()
-        );
+        final AmazonDynamoDB mergedUserInfoDynamoDBClient = amazonDynamoDBClientFactory.getForEndpoint(configuration.getUserInfo().getEndpoint());
+        final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(mergedUserInfoDynamoDBClient, configuration.getUserInfo().getTableName());
 
         final JedisPool pool = new JedisPool("localhost", 6379);
         final IRecordProcessorFactory factory = new PillScoreProcessorFactory(
                 sleepScoreDAO,
                 configuration.getDateMinuteBucket(),
                 configuration.getCheckpointThreshold(),
-                kinesisConfig,
                 keyStore,
                 deviceDAO,
-                timeZoneHistoryDB,
+                mergedUserInfoDynamoDB,
                 pool
         );
         final Worker worker = new Worker(factory, kinesisConfig);
