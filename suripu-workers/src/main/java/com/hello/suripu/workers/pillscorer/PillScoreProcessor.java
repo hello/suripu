@@ -163,7 +163,6 @@ public class PillScoreProcessor extends HelloBaseRecordProcessor {
 
     // Should this be public for easy testing?
     private Optional<DateTimeZone> getTimezoneForUser(final String senseId, final Long accountId) {
-        final DateTimeZone defaultTimezone = DateTimeZone.forID("America/Los_Angeles");
         final Optional<UserInfo> userInfoOptional = mergedUserInfoDynamoDB.getInfo(senseId, accountId);
         if(userInfoOptional.isPresent()) {
             return userInfoOptional.get().timeZone;

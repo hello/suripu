@@ -6,6 +6,8 @@ import com.hello.suripu.core.models.ProvisionRequest;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.provision.PillProvision;
+import com.hello.suripu.core.provision.PillProvisionDAO;
 import com.hello.suripu.core.util.KeyStoreUtils;
 import com.hello.suripu.core.util.SenseProvision;
 import org.slf4j.Logger;
@@ -13,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -27,13 +30,16 @@ public class ProvisionResource {
     private final KeyStore senseKeyStore;
     private final KeyStore pillKeyStore;
     private final KeyStoreUtils keyStoreUtils;
+    private final PillProvisionDAO pillProvisionDAO;
 
     public ProvisionResource(final KeyStore senseKeyStore,
                              final KeyStore pillKeyStore,
-                             final KeyStoreUtils keyStoreUtils) {
+                             final KeyStoreUtils keyStoreUtils,
+                             final PillProvisionDAO pillProvisionDAO) {
         this.senseKeyStore = senseKeyStore;
         this.pillKeyStore = pillKeyStore;
         this.keyStoreUtils = keyStoreUtils;
+        this.pillProvisionDAO = pillProvisionDAO;
     }
 
     @POST
@@ -80,5 +86,18 @@ public class ProvisionResource {
             LOGGER.error("Body was : {}", body);
         }
         return Response.serverError().entity("KO").type(MediaType.TEXT_PLAIN).build();
+    }
+
+
+    @GET
+    @Path("check/p/{serial_number}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response checkPillBySerialNumber(@PathParam("serial_number") final String serialNumber) {
+        final Optional<PillProvision> pillProvisionOptional = pillProvisionDAO.getBySN(serialNumber);
+        if(!pillProvisionOptional.isPresent()) {
+            return Response.status(Response.Status.NOT_FOUND).entity("KO not found").build();
+        }
+        final String message = String.format("OK SN created on %s\n", pillProvisionOptional.get().created.toString());
+        return Response.ok().entity(message).build();
     }
 }
