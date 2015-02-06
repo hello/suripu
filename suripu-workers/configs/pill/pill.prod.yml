@@ -80,7 +80,7 @@ kinesis:
 
 app_name: SavePillDataConsumer
 
-max_records: 1000
+max_records: 50
 
 # batch save to DB size
 batch_size: 80
