@@ -55,7 +55,7 @@ public class TrackerMotionUtilTest {
         assertThat(actual, is(expected));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testBadAESDecrypt(){
         // Nonce: 3D F9 53 77 85 CF BD C0
         // Raw Payload: 67 5B B0 69
@@ -69,7 +69,7 @@ public class TrackerMotionUtilTest {
         final byte[] encrypted = new byte[]{(byte)0xFE, (byte)0xD2, 0x70, 0x18};
         final byte[] expected = new byte[]{0x67, 0x5B, (byte)0xB0, 0x69};
         final byte[] actual = TrackerMotion.Utils.counterModeDecrypt(new byte[16], nonce, encrypted);
-        assertThat(actual, is(expected));
+        assertThat(actual.equals(expected), is(false));
     }
 
     @Test
