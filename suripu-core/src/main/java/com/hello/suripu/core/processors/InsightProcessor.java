@@ -171,7 +171,7 @@ public class InsightProcessor {
 
         if (insightCardOptional.isPresent()) {
             // save to dynamo
-//            this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
+            this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
         }
     }
 
