@@ -31,10 +31,10 @@ public class PillScoreWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
-    @JsonProperty("timezone_history_db")
-    private DynamoDBConfiguration timezoneHistoryConfiguration;
-    public DynamoDBConfiguration getTimezoneHistoryConfiguration() {
-        return timezoneHistoryConfiguration;
+    @JsonProperty("user_info")
+    private DynamoDBConfiguration userInfo;
+    public DynamoDBConfiguration getUserInfo() {
+        return userInfo;
     }
 
     @Valid

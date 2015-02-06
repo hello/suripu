@@ -7,11 +7,15 @@ import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
 import com.google.common.base.Optional;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.hello.suripu.api.input.InputProtos;
+import com.hello.suripu.api.ble.SenseCommandProtos;
+import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.KeyStore;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -28,12 +32,16 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
     private final int batchSize;
     private final PillHeartBeatDAO pillHeartBeatDAO;
     private final KeyStore pillKeyStore;
+    private final DeviceDAO deviceDAO;
+    private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
 
-    public SavePillDataProcessor(final TrackerMotionDAO trackerMotionDAO, final int batchSize, final PillHeartBeatDAO pillHeartBeatDAO, final KeyStore pillKeyStore) {
+    public SavePillDataProcessor(final TrackerMotionDAO trackerMotionDAO, final int batchSize, final PillHeartBeatDAO pillHeartBeatDAO, final KeyStore pillKeyStore, final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedUserInfoDynamoDB) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.batchSize = batchSize;
         this.pillHeartBeatDAO = pillHeartBeatDAO;
         this.pillKeyStore = pillKeyStore;
+        this.deviceDAO = deviceDAO;
+        this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
     }
 
     @Override
@@ -46,44 +54,58 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
 
         // parse kinesis records
         final ArrayList<TrackerMotion> trackerData = new ArrayList<>(records.size());
+
         for (final Record record : records) {
             try {
-                final InputProtos.PillDataKinesis data = InputProtos.PillDataKinesis.parseFrom(record.getData().array());
-                final Optional<byte[]> decryptionKey = pillKeyStore.get(data.getPillId());
-                //TODO: Get the actual decryption key.
-                if(!decryptionKey.isPresent()) {
-                    LOGGER.error("Missing decryption key for pill: {}", data.getPillId());
-                    continue;
-                }
-                TrackerMotion trackerMotion = null;
-                if(data.hasEncryptedData()){
-                    switch (data.getFirmwareVersion()){
-                        case 0:
-                        case 1:
-                            trackerMotion = new TrackerMotion.Builder().withPillKinesisData(decryptionKey.get(), data).build();
-                            LOGGER.info("Short data received from pill {}", data.getPillId());
-                            break;
-                        case 2:
-                            // TODO: add column to tracker_motion table to save acceleration range and kickoff time
-                            // TODO: modify TrackerMotion & its mapper to have those two attributes
-                            trackerMotion = new TrackerMotion.Builder().withPillKinesisDataVersion2(decryptionKey.get(), data).build();
-                            LOGGER.info("Long data received from pill {}", data.getPillId());
-                            break;
-                        default:
-                            LOGGER.warn("Unknown firmware version of pill data from pill {}", data.getPillId());
+                final SenseCommandProtos.batched_pill_data batched_pill_data = SenseCommandProtos.batched_pill_data.parseFrom(record.getData().array());
+                for(final SenseCommandProtos.pill_data data : batched_pill_data.getPillsList()) {
+                    final Optional<byte[]> decryptionKey = pillKeyStore.get(data.getDeviceId());
+                    //TODO: Get the actual decryption key.
+                    if(!decryptionKey.isPresent()) {
+                        LOGGER.error("Missing decryption key for pill: {}", data.getDeviceId());
+                        continue;
                     }
 
-                    if(trackerMotion != null){
+                    final Optional<DeviceAccountPair> optionalPair = deviceDAO.getInternalPillId(data.getDeviceId());
+                    if(!optionalPair.isPresent()) {
+                        LOGGER.error("Missing pairing in account tracker map for pill: {}", data.getDeviceId());
+                        continue;
+                    }
+
+                    final DeviceAccountPair pair = optionalPair.get();
+
+                    // Warning: mutable state!!!
+                    Optional<UserInfo> userInfoOptional = mergedUserInfoDynamoDB.getInfo(batched_pill_data.getDeviceId(), pair.accountId);
+                    if(!userInfoOptional.isPresent()) {
+                        // TODO: query DB to find which Sense and query mergedUserInfo again.
+                    }
+
+                    if(!userInfoOptional.isPresent()) {
+                        LOGGER.error("Missing UserInfo for account: {} and pill_id = {}", pair.accountId, pair.externalDeviceId);
+                        continue;
+                    }
+
+                    final UserInfo userInfo = userInfoOptional.get();
+                    final Optional<DateTimeZone> timeZoneOptional = userInfo.timeZone;
+                    if(!timeZoneOptional.isPresent()) {
+                        LOGGER.error("No timezone for account {} with pill_id = {}", pair.accountId, pair.externalDeviceId);
+                        continue;
+                    }
+
+
+                    if(data.hasMotionDataEntrypted()){
+                        final TrackerMotion trackerMotion = TrackerMotion.create(data, pair, timeZoneOptional.get(), decryptionKey.get());
                         trackerData.add(trackerMotion);
+                        LOGGER.debug("Tracker Data added for batch insert");
                     }
-                }
 
-                if(data.hasBatteryLevel()){
-                    final int batteryLevel = data.getBatteryLevel();
-                    final int upTime = data.getUpTime();
-                    final int firmwareVersion = data.getFirmwareVersion();
-                    final DateTime lastUpdated = new DateTime(data.getTimestamp(), DateTimeZone.UTC);
-                    pillHeartBeatDAO.silentInsert(data.getPillIdLong(), batteryLevel, upTime, firmwareVersion, lastUpdated);
+                    if(data.hasBatteryLevel()){
+                        final int batteryLevel = data.getBatteryLevel();
+                        final int upTimeInSeconds = data.getUptime();
+                        final int firmwareVersion = data.getFirmwareVersion();
+                        final DateTime lastUpdated = new DateTime(data.getTimestamp(), DateTimeZone.UTC);
+                        pillHeartBeatDAO.silentInsert(pair.internalDeviceId, batteryLevel, upTimeInSeconds, firmwareVersion, lastUpdated);
+                    }
                 }
             } catch (InvalidProtocolBufferException e) {
                 LOGGER.error("Failed to decode protobuf: {}", e.getMessage());

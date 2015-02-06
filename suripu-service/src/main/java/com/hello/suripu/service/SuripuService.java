@@ -15,17 +15,13 @@ import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
-import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.TeamStore;
-import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
-import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.firmware.FirmwareUpdateDAO;
@@ -101,23 +97,15 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
         final DBIFactory factory = new DBIFactory();
         final DBI commonDB = factory.build(environment, configuration.getCommonDB(), "postgresql");
-        final DBI sensorsDB = factory.build(environment, configuration.getSensorsDB(), "postgresql");
 
         commonDB.registerArgumentFactory(new JodaArgumentFactory());
         commonDB.registerContainerFactory(new OptionalContainerFactory());
         commonDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
 
-
-        sensorsDB.registerArgumentFactory(new JodaArgumentFactory());
-        sensorsDB.registerContainerFactory(new OptionalContainerFactory());
-        sensorsDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
-
-        final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final AccessTokenDAO accessTokenDAO = commonDB.onDemand(AccessTokenDAO.class);
-        final DeviceDAO deviceDAO = sensorsDB.onDemand(DeviceDAO.class);
+        final DeviceDAO deviceDAO = commonDB.onDemand(DeviceDAO.class);
         final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
 
-        final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
         final FirmwareUpdateDAO firmwareUpdateDAO = commonDB.onDemand(FirmwareUpdateDAO.class);
 
         // Checks Environment first and then instance profile.
@@ -128,10 +116,12 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);
         final String bucketName = configuration.getAudioBucketName();
 
-        final AlarmDAODynamoDB alarmDAODynamoDB = new AlarmDAODynamoDB(dynamoDBClient, configuration.getAlarmDBConfiguration().getTableName());
-        final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(dynamoDBClient,
+        final AmazonDynamoDBClientFactory dynamoDBFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
+        AmazonDynamoDB mergedInfoDynamoDBClient = dynamoDBFactory.getForEndpoint(configuration.getAlarmDBConfiguration().getEndpoint());
+
+        final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(mergedInfoDynamoDBClient,
                 configuration.getAlarmInfoDynamoDBConfiguration().getTableName());
-        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(dynamoDBClient, configuration.getTimeZoneHistoryDBConfiguration().getTableName());
+
 
 
 
@@ -192,7 +182,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final RolloutModule module = new RolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(module);
 
-        final ReceiveResource receiveResource = new ReceiveResource(deviceDataDAO, deviceDAO,
+        final ReceiveResource receiveResource = new ReceiveResource(
                 senseKeyStore,
                 kinesisLoggerFactory,
                 mergedUserInfoDynamoDB,

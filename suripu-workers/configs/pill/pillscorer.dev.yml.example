@@ -50,7 +50,6 @@ common_db:
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
-    pill_data : batch_pill_data
     batch_pill_data : batch_pill_data
 
 app_name: PillScoreConsumerDev
@@ -81,10 +80,10 @@ pill_key_store:
   region: us-east-1
   table_name: pill_key_store
 
-timezone_history_db:
+user_info:
   endpoint : http://localhost:7777
   region: us-east-1
-  table_name: timezone_history
+  table_name: alarm_info
 
 features_db:
     endpoint : http://localhost:7777

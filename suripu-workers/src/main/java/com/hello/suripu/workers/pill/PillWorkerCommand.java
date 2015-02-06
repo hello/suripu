@@ -11,9 +11,11 @@ import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.QueueName;
+import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
@@ -53,12 +55,24 @@ public final class PillWorkerCommand extends ConfiguredCommand<PillWorkerConfigu
         jdbiSensor.registerContainerFactory(new OptionalContainerFactory());
         jdbiSensor.registerArgumentFactory(new JodaArgumentFactory());
 
+
+
+        final ManagedDataSource commonDataSource = managedDataSourceFactory.build(configuration.getSensorDB());
+
+        final DBI jdbiCommon = new DBI(commonDataSource);
+        jdbiCommon.registerArgumentFactory(new OptionalArgumentFactory(configuration.getCommonDB().getDriverClass()));
+        jdbiCommon.registerContainerFactory(new ImmutableListContainerFactory());
+        jdbiCommon.registerContainerFactory(new ImmutableSetContainerFactory());
+        jdbiCommon.registerContainerFactory(new OptionalContainerFactory());
+        jdbiCommon.registerArgumentFactory(new JodaArgumentFactory());
+
         final TrackerMotionDAO trackerMotionDAO = jdbiSensor.onDemand(TrackerMotionDAO.class);
+        final DeviceDAO deviceDAO = jdbiCommon.onDemand(DeviceDAO.class);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
         LOGGER.debug("{}", queueNames);
-        final String queueName = queueNames.get(QueueName.PILL_DATA);
+        final String queueName = queueNames.get(QueueName.BATCH_PILL_DATA);
         LOGGER.info("\n\n\n!!! This worker is using the following queue: {} !!!\n\n\n", queueName);
 
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
@@ -80,20 +94,14 @@ public final class PillWorkerCommand extends ConfiguredCommand<PillWorkerConfigu
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
+        final AmazonDynamoDB mergedUserInfoDynamoDBClient = amazonDynamoDBClientFactory.getForEndpoint(configuration.getUserInfo().getEndpoint());
+        final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(mergedUserInfoDynamoDBClient, configuration.getUserInfo().getTableName());
+
         final PillHeartBeatDAO heartBeatDAO = jdbiSensor.onDemand(PillHeartBeatDAO.class);
         final AmazonDynamoDB pillKeyStoreDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(configuration.getKeyStore().getEndpoint());
         final KeyStore pillKeyStore = new KeyStoreDynamoDB(pillKeyStoreDynamoDB,configuration.getKeyStore().getTableName(), new byte[16], 120);
-        final IRecordProcessorFactory factory = new SavePillDataProcessorFactory(trackerMotionDAO, configuration.getBatchSize(), kinesisConfig, heartBeatDAO, pillKeyStore);
+        final IRecordProcessorFactory factory = new SavePillDataProcessorFactory(trackerMotionDAO, configuration.getBatchSize(), mergedUserInfoDynamoDB, heartBeatDAO, pillKeyStore, deviceDAO);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
-
-//        final S3Object headerBlob = s3Client.getObject("hello-data", "49540234611938095003552389818111531279102041887843811329-49540234611938095003552389818111531279102041887843811329-header");
-//        final InputProtos.PillBlobHeader header = InputProtos.PillBlobHeader.parseFrom(headerBlob.getObjectContent());
-//
-//        final S3Object dataBlob = s3Client.getObject("hello-data", "49540234611938095003552389818111531279102041887843811329-49540234611938095003552389818111531279102041887843811329");
-//        final InputProtos.PillBlob blob = InputProtos.PillBlob.parseFrom(dataBlob.getObjectContent());
-//
-//        System.out.println("Header -> Num of records = " + header.getNumItems());
-//        System.out.println("Blob -> Num of records = " + blob.getItemsCount());
     }
 }

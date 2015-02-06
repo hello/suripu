@@ -6,8 +6,6 @@ import com.google.common.base.Objects;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.common.primitives.UnsignedInts;
 import com.hello.suripu.api.ble.SenseCommandProtos;
-import com.hello.suripu.api.input.InputProtos;
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import javax.crypto.Cipher;
@@ -78,6 +76,41 @@ public class TrackerMotion {
         this.kickOffCounts = kickOffCounts;
         this.onDurationInSeconds = onDurationInSeconds;
     }
+
+
+    public static TrackerMotion create(final SenseCommandProtos.pill_data pill_data, final DeviceAccountPair accountPair, final DateTimeZone timeZone, final byte[] encryptionKey) {
+        final PillPayloadV2 payloadV2 = TrackerMotion.data(pill_data, encryptionKey);
+        final Long timestampInMillis = Utils.convertTimestampInSecondsToTimestampInMillis(pill_data.getTimestamp());
+        final Integer timeZoneOffset = timeZone.getOffset(timestampInMillis);
+
+        return new TrackerMotion(
+                0L,
+                accountPair.accountId,
+                accountPair.internalDeviceId,
+                timestampInMillis,
+                Utils.rawToMilliMS2(payloadV2.maxAmplitude),
+                timeZoneOffset,
+                payloadV2.motionRange,
+                payloadV2.kickOffCounts,
+                payloadV2.onDurationInSeconds
+        );
+    }
+
+
+    public static PillPayloadV2 data(SenseCommandProtos.pill_data data, final byte[] encryptionKey) {
+        if(data.hasMotionDataEntrypted()) {
+            switch(data.getFirmwareVersion()) {
+                case 0:
+                case 1:
+                    return Utils.encryptedToRaw(encryptionKey, data.getMotionDataEntrypted().toByteArray());
+                case 2:
+                    return Utils.encryptedToRawVersion2(encryptionKey, data.getMotionDataEntrypted().toByteArray());
+            }
+        }
+
+        throw new IllegalArgumentException("No motion data present or bad firmware version. Is this a hearbeat?");
+    }
+
 
     public static float intToFloatValue(final int value){
         return value / FLOAT_TO_INT_CONVERTER;
@@ -189,81 +222,6 @@ public class TrackerMotion {
             return this;
         }
 
-        public Builder withPillPayloadV2(final PillPayloadV2 payloadV2) {
-            this.motionRange = payloadV2.motionRange;
-            this.kickOffCounts = payloadV2.kickOffCounts;
-            this.onDurationInSeconds = payloadV2.onDurationInSeconds;
-            return this;
-        }
-
-        /*
-        * Take data from Morpheus and transform to core TrackerMotion data structure.
-         */
-        public Builder withPillKinesisData(final byte[] key, final InputProtos.PillDataKinesis data){
-
-            final Long accountID = data.hasAccountIdLong() ? data.getAccountIdLong() : Long.parseLong(data.getAccountId());
-            final Long pillID = data.hasPillIdLong() ? data.getPillIdLong() : Long.parseLong(data.getPillId());
-            final DateTime sampleDT = new DateTime(data.getTimestamp(), DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
-            long amplitudeMilliG = -1;
-            if(data.hasValue()){
-                amplitudeMilliG = data.getValue();
-            }
-
-            if(data.hasEncryptedData()){
-                final byte[] encryptedData = data.getEncryptedData().toByteArray();
-
-                final long raw = Utils.encryptedToRaw(key, encryptedData);
-                amplitudeMilliG = Utils.rawToMilliMS2(raw);
-            }
-
-            this.withAccountId(accountID);
-            this.withTrackerId(pillID);
-            this.withTimestampMillis(sampleDT.getMillis());
-            this.withValue((int)amplitudeMilliG);
-            this.withOffsetMillis(data.getOffsetMillis());
-
-            return this;
-        }
-
-        /*
-        * Take data from Morpheus and transform to core TrackerMotion data structure.
-         */
-        public Builder withPillKinesisDataVersion2(final byte[] key, final InputProtos.PillDataKinesis data){
-
-            final Long accountID = data.hasAccountIdLong() ? data.getAccountIdLong() : Long.parseLong(data.getAccountId());
-            final Long pillID = data.hasPillIdLong() ? data.getPillIdLong() : Long.parseLong(data.getPillId());
-            final DateTime sampleDT = new DateTime(data.getTimestamp(), DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
-            long amplitudeMilliG = -1;
-
-            if(data.hasEncryptedData()){
-                final byte[] encryptedData = data.getEncryptedData().toByteArray();
-
-                final PillPayloadV2 payloadV2 = Utils.encryptedToRawVersion2(key, encryptedData);
-                amplitudeMilliG = Utils.rawToMilliMS2(payloadV2.maxAmplitude);
-                this.withPillPayloadV2(payloadV2);
-            }
-
-            this.withAccountId(accountID);
-            this.withTrackerId(pillID);
-            this.withTimestampMillis(sampleDT.getMillis());
-            this.withValue((int)amplitudeMilliG);
-            this.withOffsetMillis(data.getOffsetMillis());
-
-            return this;
-        }
-
-        public Builder withEncryptedValue(final byte[] key, final SenseCommandProtos.pill_data pillData) {
-            long amplitudeMilliG = -1;
-            if(pillData.hasMotionDataEntrypted()){
-                final byte[] encryptedData = pillData.getMotionDataEntrypted().toByteArray();
-
-                final long raw = Utils.encryptedToRaw(key, encryptedData);
-                amplitudeMilliG = Utils.rawToMilliMS2(raw);
-            }
-            this.withValue((int) amplitudeMilliG);
-            return this;
-        }
-
         public TrackerMotion build(){
             return new TrackerMotion(
                     this.id,
@@ -289,6 +247,11 @@ public class TrackerMotion {
         public static final double COUNTS_IN_G_SQUARE = Math.pow((ACC_RANGE_IN_G  * GRAVITY_IN_MS2)/ ACC_RESOLUTION_32BIT, 2);
 
 
+
+        public static Long convertTimestampInSecondsToTimestampInMillis(final Long timestampInSeconds) {
+            return timestampInSeconds * 1000L;
+        }
+
         public static byte[] counterModeDecrypt(final byte[] key, final byte[] nonce, final byte[] encrypted)  // make it explicit that decryption can fail.
                 throws IllegalArgumentException {
             final SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
@@ -309,12 +272,12 @@ public class TrackerMotion {
             }
         }
 
-        public static long rawToMilliMS2(final Long rawMotionAmplitude){
+        public static int rawToMilliMS2(final Long rawMotionAmplitude){
             final double trackerValueInMS2 = Math.sqrt(rawMotionAmplitude) * Math.sqrt(COUNTS_IN_G_SQUARE) - GRAVITY_IN_MS2;
-            return (long)(trackerValueInMS2 * 1000);
+            return (int)(trackerValueInMS2 * 1000);
         }
 
-        public static long encryptedToRaw(final byte[] key, final byte[] encryptedMotionData) throws IllegalArgumentException {
+        public static PillPayloadV2 encryptedToRaw(final byte[] key, final byte[] encryptedMotionData) throws IllegalArgumentException {
 
             final byte[] nonce = Arrays.copyOfRange(encryptedMotionData, 0, 8);
 
@@ -352,8 +315,7 @@ public class TrackerMotion {
                 throw new IllegalArgumentException(exception);
             }
 
-            return motionAmplitude;
-
+            return new PillPayloadV2(motionAmplitude,0L,0L,0L);
         }
 
 

@@ -6,11 +6,8 @@ import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.audio.AudioControlProtos;
 import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.api.input.DataInputProtos;
-import com.hello.suripu.api.input.InputProtos;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.configuration.QueueName;
-import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.firmware.FirmwareUpdateStore;
@@ -20,7 +17,6 @@ import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.CurrentRoomState;
-import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.processors.RingProcessor;
@@ -65,8 +61,6 @@ public class ReceiveResource extends BaseResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReceiveResource.class);
     private static final int CLOCK_SKEW_TOLERATED_IN_HOURS = 2;
 
-    private final DeviceDataDAO deviceDataDAO;
-    private final DeviceDAO deviceDAO;
     private final KeyStore keyStore;
     private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
 
@@ -80,17 +74,13 @@ public class ReceiveResource extends BaseResource {
     @Context
     HttpServletRequest request;
 
-    public ReceiveResource(final DeviceDataDAO deviceDataDAO,
-                           final DeviceDAO deviceDAO,
-                           final KeyStore keyStore,
+    public ReceiveResource(final KeyStore keyStore,
                            final KinesisLoggerFactory kinesisLoggerFactory,
                            final MergedUserInfoDynamoDB mergedInfoDynamoDB,
                            final Boolean debug,
                            final FirmwareUpdateStore firmwareUpdateStore,
                            final GroupFlipper groupFlipper,
                            final SenseUploadConfiguration senseUploadConfiguration) {
-        this.deviceDataDAO = deviceDataDAO;
-        this.deviceDAO = deviceDAO;
 
         this.keyStore = keyStore;
         this.kinesisLoggerFactory = kinesisLoggerFactory;
@@ -553,72 +543,6 @@ public class ReceiveResource extends BaseResource {
         final DataLogger batchDataLogger = kinesisLoggerFactory.get(QueueName.BATCH_PILL_DATA);
         batchDataLogger.put(batchPilldata.getDeviceId(),  cleanBatch.build().toByteArray());
 
-
-        // TODO: everything below this is kept for backward compatibility
-        // TODO: remove is shortly after we've migrated to new worker
-
-        // This is the default timezone.
-        DateTimeZone userTimeZone = DateTimeZone.forID("America/Los_Angeles");
-        final String senseId  = batchPilldata.getDeviceId();
-        final List<UserInfo> userInfoList = this.mergedInfoDynamoDB.getInfo(senseId);
-        for(final UserInfo info: userInfoList){
-            if(info.timeZone.isPresent()){
-                userTimeZone = info.timeZone.get();
-            }
-        }
-
-        // TODO: MOVE THIS TO THE WORKERS! SURIPU-SERVICE SHOULD NOT BE TALKING TO POSTGRESQL AS MUCH AS POSSIBLE
-        // ********************* Pill Data Storage ****************************
-        if(cleanBatch.getPillsCount() > 0){
-            for(final SenseCommandProtos.pill_data pill: cleanBatch.getPillsList()){
-
-                final String pillId = pill.getDeviceId();
-                final Optional<DeviceAccountPair> internalPillPairingMap = this.deviceDAO.getInternalPillId(pillId);
-
-                if(!internalPillPairingMap.isPresent()){
-                    LOGGER.warn("Cannot find internal pill id for pill {}", pillId);
-                    continue;
-                }
-
-                final InputProtos.PillDataKinesis.Builder pillKinesisDataBuilder = InputProtos.PillDataKinesis.newBuilder();
-
-                final long timestampMillis = pill.getTimestamp() * 1000L;
-                final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC)
-                        .withSecondOfMinute(0);
-
-                pillKinesisDataBuilder.setAccountIdLong(internalPillPairingMap.get().accountId)
-                        .setPillId(pillId)
-                        .setPillIdLong(internalPillPairingMap.get().internalDeviceId)
-                        .setTimestamp(roundedDateTime.getMillis())
-                        .setOffsetMillis(userTimeZone.getOffset(roundedDateTime));
-
-
-
-                if(pill.hasBatteryLevel()){
-                    pillKinesisDataBuilder.setBatteryLevel(pill.getBatteryLevel());
-                }
-
-                if(pill.hasFirmwareVersion()){
-                    pillKinesisDataBuilder.setFirmwareVersion(pill.getFirmwareVersion());
-                }
-
-                if(pill.hasUptime()){
-                    pillKinesisDataBuilder.setUpTime(pill.getUptime());
-                }
-
-                if(pill.hasMotionDataEntrypted()){
-                    pillKinesisDataBuilder.setEncryptedData(pill.getMotionDataEntrypted());
-                }
-
-
-                final byte[] pillDataBytes = pillKinesisDataBuilder.build().toByteArray();
-                final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.PILL_DATA);
-                final String sequenceNumber = dataLogger.put(internalPillPairingMap.get().internalDeviceId.toString(),  // WTF?
-                        pillDataBytes);
-                LOGGER.trace("Pill Data added to Kinesis with sequenceNumber = {}", sequenceNumber);
-
-            }
-        }
 
         final SenseCommandProtos.MorpheusCommand responseCommand = SenseCommandProtos.MorpheusCommand.newBuilder()
                 .setType(SenseCommandProtos.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PILL_DATA)

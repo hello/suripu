@@ -12,12 +12,12 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.KeyStore;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.SleepScoreDAO;
-import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.PillSample;
-import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.processors.PillScoreBatchByRecordsProcessor;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.hello.suripu.workers.utils.ActiveDevicesTracker;
@@ -44,19 +44,19 @@ public class PillScoreProcessor extends HelloBaseRecordProcessor {
     private final Meter checkpointMeter;
     private final KeyStore keyStore;
     private final DeviceDAO deviceDAO;
-    private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDB;
+    private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final ActiveDevicesTracker activeDevicesTracker;
 
     private int decodeErrors = 0; // mutable
 
-    public PillScoreProcessor(final SleepScoreDAO sleepScoreDAO, final int dateMinuteBucket, final int checkpointThreshold, final KeyStore keyStore, final DeviceDAO deviceDAO, final TimeZoneHistoryDAODynamoDB timeZoneHistoryDB, final ActiveDevicesTracker activeDevicesTracker) {
+    public PillScoreProcessor(final SleepScoreDAO sleepScoreDAO, final int dateMinuteBucket, final int checkpointThreshold, final KeyStore keyStore, final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedUserInfoDynamoDB, final ActiveDevicesTracker activeDevicesTracker) {
         this.pillProcessor = new PillScoreBatchByRecordsProcessor(sleepScoreDAO, dateMinuteBucket, checkpointThreshold);
         this.messageCounter = Metrics.defaultRegistry().newCounter(PillScoreProcessor.class, "message_count");
         this.messageMeter = Metrics.defaultRegistry().newMeter(PillScoreProcessor.class, "get-requests", "requests", TimeUnit.SECONDS);
         this.checkpointMeter = Metrics.defaultRegistry().newMeter(PillScoreProcessor.class, "checkpoint_rate", "checkpoints", TimeUnit.SECONDS);
         this.keyStore = keyStore;
         this.deviceDAO = deviceDAO;
-        this.timeZoneHistoryDB = timeZoneHistoryDB;
+        this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.activeDevicesTracker = activeDevicesTracker;
     }
 
@@ -82,7 +82,13 @@ public class PillScoreProcessor extends HelloBaseRecordProcessor {
                 continue;
             }
 
-            for(SenseCommandProtos.pill_data pillData : batchPilldata.getPillsList()) {
+            for(final SenseCommandProtos.pill_data pillData : batchPilldata.getPillsList()) {
+
+                if(pillData.hasBatteryLevel()) {
+                    LOGGER.debug("Hearbeat data, not attempting to compute score for pill id: {}", pillData.getDeviceId());
+                    continue;
+                }
+
                 final Optional<byte[]> optionalKeyBytes = keyStore.get(pillData.getDeviceId());
 
                 if (!optionalKeyBytes.isPresent()) {
@@ -109,13 +115,13 @@ public class PillScoreProcessor extends HelloBaseRecordProcessor {
                     continue;
                 }
 
-                final TrackerMotion.Builder trackerMotionBuilder = new TrackerMotion.Builder();
-                trackerMotionBuilder.withAccountId(internalPillPairingMap.get().accountId);
-                trackerMotionBuilder.withTrackerId(internalPillPairingMap.get().internalDeviceId);
-                trackerMotionBuilder.withOffsetMillis(getTimezoneForUser(internalPillPairingMap.get().accountId).getOffset(roundedDateTime));
-                trackerMotionBuilder.withEncryptedValue(decryptionKey, pillData);
+                final Optional<DateTimeZone> dateTimeZoneOptional = getTimezoneForUser(batchPilldata.getDeviceId(), internalPillPairingMap.get().accountId);
+                if(!dateTimeZoneOptional.isPresent()) {
+                    LOGGER.error("Missing timezone for account id: {}  and sense id : {}", internalPillPairingMap.get().accountId, batchPilldata.getDeviceId());
+                    continue;
+                }
 
-                final TrackerMotion trackerMotion = trackerMotionBuilder.build();
+                final TrackerMotion trackerMotion = TrackerMotion.create(pillData,internalPillPairingMap.get(), dateTimeZoneOptional.get(), decryptionKey);
 
                 final Long accountID = trackerMotion.accountId;
                 final String pillID = trackerMotion.trackerId.toString();
@@ -156,13 +162,13 @@ public class PillScoreProcessor extends HelloBaseRecordProcessor {
     }
 
     // Should this be public for easy testing?
-    private DateTimeZone getTimezoneForUser(Long accountId) {
+    private Optional<DateTimeZone> getTimezoneForUser(final String senseId, final Long accountId) {
         final DateTimeZone defaultTimezone = DateTimeZone.forID("America/Los_Angeles");
-        final Optional<TimeZoneHistory> optional = timeZoneHistoryDB.getCurrentTimeZone(accountId);
-        if(optional.isPresent()) {
-            return DateTimeZone.forID(optional.get().timeZoneId);
+        final Optional<UserInfo> userInfoOptional = mergedUserInfoDynamoDB.getInfo(senseId, accountId);
+        if(userInfoOptional.isPresent()) {
+            return userInfoOptional.get().timeZone;
         }
-        LOGGER.warn("Account {} does not have a timezone set", accountId);
-        return defaultTimezone;
+
+        return Optional.absent();
     }
 }
