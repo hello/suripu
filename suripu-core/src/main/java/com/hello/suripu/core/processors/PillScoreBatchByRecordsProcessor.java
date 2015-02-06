@@ -28,8 +28,8 @@ public class PillScoreBatchByRecordsProcessor {
     private final SleepScoreDAO sleepScoreDAO;
 
     // keeping states
-    private final Map<String, Long> pillAccountID; // k: pillID, v: accountID
-    private final SortedSetMultimap<String, PillSample> pillData; // k: pillID
+    private final Map<Long, Long> pillAccountID; // k: pillID, v: accountID
+    private final SortedSetMultimap<Long, PillSample> pillData; // k: pillID
     private long lastProcessedTimestampMillis;
 
     // tracking process stats
@@ -134,9 +134,9 @@ public class PillScoreBatchByRecordsProcessor {
 
                 // only process non-heartbeat data
                 if (record.val != -1) {
-                    final String pillID = record.sampleID;
-                    this.pillAccountID.put(pillID, accountID); // map pill-id to account-id
-                    this.pillData.put(pillID, record); // stores pill data
+                    final Long internalPillId = record.internalPillId;
+                    this.pillAccountID.put(internalPillId, accountID); // map pill-id to account-id
+                    this.pillData.put(internalPillId, record); // stores pill data
                 }
 
                 LOGGER.debug("record account: {}, dt: {}", accountID, record.dateTime);
@@ -156,25 +156,25 @@ public class PillScoreBatchByRecordsProcessor {
      */
     private int computeAndSaveScores() {
         int processed = 0;
-        Set<String> successPillIDs = new HashSet<>();
+        Set<Long> successPillIDs = new HashSet<>();
         LOGGER.debug("pill data = {}", pillData);
-        for (final String pillID : this.pillData.keySet()) {
-            LOGGER.debug("ComputeAndSave for pill = {}", pillID);
-            final Long accountID = this.pillAccountID.get(pillID);
-            final SortedSet<PillSample> data = this.pillData.get(pillID);
+        for (final Long internalPillId : this.pillData.keySet()) {
+            LOGGER.debug("ComputeAndSave for pill = {}", internalPillId);
+            final Long accountID = this.pillAccountID.get(internalPillId);
+            final SortedSet<PillSample> data = this.pillData.get(internalPillId);
 
             if (data.isEmpty()) {
-                LOGGER.error("No data for scoring {}", pillID);
+                LOGGER.error("No data for scoring {}", internalPillId);
                 continue;
             }
 
-            final List<SleepScore> scores = SleepScore.computeSleepScore(accountID, pillID, data, this.dateMinuteBucket);
+            final List<SleepScore> scores = SleepScore.computeSleepScore(accountID, internalPillId, data, this.dateMinuteBucket);
 
             final Map<String, Integer> stats = this.sleepScoreDAO.saveScores(scores);
 
             final int saved = (stats.get("updated") + stats.get("inserted"));
             if (saved > 0) {
-                successPillIDs.add(pillID);
+                successPillIDs.add(internalPillId);
                 processed += data.size();
             }
 
@@ -184,9 +184,9 @@ public class PillScoreBatchByRecordsProcessor {
             LOGGER.info("Save = {}", saved);
         }
 
-        for (final String pillID: successPillIDs) {
-            this.pillData.removeAll(pillID);
-            this.pillAccountID.remove(pillID);
+        for (final Long internalPillId: successPillIDs) {
+            this.pillData.removeAll(internalPillId);
+            this.pillAccountID.remove(internalPillId);
         }
 
         this.numPillRecordsProcessed += processed;
