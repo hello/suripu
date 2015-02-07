@@ -28,7 +28,7 @@ public class PillScoreBatchByRecordProcessorTest {
     private static int CHECKPOINT_THRESHOLD = 200;
 
     final DateTime startTime = DateTime.now().withTimeAtStartOfDay();
-    private static String pillID = "10";
+    private static Long pillID = 10L;
 
     private final SleepScoreDAO sleepScoreDAO = new SleepScoreDAO() {
         @Override

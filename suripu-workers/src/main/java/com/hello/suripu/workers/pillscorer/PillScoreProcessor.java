@@ -122,10 +122,10 @@ public class PillScoreProcessor extends HelloBaseRecordProcessor {
                     try {
                         final TrackerMotion trackerMotion = TrackerMotion.create(pillData, internalPillPairingMap.get(), dateTimeZoneOptional.get(), decryptionKey);
                         final Long accountID = trackerMotion.accountId;
-                        final String pillID = trackerMotion.trackerId.toString();
+                        final Long internalPillId = trackerMotion.trackerId;
 
-                        final PillSample sample = new PillSample(pillID, roundedDateTime, trackerMotion.value, trackerMotion.offsetMillis);
-                        LOGGER.debug("adding for account {}, pill_id {}, date {}", accountID, pillID, roundedDateTime);
+                        final PillSample sample = new PillSample(internalPillId, roundedDateTime, trackerMotion.value, trackerMotion.offsetMillis);
+                        LOGGER.debug("adding for account {}, pill_id {}, date {}", accountID, internalPillId, roundedDateTime);
                         samples.put(accountID, sample);
 
                     } catch (TrackerMotion.InvalidEncryptedPayloadException exception) {
@@ -133,7 +133,6 @@ public class PillScoreProcessor extends HelloBaseRecordProcessor {
                     }
 
                 }
-
                 activePills.put(pillData.getDeviceId(), roundedDateTime.getMillis());
             }
 
@@ -169,7 +168,6 @@ public class PillScoreProcessor extends HelloBaseRecordProcessor {
 
     // Should this be public for easy testing?
     private Optional<DateTimeZone> getTimezoneForUser(final String senseId, final Long accountId) {
-        final DateTimeZone defaultTimezone = DateTimeZone.forID("America/Los_Angeles");
         final Optional<UserInfo> userInfoOptional = mergedUserInfoDynamoDB.getInfo(senseId, accountId);
         if(userInfoOptional.isPresent()) {
             return userInfoOptional.get().timeZone;
