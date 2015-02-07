@@ -91,9 +91,13 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
 
 
                     if(data.hasMotionDataEntrypted()){
-                        final TrackerMotion trackerMotion = TrackerMotion.create(data, pair, timeZoneOptional.get(), decryptionKey.get());
-                        trackerData.add(trackerMotion);
-                        LOGGER.debug("Tracker Data added for batch insert for pill_id = {}", pair.externalDeviceId);
+                        try {
+                            final TrackerMotion trackerMotion = TrackerMotion.create(data, pair, timeZoneOptional.get(), decryptionKey.get());
+                            trackerData.add(trackerMotion);
+                            LOGGER.debug("Tracker Data added for batch insert for pill_id = {}", pair.externalDeviceId);
+                        } catch (TrackerMotion.InvalidEncryptedPayloadException exception) {
+                            LOGGER.error("Fail to decrypt tracker motion payload for pill {}, account {}", pair.externalDeviceId, pair.accountId);
+                        }
                     }
 
                     if(data.hasBatteryLevel()){

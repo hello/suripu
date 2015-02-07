@@ -88,7 +88,7 @@ public class PillScoreProcessor extends HelloBaseRecordProcessor {
                         .withSecondOfMinute(0)
                         .withMillisOfSecond(0);
 
-                if(!pillData.hasBatteryLevel()) {
+                if(pillData.hasMotionDataEntrypted()){
 
                     final Optional<byte[]> optionalKeyBytes = keyStore.get(pillData.getDeviceId());
 
@@ -119,13 +119,19 @@ public class PillScoreProcessor extends HelloBaseRecordProcessor {
                         continue;
                     }
 
-                    final TrackerMotion trackerMotion = TrackerMotion.create(pillData,internalPillPairingMap.get(), dateTimeZoneOptional.get(), decryptionKey);
+                    try {
+                        final TrackerMotion trackerMotion = TrackerMotion.create(pillData, internalPillPairingMap.get(), dateTimeZoneOptional.get(), decryptionKey);
+                        final Long accountID = trackerMotion.accountId;
+                        final Long internalPillId = trackerMotion.trackerId;
 
-                    final Long accountID = trackerMotion.accountId;
-                    final Long internalPillId = trackerMotion.trackerId;
+                        final PillSample sample = new PillSample(internalPillId, roundedDateTime, trackerMotion.value, trackerMotion.offsetMillis);
+                        LOGGER.debug("adding for account {}, pill_id {}, date {}", accountID, internalPillId, roundedDateTime);
+                        samples.put(accountID, sample);
 
-                    final PillSample sample = new PillSample(internalPillId, roundedDateTime, trackerMotion.value, trackerMotion.offsetMillis);
-                    samples.put(accountID, sample);
+                    } catch (TrackerMotion.InvalidEncryptedPayloadException exception) {
+                        LOGGER.error("Fail to decrypt trackerMotion for pill {}, account {}", pillData.getDeviceId(), internalPillPairingMap.get().accountId);
+                    }
+
                 }
                 activePills.put(pillData.getDeviceId(), roundedDateTime.getMillis());
             }
@@ -152,7 +158,7 @@ public class PillScoreProcessor extends HelloBaseRecordProcessor {
 
         }
 
-        activeDevicesTracker.trackPills(activePills);
+            activeDevicesTracker.trackPills(activePills);
     }
 
     @Override
