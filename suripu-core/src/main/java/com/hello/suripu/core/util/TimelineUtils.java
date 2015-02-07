@@ -13,6 +13,7 @@ import com.hello.suripu.algorithm.sleep.scores.LightOutCumulatedMotionMixScoring
 import com.hello.suripu.algorithm.sleep.scores.LightOutScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.MotionDensityScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.SleepDataScoringFunction;
+import com.hello.suripu.algorithm.sleep.scores.WaveAccumulateMotionScoreFunction;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.CurrentRoomState;
@@ -760,6 +761,25 @@ public class TimelineUtils {
         return Optional.absent();
     }
 
+
+    public static Optional<DateTime> getFirstAwakeWaveTime(final long firstMotionTimestampMillis,
+                                                           final long lastMotionTimestampMillis,
+                                                           final List<Sample> waveData){
+        if(waveData.size() == 0){
+            return Optional.absent();
+        }
+
+        final long startDetectionTimestampMillis = (lastMotionTimestampMillis - firstMotionTimestampMillis) / 2 + firstMotionTimestampMillis;
+        for(final Sample wave:waveData){
+            if(wave.dateTime >= startDetectionTimestampMillis && wave.dateTime <= lastMotionTimestampMillis){
+                return Optional.of(new DateTime(wave.dateTime, DateTimeZone.forOffsetMillis(wave.offsetMillis)));
+            }
+        }
+
+        return Optional.absent();
+
+    }
+
     public static List<Event> getLightEvents(List<Sample> lightData) {
 
         if (lightData.size() == 0) {
@@ -832,6 +852,7 @@ public class TimelineUtils {
     public static List<Optional<Event>> getSleepEvents(final DateTime targetDateLocalUTC,
                                          final List<TrackerMotion> trackerMotions,
                                          final Optional<DateTime> lightOutTimeOptional,
+                                         final Optional<DateTime> firstWaveTimeOptional,
                                          final int smoothWindowSizeInMinutes,
                                          final int sleepFeatureAggregateWindowInMinutes,
                                          final int wakeUpFeatureAggregateWindowInMinutes,
@@ -884,6 +905,20 @@ public class TimelineUtils {
             }
             featureDimension = MotionScoreAlgorithm.addToFeatureMatrix(matrix, lightAndCumulatedMotionFeature);
             scoringFunctions.add(new LightOutCumulatedMotionMixScoringFunction(lightOutTimeOptional.get()));
+        }
+
+        if(firstWaveTimeOptional.isPresent()) {
+
+            final LinkedList<AmplitudeData> waveAndCumulatedMotionFeature = new LinkedList<>();
+            for (final AmplitudeData amplitudeData : aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_MOTION_PERIOD)) {
+                // this is the magical light feature that can keep both magic and fix broken things.
+                waveAndCumulatedMotionFeature.add(new AmplitudeData(amplitudeData.timestamp,
+                        amplitudeData.amplitude,
+                        amplitudeData.offsetMillis));
+
+            }
+            featureDimension = MotionScoreAlgorithm.addToFeatureMatrix(matrix, waveAndCumulatedMotionFeature);
+            scoringFunctions.add(new WaveAccumulateMotionScoreFunction(firstWaveTimeOptional.get()));
         }
 
         final MotionScoreAlgorithm sleepDetectionAlgorithm = new MotionScoreAlgorithm(matrix,

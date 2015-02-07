@@ -199,6 +199,7 @@ public class TimelineUtilsTest {
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 17, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 Optional.of(new DateTime(1421575200000L, DateTimeZone.UTC)),
+                Optional.<DateTime>absent(),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
@@ -254,6 +255,7 @@ public class TimelineUtilsTest {
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 26, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 Optional.of(new DateTime(1422346440000L, DateTimeZone.UTC)),
+                Optional.<DateTime>absent(),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
@@ -308,6 +310,7 @@ public class TimelineUtilsTest {
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 24, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 Optional.of(new DateTime(1422181740000L, DateTimeZone.UTC)),
+                Optional.<DateTime>absent(),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
@@ -344,7 +347,7 @@ public class TimelineUtilsTest {
 
 
     @Test
-    public void testGetFullSleepEventsSafeGuard(){
+    public void testGetFullSleepEventsWaveCanImprove(){
         final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/pang_motion_2015_01_21_raw.csv");
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
         try {
@@ -364,6 +367,7 @@ public class TimelineUtilsTest {
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 24, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 Optional.of(new DateTime(1421913780000L, DateTimeZone.UTC)),
+                Optional.of(new DateTime(1421940660000L, DateTimeZone.UTC)),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
@@ -372,11 +376,11 @@ public class TimelineUtilsTest {
         final FallingAsleepEvent sleepSegment = (FallingAsleepEvent) sleepEvents.get(1).get();
         final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
 
-        assertThat(sleepEvents.get(2).isPresent(), is(false));
-        assertThat(sleepEvents.get(3).isPresent(), is(false));
+        //assertThat(sleepEvents.get(2).isPresent(), is(false));
+        //assertThat(sleepEvents.get(3).isPresent(), is(false));
 
-        //final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2).get();
-        //final OutOfBedEvent outOfBedSegment = (OutOfBedEvent) sleepEvents.get(3).get();
+        final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2).get();
+        final OutOfBedEvent outOfBedSegment = (OutOfBedEvent) sleepEvents.get(3).get();
 
         // Out put from python script suripu_sum.py:
         /*
@@ -387,19 +391,19 @@ public class TimelineUtilsTest {
         final DateTime goToBedTime = new DateTime(goToBedSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBedSegment.getTimezoneOffset()));
         final DateTime sleepTime = new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getTimezoneOffset()));
 
-        //final DateTime wakeUpTime = new DateTime(wakeUpSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUpSegment.getTimezoneOffset()));
-        //final DateTime outOfBedTime = new DateTime(outOfBedSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBedSegment.getTimezoneOffset()));
+        final DateTime wakeUpTime = new DateTime(wakeUpSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUpSegment.getTimezoneOffset()));
+        final DateTime outOfBedTime = new DateTime(outOfBedSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBedSegment.getTimezoneOffset()));
 
         final DateTime goToBedLocalUTC = new DateTime(goToBedTime.getYear(), goToBedTime.getMonthOfYear(), goToBedTime.getDayOfMonth(), goToBedTime.getHourOfDay(), goToBedTime.getMinuteOfHour(), DateTimeZone.UTC);
         final DateTime sleepLocalUTC = new DateTime(sleepTime.getYear(), sleepTime.getMonthOfYear(), sleepTime.getDayOfMonth(), sleepTime.getHourOfDay(), sleepTime.getMinuteOfHour(), DateTimeZone.UTC);
-        //final DateTime wakeUpLocalUTC = new DateTime(wakeUpTime.getYear(), wakeUpTime.getMonthOfYear(), wakeUpTime.getDayOfMonth(), wakeUpTime.getHourOfDay(), wakeUpTime.getMinuteOfHour(), DateTimeZone.UTC);
-        //final DateTime outOfBedLocalUTC = new DateTime(outOfBedTime.getYear(), outOfBedTime.getMonthOfYear(), outOfBedTime.getDayOfMonth(), outOfBedTime.getHourOfDay(), outOfBedTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime wakeUpLocalUTC = new DateTime(wakeUpTime.getYear(), wakeUpTime.getMonthOfYear(), wakeUpTime.getDayOfMonth(), wakeUpTime.getHourOfDay(), wakeUpTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime outOfBedLocalUTC = new DateTime(outOfBedTime.getYear(), outOfBedTime.getMonthOfYear(), outOfBedTime.getDayOfMonth(), outOfBedTime.getHourOfDay(), outOfBedTime.getMinuteOfHour(), DateTimeZone.UTC);
 
         assertThat(goToBedLocalUTC, is(new DateTime(2015, 1, 22, 0, 13, DateTimeZone.UTC)));
         //assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 25, 1, 43, DateTimeZone.UTC)));
         assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 22, 0, 24, DateTimeZone.UTC)));
-        //assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 22, 5, 21, DateTimeZone.UTC)));
-        //assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 22, 7, 44, DateTimeZone.UTC)));
+        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 22, 7, 33, DateTimeZone.UTC)));
+        assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 22, 7, 44, DateTimeZone.UTC)));
     }
 
 
@@ -424,6 +428,7 @@ public class TimelineUtilsTest {
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 04, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 Optional.of(new DateTime(1420445760000L, DateTimeZone.UTC)),
+                Optional.of(new DateTime(1420473540000L, DateTimeZone.UTC)),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
@@ -457,8 +462,8 @@ public class TimelineUtilsTest {
          */
         assertThat(goToBedLocalUTC, is(new DateTime(2015, 1, 5, 0, 13, DateTimeZone.UTC)));
         assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 5, 0, 24, DateTimeZone.UTC)));
-        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 5, 8, 14, DateTimeZone.UTC)));
-        assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 5, 8, 15, DateTimeZone.UTC)));  //heuristic
+        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 5, 8, 06, DateTimeZone.UTC)));
+        assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 5, 8, 14, DateTimeZone.UTC)));  //heuristic
     }
 
 
@@ -483,6 +488,7 @@ public class TimelineUtilsTest {
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 2, 1, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 Optional.of(new DateTime(1422866580000L, DateTimeZone.UTC)),
+                Optional.of(new DateTime(1422891060000L, DateTimeZone.UTC)),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,

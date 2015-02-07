@@ -179,12 +179,19 @@ public class TimelineProcessor {
 
         // compute lights-out events
         Optional<DateTime> lightOutTimeOptional = Optional.absent();
+        Optional<DateTime> wakeUpWaveTimeOptional = Optional.absent();
         if (optionalSensorData.isPresent()) {
             final List<Event> lightEvents = TimelineUtils.getLightEvents(optionalSensorData.get().getData(Sensor.LIGHT));
 
             if (lightEvents.size() > 0) {
                 events.addAll(lightEvents);
                 lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
+            }
+
+            if(!optionalSensorData.get().getData(Sensor.WAVE_COUNT).isEmpty() && trackerMotions.size() > 0){
+                wakeUpWaveTimeOptional = TimelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
+                        trackerMotions.get(trackerMotions.size() - 1).timestamp,
+                        optionalSensorData.get().getData(Sensor.WAVE_COUNT));
             }
         }
 
@@ -210,7 +217,9 @@ public class TimelineProcessor {
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
             final List<Optional<Event>> sleepEventsFromAlgorithm = TimelineUtils.getSleepEvents(targetDate,
-                    trackerMotions, lightOutTimeOptional,
+                    trackerMotions,
+                    lightOutTimeOptional,
+                    wakeUpWaveTimeOptional,
                     MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                     MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                     MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
