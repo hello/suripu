@@ -122,12 +122,11 @@ public class PillScoreProcessor extends HelloBaseRecordProcessor {
                     final TrackerMotion trackerMotion = TrackerMotion.create(pillData,internalPillPairingMap.get(), dateTimeZoneOptional.get(), decryptionKey);
 
                     final Long accountID = trackerMotion.accountId;
-                    final String pillID = trackerMotion.trackerId.toString();
+                    final Long internalPillId = trackerMotion.trackerId;
 
-                    final PillSample sample = new PillSample(pillID, roundedDateTime, trackerMotion.value, trackerMotion.offsetMillis);
+                    final PillSample sample = new PillSample(internalPillId, roundedDateTime, trackerMotion.value, trackerMotion.offsetMillis);
                     samples.put(accountID, sample);
                 }
-
                 activePills.put(pillData.getDeviceId(), roundedDateTime.getMillis());
             }
 
