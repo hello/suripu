@@ -181,7 +181,7 @@ public class PillScoreBatchByRecordsProcessor {
             this.insertRate.mark(stats.get("inserted"));
             this.updateRate.mark(stats.get("updated"));
             this.processRate.mark(data.size());
-            LOGGER.info("Save = {}", saved);
+            LOGGER.info("Save for pill {} = {}", pillID, saved);
         }
 
         for (final String pillID: successPillIDs) {

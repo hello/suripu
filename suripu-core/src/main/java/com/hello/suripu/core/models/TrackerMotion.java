@@ -78,7 +78,7 @@ public class TrackerMotion {
     }
 
 
-    public static TrackerMotion create(final SenseCommandProtos.pill_data pill_data, final DeviceAccountPair accountPair, final DateTimeZone timeZone, final byte[] encryptionKey) {
+    public static TrackerMotion create(final SenseCommandProtos.pill_data pill_data, final DeviceAccountPair accountPair, final DateTimeZone timeZone, final byte[] encryptionKey) throws InvalidEncryptedPayloadException{
         final PillPayloadV2 payloadV2 = TrackerMotion.data(pill_data, encryptionKey);
         final Long timestampInMillis = Utils.convertTimestampInSecondsToTimestampInMillis(pill_data.getTimestamp());
         final Integer timeZoneOffset = timeZone.getOffset(timestampInMillis);
@@ -97,7 +97,7 @@ public class TrackerMotion {
     }
 
 
-    public static PillPayloadV2 data(SenseCommandProtos.pill_data data, final byte[] encryptionKey) {
+    public static PillPayloadV2 data(SenseCommandProtos.pill_data data, final byte[] encryptionKey) throws InvalidEncryptedPayloadException{
         if(data.hasMotionDataEntrypted()) {
             switch(data.getFirmwareVersion()) {
                 case 0:
@@ -144,6 +144,12 @@ public class TrackerMotion {
                 .add("value", value)
                 .add("offset", offsetMillis)
                 .toString();
+    }
+
+    public static class InvalidEncryptedPayloadException extends Exception {
+        public InvalidEncryptedPayloadException(final String message) {
+            super(message);
+        }
     }
 
     public static class PillPayloadV2 {
@@ -277,7 +283,7 @@ public class TrackerMotion {
             return (int)(trackerValueInMS2 * 1000);
         }
 
-        public static PillPayloadV2 encryptedToRaw(final byte[] key, final byte[] encryptedMotionData) throws IllegalArgumentException {
+        public static PillPayloadV2 encryptedToRaw(final byte[] key, final byte[] encryptedMotionData) throws InvalidEncryptedPayloadException {
 
             final byte[] nonce = Arrays.copyOfRange(encryptedMotionData, 0, 8);
 
@@ -290,7 +296,7 @@ public class TrackerMotion {
             // fail if they don't match
             // Only pill DVT has magic bytes, so check length to ensure only pill DVT fails if we don't find magic bytes
             if(decryptedRawMotion.length > 4 && decryptedRawMotion[decryptedRawMotion.length -1] != 90 && decryptedRawMotion[decryptedRawMotion.length -2] != 90) {
-                throw new IllegalArgumentException("Magic bytes don't match");
+                throw new InvalidEncryptedPayloadException("Magic bytes don't match");
             }
             final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion));
             Exception exception = null;
@@ -312,14 +318,14 @@ public class TrackerMotion {
 
 
             if(exception != null){
-                throw new IllegalArgumentException(exception);
+                throw new InvalidEncryptedPayloadException(exception.getMessage());
             }
 
             return new PillPayloadV2(motionAmplitude,0L,0L,0L);
         }
 
 
-        public static PillPayloadV2 encryptedToRawVersion2(final byte[] key, final byte[] encryptedMotionData) throws IllegalArgumentException {
+        public static PillPayloadV2 encryptedToRawVersion2(final byte[] key, final byte[] encryptedMotionData) throws InvalidEncryptedPayloadException {
 
             final byte[] nonce = Arrays.copyOfRange(encryptedMotionData, 0, 8);
 
@@ -333,9 +339,10 @@ public class TrackerMotion {
             // Only pill DVT has magic bytes, so check length to ensure only pill DVT fails if we don't find magic bytes
             if(decryptedRawMotion.length > 4 && decryptedRawMotion[decryptedRawMotion.length -1] != 0x5A &&
                     decryptedRawMotion[decryptedRawMotion.length -2] != 0x5A) {
-                throw new IllegalArgumentException("Magic bytes don't match");
+                throw new InvalidEncryptedPayloadException("Magic bytes don't match");
             }
             final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion));
+
             Exception exception = null;
             long motionAmplitude = -1;
             long maxAccelerationRange = 0;
@@ -358,10 +365,8 @@ public class TrackerMotion {
                 }
             }
 
-
-
             if(exception != null){
-                throw new IllegalArgumentException(exception);
+                throw new InvalidEncryptedPayloadException(exception.getMessage());
             }
 
             return new PillPayloadV2(motionAmplitude, maxAccelerationRange, kickOffTimePerMinute, motionDurationInSecond);
