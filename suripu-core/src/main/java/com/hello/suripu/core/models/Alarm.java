@@ -295,8 +295,8 @@ public class Alarm {
             OK,
             NOT_VALID_NON_REPEATED_ALARM,
             SMART_ALARM_ALREADY_SET,
-            DUPLICATE_DAYS
-
+            DUPLICATE_DAYS,
+            REPEAT_DAYS_NOT_SET
 
         }
         /**
@@ -325,6 +325,10 @@ public class Alarm {
                         alarmDays.add(expectedRingTime.getDayOfWeek());
                     }
                 }else{
+                    if(alarm.dayOfWeek.isEmpty()){
+                        return AlarmStatus.REPEAT_DAYS_NOT_SET;
+                    }
+
                     if(!alarm.isSmart) {
                         continue;
                     }

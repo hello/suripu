@@ -83,49 +83,50 @@ public class PillScoreProcessor extends HelloBaseRecordProcessor {
             }
 
             for(final SenseCommandProtos.pill_data pillData : batchPilldata.getPillsList()) {
-
-                if(pillData.hasBatteryLevel()) {
-                    LOGGER.debug("Hearbeat data, not attempting to compute score for pill id: {}", pillData.getDeviceId());
-                    continue;
-                }
-
-                final Optional<byte[]> optionalKeyBytes = keyStore.get(pillData.getDeviceId());
-
-                if (!optionalKeyBytes.isPresent()) {
-                    LOGGER.warn("Pill {} is not using the data stored in the keystore", pillData.getDeviceId());
-                    continue;
-                }
-
-                final byte[] decryptionKey = optionalKeyBytes.get();
-
-                final Optional<DeviceAccountPair> internalPillPairingMap = this.deviceDAO.getInternalPillId(pillData.getDeviceId());
-
-                if(!internalPillPairingMap.isPresent()){
-                    LOGGER.warn("Cannot find internal pill id for pill {}", pillData.getDeviceId());
-                    continue;
-                }
-
                 final long timestampMillis = pillData.getTimestamp() * 1000L;
                 final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC)
                         .withSecondOfMinute(0)
                         .withMillisOfSecond(0);
 
-                if (roundedDateTime.isAfter(DateTime.now().plusDays(2))) {
-                    LOGGER.warn("Pill timestamp is in the future {}", internalPillPairingMap.get().internalDeviceId);
-                    continue;
+                if(!pillData.hasBatteryLevel()) {
+
+                    final Optional<byte[]> optionalKeyBytes = keyStore.get(pillData.getDeviceId());
+
+                    if (!optionalKeyBytes.isPresent()) {
+                        LOGGER.warn("Pill {} is not using the data stored in the keystore", pillData.getDeviceId());
+                        continue;
+                    }
+
+                    final byte[] decryptionKey = optionalKeyBytes.get();
+
+                    final Optional<DeviceAccountPair> internalPillPairingMap = this.deviceDAO.getInternalPillId(pillData.getDeviceId());
+
+                    if(!internalPillPairingMap.isPresent()){
+                        LOGGER.warn("Cannot find internal pill id for pill {}", pillData.getDeviceId());
+                        continue;
+                    }
+
+
+
+                    if (roundedDateTime.isAfter(DateTime.now().plusDays(2))) {
+                        LOGGER.warn("Pill timestamp is in the future {}", internalPillPairingMap.get().internalDeviceId);
+                        continue;
+                    }
+
+                    final Optional<DateTimeZone> dateTimeZoneOptional = getTimezoneForUser(batchPilldata.getDeviceId(), internalPillPairingMap.get().accountId);
+                    if(!dateTimeZoneOptional.isPresent()) {
+                        LOGGER.error("Missing timezone for account id: {}  and sense id : {}", internalPillPairingMap.get().accountId, batchPilldata.getDeviceId());
+                        continue;
+                    }
+
+                    final TrackerMotion trackerMotion = TrackerMotion.create(pillData,internalPillPairingMap.get(), dateTimeZoneOptional.get(), decryptionKey);
+
+                    final Long accountID = trackerMotion.accountId;
+                    final Long internalPillId = trackerMotion.trackerId;
+
+                    final PillSample sample = new PillSample(internalPillId, roundedDateTime, trackerMotion.value, trackerMotion.offsetMillis);
+                    samples.put(accountID, sample);
                 }
-
-                final Optional<DateTimeZone> dateTimeZoneOptional = getTimezoneForUser(batchPilldata.getDeviceId(), internalPillPairingMap.get().accountId);
-                if(!dateTimeZoneOptional.isPresent()) {
-                    LOGGER.error("Missing timezone for account id: {}  and sense id : {}", internalPillPairingMap.get().accountId, batchPilldata.getDeviceId());
-                    continue;
-                }
-
-                final TrackerMotion trackerMotion = TrackerMotion.create(pillData, internalPillPairingMap.get(), dateTimeZoneOptional.get(), decryptionKey);
-
-                final Long accountID = trackerMotion.accountId;
-                final PillSample sample = new PillSample(trackerMotion.trackerId, roundedDateTime, trackerMotion.value, trackerMotion.offsetMillis);
-                samples.put(accountID, sample);
                 activePills.put(pillData.getDeviceId(), roundedDateTime.getMillis());
             }
 
@@ -161,7 +162,6 @@ public class PillScoreProcessor extends HelloBaseRecordProcessor {
 
     // Should this be public for easy testing?
     private Optional<DateTimeZone> getTimezoneForUser(final String senseId, final Long accountId) {
-        final DateTimeZone defaultTimezone = DateTimeZone.forID("America/Los_Angeles");
         final Optional<UserInfo> userInfoOptional = mergedUserInfoDynamoDB.getInfo(senseId, accountId);
         if(userInfoOptional.isPresent()) {
             return userInfoOptional.get().timeZone;
