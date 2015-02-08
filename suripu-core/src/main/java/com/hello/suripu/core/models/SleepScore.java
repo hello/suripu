@@ -90,11 +90,11 @@ public class SleepScore {
     }
 
     public static List<SleepScore> computeSleepScore(final Long accountID,
-                                                     final String pillID,
+                                                     final Long internalPillId,
                                                      final SortedSet<PillSample> pillData,
                                                      final int dateBucketPeriod) {
 
-        LOGGER.debug("======= Computing scores for this pill {}, {}", pillID, accountID);
+        LOGGER.debug("======= Computing scores for this pill {}, {}", internalPillId, accountID);
 
         final List<SleepScore> sleepScores = new ArrayList<>();
         final PillSample firstData = pillData.first();
@@ -112,7 +112,7 @@ public class SleepScore {
             if (bucket.compareTo(lastBucketDT) != 0) {
                 SleepScore sleepScore = new SleepScore(0L, accountID,
                         lastBucketDT,
-                        Long.parseLong(pillID),
+                        internalPillId,
                         duration,
                         (int) (agitationNum/((float) dateBucketPeriod) * 100.0), // score
                         false, // no customized score yet
@@ -142,7 +142,7 @@ public class SleepScore {
         if (duration != 0) {
             SleepScore sleepScore = new SleepScore(0L, accountID,
                     lastBucketDT,
-                    Long.parseLong(pillID),
+                    internalPillId,
                     duration,
                     (int) ((agitationNum)/((float) dateBucketPeriod) * 100.0),
                     false, // no customized score for now

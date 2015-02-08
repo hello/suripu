@@ -24,7 +24,7 @@ public class SleepScoreTest {
     @Test
     public void testNonEmptyScores() {
         final Long accountID = 1L;
-        final String pillID = "10";
+        final Long pillID = 10L;
         final int dateBucketPeriod = 15;
         final SortedSet<PillSample> data = new TreeSet<>();
 
@@ -38,7 +38,7 @@ public class SleepScoreTest {
     @Test
     public void testNumberOfScoresCreated() {
         final Long accountID = 1L;
-        final String pillID = "10";
+        final Long pillID = 10L;
         final int dateBucketPeriod = 20;
 
         //let's create 3 groups, 2 samples per group
@@ -53,7 +53,7 @@ public class SleepScoreTest {
     @Test
     public void testSleepScoreDateUTC() {
         final Long accountID = 1L;
-        final String pillID = "10";
+        final Long pillID = 10L;
         final int dateBucketPeriod = 10;
 
         //let's create 3 groups, 2 samples per group
@@ -69,7 +69,7 @@ public class SleepScoreTest {
         }
     }
 
-    private SortedSet<PillSample> createSamples(final String pillID, final int numGroups, final int numSamplesPerGroup, final int dateBucketPeriod) {
+    private SortedSet<PillSample> createSamples(final Long internalPillId, final int numGroups, final int numSamplesPerGroup, final int dateBucketPeriod) {
         final DateTime startTime = DateTime.now().withTimeAtStartOfDay();
         startTime.withHourOfDay(12);
         Random r = new Random(2);
@@ -81,7 +81,7 @@ public class SleepScoreTest {
             int minutes = i * dateBucketPeriod;
             for (int j=0; j<numSamplesPerGroup; j++) {
                 minutes += r.nextInt(randomMax) + 1;
-                final PillSample sample = new PillSample(pillID, startTime.withMinuteOfHour(minutes), r.nextFloat(), this.OFFSET_MILLIS);
+                final PillSample sample = new PillSample(internalPillId, startTime.withMinuteOfHour(minutes), r.nextFloat(), this.OFFSET_MILLIS);
                 LOGGER.debug("sample {}", sample);
                 data.add(sample);
             }

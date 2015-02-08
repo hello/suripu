@@ -7,7 +7,7 @@ import org.joda.time.DateTime;
 public class PillSample implements Comparable {
 
     @JsonProperty("id")
-    public final String sampleID;
+    public final Long internalPillId;
 
     @JsonProperty("datetime_utc")
     public final DateTime dateTime;
@@ -18,11 +18,11 @@ public class PillSample implements Comparable {
     @JsonProperty("timezone_offset")
     public final int timeZoneOffset;
 
-    public PillSample(String id, final DateTime dateTime, final float val, final int timeZoneOffset) {
+    public PillSample(final Long internalPillId, final DateTime dateTime, final float val, final int timeZoneOffset) {
         this.dateTime = dateTime;
         this.val = val;
         this.timeZoneOffset = timeZoneOffset;
-        this.sampleID = id;
+        this.internalPillId = internalPillId;
     }
 
     @Override
@@ -34,7 +34,7 @@ public class PillSample implements Comparable {
     @Override
     public String toString() {
         return Objects.toStringHelper(PillSample.class)
-                .add("id", sampleID)
+                .add("id", internalPillId)
                 .add("date", dateTime)
                 .add("tz_offset", timeZoneOffset)
                 .add("value", val)

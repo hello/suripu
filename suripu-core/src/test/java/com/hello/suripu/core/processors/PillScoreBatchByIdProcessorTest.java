@@ -28,7 +28,7 @@ public class PillScoreBatchByIdProcessorTest {
     private static int CHECKPOINT_THRESHOLD = 1;
 
     final DateTime startTime = DateTime.now().withTimeAtStartOfDay();
-    private static String pillID = "10";
+    private static Long pillID = 10L;
     private static Long accountID = 1L;
 
     private final SleepScoreDAO sleepScoreDAO = new SleepScoreDAO() {
