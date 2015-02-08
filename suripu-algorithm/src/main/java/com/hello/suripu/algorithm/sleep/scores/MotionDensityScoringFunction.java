@@ -68,9 +68,9 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
                 LOGGER.debug("    density {}: t {}, sl_r {}, wup 0, val {}",
                         new DateTime(datum.timestamp, DateTimeZone.forOffsetMillis(datum.offsetMillis)),
                         sleepTimeScore,
-                        sleepMotionDensityScore,
+                        Math.pow(sleepMotionDensityScore, this.motionMaxPower),
                         datum.amplitude);
-                        */
+                */
             }
 
             if(this.type == ScoreType.WAKE_UP) {
