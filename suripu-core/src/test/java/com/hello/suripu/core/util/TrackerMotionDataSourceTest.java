@@ -29,12 +29,12 @@ public class TrackerMotionDataSourceTest {
         final DateTime now = DateTime.now();
         data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), -1, DateTimeZone.getDefault().getOffset(now),0L, 0L,0L));  // this one should be skipped
         data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), -2, DateTimeZone.getDefault().getOffset(now),0L, 0L,0L));  // -2 & 0xFFFFFFFF
-        assertThat(TrackerMotionDataSource.getMinAmplitude(data), is(0));
+        assertThat(TrackerMotionDataSource.getMinAmplitude(data), is(-2));
 
         data.clear();
         data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), -2, DateTimeZone.getDefault().getOffset(now), 0L, 0L,0L));  // -2 & 0xFFFFFFFF
         data.add(new TrackerMotion(0L, 0L, 0L, now.getMillis(), 1, DateTimeZone.getDefault().getOffset(now),0L, 0L,0L));  // -2 & 0xFFFFFFFF
-        assertThat(TrackerMotionDataSource.getMinAmplitude(data), is(1));
+        assertThat(TrackerMotionDataSource.getMinAmplitude(data), is(-2));
 
     }
 

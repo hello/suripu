@@ -198,6 +198,17 @@ public class MotionFeatures {
                 features.get(FeatureType.MAX_NO_MOTION_PERIOD).add(new AmplitudeData(timestamp, maxNoMotionPeriodCount, offsetMillis));
 
                 if(debugMode) {
+                    final StringBuilder builder = new StringBuilder();
+                    builder.append("[");
+                    for(final AmplitudeData amplitudeData:backTrackAmpWindow){
+                        builder.append(amplitudeData.amplitude).append(",");
+                    }
+                    builder.append("]");
+
+                    LOGGER.debug("{}: {}",
+                            new DateTime(timestamp, DateTimeZone.forOffsetMillis(offsetMillis)),
+                            builder.toString());
+                    /*
                     LOGGER.debug("{}, max_amp: {}, drop: {}, increase: {}, comb_bkwd: {}, comb_frwd: {}, last: {}, z_last {}, max1: {}, max2: {}",
                             new DateTime(timestamp, DateTimeZone.forOffsetMillis(offsetMillis)),
                             maxBackTrackAmplitude,
@@ -209,6 +220,8 @@ public class MotionFeatures {
                             maxNoMotionPeriodCount,
                             densityMax1,
                             densityMax2);
+                            */
+
                 }
 
                 if(densityMax1 < sleepDetectionWindowSizeInMinute / 3){
