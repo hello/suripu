@@ -283,10 +283,10 @@ public class TimelineUtilsTest {
         final DateTime wakeUpLocalUTC = new DateTime(wakeUpTime.getYear(), wakeUpTime.getMonthOfYear(), wakeUpTime.getDayOfMonth(), wakeUpTime.getHourOfDay(), wakeUpTime.getMinuteOfHour(), DateTimeZone.UTC);
         final DateTime outOfBedLocalUTC = new DateTime(outOfBedTime.getYear(), outOfBedTime.getMonthOfYear(), outOfBedTime.getDayOfMonth(), outOfBedTime.getHourOfDay(), outOfBedTime.getMinuteOfHour(), DateTimeZone.UTC);
 
-        assertThat(goToBedLocalUTC, is(new DateTime(2015, 1, 27, 0, 13, DateTimeZone.UTC)));
-        assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 27, 0, 24, DateTimeZone.UTC)));
-        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 27, 8, 17, DateTimeZone.UTC)));
-        assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 27, 8, 18, DateTimeZone.UTC)));
+        assertThat(goToBedLocalUTC, is(new DateTime(2015, 1, 27, 0, 18, DateTimeZone.UTC)));
+        assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 27, 0, 29, DateTimeZone.UTC)));
+        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 27, 8, 44, DateTimeZone.UTC)));
+        assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 27, 8, 45, DateTimeZone.UTC)));
     }
 
     @Test
@@ -364,7 +364,7 @@ public class TimelineUtilsTest {
             ex.printStackTrace();
         }
 
-        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 24, 0, 0, DateTimeZone.UTC),
+        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 21, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 Optional.of(new DateTime(1421913780000L, DateTimeZone.UTC)),
                 Optional.of(new DateTime(1421940660000L, DateTimeZone.UTC)),
@@ -402,7 +402,7 @@ public class TimelineUtilsTest {
         assertThat(goToBedLocalUTC, is(new DateTime(2015, 1, 22, 0, 13, DateTimeZone.UTC)));
         //assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 25, 1, 43, DateTimeZone.UTC)));
         assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 22, 0, 24, DateTimeZone.UTC)));
-        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 22, 7, 33, DateTimeZone.UTC)));
+        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 22, 7, 22, DateTimeZone.UTC)));
         assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 22, 7, 44, DateTimeZone.UTC)));
     }
 
@@ -460,9 +460,9 @@ public class TimelineUtilsTest {
         /*
         Same thing, cannot deal with wake up at the middle of night. because we use light and time as a feature.
          */
-        assertThat(goToBedLocalUTC, is(new DateTime(2015, 1, 5, 0, 13, DateTimeZone.UTC)));
-        assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 5, 0, 24, DateTimeZone.UTC)));
-        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 5, 8, 06, DateTimeZone.UTC)));
+        assertThat(goToBedLocalUTC, is(new DateTime(2015, 1, 5, 0, 20, DateTimeZone.UTC)));
+        assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 5, 0, 21, DateTimeZone.UTC)));
+        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 5, 8, 13, DateTimeZone.UTC)));
         assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 5, 8, 14, DateTimeZone.UTC)));  //heuristic
     }
 
@@ -519,8 +519,8 @@ public class TimelineUtilsTest {
         Same thing, cannot deal with wake up at the middle of night. because we use light and time as a feature.
          */
         assertThat(goToBedLocalUTC, is(new DateTime(2015, 2, 2, 0, 43, DateTimeZone.UTC)));
-        assertThat(sleepLocalUTC, is(new DateTime(2015, 2, 2, 0, 54, DateTimeZone.UTC)));
-        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 2, 2, 8, 36, DateTimeZone.UTC)));
+        assertThat(sleepLocalUTC, is(new DateTime(2015, 2, 2, 1, 38, DateTimeZone.UTC)));
+        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 2, 2, 8, 25, DateTimeZone.UTC)));
         assertThat(outOfBedLocalUTC, is(new DateTime(2015, 2, 2, 8, 47, DateTimeZone.UTC)));  //heuristic
     }
 

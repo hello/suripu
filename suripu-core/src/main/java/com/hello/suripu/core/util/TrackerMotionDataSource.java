@@ -24,14 +24,11 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
 
     public TrackerMotionDataSource(final List<TrackerMotion> motionsFromDBShortedByTimestamp) {
 
-        final List<TrackerMotion> positiveData = retainPositiveAmplitudes(motionsFromDBShortedByTimestamp);
-        final int minAmplitude = getMinAmplitude(positiveData);
-        for(final TrackerMotion motion: positiveData) {
-
-            if(this.dataAfterAutoInsert.size() == 0) {
-                this.dataAfterAutoInsert.add(trackerMotionToAmplitude(motion, minAmplitude));
-            }else{
-                if(motion.timestamp - this.dataAfterAutoInsert.getLast().timestamp > DATA_INTERVAL) {
+        //final List<TrackerMotion> positiveData = retainPositiveAmplitudes(motionsFromDBShortedByTimestamp);
+        final int minAmplitude = getMinAmplitude(motionsFromDBShortedByTimestamp);
+        for(final TrackerMotion motion: motionsFromDBShortedByTimestamp) {
+            if(this.dataAfterAutoInsert.size() > 0) {
+                if (motion.timestamp - this.dataAfterAutoInsert.getLast().timestamp > DATA_INTERVAL) {
                     final List<AmplitudeData> gapData = fillGap(this.dataAfterAutoInsert.getLast().timestamp,
                             motion.timestamp,
                             DATA_INTERVAL,
@@ -39,9 +36,11 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
                             this.dataAfterAutoInsert.getLast().offsetMillis);
                     this.dataAfterAutoInsert.addAll(gapData);
                 }
-
-                this.dataAfterAutoInsert.add(trackerMotionToAmplitude(motion, minAmplitude));
             }
+            this.dataAfterAutoInsert.add(new AmplitudeData(motion.timestamp,
+                    motion.value - minAmplitude,  // DONOT filter out the negative values, they are just off calibration!
+                    motion.offsetMillis));
+
         }
 
     }
@@ -60,10 +59,6 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
     public static int getMinAmplitude(final List<TrackerMotion> data){
         int minAmplitude = Integer.MAX_VALUE;
         for(final TrackerMotion datum:data){
-            if(datum.value <= 0){
-                continue;
-            }
-
             int amplitude = datum.value;
 
             if(amplitude < minAmplitude){
