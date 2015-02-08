@@ -210,15 +210,17 @@ public class TimelineUtils {
                 continue;
             }
 
-            if(inBedEventOptional.isPresent() && event.getEndTimestamp() < inBedEventOptional.get().getStartTimestamp()) {
+            if(inBedEventOptional.isPresent() && event.getEndTimestamp() <= inBedEventOptional.get().getStartTimestamp()) {
                 newEventList.add(new NullEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth()));
                 continue;
             }
 
-            if(outOfBedEventOptional.isPresent() && event.getStartTimestamp() > outOfBedEventOptional.get().getEndTimestamp()){
+            if(outOfBedEventOptional.isPresent() && event.getStartTimestamp() >= outOfBedEventOptional.get().getEndTimestamp()){
                 newEventList.add(new NullEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth()));
+                continue;
             }
 
+            newEventList.add(event);
         }
 
         return newEventList;
@@ -236,12 +238,12 @@ public class TimelineUtils {
             }
 
             // This is a null event, shall we keep it as it is?
-            if(inBedEventOptional.isPresent() && event.getEndTimestamp() < inBedEventOptional.get().getStartTimestamp()){
+            if(inBedEventOptional.isPresent() && event.getEndTimestamp() <= inBedEventOptional.get().getStartTimestamp()){
                 newEventList.add(event);  // Null event before in bed, grey
                 continue;
             }
 
-            if(outOfBedEventOptional.isPresent() && event.getStartTimestamp() > outOfBedEventOptional.get().getEndTimestamp()){
+            if(outOfBedEventOptional.isPresent() && event.getStartTimestamp() >= outOfBedEventOptional.get().getEndTimestamp()){
                 newEventList.add(event);  // Null event after out of bed, grey
                 continue;
             }
