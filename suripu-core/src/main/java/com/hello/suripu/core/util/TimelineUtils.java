@@ -947,8 +947,7 @@ public class TimelineUtils {
         if(firstWaveTimeOptional.isPresent()) {
 
             final LinkedList<AmplitudeData> waveAndCumulatedMotionFeature = new LinkedList<>();
-            for (final AmplitudeData amplitudeData : aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_MOTION_PERIOD)) {
-                // this is the magical light feature that can keep both magic and fix broken things.
+            for (final AmplitudeData amplitudeData : aggregatedFeatures.get(MotionFeatures.FeatureType.AWAKE_BACKWARD_DENSITY)) {
                 waveAndCumulatedMotionFeature.add(new AmplitudeData(amplitudeData.timestamp,
                         amplitudeData.amplitude,
                         amplitudeData.offsetMillis));

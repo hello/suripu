@@ -30,7 +30,8 @@ public class MotionFeatures {
         @Deprecated
         MAX_NO_MOTION_PERIOD,
         MAX_MOTION_PERIOD,
-        DENSITY_BACKWARD_AVERAGE_AMPLITUDE
+        DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
+        AWAKE_BACKWARD_DENSITY
     }
 
     public static Map<FeatureType, List<AmplitudeData>> aggregateData(final Map<FeatureType, List<AmplitudeData>> rawFeatures, final int windowSize){
@@ -62,6 +63,9 @@ public class MotionFeatures {
                         final double aggregatedMaxAmplitude = Ordering.natural().max(window).amplitude;
                         aggregatedDimension.add(new AmplitudeData(timestamp, aggregatedMaxAmplitude, offsetMillis));
                         break;
+                    case AWAKE_BACKWARD_DENSITY:
+                        aggregatedDimension.add(new AmplitudeData(timestamp, amplitudeData.amplitude, offsetMillis));
+                        break;
                 }
                 window.clear();
             }
@@ -78,6 +82,9 @@ public class MotionFeatures {
                     case DENSITY_BACKWARD_AVERAGE_AMPLITUDE:
                         final double aggregatedMaxAmplitude = Ordering.natural().max(window).amplitude;
                         aggregatedDimension.add(new AmplitudeData(timestamp, aggregatedMaxAmplitude, offsetMillis));
+                        break;
+                    case AWAKE_BACKWARD_DENSITY:
+                        aggregatedDimension.add(new AmplitudeData(timestamp, window.getLast().amplitude, offsetMillis));
                         break;
                 }
             }
@@ -183,6 +190,10 @@ public class MotionFeatures {
                     features.put(FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE, new LinkedList<AmplitudeData>());
                 }
 
+                if(!features.containsKey(FeatureType.AWAKE_BACKWARD_DENSITY)){
+                    features.put(FeatureType.AWAKE_BACKWARD_DENSITY, new LinkedList<AmplitudeData>());
+                }
+
                 features.get(FeatureType.MAX_AMPLITUDE).add(new AmplitudeData(timestamp, maxBackTrackAmplitude, offsetMillis));
 
                 final double combinedBackward = maxBackTrackAmplitude * densityDrop * Math.pow((1d + maxMotionPeriodCount), 3);
@@ -193,6 +204,7 @@ public class MotionFeatures {
 
                 final double wakeUpFeature = wakeUpAggregateDensity * NumericalUtils.mean(wakeUpAggregateWindow);
                 features.get(FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE).add(new AmplitudeData(timestamp, wakeUpFeature, offsetMillis));
+                features.get(FeatureType.AWAKE_BACKWARD_DENSITY).add(new AmplitudeData(timestamp, wakeUpAggregateDensity, offsetMillis));
 
                 features.get(FeatureType.MAX_MOTION_PERIOD).add(new AmplitudeData(timestamp, maxMotionPeriodCount, offsetMillis));
                 features.get(FeatureType.MAX_NO_MOTION_PERIOD).add(new AmplitudeData(timestamp, maxNoMotionPeriodCount, offsetMillis));
