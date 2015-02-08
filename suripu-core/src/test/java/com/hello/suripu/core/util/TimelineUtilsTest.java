@@ -14,6 +14,7 @@ import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.hamcrest.core.Is;
@@ -788,4 +789,15 @@ public class TimelineUtilsTest {
         assertThat(insights.isEmpty(), is(true));
     }
 
+    @Test
+    public void testGeneratePreSleepInsightsWithData() {
+        final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
+        assertThat(allSensorSampleList.isEmpty(), is(true));
+
+        allSensorSampleList.add(Sensor.LIGHT, Lists.newArrayList(new Sample(DateTime.now().getMillis(), 10.0f, 0)));
+        assertThat(allSensorSampleList.get(Sensor.LIGHT).isEmpty(), is(false));
+        assertThat(allSensorSampleList.isEmpty(), is(false));
+        assertThat(allSensorSampleList.get(Sensor.TEMPERATURE).isEmpty(), is(true));
+
+    }
 }
