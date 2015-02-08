@@ -213,10 +213,14 @@ public class TimelineProcessor {
 
         Optional<Segment> sleepSegmentOptional = Optional.absent();
         Optional<Segment> inBedSegmentOptional = Optional.absent();
+        List<Optional<Event>> sleepEventsFromAlgorithm = new ArrayList<>();
+        for(int i = 0; i < 4; i++){
+            sleepEventsFromAlgorithm.add(Optional.<Event>absent());
+        }
 
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
-            final List<Optional<Event>> sleepEventsFromAlgorithm = TimelineUtils.getSleepEvents(targetDate,
+            sleepEventsFromAlgorithm = TimelineUtils.getSleepEvents(targetDate,
                     trackerMotions,
                     lightOutTimeOptional,
                     wakeUpWaveTimeOptional,
@@ -309,10 +313,17 @@ public class TimelineProcessor {
             eventsWithSleepEvents = TimelineUtils.insertOneMinuteDurationEvents(eventsWithSleepEvents, sleepEvent);
         }
 
-        final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(eventsWithSleepEvents);
-        List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(cleanedUpEvents);
+        final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(eventsWithSleepEvents,
+                                                            sleepEventsFromAlgorithm.get(0),
+                                                            sleepEventsFromAlgorithm.get(3));
 
-        final int lightSleepThreshold = 70; // todo: configurable
+        final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
+                sleepEventsFromAlgorithm.get(0),
+                sleepEventsFromAlgorithm.get(3));
+
+        List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(greyEvents);
+
+        final int lightSleepThreshold = 70; // TODO: Generate dynamically instead of hard threshold
         final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments, lightSleepThreshold);
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 

@@ -52,18 +52,185 @@ public class TimelineUtilsTest {
     public void testRemoveMotionEventsOutsideBedPeriod() {
         final List<Event> events = Lists.newArrayList();
         final DateTime now = DateTime.now();
-        events.add(new MotionEvent(now.getMillis(), now.getMillis() + DateTimeConstants.MILLIS_PER_MINUTE,0,5));
-        events.add(new InBedEvent(now.getMillis(), now.getMillis() + DateTimeConstants.MILLIS_PER_MINUTE,0));
-        events.add(new NullEvent(now.getMillis(), now.getMillis() + DateTimeConstants.MILLIS_PER_MINUTE,0,100));
-        events.add(new OutOfBedEvent(now.getMillis(), now.getMillis() + DateTimeConstants.MILLIS_PER_MINUTE,0));
-        events.add(new MotionEvent(now.getMillis(), now.getMillis() + DateTimeConstants.MILLIS_PER_MINUTE,0,10));
-        events.add(new MotionEvent(now.getMillis(), now.getMillis() + DateTimeConstants.MILLIS_PER_MINUTE,0,1));
+        events.add(new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(),0,5));
+        events.add(new InBedEvent(now.plusMinutes(1).getMillis(), now.plusMinutes(2).getMillis(),0));
+        events.add(new NullEvent(now.plusMinutes(2).getMillis(), now.plusMinutes(3).getMillis(),0,100));
+        events.add(new OutOfBedEvent(now.plusMinutes(3).getMillis(), now.plusMinutes(4).getMillis(),0));
+        events.add(new MotionEvent(now.plusMinutes(4).getMillis(), now.plusMinutes(5).getMillis(),0,10));
+        events.add(new MotionEvent(now.plusMinutes(5).getMillis(), now.plusMinutes(6).getMillis(),0,1));
 
-        final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events);
+        final Optional<Event> inBedOptional = Optional.of(events.get(1));
+        final Optional<Event> outBedOptional = Optional.of(events.get(3));
+
+        final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
         assertThat(filteredEvents.size(), is(events.size()));
         assertThat(filteredEvents.get(0).getType(), is(Event.Type.NONE));
-        assertThat(filteredEvents.get(2).getType(), is(Event.Type.SLEEPING));
+        assertThat(filteredEvents.get(2).getType(), is(Event.Type.NONE));
         assertThat(filteredEvents.get(filteredEvents.size() - 1).getType(), is(Event.Type.NONE));
+
+    }
+
+    @Test
+    public void testRemoveMotionEventsOutsideInBedPeriod() {
+        final List<Event> events = Lists.newArrayList();
+        final DateTime now = DateTime.now();
+        events.add(new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(),0,5));
+        events.add(new InBedEvent(now.plusMinutes(1).getMillis(), now.plusMinutes(2).getMillis(),0));
+        events.add(new NullEvent(now.plusMinutes(2).getMillis(), now.plusMinutes(3).getMillis(),0,100));
+        events.add(new OutOfBedEvent(now.plusMinutes(3).getMillis(), now.plusMinutes(4).getMillis(),0));
+        events.add(new MotionEvent(now.plusMinutes(4).getMillis(), now.plusMinutes(5).getMillis(),0,10));
+        events.add(new MotionEvent(now.plusMinutes(5).getMillis(), now.plusMinutes(6).getMillis(),0,1));
+
+        final Optional<Event> inBedOptional = Optional.of(events.get(1));
+        final Optional<Event> outBedOptional = Optional.absent();
+
+        final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
+        assertThat(filteredEvents.size(), is(events.size()));
+        assertThat(filteredEvents.get(0).getType(), is(Event.Type.NONE));
+        assertThat(filteredEvents.get(2).getType(), is(Event.Type.NONE));
+        assertThat(filteredEvents.get(filteredEvents.size() - 1).getType(), is(Event.Type.MOTION));
+
+    }
+
+    @Test
+    public void testRemoveMotionEventsOutsideOutBedPeriod() {
+        final List<Event> events = Lists.newArrayList();
+        final DateTime now = DateTime.now();
+        events.add(new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(),0,5));
+        events.add(new InBedEvent(now.plusMinutes(1).getMillis(), now.plusMinutes(2).getMillis(),0));
+        events.add(new NullEvent(now.plusMinutes(2).getMillis(), now.plusMinutes(3).getMillis(),0,100));
+        events.add(new OutOfBedEvent(now.plusMinutes(3).getMillis(), now.plusMinutes(4).getMillis(),0));
+        events.add(new MotionEvent(now.plusMinutes(4).getMillis(), now.plusMinutes(5).getMillis(),0,10));
+        events.add(new MotionEvent(now.plusMinutes(5).getMillis(), now.plusMinutes(6).getMillis(),0,1));
+
+        final Optional<Event> inBedOptional = Optional.absent();
+        final Optional<Event> outBedOptional = Optional.of(events.get(3));
+
+        final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
+        assertThat(filteredEvents.size(), is(events.size()));
+        assertThat(filteredEvents.get(0).getType(), is(Event.Type.MOTION));
+        assertThat(filteredEvents.get(2).getType(), is(Event.Type.NONE));
+        assertThat(filteredEvents.get(filteredEvents.size() - 1).getType(), is(Event.Type.NONE));
+
+    }
+
+    @Test
+    public void testRemoveMotionEventsBedPeriodRemovedBySafeGuard() {
+        final List<Event> events = Lists.newArrayList();
+        final DateTime now = DateTime.now();
+        events.add(new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(),0,5));
+        events.add(new InBedEvent(now.plusMinutes(1).getMillis(), now.plusMinutes(2).getMillis(),0));
+        events.add(new NullEvent(now.plusMinutes(2).getMillis(), now.plusMinutes(3).getMillis(),0,100));
+        events.add(new OutOfBedEvent(now.plusMinutes(3).getMillis(), now.plusMinutes(4).getMillis(),0));
+        events.add(new MotionEvent(now.plusMinutes(4).getMillis(), now.plusMinutes(5).getMillis(),0,10));
+        events.add(new MotionEvent(now.plusMinutes(5).getMillis(), now.plusMinutes(6).getMillis(),0,1));
+
+        final Optional<Event> inBedOptional = Optional.absent();
+        final Optional<Event> outBedOptional = Optional.absent();
+
+        final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
+        assertThat(filteredEvents.size(), is(events.size()));
+        assertThat(filteredEvents.get(0).getType(), is(Event.Type.MOTION));
+        assertThat(filteredEvents.get(2).getType(), is(Event.Type.NONE));
+        assertThat(filteredEvents.get(filteredEvents.size() - 1).getType(), is(Event.Type.MOTION));
+
+    }
+
+    @Test
+    public void testGreyNullEventsOutsideBedPeriod() {
+        final List<Event> events = Lists.newArrayList();
+        final DateTime now = DateTime.now();
+        events.add(new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(),0,5));
+        events.add(new InBedEvent(now.plusMinutes(1).getMillis(), now.plusMinutes(2).getMillis(),0));
+        events.add(new NullEvent(now.plusMinutes(2).getMillis(), now.plusMinutes(3).getMillis(),0,100));
+        events.add(new OutOfBedEvent(now.plusMinutes(3).getMillis(), now.plusMinutes(4).getMillis(),0));
+        events.add(new MotionEvent(now.plusMinutes(4).getMillis(), now.plusMinutes(5).getMillis(),0,10));
+        events.add(new MotionEvent(now.plusMinutes(5).getMillis(), now.plusMinutes(6).getMillis(),0,1));
+
+        final Optional<Event> inBedOptional = Optional.of(events.get(1));
+        final Optional<Event> outBedOptional = Optional.of(events.get(3));
+
+        final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
+        final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
+
+        assertThat(greyEvents.size(), is(events.size()));
+        assertThat(greyEvents.get(0).getType(), is(Event.Type.NONE));
+        assertThat(greyEvents.get(2).getType(), is(Event.Type.SLEEPING));
+        assertThat(greyEvents.get(filteredEvents.size() - 1).getType(), is(Event.Type.NONE));
+
+    }
+
+    @Test
+    public void testGreyNullEventsOutsideInBedPeriod() {
+        final List<Event> events = Lists.newArrayList();
+        final DateTime now = DateTime.now();
+        events.add(new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(),0,5));
+        events.add(new InBedEvent(now.plusMinutes(1).getMillis(), now.plusMinutes(2).getMillis(),0));
+        events.add(new NullEvent(now.plusMinutes(2).getMillis(), now.plusMinutes(3).getMillis(),0,100));
+        events.add(new OutOfBedEvent(now.plusMinutes(3).getMillis(), now.plusMinutes(4).getMillis(),0));
+        events.add(new MotionEvent(now.plusMinutes(4).getMillis(), now.plusMinutes(5).getMillis(),0,10));
+        events.add(new NullEvent(now.plusMinutes(5).getMillis(), now.plusMinutes(6).getMillis(),0,1));
+
+        final Optional<Event> inBedOptional = Optional.of(events.get(1));
+        final Optional<Event> outBedOptional = Optional.absent();
+
+        final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
+        final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
+
+        assertThat(greyEvents.size(), is(events.size()));
+        assertThat(greyEvents.get(0).getType(), is(Event.Type.NONE));
+        assertThat(greyEvents.get(2).getType(), is(Event.Type.SLEEPING));
+        assertThat(greyEvents.get(filteredEvents.size() - 2).getType(), is(Event.Type.MOTION));
+        assertThat(greyEvents.get(filteredEvents.size() - 1).getType(), is(Event.Type.SLEEPING));
+
+    }
+
+    @Test
+    public void testGreyNullEventsOutsideOutBedPeriod() {
+        final List<Event> events = Lists.newArrayList();
+        final DateTime now = DateTime.now();
+        events.add(new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(),0,5));
+        events.add(new InBedEvent(now.plusMinutes(1).getMillis(), now.plusMinutes(2).getMillis(),0));
+        events.add(new NullEvent(now.plusMinutes(2).getMillis(), now.plusMinutes(3).getMillis(),0,100));
+        events.add(new OutOfBedEvent(now.plusMinutes(3).getMillis(), now.plusMinutes(4).getMillis(),0));
+        events.add(new MotionEvent(now.plusMinutes(4).getMillis(), now.plusMinutes(5).getMillis(),0,10));
+        events.add(new NullEvent(now.plusMinutes(5).getMillis(), now.plusMinutes(6).getMillis(),0,1));
+
+        final Optional<Event> inBedOptional = Optional.absent();
+        final Optional<Event> outBedOptional = Optional.of(events.get(3));
+
+        final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
+        final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
+
+        assertThat(greyEvents.size(), is(events.size()));
+        assertThat(greyEvents.get(0).getType(), is(Event.Type.MOTION));
+        assertThat(greyEvents.get(2).getType(), is(Event.Type.SLEEPING));
+        assertThat(greyEvents.get(filteredEvents.size() - 2).getType(), is(Event.Type.NONE));
+        assertThat(greyEvents.get(filteredEvents.size() - 1).getType(), is(Event.Type.NONE));
+
+    }
+
+    @Test
+    public void testGreyNullEventsBedEventsRemovedBySafeGuard() {
+        final List<Event> events = Lists.newArrayList();
+        final DateTime now = DateTime.now();
+        events.add(new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(),0,5));
+        events.add(new InBedEvent(now.plusMinutes(1).getMillis(), now.plusMinutes(2).getMillis(),0));
+        events.add(new NullEvent(now.plusMinutes(2).getMillis(), now.plusMinutes(3).getMillis(),0,100));
+        events.add(new OutOfBedEvent(now.plusMinutes(3).getMillis(), now.plusMinutes(4).getMillis(),0));
+        events.add(new MotionEvent(now.plusMinutes(4).getMillis(), now.plusMinutes(5).getMillis(),0,10));
+        events.add(new MotionEvent(now.plusMinutes(5).getMillis(), now.plusMinutes(6).getMillis(),0,1));
+
+        final Optional<Event> inBedOptional = Optional.absent();
+        final Optional<Event> outBedOptional = Optional.absent();
+
+        final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
+        final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
+
+        for(int i = 0; i < events.size(); i++){
+            assertThat(greyEvents.get(i).getType() == Event.Type.NONE, is(false));
+        }
+        assertThat(greyEvents.get(2).getType(), is(Event.Type.SLEEPING));
 
     }
 
