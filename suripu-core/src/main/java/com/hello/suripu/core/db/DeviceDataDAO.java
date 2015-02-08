@@ -272,7 +272,7 @@ public abstract class DeviceDataDAO {
 
     // used by timeline, query by local_utc_ts
     @Timed
-    public Optional<AllSensorSampleList> generateTimeSeriesByLocalTimeAllSensors(
+    public AllSensorSampleList generateTimeSeriesByLocalTimeAllSensors(
             final Long queryStartTimestampInLocalUTC,
             final Long queryEndTimestampInLocalUTC,
             final Long accountId,
@@ -291,14 +291,15 @@ public abstract class DeviceDataDAO {
         final List<DeviceData> rows = getBetweenByLocalTimeAggregateBySlotDuration(accountId, deviceId, queryStartTime, queryEndTime, slotDurationInMinutes);
         LOGGER.debug("Retrieved {} rows from database", rows.size());
 
+        final AllSensorSampleList sensorDataResults = new AllSensorSampleList();
         if(rows.size() == 0) {
-            return Optional.absent();
+            return sensorDataResults;
         }
 
-        final Optional<AllSensorSampleMap> optionalPopulatedMapAll = Bucketing.populateMapAll(rows);
+        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows);
 
-        if(!optionalPopulatedMapAll.isPresent()) {
-            return Optional.absent();
+        if(allSensorSampleMap.isEmpty()) {
+            return sensorDataResults;
         }
 
         // create buckets with keys in UTC-Time
@@ -338,13 +339,12 @@ public abstract class DeviceDataDAO {
 
         final int numberOfBuckets= (int) ((absoluteIntervalMS / DateTimeConstants.MILLIS_PER_MINUTE) / slotDurationInMinutes + 1);
 
-        final AllSensorSampleList sensorDataResults = new AllSensorSampleList();
+
 
         for (final Sensor sensor : Sensor.values()) {
             LOGGER.trace("Processing sensor {}", sensor.toString());
-            final Optional<Map<Long, Sample>> optionalSensorMap = optionalPopulatedMapAll.get().getData(sensor);
-            if (optionalSensorMap.isPresent()) {
-                final Map<Long, Sample> sensorMap = optionalSensorMap.get();
+            final Map<Long, Sample> sensorMap = allSensorSampleMap.get(sensor);
+            if (!sensorMap.isEmpty()) {
 
                 final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes, missingDataDefaultValue);
                 LOGGER.trace("Empty Map size = {}", map.size());
@@ -355,17 +355,17 @@ public abstract class DeviceDataDAO {
                 LOGGER.trace("New map size = {}", merged.size());
 
                 final List<Sample> sortedList = Bucketing.sortResults(merged, startOffsetMillis);
-                sensorDataResults.setData(sensor, sortedList);
+                sensorDataResults.add(sensor, sortedList);
 
             }
         }
 
-        return Optional.of(sensorDataResults);
+        return sensorDataResults;
     }
 
     // used by room conditions, query by utc_ts
     @Timed
-    public  Optional<AllSensorSampleList> generateTimeSeriesByUTCTimeAllSensors(
+    public  AllSensorSampleList generateTimeSeriesByUTCTimeAllSensors(
             final Long queryStartTimestampInUTC,
             final Long queryEndTimestampInUTC,
             final Long accountId,
@@ -384,16 +384,17 @@ public abstract class DeviceDataDAO {
         final List<DeviceData> rows = getBetweenByAbsoluteTimeAggregateBySlotDuration(accountId, deviceId, queryStartTime, queryEndTime, slotDurationInMinutes);
         LOGGER.trace("Retrieved {} rows from database", rows.size());
 
+        final AllSensorSampleList sensorDataResults = new AllSensorSampleList();
+
         if(rows.size() == 0) {
-            return Optional.absent();
+            return sensorDataResults;
         }
 
-        final Optional<AllSensorSampleMap> optionalPopulatedMapAll = Bucketing.populateMapAll(rows);
+        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows);
 
-        if(!optionalPopulatedMapAll.isPresent()) {
-            return Optional.absent();
+        if(allSensorSampleMap.isEmpty()) {
+            return sensorDataResults;
         }
-
 
         // create buckets with keys in UTC-Time
         final int currentOffsetMillis = rows.get(0).offsetMillis;
@@ -411,19 +412,17 @@ public abstract class DeviceDataDAO {
         final long absoluteIntervalMS = queryEndTimestampInUTC - queryStartTimestampInUTC;
         final int numberOfBuckets= (int) ((absoluteIntervalMS / DateTimeConstants.MILLIS_PER_MINUTE) / slotDurationInMinutes + 1);
 
-        final AllSensorSampleList sensorDataResults = new AllSensorSampleList();
+
         final AllSensorSampleMap mergedMaps = new AllSensorSampleMap();
 
-        for (Sensor sensor : Sensor.values()) {
+        for (final Sensor sensor : Sensor.values()) {
             LOGGER.trace("Processing sensor {}", sensor.toString());
 
-            final Optional<Map<Long, Sample>> optionalSensorMap = optionalPopulatedMapAll.get().getData(sensor);
+            final Map<Long, Sample> sensorMap = allSensorSampleMap.get(sensor);
 
-            if (!optionalSensorMap.isPresent()) {
+            if (sensorMap.isEmpty()) {
                 continue;
             }
-
-            final Map<Long, Sample> sensorMap = optionalSensorMap.get();
 
             final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes, missingDataDefaultValue);
             LOGGER.trace("Map size = {}", map.size());
@@ -431,15 +430,14 @@ public abstract class DeviceDataDAO {
             // Override map with values from DB
             mergedMaps.setSampleMap(sensor, Bucketing.mergeResults(map, sensorMap));
 
-            if (mergedMaps.getData(sensor).isPresent()) {
-                LOGGER.trace("New map size = {}", mergedMaps.getData(sensor).get().size());
-                final List<Sample> sortedList = Bucketing.sortResults(mergedMaps.getData(sensor).get(), currentOffsetMillis);
-                sensorDataResults.setData(sensor, sortedList);
+            if (!mergedMaps.get(sensor).isEmpty()) {
+                LOGGER.trace("New map size = {}", mergedMaps.get(sensor).size());
+                final List<Sample> sortedList = Bucketing.sortResults(mergedMaps.get(sensor), currentOffsetMillis);
+                sensorDataResults.add(sensor, sortedList);
             }
-
         }
 
-        return Optional.of(sensorDataResults);
+        return sensorDataResults;
     }
 
 

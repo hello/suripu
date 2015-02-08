@@ -166,13 +166,14 @@ public class TimelineProcessor {
         final ArrayList<Event> sleepEvents = new ArrayList<>();
 
         // get all sensor data, used for light and sound disturbances, and presleep-insights
-        Optional<AllSensorSampleList> optionalSensorData = Optional.absent();
+        AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
 
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
+
         if (deviceId.isPresent()) {
             final int slotDurationMins = 1;
 
-            optionalSensorData = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
+            allSensorSampleList = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
                     targetDate.getMillis(), endDate.getMillis(),
                     accountId, deviceId.get(), slotDurationMins, missingDataDefaultValue);
         }
@@ -180,18 +181,18 @@ public class TimelineProcessor {
         // compute lights-out events
         Optional<DateTime> lightOutTimeOptional = Optional.absent();
         Optional<DateTime> wakeUpWaveTimeOptional = Optional.absent();
-        if (optionalSensorData.isPresent()) {
-            final List<Event> lightEvents = TimelineUtils.getLightEvents(optionalSensorData.get().getData(Sensor.LIGHT));
+        if (!allSensorSampleList.isEmpty()) {
+            final List<Event> lightEvents = TimelineUtils.getLightEvents(allSensorSampleList.get(Sensor.LIGHT));
 
             if (lightEvents.size() > 0) {
                 events.addAll(lightEvents);
                 lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
             }
 
-            if(!optionalSensorData.get().getData(Sensor.WAVE_COUNT).isEmpty() && trackerMotions.size() > 0){
+            if(!allSensorSampleList.get(Sensor.WAVE_COUNT).isEmpty() && trackerMotions.size() > 0){
                 wakeUpWaveTimeOptional = TimelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
                         trackerMotions.get(trackerMotions.size() - 1).timestamp,
-                        optionalSensorData.get().getData(Sensor.WAVE_COUNT));
+                        allSensorSampleList.get(Sensor.WAVE_COUNT));
             }
         }
 
@@ -370,7 +371,7 @@ public class TimelineProcessor {
         LOGGER.debug("Score for account_id = {} is {}", accountId, sleepScore);
 
 
-        final List<Insight> insights = TimelineUtils.generatePreSleepInsights(optionalSensorData, sleepStats.sleepTime);
+        final List<Insight> insights = TimelineUtils.generatePreSleepInsights(allSensorSampleList, sleepStats.sleepTime, accountId);
         final List<SleepSegment>  reversedSegments = Lists.reverse(reversed);
         final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, date, reversedSegments, insights, sleepStats);
 

@@ -5,6 +5,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
+import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
@@ -12,6 +13,8 @@ import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
+import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.hamcrest.core.Is;
 import org.joda.time.DateTime;
@@ -23,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -767,4 +771,21 @@ public class TimelineUtilsTest {
         assertThat(inserted.get(1).getType(), is(Event.Type.NONE));
         assertThat(inserted.get(1).getStartTimestamp(), is(now.plusMinutes(3).getMillis()));
     }
+
+    @Test
+    public void testGeneratePreSleepInsightsMissingSensorData() {
+        final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
+        final List<Insight> insights = TimelineUtils.generatePreSleepInsights(allSensorSampleList, 0L, 999L);
+        assertThat(insights.isEmpty(), is(true));
+    }
+
+
+    @Test
+    public void testGeneratePreSleepInsightsEmptyData() {
+        final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
+        allSensorSampleList.add(Sensor.LIGHT, Collections.EMPTY_LIST);
+        final List<Insight> insights = TimelineUtils.generatePreSleepInsights(allSensorSampleList, 0L, 999L);
+        assertThat(insights.isEmpty(), is(true));
+    }
+
 }
