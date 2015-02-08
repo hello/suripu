@@ -45,17 +45,6 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
 
     }
 
-    public static List<TrackerMotion> retainPositiveAmplitudes(final List<TrackerMotion> data){
-        final LinkedList<TrackerMotion> positiveItems = new LinkedList<>();
-        for(final TrackerMotion motion:data){
-            if(motion.value > 0){
-                positiveItems.add(motion);
-            }
-        }
-
-        return ImmutableList.copyOf(positiveItems);
-    }
-
     public static int getMinAmplitude(final List<TrackerMotion> data){
         int minAmplitude = Integer.MAX_VALUE;
         for(final TrackerMotion datum:data){
@@ -92,16 +81,6 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
 
         return insertData;
 
-    }
-
-    /*
-    * Convert the TrackerMotion to AmplitudeData which is used by algorithm.
-     */
-    public static AmplitudeData trackerMotionToAmplitude(final TrackerMotion trackerMotion, final int defaultValue){
-        if(trackerMotion.value < 0){
-            return new AmplitudeData(trackerMotion.timestamp, Double.valueOf(defaultValue), trackerMotion.offsetMillis);
-        }
-        return new AmplitudeData(trackerMotion.timestamp, Double.valueOf(trackerMotion.value), trackerMotion.offsetMillis);
     }
 
     /*
