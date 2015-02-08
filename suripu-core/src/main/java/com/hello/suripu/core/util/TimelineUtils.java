@@ -1016,11 +1016,13 @@ public class TimelineUtils {
         final Event outOfBed = sleepEvents.get(3);
 
 
-        final ArrayList<Optional<Event>> fixedSleepEvents = new ArrayList<>();
-        fixedSleepEvents.add(Optional.of(goToBed));
-        fixedSleepEvents.add(Optional.of(sleep));
-        fixedSleepEvents.add(Optional.of(wakeUp));
-        fixedSleepEvents.add(Optional.of(outOfBed));
+        final ArrayList<Optional<Event>> fixedSleepEvents = Lists.newArrayList(
+                Optional.of(goToBed),
+                Optional.of(sleep),
+                Optional.of(wakeUp),
+                Optional.of(outOfBed)
+        );
+
 
         if(sleep.getStartTimestamp() == goToBed.getStartTimestamp()){
             fixedSleepEvents.set(1, Optional.of((Event) new FallingAsleepEvent(sleep.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
