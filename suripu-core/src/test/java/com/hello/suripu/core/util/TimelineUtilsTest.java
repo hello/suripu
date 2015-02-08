@@ -5,6 +5,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
+import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
@@ -12,6 +13,9 @@ import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
+import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.hamcrest.core.Is;
 import org.joda.time.DateTime;
@@ -23,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -457,21 +462,17 @@ public class TimelineUtilsTest {
     }
 
     @Test
-    public void testGetFullSleepEventsBigMotionBeforeGetIntoBed(){
+    public void testGetFullSleepEventsBigMotionBeforeGetIntoBed() throws IOException {
         final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/pang_motion_2015_01_24_raw.csv");
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
-        try {
-            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
-            final String[] lines = csvString.split("\\n");
-            for(int i = 1; i < lines.length; i++){
-                final String[] columns = lines[i].split(",");
-                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
-                //if(trackerMotion.value > 0){
-                trackerMotions.add(trackerMotion);
-                //}
-            }
-        }catch (IOException ex){
-            ex.printStackTrace();
+        final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
+        final String[] lines = csvString.split("\\n");
+        for(int i = 1; i < lines.length; i++){
+            final String[] columns = lines[i].split(",");
+            final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
+            //if(trackerMotion.value > 0){
+            trackerMotions.add(trackerMotion);
+            //}
         }
 
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 24, 0, 0, DateTimeZone.UTC),
@@ -635,21 +636,18 @@ public class TimelineUtilsTest {
 
 
     @Test
-    public void testGetFullSleepEventsWeekend(){
+    public void testGetFullSleepEventsWeekend() throws IOException {
         final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/pang_motion_2015_02_01_raw.csv");
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
-        try {
-            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
-            final String[] lines = csvString.split("\\n");
-            for(int i = 1; i < lines.length; i++){
-                final String[] columns = lines[i].split(",");
-                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
-                //if(trackerMotion.value > 0){
-                trackerMotions.add(trackerMotion);
-                //}
-            }
-        }catch (IOException ex){
-            ex.printStackTrace();
+
+        final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
+        final String[] lines = csvString.split("\\n");
+        for(int i = 1; i < lines.length; i++){
+            final String[] columns = lines[i].split(",");
+            final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
+            //if(trackerMotion.value > 0){
+            trackerMotions.add(trackerMotion);
+            //}
         }
 
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 2, 1, 0, 0, DateTimeZone.UTC),
@@ -698,7 +696,7 @@ public class TimelineUtilsTest {
         final DateTime now = DateTime.now();
         events.add(new NullEvent(now.getMillis(), now.plusMinutes(2).getMillis(), 0, 0));
 
-        List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+        final List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
                 new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0, 0));
         assertThat(inserted.size(), is(2));
         assertThat(inserted.get(0).getType(), is(Event.Type.MOTION));
@@ -713,7 +711,7 @@ public class TimelineUtilsTest {
         final DateTime now = DateTime.now();
         events.add(new NullEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0, 0));
 
-        List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+        final List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
                 new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0, 0));
         assertThat(inserted.size(), is(1));
         assertThat(inserted.get(0).getType(), is(Event.Type.MOTION));
@@ -727,7 +725,7 @@ public class TimelineUtilsTest {
         final DateTime now = DateTime.now();
         events.add(new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0, 0));
 
-        List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+        final List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
                 new NullEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0, 0));
         assertThat(inserted.size(), is(1));
         assertThat(inserted.get(0).getType(), is(Event.Type.MOTION));
@@ -742,7 +740,7 @@ public class TimelineUtilsTest {
         final DateTime now = DateTime.now();
         events.add(new MotionEvent(now.getMillis(), now.plusMinutes(3).getMillis(), 0, 0));
 
-        List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+        final List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
                 new NullEvent(now.minusMinutes(1).getMillis(), now.getMillis(), 0, 0));
         assertThat(inserted.size(), is(2));
         assertThat(inserted.get(0).getType(), is(Event.Type.NONE));
@@ -759,12 +757,40 @@ public class TimelineUtilsTest {
         final DateTime now = DateTime.now();
         events.add(new MotionEvent(now.getMillis(), now.plusMinutes(3).getMillis(), 0, 0));
 
-        List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+        final List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
                 new NullEvent(now.plusMinutes(3).getMillis(), now.plusMinutes(4).getMillis(), 0, 0));
         assertThat(inserted.size(), is(2));
         assertThat(inserted.get(0).getType(), is(Event.Type.MOTION));
         assertThat(inserted.get(0).getStartTimestamp(), is(now.getMillis()));
         assertThat(inserted.get(1).getType(), is(Event.Type.NONE));
         assertThat(inserted.get(1).getStartTimestamp(), is(now.plusMinutes(3).getMillis()));
+    }
+
+    @Test
+    public void testGeneratePreSleepInsightsMissingSensorData() {
+        final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
+        final List<Insight> insights = TimelineUtils.generatePreSleepInsights(allSensorSampleList, 0L, 999L);
+        assertThat(insights.isEmpty(), is(true));
+    }
+
+
+    @Test
+    public void testGeneratePreSleepInsightsEmptyData() {
+        final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
+        allSensorSampleList.add(Sensor.LIGHT, Collections.EMPTY_LIST);
+        final List<Insight> insights = TimelineUtils.generatePreSleepInsights(allSensorSampleList, 0L, 999L);
+        assertThat(insights.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testGeneratePreSleepInsightsWithData() {
+        final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
+        assertThat(allSensorSampleList.isEmpty(), is(true));
+
+        allSensorSampleList.add(Sensor.LIGHT, Lists.newArrayList(new Sample(DateTime.now().getMillis(), 10.0f, 0)));
+        assertThat(allSensorSampleList.get(Sensor.LIGHT).isEmpty(), is(false));
+        assertThat(allSensorSampleList.isEmpty(), is(false));
+        assertThat(allSensorSampleList.get(Sensor.TEMPERATURE).isEmpty(), is(true));
+
     }
 }

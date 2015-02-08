@@ -105,16 +105,16 @@ public class DataScienceResource extends BaseResource {
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
-        Optional<AllSensorSampleList> optionalSensorData = Optional.absent();
+
 
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
         if (deviceId.isPresent()) {
             final int slotDurationMins = 1;
 
-            optionalSensorData = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
+            final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
                     targetDate.getMillis(), endDate.getMillis(),
                     accessToken.accountId, deviceId.get(), slotDurationMins, missingDataDefaultValue(accessToken.accountId));
-            final List<Sample> lightData = optionalSensorData.get().getData(Sensor.LIGHT);
+            final List<Sample> lightData = sensorData.get(Sensor.LIGHT);
             final List<Event> lightEvents = TimelineUtils.getLightEvents(lightData);
             return lightEvents;
         }
@@ -135,16 +135,15 @@ public class DataScienceResource extends BaseResource {
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
 
-        Optional<AllSensorSampleList> optionalSensorData = Optional.absent();
 
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
         if (deviceId.isPresent()) {
             final int slotDurationMins = 1;
 
-            optionalSensorData = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
+            AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
                     targetDate.getMillis(), endDate.getMillis(),
                     accessToken.accountId, deviceId.get(), slotDurationMins, missingDataDefaultValue(accessToken.accountId));
-            final List<Sample> data = optionalSensorData.get().getData(Sensor.valueOf(dataType));
+            final List<Sample> data = sensorData.get(Sensor.valueOf(dataType));
             return data;
         }
         throw new WebApplicationException(Response.Status.NOT_FOUND);

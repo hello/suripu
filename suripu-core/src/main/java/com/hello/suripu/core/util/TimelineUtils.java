@@ -2,6 +2,7 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.LightSegment;
@@ -659,86 +660,89 @@ public class TimelineUtils {
 
     }
 
-    public static List<Insight> generatePreSleepInsights(Optional<AllSensorSampleList> optionalSensorData, final long sleepTimestampUTC) {
+    public static List<Insight> generatePreSleepInsights(final AllSensorSampleList allSensorSampleList, final Long sleepTimestampUTC, final Long accountId) {
+        final List<Insight> generatedInsights = Lists.newArrayList();
 
-        if (!optionalSensorData.isPresent()) {
-            return Collections.EMPTY_LIST;
+        if (!allSensorSampleList.isEmpty()) {
+            return generatedInsights;
         }
+        try {
 
-        final List<Insight> generatedInsights = new ArrayList<>();
+            // find index for time period of interest
+            int startIndex = 0;
+            int endIndex = 0;
+            final long startTimestamp = sleepTimestampUTC - PRESLEEP_WINDOW_IN_MILLIS;
+            for (final Sample sample : allSensorSampleList.get(Sensor.LIGHT)) {
+                if (sample.dateTime < startTimestamp) {
+                    startIndex++;
+                }
 
-        final AllSensorSampleList sensorData = optionalSensorData.get();
+                endIndex++;
 
-        // find index for time period of interest
-        int startIndex = 0;
-        int endIndex = 0;
-        final long startTimestamp = sleepTimestampUTC - PRESLEEP_WINDOW_IN_MILLIS;
-        for (Sample sample : sensorData.getData(Sensor.LIGHT)) {
-            if (sample.dateTime < startTimestamp) {
-                startIndex++;
+                if (sample.dateTime > sleepTimestampUTC) {
+                    break;
+                }
             }
 
-            endIndex++;
-
-            if (sample.dateTime > sleepTimestampUTC) {
-                break;
-            }
-        }
-
-        // initialize
-        Map<Sensor, Float> counts = new HashMap<>();
-        Map<Sensor, Float> sums = new HashMap<>();
-        for (Sensor sensor : sensorData.getAvailableSensors()) {
-            counts.put(sensor, 0.0f);
-            sums.put(sensor, 0.0f);
-        }
-
-        // add values
-        for (int i = startIndex; i < endIndex; i++) {
-            for (Sensor sensor : sums.keySet()) {
-                final float average = sums.get(sensor) + sensorData.getData(sensor).get(i).value;
-                sums.put(sensor, average);
-
-                final float count = counts.get(sensor) + 1.0f;
-                counts.put(sensor, count);
-            }
-        }
-
-        final DateTime sleepDateTime = new DateTime(sleepTimestampUTC, DateTimeZone.UTC);
-
-        // compute average for each sensor, generate insights
-        for (Sensor sensor : counts.keySet()) {
-            if (counts.get(sensor) == 0.0f) {
-                continue;
+            // initialize
+            final Map<Sensor, Float> counts = new HashMap<>();
+            final Map<Sensor, Float> sums = new HashMap<>();
+            for (Sensor sensor : allSensorSampleList.getAvailableSensors()) {
+                counts.put(sensor, 0.0f);
+                sums.put(sensor, 0.0f);
             }
 
-            final float average = sums.get(sensor) / counts.get(sensor);
-            Optional<CurrentRoomState.State> sensorState;
+            // add values
+            for (int i = startIndex; i < endIndex; i++) {
+                for (final Sensor sensor : sums.keySet()) {
+                    final float average = sums.get(sensor) + allSensorSampleList.get(sensor).get(i).value;
+                    sums.put(sensor, average);
 
-            switch(sensor) {
-                case LIGHT:
-                    sensorState = Optional.of(CurrentRoomState.getLightState(average, sleepDateTime, true));
-                    break;
-                case SOUND:
-                    sensorState = Optional.of(CurrentRoomState.getSoundState(average, sleepDateTime, true));
-                    break;
-                case HUMIDITY:
-                    sensorState = Optional.of(CurrentRoomState.getHumidityState(average, sleepDateTime, true));
-                    break;
-                case TEMPERATURE:
-                    sensorState = Optional.of(CurrentRoomState.getTemperatureState(average, sleepDateTime, CurrentRoomState.DEFAULT_TEMP_UNIT, true));
-                    break;
-                case PARTICULATES:
-                    sensorState = Optional.of(CurrentRoomState.getParticulatesState(average, sleepDateTime, true));
-                    break;
-                default:
-                    sensorState = Optional.absent();
-                    break;
+                    final float count = counts.get(sensor) + 1.0f;
+                    counts.put(sensor, count);
+                }
             }
 
-            if (sensorState.isPresent()) {
-                generatedInsights.add(new Insight(sensor, sensorState.get().condition, sensorState.get().message));
+            final DateTime sleepDateTime = new DateTime(sleepTimestampUTC, DateTimeZone.UTC);
+
+            // compute average for each sensor, generate insights
+            for (final Sensor sensor : counts.keySet()) {
+                if (counts.get(sensor) == 0.0f) {
+                    continue;
+                }
+
+                final float average = sums.get(sensor) / counts.get(sensor);
+                Optional<CurrentRoomState.State> sensorState;
+
+                switch (sensor) {
+                    case LIGHT:
+                        sensorState = Optional.of(CurrentRoomState.getLightState(average, sleepDateTime, true));
+                        break;
+                    case SOUND:
+                        sensorState = Optional.of(CurrentRoomState.getSoundState(average, sleepDateTime, true));
+                        break;
+                    case HUMIDITY:
+                        sensorState = Optional.of(CurrentRoomState.getHumidityState(average, sleepDateTime, true));
+                        break;
+                    case TEMPERATURE:
+                        sensorState = Optional.of(CurrentRoomState.getTemperatureState(average, sleepDateTime, CurrentRoomState.DEFAULT_TEMP_UNIT, true));
+                        break;
+                    case PARTICULATES:
+                        sensorState = Optional.of(CurrentRoomState.getParticulatesState(average, sleepDateTime, true));
+                        break;
+                    default:
+                        sensorState = Optional.absent();
+                        break;
+                }
+
+                if (sensorState.isPresent()) {
+                    generatedInsights.add(new Insight(sensor, sensorState.get().condition, sensorState.get().message));
+                }
             }
+
+            return generatedInsights;
+        } catch (Exception e) {
+            LOGGER.error("failed generating pre-sleep insights for account {}, reason: {}", accountId, e.getMessage());
         }
 
         return generatedInsights;
@@ -1012,11 +1016,13 @@ public class TimelineUtils {
         final Event outOfBed = sleepEvents.get(3);
 
 
-        final ArrayList<Optional<Event>> fixedSleepEvents = new ArrayList<>();
-        fixedSleepEvents.add(Optional.of(goToBed));
-        fixedSleepEvents.add(Optional.of(sleep));
-        fixedSleepEvents.add(Optional.of(wakeUp));
-        fixedSleepEvents.add(Optional.of(outOfBed));
+        final ArrayList<Optional<Event>> fixedSleepEvents = Lists.newArrayList(
+                Optional.of(goToBed),
+                Optional.of(sleep),
+                Optional.of(wakeUp),
+                Optional.of(outOfBed)
+        );
+
 
         if(sleep.getStartTimestamp() == goToBed.getStartTimestamp()){
             fixedSleepEvents.set(1, Optional.of((Event) new FallingAsleepEvent(sleep.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
