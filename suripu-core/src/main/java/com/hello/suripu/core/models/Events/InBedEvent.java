@@ -33,6 +33,6 @@ public class InBedEvent extends Event {
 
     @Override
     public int getSleepDepth() {
-        return 100;
+        return 0;
     }
 }
