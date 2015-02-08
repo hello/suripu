@@ -199,25 +199,60 @@ public class TimelineUtils {
 
     }
 
-    public static List<Event> removeMotionEventsOutsideBedPeriod(final List<Event> events){
-        boolean isInBed = false;
+    public static List<Event> removeMotionEventsOutsideBedPeriod(final List<Event> events,
+                                                                 final Optional<Event> inBedEventOptional,
+                                                                 final Optional<Event> outOfBedEventOptional){
         final LinkedList<Event> newEventList = new LinkedList<>();
-        for(final Event event:events){
-            if(!isInBed && event.getType() == Event.Type.IN_BED){
-                isInBed = true;
-            }
-
-            if(isInBed && event.getType() == Event.Type.OUT_OF_BED){
-                isInBed = false;
-            }
-
-            if(isInBed && (event.getType() == Event.Type.NONE)){
-                newEventList.add(new SleepingEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth()));
-            }else if(!isInBed && (event.getType() == Event.Type.MOTION)) {
-                newEventList.add(new NullEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth()));
-            } else {
+        // State is harmful, shall avoid it like plague
+        for(final Event event:events) {
+            if (event.getType() != Event.Type.MOTION) {
                 newEventList.add(event);
+                continue;
             }
+
+            if(inBedEventOptional.isPresent() && event.getEndTimestamp() < inBedEventOptional.get().getStartTimestamp()) {
+                newEventList.add(new NullEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth()));
+                continue;
+            }
+
+            if(outOfBedEventOptional.isPresent() && event.getStartTimestamp() > outOfBedEventOptional.get().getEndTimestamp()){
+                newEventList.add(new NullEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth()));
+            }
+
+        }
+
+        return newEventList;
+    }
+
+    public static List<Event> greyNullEventsOutsideBedPeriod(final List<Event> events,
+                                                                 final Optional<Event> inBedEventOptional,
+                                                                 final Optional<Event> outOfBedEventOptional){
+        final LinkedList<Event> newEventList = new LinkedList<>();
+        // State is harmful, shall avoid it like plague
+        for(final Event event:events){
+            if(event.getType() != Event.Type.NONE){
+                newEventList.add(event);
+                continue;
+            }
+
+            // This is a null event, shall we keep it as it is?
+            if(inBedEventOptional.isPresent() && event.getEndTimestamp() < inBedEventOptional.get().getStartTimestamp()){
+                newEventList.add(event);  // Null event before in bed, grey
+                continue;
+            }
+
+            if(outOfBedEventOptional.isPresent() && event.getStartTimestamp() > outOfBedEventOptional.get().getEndTimestamp()){
+                newEventList.add(event);  // Null event after out of bed, grey
+                continue;
+            }
+
+            // Null event inside bed period, or
+            // Null event after in bed but no out of bed event presents, or
+            // Null event before out of bed but no in bed event presents, or
+            // any Null events when there is no in/out of bed events present.
+            // turn it to blue sleep event, let's don't be aggressive.
+            newEventList.add(new SleepingEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth()));
+
         }
 
         return newEventList;
