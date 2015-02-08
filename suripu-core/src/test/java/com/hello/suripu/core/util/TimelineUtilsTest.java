@@ -569,7 +569,7 @@ public class TimelineUtilsTest {
         assertThat(goToBedLocalUTC, is(new DateTime(2015, 1, 22, 0, 13, DateTimeZone.UTC)));
         //assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 25, 1, 43, DateTimeZone.UTC)));
         assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 22, 0, 14, DateTimeZone.UTC)));
-        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 22, 7, 33, DateTimeZone.UTC)));
+        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 22, 7, 22, DateTimeZone.UTC)));
         assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 22, 7, 44, DateTimeZone.UTC)));
     }
 
