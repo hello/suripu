@@ -49,7 +49,7 @@ import java.util.List;
 public class TimelineProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineProcessor.class);
-
+    private static final Integer MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES = 3 * 60;
     private final AccountDAO accountDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDAO deviceDAO;
@@ -357,6 +357,11 @@ public class TimelineProcessor {
                     this.trendsInsightsDAO.updateSleepStats(accountId, userOffsetMillis, targetDate.withTimeAtStartOfDay(), sleepStats);
                 }
             }
+        }
+
+        if(sleepStats.sleepDurationInMinutes < MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES) {
+            LOGGER.warn("Score for account id {} was set to zero because sleep duration is too short ({} min)", accountId, sleepStats.sleepDurationInMinutes);
+            sleepScore = 0;
         }
 
         final Boolean reportSleepDuration = false;
