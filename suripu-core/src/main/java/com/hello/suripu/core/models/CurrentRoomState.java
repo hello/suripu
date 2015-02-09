@@ -210,22 +210,22 @@ public class CurrentRoomState {
 
         if (temperature > (float) TemperatureHumidity.ALERT_TEMP_MAX_CELSIUS) {
             condition = State.Condition.ALERT;
-            idealTempConditions += "\n" + English.RECOMMENDATION_TEMP_TOO_HIGH;
+            idealTempConditions += English.RECOMMENDATION_TEMP_TOO_HIGH;
             message = (preSleep) ? English.HIGH_TEMPERATURE_PRE_SLEEP_ALERT_MESSAGE: English.HIGH_TEMPERATURE_ALERT_MESSAGE;
 
         } else if (temperature > (float) TemperatureHumidity.IDEAL_TEMP_MAX_CELSIUS) {
             condition = State.Condition.WARNING;
-            idealTempConditions += "\n" + English.RECOMMENDATION_TEMP_TOO_HIGH;
+            idealTempConditions += English.RECOMMENDATION_TEMP_TOO_HIGH;
             message = (preSleep) ? English.HIGH_TEMPERATURE_PRE_SLEEP_WARNING_MESSAGE: English.HIGH_TEMPERATURE_WARNING_MESSAGE;
 
         } else if (temperature  < (float) TemperatureHumidity.ALERT_TEMP_MIN_CELSIUS) {
             condition = State.Condition.ALERT;
-            idealTempConditions += "\n" + English.RECOMMENDATION_TEMP_TOO_LOW;
+            idealTempConditions += English.RECOMMENDATION_TEMP_TOO_LOW;
             message = (preSleep) ? English.LOW_TEMPERATURE_PRE_SLEEP_ALERT_MESSAGE: English.LOW_TEMPERATURE_ALERT_MESSAGE;
 
         } else if (temperature < (float) TemperatureHumidity.IDEAL_TEMP_MIN_CELSIUS) {
             condition = State.Condition.WARNING;
-            idealTempConditions += "\n" + English.RECOMMENDATION_TEMP_TOO_LOW;
+            idealTempConditions += English.RECOMMENDATION_TEMP_TOO_LOW;
             message = (preSleep) ? English.LOW_TEMPERATURE_PRE_SLEEP_WARNING_MESSAGE: English.LOW_TEMPERATURE_WARNING_MESSAGE;
         }
 
@@ -272,11 +272,11 @@ public class CurrentRoomState {
         String idealConditions = English.LIGHT_ADVICE_MESSAGE;
         if (light > 8.0) {
             condition = State.Condition.ALERT;
-            idealConditions += "\n" + English.RECOMMENDATION_LIGHT_TOO_HIGH;
+            idealConditions += English.RECOMMENDATION_LIGHT_TOO_HIGH;
             message = (preSleep) ? English.ALERT_LIGHT_PRE_SLEEP_MESSAGE : English.ALERT_LIGHT_MESSAGE;
         } else if (light > 2.0) {
             condition = State.Condition.WARNING;
-            idealConditions += "\n" + English.RECOMMENDATION_LIGHT_TOO_HIGH;
+            idealConditions += English.RECOMMENDATION_LIGHT_TOO_HIGH;
             message = (preSleep) ? English.WARNING_LIGHT_PRE_SLEEP_MESSAGE: English.WARNING_LIGHT_MESSAGE;
         }
 
