@@ -178,17 +178,22 @@ public class TimelineProcessor {
                     accountId, deviceId.get(), slotDurationMins, missingDataDefaultValue);
         }
 
-        // compute lights-out events
+        // compute sensor-related events
         Optional<DateTime> lightOutTimeOptional = Optional.absent();
         Optional<DateTime> wakeUpWaveTimeOptional = Optional.absent();
-        if (!allSensorSampleList.isEmpty()) {
-            final List<Event> lightEvents = TimelineUtils.getLightEvents(allSensorSampleList.get(Sensor.LIGHT));
 
+        if (!allSensorSampleList.isEmpty()) {
+
+            // lights-out
+            final List<Event> lightEvents = TimelineUtils.getLightEvents(allSensorSampleList.get(Sensor.LIGHT));
             if (lightEvents.size() > 0) {
                 events.addAll(lightEvents);
                 lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
             }
 
+            // sound disturbances
+
+            // sense wave count
             if(!allSensorSampleList.get(Sensor.WAVE_COUNT).isEmpty() && trackerMotions.size() > 0){
                 wakeUpWaveTimeOptional = TimelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
                         trackerMotions.get(trackerMotions.size() - 1).timestamp,
