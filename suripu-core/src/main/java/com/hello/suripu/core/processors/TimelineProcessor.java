@@ -191,8 +191,6 @@ public class TimelineProcessor {
                 lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
             }
 
-            // sound disturbances
-
             // sense wave count
             if(!allSensorSampleList.get(Sensor.WAVE_COUNT).isEmpty() && trackerMotions.size() > 0){
                 wakeUpWaveTimeOptional = TimelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,

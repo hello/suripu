@@ -236,6 +236,13 @@ public class InsightsResource {
             final DateTime endDate = DateTime.now().withTimeAtStartOfDay();
             final DateTime startDate = endDate.minusDays(numDays);
 
+            final Optional<Account> optionalAccount = accountDAO.getById(accountId);
+            int daysActive = TrendGraph.PERIOD_TYPE_DAYS.get(TrendGraph.TimePeriodType.OVER_TIME_ALL) + 1;
+            if (optionalAccount.isPresent()) {
+                final DateTime accountCreated = optionalAccount.get().created;
+                daysActive = DateTimeUtil.getDateDiffFromNowInDays(accountCreated) - 1;
+            }
+
             if (graphType == TrendGraph.DataType.SLEEP_SCORE) {
                 // sleep score over time, up to 365 days
                 final ImmutableList<AggregateScore> scores = scoreDAODynamoDB.getBatchScores(accountId,
@@ -249,7 +256,7 @@ public class InsightsResource {
                 // scores table has no offset, pull timezone offset from tracker-motion
                 final Map<DateTime, Integer> userOffsetMillis = getUserTimeZoneOffsetsUTC(accountId, startDate, endDate);
 
-                return Optional.of(TrendGraphUtils.getScoresOverTimeGraph(timePeriod, scores, userOffsetMillis));
+                return Optional.of(TrendGraphUtils.getScoresOverTimeGraph(timePeriod, scores, userOffsetMillis, daysActive));
 
             } else {
                 // sleep duration over time, up to 365 days
@@ -259,7 +266,7 @@ public class InsightsResource {
                     return Optional.absent();
                 }
 
-                return Optional.of(TrendGraphUtils.getDurationOverTimeGraph(timePeriod, statsSamples));
+                return Optional.of(TrendGraphUtils.getDurationOverTimeGraph(timePeriod, statsSamples, daysActive));
             }
 
         }
