@@ -27,6 +27,7 @@ public class TrackerMotionMapper implements ResultSetMapper<TrackerMotion> {
         builder.withMotionRange(resultSet.getLong("motion_range"));
         builder.withKickOffCounts(resultSet.getLong("kickoff_counts"));
         builder.withOnDurationInSeconds(resultSet.getLong("on_duration_seconds"));
+        builder.withSvmNoGravity(resultSet.getLong("svm_no_gravity"));
 
         return builder.build();
     }

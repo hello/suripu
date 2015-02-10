@@ -51,6 +51,9 @@ public class TrackerMotion {
     @JsonProperty("on_duration_seconds")
     public final Long onDurationInSeconds;
 
+    @JsonProperty("svm_no_gravity")
+    public final Long svmNoGravity;
+
     @JsonCreator
     // TODO: make constructor private and force Builder use to reduce risks on not
     // TODO: converting data properly
@@ -62,7 +65,8 @@ public class TrackerMotion {
                          @JsonProperty("timezone_offset") final int timeZoneOffset,
                          final Long motionRange,
                          final Long kickOffCounts,
-                         final Long onDurationInSeconds){
+                         final Long onDurationInSeconds,
+                         final Long svmNoGravity){
 
         this.id = id;
         this.accountId = accountId;
@@ -75,6 +79,20 @@ public class TrackerMotion {
         this.motionRange = motionRange;
         this.kickOffCounts = kickOffCounts;
         this.onDurationInSeconds = onDurationInSeconds;
+        this.svmNoGravity = svmNoGravity;
+    }
+
+    public TrackerMotion(@JsonProperty("id") final long id,
+                         @JsonProperty("account_id") final long accountId,
+                         @JsonProperty("tracker_id") final Long trackerId,
+                         @JsonProperty("timestamp") final long timestamp,
+                         @JsonProperty("value") final int value,
+                         @JsonProperty("timezone_offset") final int timeZoneOffset,
+                         final Long motionRange,
+                         final Long kickOffCounts,
+                         final Long onDurationInSeconds){
+
+        this(id, accountId, trackerId, timestamp, value, timeZoneOffset, motionRange, kickOffCounts, onDurationInSeconds, 0L);
     }
 
 
@@ -177,6 +195,7 @@ public class TrackerMotion {
         private Long motionRange = 0L;
         private Long kickOffCounts = 0L;
         private Long onDurationInSeconds = 0L;
+        private Long svmNoGravity = 0L;
 
         public Builder(){
 
@@ -222,9 +241,13 @@ public class TrackerMotion {
             return this;
         }
 
-
         public Builder withOnDurationInSeconds(final Long onDurationInSeconds) {
             this.onDurationInSeconds = onDurationInSeconds;
+            return this;
+        }
+
+        public Builder withSvmNoGravity(final Long svmNoGravity) {
+            this.svmNoGravity = svmNoGravity;
             return this;
         }
 
@@ -238,7 +261,8 @@ public class TrackerMotion {
                     this.offsetMillis,
                     this.motionRange,
                     this.kickOffCounts,
-                    this.onDurationInSeconds);
+                    this.onDurationInSeconds,
+                    this.svmNoGravity);
         }
 
 
