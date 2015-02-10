@@ -23,6 +23,7 @@ import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.InsightProcessor;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DateTimeUtil;
+import com.hello.suripu.core.util.JsonError;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -354,33 +355,32 @@ public class DataScienceResource extends BaseResource {
     // APIs for Benjo's analysis
 
     @GET
-    @Path("/sensors/email/{email}/{ts}")
+    @Path("/device_sensors_motion")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public List<JoinedSensorsMinuteData> getJoinedSensorDataByEmail(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                                                @PathParam("email") String email,
-                                                                @PathParam("ts") Long ts) {
-        LOGGER.debug("Getting joined sensor minute data for {} after {}", email, ts);
-        final Optional<Account> account = accountDAO.getByEmail(email);
-        if (!account.isPresent()) {
+                                                                @QueryParam("email") String email,
+                                                                @QueryParam("account_id") Long accountId,
+                                                                @QueryParam("from_ts") Long fromTimestamp) {
+
+        Optional<Account> optionalAccount;
+        if (email != null) {
+            optionalAccount = accountDAO.getByEmail(email);
+        } else if (accountId != null) {
+            optionalAccount = accountDAO.getById(accountId);
+        } else {
+            throw new WebApplicationException(Response.status(400).entity(new JsonError(400,
+                    "Missing query parameters, use email or account_id")).build());
+        }
+
+        if (!optionalAccount.isPresent() || !optionalAccount.get().id.isPresent()) {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
-        LOGGER.debug("{}", account.get());
-        if (!account.get().id.isPresent()) {
-            throw new WebApplicationException(Response.Status.NOT_ACCEPTABLE);
-        }
-        return getJoinedSensorData(account.get().id.get(), ts);
-    }
 
+        final Account account = optionalAccount.get();
+        LOGGER.debug("Getting joined sensor minute data for account {} from_ts {}", account.id.get(), fromTimestamp);
 
-    @GET
-    @Path("/sensors/account_id/{account_id}/{ts}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<JoinedSensorsMinuteData> getJoinedSensorDataByAccountId(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                                                    @PathParam("account_id") final Long accountId,
-                                                                    @PathParam("ts") final Long ts) {
-        return getJoinedSensorData(accountId, ts);
+        return getJoinedSensorData(account.id.get(), fromTimestamp);
     }
 
     private List<JoinedSensorsMinuteData> getJoinedSensorData(final Long accountId, final Long ts) {
