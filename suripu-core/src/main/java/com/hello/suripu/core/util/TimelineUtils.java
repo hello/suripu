@@ -19,6 +19,7 @@ import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.Events.AlarmEvent;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.LightEvent;
@@ -29,6 +30,7 @@ import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.SleepingEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
@@ -663,7 +665,7 @@ public class TimelineUtils {
     public static List<Insight> generatePreSleepInsights(final AllSensorSampleList allSensorSampleList, final Long sleepTimestampUTC, final Long accountId) {
         final List<Insight> generatedInsights = Lists.newArrayList();
 
-        if (!allSensorSampleList.isEmpty()) {
+        if (allSensorSampleList.isEmpty()) {
             return generatedInsights;
         }
         try {
@@ -1136,6 +1138,33 @@ public class TimelineUtils {
 
 
         return fixedSleepEvents;
+    }
+
+
+
+    public static List<Event> getAlarmEvents(final List<RingTime> ringTimes, final DateTime evening, final DateTime morning, final Integer offsetMillis) {
+        final List<Event> events = Lists.newArrayList();
+        final DateTime localMorning = new DateTime(morning.getMillis(), DateTimeZone.UTC);
+        for(final RingTime ringTime : ringTimes) {
+            final DateTime alarmLocalTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC).plusMillis(offsetMillis).plusMinutes(1);
+
+            if(ringTime.expectedRingTimeUTC > evening.getMillis() && alarmLocalTime .getMillis() < localMorning.getMillis()) {
+                LOGGER.debug("{} is valid. Adding to list", ringTime);
+
+                final AlarmEvent event = (AlarmEvent) Event.createFromType(
+                        Event.Type.ALARM,
+                        ringTime.actualRingTimeUTC,
+                        new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC).plusMinutes(1).getMillis(),
+                        offsetMillis,
+                        Optional.<String>absent(),
+                        Optional.<SleepSegment.SoundInfo>absent(),
+                        Optional.<Integer>absent());
+                events.add(event);
+            }
+        }
+
+        LOGGER.debug("Adding {} alarms to the timeline", events.size());
+        return events;
     }
 
 }

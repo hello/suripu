@@ -25,7 +25,7 @@ public class AllSensorSampleMap {
                           final float temperature,
                           final float particulates,
                           final int waveCount,
-                          final int soundNumDisturbance,
+                          final float soundNumDisturbance,
                           final float soundPeakDisturbance) {
 
         this.light.put(dateTime, new Sample(dateTime, light, offsetMillis));
