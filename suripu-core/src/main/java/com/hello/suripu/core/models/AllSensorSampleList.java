@@ -108,9 +108,9 @@ public class AllSensorSampleList {
 
 
     public Boolean isEmpty() {
-        return light.isEmpty() && humidity.isEmpty() && sound.isEmpty() && temperature.isEmpty()
-                && particulates.isEmpty() && waveCounts.isEmpty() && soundNumDisturbances.isEmpty()
-                && soundPeakDisturbance.isEmpty();
+        return light.isEmpty() && humidity.isEmpty() && sound.isEmpty() &&
+                temperature.isEmpty() && particulates.isEmpty() && waveCounts.isEmpty() &&
+                soundNumDisturbances.isEmpty() && soundPeakDisturbance.isEmpty();
     }
 
     public static Map<Sensor, List<Sample>> getEmptyData() {
