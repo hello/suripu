@@ -78,11 +78,17 @@ public class InsightsResource {
 
         if (cards.size() == 0) {
             // no insights generated yet, probably a new user, send introduction card
-            final InsightCard introCard = GenericInsights.getIntroductionCard(accessToken.accountId);
-            this.insightsDAODynamoDB.insertInsight(introCard);
-            final List<InsightCard> newCards = new ArrayList<>();
-            newCards.add(introCard);
-            return newCards;
+            final Optional<Account> optionalAccount = accountDAO.getById(accessToken.accountId);
+            int userAgeInYears = 0;
+            if (optionalAccount.isPresent()) {
+                userAgeInYears = DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365;
+            }
+
+            final List<InsightCard> introCards = GenericInsights.getIntroCards(accessToken.accountId, userAgeInYears);
+            for (InsightCard card : introCards) {
+                this.insightsDAODynamoDB.insertInsight(card);
+            }
+            return introCards;
         }
 
         // TODO: fetch generic cards.
