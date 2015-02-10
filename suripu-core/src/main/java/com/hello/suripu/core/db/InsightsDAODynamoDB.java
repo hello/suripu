@@ -4,6 +4,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
+import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
@@ -13,8 +15,10 @@ import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
+import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
+import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.util.DateTimeUtil;
@@ -71,6 +75,33 @@ public class InsightsDAODynamoDB {
         final PutItemResult result = this.dynamoDBClient.putItem(putItemRequest);
         LOGGER.debug("write single insight {}", result.toString());
 
+    }
+
+    @Timed
+    public void insertListOfInsights(final List<InsightCard> insightCards) {
+        final List<WriteRequest> insights = new ArrayList<>();
+        for (InsightCard insightCard : insightCards) {
+            final HashMap<String, AttributeValue> item = this.createItem(insightCard);
+            final PutRequest putRequest = new PutRequest().withItem(item);
+            insights.add(new WriteRequest().withPutRequest(putRequest));
+        }
+
+        // batch-write
+        Map<String, List<WriteRequest>> requestItems = new HashMap<>();
+        requestItems.put(this.tableName, insights);
+
+        BatchWriteItemResult results;
+        final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest();
+
+        do {
+            batchWriteItemRequest.withRequestItems(requestItems);
+            results = this.dynamoDBClient.batchWriteItem(batchWriteItemRequest);
+        } while (results.getUnprocessedItems().size() > 0);
+
+        if (results.getUnprocessedItems().size() > 0) {
+            LOGGER.error("Batch write insights fail to write {} records", results.getUnprocessedItems().size());
+            LOGGER.error("First insight in batch is account {}, category", insightCards.get(0).accountId, insightCards.get(0).category);
+        }
     }
 
     @Timed

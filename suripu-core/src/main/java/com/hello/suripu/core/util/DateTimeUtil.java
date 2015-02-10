@@ -2,6 +2,7 @@ package com.hello.suripu.core.util;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Duration;
 import org.joda.time.format.DateTimeFormat;
 
 /**
@@ -23,4 +24,11 @@ public class DateTimeUtil {
                 .withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
 
     }
+
+    public static int getDateDiffFromNowInDays(final DateTime datetime) {
+        final DateTime now = DateTime.now(DateTimeZone.UTC);
+        final Duration duration = new Duration(datetime, now);
+        return duration.toStandardDays().getDays();
+    }
+
 }

@@ -16,9 +16,9 @@ import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
 import com.hello.suripu.core.processors.insights.SleepMotion;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
+import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +71,7 @@ public class InsightProcessor {
     }
 
     public void generateInsights(final Long accountId, final DateTime accountCreated) {
-        final int accountAge = this.getAccountAgeInDays(accountCreated);
+        final int accountAge = DateTimeUtil.getDateDiffFromNowInDays(accountCreated);
         if (accountAge < 1) {
             return; // not slept one night yet
         }
@@ -187,12 +187,6 @@ public class InsightProcessor {
             seenCategories.add(card.category);
         }
         return seenCategories;
-    }
-
-    private int getAccountAgeInDays(final DateTime accountCreated) {
-        final DateTime now = DateTime.now(DateTimeZone.UTC);
-        final Duration duration = new Duration(accountCreated, now);
-        return duration.toStandardDays().getDays();
     }
 
     private AccountPreference.TemperatureUnit getTemperatureUnitString(final Long accountId) {
