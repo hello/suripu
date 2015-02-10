@@ -14,6 +14,7 @@ import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -792,5 +793,44 @@ public class TimelineUtilsTest {
         assertThat(allSensorSampleList.isEmpty(), is(false));
         assertThat(allSensorSampleList.get(Sensor.TEMPERATURE).isEmpty(), is(true));
 
+    }
+
+
+    @Test
+    public void testAlarmInTimelineEmptyRingTime() {
+        final RingTime emptyRingTime = RingTime.createEmpty();
+        final List<RingTime> ringTimes = Lists.newArrayList(emptyRingTime);
+        final DateTime now = DateTime.now();
+        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now, 0);
+        assertThat(events.isEmpty(), is(true));
+    }
+
+
+    @Test
+    public void testAlarmInTimelineRingTimeInThePast() {
+        final DateTime now = DateTime.now();
+        final RingTime ringTime = new RingTime(now.minusDays(1).getMillis(), now.minusDays(1).plusMinutes(10).getMillis(), 0L, false);
+        final List<RingTime> ringTimes = Lists.newArrayList(ringTime);
+        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.plusDays(1), now.plusDays(5), 0);
+        assertThat(events.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testAlarmInTimelineRingTimeInTheFuture() {
+        final DateTime now = DateTime.now();
+        final RingTime ringTime = new RingTime(now.plusDays(1).getMillis(), now.plusDays(1).getMillis(), 0L, false);
+        final List<RingTime> ringTimes = Lists.newArrayList(ringTime);
+        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now, 0);
+        assertThat(events.isEmpty(), is(true));
+    }
+
+
+    @Test
+    public void testAlarmInTimelineRingTimeValid() {
+        final DateTime now = DateTime.now();
+        final RingTime ringTime = new RingTime(now.getMillis(), now.getMillis(), 0L, false);
+        final List<RingTime> ringTimes = Lists.newArrayList(ringTime);
+        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now.plusHours(1), 0);
+        assertThat(events.size(), is(1));
     }
 }
