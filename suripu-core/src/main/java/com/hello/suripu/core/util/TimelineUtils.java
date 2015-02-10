@@ -663,7 +663,7 @@ public class TimelineUtils {
     public static List<Insight> generatePreSleepInsights(final AllSensorSampleList allSensorSampleList, final Long sleepTimestampUTC, final Long accountId) {
         final List<Insight> generatedInsights = Lists.newArrayList();
 
-        if (!allSensorSampleList.isEmpty()) {
+        if (allSensorSampleList.isEmpty()) {
             return generatedInsights;
         }
         try {
