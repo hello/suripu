@@ -18,7 +18,7 @@ import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
-import com.hello.suripu.core.processors.insights.GenericInsights;
+import com.hello.suripu.core.processors.insights.IntroductionInsights;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.TrendGraphUtils;
 import com.yammer.metrics.annotation.Timed;
@@ -78,14 +78,16 @@ public class InsightsResource {
 
         if (cards.size() == 0) {
             // no insights generated yet, probably a new user, send introduction card
-            final InsightCard introCard = GenericInsights.getIntroductionCard(accessToken.accountId);
-            this.insightsDAODynamoDB.insertInsight(introCard);
-            final List<InsightCard> newCards = new ArrayList<>();
-            newCards.add(introCard);
-            return newCards;
-        }
+            final Optional<Account> optionalAccount = accountDAO.getById(accessToken.accountId);
+            int userAgeInYears = 0;
+            if (optionalAccount.isPresent()) {
+                userAgeInYears = DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365;
+            }
 
-        // TODO: fetch generic cards.
+            final List<InsightCard> introCards = IntroductionInsights.getIntroCards(accessToken.accountId, userAgeInYears);
+            this.insightsDAODynamoDB.insertListOfInsights(introCards);
+            return introCards;
+        }
 
         return cards;
     }
@@ -236,6 +238,13 @@ public class InsightsResource {
             final DateTime endDate = DateTime.now().withTimeAtStartOfDay();
             final DateTime startDate = endDate.minusDays(numDays);
 
+            final Optional<Account> optionalAccount = accountDAO.getById(accountId);
+            int daysActive = TrendGraph.PERIOD_TYPE_DAYS.get(TrendGraph.TimePeriodType.OVER_TIME_ALL) + 1;
+            if (optionalAccount.isPresent()) {
+                final DateTime accountCreated = optionalAccount.get().created;
+                daysActive = DateTimeUtil.getDateDiffFromNowInDays(accountCreated) - 1;
+            }
+
             if (graphType == TrendGraph.DataType.SLEEP_SCORE) {
                 // sleep score over time, up to 365 days
                 final ImmutableList<AggregateScore> scores = scoreDAODynamoDB.getBatchScores(accountId,
@@ -249,7 +258,7 @@ public class InsightsResource {
                 // scores table has no offset, pull timezone offset from tracker-motion
                 final Map<DateTime, Integer> userOffsetMillis = getUserTimeZoneOffsetsUTC(accountId, startDate, endDate);
 
-                return Optional.of(TrendGraphUtils.getScoresOverTimeGraph(timePeriod, scores, userOffsetMillis));
+                return Optional.of(TrendGraphUtils.getScoresOverTimeGraph(timePeriod, scores, userOffsetMillis, daysActive));
 
             } else {
                 // sleep duration over time, up to 365 days
@@ -259,7 +268,7 @@ public class InsightsResource {
                     return Optional.absent();
                 }
 
-                return Optional.of(TrendGraphUtils.getDurationOverTimeGraph(timePeriod, statsSamples));
+                return Optional.of(TrendGraphUtils.getDurationOverTimeGraph(timePeriod, statsSamples, daysActive));
             }
 
         }

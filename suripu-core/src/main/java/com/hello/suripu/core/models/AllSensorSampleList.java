@@ -15,6 +15,8 @@ public class AllSensorSampleList {
     private final List<Sample> temperature = Lists.newArrayList();
     private final List<Sample> particulates = Lists.newArrayList();
     private final List<Sample> waveCounts = Lists.newArrayList();
+    private final List<Sample> soundNumDisturbances = Lists.newArrayList();
+    private final List<Sample> soundPeakDisturbance = Lists.newArrayList();
 
     private final List<Sensor> sensors;
 
@@ -26,7 +28,9 @@ public class AllSensorSampleList {
                 Sensor.PARTICULATES,
                 Sensor.SOUND,
                 Sensor.TEMPERATURE,
-                Sensor.WAVE_COUNT);
+                Sensor.WAVE_COUNT,
+                Sensor.SOUND_NUM_DISTURBANCES,
+                Sensor.SOUND_PEAK_DISTURBANCE);
     }
 
     public void add(final Sensor sensor, final List<Sample> values) {
@@ -48,6 +52,12 @@ public class AllSensorSampleList {
                 break;
             case WAVE_COUNT:
                 this.waveCounts.addAll(values);
+                break;
+            case SOUND_NUM_DISTURBANCES:
+                this.soundNumDisturbances.addAll(values);
+                break;
+            case SOUND_PEAK_DISTURBANCE:
+                this.soundPeakDisturbance.addAll(values);
                 break;
             default:
                 break;
@@ -73,6 +83,10 @@ public class AllSensorSampleList {
                 return this.particulates;
             case WAVE_COUNT:
                 return this.waveCounts;
+            case SOUND_NUM_DISTURBANCES:
+                return this.soundNumDisturbances;
+            case SOUND_PEAK_DISTURBANCE:
+                return this.soundPeakDisturbance;
             default:
                 return Collections.EMPTY_LIST;
         }
@@ -86,14 +100,19 @@ public class AllSensorSampleList {
         results.put(Sensor.TEMPERATURE, this.temperature);
         results.put(Sensor.PARTICULATES, this.particulates);
         results.put(Sensor.WAVE_COUNT, this.waveCounts);
+        results.put(Sensor.SOUND_NUM_DISTURBANCES, this.soundNumDisturbances);
+        results.put(Sensor.SOUND_PEAK_DISTURBANCE, this.soundPeakDisturbance);
+
         return results;
     }
 
 
     public Boolean isEmpty() {
-        return light.isEmpty() && humidity.isEmpty() && sound.isEmpty() && temperature.isEmpty()
-                && particulates.isEmpty() && waveCounts.isEmpty();
+        return light.isEmpty() && humidity.isEmpty() && sound.isEmpty() &&
+                temperature.isEmpty() && particulates.isEmpty() && waveCounts.isEmpty() &&
+                soundNumDisturbances.isEmpty() && soundPeakDisturbance.isEmpty();
     }
+
     public static Map<Sensor, List<Sample>> getEmptyData() {
         final Map<Sensor, List<Sample>> results = new HashMap<>();
         results.put(Sensor.LIGHT, Collections.EMPTY_LIST);

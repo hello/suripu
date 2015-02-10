@@ -12,6 +12,8 @@ public class AllSensorSampleMap {
     private final Map<Long, Sample> temperature = Maps.newHashMap();
     private final Map<Long, Sample> particulates = Maps.newHashMap();
     private final Map<Long, Sample> waveCounts = Maps.newHashMap();
+    private final Map<Long, Sample> soundNumDisturbances = Maps.newHashMap();
+    private final Map<Long, Sample> soundPeakDisturbance = Maps.newHashMap();
 
     public AllSensorSampleMap() {
     }
@@ -22,7 +24,9 @@ public class AllSensorSampleMap {
                           final float humidity,
                           final float temperature,
                           final float particulates,
-                          final int waveCount) {
+                          final int waveCount,
+                          final float soundNumDisturbance,
+                          final float soundPeakDisturbance) {
 
         this.light.put(dateTime, new Sample(dateTime, light, offsetMillis));
         this.sound.put(dateTime, new Sample(dateTime, sound, offsetMillis));
@@ -30,6 +34,8 @@ public class AllSensorSampleMap {
         this.temperature.put(dateTime, new Sample(dateTime, temperature, offsetMillis));
         this.particulates.put(dateTime, new Sample(dateTime, particulates, offsetMillis));
         this.waveCounts.put(dateTime, new Sample(dateTime, waveCount, offsetMillis));
+        this.soundNumDisturbances.put(dateTime, new Sample(dateTime, soundNumDisturbance, offsetMillis));
+        this.soundPeakDisturbance.put(dateTime, new Sample(dateTime, soundPeakDisturbance, offsetMillis));
     }
 
     public void setSampleMap(final Sensor sensor, final Map<Long, Sample> sampleMap) {
@@ -52,6 +58,12 @@ public class AllSensorSampleMap {
             case WAVE_COUNT:
                 this.waveCounts.putAll(sampleMap);
                 break;
+            case SOUND_NUM_DISTURBANCES:
+                this.soundNumDisturbances.putAll(sampleMap);
+                break;
+            case SOUND_PEAK_DISTURBANCE:
+                this.soundPeakDisturbance.putAll(sampleMap);
+                break;
             default:
                 break;
         }
@@ -71,13 +83,18 @@ public class AllSensorSampleMap {
                 return particulates;
             case WAVE_COUNT:
                 return waveCounts;
+            case SOUND_NUM_DISTURBANCES:
+                return soundNumDisturbances;
+            case SOUND_PEAK_DISTURBANCE:
+                return soundPeakDisturbance;
         }
         return Maps.newHashMap();
     }
 
     public Boolean isEmpty() {
         return light.isEmpty() && sound.isEmpty() && humidity.isEmpty() && temperature.isEmpty()
-                && particulates.isEmpty() && waveCounts.isEmpty();
+                && particulates.isEmpty() && waveCounts.isEmpty()
+                && soundNumDisturbances.isEmpty() && soundPeakDisturbance.isEmpty();
     }
 
 }

@@ -174,20 +174,14 @@ public class TimelineProcessor {
                     accountId, deviceId.get(), slotDurationMins, missingDataDefaultValue);
         }
 
-        // compute lights-out events
+        // compute sensor-related events
         Optional<DateTime> lightOutTimeOptional = Optional.absent();
         Optional<DateTime> wakeUpWaveTimeOptional = Optional.absent();
+
         final List<Event> lightEvents = Lists.newArrayList();
         if (!allSensorSampleList.isEmpty()) {
             lightEvents.addAll(TimelineUtils.getLightEvents(allSensorSampleList.get(Sensor.LIGHT)));
-
-            if (lightEvents.size() > 0) {
-                events.addAll(lightEvents);
-                lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
-            }
-
-
-            // TODO: refactor
+            lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
 
             if(!allSensorSampleList.get(Sensor.WAVE_COUNT).isEmpty() && trackerMotions.size() > 0){
                 wakeUpWaveTimeOptional = TimelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,

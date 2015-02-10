@@ -10,7 +10,9 @@ public enum Sensor {
     SOUND("sound"),
     LIGHT("light"),
     WAVE_COUNT("wave_count"),
-    HOLD_COUNT("hold_count");
+    HOLD_COUNT("hold_count"),
+    SOUND_NUM_DISTURBANCES("num_disturbances"),
+    SOUND_PEAK_DISTURBANCE("peak_disturbance");
 
 
     private String value;
