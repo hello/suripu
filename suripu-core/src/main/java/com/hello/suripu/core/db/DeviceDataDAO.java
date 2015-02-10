@@ -470,4 +470,5 @@ public abstract class DeviceDataDAO {
     public abstract Optional<DeviceData> getAverageForNight(@Bind("account_id") final Long accountId,
                                                             @Bind("start_ts") final DateTime targetDate,
                                                             @Bind("end_ts") final DateTime endDate);
+
 }

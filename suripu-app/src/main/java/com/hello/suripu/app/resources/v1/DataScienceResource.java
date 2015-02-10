@@ -1,6 +1,7 @@
 package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -9,6 +10,7 @@ import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.DataScience.UserLabel;
+import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Sample;
@@ -42,7 +44,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by pangwu on 12/1/14.
@@ -337,13 +341,112 @@ public class DataScienceResource extends BaseResource {
     @Path("/label/{email}/{night}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public List<UserLabel> getLabels(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+    public List<UserLabel> getLabels(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                      @PathParam("email") String email,
                                      @PathParam("night") String night) {
         final DateTime nightDate = DateTime.parse(night, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
-        LOGGER.debug("{} {}", email, nightDate);
+        LOGGER.debug("Getting labels for {} on {}", email, nightDate);
         return sleepLabelDAO.getUserLabelsByEmailAndNight(email, nightDate);
-
     }
+
+    @GET
+    @Path("/label/{email}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<UserLabel> getLabels(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                     @PathParam("email") String email) {
+        LOGGER.debug("Getting all labels for {}", email);
+        return sleepLabelDAO.getUserLabelsByEmail(email);
+    }
+
+
+    // APIs for Benjo's analysis
+
+    @GET
+    @Path("/sensors/email/{email}/{ts}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, List<Sample>> getJoinedSensorDataByEmail(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                                   @PathParam("email") String email,
+                                                                   @PathParam("ts") Long ts) {
+        LOGGER.debug("Getting joined sensor minute data for {} after {}", email, ts);
+        final Optional<Account> account = accountDAO.getByEmail(email);
+        if (!account.isPresent()) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        LOGGER.debug("{}", account.get());
+        if (!account.get().id.isPresent()) {
+            throw new WebApplicationException(Response.Status.NOT_ACCEPTABLE);
+        }
+        return getJoinedSensorData(account.get().id.get(), ts);
+    }
+
+
+    @GET
+    @Path("/sensors/account_id/{account_id}/{ts}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, List<Sample>> getJoinedSensorDataByAccountId(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                                     @PathParam("account_id") final Long accountId,
+                                                                     @PathParam("ts") final Long ts) {
+        return getJoinedSensorData(accountId, ts);
+    }
+
+    private Map<String, List<Sample>> getJoinedSensorData(final Long accountId, final Long ts) {
+        LOGGER.debug("Getting joined sensor minute data for account id {} after {}", accountId, ts);
+
+        ImmutableList<TrackerMotion> motionData = trackerMotionDAO.getBetween(
+                accountId,
+                new DateTime(ts, DateTimeZone.UTC),
+                new DateTime(ts, DateTimeZone.UTC).plusDays(7)
+        );
+
+        final List<Sample> motionSample = new ArrayList<>();
+        for (final TrackerMotion motion : motionData) {
+            motionSample.add(new Sample(motion.timestamp, motion.kickOffCounts, motion.offsetMillis));
+        }
+
+        Optional<DeviceAccountPair> deviceAccountPairOptional = deviceDAO.getMostRecentSensePairByAccountId(accountId);
+        if (!deviceAccountPairOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity("This account does not have a sense recently").build());
+        }
+
+        Optional<AllSensorSampleList> allSensorsData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
+                new DateTime(ts, DateTimeZone.UTC).getMillis(),
+                new DateTime(ts, DateTimeZone.UTC).plusDays(7).getMillis(),
+                accountId,
+                deviceAccountPairOptional.get().internalDeviceId,
+                1,
+                0
+        );
+        if (!allSensorsData.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity("No sensors data available for this account").build());
+        }
+
+        final AllSensorSampleList sensorSamples = allSensorsData.get();
+
+        Map<String, List<Sample>> joinedSensorSamples = new HashMap<>();
+        final Sensor[] selectedSensors = new Sensor[]{
+                Sensor.TEMPERATURE,
+                Sensor.HUMIDITY,
+                Sensor.HUMIDITY,
+                Sensor.PARTICULATES,
+                Sensor.LIGHT,
+                Sensor.SOUND,
+                Sensor.WAVE_COUNT,
+                Sensor.HOLD_COUNT
+        };
+        for (final Sensor sensor : selectedSensors) {
+            joinedSensorSamples.put(sensor.toString().toLowerCase(), sensorSamples.getData(sensor));
+        }
+
+        // Append motion sample
+        joinedSensorSamples.put("motion", motionSample);
+
+        return joinedSensorSamples;
+    }
+    
 }
