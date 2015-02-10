@@ -386,7 +386,7 @@ public class DataScienceResource extends BaseResource {
     private List<JoinedSensorsMinuteData> getJoinedSensorData(final Long accountId, final Long ts) {
         LOGGER.debug("Getting joined sensor minute data for account id {} after {}", accountId, ts);
 
-        Optional<DeviceAccountPair> deviceAccountPairOptional = deviceDAO.getMostRecentSensePairByAccountId(accountId);
+        final Optional<DeviceAccountPair> deviceAccountPairOptional = deviceDAO.getMostRecentSensePairByAccountId(accountId);
         if (!deviceAccountPairOptional.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
                     .entity("This account does not have a sense recently").build());
@@ -395,44 +395,49 @@ public class DataScienceResource extends BaseResource {
         final DateTime startTs = new DateTime(ts, DateTimeZone.UTC);
         final DateTime endTs = startTs.plusDays(7);
 
-        ImmutableList<TrackerMotion> motionData = trackerMotionDAO.getBetween(
+        final ImmutableList<TrackerMotion> motionData = trackerMotionDAO.getBetween(
                 accountId,
                 startTs,
                 endTs
         );
 
-        AllSensorSampleList sensorSamples = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
-                startTs.getMillis(),
-                endTs.getMillis(),
-                accountId,
-                deviceAccountPairOptional.get().internalDeviceId,
-                1,
-                0
-        );
-
-        List<JoinedSensorsMinuteData> joinedSensorsMinuteData = new ArrayList<>();
-
-        Map<Long, TrackerMotion> motionSamples = new HashMap<>();
+        final Map<Long, TrackerMotion> motionSamples = new HashMap<>();
         for (final TrackerMotion motion: motionData) {
             motionSamples.put(motion.timestamp, motion);
         }
 
-        Map<Long, Sample> soundPeakSamples = new HashMap<>();
-        for (Sample soundPeak: sensorSamples.get(Sensor.SOUND_PEAK_DISTURBANCE)) {
-            soundPeakSamples.put(soundPeak.dateTime, soundPeak);
-        }
+        final int slotDurationInMinutes = 1;
+        final Integer missingDataDefaultValue = 0;
+        final AllSensorSampleList sensorSamples = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
+                startTs.getMillis(),
+                endTs.getMillis(),
+                accountId,
+                deviceAccountPairOptional.get().internalDeviceId,
+                slotDurationInMinutes,
+                missingDataDefaultValue
+        );
 
-        for (final Sample soundNum : sensorSamples.get(Sensor.SOUND_NUM_DISTURBANCES)) {
-            final Long timestamp = soundNum.dateTime;
+        final List<Sample> soundNumDisturbances = sensorSamples.get(Sensor.SOUND_NUM_DISTURBANCES);
+        final List<Sample> soundPeakDisturbance = sensorSamples.get(Sensor.SOUND_PEAK_DISTURBANCE);
+        final int numSamples = soundNumDisturbances.size();
+
+        final List<JoinedSensorsMinuteData> joinedSensorsMinuteData = new ArrayList<>();
+        for (int i = 0; i < numSamples; i++) {
+            final Long timestamp = soundNumDisturbances.get(i).dateTime;
+            if (!motionSamples.containsKey(timestamp)) {
+                continue;
+            }
+
             joinedSensorsMinuteData.add(new JoinedSensorsMinuteData(
                     timestamp,
                     accountId,
-                    soundNum.value,
-                    soundPeakSamples.containsKey(timestamp) ? soundPeakSamples.get(timestamp).value : null,
-                    motionSamples.containsKey(timestamp) ? motionSamples.get(timestamp).value : null,
-                    motionSamples.containsKey(timestamp) ? motionSamples.get(timestamp).kickOffCounts : null
-            ));
+                    soundNumDisturbances.get(i).value,
+                    soundPeakDisturbance.get(i).value,
+                    motionSamples.get(timestamp).value,
+                    motionSamples.get(timestamp).kickOffCounts,
+                    motionSamples.get(timestamp).offsetMillis));
         }
+
         return joinedSensorsMinuteData;
     }
     

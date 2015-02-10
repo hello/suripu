@@ -22,13 +22,17 @@ public class JoinedSensorsMinuteData {
     @JsonProperty("kickoff_counts")
     public final Long kickoffCounts;
 
-    public JoinedSensorsMinuteData(final Long ts, final Long accountId, final Float soundNumDisturbances, final Float soundPeakDisturbances, final Integer svmNoGravity, final Long kickoffCounts) {
+    @JsonProperty("offset_millis")
+    public final Integer offsetMillis;
+
+    public JoinedSensorsMinuteData(final Long ts, final Long accountId, final Float soundNumDisturbances, final Float soundPeakDisturbances, final Integer svmNoGravity, final Long kickoffCounts, final Integer offsetMillis) {
         this.ts = ts;
         this.accountId = accountId;
         this.soundNumDisturbances = soundNumDisturbances;
         this.soundPeakDisturbances = soundPeakDisturbances;
         this.svmNoGravity = svmNoGravity;
         this.kickoffCounts = kickoffCounts;
+        this.offsetMillis = offsetMillis;
     }
 
 }
