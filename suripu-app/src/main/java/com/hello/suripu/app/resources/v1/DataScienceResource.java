@@ -398,12 +398,6 @@ public class DataScienceResource extends BaseResource {
                 new DateTime(ts, DateTimeZone.UTC).plusDays(7)
         );
 
-
-        if (motionData.isEmpty()) {
-            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
-                    .entity("No motion data -> Stop getting other sensors data.").build());
-        }
-
         AllSensorSampleList sensorSamples = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
                 motionData.get(0).timestamp,
                 motionData.get(motionData.size()-1).timestamp,
@@ -415,9 +409,9 @@ public class DataScienceResource extends BaseResource {
 
         List<JoinedSensorsMinuteData> joinedSensorsMinuteData = new ArrayList<>();
 
-        Map<Long, Sample> lightSamples = new HashMap<>();
-        for (Sample light: sensorSamples.get(Sensor.LIGHT)) {
-            lightSamples.put(light.dateTime, light);
+        Map<Long, TrackerMotion> motionSamples = new HashMap<>();
+        for (final TrackerMotion motion: motionData) {
+            motionSamples.put(motion.timestamp, motion);
         }
 
         Map<Long, Sample> soundSamples = new HashMap<>();
@@ -425,14 +419,15 @@ public class DataScienceResource extends BaseResource {
             soundSamples.put(sound.dateTime, sound);
         }
 
-        for (final TrackerMotion motion : motionData) {
+        for (final Sample light : sensorSamples.get(Sensor.LIGHT)) {
+            final Long timestamp = light.dateTime;
             joinedSensorsMinuteData.add(new JoinedSensorsMinuteData(
-                    motion.timestamp,
+                    timestamp,
                     accountId,
-                    lightSamples.get(motion.timestamp).value,
-                    soundSamples.get(motion.timestamp).value,
-                    motion.svmNoGravity,
-                    motion.kickOffCounts
+                    light.value,
+                    soundSamples.containsKey(timestamp) ? soundSamples.get(timestamp).value : null,
+                    motionSamples.containsKey(timestamp) ? motionSamples.get(timestamp).svmNoGravity : null,
+                    motionSamples.containsKey(timestamp) ? motionSamples.get(timestamp).kickOffCounts : null
             ));
         }
         return joinedSensorsMinuteData;
