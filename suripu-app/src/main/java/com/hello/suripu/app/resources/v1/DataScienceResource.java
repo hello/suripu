@@ -395,7 +395,7 @@ public class DataScienceResource extends BaseResource {
         }
 
         final DateTime startTs = new DateTime(ts, DateTimeZone.UTC);
-        final DateTime endTs = startTs.plusDays(7);
+        final DateTime endTs = startTs.plusDays(3); // return 3 days of data max.
 
         final ImmutableList<TrackerMotion> motionData = trackerMotionDAO.getBetween(
                 accountId,
