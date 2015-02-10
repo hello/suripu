@@ -1,6 +1,7 @@
 package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -8,7 +9,9 @@ import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.DataScience.JoinedSensorsMinuteData;
 import com.hello.suripu.core.models.DataScience.UserLabel;
+import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Sample;
@@ -42,7 +45,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by pangwu on 12/1/14.
@@ -344,6 +349,88 @@ public class DataScienceResource extends BaseResource {
                 .withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
         LOGGER.debug("{} {}", email, nightDate);
         return sleepLabelDAO.getUserLabelsByEmailAndNight(email, nightDate);
-
     }
+
+    // APIs for Benjo's analysis
+
+    @GET
+    @Path("/sensors/email/{email}/{ts}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<JoinedSensorsMinuteData> getJoinedSensorDataByEmail(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                                @PathParam("email") String email,
+                                                                @PathParam("ts") Long ts) {
+        LOGGER.debug("Getting joined sensor minute data for {} after {}", email, ts);
+        final Optional<Account> account = accountDAO.getByEmail(email);
+        if (!account.isPresent()) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        LOGGER.debug("{}", account.get());
+        if (!account.get().id.isPresent()) {
+            throw new WebApplicationException(Response.Status.NOT_ACCEPTABLE);
+        }
+        return getJoinedSensorData(account.get().id.get(), ts);
+    }
+
+
+    @GET
+    @Path("/sensors/account_id/{account_id}/{ts}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<JoinedSensorsMinuteData> getJoinedSensorDataByAccountId(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                                    @PathParam("account_id") final Long accountId,
+                                                                    @PathParam("ts") final Long ts) {
+        return getJoinedSensorData(accountId, ts);
+    }
+
+    private List<JoinedSensorsMinuteData> getJoinedSensorData(final Long accountId, final Long ts) {
+        LOGGER.debug("Getting joined sensor minute data for account id {} after {}", accountId, ts);
+
+        Optional<DeviceAccountPair> deviceAccountPairOptional = deviceDAO.getMostRecentSensePairByAccountId(accountId);
+        if (!deviceAccountPairOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity("This account does not have a sense recently").build());
+        }
+
+        ImmutableList<TrackerMotion> motionData = trackerMotionDAO.getBetween(
+                accountId,
+                new DateTime(ts, DateTimeZone.UTC),
+                new DateTime(ts, DateTimeZone.UTC).plusDays(7)
+        );
+
+        AllSensorSampleList sensorSamples = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
+                motionData.get(0).timestamp,
+                motionData.get(motionData.size()-1).timestamp,
+                accountId,
+                deviceAccountPairOptional.get().internalDeviceId,
+                1,
+                0
+        );
+
+        List<JoinedSensorsMinuteData> joinedSensorsMinuteData = new ArrayList<>();
+
+        Map<Long, TrackerMotion> motionSamples = new HashMap<>();
+        for (final TrackerMotion motion: motionData) {
+            motionSamples.put(motion.timestamp, motion);
+        }
+
+        Map<Long, Sample> soundPeakSamples = new HashMap<>();
+        for (Sample soundPeak: sensorSamples.get(Sensor.SOUND_PEAK_DISTURBANCE)) {
+            soundPeakSamples.put(soundPeak.dateTime, soundPeak);
+        }
+
+        for (final Sample soundNum : sensorSamples.get(Sensor.SOUND_NUM_DISTURBANCES)) {
+            final Long timestamp = soundNum.dateTime;
+            joinedSensorsMinuteData.add(new JoinedSensorsMinuteData(
+                    timestamp,
+                    accountId,
+                    soundNum.value,
+                    soundPeakSamples.containsKey(timestamp) ? soundPeakSamples.get(timestamp).value : null,
+                    motionSamples.containsKey(timestamp) ? motionSamples.get(timestamp).value : null,
+                    motionSamples.containsKey(timestamp) ? motionSamples.get(timestamp).kickOffCounts : null
+            ));
+        }
+        return joinedSensorsMinuteData;
+    }
+    
 }
