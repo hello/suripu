@@ -801,7 +801,7 @@ public class TimelineUtilsTest {
         final RingTime emptyRingTime = RingTime.createEmpty();
         final List<RingTime> ringTimes = Lists.newArrayList(emptyRingTime);
         final DateTime now = DateTime.now();
-        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now, 0);
+        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now, 0, now);
         assertThat(events.isEmpty(), is(true));
     }
 
@@ -811,7 +811,7 @@ public class TimelineUtilsTest {
         final DateTime now = DateTime.now();
         final RingTime ringTime = new RingTime(now.minusDays(1).getMillis(), now.minusDays(1).plusMinutes(10).getMillis(), 0L, false);
         final List<RingTime> ringTimes = Lists.newArrayList(ringTime);
-        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.plusDays(1), now.plusDays(5), 0);
+        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.plusDays(1), now.plusDays(5), 0, now);
         assertThat(events.isEmpty(), is(true));
     }
 
@@ -820,7 +820,7 @@ public class TimelineUtilsTest {
         final DateTime now = DateTime.now();
         final RingTime ringTime = new RingTime(now.plusDays(1).getMillis(), now.plusDays(1).getMillis(), 0L, false);
         final List<RingTime> ringTimes = Lists.newArrayList(ringTime);
-        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now, 0);
+        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now, 0, now);
         assertThat(events.isEmpty(), is(true));
     }
 
@@ -828,9 +828,22 @@ public class TimelineUtilsTest {
     @Test
     public void testAlarmInTimelineRingTimeValid() {
         final DateTime now = DateTime.now();
-        final RingTime ringTime = new RingTime(now.getMillis(), now.getMillis(), 0L, false);
+        final Long nowMillis = now.getMillis();
+        final RingTime ringTime = new RingTime(nowMillis, nowMillis, 0L, false);
+
         final List<RingTime> ringTimes = Lists.newArrayList(ringTime);
-        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now.plusHours(1), 0);
-        assertThat(events.size(), is(1));
+        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now.plusHours(1), 0, now.plusMinutes(1));
+        assertThat(events.isEmpty(), is(false));
+    }
+
+    @Test
+    public void testAlarmInTimelineRingTimeTooEarly() {
+        final DateTime now = DateTime.now();
+        final Long nowMillis = now.getMillis();
+        final RingTime ringTime = new RingTime(nowMillis, nowMillis, 0L, false);
+
+        final List<RingTime> ringTimes = Lists.newArrayList(ringTime);
+        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now.plusHours(1), 0, now.minusMinutes(1));
+        assertThat(events.isEmpty(), is(true));
     }
 }

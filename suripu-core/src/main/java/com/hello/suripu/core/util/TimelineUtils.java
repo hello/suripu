@@ -1141,12 +1141,25 @@ public class TimelineUtils {
     }
 
 
-
-    public static List<Event> getAlarmEvents(final List<RingTime> ringTimes, final DateTime evening, final DateTime morning, final Integer offsetMillis) {
+    /**
+     * Returns a list of Alarm Events containing alarms within the window and that have rang.
+     * @param ringTimes
+     * @param evening
+     * @param morning
+     * @param offsetMillis
+     * @return
+     */
+    public static List<Event> getAlarmEvents(final List<RingTime> ringTimes, final DateTime evening, final DateTime morning, final Integer offsetMillis, final DateTime nowInUTC) {
         final List<Event> events = Lists.newArrayList();
         final DateTime localMorning = new DateTime(morning.getMillis(), DateTimeZone.UTC);
         for(final RingTime ringTime : ringTimes) {
             final DateTime alarmLocalTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC).plusMillis(offsetMillis).plusMinutes(1);
+            final DateTime localNow = nowInUTC.plusMillis(offsetMillis);
+            final Long diffInMillis = localNow.getMillis() - alarmLocalTime.getMillis();
+            if(diffInMillis < 0) {
+                LOGGER.debug("{} is in the future. It is now {}", ringTime, localNow);
+                continue;
+            }
 
             if(ringTime.expectedRingTimeUTC > evening.getMillis() && alarmLocalTime .getMillis() < localMorning.getMillis()) {
                 LOGGER.debug("{} is valid. Adding to list", ringTime);
