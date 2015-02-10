@@ -392,15 +392,18 @@ public class DataScienceResource extends BaseResource {
                     .entity("This account does not have a sense recently").build());
         }
 
+        final DateTime startTs = new DateTime(ts, DateTimeZone.UTC);
+        final DateTime endTs = startTs.plusDays(7);
+
         ImmutableList<TrackerMotion> motionData = trackerMotionDAO.getBetween(
                 accountId,
-                new DateTime(ts, DateTimeZone.UTC),
-                new DateTime(ts, DateTimeZone.UTC).plusDays(7)
+                startTs,
+                endTs
         );
 
         AllSensorSampleList sensorSamples = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
-                motionData.get(0).timestamp,
-                motionData.get(motionData.size()-1).timestamp,
+                startTs.getMillis(),
+                endTs.getMillis(),
                 accountId,
                 deviceAccountPairOptional.get().internalDeviceId,
                 1,
