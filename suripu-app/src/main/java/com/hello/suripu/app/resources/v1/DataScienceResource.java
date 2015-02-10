@@ -363,14 +363,16 @@ public class DataScienceResource extends BaseResource {
                                                                 @QueryParam("account_id") Long accountId,
                                                                 @QueryParam("from_ts") Long fromTimestamp) {
 
+        if (email == null && accountId == null && fromTimestamp == null) {
+            throw new WebApplicationException(Response.status(400).entity(new JsonError(400,
+                    "Missing query parameters, use email or account_id, and from_ts")).build());
+        }
+
         Optional<Account> optionalAccount;
         if (email != null) {
             optionalAccount = accountDAO.getByEmail(email);
-        } else if (accountId != null) {
-            optionalAccount = accountDAO.getById(accountId);
         } else {
-            throw new WebApplicationException(Response.status(400).entity(new JsonError(400,
-                    "Missing query parameters, use email or account_id")).build());
+            optionalAccount = accountDAO.getById(accountId);
         }
 
         if (!optionalAccount.isPresent() || !optionalAccount.get().id.isPresent()) {
