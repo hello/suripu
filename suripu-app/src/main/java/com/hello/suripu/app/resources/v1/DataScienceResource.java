@@ -417,25 +417,20 @@ public class DataScienceResource extends BaseResource {
                 missingDataDefaultValue
         );
 
-        final List<Sample> soundNumDisturbances = sensorSamples.get(Sensor.SOUND_NUM_DISTURBANCES);
-        final List<Sample> soundPeakDisturbance = sensorSamples.get(Sensor.SOUND_PEAK_DISTURBANCE);
-        final int numSamples = soundNumDisturbances.size();
+        final List<Sample> lightSamples = sensorSamples.get(Sensor.LIGHT);
+        final int numSamples = lightSamples.size();
 
         final List<JoinedSensorsMinuteData> joinedSensorsMinuteData = new ArrayList<>();
         for (int i = 0; i < numSamples; i++) {
-            final Long timestamp = soundNumDisturbances.get(i).dateTime;
-            if (!motionSamples.containsKey(timestamp)) {
-                continue;
-            }
+            final Long timestamp = lightSamples.get(i).dateTime;
 
-            joinedSensorsMinuteData.add(new JoinedSensorsMinuteData(
-                    timestamp,
-                    accountId,
-                    soundNumDisturbances.get(i).value,
-                    soundPeakDisturbance.get(i).value,
-                    motionSamples.get(timestamp).value,
-                    motionSamples.get(timestamp).kickOffCounts,
-                    motionSamples.get(timestamp).offsetMillis));
+            joinedSensorsMinuteData.add(new JoinedSensorsMinuteData(timestamp, accountId,
+                    lightSamples.get(i).value,
+                    sensorSamples.get(Sensor.SOUND_NUM_DISTURBANCES).get(i).value,
+                    sensorSamples.get(Sensor.SOUND_PEAK_DISTURBANCE).get(i).value,
+                    motionSamples.containsKey(timestamp) ? motionSamples.get(timestamp).value : null,
+                    motionSamples.containsKey(timestamp) ? motionSamples.get(timestamp).kickOffCounts : null,
+                    lightSamples.get(i).offsetMillis));
         }
 
         return joinedSensorsMinuteData;
