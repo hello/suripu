@@ -28,7 +28,7 @@ public class PushNotificationsProcessorFactory implements IRecordProcessorFactor
     private final PushNotificationsWorkerConfiguration configuration;
     private final AWSCredentialsProvider awsCredentialsProvider;
 
-    public PushNotificationsProcessorFactory(final PushNotificationsWorkerConfiguration configuration, AWSCredentialsProvider awsCredentialsProvider) {
+    public PushNotificationsProcessorFactory(final PushNotificationsWorkerConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
         this.configuration = configuration;
         this.awsCredentialsProvider = awsCredentialsProvider;
     }
