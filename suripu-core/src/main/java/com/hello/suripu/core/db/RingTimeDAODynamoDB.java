@@ -157,22 +157,21 @@ public class RingTimeDAODynamoDB {
     /**
      * TODO: this is awfully similar to getNextRingTimeForSense. Probably needs refactoring.
      * @param senseId
-     * @param evening
-     * @param morning
+     * @param eveningDayBefore
      * @return
      */
-    public List<RingTime> getRingTimesBetween(final String senseId, final DateTime evening, final DateTime morning) {
+    public List<RingTime> getRingTimesBetween(final String senseId, final DateTime upToOneWeekAgo) {
         final Map<String, Condition> queryConditions = Maps.newHashMap();
         final List<AttributeValue> values = Lists.newArrayList();
-        final String eveningMillis = String.valueOf(evening.getMillis());
-        final String morningMillis = String.valueOf(morning.getMillis());
-        LOGGER.debug("Evening: {} ({})", evening.toString(), evening.getMillis());
-        LOGGER.debug("Morning: {} ({})", morning.toString(), morning.getMillis());
+        final String eveningMillis = String.valueOf(upToOneWeekAgo.getMillis());
+
+        LOGGER.debug("Evening: {} ({})", upToOneWeekAgo.toString(), upToOneWeekAgo.getMillis());
+
         values.add(new AttributeValue().withN(eveningMillis));
-        values.add(new AttributeValue().withN(morningMillis));
+//        values.add(new AttributeValue().withN(morningMillis));
 
         final Condition selectDateCondition = new Condition()
-                .withComparisonOperator(ComparisonOperator.BETWEEN.toString())
+                .withComparisonOperator(ComparisonOperator.GT.toString())
                 .withAttributeValueList(values);
         queryConditions.put(CREATED_AT_ATTRIBUTE_NAME, selectDateCondition);
 
@@ -186,7 +185,7 @@ public class RingTimeDAODynamoDB {
 
         final QueryRequest queryRequest = new QueryRequest(tableName).withKeyConditions(queryConditions)
                 .withAttributesToGet(targetAttributeSet)
-                .withLimit(5)
+                .withLimit(50)
                 .withScanIndexForward(false);
         final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
 
@@ -197,7 +196,7 @@ public class RingTimeDAODynamoDB {
         final List<Map<String, AttributeValue>> items = queryResult.getItems();
 
         final List<RingTime> ringTimes = Lists.newArrayList();
-        for(final Map<String, AttributeValue> item:items){
+        for(final Map<String, AttributeValue> item: items){
             final Optional<RingTime> ringTime = Optional.fromNullable(ringTimeFromItemSet(senseId, targetAttributeSet, item));
             if(ringTime.isPresent()) {
                 ringTimes.add(ringTime.get());

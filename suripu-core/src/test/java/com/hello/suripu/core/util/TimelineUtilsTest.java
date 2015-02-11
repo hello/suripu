@@ -5,6 +5,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
+import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
@@ -12,6 +13,10 @@ import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
+import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.RingTime;
+import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.hamcrest.core.Is;
 import org.joda.time.DateTime;
@@ -23,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -457,21 +463,17 @@ public class TimelineUtilsTest {
     }
 
     @Test
-    public void testGetFullSleepEventsBigMotionBeforeGetIntoBed(){
+    public void testGetFullSleepEventsBigMotionBeforeGetIntoBed() throws IOException {
         final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/pang_motion_2015_01_24_raw.csv");
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
-        try {
-            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
-            final String[] lines = csvString.split("\\n");
-            for(int i = 1; i < lines.length; i++){
-                final String[] columns = lines[i].split(",");
-                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
-                //if(trackerMotion.value > 0){
-                trackerMotions.add(trackerMotion);
-                //}
-            }
-        }catch (IOException ex){
-            ex.printStackTrace();
+        final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
+        final String[] lines = csvString.split("\\n");
+        for(int i = 1; i < lines.length; i++){
+            final String[] columns = lines[i].split(",");
+            final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
+            //if(trackerMotion.value > 0){
+            trackerMotions.add(trackerMotion);
+            //}
         }
 
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 24, 0, 0, DateTimeZone.UTC),
@@ -569,7 +571,7 @@ public class TimelineUtilsTest {
         assertThat(goToBedLocalUTC, is(new DateTime(2015, 1, 22, 0, 13, DateTimeZone.UTC)));
         //assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 25, 1, 43, DateTimeZone.UTC)));
         assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 22, 0, 14, DateTimeZone.UTC)));
-        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 22, 7, 33, DateTimeZone.UTC)));
+        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 22, 7, 22, DateTimeZone.UTC)));
         assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 22, 7, 44, DateTimeZone.UTC)));
     }
 
@@ -635,21 +637,18 @@ public class TimelineUtilsTest {
 
 
     @Test
-    public void testGetFullSleepEventsWeekend(){
+    public void testGetFullSleepEventsWeekend() throws IOException {
         final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/pang_motion_2015_02_01_raw.csv");
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
-        try {
-            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
-            final String[] lines = csvString.split("\\n");
-            for(int i = 1; i < lines.length; i++){
-                final String[] columns = lines[i].split(",");
-                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
-                //if(trackerMotion.value > 0){
-                trackerMotions.add(trackerMotion);
-                //}
-            }
-        }catch (IOException ex){
-            ex.printStackTrace();
+
+        final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
+        final String[] lines = csvString.split("\\n");
+        for(int i = 1; i < lines.length; i++){
+            final String[] columns = lines[i].split(",");
+            final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
+            //if(trackerMotion.value > 0){
+            trackerMotions.add(trackerMotion);
+            //}
         }
 
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 2, 1, 0, 0, DateTimeZone.UTC),
@@ -747,7 +746,7 @@ public class TimelineUtilsTest {
         final DateTime now = DateTime.now();
         events.add(new NullEvent(now.getMillis(), now.plusMinutes(2).getMillis(), 0, 0));
 
-        List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+        final List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
                 new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0, 0));
         assertThat(inserted.size(), is(2));
         assertThat(inserted.get(0).getType(), is(Event.Type.MOTION));
@@ -762,7 +761,7 @@ public class TimelineUtilsTest {
         final DateTime now = DateTime.now();
         events.add(new NullEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0, 0));
 
-        List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+        final List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
                 new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0, 0));
         assertThat(inserted.size(), is(1));
         assertThat(inserted.get(0).getType(), is(Event.Type.MOTION));
@@ -776,7 +775,7 @@ public class TimelineUtilsTest {
         final DateTime now = DateTime.now();
         events.add(new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0, 0));
 
-        List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+        final List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
                 new NullEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0, 0));
         assertThat(inserted.size(), is(1));
         assertThat(inserted.get(0).getType(), is(Event.Type.MOTION));
@@ -791,7 +790,7 @@ public class TimelineUtilsTest {
         final DateTime now = DateTime.now();
         events.add(new MotionEvent(now.getMillis(), now.plusMinutes(3).getMillis(), 0, 0));
 
-        List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+        final List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
                 new NullEvent(now.minusMinutes(1).getMillis(), now.getMillis(), 0, 0));
         assertThat(inserted.size(), is(2));
         assertThat(inserted.get(0).getType(), is(Event.Type.NONE));
@@ -808,12 +807,92 @@ public class TimelineUtilsTest {
         final DateTime now = DateTime.now();
         events.add(new MotionEvent(now.getMillis(), now.plusMinutes(3).getMillis(), 0, 0));
 
-        List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+        final List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
                 new NullEvent(now.plusMinutes(3).getMillis(), now.plusMinutes(4).getMillis(), 0, 0));
         assertThat(inserted.size(), is(2));
         assertThat(inserted.get(0).getType(), is(Event.Type.MOTION));
         assertThat(inserted.get(0).getStartTimestamp(), is(now.getMillis()));
         assertThat(inserted.get(1).getType(), is(Event.Type.NONE));
         assertThat(inserted.get(1).getStartTimestamp(), is(now.plusMinutes(3).getMillis()));
+    }
+
+    @Test
+    public void testGeneratePreSleepInsightsMissingSensorData() {
+        final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
+        final List<Insight> insights = TimelineUtils.generatePreSleepInsights(allSensorSampleList, 0L, 999L);
+        assertThat(insights.isEmpty(), is(true));
+    }
+
+
+    @Test
+    public void testGeneratePreSleepInsightsEmptyData() {
+        final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
+        allSensorSampleList.add(Sensor.LIGHT, Collections.EMPTY_LIST);
+        final List<Insight> insights = TimelineUtils.generatePreSleepInsights(allSensorSampleList, 0L, 999L);
+        assertThat(insights.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testGeneratePreSleepInsightsWithData() {
+        final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
+        assertThat(allSensorSampleList.isEmpty(), is(true));
+
+        allSensorSampleList.add(Sensor.LIGHT, Lists.newArrayList(new Sample(DateTime.now().getMillis(), 10.0f, 0)));
+        assertThat(allSensorSampleList.get(Sensor.LIGHT).isEmpty(), is(false));
+        assertThat(allSensorSampleList.isEmpty(), is(false));
+        assertThat(allSensorSampleList.get(Sensor.TEMPERATURE).isEmpty(), is(true));
+
+    }
+
+
+    @Test
+    public void testAlarmInTimelineEmptyRingTime() {
+        final RingTime emptyRingTime = RingTime.createEmpty();
+        final List<RingTime> ringTimes = Lists.newArrayList(emptyRingTime);
+        final DateTime now = DateTime.now();
+        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now, 0, now);
+        assertThat(events.isEmpty(), is(true));
+    }
+
+
+    @Test
+    public void testAlarmInTimelineRingTimeInThePast() {
+        final DateTime now = DateTime.now();
+        final RingTime ringTime = new RingTime(now.minusDays(1).getMillis(), now.minusDays(1).plusMinutes(10).getMillis(), 0L, false);
+        final List<RingTime> ringTimes = Lists.newArrayList(ringTime);
+        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.plusDays(1), now.plusDays(5), 0, now);
+        assertThat(events.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testAlarmInTimelineRingTimeInTheFuture() {
+        final DateTime now = DateTime.now();
+        final RingTime ringTime = new RingTime(now.plusDays(1).getMillis(), now.plusDays(1).getMillis(), 0L, false);
+        final List<RingTime> ringTimes = Lists.newArrayList(ringTime);
+        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now, 0, now);
+        assertThat(events.isEmpty(), is(true));
+    }
+
+
+    @Test
+    public void testAlarmInTimelineRingTimeValid() {
+        final DateTime now = DateTime.now();
+        final Long nowMillis = now.getMillis();
+        final RingTime ringTime = new RingTime(nowMillis, nowMillis, 0L, false);
+
+        final List<RingTime> ringTimes = Lists.newArrayList(ringTime);
+        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now.plusHours(1), 0, now.plusMinutes(1));
+        assertThat(events.isEmpty(), is(false));
+    }
+
+    @Test
+    public void testAlarmInTimelineRingTimeTooEarly() {
+        final DateTime now = DateTime.now();
+        final Long nowMillis = now.getMillis();
+        final RingTime ringTime = new RingTime(nowMillis, nowMillis, 0L, false);
+
+        final List<RingTime> ringTimes = Lists.newArrayList(ringTime);
+        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now.plusHours(1), 0, now.minusMinutes(1));
+        assertThat(events.isEmpty(), is(true));
     }
 }

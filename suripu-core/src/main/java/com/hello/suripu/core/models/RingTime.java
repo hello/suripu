@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 /**
  * Created by pangwu on 9/23/14.
@@ -100,5 +102,15 @@ public class RingTime {
         final RingTime convertedObject = (RingTime) other;
         return Objects.equal(convertedObject.expectedRingTimeUTC, this.expectedRingTimeUTC) &&
                 Objects.equal(convertedObject.fromSmartAlarm, this.fromSmartAlarm);
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(RingTime.class)
+                .add("acualRingTimeUTC", new DateTime(actualRingTimeUTC, DateTimeZone.UTC))
+                .add("expectedRingTimeUTC", new DateTime(expectedRingTimeUTC, DateTimeZone.UTC))
+                .add("soundIds", soundIds)
+                .add("fromSmartAlarm", fromSmartAlarm)
+                .toString();
     }
 }

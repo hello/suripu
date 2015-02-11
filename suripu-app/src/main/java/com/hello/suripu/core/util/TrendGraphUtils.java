@@ -23,7 +23,7 @@ import java.util.Map;
  */
 public class TrendGraphUtils {
 
-    private static int TRENDS_AVAILABLE_AFTER_DAYS = 10; // no trends before collecting 10 days of data
+    private static int TRENDS_AVAILABLE_AFTER_DAYS = 7; // no trends before collecting 10 days of data
 
     public static TrendGraph getDayOfWeekGraph(final TrendGraph.DataType dataType, final TrendGraph.TimePeriodType timePeriodType, final List<DowSample> rawData) {
 
@@ -55,7 +55,10 @@ public class TrendGraphUtils {
         return new TrendGraph(dataType, TrendGraph.GraphType.HISTOGRAM, timePeriodType, dataPoints);
     }
 
-    public static TrendGraph getScoresOverTimeGraph(final TrendGraph.TimePeriodType timePeriodType, final ImmutableList<AggregateScore> scores, final Map<DateTime, Integer> userOffsetMillis ) {
+    public static TrendGraph getScoresOverTimeGraph(final TrendGraph.TimePeriodType timePeriodType,
+                                                    final ImmutableList<AggregateScore> scores,
+                                                    final Map<DateTime, Integer> userOffsetMillis,
+                                                    final int numDaysActive) {
         // aggregate
         final List<GraphSample> dataPoints = new ArrayList<>();
 
@@ -71,10 +74,13 @@ public class TrendGraphUtils {
 
             dataPoints.add(new GraphSample(date.getMillis(), value, offsetMillis, label));
         }
-        return new TrendGraph(TrendGraph.DataType.SLEEP_SCORE, TrendGraph.GraphType.TIME_SERIES_LINE, timePeriodType, TrendGraph.TimePeriodType.getTimeSeriesOptions(), dataPoints);
+
+        final List<String> timeSeriesOptions = TrendGraph.TimePeriodType.getTimeSeriesOptions(numDaysActive);
+        return new TrendGraph(TrendGraph.DataType.SLEEP_SCORE, TrendGraph.GraphType.TIME_SERIES_LINE, timePeriodType, timeSeriesOptions, dataPoints);
     }
 
-    public static TrendGraph getDurationOverTimeGraph(final TrendGraph.TimePeriodType timePeriodType, final ImmutableList<SleepStatsSample> statsSamples) {
+    public static TrendGraph getDurationOverTimeGraph(final TrendGraph.TimePeriodType timePeriodType,
+                                                      final ImmutableList<SleepStatsSample> statsSamples, final int numDaysActive) {
 
         final List<GraphSample> dataPoints = new ArrayList<>();
         for (final SleepStatsSample sample : statsSamples) {
@@ -82,7 +88,9 @@ public class TrendGraphUtils {
             final TrendGraph.DataLabel label = TrendGraph.getDataLabel(TrendGraph.DataType.SLEEP_DURATION, value);
             dataPoints.add(new GraphSample(sample.localUTCDate.getMillis(), value, sample.timeZoneOffset, label));
         }
-        return new TrendGraph(TrendGraph.DataType.SLEEP_DURATION, TrendGraph.GraphType.TIME_SERIES_LINE, timePeriodType, TrendGraph.TimePeriodType.getTimeSeriesOptions(), dataPoints);
+
+        final List<String> timeSeriesOptions = TrendGraph.TimePeriodType.getTimeSeriesOptions(numDaysActive);
+        return new TrendGraph(TrendGraph.DataType.SLEEP_DURATION, TrendGraph.GraphType.TIME_SERIES_LINE, timePeriodType, timeSeriesOptions, dataPoints);
     }
 
     public static List<AvailableGraph> getGraphList(final Account account) {

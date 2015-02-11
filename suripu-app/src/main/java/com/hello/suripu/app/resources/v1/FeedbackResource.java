@@ -2,6 +2,7 @@ package com.hello.suripu.app.resources.v1;
 
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.models.SleepFeedback;
+import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -23,7 +24,14 @@ public class FeedbackResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public void saveFeedback(@Scope(OAuthScope.SLEEP_FEEDBACK) final AccessToken accessToken, final SleepFeedback feedback) {
-        final SleepFeedback sleepFeedback = SleepFeedback.forAccount(feedback, accessToken.accountId);
-        feedbackDAO.insert(sleepFeedback);
+        // NOOP
+    }
+
+
+    @POST
+    @Path("/sleep")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void saveTimelineFeedback(@Scope(OAuthScope.SLEEP_FEEDBACK) final AccessToken accessToken, final TimelineFeedback feedback) {
+        feedbackDAO.insertTimelineFeedback(accessToken.accountId, feedback);
     }
 }

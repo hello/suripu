@@ -210,18 +210,22 @@ public class CurrentRoomState {
 
         if (temperature > (float) TemperatureHumidity.ALERT_TEMP_MAX_CELSIUS) {
             condition = State.Condition.ALERT;
+            idealTempConditions += English.RECOMMENDATION_TEMP_TOO_HIGH;
             message = (preSleep) ? English.HIGH_TEMPERATURE_PRE_SLEEP_ALERT_MESSAGE: English.HIGH_TEMPERATURE_ALERT_MESSAGE;
 
         } else if (temperature > (float) TemperatureHumidity.IDEAL_TEMP_MAX_CELSIUS) {
             condition = State.Condition.WARNING;
+            idealTempConditions += English.RECOMMENDATION_TEMP_TOO_HIGH;
             message = (preSleep) ? English.HIGH_TEMPERATURE_PRE_SLEEP_WARNING_MESSAGE: English.HIGH_TEMPERATURE_WARNING_MESSAGE;
 
         } else if (temperature  < (float) TemperatureHumidity.ALERT_TEMP_MIN_CELSIUS) {
             condition = State.Condition.ALERT;
+            idealTempConditions += English.RECOMMENDATION_TEMP_TOO_LOW;
             message = (preSleep) ? English.LOW_TEMPERATURE_PRE_SLEEP_ALERT_MESSAGE: English.LOW_TEMPERATURE_ALERT_MESSAGE;
 
         } else if (temperature < (float) TemperatureHumidity.IDEAL_TEMP_MIN_CELSIUS) {
             condition = State.Condition.WARNING;
+            idealTempConditions += English.RECOMMENDATION_TEMP_TOO_LOW;
             message = (preSleep) ? English.LOW_TEMPERATURE_PRE_SLEEP_WARNING_MESSAGE: English.LOW_TEMPERATURE_WARNING_MESSAGE;
         }
 
@@ -265,16 +269,18 @@ public class CurrentRoomState {
     public static State getLightState(final float light, final DateTime dataTimestampUTC, final Boolean preSleep) {
         State.Condition condition = State.Condition.IDEAL;;
         String message = (preSleep) ? English.IDEAL_LIGHT_PRE_SLEEP_MESSAGE: English.IDEAL_LIGHT_MESSAGE;;
-
+        String idealConditions = English.LIGHT_ADVICE_MESSAGE;
         if (light > 8.0) {
             condition = State.Condition.ALERT;
+            idealConditions += English.RECOMMENDATION_LIGHT_TOO_HIGH;
             message = (preSleep) ? English.ALERT_LIGHT_PRE_SLEEP_MESSAGE : English.ALERT_LIGHT_MESSAGE;
         } else if (light > 2.0) {
             condition = State.Condition.WARNING;
+            idealConditions += English.RECOMMENDATION_LIGHT_TOO_HIGH;
             message = (preSleep) ? English.WARNING_LIGHT_PRE_SLEEP_MESSAGE: English.WARNING_LIGHT_MESSAGE;
         }
 
-        return new State(light, message, English.LIGHT_ADVICE_MESSAGE, condition, dataTimestampUTC, State.Unit.LUX);
+        return new State(light, message, idealConditions, condition, dataTimestampUTC, State.Unit.LUX);
     }
 
     public static State getSoundState(final float sound, final DateTime dataTimestampUTC, final Boolean preSleep) {

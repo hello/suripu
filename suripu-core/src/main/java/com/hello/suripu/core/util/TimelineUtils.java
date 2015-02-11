@@ -2,6 +2,7 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.LightSegment;
@@ -19,6 +20,7 @@ import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.Events.AlarmEvent;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.LightEvent;
@@ -29,6 +31,7 @@ import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.SleepingEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
@@ -660,86 +663,89 @@ public class TimelineUtils {
 
     }
 
-    public static List<Insight> generatePreSleepInsights(Optional<AllSensorSampleList> optionalSensorData, final long sleepTimestampUTC) {
+    public static List<Insight> generatePreSleepInsights(final AllSensorSampleList allSensorSampleList, final Long sleepTimestampUTC, final Long accountId) {
+        final List<Insight> generatedInsights = Lists.newArrayList();
 
-        if (!optionalSensorData.isPresent()) {
-            return Collections.EMPTY_LIST;
+        if (allSensorSampleList.isEmpty()) {
+            return generatedInsights;
         }
+        try {
 
-        final List<Insight> generatedInsights = new ArrayList<>();
+            // find index for time period of interest
+            int startIndex = 0;
+            int endIndex = 0;
+            final long startTimestamp = sleepTimestampUTC - PRESLEEP_WINDOW_IN_MILLIS;
+            for (final Sample sample : allSensorSampleList.get(Sensor.LIGHT)) {
+                if (sample.dateTime < startTimestamp) {
+                    startIndex++;
+                }
 
-        final AllSensorSampleList sensorData = optionalSensorData.get();
+                endIndex++;
 
-        // find index for time period of interest
-        int startIndex = 0;
-        int endIndex = 0;
-        final long startTimestamp = sleepTimestampUTC - PRESLEEP_WINDOW_IN_MILLIS;
-        for (Sample sample : sensorData.getData(Sensor.LIGHT)) {
-            if (sample.dateTime < startTimestamp) {
-                startIndex++;
+                if (sample.dateTime > sleepTimestampUTC) {
+                    break;
+                }
             }
 
-            endIndex++;
-
-            if (sample.dateTime > sleepTimestampUTC) {
-                break;
-            }
-        }
-
-        // initialize
-        Map<Sensor, Float> counts = new HashMap<>();
-        Map<Sensor, Float> sums = new HashMap<>();
-        for (Sensor sensor : sensorData.getAvailableSensors()) {
-            counts.put(sensor, 0.0f);
-            sums.put(sensor, 0.0f);
-        }
-
-        // add values
-        for (int i = startIndex; i < endIndex; i++) {
-            for (Sensor sensor : sums.keySet()) {
-                final float average = sums.get(sensor) + sensorData.getData(sensor).get(i).value;
-                sums.put(sensor, average);
-
-                final float count = counts.get(sensor) + 1.0f;
-                counts.put(sensor, count);
-            }
-        }
-
-        final DateTime sleepDateTime = new DateTime(sleepTimestampUTC, DateTimeZone.UTC);
-
-        // compute average for each sensor, generate insights
-        for (Sensor sensor : counts.keySet()) {
-            if (counts.get(sensor) == 0.0f) {
-                continue;
+            // initialize
+            final Map<Sensor, Float> counts = new HashMap<>();
+            final Map<Sensor, Float> sums = new HashMap<>();
+            for (Sensor sensor : allSensorSampleList.getAvailableSensors()) {
+                counts.put(sensor, 0.0f);
+                sums.put(sensor, 0.0f);
             }
 
-            final float average = sums.get(sensor) / counts.get(sensor);
-            Optional<CurrentRoomState.State> sensorState;
+            // add values
+            for (int i = startIndex; i < endIndex; i++) {
+                for (final Sensor sensor : sums.keySet()) {
+                    final float average = sums.get(sensor) + allSensorSampleList.get(sensor).get(i).value;
+                    sums.put(sensor, average);
 
-            switch(sensor) {
-                case LIGHT:
-                    sensorState = Optional.of(CurrentRoomState.getLightState(average, sleepDateTime, true));
-                    break;
-                case SOUND:
-                    sensorState = Optional.of(CurrentRoomState.getSoundState(average, sleepDateTime, true));
-                    break;
-                case HUMIDITY:
-                    sensorState = Optional.of(CurrentRoomState.getHumidityState(average, sleepDateTime, true));
-                    break;
-                case TEMPERATURE:
-                    sensorState = Optional.of(CurrentRoomState.getTemperatureState(average, sleepDateTime, CurrentRoomState.DEFAULT_TEMP_UNIT, true));
-                    break;
-                case PARTICULATES:
-                    sensorState = Optional.of(CurrentRoomState.getParticulatesState(average, sleepDateTime, true));
-                    break;
-                default:
-                    sensorState = Optional.absent();
-                    break;
+                    final float count = counts.get(sensor) + 1.0f;
+                    counts.put(sensor, count);
+                }
             }
 
-            if (sensorState.isPresent()) {
-                generatedInsights.add(new Insight(sensor, sensorState.get().condition, sensorState.get().message));
+            final DateTime sleepDateTime = new DateTime(sleepTimestampUTC, DateTimeZone.UTC);
+
+            // compute average for each sensor, generate insights
+            for (final Sensor sensor : counts.keySet()) {
+                if (counts.get(sensor) == 0.0f) {
+                    continue;
+                }
+
+                final float average = sums.get(sensor) / counts.get(sensor);
+                Optional<CurrentRoomState.State> sensorState;
+
+                switch (sensor) {
+                    case LIGHT:
+                        sensorState = Optional.of(CurrentRoomState.getLightState(average, sleepDateTime, true));
+                        break;
+                    case SOUND:
+                        sensorState = Optional.of(CurrentRoomState.getSoundState(average, sleepDateTime, true));
+                        break;
+                    case HUMIDITY:
+                        sensorState = Optional.of(CurrentRoomState.getHumidityState(average, sleepDateTime, true));
+                        break;
+                    case TEMPERATURE:
+                        sensorState = Optional.of(CurrentRoomState.getTemperatureState(average, sleepDateTime, CurrentRoomState.DEFAULT_TEMP_UNIT, true));
+                        break;
+                    case PARTICULATES:
+                        sensorState = Optional.of(CurrentRoomState.getParticulatesState(average, sleepDateTime, true));
+                        break;
+                    default:
+                        sensorState = Optional.absent();
+                        break;
+                }
+
+                if (sensorState.isPresent()) {
+                    generatedInsights.add(new Insight(sensor, sensorState.get().condition, sensorState.get().message));
+                }
             }
+
+            return generatedInsights;
+        } catch (Exception e) {
+            LOGGER.error("failed generating pre-sleep insights for account {}, reason: {}", accountId, e.getMessage());
         }
 
         return generatedInsights;
@@ -951,8 +957,7 @@ public class TimelineUtils {
         if(firstWaveTimeOptional.isPresent()) {
 
             final LinkedList<AmplitudeData> waveAndCumulatedMotionFeature = new LinkedList<>();
-            for (final AmplitudeData amplitudeData : aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_MOTION_PERIOD)) {
-                // this is the magical light feature that can keep both magic and fix broken things.
+            for (final AmplitudeData amplitudeData : aggregatedFeatures.get(MotionFeatures.FeatureType.AWAKE_BACKWARD_DENSITY)) {
                 waveAndCumulatedMotionFeature.add(new AmplitudeData(amplitudeData.timestamp,
                         amplitudeData.amplitude,
                         amplitudeData.offsetMillis));
@@ -1017,11 +1022,13 @@ public class TimelineUtils {
         final Event outOfBed = sleepEvents.get(3);
 
 
-        final ArrayList<Optional<Event>> fixedSleepEvents = new ArrayList<>();
-        fixedSleepEvents.add(Optional.of(goToBed));
-        fixedSleepEvents.add(Optional.of(sleep));
-        fixedSleepEvents.add(Optional.of(wakeUp));
-        fixedSleepEvents.add(Optional.of(outOfBed));
+        final ArrayList<Optional<Event>> fixedSleepEvents = Lists.newArrayList(
+                Optional.of(goToBed),
+                Optional.of(sleep),
+                Optional.of(wakeUp),
+                Optional.of(outOfBed)
+        );
+
 
         if(sleep.getStartTimestamp() == goToBed.getStartTimestamp()){
             fixedSleepEvents.set(1, Optional.of((Event) new FallingAsleepEvent(sleep.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
@@ -1135,6 +1142,46 @@ public class TimelineUtils {
 
 
         return fixedSleepEvents;
+    }
+
+
+    /**
+     * Returns a list of Alarm Events containing alarms within the window and that have rang.
+     * @param ringTimes
+     * @param evening
+     * @param morning
+     * @param offsetMillis
+     * @return
+     */
+    public static List<Event> getAlarmEvents(final List<RingTime> ringTimes, final DateTime evening, final DateTime morning, final Integer offsetMillis, final DateTime nowInUTC) {
+        final List<Event> events = Lists.newArrayList();
+        final DateTime localMorning = new DateTime(morning.getMillis(), DateTimeZone.UTC);
+        for(final RingTime ringTime : ringTimes) {
+            final DateTime alarmLocalTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC).plusMillis(offsetMillis).plusMinutes(1);
+            final DateTime localNow = nowInUTC.plusMillis(offsetMillis);
+            final Long diffInMillis = localNow.getMillis() - alarmLocalTime.getMillis();
+            if(diffInMillis < 0) {
+                LOGGER.debug("{} is in the future. It is now {}", ringTime, localNow);
+                continue;
+            }
+
+            if(ringTime.expectedRingTimeUTC > evening.getMillis() && alarmLocalTime .getMillis() < localMorning.getMillis()) {
+                LOGGER.debug("{} is valid. Adding to list", ringTime);
+
+                final AlarmEvent event = (AlarmEvent) Event.createFromType(
+                        Event.Type.ALARM,
+                        ringTime.actualRingTimeUTC,
+                        new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC).plusMinutes(1).getMillis(),
+                        offsetMillis,
+                        Optional.<String>absent(),
+                        Optional.<SleepSegment.SoundInfo>absent(),
+                        Optional.<Integer>absent());
+                events.add(event);
+            }
+        }
+
+        LOGGER.debug("Adding {} alarms to the timeline", events.size());
+        return events;
     }
 
 }

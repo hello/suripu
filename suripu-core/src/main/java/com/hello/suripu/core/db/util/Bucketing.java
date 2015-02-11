@@ -12,6 +12,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.constraints.NotNull;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -107,18 +108,13 @@ public class Bucketing {
         return Optional.of(map);
     }
 
-    public static Optional<AllSensorSampleMap> populateMapAll(final List<DeviceData> deviceDataList) {
-
-        if(deviceDataList == null) {
-            LOGGER.error("deviceDataList is null for all sensors");
-            return Optional.absent();
-        }
-
-        if(deviceDataList.isEmpty()) {
-            return Optional.absent();
-        }
+    public static AllSensorSampleMap populateMapAll(@NotNull final List<DeviceData> deviceDataList) {
 
         final AllSensorSampleMap populatedMap = new AllSensorSampleMap();
+
+        if(deviceDataList.isEmpty()) {
+            return populatedMap;
+        }
 
         for(final DeviceData deviceData: deviceDataList) {
 
@@ -130,14 +126,15 @@ public class Bucketing {
             final float temperatureValue = DataUtils.calibrateTemperature(deviceData.ambientTemperature);
             final float particulatesValue = (float) DataUtils.convertRawDustCountsToAQI(deviceData.ambientDustMax, deviceData.firmwareVersion);
             final int waveCount = deviceData.waveCount;
+            final float soundNumDisturbances = (float) deviceData.audioNumDisturbances;
+            final float soundPeakDisturbance = DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB);
 
             populatedMap.addSample(newKey, deviceData.offsetMillis,
-                    lightValue, soundValue, humidityValue, temperatureValue, particulatesValue, waveCount);
-
-            LOGGER.trace("Overriding {}", newKey);
+                    lightValue, soundValue, humidityValue, temperatureValue, particulatesValue, waveCount,
+                    soundNumDisturbances, soundPeakDisturbance);
         }
 
-        return Optional.of(populatedMap);
+        return populatedMap;
     }
     /**
      * Generates a map with every bucket containing empty sample

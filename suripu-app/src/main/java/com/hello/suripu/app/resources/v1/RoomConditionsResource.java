@@ -149,14 +149,14 @@ public class RoomConditionsResource extends BaseResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final Optional<AllSensorSampleList> optionalData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
+        final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
                 accessToken.accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId));
 
-        if (!optionalData.isPresent()) {
+        if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
         }
 
-        return getDisplayData(optionalData.get().getAllData());
+        return getDisplayData(sensorData.getAllData());
     }
 
     @Timed
@@ -180,13 +180,13 @@ public class RoomConditionsResource extends BaseResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final Optional<AllSensorSampleList> optionalData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
+        final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
                 accessToken.accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId));
-        if (!optionalData.isPresent()) {
+        if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
         }
 
-        return getDisplayData(optionalData.get().getAllData());
+        return getDisplayData(sensorData.getAllData());
     }
 
     /*
@@ -490,14 +490,14 @@ public class RoomConditionsResource extends BaseResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final Optional<AllSensorSampleList> optionalData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeInUTC, queryEndTimestampInUTC,
+        final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accountId));
 
-        if (!optionalData.isPresent()) {
+        if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
         }
 
-        return getDisplayData(optionalData.get().getAllData());
+        return getDisplayData(sensorData.getAllData());
     }
 
     private static Map<Sensor, List<Sample>> getDisplayData(final Map<Sensor, List<Sample>> allSensorData){

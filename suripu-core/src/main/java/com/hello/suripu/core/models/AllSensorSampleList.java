@@ -2,7 +2,6 @@ package com.hello.suripu.core.models;
 
 import com.google.common.collect.Lists;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -10,22 +9,18 @@ import java.util.Map;
 
 public class AllSensorSampleList {
 
-    private final List<Sample> light;
-    private final List<Sample> sound;
-    private final List<Sample> humidity;
-    private final List<Sample> temperature;
-    private final List<Sample> particulates;
-    private final List<Sample> waveCounts;
+    private final List<Sample> light = Lists.newArrayList();
+    private final List<Sample> sound = Lists.newArrayList();
+    private final List<Sample> humidity = Lists.newArrayList();
+    private final List<Sample> temperature = Lists.newArrayList();
+    private final List<Sample> particulates = Lists.newArrayList();
+    private final List<Sample> waveCounts = Lists.newArrayList();
+    private final List<Sample> soundNumDisturbances = Lists.newArrayList();
+    private final List<Sample> soundPeakDisturbance = Lists.newArrayList();
 
     private final List<Sensor> sensors;
 
     public AllSensorSampleList() {
-        this.light = new ArrayList<>();
-        this.sound = new ArrayList<>();
-        this.humidity = new ArrayList<>();
-        this.temperature = new ArrayList<>();
-        this.particulates = new ArrayList<>();
-        this.waveCounts = new ArrayList<>();
 
         sensors = Lists.newArrayList(
                 Sensor.LIGHT,
@@ -33,11 +28,12 @@ public class AllSensorSampleList {
                 Sensor.PARTICULATES,
                 Sensor.SOUND,
                 Sensor.TEMPERATURE,
-                Sensor.WAVE_COUNT);
-
+                Sensor.WAVE_COUNT,
+                Sensor.SOUND_NUM_DISTURBANCES,
+                Sensor.SOUND_PEAK_DISTURBANCE);
     }
 
-    public void setData(final Sensor sensor, final List<Sample> values) {
+    public void add(final Sensor sensor, final List<Sample> values) {
         switch (sensor) {
             case LIGHT:
                 this.light.addAll(values);
@@ -57,6 +53,12 @@ public class AllSensorSampleList {
             case WAVE_COUNT:
                 this.waveCounts.addAll(values);
                 break;
+            case SOUND_NUM_DISTURBANCES:
+                this.soundNumDisturbances.addAll(values);
+                break;
+            case SOUND_PEAK_DISTURBANCE:
+                this.soundPeakDisturbance.addAll(values);
+                break;
             default:
                 break;
         }
@@ -67,7 +69,7 @@ public class AllSensorSampleList {
         return this.sensors;
     }
 
-    public List<Sample> getData(final Sensor sensor) {
+    public List<Sample> get(final Sensor sensor) {
         switch (sensor) {
             case LIGHT:
                 return this.light;
@@ -81,6 +83,10 @@ public class AllSensorSampleList {
                 return this.particulates;
             case WAVE_COUNT:
                 return this.waveCounts;
+            case SOUND_NUM_DISTURBANCES:
+                return this.soundNumDisturbances;
+            case SOUND_PEAK_DISTURBANCE:
+                return this.soundPeakDisturbance;
             default:
                 return Collections.EMPTY_LIST;
         }
@@ -94,7 +100,17 @@ public class AllSensorSampleList {
         results.put(Sensor.TEMPERATURE, this.temperature);
         results.put(Sensor.PARTICULATES, this.particulates);
         results.put(Sensor.WAVE_COUNT, this.waveCounts);
+        results.put(Sensor.SOUND_NUM_DISTURBANCES, this.soundNumDisturbances);
+        results.put(Sensor.SOUND_PEAK_DISTURBANCE, this.soundPeakDisturbance);
+
         return results;
+    }
+
+
+    public Boolean isEmpty() {
+        return light.isEmpty() && humidity.isEmpty() && sound.isEmpty() &&
+                temperature.isEmpty() && particulates.isEmpty() && waveCounts.isEmpty() &&
+                soundNumDisturbances.isEmpty() && soundPeakDisturbance.isEmpty();
     }
 
     public static Map<Sensor, List<Sample>> getEmptyData() {

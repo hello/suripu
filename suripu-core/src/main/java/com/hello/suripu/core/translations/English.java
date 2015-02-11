@@ -122,7 +122,13 @@ public class English {
     /* END Current Room State Declaration */
 
 
+    public final static String RECOMMENDATION_TEMP_TOO_HIGH = "\n\nTry to lower your thermostat.";
+    public final static String RECOMMENDATION_TEMP_TOO_LOW = "\n\nTry turning the heat a little bit.";
+
+
+    public final static String RECOMMENDATION_LIGHT_TOO_HIGH = "\n\nMake sure you turn off your lights.";
+
     // TIMELINE
 
-    public final static String TIMELINE_NO_SLEEP_DATA = "No sleep data recorded";
+    public final static String TIMELINE_NO_SLEEP_DATA = " No sleep data recorded";
 }

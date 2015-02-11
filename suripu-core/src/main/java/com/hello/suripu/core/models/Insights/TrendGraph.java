@@ -80,10 +80,10 @@ public class TrendGraph {
             throw new IllegalArgumentException();
         }
 
-        public static List<String> getTimeSeriesOptions() {
+        public static List<String> getTimeSeriesOptions(final int numDaysActive) {
             final List<String> options = new ArrayList<>();
-            for (TimePeriodType periodType : TimePeriodType.values()) {
-                if (periodType == DAY_OF_WEEK)
+            for (TimePeriodType periodType : PERIOD_TYPE_DAYS.keySet()) {
+                if (periodType == DAY_OF_WEEK || PERIOD_TYPE_DAYS.get(periodType) > numDaysActive)
                     continue;
                 options.add(periodType.getValue());
             }

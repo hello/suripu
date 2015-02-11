@@ -1,26 +1,21 @@
 package com.hello.suripu.core.models;
 
-import com.google.common.base.Optional;
+import com.google.common.collect.Maps;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class AllSensorSampleMap {
 
-    private final Map<Long, Sample> light;
-    private final Map<Long, Sample> sound;
-    private final Map<Long, Sample> humidity;
-    private final Map<Long, Sample> temperature;
-    private final Map<Long, Sample> particulates;
-    private final Map<Long, Sample> waveCounts;
+    private final Map<Long, Sample> light = Maps.newHashMap();
+    private final Map<Long, Sample> sound = Maps.newHashMap();
+    private final Map<Long, Sample> humidity = Maps.newHashMap();
+    private final Map<Long, Sample> temperature = Maps.newHashMap();
+    private final Map<Long, Sample> particulates = Maps.newHashMap();
+    private final Map<Long, Sample> waveCounts = Maps.newHashMap();
+    private final Map<Long, Sample> soundNumDisturbances = Maps.newHashMap();
+    private final Map<Long, Sample> soundPeakDisturbance = Maps.newHashMap();
 
     public AllSensorSampleMap() {
-        this.light = new HashMap<>();
-        this.sound = new HashMap<>();
-        this.humidity = new HashMap<>();
-        this.temperature = new HashMap<>();
-        this.particulates = new HashMap<>();
-        this.waveCounts = new HashMap<>();
     }
 
     public void addSample(final Long dateTime, final int offsetMillis,
@@ -29,7 +24,9 @@ public class AllSensorSampleMap {
                           final float humidity,
                           final float temperature,
                           final float particulates,
-                          final int waveCount) {
+                          final int waveCount,
+                          final float soundNumDisturbance,
+                          final float soundPeakDisturbance) {
 
         this.light.put(dateTime, new Sample(dateTime, light, offsetMillis));
         this.sound.put(dateTime, new Sample(dateTime, sound, offsetMillis));
@@ -37,6 +34,8 @@ public class AllSensorSampleMap {
         this.temperature.put(dateTime, new Sample(dateTime, temperature, offsetMillis));
         this.particulates.put(dateTime, new Sample(dateTime, particulates, offsetMillis));
         this.waveCounts.put(dateTime, new Sample(dateTime, waveCount, offsetMillis));
+        this.soundNumDisturbances.put(dateTime, new Sample(dateTime, soundNumDisturbance, offsetMillis));
+        this.soundPeakDisturbance.put(dateTime, new Sample(dateTime, soundPeakDisturbance, offsetMillis));
     }
 
     public void setSampleMap(final Sensor sensor, final Map<Long, Sample> sampleMap) {
@@ -59,41 +58,43 @@ public class AllSensorSampleMap {
             case WAVE_COUNT:
                 this.waveCounts.putAll(sampleMap);
                 break;
+            case SOUND_NUM_DISTURBANCES:
+                this.soundNumDisturbances.putAll(sampleMap);
+                break;
+            case SOUND_PEAK_DISTURBANCE:
+                this.soundPeakDisturbance.putAll(sampleMap);
+                break;
             default:
                 break;
         }
     }
 
-    public Optional<Map<Long, Sample>> getData(final Sensor sensor) {
+    public Map<Long, Sample> get(final Sensor sensor) {
         switch (sensor) {
             case LIGHT:
-                if (!this.light.isEmpty()) {
-                    return Optional.of(this.light);
-                }
+                return light;
             case SOUND:
-                if (!this.sound.isEmpty()) {
-                    return Optional.of(this.sound);
-                }
+                return sound;
             case HUMIDITY:
-                if (!this.humidity.isEmpty()) {
-                    return Optional.of(this.humidity);
-                }
+                return humidity;
             case TEMPERATURE:
-                if (!this.temperature.isEmpty()) {
-                    return Optional.of(this.temperature);
-                }
+                return temperature;
             case PARTICULATES:
-                if (!this.particulates.isEmpty()) {
-                    return Optional.of(this.particulates);
-                }
+                return particulates;
             case WAVE_COUNT:
-                if(!this.waveCounts.isEmpty()){
-                    return Optional.of(this.waveCounts);
-                }
-            default:
-                return Optional.absent();
+                return waveCounts;
+            case SOUND_NUM_DISTURBANCES:
+                return soundNumDisturbances;
+            case SOUND_PEAK_DISTURBANCE:
+                return soundPeakDisturbance;
         }
+        return Maps.newHashMap();
     }
 
+    public Boolean isEmpty() {
+        return light.isEmpty() && sound.isEmpty() && humidity.isEmpty() && temperature.isEmpty()
+                && particulates.isEmpty() && waveCounts.isEmpty()
+                && soundNumDisturbances.isEmpty() && soundPeakDisturbance.isEmpty();
+    }
 
 }
