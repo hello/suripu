@@ -75,7 +75,7 @@ public class PushNotificationsProcessor implements IRecordProcessor {
     private void sendMessage(final DataInputProtos.batched_periodic_data batched_periodic_data) {
         final String senseId = batched_periodic_data.getDeviceId();
         if(!"F8A21FD2CDAF2E74".equals(senseId)) {
-            return;
+            return; // TODO: replace by feature flipper
         }
 
         final List<UserInfo> userInfos = mergedUserInfoDynamoDB.getInfo(senseId);
@@ -101,7 +101,7 @@ public class PushNotificationsProcessor implements IRecordProcessor {
                         roundedDateTime.getMillis(),
                         data.getFirmwareVersion(),
                         now,
-                        10);
+                        10); // TODO: adjust threshold
                 final Optional<HelloPushMessage> messageOptional = getMostImportantSensorState(currentRoomState);
                 if(messageOptional.isPresent()) {
                     mobilePushNotificationProcessor.push(userInfo.accountId, messageOptional.get());
