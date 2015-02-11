@@ -300,6 +300,4 @@ public class CurrentRoomState {
 
         return new State(sound, message, English.SOUND_ADVICE_MESSAGE, condition, dataTimestampUTC, State.Unit.DB);
     }
-
-
 }
