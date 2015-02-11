@@ -192,8 +192,8 @@ public class AlarmResource {
         final List<AlarmSound> alarmSounds = new ArrayList<>();
 
         final List<String> displayNames = Lists.newArrayList(
-                "Pulse",
                 "Dusk",
+                "Pulse",
                 "Lilt",
                 "Bounce",
                 "Celebration",
