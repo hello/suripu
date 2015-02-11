@@ -2,11 +2,11 @@ package com.hello.suripu.workers.notifications;
 
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.InvalidStateException;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException;
-import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.DataInputProtos;
@@ -16,6 +16,10 @@ import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.notifications.HelloPushMessage;
 import com.hello.suripu.core.notifications.MobilePushNotificationProcessor;
+
+import com.hello.suripu.core.preferences.AccountPreference;
+import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
+import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -25,15 +29,25 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class PushNotificationsProcessor implements IRecordProcessor {
+public class PushNotificationsProcessor extends HelloBaseRecordProcessor {
+
     private final static Logger LOGGER = LoggerFactory.getLogger(PushNotificationsProcessor.class);
 
     private final MobilePushNotificationProcessor mobilePushNotificationProcessor;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
 
-    public PushNotificationsProcessor(final MobilePushNotificationProcessor mobilePushNotificationProcessor, final MergedUserInfoDynamoDB mergedUserInfoDynamoDB) {
+    private final AccountPreferencesDynamoDB accountPreferencesDynamoDB;
+    private final ImmutableSet<Integer> activeHours;
+
+    public PushNotificationsProcessor(
+            final MobilePushNotificationProcessor mobilePushNotificationProcessor,
+            final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
+            final AccountPreferencesDynamoDB accountPreferencesDynamoDB,
+            final Set<Integer> activeHours) {
         this.mobilePushNotificationProcessor = mobilePushNotificationProcessor;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
+        this.accountPreferencesDynamoDB = accountPreferencesDynamoDB;
+        this.activeHours = ImmutableSet.copyOf(activeHours);
     }
 
     @Override
@@ -48,14 +62,15 @@ public class PushNotificationsProcessor implements IRecordProcessor {
             try {
                 batchPeriodicDataWorker = DataInputProtos.BatchPeriodicDataWorker.parseFrom(record.getData().array());
                 sendMessage(batchPeriodicDataWorker.getData());
+                Thread.sleep(1000);
             } catch (InvalidProtocolBufferException e) {
                 LOGGER.error("Failed parsing protobuf: {}", e.getMessage());
                 LOGGER.error("Moving to next record");
                 continue;
             } catch (Exception e) {
                 LOGGER.error("{}", e.getMessage());
-            }
-            finally {
+            }  finally {
+                // we checkpoint regardless.
                 try {
                     iRecordProcessorCheckpointer.checkpoint();
                 } catch (InvalidStateException e) {
@@ -74,12 +89,14 @@ public class PushNotificationsProcessor implements IRecordProcessor {
      */
     private void sendMessage(final DataInputProtos.batched_periodic_data batched_periodic_data) {
         final String senseId = batched_periodic_data.getDeviceId();
-        if(!"F8A21FD2CDAF2E74".equals(senseId)) {
-            return; // TODO: replace by feature flipper
-        }
 
         final List<UserInfo> userInfos = mergedUserInfoDynamoDB.getInfo(senseId);
         for(final UserInfo userInfo : userInfos) {
+
+            if(!userHasPushNotificationsEnabled(userInfo.accountId)) {
+                return;
+            }
+
             final Optional<DateTimeZone> dateTimeZoneOptional = userInfo.timeZone;
             if(!dateTimeZoneOptional.isPresent()) {
                 LOGGER.warn("No timezone for account: {} paired to Sense: {}", userInfo.accountId, senseId);
@@ -87,8 +104,11 @@ public class PushNotificationsProcessor implements IRecordProcessor {
             }
 
             final DateTime nowInLocalTimeZone = DateTime.now().withZone(dateTimeZoneOptional.get());
-            final Set<Integer> onHours = Sets.newHashSet(19,20);
-            if(!onHours.contains(nowInLocalTimeZone.getHourOfDay())) {
+            if(!activeHours.contains(nowInLocalTimeZone.getHourOfDay())) {
+                return;
+            }
+
+            if(!accountPreferencesDynamoDB.isEnabled(userInfo.accountId, AccountPreference.EnabledPreference.PUSH_ALERT_CONDITIONS)) {
                 return;
             }
 
@@ -104,6 +124,7 @@ public class PushNotificationsProcessor implements IRecordProcessor {
                         10); // TODO: adjust threshold
                 final Optional<HelloPushMessage> messageOptional = getMostImportantSensorState(currentRoomState);
                 if(messageOptional.isPresent()) {
+                    LOGGER.info("Sending push notifications to user: {}. Message: {}", userInfo.accountId, messageOptional.get());
                     mobilePushNotificationProcessor.push(userInfo.accountId, messageOptional.get());
                 }
                 return; // only attempt to send one message per batch

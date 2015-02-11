@@ -40,7 +40,6 @@ public class AccountPreferencesDynamoDB implements AccountPreferencesDAO {
         return new AccountPreferencesDynamoDB(amazonDynamoDB, tableName, optOuts);
     }
 
-
     @Override
     public AccountPreference put(final Long accountId, final AccountPreference preference) {
         final UpdateItemRequest updateItemRequest = new UpdateItemRequest();
@@ -105,5 +104,11 @@ public class AccountPreferencesDynamoDB implements AccountPreferencesDAO {
 
         final CreateTableResult result = dynamoDBClient.createTable(request);
         return result;
+    }
+
+
+    public Boolean isEnabled(final Long accountId, final AccountPreference.EnabledPreference preference) {
+        final Map<AccountPreference.EnabledPreference, Boolean> prefs = this.get(accountId);
+        return prefs.containsKey(preference) && prefs.get(preference);
     }
 }
