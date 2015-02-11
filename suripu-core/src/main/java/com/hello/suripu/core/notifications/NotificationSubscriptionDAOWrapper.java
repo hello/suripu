@@ -72,8 +72,11 @@ public class NotificationSubscriptionDAOWrapper {
             notificationSubscriptionsDAO.deleteByDeviceToken(mobilePushRegistration.deviceToken);
         }
 
-        final MobilePushRegistration updated = createSNSEndpoint(accountId, mobilePushRegistration);
-        notificationSubscriptionsDAO.subscribe(accountId, updated);
+        final Optional<MobilePushRegistration> updated = createSNSEndpoint(accountId, mobilePushRegistration);
+        if(updated.isPresent()) {
+            notificationSubscriptionsDAO.subscribe(accountId, updated.get());
+        }
+
     }
 
 
@@ -135,21 +138,27 @@ public class NotificationSubscriptionDAOWrapper {
      * @param accountId
      * @param mobilePushRegistration
      */
-    private MobilePushRegistration createSNSEndpoint(final Long accountId, final MobilePushRegistration mobilePushRegistration) {
+    private Optional<MobilePushRegistration> createSNSEndpoint(final Long accountId, final MobilePushRegistration mobilePushRegistration) {
         final CreatePlatformEndpointRequest request = new CreatePlatformEndpointRequest();
 
         request.setCustomUserData(accountId.toString());
         request.withToken(mobilePushRegistration.deviceToken); //custom per user
         request.setPlatformApplicationArn(arns.get(mobilePushRegistration.os));
 
-        // TODO: catch exceptions when creating endpoint fails
-        final CreatePlatformEndpointResult result = amazonSNSClient.createPlatformEndpoint(request);
-        final MobilePushRegistration m = MobilePushRegistration.withEndpointForAccount(
-                mobilePushRegistration,
-                result.getEndpointArn(),
-                accountId
-        );
+        try {
+            // TODO: catch exceptions when creating endpoint fails
+            final CreatePlatformEndpointResult result = amazonSNSClient.createPlatformEndpoint(request);
+            final MobilePushRegistration m = MobilePushRegistration.withEndpointForAccount(
+                    mobilePushRegistration,
+                    result.getEndpointArn(),
+                    accountId
+            );
 
-        return m;
+            return Optional.of(m);
+        } catch (Exception e) {
+            LOGGER.error("Failed creating endpoint for account_id = {}, reason: {}", accountId, e.getMessage());
+        }
+
+        return Optional.absent();
     }
 }
