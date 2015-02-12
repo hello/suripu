@@ -246,10 +246,10 @@ public abstract class Event {
             case LIGHTS_OUT:
                 return new LightsOutEvent(startTimestamp, endTimestamp, offsetMillis);
             case ALARM:
-                if (messageOptional.isPresent()) {
-                    return new AlarmEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
+                if (!messageOptional.isPresent()) {
+                    throw new InvalidArgumentException("message required.");
                 }
-                return new AlarmEvent(startTimestamp, endTimestamp, offsetMillis);
+                return new AlarmEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
             default:
                 if(!sleepDepth.isPresent()){
                     throw new InvalidArgumentException("sleepDepth required.");

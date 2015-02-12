@@ -16,9 +16,10 @@ public class English {
     public final static String MOTION_MESSAGE = "You were moving around quite a bit.";
     public final static String PARTNER_MOTION_MESSAGE = "Your partner was moving quite a bit.";
     public final static String SLEEP_MOTION_MESSAGE = "You were tossing and turning.";
+    public final static String ALARM_DEFAULT_MESSAGE = "Your alarm rang.";
     public final static String ALARM_NORMAL_MESSAGE = "Your alarm rang at **%s**.";
-    public final static String ALARM_DUMB_MESSAGE = "Your Smart Alarm rang at **%s**.";
-    public final static String ALARM_SMART_MESSAGE = "Your Smart Alarm rang at **XX%s**.\nYou set it to wake you up by **YY%s**.";
+    public final static String ALARM_NOT_SO_SMART_MESSAGE = "Your Smart Alarm rang at **%s**.";
+    public final static String ALARM_SMART_MESSAGE = "Your Smart Alarm rang at **%s**.\nYou set it to wake you up by **%s**.";
     public final static String NULL_MESSAGE = "";
 
 
@@ -52,10 +53,10 @@ public class English {
 
     public final static String PARTICULATES_ADVICE_MESSAGE = "The lower the AQI in your bedroom, " +
             "the lower the chance of aggravating allergies and respiratory problems. " +
-            "Generally, a healthy level is below *50*.";
+            "Generally, a healthy level is below **50**.";
 
     public final static String LIGHT_ADVICE_MESSAGE =
-            "For ideal sleep, your bedroom should be as dark as possible, which is below *2 lux**.";
+            "For ideal sleep, your bedroom should be as dark as possible, which is below **2 lux**.";
 
     public final static String SOUND_ADVICE_MESSAGE =
             "For ideal sleep, your bedroom should be as quiet as possible, which is usually below **40dB**.";
@@ -143,7 +144,7 @@ public class English {
     public final static String RECOMMENDATION_TEMP_TOO_LOW = "\n\nTry raising the thermostat setting, or closing any open windows";
 
     public final static String RECOMMENDATION_HUMIDITY_TOO_LOW = "\n\nTry using a humidifier if your bedroom continues to be dry.";
-    public final static String RECOMMENDATION_HUMIDITY_TOO_HIGH = "\n\nTry using a dehumidifier if your bedroom continues to be humid/";
+    public final static String RECOMMENDATION_HUMIDITY_TOO_HIGH = "\n\nTry using a dehumidifier if your bedroom continues to be humid.";
 
 
     public final static String RECOMMENDATION_LIGHT_TOO_HIGH = "\n\nMake sure all your lights are off. You may want to consider blackout curtains.";
