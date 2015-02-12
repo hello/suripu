@@ -37,9 +37,11 @@ import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.translations.English;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1158,6 +1160,7 @@ public class TimelineUtils {
         final DateTime localMorning = new DateTime(morning.getMillis(), DateTimeZone.UTC);
         for(final RingTime ringTime : ringTimes) {
             final DateTime alarmLocalTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC).plusMillis(offsetMillis).plusMinutes(1);
+
             final DateTime localNow = nowInUTC.plusMillis(offsetMillis);
             final Long diffInMillis = localNow.getMillis() - alarmLocalTime.getMillis();
             if(diffInMillis < 0) {
@@ -1168,12 +1171,26 @@ public class TimelineUtils {
             if(ringTime.expectedRingTimeUTC > evening.getMillis() && alarmLocalTime .getMillis() < localMorning.getMillis()) {
                 LOGGER.debug("{} is valid. Adding to list", ringTime);
 
+                final DateTime alarmRingLocalTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC).plusMillis(offsetMillis);
+                final String ringTimeString = alarmRingLocalTime.toString(DateTimeFormat.forPattern("HH:mm"));
+                String message = String.format(English.ALARM_NORMAL_MESSAGE, ringTimeString);
+
+                if (ringTime.fromSmartAlarm) {
+                    final DateTime alarmSetLocalTime = new DateTime(ringTime.expectedRingTimeUTC, DateTimeZone.UTC).plusMillis(offsetMillis);
+                    if (alarmRingLocalTime.equals(alarmSetLocalTime)) {
+                        message = String.format(English.ALARM_NOT_SO_SMART_MESSAGE, ringTimeString);
+                    } else {
+                        final String setTimeString = alarmSetLocalTime.toString(DateTimeFormat.forPattern("HH:mm"));
+                        message = String.format(English.ALARM_SMART_MESSAGE, ringTimeString, setTimeString);
+                    }
+                }
+
                 final AlarmEvent event = (AlarmEvent) Event.createFromType(
                         Event.Type.ALARM,
                         ringTime.actualRingTimeUTC,
                         new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC).plusMinutes(1).getMillis(),
                         offsetMillis,
-                        Optional.<String>absent(),
+                        Optional.of(message),
                         Optional.<SleepSegment.SoundInfo>absent(),
                         Optional.<Integer>absent());
                 events.add(event);

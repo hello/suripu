@@ -3,23 +3,26 @@ package com.hello.suripu.core.models.Events;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.translations.English;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormat;
 
 /**
  * Created by pangwu on 11/22/14.
  */
 public class AlarmEvent extends Event {
 
+    private String message = English.ALARM_DEFAULT_MESSAGE;
+
     public AlarmEvent(final long startTimestamp, final long endTimestamp, final int offsetMillis){
         super(Type.ALARM, startTimestamp, endTimestamp, offsetMillis);
     }
 
+    public AlarmEvent(final long startTimestamp, final long endTimestamp, final int offsetMillis, final String message){
+        super(Type.ALARM, startTimestamp, endTimestamp, offsetMillis);
+        this.message = message;
+    }
+
     @Override
-    public String getDescription(){
-        final String time = new DateTime(getStartTimestamp(), DateTimeZone.UTC).plusMillis(getTimezoneOffset()).toString(DateTimeFormat.forPattern("HH:mm"));
-        return String.format(English.ALARM_NORMAL_MESSAGE, time);
+    public String getDescription() {
+        return this.message;
     }
 
     @Override
