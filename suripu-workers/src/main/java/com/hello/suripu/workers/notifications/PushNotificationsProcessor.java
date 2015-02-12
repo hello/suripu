@@ -1,7 +1,5 @@
 package com.hello.suripu.workers.notifications;
 
-import com.amazonaws.services.kinesis.clientlibrary.exceptions.InvalidStateException;
-import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
@@ -16,7 +14,6 @@ import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.notifications.HelloPushMessage;
 import com.hello.suripu.core.notifications.MobilePushNotificationProcessor;
-
 import com.hello.suripu.core.preferences.AccountPreference;
 import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
@@ -69,17 +66,10 @@ public class PushNotificationsProcessor extends HelloBaseRecordProcessor {
                 continue;
             } catch (Exception e) {
                 LOGGER.error("{}", e.getMessage());
-            }  finally {
-                // we checkpoint regardless.
-                try {
-                    iRecordProcessorCheckpointer.checkpoint();
-                } catch (InvalidStateException e) {
-                    e.printStackTrace();
-                } catch (ShutdownException e) {
-                    e.printStackTrace();
-                }
             }
         }
+
+        // We do not checkpoint since we are using LATEST strategy, only going through new messages
     }
 
 
