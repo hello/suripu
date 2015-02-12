@@ -127,6 +127,7 @@ public class PushNotificationsProcessor extends HelloBaseRecordProcessor {
                     mobilePushNotificationProcessor.push(userInfo.accountId, messageOptional.get());
                     sent.add(key);
                 }
+                break;
             }
         }
     }
