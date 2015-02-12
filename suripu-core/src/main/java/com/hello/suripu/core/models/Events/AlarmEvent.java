@@ -12,8 +12,16 @@ import org.joda.time.format.DateTimeFormat;
  */
 public class AlarmEvent extends Event {
 
+    private String message;
+
     public AlarmEvent(final long startTimestamp, final long endTimestamp, final int offsetMillis){
         super(Type.ALARM, startTimestamp, endTimestamp, offsetMillis);
+        this.message = getDescription();
+    }
+
+    public AlarmEvent(final long startTimestamp, final long endTimestamp, final int offsetMillis, final String message){
+        super(Type.ALARM, startTimestamp, endTimestamp, offsetMillis);
+        this.message = message;
     }
 
     @Override

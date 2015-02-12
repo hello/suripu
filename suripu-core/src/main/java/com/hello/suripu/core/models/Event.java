@@ -246,6 +246,9 @@ public abstract class Event {
             case LIGHTS_OUT:
                 return new LightsOutEvent(startTimestamp, endTimestamp, offsetMillis);
             case ALARM:
+                if (messageOptional.isPresent()) {
+                    return new AlarmEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
+                }
                 return new AlarmEvent(startTimestamp, endTimestamp, offsetMillis);
             default:
                 if(!sleepDepth.isPresent()){
