@@ -144,12 +144,8 @@ public class PushNotificationsProcessor extends HelloBaseRecordProcessor {
             return Optional.of(HelloPushMessage.fromSensors(currentRoomState.temperature.message, Sensor.TEMPERATURE));
         }
 
-        if(notificationStates.contains(currentRoomState.light.condition)) {
-            return Optional.of(HelloPushMessage.fromSensors(currentRoomState.light.message, Sensor.LIGHT));
-        }
-
-        if(notificationStates.contains(currentRoomState.sound.condition)) {
-            return Optional.of(HelloPushMessage.fromSensors(currentRoomState.sound.message, Sensor.SOUND));
+        if(notificationStates.contains(currentRoomState.humidity.condition)) {
+            return Optional.of(HelloPushMessage.fromSensors(currentRoomState.humidity.message, Sensor.HUMIDITY));
         }
 
         return Optional.absent();
