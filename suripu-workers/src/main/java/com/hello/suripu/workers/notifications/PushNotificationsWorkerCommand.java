@@ -46,7 +46,6 @@ public class PushNotificationsWorkerCommand extends ConfiguredCommand<PushNotifi
         kinesisConfig.withMaxRecords(configuration.getMaxRecords());
         kinesisConfig.withKinesisEndpoint(configuration.getKinesisEndpoint());
         kinesisConfig.withInitialPositionInStream(InitialPositionInStream.LATEST); // only moving forward, we don't want to replay push notifications
-
         final IRecordProcessorFactory factory = new PushNotificationsProcessorFactory(configuration, awsCredentialsProvider);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();

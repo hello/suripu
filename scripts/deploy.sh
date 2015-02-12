@@ -93,3 +93,4 @@ sleep 1
 echo "Moving push notifications worker configs to /etc/"
 cp /home/build/build/push-notifications.prod.yml /etc/
 
+restart suripuworkers-push
