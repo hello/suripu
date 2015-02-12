@@ -147,8 +147,9 @@ public class NotificationSubscriptionDAOWrapper {
         request.withToken(mobilePushRegistration.deviceToken); //custom per user
         request.setPlatformApplicationArn(arns.get(mobilePushRegistration.os));
 
-        // TODO: catch exceptions when creating endpoint fails
+
         try {
+            // TODO: catch exceptions when creating endpoint fails
             final CreatePlatformEndpointResult result = amazonSNSClient.createPlatformEndpoint(request);
             final MobilePushRegistration m = MobilePushRegistration.withEndpointForAccount(
                     mobilePushRegistration,

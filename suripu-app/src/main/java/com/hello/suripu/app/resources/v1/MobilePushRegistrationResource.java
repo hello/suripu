@@ -50,7 +50,7 @@ public class MobilePushRegistrationResource {
     public void registerDevice(@Scope(OAuthScope.PUSH_NOTIFICATIONS) final AccessToken accessToken,
                                final @Valid MobilePushRegistration mobilePushRegistration) {
 
-        LOGGER.debug("{}", mobilePushRegistration);
+        LOGGER.debug("Receive push notification registration for account_id {}. {}", accessToken.accountId, mobilePushRegistration);
         final MobilePushRegistration mobilePushRegistrationWithOauthToken = MobilePushRegistration.withOauthToken(mobilePushRegistration, accessToken.serializeAccessToken());
         notificationSubscriptionDAOWrapper.subscribe(accessToken.accountId, mobilePushRegistrationWithOauthToken);
     }

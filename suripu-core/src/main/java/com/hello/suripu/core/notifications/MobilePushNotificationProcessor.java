@@ -118,6 +118,4 @@ public class MobilePushNotificationProcessor {
         }
         return Optional.absent();
     }
-
-
 }

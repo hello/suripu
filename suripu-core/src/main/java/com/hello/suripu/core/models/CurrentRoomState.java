@@ -324,6 +324,4 @@ public class CurrentRoomState {
 
         return new State(sound, message, idealSoundCondition, condition, dataTimestampUTC, State.Unit.DB);
     }
-
-
 }
