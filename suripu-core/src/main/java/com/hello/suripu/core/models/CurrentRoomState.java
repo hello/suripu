@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.hello.suripu.core.processors.insights.Lights;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DataUtils;
@@ -130,8 +131,8 @@ public class CurrentRoomState {
 
         if(referenceTime.minusMinutes(thresholdInMinutes).getMillis() > dataTimestampUTC.getMillis()) {
             LOGGER.warn("{} is too old, not returning anything", dataTimestampUTC);
-            final CurrentRoomState roomState = dataTooOld(temperature, humidity, particulatesAQI, light, sound, dataTimestampUTC);
-            return roomState;
+//            final CurrentRoomState roomState = dataTooOld(temperature, humidity, particulatesAQI, light, sound, dataTimestampUTC);
+//            return roomState;
         }
 
         // get states
@@ -201,9 +202,12 @@ public class CurrentRoomState {
 
         String idealTempConditions;
         if (tempUnit.equals(DEFAULT_TEMP_UNIT)) {
-            idealTempConditions = String.format(English.TEMPERATURE_ADVICE_MESSAGE_C, tempUnit, tempUnit);
+            idealTempConditions = String.format(English.TEMPERATURE_ADVICE_MESSAGE_C,
+                    TemperatureHumidity.IDEAL_TEMP_MIN_CELSIUS, TemperatureHumidity.IDEAL_TEMP_MAX_CELSIUS);
         } else {
-            idealTempConditions = String.format(English.TEMPERATURE_ADVICE_MESSAGE_F, tempUnit, tempUnit);
+            idealTempConditions = String.format(English.TEMPERATURE_ADVICE_MESSAGE_F,
+                    TemperatureHumidity.IDEAL_TEMP_MIN, TemperatureHumidity.IDEAL_TEMP_MAX);
+
         }
 
         State.Condition condition = State.Condition.IDEAL;;
@@ -234,16 +238,30 @@ public class CurrentRoomState {
     }
 
     public static State getHumidityState(final float humidity, final DateTime dataTimestampUTC, final Boolean preSleep) {
-        final String idealHumidityConditions = English.HUMIDITY_ADVICE_MESSAGE;
-        State.Condition condition = State.Condition.IDEAL;;
-        String message = (preSleep) ? English.IDEAL_HUMIDITY_PRE_SLEEP_MESSAGE: English.IDEAL_HUMIDITY_MESSAGE;;
 
-        if (humidity  < 30.0) {
+        State.Condition condition = State.Condition.IDEAL;;
+        String idealHumidityConditions = English.HUMIDITY_ADVICE_MESSAGE;
+        String message = (preSleep) ? English.IDEAL_HUMIDITY_PRE_SLEEP_MESSAGE: English.IDEAL_HUMIDITY_MESSAGE;
+
+        if (humidity < (float) TemperatureHumidity.ALERT_HUMIDITY_LOW) {
+            condition = State.Condition.ALERT;
+            idealHumidityConditions += English.RECOMMENDATION_HUMIDITY_TOO_LOW;
+            message = (preSleep) ? English.LOW_HUMIDITY_PRE_SLEEP_ALERT_MESSAGE : English.LOW_HUMIDITY_ALERT_MESSAGE;
+
+        } else if (humidity  < (float) TemperatureHumidity.IDEAL_HUMIDITY_MIN) {
             condition = State.Condition.WARNING;
-            message = (preSleep) ? English.LOW_HUMIDITY_PRE_SLEEP_MESSAGE : English.LOW_HUMIDITY_MESSAGE;
-        } else if (humidity > 60.0) {
+            idealHumidityConditions += English.RECOMMENDATION_HUMIDITY_TOO_LOW;
+            message = (preSleep) ? English.LOW_HUMIDITY_PRE_SLEEP_WARNING_MESSAGE : English.LOW_HUMIDITY_WARNING_MESSAGE;
+
+        } else if (humidity > (float) TemperatureHumidity.IDEAL_HUMIDITY_MAX) {
             condition = State.Condition.WARNING;
-            message = (preSleep) ? English.HIGH_HUMIDITY_PRE_SLEEP_MESSAGE : English.HIGH_HUMIDITY_MESSAGE;
+            idealHumidityConditions += English.RECOMMENDATION_HUMIDITY_TOO_HIGH;
+            message = (preSleep) ? English.HIGH_HUMIDITY_PRE_SLEEP_WARNING_MESSAGE : English.HIGH_HUMIDITY_WARNING_MESSAGE;
+
+        } else if (humidity > (float) TemperatureHumidity.ALERT_HUMIDITY_HIGH) {
+            condition = State.Condition.ALERT;
+            idealHumidityConditions += English.RECOMMENDATION_HUMIDITY_TOO_HIGH;
+            message = (preSleep) ? English.HIGH_HUMIDITY_PRE_SLEEP_ALERT_MESSAGE : English.HIGH_HUMIDITY_ALERT_MESSAGE;
         }
 
         return new State(humidity, message, idealHumidityConditions, condition, dataTimestampUTC, State.Unit.PERCENT);
@@ -269,13 +287,15 @@ public class CurrentRoomState {
 
     public static State getLightState(final float light, final DateTime dataTimestampUTC, final Boolean preSleep) {
         State.Condition condition = State.Condition.IDEAL;;
-        String message = (preSleep) ? English.IDEAL_LIGHT_PRE_SLEEP_MESSAGE: English.IDEAL_LIGHT_MESSAGE;;
         String idealConditions = English.LIGHT_ADVICE_MESSAGE;
-        if (light > 8.0) {
+        String message = (preSleep) ? English.IDEAL_LIGHT_PRE_SLEEP_MESSAGE: English.IDEAL_LIGHT_MESSAGE;;
+
+        if (light >  Lights.LIGHT_LEVEL_ALERT) {
             condition = State.Condition.ALERT;
             idealConditions += English.RECOMMENDATION_LIGHT_TOO_HIGH;
             message = (preSleep) ? English.ALERT_LIGHT_PRE_SLEEP_MESSAGE : English.ALERT_LIGHT_MESSAGE;
-        } else if (light > 2.0) {
+
+        } else if (light > Lights.LIGHT_LEVEL_WARNING) {
             condition = State.Condition.WARNING;
             idealConditions += English.RECOMMENDATION_LIGHT_TOO_HIGH;
             message = (preSleep) ? English.WARNING_LIGHT_PRE_SLEEP_MESSAGE: English.WARNING_LIGHT_MESSAGE;
@@ -288,18 +308,21 @@ public class CurrentRoomState {
         // see http://www.noisehelp.com/noise-level-chart.html
 
         State.Condition condition = State.Condition.IDEAL;;
+        String idealSoundCondition = English.SOUND_ADVICE_MESSAGE;
         String message = (preSleep) ? English.IDEAL_SOUND_PRE_SLEEP_MESSAGE: English.IDEAL_SOUND_MESSAGE;;
 
         if (sound > 90.0) {
             // lawn mower
             condition = State.Condition.ALERT;
+            idealSoundCondition += English.RECOMMENDATION_SOUND_TOO_HIGH;
             message = (preSleep) ? English.ALERT_SOUND_PRE_SLEEP_MESSAGE : English.ALERT_SOUND_MESSAGE;
         } else if (sound > 40.0) {
             condition = State.Condition.WARNING;
+            idealSoundCondition += English.RECOMMENDATION_SOUND_TOO_HIGH;
             message = (preSleep) ? English.WARNING_SOUND_PRE_SLEEP_MESSAGE: English.WARNING_SOUND_MESSAGE;
         }
 
-        return new State(sound, message, English.SOUND_ADVICE_MESSAGE, condition, dataTimestampUTC, State.Unit.DB);
+        return new State(sound, message, idealSoundCondition, condition, dataTimestampUTC, State.Unit.DB);
     }
 
 

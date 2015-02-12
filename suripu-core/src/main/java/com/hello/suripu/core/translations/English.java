@@ -1,8 +1,6 @@
 package com.hello.suripu.core.translations;
 
 
-import com.hello.suripu.core.processors.insights.TemperatureHumidity;
-
 public class English {
 
     /* BEGIN Events Declaration */
@@ -45,90 +43,112 @@ public class English {
     public final static String UNKNOWN_SOUND_MESSAGE = "Could not retrieve the current sound level.";
 
     // Advice
-    public final static String TEMPERATURE_ADVICE_MESSAGE_C = String.format(
-            "People tend to sleep best when temperature is between **%d°C** and **%d°C**.",
-            TemperatureHumidity.IDEAL_TEMP_MIN_CELSIUS, TemperatureHumidity.IDEAL_TEMP_MAX_CELSIUS);
+    public final static String TEMPERATURE_ADVICE_MESSAGE_C = "People tend to sleep best when temperature is between **%d°C** and **%d°C**.";
+    public final static String TEMPERATURE_ADVICE_MESSAGE_F = "People tend to sleep best when temperature is between **%d°F** and **%d°F**.";
 
-    public final static String TEMPERATURE_ADVICE_MESSAGE_F = String.format(
-            "People tend to sleep best when temperature is between **%d°F** and **%d°F**.",
-            TemperatureHumidity.IDEAL_TEMP_MIN, TemperatureHumidity.IDEAL_TEMP_MAX);
+    public final static String HUMIDITY_ADVICE_MESSAGE =
+            "People tend to sleep best when humidity is between **30%** and **60%**.";
 
-    public final static String HUMIDITY_ADVICE_MESSAGE = String.format(
-            "People tend to sleep best when humidity is between **%d%%** and **%d%%**.",
-            TemperatureHumidity.IDEAL_HUMIDITY_MIN, TemperatureHumidity.IDEAL_HUMIDITY_MAX);
+    public final static String PARTICULATES_ADVICE_MESSAGE = "The lower the AQI in your bedroom, " +
+            "the lower the chance of aggravating allergies and respiratory problems. " +
+            "Generally, a healthy level is below *50*.";
 
-    public final static String PARTICULATES_ADVICE_MESSAGE = "The lower the AQI in your bedroom, the better you sleep.";
-    public final static String LIGHT_ADVICE_MESSAGE = "For ideal sleep, your bedroom should be as dark as possible.";
-    public final static String SOUND_ADVICE_MESSAGE = "For ideal sleep, your bedroom should be as quiet as possible.";
+    public final static String LIGHT_ADVICE_MESSAGE =
+            "For ideal sleep, your bedroom should be as dark as possible, which is below *2 lux**.";
 
-    // Temperature Conditions
+    public final static String SOUND_ADVICE_MESSAGE =
+            "For ideal sleep, your bedroom should be as quiet as possible, which is usually below **40dB**.";
+
+    // Sensor Conditions
+    // Temperature
     public final static String LOW_TEMPERATURE_WARNING_MESSAGE = "It’s **pretty cold** in here.";
     public final static String HIGH_TEMPERATURE_WARNING_MESSAGE = "It’s **pretty hot** in here.";
 
-    public final static String LOW_TEMPERATURE_ALERT_MESSAGE = "It’s **too cold** in here.";
-    public final static String HIGH_TEMPERATURE_ALERT_MESSAGE = "It’s **too hot** in here.";
+    public final static String LOW_TEMPERATURE_ALERT_MESSAGE = "It’s far **too cold** in here.";
+    public final static String HIGH_TEMPERATURE_ALERT_MESSAGE = "It’s far **too hot** in here.";
 
     public final static String IDEAL_TEMPERATURE_MESSAGE = "The temperature is **just right**.";
 
-    // Humidity Conditions
-    public final static String LOW_HUMIDITY_PRE_SLEEP_MESSAGE = "It was **pretty dry** in here.";
-    public final static String HIGH_HUMIDITY_PRE_SLEEP_MESSAGE = "It was**pretty humid** in here.";
-    public final static String IDEAL_HUMIDITY_PRE_SLEEP_MESSAGE = "The humidity was **just right**.";
+    // Humidity
+    public final static String LOW_HUMIDITY_WARNING_MESSAGE = "It's **slightly dry** in here.";
+    public final static String HIGH_HUMIDITY_WARNING_MESSAGE = "It's **slightly humid** in here.";
 
-    public final static String LOW_HUMIDITY_MESSAGE = "It's **slightly dry** in here.";
-    public final static String HIGH_HUMIDITY_MESSAGE = "It's **slightly humid** in here.";
-    public final static String IDEAL_HUMIDITY_MESSAGE = "Humidity is **just right**.";
+    public final static String LOW_HUMIDITY_ALERT_MESSAGE = "It's far **too dry** in here.";
+    public final static String HIGH_HUMIDITY_ALERT_MESSAGE = "It's far **too humid** in here.";
 
-    // Particulates Conditions (Air Quality)
-    public final static String VERY_HIGH_PARTICULATES_PRE_SLEEP_MESSAGE = "AQI was at an **unhealthy** level.";
-    public final static String HIGH_PARTICULATES_PRE_SLEEP_MESSAGE = "AQI was **moderately high**.";
-    public final static String IDEAL_PARTICULATES_PRE_SLEEP_MESSAGE = "The particulates level was **just right** last night.";
+    public final static String IDEAL_HUMIDITY_MESSAGE = "The humidity is **just right**.";
 
-    public final static String VERY_HIGH_PARTICULATES_MESSAGE = "AQI is at an **unhealthy** level.";
-    public final static String HIGH_PARTICULATES_MESSAGE = "AQI is **moderately high**.";
+    // Particulates (Air Quality)
+    public final static String VERY_HIGH_PARTICULATES_MESSAGE = "AQI is **too high**.";
+    public final static String HIGH_PARTICULATES_MESSAGE = "AQI is **a bit high**.";
     public final static String IDEAL_PARTICULATES_MESSAGE = "AQI is **just right**.";
 
-    // Light Conditions.
-    public final static String IDEAL_LIGHT_PRE_SLEEP_MESSAGE = "The light level was **perfect**.";
-    public final static String WARNING_LIGHT_PRE_SLEEP_MESSAGE = "The light level was **higher** than ideal.";
-    public final static String ALERT_LIGHT_PRE_SLEEP_MESSAGE = "The light level was **way too high**.";
+    // Light
+    public final static String IDEAL_LIGHT_MESSAGE = "The light level is **just right**.";
+    public final static String WARNING_LIGHT_MESSAGE = "It's a bit **too bright** in here.";
+    public final static String ALERT_LIGHT_MESSAGE = "It's far **too bright** in here.";
 
-    public final static String IDEAL_LIGHT_MESSAGE = "The light is **just right**.";
-    public final static String WARNING_LIGHT_MESSAGE = "It is slightly **too bright** now.";
-    public final static String ALERT_LIGHT_MESSAGE = "It is **far too bright** now.";
-
-    // Sound Conditions
-    public final static String IDEAL_SOUND_PRE_SLEEP_MESSAGE = "Your room's sound level was **just right**.";
-    public final static String WARNING_SOUND_PRE_SLEEP_MESSAGE = "Your room was **a little noisy**.";
-    public final static String ALERT_SOUND_PRE_SLEEP_MESSAGE = "Your room was **too noisy**.";
-
-    public final static String IDEAL_SOUND_MESSAGE = "The sound level is **just right**.";
-    public final static String WARNING_SOUND_MESSAGE = "Your room is **a little noisy**.";
-    public final static String ALERT_SOUND_MESSAGE = "Your room is **too noisy**.";
+    // Sound
+    public final static String IDEAL_SOUND_MESSAGE = "The noise level is **just right**.";
+    public final static String WARNING_SOUND_MESSAGE = "It's a **little noisy** in here.";
+    public final static String ALERT_SOUND_MESSAGE = "It's far **too noisy** in here.";
 
 
     public final static String LOW_TEMPERATURE_MESSAGE_EXPANDED = "Your current room's temperature is **too cold** for a good night's sleep.";
     public final static String HIGH_TEMPERATURE_MESSAGE_EXPANDED = "Your current room's temperature is **too hot** for a good night's sleep.";
     public final static String IDEAL_TEMPERATURE_MESSAGE_EXPANDED = "Your current room's temperature is **just right** for a good night's sleep.";
 
-    // Temperature pre-sleep conditions
+
+    // Pre-Sleep condition messages in time-line tab
+    // Temperature
     public final static String LOW_TEMPERATURE_PRE_SLEEP_WARNING_MESSAGE = "It was **pretty cold** in your room.";
     public final static String HIGH_TEMPERATURE_PRE_SLEEP_WARNING_MESSAGE = "It was **pretty hot** in your room.";
 
-    public final static String LOW_TEMPERATURE_PRE_SLEEP_ALERT_MESSAGE = "It was **too cold** in your room.";
-    public final static String HIGH_TEMPERATURE_PRE_SLEEP_ALERT_MESSAGE = "It was **too hot** in your room.";
+    public final static String LOW_TEMPERATURE_PRE_SLEEP_ALERT_MESSAGE = "It was far **too cold** in your room.";
+    public final static String HIGH_TEMPERATURE_PRE_SLEEP_ALERT_MESSAGE = "It was far **too hot** in your room.";
+
     public final static String IDEAL_TEMPERATURE_PRE_SLEEP_MESSAGE = "The temperature was **just right**.";
+
+    // Humidity
+    public final static String LOW_HUMIDITY_PRE_SLEEP_WARNING_MESSAGE = "It was **pretty dry** in your room.";
+    public final static String HIGH_HUMIDITY_PRE_SLEEP_WARNING_MESSAGE = "It was **pretty humid** in your room.";
+
+    public final static String LOW_HUMIDITY_PRE_SLEEP_ALERT_MESSAGE = "It was far **too dry** in your room.";
+    public final static String HIGH_HUMIDITY_PRE_SLEEP_ALERT_MESSAGE = "It was far far **too humid** in your room.";
+
+    public final static String IDEAL_HUMIDITY_PRE_SLEEP_MESSAGE = "The humidity was **just right**.";
+
+    // Particulates
+    public final static String VERY_HIGH_PARTICULATES_PRE_SLEEP_MESSAGE = "AQI was at an **unhealthy** level.";
+    public final static String HIGH_PARTICULATES_PRE_SLEEP_MESSAGE = "AQI was **moderately high**.";
+    public final static String IDEAL_PARTICULATES_PRE_SLEEP_MESSAGE = "AQI was **just right**.";
+
+    // Light
+    public final static String IDEAL_LIGHT_PRE_SLEEP_MESSAGE = "Your room's light level was **just right**.";
+    public final static String WARNING_LIGHT_PRE_SLEEP_MESSAGE = "Your room was a bit **too bright**.";
+    public final static String ALERT_LIGHT_PRE_SLEEP_MESSAGE = "It was far **too bright** in your room.";
+
+    //Sound
+    public final static String IDEAL_SOUND_PRE_SLEEP_MESSAGE = "Your room's noise level was **just right**.";
+    public final static String WARNING_SOUND_PRE_SLEEP_MESSAGE = "Your room was **a little noisy**.";
+    public final static String ALERT_SOUND_PRE_SLEEP_MESSAGE = "Your room was far **too noisy**.";
 
     /* END Current Room State Declaration */
 
 
-    public final static String RECOMMENDATION_TEMP_TOO_HIGH = "\n\nTry to lower your thermostat.";
-    public final static String RECOMMENDATION_TEMP_TOO_LOW = "\n\nTry turning the heat a little bit.";
+    // Recommendations
+
+    public final static String RECOMMENDATION_TEMP_TOO_HIGH = "\n\nTry lowering your thermostat setting, or opening a window.";
+    public final static String RECOMMENDATION_TEMP_TOO_LOW = "\n\nTry raising the thermostat setting, or closing any open windows";
+
+    public final static String RECOMMENDATION_HUMIDITY_TOO_LOW = "\n\nTry using a humidifier if your bedroom continues to be dry.";
+    public final static String RECOMMENDATION_HUMIDITY_TOO_HIGH = "\n\nTry using a dehumidifier if your bedroom continues to be humid/";
 
 
-    public final static String RECOMMENDATION_LIGHT_TOO_HIGH = "\n\nMake sure you turn off your lights.";
+    public final static String RECOMMENDATION_LIGHT_TOO_HIGH = "\n\nMake sure all your lights are off. You may want to consider blackout curtains.";
+    public final static String RECOMMENDATION_SOUND_TOO_HIGH = "\n\nTry shutting windows if it's noisy outside, or consider ear plugs.";
+
 
     // TIMELINE
-
     public final static String TIMELINE_NO_SLEEP_DATA = " No sleep data recorded";
 }
