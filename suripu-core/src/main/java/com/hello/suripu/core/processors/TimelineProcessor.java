@@ -487,7 +487,7 @@ public class TimelineProcessor {
 
         // ALARM
         if(hasAlarmInTimeline) {
-            final List<Event> alarmEvents = getAlarmEvents(accountId, targetDate, endDate, DateTimeZone.forID("America/Los_Angeles").getOffset(DateTime.now()));
+            final List<Event> alarmEvents = getAlarmEvents(accountId, targetDate, endDate, trackerMotions.get(0).offsetMillis);
             for(final Event event : alarmEvents) {
                 timelineEvents.put(event.getStartTimestamp(), event);
             }
