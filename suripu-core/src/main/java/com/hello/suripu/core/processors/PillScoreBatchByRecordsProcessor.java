@@ -129,7 +129,7 @@ public class PillScoreBatchByRecordsProcessor {
 
         for (final Long accountID : pillRecords.keySet()) {
 
-            List<PillSample> records = pillRecords.get(accountID);
+            final List<PillSample> records = pillRecords.get(accountID);
             for (final PillSample record : records) {
 
                 // only process non-heartbeat data
@@ -139,7 +139,7 @@ public class PillScoreBatchByRecordsProcessor {
                     this.pillData.put(internalPillId, record); // stores pill data
                 }
 
-                LOGGER.debug("record account: {}, dt: {}", accountID, record.dateTime);
+                LOGGER.trace("record account: {}, dt: {}", accountID, record.dateTime);
                 if (record.dateTime.getMillis() > lastTimestampMillis) {
                     lastTimestampMillis = record.dateTime.getMillis(); // track last-seen timestamp
                 }
@@ -157,7 +157,7 @@ public class PillScoreBatchByRecordsProcessor {
     private int computeAndSaveScores() {
         int processed = 0;
         Set<Long> successPillIDs = new HashSet<>();
-        LOGGER.debug("pill data = {}", pillData);
+        LOGGER.trace("pill data = {}", pillData);
 
         for (final Long internalPillId : this.pillData.keySet()) {
             LOGGER.debug("ComputeAndSave for pill = {}", internalPillId);
