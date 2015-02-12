@@ -1,5 +1,6 @@
 package com.hello.suripu.core.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -12,7 +13,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@JsonPropertyOrder({"temperature", "humidity", "particulates", "light", "sound"})
+@JsonPropertyOrder({"temperature", "humidity", "light", "sound"})
 public class CurrentRoomState {
 
 
@@ -88,7 +89,7 @@ public class CurrentRoomState {
     @JsonProperty("humidity")
     public final State humidity;
 
-    @JsonProperty("particulates")
+    @JsonIgnore
     public final State particulates;
 
     @JsonProperty("light")
@@ -323,6 +324,4 @@ public class CurrentRoomState {
 
         return new State(sound, message, idealSoundCondition, condition, dataTimestampUTC, State.Unit.DB);
     }
-
-
 }

@@ -123,7 +123,7 @@ public class TimelineProcessor {
 
         final List<RingTime> ringTimes = ringTimeDAODynamoDB.getRingTimesBetween(senseId, evening.minusWeeks(1));
 
-        return TimelineUtils.getAlarmEvents(ringTimes, evening, morning, offsetMillis);
+        return TimelineUtils.getAlarmEvents(ringTimes, evening, morning, offsetMillis, DateTime.now(DateTimeZone.UTC));
     }
 
     public List<Timeline> retrieveTimelines(final Long accountId, final String date, final Integer missingDataDefaultValue, final Boolean hasAlarmInTimeline) {

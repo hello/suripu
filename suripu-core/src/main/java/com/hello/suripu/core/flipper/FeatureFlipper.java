@@ -14,5 +14,6 @@ public class FeatureFlipper {
     public final static String MISSING_DATA_DEFAULT_VALUE = "missing_data_default_value";
     public final static String FORCE_HTTP_500 = "force_http_500";
     public final static String ALARM_IN_TIMELINE = "alarm_in_timeline";
+    public final static String PUSH_NOTIFICATIONS_ENABLED = "push_notifications_enabled";
 
 }

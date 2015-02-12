@@ -72,8 +72,12 @@ public class NotificationSubscriptionDAOWrapper {
             notificationSubscriptionsDAO.deleteByDeviceToken(mobilePushRegistration.deviceToken);
         }
 
-        final MobilePushRegistration updated = createSNSEndpoint(accountId, mobilePushRegistration);
-        notificationSubscriptionsDAO.subscribe(accountId, updated);
+        final Optional<MobilePushRegistration> updated = createSNSEndpoint(accountId, mobilePushRegistration);
+        if(updated.isPresent()) {
+            notificationSubscriptionsDAO.subscribe(accountId, updated.get());
+            return;
+        }
+        LOGGER.error("Did not subscribe account_id {}", accountId);
     }
 
 
@@ -107,6 +111,7 @@ public class NotificationSubscriptionDAOWrapper {
     public boolean unsubscribe(final String oauthToken) {
         final Optional<MobilePushRegistration> mobilePushRegistrationOptional = notificationSubscriptionsDAO.getSubscriptionByOauthToken(oauthToken);
         if(mobilePushRegistrationOptional.isPresent()) {
+            deleteFromSNS(Lists.newArrayList(mobilePushRegistrationOptional.get()));
             notificationSubscriptionsDAO.unsubscribe(mobilePushRegistrationOptional.get().accountId.get(), mobilePushRegistrationOptional.get().deviceToken);
         }
 
@@ -135,21 +140,28 @@ public class NotificationSubscriptionDAOWrapper {
      * @param accountId
      * @param mobilePushRegistration
      */
-    private MobilePushRegistration createSNSEndpoint(final Long accountId, final MobilePushRegistration mobilePushRegistration) {
+    private Optional<MobilePushRegistration> createSNSEndpoint(final Long accountId, final MobilePushRegistration mobilePushRegistration) {
         final CreatePlatformEndpointRequest request = new CreatePlatformEndpointRequest();
 
         request.setCustomUserData(accountId.toString());
         request.withToken(mobilePushRegistration.deviceToken); //custom per user
         request.setPlatformApplicationArn(arns.get(mobilePushRegistration.os));
 
-        // TODO: catch exceptions when creating endpoint fails
-        final CreatePlatformEndpointResult result = amazonSNSClient.createPlatformEndpoint(request);
-        final MobilePushRegistration m = MobilePushRegistration.withEndpointForAccount(
-                mobilePushRegistration,
-                result.getEndpointArn(),
-                accountId
-        );
 
-        return m;
+        try {
+            // TODO: catch exceptions when creating endpoint fails
+            final CreatePlatformEndpointResult result = amazonSNSClient.createPlatformEndpoint(request);
+            final MobilePushRegistration m = MobilePushRegistration.withEndpointForAccount(
+                    mobilePushRegistration,
+                    result.getEndpointArn(),
+                    accountId
+            );
+
+            return Optional.of(m);
+        } catch (Exception e) {
+            LOGGER.error("Failed creating SNS endpoint for account_id: {}. Reason: {}", accountId, e.getMessage());
+        }
+
+        return Optional.absent();
     }
 }

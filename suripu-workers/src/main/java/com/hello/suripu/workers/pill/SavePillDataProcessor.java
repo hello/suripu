@@ -104,7 +104,8 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                         final int batteryLevel = data.getBatteryLevel();
                         final int upTimeInSeconds = data.getUptime();
                         final int firmwareVersion = data.getFirmwareVersion();
-                        final DateTime lastUpdated = new DateTime(data.getTimestamp(), DateTimeZone.UTC);
+                        final Long ts = data.getTimestamp() * 1000L;
+                        final DateTime lastUpdated = new DateTime(ts, DateTimeZone.UTC);
                         pillHeartBeatDAO.silentInsert(pair.internalDeviceId, batteryLevel, upTimeInSeconds, firmwareVersion, lastUpdated);
                     }
                 }

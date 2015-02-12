@@ -28,4 +28,12 @@ public abstract class HelloBaseRecordProcessor implements IRecordProcessor {
     protected Boolean hasAlarmInTimeline(final Long accountId) {
         return flipper.userFeatureActive(FeatureFlipper.ALARM_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean deviceHasPushNotificationsEnabled(final String senseId) {
+        return flipper.deviceFeatureActive(FeatureFlipper.PUSH_NOTIFICATIONS_ENABLED, senseId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean userHasPushNotificationsEnabled(final Long accountId) {
+        return flipper.userFeatureActive(FeatureFlipper.PUSH_NOTIFICATIONS_ENABLED, accountId, Collections.EMPTY_LIST);
+    }
 }

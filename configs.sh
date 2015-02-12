@@ -17,3 +17,4 @@ s3cmd put suripu-workers/configs/sense/sense_save.prod.yml s3://hello-deploy/con
 s3cmd put suripu-workers/configs/logs/index_logs_worker.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/index_logs_worker.prod.yml
 s3cmd put suripu-workers/configs/insights/insights_generator.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/insights_generator.prod.yml
 s3cmd put suripu-workers/configs/timeline/timeline_worker.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/timeline_worker.prod.yml
+s3cmd put suripu-workers/configs/notifications/push-notifications.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/push-notifications.prod.yml
