@@ -62,7 +62,6 @@ public class PushNotificationsProcessor extends HelloBaseRecordProcessor {
             try {
                 batchPeriodicDataWorker = DataInputProtos.BatchPeriodicDataWorker.parseFrom(record.getData().array());
                 sendMessage(batchPeriodicDataWorker.getData());
-                Thread.sleep(1000);
             } catch (InvalidProtocolBufferException e) {
                 LOGGER.error("Failed parsing protobuf: {}", e.getMessage());
                 LOGGER.error("Moving to next record");
@@ -82,12 +81,11 @@ public class PushNotificationsProcessor extends HelloBaseRecordProcessor {
      */
     private void sendMessage(final DataInputProtos.batched_periodic_data batched_periodic_data) {
         final String senseId = batched_periodic_data.getDeviceId();
-
         final List<UserInfo> userInfos = mergedUserInfoDynamoDB.getInfo(senseId);
         for(final UserInfo userInfo : userInfos) {
 
             if(!userHasPushNotificationsEnabled(userInfo.accountId)) {
-                return;
+                continue;
             }
 
             final Optional<DateTimeZone> dateTimeZoneOptional = userInfo.timeZone;
@@ -98,17 +96,17 @@ public class PushNotificationsProcessor extends HelloBaseRecordProcessor {
 
             final DateTime nowInLocalTimeZone = DateTime.now().withZone(dateTimeZoneOptional.get());
             if(!activeHours.contains(nowInLocalTimeZone.getHourOfDay())) {
-                return;
+                continue;
             }
 
             final String key = String.format("%s-%s", String.valueOf(userInfo.accountId), nowInLocalTimeZone.toString(DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT)));
             if(sent.contains(key)) {
                 LOGGER.info("Account {}, already received push notification: {}", userInfo.accountId, key);
-                return;
+                continue;
             }
 
             if(!accountPreferencesDynamoDB.isEnabled(userInfo.accountId, AccountPreference.EnabledPreference.PUSH_ALERT_CONDITIONS)) {
-                return;
+                continue;
             }
 
             // TODO: write to cache to avoid sending multiple notifications

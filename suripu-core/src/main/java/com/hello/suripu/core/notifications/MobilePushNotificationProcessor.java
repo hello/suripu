@@ -36,6 +36,7 @@ public class MobilePushNotificationProcessor {
                     LOGGER.info("Did not get any suitable message for {}", reg);
                     continue;
                 }
+                LOGGER.info(message.get());
                 final PublishRequest pr = new PublishRequest();
                 pr.setMessageStructure("json");
                 pr.setMessage(message.get());

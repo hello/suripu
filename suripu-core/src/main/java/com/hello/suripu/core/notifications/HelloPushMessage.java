@@ -21,7 +21,7 @@ public class HelloPushMessage {
     }
 
     public static HelloPushMessage fromSensors(final String body, final Sensor sensor) {
-        return new HelloPushMessage(body, "sensors", sensor.name().toLowerCase());
+        return new HelloPushMessage(body, "sensor", sensor.name().toLowerCase());
     }
 
     @Override
