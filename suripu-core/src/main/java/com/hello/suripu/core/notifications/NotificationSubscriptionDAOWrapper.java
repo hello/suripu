@@ -75,8 +75,9 @@ public class NotificationSubscriptionDAOWrapper {
         final Optional<MobilePushRegistration> updated = createSNSEndpoint(accountId, mobilePushRegistration);
         if(updated.isPresent()) {
             notificationSubscriptionsDAO.subscribe(accountId, updated.get());
+            return;
         }
-
+        LOGGER.error("Did not subscribe account_id {}", accountId);
     }
 
 
@@ -110,6 +111,7 @@ public class NotificationSubscriptionDAOWrapper {
     public boolean unsubscribe(final String oauthToken) {
         final Optional<MobilePushRegistration> mobilePushRegistrationOptional = notificationSubscriptionsDAO.getSubscriptionByOauthToken(oauthToken);
         if(mobilePushRegistrationOptional.isPresent()) {
+            deleteFromSNS(Lists.newArrayList(mobilePushRegistrationOptional.get()));
             notificationSubscriptionsDAO.unsubscribe(mobilePushRegistrationOptional.get().accountId.get(), mobilePushRegistrationOptional.get().deviceToken);
         }
 
@@ -145,6 +147,7 @@ public class NotificationSubscriptionDAOWrapper {
         request.withToken(mobilePushRegistration.deviceToken); //custom per user
         request.setPlatformApplicationArn(arns.get(mobilePushRegistration.os));
 
+
         try {
             // TODO: catch exceptions when creating endpoint fails
             final CreatePlatformEndpointResult result = amazonSNSClient.createPlatformEndpoint(request);
@@ -156,7 +159,7 @@ public class NotificationSubscriptionDAOWrapper {
 
             return Optional.of(m);
         } catch (Exception e) {
-            LOGGER.error("Failed creating endpoint for account_id = {}, reason: {}", accountId, e.getMessage());
+            LOGGER.error("Failed creating SNS endpoint for account_id: {}. Reason: {}", accountId, e.getMessage());
         }
 
         return Optional.absent();

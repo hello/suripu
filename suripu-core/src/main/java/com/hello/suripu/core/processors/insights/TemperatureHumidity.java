@@ -37,6 +37,9 @@ public class TemperatureHumidity {
     public static final int ALERT_TEMP_MAX_CELSIUS = 26;
 
 
+    public static final int ALERT_HUMIDITY_LOW = 20;
+    public static final int ALERT_HUMIDITY_HIGH = 70;
+
     public static final int IDEAL_HUMIDITY_MIN = 30;
     public static final int IDEAL_HUMIDITY_MAX = 60;
 

@@ -155,3 +155,24 @@ The increase and decrease of light cues, trigger different chemical reactions ou
 'Periodic limb movements during sleep are repetitive movements, typically in the lower extremities that occur about every 20-40 seconds. *Periodic Limb Movement Disorder* (PLMD), are movements such as brief muscle twitches, jerking movements or an upward flexing of the feet. They cluster into episodes lasting anywhere from a few minutes to several hours. PLMD are not considered medically serious but can contribute to insomnia and/or daytime fatigue because they may cause awakenings during the night. Occasionally, PLMD may be an indicator of a serious medical condition such as kidney disease, diabetes or anemia.'
 )
 ;
+
+INSERT INTO info_insight_cards (category, image_url, title, text)
+VALUES ('sleep_hygiene', '', 'Healthy Sleep Habits',
+'Maintaining good sleep habits is crucial to having regular, good quality sleep. The **most important habit** is to keep a consistent sleep and wake time for every day of the week. Other good habits to cultivate includes:
+
+**Avoid napping** during the day as it may disrupt your sleep time.
+
+**Avoid caffeine** about 3 hours before bedtime. Caffeine stimulates your nervous system, making you more alert and harder to fall asleep. Note that certain energy or soft drinks may also contain caffeine.
+
+**Stay away from stimulants** such as nicotine and alcohol. While you may feel sleepy after consuming alcohol, your sleep might be disrupted at a later time when the effect has worn off.
+
+**Regular exercise** has been shown to promote good sleep. However, vigorous exercise close to bedtime may be too stimulating, try a more gentle exercise such as yoga.
+
+Get sufficient **exposure to natural light**, which helps to maintain a healthy sleep-wake cycle. Go for a 15-minute after lunch, or take a coffee break during the afternoon.
+
+**Avoid bright lights** close to bedtime to allow the production of melatonin, a sleep-inducing hormone. The “blue light” from many modern smartphones or tablets has been shown to **interfere with** the body’s melatonin levels. Try not to use such devices in bed.
+
+**Develop a bedtime routine**. Wind down about an hour before bedtime, engage in relaxing activities such as reading, listening to soothing music, take a warm shower or bath.
+
+**Associate your bedroom with sleep**. Avoid non-sleep activities such as watching TV, working, or using the computer when in the bedroom.'
+);

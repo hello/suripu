@@ -506,7 +506,7 @@ public class RoomConditionsResource extends BaseResource {
         displayData.put(Sensor.HUMIDITY, allSensorData.get(Sensor.HUMIDITY));
         displayData.put(Sensor.SOUND, allSensorData.get(Sensor.SOUND));
         displayData.put(Sensor.TEMPERATURE, allSensorData.get(Sensor.TEMPERATURE));
-        displayData.put(Sensor.PARTICULATES, allSensorData.get(Sensor.PARTICULATES));
+//        displayData.put(Sensor.PARTICULATES, allSensorData.get(Sensor.PARTICULATES));
         return displayData;
     }
 }

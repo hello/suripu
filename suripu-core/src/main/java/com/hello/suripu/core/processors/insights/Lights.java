@@ -20,6 +20,9 @@ public class Lights {
     private static final int NIGHT_START_HOUR = 18; // 6pm
     private static final int NIGHT_END_HOUR = 1; // 1am
 
+    public static final float LIGHT_LEVEL_WARNING = 2.0f;  // in lux
+    public static final float LIGHT_LEVEL_ALERT = 8.0f;  // in lux
+
     public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final LightData lightData) {
 
         // get light data for last three days, filter by time
