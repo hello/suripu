@@ -101,7 +101,7 @@ public class MotionScoreAlgorithm {
                 timestamp = datum.timestamp;
 
                 if(!printedTime && debugMode){
-                    LOGGER.debug("time {}: ", new DateTime(timestamp, DateTimeZone.forOffsetMillis(rawData.get(0).get(r).offsetMillis)));
+                    LOGGER.trace("time {}: ", new DateTime(timestamp, DateTimeZone.forOffsetMillis(rawData.get(0).get(r).offsetMillis)));
                     printedTime = true;
                 }
 
@@ -114,7 +114,7 @@ public class MotionScoreAlgorithm {
                 outOfBedScore *= scoringFunction.getScore(datum, pdf).outOfBedEventScore;
 
                 if(debugMode) {
-                    LOGGER.debug("    {}: sleep: {}, wakeup: {}, in_bed: {}, out_bed: {}, val: {}",
+                    LOGGER.trace("    {}: sleep: {}, wakeup: {}, in_bed: {}, out_bed: {}, val: {}",
                             scoringFunction.getClass().getSimpleName(),
                             scoringFunction.getScore(datum, pdf).sleepEventScore,
                             scoringFunction.getScore(datum, pdf).wakeUpEventScore,
@@ -129,7 +129,7 @@ public class MotionScoreAlgorithm {
             outOfBedScores.add(new InternalScore(timestamp, outOfBedScore));
 
             if(debugMode) {
-                LOGGER.debug("goto_bed_prob {}, sleep_prob {}, wake up prob {}, out_bed_prob {}",
+                LOGGER.trace("goto_bed_prob {}, sleep_prob {}, wake up prob {}, out_bed_prob {}",
                         goToBedScore,
                         sleepScore,
                         wakeUpScore,
