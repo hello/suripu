@@ -1,3 +1,4 @@
+#!/bin/sh
 if [ -z "$1" ]
   then
     echo "[ERROR] \xE2\x9A\xA0 Missing version number"
@@ -86,3 +87,9 @@ cp /home/build/build/timeline_worker.prod.yml /etc/
 
 echo "restarting"
 restart suripuworkers-timeline
+
+sleep 1
+
+echo "Moving push notifications worker configs to /etc/"
+cp /home/build/build/push-notifications.prod.yml /etc/
+

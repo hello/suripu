@@ -16,9 +16,11 @@ import com.hello.suripu.core.notifications.HelloPushMessage;
 import com.hello.suripu.core.notifications.MobilePushNotificationProcessor;
 import com.hello.suripu.core.preferences.AccountPreference;
 import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +37,7 @@ public class PushNotificationsProcessor extends HelloBaseRecordProcessor {
 
     private final AccountPreferencesDynamoDB accountPreferencesDynamoDB;
     private final ImmutableSet<Integer> activeHours;
+    private final Set<String> sent = Sets.newHashSet();
 
     public PushNotificationsProcessor(
             final MobilePushNotificationProcessor mobilePushNotificationProcessor,
@@ -98,6 +101,12 @@ public class PushNotificationsProcessor extends HelloBaseRecordProcessor {
                 return;
             }
 
+            final String key = String.format("%s-%s", String.valueOf(userInfo.accountId), nowInLocalTimeZone.toString(DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT)));
+            if(sent.contains(key)) {
+                LOGGER.info("Account {}, already received push notification: {}", userInfo.accountId, key);
+                return;
+            }
+
             if(!accountPreferencesDynamoDB.isEnabled(userInfo.accountId, AccountPreference.EnabledPreference.PUSH_ALERT_CONDITIONS)) {
                 return;
             }
@@ -116,6 +125,7 @@ public class PushNotificationsProcessor extends HelloBaseRecordProcessor {
                 if(messageOptional.isPresent()) {
                     LOGGER.info("Sending push notifications to user: {}. Message: {}", userInfo.accountId, messageOptional.get());
                     mobilePushNotificationProcessor.push(userInfo.accountId, messageOptional.get());
+                    sent.add(key);
                 }
                 return; // only attempt to send one message per batch
             }
