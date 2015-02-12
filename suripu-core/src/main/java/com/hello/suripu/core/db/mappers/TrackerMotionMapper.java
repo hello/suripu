@@ -21,7 +21,7 @@ public class TrackerMotionMapper implements ResultSetMapper<TrackerMotion> {
         builder.withId(resultSet.getLong("id"));
         builder.withAccountId(resultSet.getLong("account_id"));
         builder.withTrackerId(resultSet.getLong("tracker_id"));
-        builder.withTimestampMillis(new DateTime(resultSet.getTimestamp("ts"), DateTimeZone.UTC).getMillis());
+        builder.withTimestampMillis(new DateTime(resultSet.getTimestamp("ts"), DateTimeZone.UTC).withSecondOfMinute(0).getMillis());
         builder.withOffsetMillis(resultSet.getInt("offset_millis"));
         builder.withValue(resultSet.getInt("svm_no_gravity"));
         builder.withMotionRange(resultSet.getLong("motion_range"));
