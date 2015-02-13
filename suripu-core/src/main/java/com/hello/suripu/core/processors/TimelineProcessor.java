@@ -138,12 +138,6 @@ public class TimelineProcessor {
 
         final List<Event> events = new LinkedList<>();
 
-        final List<Event> alarmEvents = Lists.newArrayList();
-        if(hasAlarmInTimeline) {
-            alarmEvents.addAll(getAlarmEvents(accountId, targetDate, endDate, DateTimeZone.forID("America/Los_Angeles").getOffset(DateTime.now())));
-            events.addAll(alarmEvents);
-        }
-
         // TODO: compute this threshold dynamically
         final int threshold = 10; // events with scores < threshold will be considered motion events
         final int mergeThreshold = 1; // min segment size is 1 minute
@@ -318,10 +312,6 @@ public class TimelineProcessor {
 //        }
 
 
-        for(Event event : alarmEvents) {
-            timEvents.put(event.getStartTimestamp(), event);
-        }
-
 
         final List<Event> eventsWithSleepEvents = TimelineRefactored.mergeEvents(timEvents);
         final List<Event> smoothedEvents = TimelineUtils.smoothEvents(eventsWithSleepEvents);
@@ -487,7 +477,7 @@ public class TimelineProcessor {
 
         // ALARM
         if(hasAlarmInTimeline) {
-            final List<Event> alarmEvents = getAlarmEvents(accountId, targetDate, endDate, DateTimeZone.forID("America/Los_Angeles").getOffset(DateTime.now()));
+            final List<Event> alarmEvents = getAlarmEvents(accountId, targetDate, endDate, trackerMotions.get(0).offsetMillis);
             for(final Event event : alarmEvents) {
                 timelineEvents.put(event.getStartTimestamp(), event);
             }

@@ -73,13 +73,13 @@ public abstract class SleepScoreDAO {
         int numInserts = 0;
         int numUpdates = 0;
         for (final SleepScore score : scores) {
-            LOGGER.debug("Saving Score: {}", score.toString());
+            LOGGER.trace("Saving Score: {}", score.toString());
 
             try {
                 // try inserting first as this should be more common
                 final long rowID = this.insert(score);
                 if (rowID > 0) {
-                    LOGGER.debug("INSERTED");
+                    LOGGER.trace("INSERTED");
                     numInserts++;
                 }
             } catch (UnableToExecuteStatementException exception) {

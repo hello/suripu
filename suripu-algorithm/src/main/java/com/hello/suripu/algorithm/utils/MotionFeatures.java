@@ -244,7 +244,7 @@ public class MotionFeatures {
                     }
                     builder.append("]");
 
-                    LOGGER.debug("{}: {}",
+                    LOGGER.trace("{}: {}",
                             new DateTime(timestamp, DateTimeZone.forOffsetMillis(offsetMillis)),
                             builder.toString());
                     /*

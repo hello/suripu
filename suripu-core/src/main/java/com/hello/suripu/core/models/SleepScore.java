@@ -121,7 +121,7 @@ public class SleepScore {
                         DateTime.now(),
                         timeZoneOffset
                 );
-                LOGGER.debug("created new score object for {}", sleepScore.toString());
+                LOGGER.trace("created new score object for {}", sleepScore.toString());
                 sleepScores.add(sleepScore);
 
                 agitationNum = 0;
@@ -130,7 +130,7 @@ public class SleepScore {
                 lastBucketDT = bucket;
             }
 
-            LOGGER.debug("Sensor Sample {}", data.toString());
+            LOGGER.trace("Sensor Sample {}", data.toString());
             final float value = data.val;
             if (value != -1) {
                 agitationNum++;
@@ -151,7 +151,7 @@ public class SleepScore {
                     DateTime.now(),
                     timeZoneOffset
             );
-            LOGGER.debug("created new score object for {}", sleepScore.toString());
+            LOGGER.trace("created new score object for {}", sleepScore.toString());
             sleepScores.add(sleepScore);
 
         }

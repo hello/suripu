@@ -1187,8 +1187,8 @@ public class TimelineUtils {
 
                 final AlarmEvent event = (AlarmEvent) Event.createFromType(
                         Event.Type.ALARM,
-                        ringTime.actualRingTimeUTC,
-                        new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC).plusMinutes(1).getMillis(),
+                        new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC).withSecondOfMinute(0).getMillis(),
+                        new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC).withSecondOfMinute(0).plusMinutes(1).getMillis(),
                         offsetMillis,
                         Optional.of(message),
                         Optional.<SleepSegment.SoundInfo>absent(),

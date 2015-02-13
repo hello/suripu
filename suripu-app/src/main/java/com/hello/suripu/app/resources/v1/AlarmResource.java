@@ -32,7 +32,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -189,34 +188,44 @@ public class AlarmResource {
     @Path("/sounds")
     @Produces(MediaType.APPLICATION_JSON)
     public List<AlarmSound> getAlarmSounds(@Scope(OAuthScope.ALARM_READ) final AccessToken accessToken) {
-        final List<AlarmSound> alarmSounds = new ArrayList<>();
+        final List<AlarmSound> alarmSounds = Lists.newArrayList();
 
-        final List<String> displayNames = Lists.newArrayList(
-                "Dusk",
-                "Pulse",
-                "Lilt",
-                "Bounce",
-                "Celebration",
-                "Milky Way",
-                "Waves",
-                "Lights",
-                "Echo",
-                "Drops",
-                "Twinkle",
-                "Silver",
-                "Highlights",
-                "Ripple",
-                "Sway"
+
+        // Note: this is the order in which they appear in the app.
+        final List<SoundTuple> sounds = Lists.newArrayList(
+                new SoundTuple("Dusk", 5),
+                new SoundTuple("Pulse", 4),
+                new SoundTuple("Lilt", 6),
+                new SoundTuple("Bounce", 7),
+                new SoundTuple("Celebration", 8),
+                new SoundTuple("Milky Way", 9),
+                new SoundTuple("Waves", 10),
+                new SoundTuple("Lights", 11),
+                new SoundTuple("Echo", 12),
+                new SoundTuple("Drops", 13),
+                new SoundTuple("Twinkle", 14),
+                new SoundTuple("Silver", 15),
+                new SoundTuple("Highlights", 16),
+                new SoundTuple("Ripple", 17),
+                new SoundTuple("Sway", 18)
         );
 
-        int i = 4;
-        for(String name : displayNames) {
-            final URL url = amazonS3.generatePresignedUrl("hello-audio", String.format("ringtones/%s.mp3", name), DateTime.now().plusWeeks(1).toDate());
-            final AlarmSound sound = new AlarmSound(i, name, url.toExternalForm());
+        for(final SoundTuple tuple: sounds) {
+            final URL url = amazonS3.generatePresignedUrl("hello-audio", String.format("ringtones/%s.mp3", tuple.displayName), DateTime.now().plusWeeks(1).toDate());
+            final AlarmSound sound = new AlarmSound(tuple.id, tuple.displayName, url.toExternalForm());
             alarmSounds.add(sound);
-            i++;
         }
 
         return alarmSounds;
+    }
+
+    private static class SoundTuple {
+        public final String displayName;
+        public final Integer id;
+
+        public SoundTuple(final String displayName, final Integer id) {
+            this.id = id;
+            this.displayName = displayName;
+        }
     }
 }
