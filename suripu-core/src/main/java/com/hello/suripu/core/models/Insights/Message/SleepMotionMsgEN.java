@@ -44,7 +44,7 @@ public class SleepMotionMsgEN {
         }
 
         return new Text("Just Right", String.format("In each of the last %d nights, ", numNights) +
-                String.format("we notice that you only move **%.1f %% %s** than the average Sense user. ", diff, description) +
+                String.format("we notice that you only move **%.1f%% %s** than the average Sense user. ", diff, description) +
                 String.format("About %.1f%% of your sleep period consist of agitated sleep.", perc));
     }
 }
