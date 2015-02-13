@@ -293,7 +293,7 @@ public class RingProcessor {
 
         try {
             final RingTime lastRingTimeFromHistory = ringTimeDAODynamoDB.getNextRingTime(morpheusId);
-            if (lastRingTimeFromHistory.actualRingTimeUTC < nextRingTime.actualRingTimeUTC) {
+            if (lastRingTimeFromHistory.actualRingTimeUTC != nextRingTime.actualRingTimeUTC) {
                 ringTimeDAODynamoDB.setNextRingTime(morpheusId, nextRingTime);  // Just for backing up the history.
                 return true;
             }
