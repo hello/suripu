@@ -49,7 +49,9 @@ public class TimelineResource extends BaseResource {
             @PathParam("date") String date) {
 
 
-        return timelineProcessor.retrieveTimelinesFast(accessToken.accountId, date, missingDataDefaultValue(accessToken.accountId), hasAlarmInTimeline(accessToken.accountId));
+        return timelineProcessor.retrieveTimelinesFast(accessToken.accountId, date, missingDataDefaultValue(accessToken.accountId),
+                hasAlarmInTimeline(accessToken.accountId),
+                hasSoundInTimeline(accessToken.accountId));
 
     }
 
@@ -65,7 +67,9 @@ public class TimelineResource extends BaseResource {
         if (!accountId.isPresent()) {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
-        return timelineProcessor.retrieveTimelinesFast(accountId.get(), date, missingDataDefaultValue(accessToken.accountId), hasAlarmInTimeline(accountId.get()));
+        return timelineProcessor.retrieveTimelinesFast(accountId.get(), date, missingDataDefaultValue(accessToken.accountId),
+                hasAlarmInTimeline(accountId.get()),
+                hasSoundInTimeline(accountId.get()));
     }
 
     private Optional<Long> getAccountIdByEmail(final String email) {

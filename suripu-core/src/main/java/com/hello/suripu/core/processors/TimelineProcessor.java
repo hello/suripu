@@ -298,7 +298,6 @@ public class TimelineProcessor {
 //            LOGGER.warn("No sun rise data for date {}", sunRiseQueryDateString);
 //        }
 //
-//        // TODO: add sound
 //
 //
 //        // merge similar segments (by motion & event-type), then categorize
@@ -383,7 +382,9 @@ public class TimelineProcessor {
     }
 
 
-    public List<Timeline> retrieveTimelinesFast(final Long accountId, final String date, final Integer missingDataDefaultValue, final Boolean hasAlarmInTimeline) {
+    public List<Timeline> retrieveTimelinesFast(final Long accountId, final String date, final Integer missingDataDefaultValue,
+                                                final Boolean hasAlarmInTimeline,
+                                                final Boolean hasSoundInTimeline) {
 
 
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
@@ -484,10 +485,13 @@ public class TimelineProcessor {
             }
         }
 
-        // TODO: SOUND
-        final List<Event> soundEvents = getNoiseEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE), lightOutTimeOptional, sleepEventsFromAlgorithm);
-        for (final Event event : soundEvents) {
-            timelineEvents.put(event.getStartTimestamp(), event);
+        // SOUND
+        if (hasSoundInTimeline) {
+            final List<Event> soundEvents = getNoiseEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE),
+                    lightOutTimeOptional, sleepEventsFromAlgorithm);
+            for (final Event event : soundEvents) {
+                timelineEvents.put(event.getStartTimestamp(), event);
+            }
         }
 
         final List<Event> eventsWithSleepEvents = TimelineRefactored.mergeEvents(timelineEvents);
@@ -508,7 +512,7 @@ public class TimelineProcessor {
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
 
-        Integer sleepScore = computeAndMaybeSaveScore(trackerMotions.get(0).offsetMillis, targetDate, accountId, sleepStats);
+            Integer sleepScore = computeAndMaybeSaveScore(trackerMotions.get(0).offsetMillis, targetDate, accountId, sleepStats);
 
         if(sleepStats.sleepDurationInMinutes < MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES) {
             LOGGER.warn("Score for account id {} was set to zero because sleep duration is too short ({} min)", accountId, sleepStats.sleepDurationInMinutes);
