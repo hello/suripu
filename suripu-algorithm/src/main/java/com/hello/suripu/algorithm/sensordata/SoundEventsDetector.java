@@ -35,8 +35,8 @@ public class SoundEventsDetector {
     /**
      *  This method detects sound spikes during sleep
      *
-     * @param rawDataMinutes raw light data, one value per minute
-     * @return list of light segments
+     * @param rawDataMinutes raw sound data, one value per minute
+     * @return list of sound segments
      */
     public LinkedList<Segment> process(final LinkedList<AmplitudeData> rawDataMinutes) {
 

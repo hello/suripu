@@ -12,8 +12,6 @@ public class NoiseEvent extends Event {
 
     public NoiseEvent(final long startTimestamp, final long endTimestamp, final int offsetMillis) {
         super(Type.NOISE, startTimestamp, endTimestamp, offsetMillis);
-        final DateTime noiseDateTime = new DateTime(startTimestamp, DateTimeZone.UTC).plusMillis(offsetMillis);
-        this.description += " " + noiseDateTime.toString(DateTimeFormat.forPattern("HH:mm"));
     }
 
     @Override
