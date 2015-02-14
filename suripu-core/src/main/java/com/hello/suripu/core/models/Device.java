@@ -19,6 +19,16 @@ public class Device {
         UNKNOWN
     }
 
+    public enum Color {
+        BLACK,
+        WHITE,
+        BLUE,
+        RED
+    }
+
+    @JsonProperty("color")
+    public final Color color;
+
     @JsonProperty("type")
     final public Type type;
 
@@ -38,12 +48,23 @@ public class Device {
     @JsonProperty("last_updated")
     final public DateTime lastUpdated;
 
-    public Device(final Type type, final String deviceId, final State state, final String firmwareVersion, final DateTime lastUpdated) {
+    public Device(final Type type, final String deviceId, final State state, final String firmwareVersion, final DateTime lastUpdated, final Color color) {
         this.type = type;
         this.deviceId = deviceId;
         this.state = state;
         this.firmwareVersion = firmwareVersion;
         this.lastUpdated = lastUpdated;
+        this.color = color;
     }
 
+    public Device(final Type type, final String deviceId, final State state, final String firmwareVersion, final DateTime lastUpdated) {
+        this(type, deviceId, state, firmwareVersion, lastUpdated, getDefaultColor(type));
+    }
+
+    private static Color getDefaultColor(final Type type) {
+        if (type == Type.PILL) {
+            return Color.BLUE;
+        }
+        return Color.BLACK;
+    }
 }
