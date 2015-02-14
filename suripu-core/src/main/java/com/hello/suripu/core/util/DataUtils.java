@@ -13,6 +13,7 @@ public class DataUtils{
     public static final float AUDIO_FLOAT_TO_INT_MULTIPLIER = 1000.0f; // 3 decimal places
     public static final float FLOAT_2_INT_MULTIPLIER = 100;
     private static final int TEMPERATURE_CALIBRATION_FACTOR_IN_CELSIUS = 278;
+    public static final float PEAK_DISTURBANCE_NOISE_FLOOR = 40.0f;
 
     // AQI ranges from 0 to 500;
     // see http://www.sparetheair.com/publications/AQI_Lookup_Table-PM25.pdf

@@ -11,7 +11,6 @@ import org.joda.time.format.DateTimeFormat;
 public class DateTimeUtil {
     public static final String DYNAMO_DB_DATE_FORMAT = "yyyy-MM-dd";
     public static final long DAY_IN_MILLIS = 86400000L;
-    public static final long ONE_MINUTE_IN_MILLIS = 60000L;
 
     public static final DateTime MORPHEUS_DAY_ONE = DateTime.parse("2014-04-08", DateTimeFormat.forPattern(DYNAMO_DB_DATE_FORMAT));
 

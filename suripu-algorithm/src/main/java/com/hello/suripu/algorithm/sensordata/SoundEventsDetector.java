@@ -1,15 +1,14 @@
 package com.hello.suripu.algorithm.sensordata;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.Segment;
-import com.hello.suripu.algorithm.utils.GaussianSmoother;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -20,6 +19,8 @@ import java.util.Map;
  */
 public class SoundEventsDetector {
     private static final Logger LOGGER = LoggerFactory.getLogger(SoundEventsDetector.class);
+
+    private static final long MINUTE_IN_MILLIS = 60000L;
 
     private final int approxQuietTimeStart;
     private final int approxQuietTimeEnd;
@@ -32,46 +33,36 @@ public class SoundEventsDetector {
     }
 
     /**
-     *  This method detects sound spikes duringh sleep
-     *
-     *  Step 1: data is gaussian-smoothed with a window of 20 minutes, to reduce effects of light fluctuations
-     *  Step 2: scan data in chronological order, and detect periods of light
-     *  Step 3: annotate each period:
-     *    LIGHT_SPIKE if light is on for a short duration during the night,
-     *    LIGHTS_OUT if light is on for a long time and it's the last period betw sunset and sunrise,
-     *    DAYLIGHT if light is detected and hour of day is > sunrise hour
-     *    LOW_DAYLIGHT if daylight detected, but light level is low, probably a darker room
-     *    SUNLIGHT_SPIKE (not implemented yet)
+     *  This method detects sound spikes during sleep
      *
      * @param rawDataMinutes raw light data, one value per minute
      * @return list of light segments
      */
     public LinkedList<Segment> process(final LinkedList<AmplitudeData> rawDataMinutes) {
 
-        final GaussianSmoother smoother = new GaussianSmoother(smoothingDegree);
-        final ImmutableList<AmplitudeData> smoothedData = smoother.process(rawDataMinutes);
-
         LOGGER.debug("Data Start time: {}", rawDataMinutes.get(0).timestamp);
         LOGGER.debug("Data End time: {}", rawDataMinutes.getLast().timestamp);
 
-        // compute average of smoothed sound data
+        // compute average of raw sound data
         double totalValue = 0.0;
-        for (AmplitudeData value : smoothedData) {
+        for (AmplitudeData value : rawDataMinutes) {
             totalValue += value.amplitude;
         }
-        final double smoothedAverage = totalValue / (double) smoothedData.size();
+        final double avgPeakDisturbance = totalValue / (double) rawDataMinutes.size() + 1.0;
 
-        final LinkedList<Segment> soundSegments = new LinkedList<>();
 
-        long startTimestamp = 0;
-        long endTimestamp = 0;
-        int offsetMillis = 0;
-
-        // keeps track loud sounds (> average sound energy) in 20 minutes window.
+        // keeps track loud sounds (> average sound energy) in time windows determined by smoothing degree
         final Map<DateTime, AmplitudeData> peakSoundWindows = new HashMap<>();
-        for (final AmplitudeData datum : smoothedData) {
 
-            if (datum.amplitude < smoothedAverage) {
+        // tracks the value and timestamp of the last added peak
+        long lastAddedTimestamp = 0;
+        double lastAddedValue = 0.0;
+        final List<DateTime> addedTimeBuckets = new ArrayList<>();
+        final long minInterval = this.smoothingDegree * MINUTE_IN_MILLIS;
+
+        for (final AmplitudeData datum : rawDataMinutes) {
+
+            if (datum.amplitude < avgPeakDisturbance) {
                 continue;
             }
 
@@ -85,21 +76,43 @@ public class SoundEventsDetector {
 
             final int minuteBucket = (dataTime.getMinuteOfHour() / this.smoothingDegree) * this.smoothingDegree;
             final DateTime timeBucket = dataTime.withMinuteOfHour(minuteBucket).withSecondOfMinute(0).withMillisOfSecond(0);
+
+            // add new sound disturbance
             if (!peakSoundWindows.containsKey(timeBucket)) {
+
+                // check if the last added peak is too recent
+                if (!addedTimeBuckets.isEmpty() && (datum.timestamp - lastAddedTimestamp) < minInterval) {
+                    if (datum.amplitude <= lastAddedValue) {
+                        continue;
+                    } else {
+                        // this new peak is louder than the last bucket's peak, delete the previous peak
+                        final int lastIndex = addedTimeBuckets.size() - 1;
+                        peakSoundWindows.remove(addedTimeBuckets.get(lastIndex));
+                        addedTimeBuckets.remove(lastIndex);
+                    }
+                }
+
                 peakSoundWindows.put(timeBucket, datum);
+
+                lastAddedTimestamp = datum.timestamp;
+                lastAddedValue = datum.amplitude;
+                addedTimeBuckets.add(timeBucket);
             }
 
-            if (peakSoundWindows.get(timeBucket).amplitude < datum.amplitude) {
+            // there's a louder noise in this time window
+            if (datum.amplitude > peakSoundWindows.get(timeBucket).amplitude) {
                 peakSoundWindows.put(timeBucket, datum);
+
+                lastAddedTimestamp = datum.timestamp;
+                lastAddedValue = datum.amplitude;
             }
         }
 
         final List<AmplitudeData> sortedAmplitudes = Ordering.natural().reverse().sortedCopy(peakSoundWindows.values());
+
+        final LinkedList<Segment> soundSegments = new LinkedList<>();
         for (final AmplitudeData datum : sortedAmplitudes) {
-            soundSegments.add(new Segment(datum.timestamp, datum.timestamp + 60000L, datum.offsetMillis));
-            if (soundSegments.size() >= 5) {
-                break;
-            }
+            soundSegments.add(new Segment(datum.timestamp, datum.timestamp + MINUTE_IN_MILLIS, datum.offsetMillis));
         }
 
         return soundSegments;
