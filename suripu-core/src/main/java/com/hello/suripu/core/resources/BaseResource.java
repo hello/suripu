@@ -34,7 +34,7 @@ public class BaseResource {
     }
 
     protected Boolean hasSoundInTimeline(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.SOUND_INFO_TIMELINE, accountId, Collections.EMPTY_LIST);
+        return featureFlipper.userFeatureActive(FeatureFlipper.SOUND_EVENTS_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
     }
 
 }
