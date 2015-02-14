@@ -418,10 +418,11 @@ public class TimelineProcessor {
                     accountId, deviceId.get(), slotDurationMins, missingDataDefaultValue);
         }
 
-        // compute lights-out events
+        // compute lights-out and sound-disturbance events
         Optional<DateTime> lightOutTimeOptional = Optional.absent();
         Optional<DateTime> wakeUpWaveTimeOptional = Optional.absent();
         final List<Event> lightEvents = Lists.newArrayList();
+        final List<Event> soundEvents = Lists.newArrayList();
 
         if (!allSensorSampleList.isEmpty()) {
             lightEvents.addAll(TimelineUtils.getLightEvents(allSensorSampleList.get(Sensor.LIGHT)));
@@ -430,6 +431,7 @@ public class TimelineProcessor {
                 lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
             }
 
+            soundEvents.addAll(TimelineUtils.getSoundEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE)));
 
             // TODO: refactor
 
@@ -484,7 +486,9 @@ public class TimelineProcessor {
         }
 
         // TODO: SOUND
-
+        for (final Event event : soundEvents) {
+            timelineEvents.put(event.getStartTimestamp(), event);
+        }
 
         final List<Event> eventsWithSleepEvents = TimelineRefactored.mergeEvents(timelineEvents);
         final List<Event> smoothedEvents = TimelineUtils.smoothEvents(eventsWithSleepEvents);

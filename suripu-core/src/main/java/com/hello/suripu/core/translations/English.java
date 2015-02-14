@@ -20,6 +20,7 @@ public class English {
     public final static String ALARM_NORMAL_MESSAGE = "Your alarm rang at **%s**.";
     public final static String ALARM_NOT_SO_SMART_MESSAGE = "Your Smart Alarm rang at **%s**.";
     public final static String ALARM_SMART_MESSAGE = "Your Smart Alarm rang at **%s**.\nYou set it to wake you up by **%s**.";
+    public final static String NOISE_MESSAGE = "There was a noise disturbance.";
     public final static String NULL_MESSAGE = "";
 
 

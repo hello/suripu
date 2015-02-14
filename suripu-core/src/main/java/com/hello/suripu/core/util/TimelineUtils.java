@@ -8,6 +8,7 @@ import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.LightSegment;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sensordata.LightEventsDetector;
+import com.hello.suripu.algorithm.sensordata.SoundEventsDetector;
 import com.hello.suripu.algorithm.sleep.MotionScoreAlgorithm;
 import com.hello.suripu.algorithm.sleep.scores.AmplitudeDataScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.HourlyMotionCountScoreFunction;
@@ -26,6 +27,7 @@ import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.LightEvent;
 import com.hello.suripu.core.models.Events.LightsOutEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
+import com.hello.suripu.core.models.Events.NoiseEvent;
 import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.SleepingEvent;
@@ -874,6 +876,39 @@ public class TimelineUtils {
                 events.add(new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, "Light"));
             }
             // TODO: daylight spike event -- unsure what the value might be at this moment
+        }
+        return events;
+    }
+
+
+    /**
+     * Get a list of top peak sound disturbances during queit hours)
+     * @param soundData
+     * @return
+     */
+    public static List<Event> getSoundEvents(List<Sample> soundData) {
+        if (soundData.size() == 0) {
+            return Collections.EMPTY_LIST;
+        }
+
+        LOGGER.debug("Sound samples size: {}", soundData.size());
+
+        final LinkedList<AmplitudeData> soundAmplitudeData = new LinkedList<>();
+        for (final Sample sample : soundData) {
+            soundAmplitudeData.add(new AmplitudeData(sample.dateTime, (double) sample.value, sample.offsetMillis));
+        }
+
+        final int approxQuietTimeStart = 23; // check from 11pm to 7am
+        final int approxQuietTimeEnds = 7;
+        final int smoothingDegree = 20; // 20 mins smoothing
+
+        final SoundEventsDetector detector = new SoundEventsDetector(approxQuietTimeStart, approxQuietTimeEnds, smoothingDegree);
+
+        final LinkedList<Segment> soundSegments = detector.process(soundAmplitudeData);
+
+        final List<Event> events = new ArrayList<>();
+        for (final Segment segment : soundSegments) {
+            events.add(new NoiseEvent(segment.getStartTimestamp(), segment.getEndTimestamp(), segment.getOffsetMillis()));
         }
         return events;
     }
