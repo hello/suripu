@@ -11,9 +11,11 @@ graphite:
 
 sensors_db:
   driverClass: org.postgresql.Driver
-  user: sensors
-  password: hello-sensors
-  url: jdbc:postgresql://sensors-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors
+  user: ingress_user
+  password: hello ingress user
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
+  properties:
+    hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
   # any properties specific to your JDBC driver:
   properties:
@@ -42,9 +44,9 @@ sensors_db:
 
 common_db:
   driverClass: org.postgresql.Driver
-  user: common
-  password: hello-common
-  url: jdbc:postgresql://common.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
+  user: ingress_user
+  password: hello ingress user
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -75,9 +77,9 @@ common_db:
 
 insights_db:
   driverClass: org.postgresql.Driver
-  user: common
-  password: hello-common
-  url: jdbc:postgresql://common.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
+  user: ingress_user
+  password: hello ingress user
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -138,17 +140,17 @@ logging:
 event_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: prod_event
+  table_name: event
 
 timezone_history_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: prod_timezone_history
+  table_name: timezone_history
 
 alarm_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: prod_alarm
+  table_name: alarm
 
 kinesis_logger:
   stream_name: logs
@@ -168,29 +170,29 @@ push_notifications:
 notifications_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: prod_notifications
+  table_name: notifications
 
 preferences_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: prod_preferences
+  table_name: preferences
 
 ring_time_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: prod_ring_time
+  table_name: ring_time
 
 alarm_info_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: prod_alarm_info
+  table_name: alarm_info
 
 # remember to update version when changing score methods
 # v0.1: pure movement
 sleep_score_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
     region: us-east-1
-    table_name: prod_sleep_score
+    table_name: sleep_score
 sleep_score_version: v_0_1
 
 features_db:
@@ -206,7 +208,7 @@ teams_db:
 insights_dynamo_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
     region: us-east-1
-    table_name: prod_insights
+    table_name: insights
 
 sense_key_store_dynamo_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
@@ -234,4 +236,4 @@ question_configs:
 timeline_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: prod_timeline
+  table_name: timeline
