@@ -57,6 +57,7 @@ public class TimelineProcessor {
     private final SleepScoreDAO sleepScoreDAO;
     private final SleepLabelDAO sleepLabelDAO;
     private final TrendsInsightsDAO trendsInsightsDAO;
+    private final SleepTimePriorsDAO sleepPriorsDAO;
     private final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB;
     private final int dateBucketPeriod;
     private final SunData sunData;
@@ -72,6 +73,7 @@ public class TimelineProcessor {
                             final SleepLabelDAO sleepLabelDAO,
                             final SleepScoreDAO sleepScoreDAO,
                             final TrendsInsightsDAO trendsInsightsDAO,
+                            final SleepTimePriorsDAO sleepPriorsDAO,
                             final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
                             final int dateBucketPeriod,
                             final SunData sunData,
@@ -85,6 +87,7 @@ public class TimelineProcessor {
         this.sleepLabelDAO = sleepLabelDAO;
         this.sleepScoreDAO = sleepScoreDAO;
         this.trendsInsightsDAO = trendsInsightsDAO;
+        this.sleepPriorsDAO = sleepPriorsDAO;
         this.aggregateSleepScoreDAODynamoDB = aggregateSleepScoreDAODynamoDB;
         this.dateBucketPeriod = dateBucketPeriod;
         this.sunData = sunData;

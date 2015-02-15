@@ -167,6 +167,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final SleepScoreDAO sleepScoreDAO = commonDB.onDemand(SleepScoreDAO.class);
         final TrendsInsightsDAO trendsInsightsDAO = insightsDB.onDemand(TrendsInsightsDAO.class);
 
+        //temp
+        final SleepTimePriorsDAO sleepPriorDAO = new SleepTimePriorsLocalImpl();
+
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
         final QuestionResponseDAO questionResponseDAO = insightsDB.onDemand(QuestionResponseDAO.class);
@@ -316,6 +319,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 sleepLabelDAO,
                 sleepScoreDAO,
                 trendsInsightsDAO,
+                sleepPriorDAO,
                 aggregateSleepScoreDAODynamoDB,
                 configuration.getScoreThreshold(),
                 sunData,
