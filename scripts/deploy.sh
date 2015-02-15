@@ -10,7 +10,7 @@ rm /home/build/build/suripu-app.jar
 ln -s /home/build/build/suripu-app-$1.jar /home/build/build/suripu-app.jar
 
 echo "Copying configs to /etc/"
-cp /home/build/build/suripu-app.prod.yml /etc/
+cp /home/build/build/suripu-app.stagin.yml /etc/
 
 echo "restarting..."
 restart suripuapp
@@ -23,7 +23,7 @@ rm /home/build/build/suripu-service.jar
 ln -s /home/build/build/suripu-service-$1.jar /home/build/build/suripu-service.jar
 
 echo "Moving configs to /etc/"
-cp /home/build/build/suripu-service.prod.yml /etc/
+cp /home/build/build/suripu-service.stagin.yml /etc/
 
 echo "restarting..."
 restart suripuservice
@@ -35,7 +35,7 @@ rm /home/build/build/suripu-workers.jar
 ln -s /home/build/build/suripu-workers-$1.jar /home/build/build/suripu-workers.jar
 
 echo "Moving pillscorer configs to /etc/"
-cp /home/build/build/pillscorer.prod.yml /etc/
+cp /home/build/build/pillscorer.stagin.yml /etc/
 
 echo "restarting..."
 restart suripuworkers-pillscorer
@@ -43,7 +43,7 @@ restart suripuworkers-pillscorer
 sleep 1
 
 echo "Moving pilldata configs to /etc/"
-cp /home/build/build/pill.prod.yml /etc/
+cp /home/build/build/pill.stagin.yml /etc/
 
 echo "restarting..."
 restart suripuworkers-pilldata
@@ -51,7 +51,7 @@ restart suripuworkers-pilldata
 sleep 1
 
 echo "Moving smart alarm configs to /etc/"
-cp /home/build/build/alarm_worker.prod.yml /etc/
+cp /home/build/build/alarm_worker.stagin.yml /etc/
 
 echo "restarting..."
 restart suripuworkers-smartalarm
@@ -59,7 +59,7 @@ restart suripuworkers-smartalarm
 sleep 1
 
 echo "Moving sense save configs to /etc/"
-cp /home/build/build/sense_save.prod.yml /etc/
+cp /home/build/build/sense_save.stagin.yml /etc/
 
 echo "restarting"
 restart suripuworkers-sense
@@ -67,7 +67,7 @@ restart suripuworkers-sense
 sleep 1
 
 echo "Moving index log worker configs to /etc/"
-cp /home/build/build/index_logs_worker.prod.yml /etc/
+cp /home/build/build/index_logs_worker.stagin.yml /etc/
 
 echo "restarting"
 restart suripuworkers-index-logs
@@ -75,7 +75,7 @@ restart suripuworkers-index-logs
 sleep 1
 
 echo "Moving insights generator worker configs to /etc/"
-cp /home/build/build/insights_generator.prod.yml /etc/
+cp /home/build/build/insights_generator.stagin.yml /etc/
 
 echo "restarting"
 restart suripuworkers-insights
@@ -83,7 +83,7 @@ restart suripuworkers-insights
 sleep 1
 
 echo "Moving insights generator worker configs to /etc/"
-cp /home/build/build/timeline_worker.prod.yml /etc/
+cp /home/build/build/timeline_worker.stagin.yml /etc/
 
 echo "restarting"
 restart suripuworkers-timeline
@@ -91,6 +91,7 @@ restart suripuworkers-timeline
 sleep 1
 
 echo "Moving push notifications worker configs to /etc/"
-cp /home/build/build/push-notifications.prod.yml /etc/
+cp /home/build/build/push-notifications.stagin.yml /etc/
+echo "restarting"
 
 restart suripuworkers-push
