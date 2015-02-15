@@ -8,12 +8,11 @@ graphite:
     - com.yammer
     - com.hello
 
-
 common_db:
   driverClass: org.postgresql.Driver
-  user: ingress_user
-  password: hello ingress user
-  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
+  user: common
+  password: hello-common
+  url: jdbc:postgresql://common.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -44,9 +43,9 @@ common_db:
 
 sensors_db:
   driverClass: org.postgresql.Driver
-  user: ingress_user
-  password: hello ingress user
-  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
+  user: sensors
+  password: hello-sensors
+  url: jdbc:postgresql://sensors-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -77,9 +76,9 @@ sensors_db:
 
 insights_db:
   driverClass: org.postgresql.Driver
-  user: ingress_user
-  password: hello ingress user
-  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
+  user: common
+  password: hello-common
+  url: jdbc:postgresql://common.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -113,7 +112,7 @@ kinesis:
   streams :
     batch_pill_data : batch_pill_data
 
-app_name: InsightsGeneratorConsumer
+app_name: InsightsGeneratorConsumerProd
 
 max_records: 100
 
@@ -132,12 +131,12 @@ logging:
 insights_dynamo_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
     region: us-east-1
-    table_name: insights
+    table_name: prod_insights
 
 sleep_score_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
     region: us-east-1
-    table_name: sleep_score
+    table_name: prod_sleep_score
 sleep_score_version: v_0_1
 
 features_db:

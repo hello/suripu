@@ -10,9 +10,9 @@ graphite:
 
 sensors_db:
   driverClass: org.postgresql.Driver
-  user: sensors
-  password: hello-sensors
-  url: jdbc:postgresql://sensors-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors
+  user: ingress_user
+  password: hello ingress user
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -43,9 +43,9 @@ sensors_db:
 
 common_db:
   driverClass: org.postgresql.Driver
-  user: common
-  password: hello-common
-  url: jdbc:postgresql://common.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
+  user: ingress_user
+  password: hello ingress user
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -76,9 +76,9 @@ common_db:
 
 insights_db:
   driverClass: org.postgresql.Driver
-  user: common
-  password: hello-common
-  url: jdbc:postgresql://common.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
+  user: ingress_user
+  password: hello ingress user
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -132,17 +132,17 @@ logging:
 ring_time_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: prod_ring_time
+  table_name: ring_time
 
 timezone_history_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: prod_timezone_history
+  table_name: timezone_history
 
 alarm_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: prod_alarm
+  table_name: alarm
 
 features_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
@@ -154,21 +154,21 @@ aggregate_window_size_min: 10
 user_info_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: prod_alarm_info
+  table_name: alarm_info
 
 # remember to update version when changing score methods
 # v0.1: pure movement
 sleep_score_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
     region: us-east-1
-    table_name: prod_sleep_score
+    table_name: sleep_score
 sleep_score_version: v_0_1
 score_threshold : 15 # minutes bucket for sleep-scores
 
 timeline_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: prod_timeline
+  table_name: timeline
 
 max_no_motion_period_minutes: 90
 hour_of_day_trigger: 5

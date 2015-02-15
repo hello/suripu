@@ -1,18 +1,17 @@
-debug: false
 metrics_enabled: false
+debug: false
 graphite:
   host: carbon.hostedgraphite.com
   api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
   reporting_interval_in_seconds: 30
   include_metrics:
-    - com.yammer
     - com.hello
 
 sensors_db:
   driverClass: org.postgresql.Driver
-  user: sensors
-  password: hello-sensors
-  url: jdbc:postgresql://sensors-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors
+  user: ingress_user
+  password: hello ingress user
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -43,42 +42,9 @@ sensors_db:
 
 common_db:
   driverClass: org.postgresql.Driver
-  user: common
-  password: hello-common
-  url: jdbc:postgresql://common.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
-  properties:
-    hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
-
-  # any properties specific to your JDBC driver:
-  properties:
-    charSet: UTF-8
-
-  # the maximum amount of time to wait on an empty pool before throwing an exception
-  maxWaitForConnection: 1s
-
-  # the SQL query to run when validating a connection's liveness
-  validationQuery: "/* MyService Health Check */ SELECT 1"
-
-  # the minimum number of connections to keep open
-  minSize: 2
-
-  # the maximum number of connections to keep open
-  maxSize: 8
-
-  # whether or not idle connections should be validated
-  checkConnectionWhileIdle: false
-
-  # how long a connection must be held before it can be validated
-  checkConnectionHealthWhenIdleFor: 10s
-
-  # the maximum lifetime of an idle connection
-  closeConnectionIfIdleFor: 1 minute
-
-insights_db:
-  driverClass: org.postgresql.Driver
-  user: common
-  password: hello-common
-  url: jdbc:postgresql://common.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
+  user: ingress_user
+  password: hello ingress user
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -112,9 +78,17 @@ kinesis:
   streams :
     batch_pill_data : batch_pill_data
 
-app_name: TimelineWorker
+app_name: SavePillDataConsumer
 
-max_records: 20
+max_records: 50
+
+# batch save to DB size
+batch_size: 80
+
+key_store:
+    endpoint: http://dynamodb.us-east-1.amazonaws.com
+    region: us-east-1
+    table_name : pill_key_store
 
 # Logging settings.
 logging:
@@ -128,48 +102,12 @@ logging:
     # Sets the level for 'com.example.app' to DEBUG.
     com.hello.suripu.workers: DEBUG
 
-
-ring_time_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: prod_ring_time
-
-timezone_history_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: prod_timezone_history
-
-alarm_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: prod_alarm
-
 features_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
     region: us-east-1
     table_name: features
 
-aggregate_window_size_min: 10
-
-user_info_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: prod_alarm_info
-
-# remember to update version when changing score methods
-# v0.1: pure movement
-sleep_score_db:
+user_info:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
     region: us-east-1
-    table_name: prod_sleep_score
-sleep_score_version: v_0_1
-score_threshold : 15 # minutes bucket for sleep-scores
-
-timeline_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: prod_timeline
-
-max_no_motion_period_minutes: 90
-hour_of_day_trigger: 5
-end_process_time: 11
+    table_name: alarm_info
