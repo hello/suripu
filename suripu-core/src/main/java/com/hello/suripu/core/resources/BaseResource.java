@@ -32,4 +32,9 @@ public class BaseResource {
     protected Boolean hasAlarmInTimeline(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.ALARM_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean hasSoundInTimeline(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SOUND_EVENTS_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
+    }
+
 }

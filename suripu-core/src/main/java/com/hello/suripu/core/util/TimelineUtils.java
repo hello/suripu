@@ -8,6 +8,7 @@ import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.LightSegment;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sensordata.LightEventsDetector;
+import com.hello.suripu.algorithm.sensordata.SoundEventsDetector;
 import com.hello.suripu.algorithm.sleep.MotionScoreAlgorithm;
 import com.hello.suripu.algorithm.sleep.scores.AmplitudeDataScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.HourlyMotionCountScoreFunction;
@@ -26,6 +27,7 @@ import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.LightEvent;
 import com.hello.suripu.core.models.Events.LightsOutEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
+import com.hello.suripu.core.models.Events.NoiseEvent;
 import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.SleepingEvent;
@@ -69,7 +71,11 @@ public class TimelineUtils {
     private static final int LIGHTS_OUT_START_THRESHOLD = 19; // 7pm local time
     private static final int LIGHTS_OUT_END_THRESHOLD = 4; // 4am local time
 
-
+    // for sound
+    private static final int DEFAULT_QUIET_START_HOUR = 23; // 11pm
+    private static final int DEFAULT_QUIET_END_HOUR = 7; // 7am
+    private static final int SOUND_WINDOW_SIZE_MINS = 30; // smoothing windows, binning
+    private static final int MAX_SOUND_EVENT_SIZE = 5; // max sound event allowed in timeline
 
     public static List<Event> convertLightMotionToNone(final List<Event> eventList, final int thresholdSleepDepth){
         final LinkedList<Event> convertedEvents = new LinkedList<>();
@@ -893,6 +899,71 @@ public class TimelineUtils {
         }
 
         return Optional.absent();
+    }
+
+    /**
+     * Get a list of top peak sound disturbances during queit hours)
+     * @param soundData
+     * @return
+     */
+    public static List<Event> getSoundEvents(final List<Sample> soundData,
+                                             final Optional<DateTime> optionalLightsOut,
+                                             final Optional<DateTime> optionalSleepTime,
+                                             final Optional<DateTime> optionalAwakeTime) {
+        if (soundData.size() == 0) {
+            return Collections.EMPTY_LIST;
+        }
+
+        LOGGER.debug("Sound samples size: {}", soundData.size());
+
+        final LinkedList<AmplitudeData> soundAmplitudeData = new LinkedList<>();
+        for (final Sample sample : soundData) {
+            final float value = (sample.value == 0.0f) ? DataUtils.PEAK_DISTURBANCE_NOISE_FLOOR : sample.value;
+            soundAmplitudeData.add(new AmplitudeData(sample.dateTime, (double) value, sample.offsetMillis));
+        }
+
+        // adjust boundaries to do noise checking
+        int approxQuietTimeStart = DEFAULT_QUIET_START_HOUR; // check from 11pm to 7am
+        if (optionalLightsOut.isPresent()) {
+            approxQuietTimeStart = optionalLightsOut.get().getHourOfDay();
+        }
+
+        if (optionalSleepTime.isPresent()) {
+            final DateTime sleepTime = optionalSleepTime.get();
+            if (optionalLightsOut.isPresent() && optionalLightsOut.get().isBefore(sleepTime)) {
+                approxQuietTimeStart = sleepTime.getHourOfDay();
+            }
+        }
+
+        int approxQuietTimeEnds = DEFAULT_QUIET_END_HOUR;
+        if (optionalAwakeTime.isPresent()) {
+            approxQuietTimeEnds = optionalAwakeTime.get().getHourOfDay();
+        }
+
+        final int smoothingDegree = SOUND_WINDOW_SIZE_MINS; // smoothing window in minutes
+
+        // get sound events
+        final SoundEventsDetector detector = new SoundEventsDetector(approxQuietTimeStart, approxQuietTimeEnds, smoothingDegree);
+
+        final LinkedList<Segment> soundSegments = detector.process(soundAmplitudeData);
+
+        final List<Event> events = new ArrayList<>();
+        for (final Segment segment : soundSegments) {
+            final DateTime segmentDateTime = new DateTime(segment.getStartTimestamp(), DateTimeZone.UTC).plusMillis(segment.getOffsetMillis());
+            if (optionalSleepTime.isPresent() && segmentDateTime.isBefore(optionalSleepTime.get())) {
+                continue;
+            }
+
+            if (optionalAwakeTime.isPresent() && segmentDateTime.isAfter(optionalAwakeTime.get())) {
+                continue;
+            }
+
+            events.add(new NoiseEvent(segment.getStartTimestamp(), segment.getEndTimestamp(), segment.getOffsetMillis()));
+            if (events.size() >= MAX_SOUND_EVENT_SIZE) {
+                break;
+            }
+        }
+        return events;
     }
 
     public static List<Optional<Event>> getSleepEvents(final DateTime targetDateLocalUTC,

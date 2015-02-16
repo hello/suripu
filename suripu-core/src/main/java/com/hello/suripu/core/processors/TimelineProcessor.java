@@ -23,6 +23,7 @@ import com.hello.suripu.core.models.Events.PartnerMotionEvent;
 import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.models.RingTime;
+import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
@@ -297,7 +298,6 @@ public class TimelineProcessor {
 //            LOGGER.warn("No sun rise data for date {}", sunRiseQueryDateString);
 //        }
 //
-//        // TODO: add sound
 //
 //
 //        // merge similar segments (by motion & event-type), then categorize
@@ -382,7 +382,9 @@ public class TimelineProcessor {
     }
 
 
-    public List<Timeline> retrieveTimelinesFast(final Long accountId, final String date, final Integer missingDataDefaultValue, final Boolean hasAlarmInTimeline) {
+    public List<Timeline> retrieveTimelinesFast(final Long accountId, final String date, final Integer missingDataDefaultValue,
+                                                final Boolean hasAlarmInTimeline,
+                                                final Boolean hasSoundInTimeline) {
 
 
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
@@ -418,18 +420,18 @@ public class TimelineProcessor {
                     accountId, deviceId.get(), slotDurationMins, missingDataDefaultValue);
         }
 
-        // compute lights-out events
+        // compute lights-out and sound-disturbance events
         Optional<DateTime> lightOutTimeOptional = Optional.absent();
         Optional<DateTime> wakeUpWaveTimeOptional = Optional.absent();
         final List<Event> lightEvents = Lists.newArrayList();
 
         if (!allSensorSampleList.isEmpty()) {
-            lightEvents.addAll(TimelineUtils.getLightEvents(allSensorSampleList.get(Sensor.LIGHT)));
 
+            // Light
+            lightEvents.addAll(TimelineUtils.getLightEvents(allSensorSampleList.get(Sensor.LIGHT)));
             if (lightEvents.size() > 0) {
                 lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
             }
-
 
             // TODO: refactor
 
@@ -483,8 +485,14 @@ public class TimelineProcessor {
             }
         }
 
-        // TODO: SOUND
-
+        // SOUND
+        if (hasSoundInTimeline) {
+            final List<Event> soundEvents = getSoundEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE),
+                    lightOutTimeOptional, sleepEventsFromAlgorithm);
+            for (final Event event : soundEvents) {
+                timelineEvents.put(event.getStartTimestamp(), event);
+            }
+        }
 
         final List<Event> eventsWithSleepEvents = TimelineRefactored.mergeEvents(timelineEvents);
         final List<Event> smoothedEvents = TimelineUtils.smoothEvents(eventsWithSleepEvents);
@@ -504,7 +512,7 @@ public class TimelineProcessor {
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
 
-        Integer sleepScore = computeAndMaybeSaveScore(trackerMotions.get(0).offsetMillis, targetDate, accountId, sleepStats);
+            Integer sleepScore = computeAndMaybeSaveScore(trackerMotions.get(0).offsetMillis, targetDate, accountId, sleepStats);
 
         if(sleepStats.sleepDurationInMinutes < MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES) {
             LOGGER.warn("Score for account id {} was set to zero because sleep duration is too short ({} min)", accountId, sleepStats.sleepDurationInMinutes);
@@ -552,6 +560,42 @@ public class TimelineProcessor {
         return Collections.EMPTY_LIST;
     }
 
+    private List<Event> getSoundEvents(final List<Sample> soundSamples, final Optional<DateTime> lightOutTimeOptional,
+                                       final List<Optional<Event>> sleepEventsFromAlgorithm) {
+        if (soundSamples.isEmpty()) {
+            return Collections.EMPTY_LIST;
+        }
+
+        // TODO: refactor - ¡don't doubt it!
+        Optional<DateTime> optionalSleepTime = Optional.absent();
+        Optional<DateTime> optionalAwakeTime = Optional.absent();
+
+        if (sleepEventsFromAlgorithm.get(1).isPresent()) {
+            // sleep time
+            final Event event = sleepEventsFromAlgorithm.get(1).get();
+            optionalSleepTime = Optional.of(new DateTime(event.getStartTimestamp(),
+                    DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
+        } else if (sleepEventsFromAlgorithm.get(0).isPresent()) {
+            // in-bed time
+            final Event event = sleepEventsFromAlgorithm.get(0).get();
+            optionalSleepTime = Optional.of(new DateTime(event.getStartTimestamp(),
+                    DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
+        }
+
+        if (sleepEventsFromAlgorithm.get(2).isPresent()) {
+            // awake time
+            final Event event = sleepEventsFromAlgorithm.get(2).get();
+            optionalAwakeTime = Optional.of(new DateTime(event.getStartTimestamp(),
+                    DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
+        } else if (sleepEventsFromAlgorithm.get(3).isPresent()) {
+            // out-of-bed time
+            final Event event = sleepEventsFromAlgorithm.get(2).get();
+            optionalAwakeTime = Optional.of(new DateTime(event.getStartTimestamp(),
+                    DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
+        }
+
+        return TimelineUtils.getSoundEvents(soundSamples, lightOutTimeOptional, optionalSleepTime, optionalAwakeTime);
+    }
 
     /**
      * Pang magic
