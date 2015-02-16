@@ -3,9 +3,11 @@ package com.hello.suripu.core.db;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.binders.BindTrackerMotion;
+import com.hello.suripu.core.db.mappers.DeviceStatusMapper;
 import com.hello.suripu.core.db.mappers.GroupedTrackerMotionMapper;
 import com.hello.suripu.core.db.mappers.TrackerMotionMapper;
 import com.hello.suripu.core.db.mappers.TrackerMotionOffsetMillisMapper;
+import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -52,6 +54,11 @@ public abstract class TrackerMotionDAO {
     public abstract ImmutableList<TrackerMotion> getBetweenLocalUTC(@Bind("account_id") long accountId,
                                                    @Bind("start_timestamp_local_utc") final DateTime startTimestampLocalUTC,
                                                    @Bind("end_timestamp_local_utc") final DateTime endTimestampLocalUTC);
+
+    @RegisterMapper(DeviceStatusMapper.class)
+    @SingleValueResult(DeviceStatus.class)
+    @SqlQuery("SELECT id, tracker_id AS pill_id, '1' AS firmware_version, 100 AS battery_level, ts AS last_seen, 0 AS uptime from tracker_motion_master WHERE tracker_id = :pill_id ORDER BY id DESC LIMIT 1;")
+    public abstract Optional<DeviceStatus> pillStatus(@Bind("pill_id") final Long pillId);
 
     @RegisterMapper(TrackerMotionMapper.class)
     @SingleValueResult(TrackerMotion.class)
