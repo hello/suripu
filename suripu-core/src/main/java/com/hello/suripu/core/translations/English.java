@@ -14,7 +14,7 @@ public class English {
     public final static String LIGHT_MESSAGE = "Your room lit up.";
     public final static String LIGHTS_OUT_MESSAGE = "The lights went out in your room.";
     public final static String MOTION_MESSAGE = "You were moving around quite a bit.";
-    public final static String PARTNER_MOTION_MESSAGE = "Your partner was moving quite a bit.";
+    public final static String PARTNER_MOTION_MESSAGE = "You and your partner were both moving around.";
     public final static String SLEEP_MOTION_MESSAGE = "You were tossing and turning.";
     public final static String ALARM_DEFAULT_MESSAGE = "Your alarm rang.";
     public final static String ALARM_NORMAL_MESSAGE = "Your alarm rang at **%s**.";
@@ -141,7 +141,7 @@ public class English {
 
     // Recommendations
 
-    public final static String RECOMMENDATION_TEMP_TOO_HIGH = "\n\nTry lowering your thermostat setting, or opening a window.";
+    public final static String RECOMMENDATION_TEMP_TOO_HIGH = "\n\nTry lowering your thermostat setting or opening a window.";
     public final static String RECOMMENDATION_TEMP_TOO_LOW = "\n\nTry raising the thermostat setting, or closing any open windows";
 
     public final static String RECOMMENDATION_HUMIDITY_TOO_LOW = "\n\nTry using a humidifier if your bedroom continues to be dry.";

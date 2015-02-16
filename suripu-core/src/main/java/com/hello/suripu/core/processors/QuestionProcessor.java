@@ -70,12 +70,18 @@ public class QuestionProcessor {
 
             final ImmutableList<Question> allQuestions = questionResponseDAO.getAllQuestions();
             for (final Question question : allQuestions) {
+                if (question.dependency != 0 || question.askTime == Question.ASK_TIME.AFTERNOON || question.askTime == Question.ASK_TIME.EVENING) {
+                    // TODO: implement dependency and asktime
+                    // don't show these questions till dependency and asktime is implemented
+                    continue;
+                }
                 this.availableQuestionIds.put(question.frequency, question.id);
                 this.questionIdMap.put(question.id, question);
                 if (question.frequency == Question.FREQUENCY.ONE_TIME) {
                     baseQuestionIds.add(question.id);
                 }
             }
+
             return this;
         }
 
@@ -461,6 +467,7 @@ public class QuestionProcessor {
      * Get ids of base questions answered, and recently answered questions (one week)
      */
     private Set<Integer> getUserAnsweredQuestionIds (final Long accountId, final DateTime today, final Boolean newbie) {
+
         final DateTime oneWeekAgo = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(7);
 
 //        final List<Integer> baseIds = this.questionResponseDAO.getBaseAndRecentAnsweredQuestionIds(accountId, Question.FREQUENCY.ONE_TIME.toSQLString(), oneWeekAgo);
@@ -481,7 +488,7 @@ public class QuestionProcessor {
             uniqueIds.add(response.questionId);
         }
 
-        LOGGER.debug("User has seen {} base questions", recentResponses.size());
+        LOGGER.debug("User {} has seen {} base questions", accountId, recentResponses.size());
         return uniqueIds;
     }
 
