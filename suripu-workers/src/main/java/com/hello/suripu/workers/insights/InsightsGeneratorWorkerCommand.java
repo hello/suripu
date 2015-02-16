@@ -89,7 +89,7 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
         final TrackerMotionDAO trackerMotionDAO = sensorDBI.onDemand(TrackerMotionDAO.class);
 
         final ManagedDataSource insightsDataSource = managedDataSourceFactory.build(configuration.getInsightsDB());
-        final DBI insightsDBI = new DBI(sensorDataSource);
+        final DBI insightsDBI = new DBI(insightsDataSource);
         insightsDBI.registerArgumentFactory(new OptionalArgumentFactory(configuration.getInsightsDB().getDriverClass()));
         insightsDBI.registerContainerFactory(new ImmutableListContainerFactory());
         insightsDBI.registerContainerFactory(new ImmutableSetContainerFactory());
