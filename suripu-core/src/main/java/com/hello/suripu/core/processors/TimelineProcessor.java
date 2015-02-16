@@ -613,6 +613,16 @@ public class TimelineProcessor {
 
         final DateTime yesterday  = targetDate.minusDays(1);
 
+        //TODO put hard-coded values somewhere else
+        //units are in hours
+        final double min_sigma_of_prediction = 0.5;
+        final double min_sigma_of_bias = 0.1;
+
+        final double prediction_sigma = 0.5;
+        final double alarm_sigma = 0.17;
+
+
+
         WakeProbabilityDistributions wake_priors = this.sleepPriorsDAO.getWakeDistributionByDay(account_id,yesterday,this.default_wake_distribution);
 
         GaussianDistributionDataModel wake_time_posterior = wake_priors.wake_time_dist;
@@ -645,8 +655,6 @@ public class TimelineProcessor {
 
                         final double alarm_time_hours = getLocalTimeInHours(alarm_time.getStartTimestamp(), alarm_time.getTimezoneOffset());
 
-                        // TODO remove magical constant here
-                        final double alarm_time_sigma = 10.0 / 60.0; //10 minutes, in hours
 
 
                         //TODO perform sanity check on likeliness of alarm given prior.
@@ -655,7 +663,7 @@ public class TimelineProcessor {
                         //perform inference on posterior
                         wake_time_posterior = new GaussianDistributionDataModel(
                                 GaussianInference.GetInferredDistribution(wake_priors.wake_time_dist.asGaussian(),
-                                        alarm_time_hours,alarm_time_sigma)
+                                        alarm_time_hours,alarm_sigma,min_sigma_of_prediction)
                         );
 
                         double prediction_bias = alarm_time_hours - wake_prediction_time_in_hours_local_time;
@@ -675,7 +683,7 @@ public class TimelineProcessor {
                         //perform inference on posterior of bias estimate
                         prediction_bias_posterior = new GaussianDistributionDataModel(
                                 GaussianInference.GetInferredDistribution(wake_priors.prediction_bias_dist.asGaussian(),
-                                        alarm_time_hours, alarm_time_sigma)
+                                        alarm_time_hours, alarm_sigma,min_sigma_of_bias)
                         );
 
                     }
@@ -690,7 +698,7 @@ public class TimelineProcessor {
                     if (isInferingWakeFromPrediction) {
                         wake_time_posterior = new GaussianDistributionDataModel(
                                 GaussianInference.GetInferredDistribution(wake_priors.wake_time_dist.asGaussian(),
-                                        wake_prediction_time_in_hours_local_time,1.0) // TODO remove magical constant here
+                                        wake_prediction_time_in_hours_local_time,prediction_sigma,min_sigma_of_prediction)
                         );
 
                     }

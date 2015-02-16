@@ -9,7 +9,7 @@ public class GaussianInference {
     static public final double k_minimum_conj_prior_variance = 1e-6;
 
     /* return posterior */
-    static public GaussianDistribution GetInferredDistribution(final GaussianDistribution prior, final double x, final double conjugate_prior_sigma) {
+    static public GaussianDistribution GetInferredDistribution(final GaussianDistribution prior, final double x, final double conjugate_prior_sigma, final double sigma_floor) {
         GaussianDistribution posterior = prior;
 
         switch (prior.model_type) {
@@ -35,7 +35,13 @@ public class GaussianInference {
                 final double new_mean  = w1 * x + w2 * prior.mean;
                 final double new_variance = 1.0 / (conj_prior_information + prior_information);
 
-                posterior = new GaussianDistribution(new_mean,Math.sqrt(new_variance),prior.alpha,prior.beta,prior.model_type);
+                double new_sigma = Math.sqrt(new_variance);
+
+                if (new_sigma < sigma_floor) {
+                    new_sigma = sigma_floor;
+                }
+
+                posterior = new GaussianDistribution(new_mean,new_sigma,prior.alpha,prior.beta,prior.model_type);
 
                 break;
             case RANDOM_VARIANCE:
