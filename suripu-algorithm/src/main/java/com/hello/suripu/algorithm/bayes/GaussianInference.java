@@ -9,7 +9,7 @@ public class GaussianInference {
     static public final double k_minimum_conj_prior_variance = 1e-6;
 
     /* return posterior */
-    static public GaussianDistribution InferRandomMean(final GaussianDistribution prior, final double x, final double conjugate_prior_sigma) {
+    static public GaussianDistribution GetInferredDistribution(final GaussianDistribution prior, final double x, final double conjugate_prior_sigma) {
         GaussianDistribution posterior = prior;
 
         switch (prior.model_type) {

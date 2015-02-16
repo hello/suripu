@@ -3,6 +3,8 @@ package com.hello.suripu.core.processors;
 import com.amazonaws.services.s3.AmazonS3;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.hello.suripu.algorithm.bayes.GaussianDistribution;
+import com.hello.suripu.algorithm.bayes.GaussianInference;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.db.AccountDAO;
@@ -17,6 +19,8 @@ import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.DataScience.GaussianDistributionDataModel;
+import com.hello.suripu.core.models.DataScience.WakeProbabilityDistributions;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.MotionEvent;
@@ -66,6 +70,7 @@ public class TimelineProcessor {
     private final String bucketName;
     private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
     private final Histogram motionEventDistribution;
+    private final WakeProbabilityDistributions default_wake_distribution;
 
     public TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
                             final AccountDAO accountDAO,
@@ -96,6 +101,26 @@ public class TimelineProcessor {
         this.bucketName = bucketName;
         this.motionEventDistribution = Metrics.defaultRegistry().newHistogram(TimelineProcessor.class, "motion_event_distribution");
         this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
+
+
+        //magical hard-coded constants
+        //wake times are in local time, in hours from midnight
+       //so -1.0 = 23:00
+       //and 23.0 == 23:00
+        //we will restrict times between 0 and 24, and just wrap after addition/subtraction
+
+        //8am, with a lot of uncertainty
+        final GaussianDistributionDataModel wake = new GaussianDistributionDataModel(
+                new GaussianDistribution(8.0,2.0,0.0,0.0, GaussianDistribution.DistributionModel.RANDOM_MEAN));
+
+        //this is a relative time, so 0 mean means no bias
+        final GaussianDistributionDataModel wake_prediction_bias = new GaussianDistributionDataModel(
+                new GaussianDistribution(0.0,0.5,0.0,0.0, GaussianDistribution.DistributionModel.RANDOM_MEAN));
+
+        this.default_wake_distribution =  new WakeProbabilityDistributions(wake_prediction_bias,wake);
+
+
+
     }
 
     public boolean shouldProcessTimelineByWorker(final long accountId,
@@ -462,8 +487,23 @@ public class TimelineProcessor {
             timelineEvents.put(event.getStartTimestamp(), event);
         }
 
+        // ALARM
+        Optional<List<Event>> alarmEventsOptional = Optional.absent();
+
+        if(hasAlarmInTimeline) {
+            alarmEventsOptional = Optional.of(getAlarmEvents(accountId, targetDate, endDate, trackerMotions.get(0).offsetMillis));
+
+            //if we are here, there are events and the get is not null
+            for(final Event event : alarmEventsOptional.get()) {
+                timelineEvents.put(event.getStartTimestamp(), event);
+            }
+        }
 
         final List<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate, trackerMotions, lightOutTimeOptional, wakeUpWaveTimeOptional);
+        Optional<DateTime> feedbackWakeTime = Optional.absent();
+
+        //BEJ - post-process sleep predictions using priors from previous day, if available
+        BayesUpdate(accountId,targetDate,sleepEventsFromAlgorithm,alarmEventsOptional,feedbackWakeTime);
 
         // WAKE UP , etc.
         for(final Optional<Event> sleepEventOptional: sleepEventsFromAlgorithm){
@@ -479,13 +519,8 @@ public class TimelineProcessor {
             timelineEvents.put(partnerMotionEvent.getStartTimestamp(), partnerMotionEvent);
         }
 
-        // ALARM
-        if(hasAlarmInTimeline) {
-            final List<Event> alarmEvents = getAlarmEvents(accountId, targetDate, endDate, trackerMotions.get(0).offsetMillis);
-            for(final Event event : alarmEvents) {
-                timelineEvents.put(event.getStartTimestamp(), event);
-            }
-        }
+
+
 
         // TODO: SOUND
 
@@ -557,6 +592,125 @@ public class TimelineProcessor {
     }
 
 
+
+    static private double getLocalTimeInHours(long timestamp, int offset) {
+        long local_timestamp = timestamp + offset; //local time
+        local_timestamp /= 1000; //remove millis
+        local_timestamp %= 86400; //when in the day?
+        double time_in_hours_local_time = local_timestamp / 3600.0; //which hour, floating point.
+
+        return time_in_hours_local_time;
+    }
+    /*
+     * Bayes' magic
+     * @param targetDate
+     * @param predictions sleep predictions, list of optional events
+     * @param alarmTime optional list of events (confusing!)
+     * @param wakeFeedbackTime time user said they woke up
+     * @return
+     */
+    private void BayesUpdate(final Long account_id,final DateTime targetDate,final List<Optional<Event>> predictions, final Optional<List<Event>> alarmTime, final Optional<DateTime> wakeFeedbackTime ) {
+
+        final DateTime yesterday  = targetDate.minusDays(1);
+
+        WakeProbabilityDistributions wake_priors = this.sleepPriorsDAO.getWakeDistributionByDay(account_id,yesterday,this.default_wake_distribution);
+
+        GaussianDistributionDataModel wake_time_posterior = wake_priors.wake_time_dist;
+        GaussianDistributionDataModel prediction_bias_posterior = wake_priors.prediction_bias_dist;
+
+        Optional<WakeProbabilityDistributions> optional_posterior = Optional.absent();
+
+        //iterate through all predictions, looking for wake
+
+        for (Optional<Event> item : predictions) {
+            if (item.isPresent()) {
+                if (item.get().getType() == Event.Type.WAKE_UP) {
+                    Event wake = item.get();
+                    boolean isInferingWakeFromPrediction = true;
+
+                    final double wake_prediction_time_in_hours_local_time = getLocalTimeInHours(wake.getStartTimestamp(),wake.getTimezoneOffset());
+
+                    //infer wake up from prediction if no alarm of feedback is present
+
+                    //if wake is present with feedback, or alarm, then we will try and estimate the prediction bias
+                    if (alarmTime.isPresent() && alarmTime.get().size() > 0) {
+                        isInferingWakeFromPrediction = false;
+
+                        //FIND ALARM THAT HAS OCCURRED -- so it must be in the past.  Assume this is already taken care of.
+                        //MULTIPLE ALARMS?  Agh.  Just pick the latest one.
+                        //ASSUME last one was the latest.  Is this true?
+                        List<Event> alarm_times_list  = alarmTime.get();
+
+                        final Event alarm_time = alarm_times_list.get(alarm_times_list.size()-1);
+
+                        final double alarm_time_hours = getLocalTimeInHours(alarm_time.getStartTimestamp(), alarm_time.getTimezoneOffset());
+
+                        // TODO remove magical constant here
+                        final double alarm_time_sigma = 10.0 / 60.0; //10 minutes, in hours
+
+
+                        //TODO perform sanity check on likeliness of alarm given prior.
+                        //if disagreement, then do what?  It's something uncharacteristic of the user.
+
+                        //perform inference on posterior
+                        wake_time_posterior = new GaussianDistributionDataModel(
+                                GaussianInference.GetInferredDistribution(wake_priors.wake_time_dist.asGaussian(),
+                                        alarm_time_hours,alarm_time_sigma)
+                        );
+
+                        double prediction_bias = alarm_time_hours - wake_prediction_time_in_hours_local_time;
+
+                        //check for wrapping
+                        if (prediction_bias > 12.0) {
+                            prediction_bias -= 24.0;
+                        }
+
+                        if (prediction_bias < -12.0) {
+                            prediction_bias += 24.0;
+                        }
+
+                        //TODO perform sanity check on likeliness of prediction bias given prior.
+                        //if disagreement, then do what? reject measurement.
+
+                        //perform inference on posterior of bias estimate
+                        prediction_bias_posterior = new GaussianDistributionDataModel(
+                                GaussianInference.GetInferredDistribution(wake_priors.prediction_bias_dist.asGaussian(),
+                                        alarm_time_hours, alarm_time_sigma)
+                        );
+
+                    }
+
+
+                    // TODO implement wake-time feedback
+                    if (wakeFeedbackTime.isPresent()) {
+                        isInferingWakeFromPrediction = false;
+                    }
+
+                    //infer on wake prediction, because an alarm did not sound
+                    if (isInferingWakeFromPrediction) {
+                        wake_time_posterior = new GaussianDistributionDataModel(
+                                GaussianInference.GetInferredDistribution(wake_priors.wake_time_dist.asGaussian(),
+                                        wake_prediction_time_in_hours_local_time,1.0) // TODO remove magical constant here
+                        );
+
+                    }
+
+
+
+                    //copy over posteriors
+                    optional_posterior = Optional.of(new WakeProbabilityDistributions(prediction_bias_posterior,wake_time_posterior));
+
+
+                }
+            }
+        }
+
+
+        if (optional_posterior.isPresent()) {
+            this.sleepPriorsDAO.updateWakeProbabilityDistributions(account_id,targetDate,optional_posterior.get());
+        }
+    }
+
     /**
      * Pang magic
      * @param targetDate
@@ -609,6 +763,9 @@ public class TimelineProcessor {
         }catch (Exception ex){ //TODO : catch a more specific exception
             LOGGER.error("Generate sleep period from Awake Detection Algorithm failed: {}", ex.getMessage());
         }
+
+
+
 
         return  sleepEventsFromAlgorithm;
     }

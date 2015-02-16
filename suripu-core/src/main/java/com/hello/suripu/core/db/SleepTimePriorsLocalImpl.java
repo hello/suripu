@@ -13,6 +13,10 @@ import java.util.HashMap;
 public class SleepTimePriorsLocalImpl implements SleepTimePriorsDAO {
     HashMap<String,WakeProbabilityDistributions> _mymap;
 
+    public SleepTimePriorsLocalImpl() {
+        _mymap = new HashMap<String,WakeProbabilityDistributions>();
+    }
+
     private static String getKey(Long account_id, DateTime day) {
         DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd");
         return String.format("%d::%s",account_id,fmt.print(day));

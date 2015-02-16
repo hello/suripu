@@ -4,10 +4,33 @@ package com.hello.suripu.algorithm.bayes;
  * Created by benjo on 2/14/15.
  */
 public class GaussianDistribution {
-    enum DistributionModel {
-        RANDOM_MEAN,
-        RANDOM_VARIANCE,
-        RANDOM_MEAN_AND_VARIANCE
+    public enum DistributionModel {
+        RANDOM_MEAN (0),
+        RANDOM_VARIANCE (1),
+        RANDOM_MEAN_AND_VARIANCE (2);
+
+        DistributionModel(int value) {
+            this.value = value;
+        }
+
+        public final int value;
+
+        public static DistributionModel from_value(int value) {
+            switch (value) {
+                case 0:
+                   return RANDOM_MEAN;
+
+                case 1:
+                    return RANDOM_VARIANCE;
+
+                case 2:
+                    return RANDOM_MEAN_AND_VARIANCE;
+
+                default:
+                    return RANDOM_MEAN;
+            }
+        }
+
     }
 
     public GaussianDistribution(final double mean, final double sigma, final double alpha, final double beta,final DistributionModel model_type) {
