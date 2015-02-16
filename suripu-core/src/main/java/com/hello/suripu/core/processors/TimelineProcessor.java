@@ -486,8 +486,8 @@ public class TimelineProcessor {
         }
 
         // SOUND
-        if (hasSoundInTimeline) {
-            final List<Event> soundEvents = getNoiseEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE),
+        if (true) { // hasSoundInTimeline) {
+            final List<Event> soundEvents = getSoundEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE),
                     lightOutTimeOptional, sleepEventsFromAlgorithm);
             for (final Event event : soundEvents) {
                 timelineEvents.put(event.getStartTimestamp(), event);
@@ -560,12 +560,13 @@ public class TimelineProcessor {
         return Collections.EMPTY_LIST;
     }
 
-    private List<Event> getNoiseEvents(final List<Sample> soundSamples, final Optional<DateTime> lightOutTimeOptional,
-                                            final List<Optional<Event>> sleepEventsFromAlgorithm) {
+    private List<Event> getSoundEvents(final List<Sample> soundSamples, final Optional<DateTime> lightOutTimeOptional,
+                                       final List<Optional<Event>> sleepEventsFromAlgorithm) {
         if (soundSamples.isEmpty()) {
             return Collections.EMPTY_LIST;
         }
 
+        // TODO: refactor - ¡don't doubt it!
         Optional<DateTime> optionalSleepTime = Optional.absent();
         Optional<DateTime> optionalAwakeTime = Optional.absent();
 
