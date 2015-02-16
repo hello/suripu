@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -488,7 +489,7 @@ public class TimelineProcessor {
         // SOUND
         if (hasSoundInTimeline) {
             final List<Event> soundEvents = getSoundEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE),
-                    lightOutTimeOptional, sleepEventsFromAlgorithm);
+                    motionEvents, lightOutTimeOptional, sleepEventsFromAlgorithm);
             for (final Event event : soundEvents) {
                 timelineEvents.put(event.getStartTimestamp(), event);
             }
@@ -560,7 +561,9 @@ public class TimelineProcessor {
         return Collections.EMPTY_LIST;
     }
 
-    private List<Event> getSoundEvents(final List<Sample> soundSamples, final Optional<DateTime> lightOutTimeOptional,
+    private List<Event> getSoundEvents(final List<Sample> soundSamples,
+                                       final List<MotionEvent> motionEvents,
+                                       final Optional<DateTime> lightOutTimeOptional,
                                        final List<Optional<Event>> sleepEventsFromAlgorithm) {
         if (soundSamples.isEmpty()) {
             return Collections.EMPTY_LIST;
@@ -594,7 +597,14 @@ public class TimelineProcessor {
                     DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
         }
 
-        return TimelineUtils.getSoundEvents(soundSamples, lightOutTimeOptional, optionalSleepTime, optionalAwakeTime);
+        final Map<Long, Integer> sleepDepths = new HashMap<>();
+        for (final MotionEvent event : motionEvents) {
+            if (event.getSleepDepth() > 0) {
+                sleepDepths.put(event.getStartTimestamp(), event.getSleepDepth());
+            }
+        }
+
+        return TimelineUtils.getSoundEvents(soundSamples, sleepDepths, lightOutTimeOptional, optionalSleepTime, optionalAwakeTime);
     }
 
     /**

@@ -907,6 +907,7 @@ public class TimelineUtils {
      * @return
      */
     public static List<Event> getSoundEvents(final List<Sample> soundData,
+                                             final Map<Long, Integer> sleepDepths,
                                              final Optional<DateTime> optionalLightsOut,
                                              final Optional<DateTime> optionalSleepTime,
                                              final Optional<DateTime> optionalAwakeTime) {
@@ -958,7 +959,11 @@ public class TimelineUtils {
                 continue;
             }
 
-            events.add(new NoiseEvent(segment.getStartTimestamp(), segment.getEndTimestamp(), segment.getOffsetMillis()));
+            final long timestamp = segment.getStartTimestamp();
+            final int sleepDepth = (sleepDepths.containsKey(timestamp)) ? sleepDepths.get(timestamp) : 0;
+
+            events.add(new NoiseEvent(timestamp, segment.getEndTimestamp(), segment.getOffsetMillis(), sleepDepth));
+
             if (events.size() >= MAX_SOUND_EVENT_SIZE) {
                 break;
             }
