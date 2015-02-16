@@ -655,19 +655,67 @@ public class TimelineUtils {
      * @param sleepStats
      * @return
      */
-    public static String generateMessage(final SleepStats sleepStats, final Boolean reportSleepDuration) {
+    public static String generateMessage(final SleepStats sleepStats, final int numPartnerMotion, final int numSoundEvents, final Boolean reportSleepDuration) {
+
         final Integer percentageOfSoundSleep = Math.round(new Float(sleepStats.soundSleepDurationInMinutes) /sleepStats.sleepDurationInMinutes * 100);
         final double sleepDurationInHours = sleepStats.sleepDurationInMinutes / (double)DateTimeConstants.MINUTES_PER_HOUR;
         final double soundDurationInHours = sleepStats.soundSleepDurationInMinutes / (double)DateTimeConstants.MINUTES_PER_HOUR;
 
+        // report in-bed time
+        String message = String.format("You were in bed for **%.1f hours**", sleepDurationInHours);
+
         if (reportSleepDuration) {
             // report sleep duration
-            return String.format("You were asleep for **%.1f hours**, and sleeping soundly for %.1f hours.",
+            message = String.format("You were asleep for **%.1f hours**, and sleeping soundly for %.1f hours",
                     sleepDurationInHours, soundDurationInHours);
         }
 
-        // report in-bed time
-        return String.format("You were in bed for **%.1f hours**", sleepDurationInHours);
+        // Count toss & turns
+        if (sleepStats.numberOfMotionEvents > 2) {
+            message += String.format(", and moved %d times", sleepStats.numberOfMotionEvents);
+        }
+        message += ".";
+
+
+        String partnerMessage = "";
+        if (numPartnerMotion > 0) {
+            if (numPartnerMotion == 1) {
+                partnerMessage = "was a single partner disturbance";
+            } else {
+                partnerMessage = String.format("were %d partner disturbances", numPartnerMotion);
+            }
+        }
+
+        String soundMessage = "";
+        if (numSoundEvents > 0) {
+            if (numSoundEvents == 1) {
+                soundMessage = "a single noise disturbance.";
+            } else {
+                soundMessage = String.format("%d noise disturbances", numSoundEvents);
+            }
+        }
+
+        if (!partnerMessage.isEmpty()) {
+            if (soundMessage.isEmpty()) {
+                message += " There " + partnerMessage + ".";
+            } else {
+                message += " There " + partnerMessage;
+            }
+        }
+
+        if (!soundMessage.isEmpty()) {
+            if (!partnerMessage.isEmpty()) {
+            message += ", and " + soundMessage + ".";
+            } else {
+                if (numSoundEvents == 1) {
+                    message += " There was " + soundMessage + ".";
+                } else {
+                    message += " There were " + soundMessage + ".";
+                }
+            }
+        }
+
+        return message;
 
     }
 
