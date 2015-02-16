@@ -3,6 +3,7 @@ package com.hello.suripu.core.processors;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Insights.InsightCard;
+import com.hello.suripu.core.models.Insights.Message.LightMsgEN;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
 import org.joda.time.DateTime;
@@ -38,7 +39,7 @@ public class LightInsightsTest {
 
         final Optional<InsightCard> insightCardOptional = Lights.processLightData(accountId, data, new LightData());
         if (insightCardOptional.isPresent()) {
-            final String expectedTitle = "Hello, Dark Room";
+            final String expectedTitle = LightMsgEN.getLightDark(0,0).title;
             assertThat(insightCardOptional.get().title, is(expectedTitle));
         }
     }
@@ -59,9 +60,10 @@ public class LightInsightsTest {
         data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light, 0, 0, timestamp.withMinuteOfHour(45), offsetMillis, 1, 1, 1, 0, 0, 0));
         data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, zeroLight, 0, 0, timestamp.withHourOfDay(21), offsetMillis, 1, 1, 1, 0, 0, 0));
 
+
         final Optional<InsightCard> insightCardOptional = Lights.processLightData(accountId, data, new LightData());
         if (insightCardOptional.isPresent()) {
-            final String expectedTitle = "Time to Dim It Down";
+            final String expectedTitle = LightMsgEN.getLightTooBright(0,0).title;
             assertThat(insightCardOptional.get().title, is(expectedTitle));
         }
     }

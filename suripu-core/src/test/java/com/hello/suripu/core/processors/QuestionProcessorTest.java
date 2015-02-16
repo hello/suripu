@@ -193,7 +193,7 @@ public class QuestionProcessorTest {
                 "Did you workout today?", "EN",
                 Question.Type.CHOICE,
                 Question.FREQUENCY.DAILY,
-                Question.ASK_TIME.EVENING,
+                Question.ASK_TIME.ANYTIME,
                 5, parentId, now, choices7, AccountInfo.Type.NONE));
 
         List<Choice> choices8 = new ArrayList<>();
@@ -205,7 +205,7 @@ public class QuestionProcessorTest {
                 "How are you feeling?", "EN",
                 Question.Type.CHOICE,
                 Question.FREQUENCY.OCCASIONALLY,
-                Question.ASK_TIME.AFTERNOON,
+                Question.ASK_TIME.ANYTIME,
                 dependency, parentId, now, choices8, AccountInfo.Type.NONE));
 
         return questions;
