@@ -486,7 +486,7 @@ public class TimelineProcessor {
         }
 
         // SOUND
-        if (true) { // hasSoundInTimeline) {
+        if (hasSoundInTimeline) {
             final List<Event> soundEvents = getSoundEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE),
                     lightOutTimeOptional, sleepEventsFromAlgorithm);
             for (final Event event : soundEvents) {
