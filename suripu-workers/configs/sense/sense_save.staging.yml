@@ -11,8 +11,8 @@ graphite:
 
 common_db:
   driverClass: org.postgresql.Driver
-  user: common
-  password: hello-common
+  user: ingress_user
+  password: hello ingress user
   url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
