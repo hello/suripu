@@ -57,7 +57,7 @@ public final class PillWorkerCommand extends ConfiguredCommand<PillWorkerConfigu
 
 
 
-        final ManagedDataSource commonDataSource = managedDataSourceFactory.build(configuration.getSensorDB());
+        final ManagedDataSource commonDataSource = managedDataSourceFactory.build(configuration.getCommonDB());
 
         final DBI jdbiCommon = new DBI(commonDataSource);
         jdbiCommon.registerArgumentFactory(new OptionalArgumentFactory(configuration.getCommonDB().getDriverClass()));
