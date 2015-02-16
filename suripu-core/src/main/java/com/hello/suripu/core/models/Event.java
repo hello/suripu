@@ -142,7 +142,7 @@ public abstract class Event {
             case ALARM:
                 return new AlarmEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
             case NOISE:
-                return new NoiseEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+                return new NoiseEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
             default:
                 return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
 
@@ -180,7 +180,7 @@ public abstract class Event {
             case SLEEPING:
                 return new SleepingEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
             case NOISE:
-                    return new NoiseEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+                    return new NoiseEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
             default:
                 return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
 
@@ -256,7 +256,7 @@ public abstract class Event {
                 }
                 return new AlarmEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
             case NOISE:
-                return new NoiseEvent(startTimestamp, endTimestamp, offsetMillis);
+                return new NoiseEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
             default:
                 if(!sleepDepth.isPresent()){
                     throw new InvalidArgumentException("sleepDepth required.");

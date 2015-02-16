@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -253,6 +254,7 @@ public class TimelineProcessor {
 
         // add partner movement data, check if there's a partner
         final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accountId);
+        int numPartnerMotion = 0;
         if (optionalPartnerAccountId.isPresent() && events.size() > 0) {
             LOGGER.debug("partner account {}", optionalPartnerAccountId.get());
             // get tracker motions for partner, query time is in UTC, not local_utc
@@ -270,6 +272,7 @@ public class TimelineProcessor {
                 for(PartnerMotionEvent partnerMotionEvent : partnerMotionEvents) {
                     timEvents.put(partnerMotionEvent.getStartTimestamp(), partnerMotionEvent);
                 }
+                numPartnerMotion = partnerMotionEvents.size();
             }
         }
 
@@ -368,7 +371,7 @@ public class TimelineProcessor {
         }
 
         final Boolean reportSleepDuration = false;
-        final String timeLineMessage = TimelineUtils.generateMessage(sleepStats, reportSleepDuration);
+        final String timeLineMessage = TimelineUtils.generateMessage(sleepStats, numPartnerMotion, 0, reportSleepDuration);
 
         LOGGER.debug("Score for account_id = {} is {}", accountId, sleepScore);
 
@@ -476,6 +479,8 @@ public class TimelineProcessor {
         for(PartnerMotionEvent partnerMotionEvent : partnerMotionEvents) {
             timelineEvents.put(partnerMotionEvent.getStartTimestamp(), partnerMotionEvent);
         }
+        final int numPartnerMotion = partnerMotionEvents.size();
+
 
         // ALARM
         if(hasAlarmInTimeline) {
@@ -486,12 +491,14 @@ public class TimelineProcessor {
         }
 
         // SOUND
+        int numSoundEvents = 0;
         if (hasSoundInTimeline) {
             final List<Event> soundEvents = getSoundEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE),
-                    lightOutTimeOptional, sleepEventsFromAlgorithm);
+                    motionEvents, lightOutTimeOptional, sleepEventsFromAlgorithm);
             for (final Event event : soundEvents) {
                 timelineEvents.put(event.getStartTimestamp(), event);
             }
+            numSoundEvents = soundEvents.size();
         }
 
         final List<Event> eventsWithSleepEvents = TimelineRefactored.mergeEvents(timelineEvents);
@@ -520,7 +527,7 @@ public class TimelineProcessor {
         }
 
         final Boolean reportSleepDuration = false;
-        final String timeLineMessage = TimelineUtils.generateMessage(sleepStats, reportSleepDuration);
+        final String timeLineMessage = TimelineUtils.generateMessage(sleepStats, numPartnerMotion, numSoundEvents, reportSleepDuration);
 
         LOGGER.debug("Score for account_id = {} is {}", accountId, sleepScore);
 
@@ -560,7 +567,9 @@ public class TimelineProcessor {
         return Collections.EMPTY_LIST;
     }
 
-    private List<Event> getSoundEvents(final List<Sample> soundSamples, final Optional<DateTime> lightOutTimeOptional,
+    private List<Event> getSoundEvents(final List<Sample> soundSamples,
+                                       final List<MotionEvent> motionEvents,
+                                       final Optional<DateTime> lightOutTimeOptional,
                                        final List<Optional<Event>> sleepEventsFromAlgorithm) {
         if (soundSamples.isEmpty()) {
             return Collections.EMPTY_LIST;
@@ -594,7 +603,14 @@ public class TimelineProcessor {
                     DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
         }
 
-        return TimelineUtils.getSoundEvents(soundSamples, lightOutTimeOptional, optionalSleepTime, optionalAwakeTime);
+        final Map<Long, Integer> sleepDepths = new HashMap<>();
+        for (final MotionEvent event : motionEvents) {
+            if (event.getSleepDepth() > 0) {
+                sleepDepths.put(event.getStartTimestamp(), event.getSleepDepth());
+            }
+        }
+
+        return TimelineUtils.getSoundEvents(soundSamples, sleepDepths, lightOutTimeOptional, optionalSleepTime, optionalAwakeTime);
     }
 
     /**

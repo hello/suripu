@@ -3,15 +3,13 @@ package com.hello.suripu.core.models.Events;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.translations.English;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormat;
 
 public class NoiseEvent extends Event {
     private String description = English.NOISE_MESSAGE;
-
-    public NoiseEvent(final long startTimestamp, final long endTimestamp, final int offsetMillis) {
+    private int sleepDepth = 0;
+    public NoiseEvent(final long startTimestamp, final long endTimestamp, final int offsetMillis, final int sleepDepth) {
         super(Type.NOISE, startTimestamp, endTimestamp, offsetMillis);
+        this.sleepDepth = sleepDepth;
     }
 
     @Override
@@ -26,6 +24,6 @@ public class NoiseEvent extends Event {
 
     @Override
     public int getSleepDepth() {
-        return 0;
+        return this.sleepDepth;
     }
 }

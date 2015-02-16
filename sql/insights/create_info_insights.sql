@@ -152,7 +152,7 @@ The increase and decrease of light cues, trigger different chemical reactions ou
 ),
 ----
 ('sleep_quality', '', 'Amount of Movement during Sleep',
-'Periodic limb movements during sleep are repetitive movements, typically in the lower extremities that occur about every 20-40 seconds. *Periodic Limb Movement Disorder* (PLMD), are movements such as brief muscle twitches, jerking movements or an upward flexing of the feet. They cluster into episodes lasting anywhere from a few minutes to several hours. PLMD are not considered medically serious but can contribute to insomnia and/or daytime fatigue because they may cause awakenings during the night. Occasionally, PLMD may be an indicator of a serious medical condition such as kidney disease, diabetes or anemia.'
+'Tossing and turning generally occurs during brief interruptions of sleep during the night. Chemical systems in your brain work to paralyze skeletal muscles during rapid eye movement (REM) sleep, keeping you still at night. But simple factors such as high temperature or light levels can lead to restless sleep. Excessive alcohol, heavy meals, and caffeine before bed can also cause tossing and turning in bed. Lastly, serious conditions such as acid reflux, periodic limb movement, and sleep apnea can contribute to high levels of movement during the night.'
 )
 ;
 
