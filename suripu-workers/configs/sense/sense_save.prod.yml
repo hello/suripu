@@ -11,9 +11,9 @@ graphite:
 
 common_db:
   driverClass: org.postgresql.Driver
-  user: ingress_user
-  password: hello ingress user
-  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
+  user: common
+  password: hello-common
+  url: jdbc:postgresql://common.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -44,9 +44,9 @@ common_db:
 
 sensors_db:
   driverClass: org.postgresql.Driver
-  user: ingress_user
-  password: hello ingress user
-  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
+  user: sensors
+  password: hello-sensors
+  url: jdbc:postgresql://sensors-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -80,7 +80,7 @@ kinesis:
   streams :
     sense_sensors_data : sense_sensors_data
 
-app_name: SenseSaveConsumer
+app_name: SenseSaveConsumerProd
 
 max_records: 100
 
@@ -99,7 +99,7 @@ logging:
 merged_info_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: alarm_info
+  table_name: prod_alarm_info
 
 features_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com

@@ -1,5 +1,5 @@
-debug: false
 metrics_enabled: false
+debug: false
 graphite:
   host: carbon.hostedgraphite.com
   api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
@@ -8,11 +8,12 @@ graphite:
     - com.yammer
     - com.hello
 
-sensors_db:
+
+common_db:
   driverClass: org.postgresql.Driver
-  user: sensors
-  password: hello-sensors
-  url: jdbc:postgresql://sensors-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors
+  user: ingress_user
+  password: hello ingress user
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -30,7 +31,7 @@ sensors_db:
   minSize: 2
 
   # the maximum number of connections to keep open
-  maxSize: 8
+  maxSize: 4
 
   # whether or not idle connections should be validated
   checkConnectionWhileIdle: false
@@ -41,11 +42,11 @@ sensors_db:
   # the maximum lifetime of an idle connection
   closeConnectionIfIdleFor: 1 minute
 
-common_db:
+sensors_db:
   driverClass: org.postgresql.Driver
-  user: common
-  password: hello-common
-  url: jdbc:postgresql://common.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
+  user: ingress_user
+  password: hello ingress user
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -63,7 +64,7 @@ common_db:
   minSize: 2
 
   # the maximum number of connections to keep open
-  maxSize: 8
+  maxSize: 4
 
   # whether or not idle connections should be validated
   checkConnectionWhileIdle: false
@@ -76,9 +77,9 @@ common_db:
 
 insights_db:
   driverClass: org.postgresql.Driver
-  user: common
-  password: hello-common
-  url: jdbc:postgresql://common.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
+  user: ingress_user
+  password: hello ingress user
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -96,7 +97,7 @@ insights_db:
   minSize: 2
 
   # the maximum number of connections to keep open
-  maxSize: 8
+  maxSize: 4
 
   # whether or not idle connections should be validated
   checkConnectionWhileIdle: false
@@ -112,9 +113,9 @@ kinesis:
   streams :
     batch_pill_data : batch_pill_data
 
-app_name: TimelineWorker
+app_name: InsightsGeneratorConsumer
 
-max_records: 20
+max_records: 100
 
 # Logging settings.
 logging:
@@ -128,48 +129,18 @@ logging:
     # Sets the level for 'com.example.app' to DEBUG.
     com.hello.suripu.workers: DEBUG
 
+insights_dynamo_db:
+    endpoint : http://dynamodb.us-east-1.amazonaws.com
+    region: us-east-1
+    table_name: insights
 
-ring_time_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: prod_ring_time
-
-timezone_history_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: prod_timezone_history
-
-alarm_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: prod_alarm
+sleep_score_db:
+    endpoint : http://dynamodb.us-east-1.amazonaws.com
+    region: us-east-1
+    table_name: sleep_score
+sleep_score_version: v_0_1
 
 features_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
     region: us-east-1
     table_name: features
-
-aggregate_window_size_min: 10
-
-user_info_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: prod_alarm_info
-
-# remember to update version when changing score methods
-# v0.1: pure movement
-sleep_score_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: prod_sleep_score
-sleep_score_version: v_0_1
-score_threshold : 15 # minutes bucket for sleep-scores
-
-timeline_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: prod_timeline
-
-max_no_motion_period_minutes: 90
-hour_of_day_trigger: 5
-end_process_time: 11

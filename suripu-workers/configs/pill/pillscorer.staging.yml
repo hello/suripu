@@ -1,17 +1,19 @@
-metrics_enabled: false
+metrics_enabled: true
 debug: false
 graphite:
   host: carbon.hostedgraphite.com
   api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
-  reporting_interval_in_seconds: 15
+  reporting_interval_in_seconds: 30
   include_metrics:
     - com.hello
 
 common_db:
   driverClass: org.postgresql.Driver
-  user: common
-  password: hello-common
-  url: jdbc:postgresql://common.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
+  user: ingress_user
+  password: hello ingress user
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
+  properties:
+    hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
   # any properties specific to your JDBC driver:
   properties:
@@ -27,7 +29,7 @@ common_db:
   minSize: 2
 
   # the maximum number of connections to keep open
-  maxSize: 2
+  maxSize: 4
 
   # whether or not idle connections should be validated
   checkConnectionWhileIdle: false
@@ -41,11 +43,18 @@ common_db:
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
-    sense_sensors_data : sense_sensors_data
+    batch_pill_data : batch_pill_data
 
-app_name: PushNotificationsConsumer
+app_name: PillScoreConsumer
 
-max_records: 100
+max_records: 1000
+
+# minutes of data to store in memory before processing
+date_minutes_bucket: 15
+
+# no. of pills/records to process before kinesis checkpoint
+# we want this number to be roughly no. of pills in the wild
+checkpoint_threshold: 200
 
 # Logging settings.
 logging:
@@ -59,30 +68,21 @@ logging:
     # Sets the level for 'com.example.app' to DEBUG.
     com.hello.suripu.workers: DEBUG
 
+pill_key_store:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: pill_key_store
+
+user_info:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: alarm_info
+
 features_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
     region: us-east-1
     table_name: features
 
-user_info_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: prod_alarm_info
-
-preferences_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: prod_preferences
-
-push_notifications:
-  arns:
-    ios: arn:aws:sns:us-east-1:053216739513:app/APNS/hello-sense-ios-dev
-    android: arn:aws:sns:us-east-1:053216739513:app/GCM/hello-sense-android-dev
-
-  table_name: prod_notifications
-
-active_hours:
-  - 18
-  - 19
-  - 20
-
+redis:
+  host: localhost # redis is running locally for now
+  port: 6379

@@ -8,10 +8,11 @@ graphite:
     - com.hello
 
 common_db:
+  # the name of your JDBC driver
   driverClass: org.postgresql.Driver
-  user: common
-  password: hello-common
-  url: jdbc:postgresql://common.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
+  user: ingress_user
+  password: hello ingress user
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
 
   # any properties specific to your JDBC driver:
   properties:
@@ -67,19 +68,19 @@ features_db:
 user_info_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
     region: us-east-1
-    table_name: prod_alarm_info
+    table_name: alarm_info
 
 preferences_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: prod_preferences
+  table_name: preferences
 
 push_notifications:
   arns:
     ios: arn:aws:sns:us-east-1:053216739513:app/APNS/hello-sense-ios-dev
     android: arn:aws:sns:us-east-1:053216739513:app/GCM/hello-sense-android-dev
 
-  table_name: prod_notifications
+  table_name: notifications
 
 active_hours:
   - 18
