@@ -1,5 +1,6 @@
 package com.hello.suripu.core.db;
 
+import com.google.common.base.Optional;
 import com.hello.suripu.core.models.DataScience.WakeProbabilityDistributions;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -23,7 +24,26 @@ public class SleepTimePriorsLocalImpl implements SleepTimePriorsDAO {
     }
 
     @Override
-    public WakeProbabilityDistributions getWakeDistributionByDay(final Long account_id, DateTime day, final WakeProbabilityDistributions default_dist) {
+    public Optional<WakeProbabilityDistributions> getWakeDistributionByDay(Long account_id, DateTime day) {
+
+        final String key = this.getKey(account_id,day);
+        Optional<WakeProbabilityDistributions> ret = Optional.absent();
+
+        WakeProbabilityDistributions value = null;
+
+        synchronized (_mymap) {
+            value = _mymap.get(key);
+        }
+
+        if (value != null) {
+            ret = Optional.of(value);
+        }
+
+        return ret;
+    }
+
+    @Override
+    public WakeProbabilityDistributions getWakeDistributionByDayEnforcingDefault(final Long account_id, DateTime day, final WakeProbabilityDistributions default_dist) {
 
         final String key = this.getKey(account_id,day);
 
