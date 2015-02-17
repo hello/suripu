@@ -16,11 +16,12 @@ public class GaussianDistributionDataModel {
         this.sigma = gaussian.sigma;
         this.alpha = gaussian.alpha;
         this.beta = gaussian.beta;
-        this.modelType = gaussian.model_type.value;
+        this.modelType = gaussian.modelType;
     }
 
     public GaussianDistribution asGaussian() {
-        return new GaussianDistribution(this.mean,this.sigma,this.alpha,this.beta,GaussianDistribution.DistributionModel.from_value(this.modelType));
+        return new GaussianDistribution(this.mean,this.sigma,this.alpha,this.beta,
+                this.modelType);
     }
 
 
@@ -37,7 +38,7 @@ public class GaussianDistributionDataModel {
     @JsonProperty("beta")
     public final double beta;
 
-    @JsonProperty("model_type")
-    public final int modelType;
+    @JsonProperty("modelType")
+    public final GaussianDistribution.DistributionModel modelType;
 
 }

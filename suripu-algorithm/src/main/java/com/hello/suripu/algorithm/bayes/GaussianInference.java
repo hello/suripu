@@ -12,7 +12,7 @@ public class GaussianInference {
     static public GaussianDistribution GetInferredDistribution(final GaussianDistribution prior, final double x, final double conjugate_prior_sigma, final double sigma_floor) {
         GaussianDistribution posterior = prior;
 
-        switch (prior.model_type) {
+        switch (prior.modelType) {
 
             case RANDOM_MEAN:
                 double variance = prior.sigma*prior.sigma;
@@ -41,7 +41,7 @@ public class GaussianInference {
                     new_sigma = sigma_floor;
                 }
 
-                posterior = new GaussianDistribution(new_mean,new_sigma,prior.alpha,prior.beta,prior.model_type);
+                posterior = new GaussianDistribution(new_mean,new_sigma,prior.alpha,prior.beta,prior.modelType);
 
                 break;
             case RANDOM_VARIANCE:
