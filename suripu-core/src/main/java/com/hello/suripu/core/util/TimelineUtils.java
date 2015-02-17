@@ -670,52 +670,58 @@ public class TimelineUtils {
                     sleepDurationInHours, soundDurationInHours);
         }
 
-        // Count toss & turns
-        if (sleepStats.numberOfMotionEvents > 2) {
-            message += String.format(", and moved %d times", sleepStats.numberOfMotionEvents);
+        if (soundDurationInHours > 0) {
+            message += String.format(", and sleeping soundly for %.1f hours", soundDurationInHours);
         }
         message += ".";
-
-
-        String partnerMessage = "";
-        if (numPartnerMotion > 0) {
-            if (numPartnerMotion == 1) {
-                partnerMessage = "was a single partner disturbance";
-            } else {
-                partnerMessage = String.format("were %d partner disturbances", numPartnerMotion);
-            }
-        }
-
-        String soundMessage = "";
-        if (numSoundEvents > 0) {
-            if (numSoundEvents == 1) {
-                soundMessage = "a single noise disturbance.";
-            } else {
-                soundMessage = String.format("%d noise disturbances", numSoundEvents);
-            }
-        }
-
-        if (!partnerMessage.isEmpty()) {
-            if (soundMessage.isEmpty()) {
-                message += " There " + partnerMessage + ".";
-            } else {
-                message += " There " + partnerMessage;
-            }
-        }
-
-        if (!soundMessage.isEmpty()) {
-            if (!partnerMessage.isEmpty()) {
-            message += ", and " + soundMessage + ".";
-            } else {
-                if (numSoundEvents == 1) {
-                    message += " There was " + soundMessage + ".";
-                } else {
-                    message += " There were " + soundMessage + ".";
-                }
-            }
-        }
-
         return message;
+
+//        // Count toss & turns
+//        if (sleepStats.numberOfMotionEvents > 2) {
+//            message += String.format(", and moved %d times", sleepStats.numberOfMotionEvents);
+//        }
+//        message += ".";
+//
+//
+//        String partnerMessage = "";
+//        if (numPartnerMotion > 0) {
+//            if (numPartnerMotion == 1) {
+//                partnerMessage = "was a single partner disturbance";
+//            } else {
+//                partnerMessage = String.format("were %d partner disturbances", numPartnerMotion);
+//            }
+//        }
+//
+//        String soundMessage = "";
+//        if (numSoundEvents > 0) {
+//            if (numSoundEvents == 1) {
+//                soundMessage = "a single noise disturbance.";
+//            } else {
+//                soundMessage = String.format("%d noise disturbances", numSoundEvents);
+//            }
+//        }
+//
+//        if (!partnerMessage.isEmpty()) {
+//            if (soundMessage.isEmpty()) {
+//                message += " There " + partnerMessage + ".";
+//            } else {
+//                message += " There " + partnerMessage;
+//            }
+//        }
+//
+//        if (!soundMessage.isEmpty()) {
+//            if (!partnerMessage.isEmpty()) {
+//            message += ", and " + soundMessage + ".";
+//            } else {
+//                if (numSoundEvents == 1) {
+//                    message += " There was " + soundMessage + ".";
+//                } else {
+//                    message += " There were " + soundMessage + ".";
+//                }
+//            }
+//        }
+//
+//        return message;
 
     }
 
