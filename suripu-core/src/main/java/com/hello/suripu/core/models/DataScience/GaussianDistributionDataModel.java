@@ -20,8 +20,7 @@ public class GaussianDistributionDataModel {
     }
 
     public GaussianDistribution asGaussian() {
-        GaussianDistribution gaussian = new GaussianDistribution(this.mean,this.sigma,this.alpha,this.beta,GaussianDistribution.DistributionModel.from_value(this.modelType));
-        return gaussian;
+        return new GaussianDistribution(this.mean,this.sigma,this.alpha,this.beta,GaussianDistribution.DistributionModel.from_value(this.modelType));
     }
 
 
