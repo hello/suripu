@@ -108,6 +108,7 @@ public class SleepEventSafeGuard {
                 if(durationMillis >= quietPeriodThresholdMillis){
                     quietPeriods.add(new Segment(periodBounds.get(0).timestamp, periodBounds.get(1).timestamp, periodBounds.get(0).offsetMillis));
                 }
+                periodBounds.clear();
             }
         }
 
