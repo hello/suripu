@@ -75,6 +75,7 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
 
         final AccountDAO accountDAO = jdbi.onDemand(AccountDAOImpl.class);
         final SleepScoreDAO scoreDAO = jdbi.onDemand(SleepScoreDAO.class);
+        final DeviceDAO deviceDAO = jdbi.onDemand(DeviceDAO.class);
 
         final ManagedDataSource sensorDataSource = managedDataSourceFactory.build(configuration.getSensorsDB());
         final DBI sensorDBI = new DBI(sensorDataSource);
@@ -84,7 +85,7 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
         sensorDBI.registerContainerFactory(new OptionalContainerFactory());
         sensorDBI.registerArgumentFactory(new JodaArgumentFactory());
 
-        final DeviceDAO deviceDAO = sensorDBI.onDemand(DeviceDAO.class);
+
         final DeviceDataDAO deviceDataDAO = sensorDBI.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorDBI.onDemand(TrackerMotionDAO.class);
 
