@@ -117,7 +117,7 @@ public class TimelineProcessor {
         final GaussianDistributionDataModel wake_prediction_bias = new GaussianDistributionDataModel(
                 new GaussianDistribution(0.0,0.5,0.0,0.0, GaussianDistribution.DistributionModel.RANDOM_MEAN));
 
-        this.default_wake_distribution =  new WakeProbabilityDistributions(wake_prediction_bias,wake);
+        this.default_wake_distribution =  new WakeProbabilityDistributions(wake_prediction_bias,wake,wake_prediction_bias,wake);
 
 
 
@@ -623,12 +623,12 @@ public class TimelineProcessor {
 
 
 
-        WakeProbabilityDistributions wake_priors = this.sleepPriorsDAO.getWakeDistributionByDay(account_id,yesterday,this.default_wake_distribution);
+        WakeProbabilityDistributions yesterdays_wake_distribution = this.sleepPriorsDAO.getWakeDistributionByDay(account_id,yesterday,this.default_wake_distribution);
 
-        GaussianDistributionDataModel wake_time_posterior = wake_priors.wake_time_dist;
-        GaussianDistributionDataModel prediction_bias_posterior = wake_priors.prediction_bias_dist;
+        GaussianDistributionDataModel wake_time_posterior = yesterdays_wake_distribution.wake_time_posterior;
+        GaussianDistributionDataModel prediction_bias_posterior = yesterdays_wake_distribution.prediction_bias_posterior;
 
-        Optional<WakeProbabilityDistributions> optional_posterior = Optional.absent();
+        WakeProbabilityDistributions todays_distributions = yesterdays_wake_distribution;
 
         //iterate through all predictions, looking for wake
 
@@ -662,8 +662,8 @@ public class TimelineProcessor {
 
                         //perform inference on posterior
                         wake_time_posterior = new GaussianDistributionDataModel(
-                                GaussianInference.GetInferredDistribution(wake_priors.wake_time_dist.asGaussian(),
-                                        alarm_time_hours,alarm_sigma,min_sigma_of_prediction)
+                                GaussianInference.GetInferredDistribution(yesterdays_wake_distribution.wake_time_posterior.asGaussian(),
+                                        alarm_time_hours, alarm_sigma, min_sigma_of_prediction)
                         );
 
                         double prediction_bias = alarm_time_hours - wake_prediction_time_in_hours_local_time;
@@ -682,7 +682,7 @@ public class TimelineProcessor {
 
                         //perform inference on posterior of bias estimate
                         prediction_bias_posterior = new GaussianDistributionDataModel(
-                                GaussianInference.GetInferredDistribution(wake_priors.prediction_bias_dist.asGaussian(),
+                                GaussianInference.GetInferredDistribution(yesterdays_wake_distribution.prediction_bias_posterior.asGaussian(),
                                         alarm_time_hours, alarm_sigma,min_sigma_of_bias)
                         );
 
@@ -697,16 +697,24 @@ public class TimelineProcessor {
                     //infer on wake prediction, because an alarm did not sound
                     if (isInferingWakeFromPrediction) {
                         wake_time_posterior = new GaussianDistributionDataModel(
-                                GaussianInference.GetInferredDistribution(wake_priors.wake_time_dist.asGaussian(),
-                                        wake_prediction_time_in_hours_local_time,prediction_sigma,min_sigma_of_prediction)
+                                GaussianInference.GetInferredDistribution(yesterdays_wake_distribution.wake_time_posterior.asGaussian(),
+                                        wake_prediction_time_in_hours_local_time, prediction_sigma, min_sigma_of_prediction)
                         );
 
                     }
 
 
 
-                    //copy over posteriors
-                    optional_posterior = Optional.of(new WakeProbabilityDistributions(prediction_bias_posterior,wake_time_posterior));
+                    //copy over posteriors and priors
+                    todays_distributions = new WakeProbabilityDistributions(
+                                                        yesterdays_wake_distribution.prediction_bias_posterior,
+                                                        yesterdays_wake_distribution.wake_time_posterior,
+                                                        prediction_bias_posterior,
+                                                        wake_time_posterior);
+
+                    LOGGER.info(String.format("new posterior wake time %f %f    %f, %f",
+                            yesterdays_wake_distribution.wake_time_posterior.mean,yesterdays_wake_distribution.wake_time_posterior.sigma,
+                            wake_time_posterior.mean,wake_time_posterior.sigma));
 
 
                 }
@@ -714,9 +722,9 @@ public class TimelineProcessor {
         }
 
 
-        if (optional_posterior.isPresent()) {
-            this.sleepPriorsDAO.updateWakeProbabilityDistributions(account_id,targetDate,optional_posterior.get());
-        }
+
+        this.sleepPriorsDAO.updateWakeProbabilityDistributions(account_id,targetDate,todays_distributions);
+
     }
 
     /**

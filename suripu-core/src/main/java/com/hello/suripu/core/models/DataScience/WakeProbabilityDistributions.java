@@ -6,18 +6,39 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class WakeProbabilityDistributions {
 
-    public WakeProbabilityDistributions(final GaussianDistributionDataModel prediction_bias_dist,
-                                        final GaussianDistributionDataModel wake_time_dist) {
-        this.prediction_bias_dist = prediction_bias_dist;
-        this.wake_time_dist = wake_time_dist;
+    public WakeProbabilityDistributions(final GaussianDistributionDataModel prediction_bias_prior,
+                                        final GaussianDistributionDataModel wake_time_prior,
+                                        final GaussianDistributionDataModel prediction_bias_posterior,
+                                        final GaussianDistributionDataModel wake_time_posterior) {
+
+        this.prediction_bias_prior = prediction_bias_prior;
+        this.wake_time_prior = wake_time_prior;
+        this.prediction_bias_posterior = prediction_bias_posterior;
+        this.wake_time_posterior = wake_time_posterior;
     }
 
-    @JsonProperty("prediction_bias_dist")
-    public final GaussianDistributionDataModel prediction_bias_dist;
+    public WakeProbabilityDistributions(final GaussianDistributionDataModel prediction_bias_prior,
+                                        final GaussianDistributionDataModel wake_time_prior) {
 
-    @JsonProperty("wake_time_dist")
-    public final GaussianDistributionDataModel wake_time_dist;
 
+        this.prediction_bias_prior = prediction_bias_prior;
+        this.wake_time_prior = wake_time_prior;
+        this.prediction_bias_posterior = prediction_bias_prior;
+        this.wake_time_posterior = wake_time_prior;
+    }
+
+
+    @JsonProperty("prediction_bias_prior")
+    public final GaussianDistributionDataModel prediction_bias_prior;
+
+    @JsonProperty("wake_time_prior")
+    public final GaussianDistributionDataModel wake_time_prior;
+
+    @JsonProperty("prediction_bias_posterior")
+    public final GaussianDistributionDataModel prediction_bias_posterior;
+
+    @JsonProperty("wake_time_posterior")
+    public final GaussianDistributionDataModel wake_time_posterior;
 
 
 }
