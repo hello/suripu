@@ -41,6 +41,7 @@ import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Histogram;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -593,11 +594,16 @@ public class TimelineProcessor {
 
 
 
-    static private double getLocalTimeInHours(long timestamp, int offset) {
-        long local_timestamp = timestamp + offset; //local time
-        local_timestamp /= 1000; //remove millis
-        local_timestamp %= 86400; //when in the day?
-        double time_in_hours_local_time = local_timestamp / 3600.0; //which hour, floating point.
+    static private double getLocalTimeInFloatingPointHoursFromEvent(final Event event) {
+        final DateTime dateTime  = new DateTime(event.getStartTimestamp());
+        final DateTimeZone zone = DateTimeZone.forOffsetMillis(event.getTimezoneOffset());
+        final DateTime withZone = dateTime.withZone(zone);
+        final LocalDateTime local = withZone.toLocalDateTime();
+
+
+        final double time_in_hours_local_time =
+                ((double)local.getHourOfDay()) +
+                ((double)local.getMinuteOfHour()) / 60.0; //which hour, floating point.
 
         return time_in_hours_local_time;
     }
@@ -647,7 +653,7 @@ public class TimelineProcessor {
                     Event wake = item.get();
                     boolean isInferingWakeFromPrediction = true;
 
-                    final double wakePredictionTimeInHoursLocalTime = getLocalTimeInHours(wake.getStartTimestamp(),wake.getTimezoneOffset());
+                    final double wakePredictionTimeInHoursLocalTime = getLocalTimeInFloatingPointHoursFromEvent(wake);
 
                     //infer wake up from prediction if no alarm of feedback is present
 
@@ -662,7 +668,7 @@ public class TimelineProcessor {
 
                         final Event alarm_time = alarmTimesList.get(alarmTimesList.size()-1);
 
-                        final double alarmTimeHours = getLocalTimeInHours(alarm_time.getStartTimestamp(), alarm_time.getTimezoneOffset());
+                        final double alarmTimeHours = getLocalTimeInFloatingPointHoursFromEvent(alarm_time);
 
 
 
