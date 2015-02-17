@@ -138,6 +138,7 @@ public class TimelineProcessor {
         return false;
     }
 
+
     private List<Event> getAlarmEvents(final Long accountId, final DateTime evening, final DateTime morning, final Integer offsetMillis) {
 
         final List<DeviceAccountPair> pairs = deviceDAO.getSensesForAccountId(accountId);
@@ -607,6 +608,23 @@ public class TimelineProcessor {
 
         return time_in_hours_local_time;
     }
+
+
+    static private double addHours(final double h1, final double h2) {
+
+        //check for wrapping
+        double h3 = h1 + h2;
+        if (h3 > 12.0) {
+            h3 -= 24.0;
+        }
+
+        if (h3 < -12.0) {
+            h3 += 24.0;
+        }
+
+        return h3;
+    }
+
     /*
      * Bayes' magic
      * @param targetDate
@@ -681,16 +699,8 @@ public class TimelineProcessor {
                                         alarmTimeHours, alarmSigma, minSigmaOfPrediction)
                         );
 
-                        double predictionBias = alarmTimeHours - wakePredictionTimeInHoursLocalTime;
+                        final double predictionBias = addHours(alarmTimeHours,-wakePredictionTimeInHoursLocalTime);
 
-                        //check for wrapping
-                        if (predictionBias > 12.0) {
-                            predictionBias -= 24.0;
-                        }
-
-                        if (predictionBias < -12.0) {
-                            predictionBias += 24.0;
-                        }
 
                         //TODO perform sanity check on likeliness of prediction bias given prior.
                         //if disagreement, then do what? reject measurement.
@@ -711,8 +721,20 @@ public class TimelineProcessor {
 
                     //infer on wake prediction, because an alarm did not sound
                     if (isInferingWakeFromPrediction) {
+
+                        //add predicted bias compensation to prior
+                        final GaussianDistribution priorWithoutBiasCompensation = latestDayDist.wakeTimePosterior.asGaussian();
+
+                        final double unBiasedMean = addHours(latestDayDist.predictionBiasPosterior.mean,priorWithoutBiasCompensation.mean);
+
+
+                        GaussianDistribution priorWithBiasCompensation = new GaussianDistribution(unBiasedMean,
+                                                                            priorWithoutBiasCompensation.sigma,priorWithoutBiasCompensation.alpha,priorWithoutBiasCompensation.beta,
+                                                                               priorWithoutBiasCompensation.modelType);
+
+                        //inference
                         wakeTimePosterior = new GaussianDistributionDataModel(
-                                GaussianInference.GetInferredDistribution(latestDayDist.wakeTimePosterior.asGaussian(),
+                                GaussianInference.GetInferredDistribution(priorWithBiasCompensation,
                                         wakePredictionTimeInHoursLocalTime, predictionSigma, minSigmaOfPrediction)
                         );
 
