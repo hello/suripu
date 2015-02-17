@@ -24,9 +24,9 @@ public class SleepTimePriorsLocalImpl implements SleepTimePriorsDAO {
     }
 
     @Override
-    public Optional<WakeProbabilityDistributions> getWakeDistributionByDay(Long account_id, DateTime day) {
+    public Optional<WakeProbabilityDistributions> getWakeDistributionByDay(Long accountId, DateTime day) {
 
-        final String key = this.getKey(account_id,day);
+        final String key = this.getKey(accountId,day);
         Optional<WakeProbabilityDistributions> ret = Optional.absent();
 
         WakeProbabilityDistributions value = null;
@@ -43,9 +43,9 @@ public class SleepTimePriorsLocalImpl implements SleepTimePriorsDAO {
     }
 
     @Override
-    public WakeProbabilityDistributions getWakeDistributionByDayEnforcingDefault(final Long account_id, DateTime day, final WakeProbabilityDistributions default_dist) {
+    public WakeProbabilityDistributions getWakeDistributionByDayEnforcingDefault(final Long accountId, DateTime day, final WakeProbabilityDistributions default_dist) {
 
-        final String key = this.getKey(account_id,day);
+        final String key = this.getKey(accountId,day);
 
         WakeProbabilityDistributions value = null;
 
@@ -63,11 +63,11 @@ public class SleepTimePriorsLocalImpl implements SleepTimePriorsDAO {
     }
 
     @Override
-    public void updateWakeProbabilityDistributions( final Long account_id,final DateTime day,final WakeProbabilityDistributions new_dist) {
-        final String key = this.getKey(account_id,day);
+    public void updateWakeProbabilityDistributions( final Long accountId,final DateTime day,final WakeProbabilityDistributions newDist) {
+        final String key = this.getKey(accountId,day);
 
         synchronized (_mymap) {
-            _mymap.put(key,new_dist);
+            _mymap.put(key, newDist);
         }
     }
 

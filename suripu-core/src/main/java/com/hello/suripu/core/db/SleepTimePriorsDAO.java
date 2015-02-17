@@ -9,9 +9,9 @@ import org.joda.time.DateTime;
  */
 public interface SleepTimePriorsDAO {
 
-    public Optional<WakeProbabilityDistributions> getWakeDistributionByDay(final Long account_id, final DateTime day);
+    public Optional<WakeProbabilityDistributions> getWakeDistributionByDay(final Long accountId, final DateTime day);
 
-    public WakeProbabilityDistributions getWakeDistributionByDayEnforcingDefault(final Long account_id, final DateTime day, final WakeProbabilityDistributions default_dist);
+    public WakeProbabilityDistributions getWakeDistributionByDayEnforcingDefault(final Long accountId, final DateTime day, final WakeProbabilityDistributions default_dist);
 
-    public void updateWakeProbabilityDistributions( final Long account_id,final DateTime day,final WakeProbabilityDistributions new_dist);
+    public void updateWakeProbabilityDistributions( final Long accountId,final DateTime day,final WakeProbabilityDistributions newDist);
 }

@@ -70,7 +70,7 @@ public class TimelineProcessor {
     private final String bucketName;
     private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
     private final Histogram motionEventDistribution;
-    private final WakeProbabilityDistributions default_wake_distribution;
+    private final WakeProbabilityDistributions defaultWakeDistribution;
 
     public TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
                             final AccountDAO accountDAO,
@@ -117,7 +117,7 @@ public class TimelineProcessor {
         final GaussianDistributionDataModel wake_prediction_bias = new GaussianDistributionDataModel(
                 new GaussianDistribution(0.0,0.5,0.0,0.0, GaussianDistribution.DistributionModel.RANDOM_MEAN));
 
-        this.default_wake_distribution =  new WakeProbabilityDistributions(wake_prediction_bias,wake,wake_prediction_bias,wake);
+        this.defaultWakeDistribution =  new WakeProbabilityDistributions(wake_prediction_bias,wake,wake_prediction_bias,wake);
 
 
 
@@ -609,35 +609,35 @@ public class TimelineProcessor {
      * @param wakeFeedbackTime time user said they woke up
      * @return
      */
-    private void BayesUpdate(final Long account_id,final DateTime targetDate,final List<Optional<Event>> predictions, final Optional<List<Event>> alarmTime, final Optional<DateTime> wakeFeedbackTime ) {
+    private void BayesUpdate(final Long accountId,final DateTime targetDate,final List<Optional<Event>> predictions, final Optional<List<Event>> alarmTime, final Optional<DateTime> wakeFeedbackTime ) {
 
 
         //TODO put hard-coded values somewhere else
         //units are in hours
-        final double min_sigma_of_prediction = 0.5;
-        final double min_sigma_of_bias = 0.1;
+        final double minSigmaOfPrediction = 0.5;
+        final double minSigmaOfBias = 0.1;
 
-        final double prediction_sigma = 0.5;
-        final double alarm_sigma = 0.17;
+        final double predictionSigma = 0.5;
+        final double alarmSigma = 0.17;
 
 
-        WakeProbabilityDistributions latest_day_dist = this.default_wake_distribution;
+        WakeProbabilityDistributions latestDayDist = this.defaultWakeDistribution;
 
         //go back a week, stop if you find a day that had something
         for (int i = 1; i < 7; i++) {
-            Optional<WakeProbabilityDistributions> prev_dist = this.sleepPriorsDAO.getWakeDistributionByDay(account_id,targetDate.minusDays(i));
+            Optional<WakeProbabilityDistributions> prevDist = this.sleepPriorsDAO.getWakeDistributionByDay(accountId,targetDate.minusDays(i));
 
-            if (prev_dist.isPresent()) {
-                latest_day_dist = prev_dist.get();
+            if (prevDist.isPresent()) {
+                latestDayDist = prevDist.get();
                 break;
             }
 
         }
 
-        GaussianDistributionDataModel wake_time_posterior = latest_day_dist.wake_time_posterior;
-        GaussianDistributionDataModel prediction_bias_posterior = latest_day_dist.prediction_bias_posterior;
+        GaussianDistributionDataModel wakeTimePosterior = latestDayDist.wakeTimePosterior;
+        GaussianDistributionDataModel predictionBiasPosterior = latestDayDist.predictionBiasPosterior;
 
-        WakeProbabilityDistributions todays_distributions = latest_day_dist;
+        WakeProbabilityDistributions todaysDistributions = latestDayDist;
 
         //iterate through all predictions, looking for wake
 
@@ -647,7 +647,7 @@ public class TimelineProcessor {
                     Event wake = item.get();
                     boolean isInferingWakeFromPrediction = true;
 
-                    final double wake_prediction_time_in_hours_local_time = getLocalTimeInHours(wake.getStartTimestamp(),wake.getTimezoneOffset());
+                    final double wakePredictionTimeInHoursLocalTime = getLocalTimeInHours(wake.getStartTimestamp(),wake.getTimezoneOffset());
 
                     //infer wake up from prediction if no alarm of feedback is present
 
@@ -658,11 +658,11 @@ public class TimelineProcessor {
                         //FIND ALARM THAT HAS OCCURRED -- so it must be in the past.  Assume this is already taken care of.
                         //MULTIPLE ALARMS?  Agh.  Just pick the latest one.
                         //ASSUME last one was the latest.  Is this true?
-                        List<Event> alarm_times_list  = alarmTime.get();
+                        List<Event> alarmTimesList  = alarmTime.get();
 
-                        final Event alarm_time = alarm_times_list.get(alarm_times_list.size()-1);
+                        final Event alarm_time = alarmTimesList.get(alarmTimesList.size()-1);
 
-                        final double alarm_time_hours = getLocalTimeInHours(alarm_time.getStartTimestamp(), alarm_time.getTimezoneOffset());
+                        final double alarmTimeHours = getLocalTimeInHours(alarm_time.getStartTimestamp(), alarm_time.getTimezoneOffset());
 
 
 
@@ -670,29 +670,29 @@ public class TimelineProcessor {
                         //if disagreement, then do what?  It's something uncharacteristic of the user.
 
                         //perform inference on posterior
-                        wake_time_posterior = new GaussianDistributionDataModel(
-                                GaussianInference.GetInferredDistribution(latest_day_dist.wake_time_posterior.asGaussian(),
-                                        alarm_time_hours, alarm_sigma, min_sigma_of_prediction)
+                        wakeTimePosterior = new GaussianDistributionDataModel(
+                                GaussianInference.GetInferredDistribution(latestDayDist.wakeTimePosterior.asGaussian(),
+                                        alarmTimeHours, alarmSigma, minSigmaOfPrediction)
                         );
 
-                        double prediction_bias = alarm_time_hours - wake_prediction_time_in_hours_local_time;
+                        double predictionBias = alarmTimeHours - wakePredictionTimeInHoursLocalTime;
 
                         //check for wrapping
-                        if (prediction_bias > 12.0) {
-                            prediction_bias -= 24.0;
+                        if (predictionBias > 12.0) {
+                            predictionBias -= 24.0;
                         }
 
-                        if (prediction_bias < -12.0) {
-                            prediction_bias += 24.0;
+                        if (predictionBias < -12.0) {
+                            predictionBias += 24.0;
                         }
 
                         //TODO perform sanity check on likeliness of prediction bias given prior.
                         //if disagreement, then do what? reject measurement.
 
                         //perform inference on posterior of bias estimate
-                        prediction_bias_posterior = new GaussianDistributionDataModel(
-                                GaussianInference.GetInferredDistribution(latest_day_dist.prediction_bias_posterior.asGaussian(),
-                                        alarm_time_hours, alarm_sigma,min_sigma_of_bias)
+                        predictionBiasPosterior = new GaussianDistributionDataModel(
+                                GaussianInference.GetInferredDistribution(latestDayDist.predictionBiasPosterior.asGaussian(),
+                                        alarmTimeHours, alarmSigma, minSigmaOfBias)
                         );
 
                     }
@@ -705,9 +705,9 @@ public class TimelineProcessor {
 
                     //infer on wake prediction, because an alarm did not sound
                     if (isInferingWakeFromPrediction) {
-                        wake_time_posterior = new GaussianDistributionDataModel(
-                                GaussianInference.GetInferredDistribution(latest_day_dist.wake_time_posterior.asGaussian(),
-                                        wake_prediction_time_in_hours_local_time, prediction_sigma, min_sigma_of_prediction)
+                        wakeTimePosterior = new GaussianDistributionDataModel(
+                                GaussianInference.GetInferredDistribution(latestDayDist.wakeTimePosterior.asGaussian(),
+                                        wakePredictionTimeInHoursLocalTime, predictionSigma, minSigmaOfPrediction)
                         );
 
                     }
@@ -715,15 +715,15 @@ public class TimelineProcessor {
 
 
                     //copy over posteriors and priors
-                    todays_distributions = new WakeProbabilityDistributions(
-                                                        latest_day_dist.prediction_bias_posterior,
-                                                        latest_day_dist.wake_time_posterior,
-                                                        prediction_bias_posterior,
-                                                        wake_time_posterior);
+                    todaysDistributions = new WakeProbabilityDistributions(
+                                                        latestDayDist.predictionBiasPosterior,
+                                                        latestDayDist.wakeTimePosterior,
+                                                        predictionBiasPosterior,
+                                                        wakeTimePosterior);
 
                     LOGGER.debug(String.format("new posterior wake time %f %f    %f, %f",
-                            latest_day_dist.wake_time_posterior.mean, latest_day_dist.wake_time_posterior.sigma,
-                            wake_time_posterior.mean, wake_time_posterior.sigma));
+                            latestDayDist.wakeTimePosterior.mean, latestDayDist.wakeTimePosterior.sigma,
+                            wakeTimePosterior.mean, wakeTimePosterior.sigma));
 
 
                 }
@@ -732,7 +732,7 @@ public class TimelineProcessor {
 
 
 
-        this.sleepPriorsDAO.updateWakeProbabilityDistributions(account_id,targetDate,todays_distributions);
+        this.sleepPriorsDAO.updateWakeProbabilityDistributions(accountId,targetDate,todaysDistributions);
 
     }
 
