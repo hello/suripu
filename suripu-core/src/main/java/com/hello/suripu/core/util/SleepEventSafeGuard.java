@@ -68,13 +68,18 @@ public class SleepEventSafeGuard {
         final List<Segment> quietPeriods = getQuietPeriods(hourlyMotionCounts, 90 * DateTimeConstants.MILLIS_PER_MINUTE);
         if(quietPeriods.size() > 0 && hourlyMotionCounts.size() >= 2){
             final long nearestQuietPeriodStartTimeMillis = quietPeriods.get(0).getStartTimestamp();
-            if(nearestQuietPeriodStartTimeMillis < getMiddleOfMotionPeriodTimestamp(hourlyMotionCounts)){
+            final long middleOfNightTimestamp = getMiddleOfMotionPeriodTimestamp(hourlyMotionCounts);
+            final int offsetMillis = quietPeriods.get(0).getOffsetMillis();
+
+            if(nearestQuietPeriodStartTimeMillis < middleOfNightTimestamp && inBedOrFallAsleepTimeMillis < nearestQuietPeriodStartTimeMillis){
 
                 // The long quite period starts before middle of the night
                 // the user is likely left the bed
-                LOGGER.warn("User left bed at {}, for {} millis.",
-                        new DateTime(nearestQuietPeriodStartTimeMillis, DateTimeZone.forOffsetMillis(quietPeriods.get(0).getOffsetMillis())),
-                        quietPeriods.get(0).getDuration());
+                LOGGER.warn("User in bed/sleep at {}, left bed at {}, for {} millis, middle of night {}.",
+                        new DateTime(inBedOrFallAsleepTimeMillis, DateTimeZone.forOffsetMillis(offsetMillis)),
+                        new DateTime(nearestQuietPeriodStartTimeMillis, DateTimeZone.forOffsetMillis(offsetMillis)),
+                        quietPeriods.get(0).getDuration(),
+                        new DateTime(middleOfNightTimestamp, DateTimeZone.forOffsetMillis(offsetMillis)));
                 return true;
             }
         }
