@@ -24,6 +24,7 @@ import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
+import com.hello.suripu.core.filters.CacheFilterFactory;
 import com.hello.suripu.core.firmware.FirmwareUpdateDAO;
 import com.hello.suripu.core.firmware.FirmwareUpdateStore;
 import com.hello.suripu.core.flipper.GroupFlipper;
@@ -94,6 +95,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
     @Override
     public void run(SuripuConfiguration configuration, Environment environment) throws Exception {
         environment.addProvider(new JacksonProtobufProvider());
+        environment.getJerseyResourceConfig()
+                .getResourceFilterFactories().add(CacheFilterFactory.class);
 
         final DBIFactory factory = new DBIFactory();
         final DBI commonDB = factory.build(environment, configuration.getCommonDB(), "postgresql");

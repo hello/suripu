@@ -67,6 +67,7 @@ import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
+import com.hello.suripu.core.filters.CacheFilterFactory;
 import com.hello.suripu.core.firmware.FirmwareUpdateDAO;
 import com.hello.suripu.core.firmware.FirmwareUpdateStore;
 import com.hello.suripu.core.logging.DataLogger;
@@ -271,6 +272,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addProvider(new CustomJSONExceptionMapper(configuration.getDebug()));
 
         environment.addProvider(new OAuthProvider(new OAuthAuthenticator(accessTokenStore), "protected-resources", activityLogger));
+
+        environment.getJerseyResourceConfig()
+                .getResourceFilterFactories().add(CacheFilterFactory.class);
 
         final String namespace = (configuration.getDebug()) ? "dev" : "prod";
         final AmazonDynamoDB featuresDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
