@@ -25,6 +25,7 @@ import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.PartnerMotionEvent;
+import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.models.RingTime;
@@ -40,6 +41,7 @@ import com.hello.suripu.core.util.TimelineUtils;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Histogram;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -505,10 +507,10 @@ public class TimelineProcessor {
         Optional<DateTime> feedbackWakeTime = Optional.absent();
 
         //BEJ - post-process sleep predictions using priors from previous day, if available
-        BayesUpdate(accountId,targetDate,sleepEventsFromAlgorithm,alarmEventsOptional,feedbackWakeTime);
+        final List<Optional<Event>> updatedSleepEvents  = BayesUpdate(accountId,targetDate,sleepEventsFromAlgorithm,alarmEventsOptional,feedbackWakeTime);
 
         // WAKE UP , etc.
-        for(final Optional<Event> sleepEventOptional: sleepEventsFromAlgorithm){
+        for(final Optional<Event> sleepEventOptional: updatedSleepEvents){
             if(sleepEventOptional.isPresent()){
                 timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
             }
@@ -516,7 +518,7 @@ public class TimelineProcessor {
 
 
         // PARTNER MOTION
-        final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.get(1), sleepEventsFromAlgorithm.get(2), motionEvents, accountId);
+        final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(updatedSleepEvents.get(1), updatedSleepEvents.get(2), motionEvents, accountId);
         for(PartnerMotionEvent partnerMotionEvent : partnerMotionEvents) {
             timelineEvents.put(partnerMotionEvent.getStartTimestamp(), partnerMotionEvent);
         }
@@ -531,12 +533,12 @@ public class TimelineProcessor {
         final List<Event> smoothedEvents = TimelineUtils.smoothEvents(eventsWithSleepEvents);
 
         final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents,
-                sleepEventsFromAlgorithm.get(0),
-                sleepEventsFromAlgorithm.get(3));
+                updatedSleepEvents.get(0),
+                updatedSleepEvents.get(3));
 
         final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
-                sleepEventsFromAlgorithm.get(0),
-                sleepEventsFromAlgorithm.get(3));
+                updatedSleepEvents.get(0),
+                updatedSleepEvents.get(3));
 
         final List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(greyEvents);
 
@@ -633,16 +635,20 @@ public class TimelineProcessor {
      * @param wakeFeedbackTime time user said they woke up
      * @return
      */
-    private void BayesUpdate(final Long accountId,final DateTime targetDate,final List<Optional<Event>> predictions, final Optional<List<Event>> alarmTime, final Optional<DateTime> wakeFeedbackTime ) {
+    private final List<Optional<Event>>  BayesUpdate(final Long accountId,final DateTime targetDate,final List<Optional<Event>> predictions, final Optional<List<Event>> alarmTime, final Optional<DateTime> wakeFeedbackTime ) {
 
 
         //TODO put hard-coded values somewhere else
         //units are in hours
-        final double minSigmaOfPrediction = 0.5;
-        final double minSigmaOfBias = 0.1;
+        final double K_MIN_SIGMA_OF_PREDICTION = 0.5;
+        final double K_MIN_SIGMA_OF_BIAS = 0.1;
 
-        final double predictionSigma = 0.5;
-        final double alarmSigma = 0.17;
+        final double K_PREDICTION_SIGMA = 0.5;
+        final double K_ALARM_SIGMA = 0.17;
+
+        ArrayList<Optional<Event>> updatedSleepEvents = new ArrayList<Optional<Event>>();
+
+        Optional<Event> newWakeEvent = Optional.absent();
 
 
         WakeProbabilityDistributions latestDayDist = this.defaultWakeDistribution;
@@ -665,10 +671,10 @@ public class TimelineProcessor {
 
         //iterate through all predictions, looking for wake
 
-        for (Optional<Event> item : predictions) {
-            if (item.isPresent()) {
-                if (item.get().getType() == Event.Type.WAKE_UP) {
-                    Event wake = item.get();
+        for (Optional<Event> ev : predictions) {
+            if (ev.isPresent()) {
+                if (ev.get().getType() == Event.Type.WAKE_UP) {
+                    Event wake = ev.get();
                     boolean isInferingWakeFromPrediction = true;
 
                     final double wakePredictionTimeInHoursLocalTime = getLocalTimeInFloatingPointHoursFromEvent(wake);
@@ -696,7 +702,7 @@ public class TimelineProcessor {
                         //perform inference on posterior
                         wakeTimePosterior = new GaussianDistributionDataModel(
                                 GaussianInference.GetInferredDistribution(latestDayDist.wakeTimePosterior.asGaussian(),
-                                        alarmTimeHours, alarmSigma, minSigmaOfPrediction)
+                                        alarmTimeHours, K_ALARM_SIGMA, K_MIN_SIGMA_OF_PREDICTION)
                         );
 
                         final double predictionBias = addHours(alarmTimeHours,-wakePredictionTimeInHoursLocalTime);
@@ -708,7 +714,7 @@ public class TimelineProcessor {
                         //perform inference on posterior of bias estimate
                         predictionBiasPosterior = new GaussianDistributionDataModel(
                                 GaussianInference.GetInferredDistribution(latestDayDist.predictionBiasPosterior.asGaussian(),
-                                        alarmTimeHours, alarmSigma, minSigmaOfBias)
+                                        alarmTimeHours, K_ALARM_SIGMA, K_MIN_SIGMA_OF_BIAS)
                         );
 
                     }
@@ -716,7 +722,7 @@ public class TimelineProcessor {
 
                     // TODO implement wake-time feedback
                     if (wakeFeedbackTime.isPresent()) {
-                        isInferingWakeFromPrediction = false;
+                      //  isInferingWakeFromPrediction = false;
                     }
 
                     //infer on wake prediction, because an alarm did not sound
@@ -735,11 +741,20 @@ public class TimelineProcessor {
                         //inference
                         wakeTimePosterior = new GaussianDistributionDataModel(
                                 GaussianInference.GetInferredDistribution(priorWithBiasCompensation,
-                                        wakePredictionTimeInHoursLocalTime, predictionSigma, minSigmaOfPrediction)
+                                        wakePredictionTimeInHoursLocalTime, K_PREDICTION_SIGMA, K_MIN_SIGMA_OF_PREDICTION)
                         );
 
                     }
 
+
+                    //compute new wake time in absolute terms
+                    //B - A = C ---> A + C = B
+                    final double timeDeltaFromPredictionToPosteriorInHours = addHours(-getLocalTimeInFloatingPointHoursFromEvent(wake),wakeTimePosterior.mean);
+                    final long timeDeltaInMillis = (long)(timeDeltaFromPredictionToPosteriorInHours * 3600 * 1000);
+                    final long newStartTimestamp = wake.getStartTimestamp() + timeDeltaInMillis;
+                    final long newEndTimestamp = newStartTimestamp + 1 * DateTimeConstants.MILLIS_PER_MINUTE;
+
+                    newWakeEvent = Optional.of((Event)new WakeupEvent(newStartTimestamp,newEndTimestamp,wake.getTimezoneOffset()));
 
 
                     //copy over posteriors and priors
@@ -754,6 +769,7 @@ public class TimelineProcessor {
                             wakeTimePosterior.mean, wakeTimePosterior.sigma));
 
 
+
                 }
             }
         }
@@ -762,6 +778,17 @@ public class TimelineProcessor {
 
         this.sleepPriorsDAO.updateWakeProbabilityDistributions(accountId,targetDate,todaysDistributions);
 
+        //repopulate, substituting the new wake event
+        for (Optional<Event> ev : predictions) {
+            if (ev.isPresent() && ev.get().getType() == Event.Type.WAKE_UP && newWakeEvent.isPresent()) {
+                updatedSleepEvents.add(newWakeEvent);
+            }
+            else {
+                updatedSleepEvents.add(ev);
+            }
+        }
+
+        return updatedSleepEvents;
     }
 
     /**
