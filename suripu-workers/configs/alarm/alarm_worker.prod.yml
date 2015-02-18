@@ -8,11 +8,11 @@ graphite:
     - com.yammer
     - com.hello
 
-common_db:
+sensors_db:
   driverClass: org.postgresql.Driver
-  user: common
-  password: hello-common
-  url: jdbc:postgresql://common.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
+  user: sensors
+  password: hello-sensors
+  url: jdbc:postgresql://sensors-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors1
 
   # any properties specific to your JDBC driver:
   properties:

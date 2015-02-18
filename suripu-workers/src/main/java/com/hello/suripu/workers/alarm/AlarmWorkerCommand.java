@@ -11,7 +11,6 @@ import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.QueueName;
-import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
@@ -49,21 +48,19 @@ public class AlarmWorkerCommand extends ConfiguredCommand<AlarmWorkerConfigurati
 
 
         final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
-        final ManagedDataSource dataSource = managedDataSourceFactory.build(configuration.getCommonDB());
+        final ManagedDataSource dataSource = managedDataSourceFactory.build(configuration.getSensorsDB());
 
-        final DBI jdbi = new DBI(dataSource);
-        jdbi.registerArgumentFactory(new OptionalArgumentFactory(configuration.getCommonDB().getDriverClass()));
-        jdbi.registerContainerFactory(new ImmutableListContainerFactory());
-        jdbi.registerContainerFactory(new ImmutableSetContainerFactory());
-        jdbi.registerContainerFactory(new OptionalContainerFactory());
-        jdbi.registerArgumentFactory(new JodaArgumentFactory());
+        final DBI sensorsDBI = new DBI(dataSource);
+        sensorsDBI.registerArgumentFactory(new OptionalArgumentFactory(configuration.getSensorsDB().getDriverClass()));
+        sensorsDBI.registerContainerFactory(new ImmutableListContainerFactory());
+        sensorsDBI.registerContainerFactory(new ImmutableSetContainerFactory());
+        sensorsDBI.registerContainerFactory(new OptionalContainerFactory());
+        sensorsDBI.registerArgumentFactory(new JodaArgumentFactory());
 
-        final TrackerMotionDAO trackerMotionDAO = jdbi.onDemand(TrackerMotionDAO.class);
-        final DeviceDAO deviceDAO = jdbi.onDemand(DeviceDAO.class);
+        final TrackerMotionDAO trackerMotionDAO = sensorsDBI.onDemand(TrackerMotionDAO.class);
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
 
         final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
-
 
         final AmazonDynamoDB mergedUserInfoDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getAlarmDBConfiguration().getEndpoint());
         final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(mergedUserInfoDynamoDBClient,
