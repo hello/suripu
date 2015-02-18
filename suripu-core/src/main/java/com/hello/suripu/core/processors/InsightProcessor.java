@@ -17,6 +17,8 @@ import com.hello.suripu.core.processors.insights.Lights;
 import com.hello.suripu.core.processors.insights.SleepMotion;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
 import com.hello.suripu.core.util.DateTimeUtil;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -27,6 +29,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Created by kingshy on 10/24/14.
@@ -47,16 +51,16 @@ public class InsightProcessor {
     private final LightData lightData;
     private final AccountInfoProcessor accountInfoProcessor;
 
-    public InsightProcessor(final DeviceDataDAO deviceDataDAO,
-                            final DeviceDAO deviceDAO,
-                            final TrendsInsightsDAO trendsInsightsDAO,
-                            final TrackerMotionDAO trackerMotionDAO,
-                            final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
-                            final InsightsDAODynamoDB insightsDAODynamoDB,
-                            final SleepScoreDAO scoreDAO,
-                            final AccountPreferencesDAO preferencesDAO,
-                            final AccountInfoProcessor accountInfoProcessor,
-                            final LightData lightData
+    public InsightProcessor(@NotNull final DeviceDataDAO deviceDataDAO,
+                            @NotNull final DeviceDAO deviceDAO,
+                            @NotNull final TrendsInsightsDAO trendsInsightsDAO,
+                            @NotNull final TrackerMotionDAO trackerMotionDAO,
+                            @NotNull final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
+                            @NotNull final InsightsDAODynamoDB insightsDAODynamoDB,
+                            @NotNull final SleepScoreDAO scoreDAO,
+                            @NotNull final AccountPreferencesDAO preferencesDAO,
+                            @NotNull final AccountInfoProcessor accountInfoProcessor,
+                            @NotNull final LightData lightData
                             ) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
@@ -205,16 +209,16 @@ public class InsightProcessor {
      * Builder class, too many variables to initialize in the constructor
      */
     public static class Builder {
-        private DeviceDataDAO deviceDataDAO;
-        private DeviceDAO deviceDAO;
-        private TrendsInsightsDAO trendsInsightsDAO;
-        private TrackerMotionDAO trackerMotionDAO;
-        private AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
-        private InsightsDAODynamoDB insightsDAODynamoDB;
-        private SleepScoreDAO scoreDAO;
-        private AccountPreferencesDAO preferencesDAO;
-        private LightData lightData;
-        private AccountInfoProcessor accountInfoProcessor;
+        private @Nullable DeviceDataDAO deviceDataDAO;
+        private @Nullable DeviceDAO deviceDAO;
+        private @Nullable TrendsInsightsDAO trendsInsightsDAO;
+        private @Nullable TrackerMotionDAO trackerMotionDAO;
+        private @Nullable AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
+        private @Nullable InsightsDAODynamoDB insightsDAODynamoDB;
+        private @Nullable SleepScoreDAO scoreDAO;
+        private @Nullable AccountPreferencesDAO preferencesDAO;
+        private @Nullable LightData lightData;
+        private @Nullable AccountInfoProcessor accountInfoProcessor;
 
         public Builder withSenseDAOs(final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO) {
             this.deviceDAO = deviceDAO;
@@ -247,6 +251,7 @@ public class InsightProcessor {
             this.preferencesDAO = preferencesDAO;
             return this;
         }
+
         public Builder withAccountInfoProcessor(final AccountInfoProcessor processor) {
             this.accountInfoProcessor = processor;
             return this;
@@ -258,6 +263,17 @@ public class InsightProcessor {
         }
 
         public InsightProcessor build() {
+            checkNotNull(deviceDataDAO, "deviceDataDAO can not be null");
+            checkNotNull(deviceDAO, "deviceDAO can not be null");
+            checkNotNull(trendsInsightsDAO, "trendsInsightsDAO can not be null");
+            checkNotNull(trackerMotionDAO, "trackerMotionDAO can not be null");
+            checkNotNull(scoreDAODynamoDB, "scoreDAODynamoDB can not be null");
+            checkNotNull(insightsDAODynamoDB, "insightsDAODynamoDB can not be null");
+            checkNotNull(scoreDAO, "scoreDAO can not be null");
+            checkNotNull(preferencesDAO, "preferencesDAO can not be null");
+            checkNotNull(accountInfoProcessor, "accountInfoProcessor can not be null");
+            checkNotNull(lightData, "lightData can not be null");
+
             return new InsightProcessor(deviceDataDAO, deviceDAO,
                     trendsInsightsDAO,
                     trackerMotionDAO,

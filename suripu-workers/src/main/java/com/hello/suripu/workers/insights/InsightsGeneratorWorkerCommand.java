@@ -26,6 +26,8 @@ import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
+import com.hello.suripu.core.preferences.AccountPreferencesDAO;
+import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
@@ -149,6 +151,9 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
         final AmazonDynamoDB insightsDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(configuration.getInsightsDynamoDB().getEndpoint());
         final InsightsDAODynamoDB insightsDAODynamoDB = new InsightsDAODynamoDB(insightsDynamoDB, configuration.getInsightsDynamoDB().getTableName());
 
+        final AmazonDynamoDB accountPreferencesDynamoDBClient = amazonDynamoDBClientFactory.getForEndpoint(configuration.getInsightsDynamoDB().getEndpoint());
+        final AccountPreferencesDAO accountPreferencesDynamoDB = AccountPreferencesDynamoDB.create(accountPreferencesDynamoDBClient, configuration.getInsightsDynamoDB().getTableName());
+
         final AmazonDynamoDBClient dynamoDBScoreClient = new AmazonDynamoDBClient(awsCredentialsProvider);
         dynamoDBScoreClient.setEndpoint(configuration.getSleepScoreDynamoDB().getEndpoint());
         final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB = new AggregateSleepScoreDAODynamoDB(
@@ -173,7 +178,8 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
                 trendsInsightsDAO,
                 questionResponseDAO,
                 scoreDAO,
-                lightData);
+                lightData,
+                accountPreferencesDynamoDB);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
     }
