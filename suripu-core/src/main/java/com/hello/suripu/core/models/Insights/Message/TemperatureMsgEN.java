@@ -22,13 +22,13 @@ public class TemperatureMsgEN {
 
     public static Text getTempMsgPerfect(final String commonMsg, final String sleeperMsg) {
         return new Text("Perfect Temperature", commonMsg +
-                "This is the **perfect** condition " + sleeperMsg + ".\n\n" +
+                "Your bedroom is the **perfect** temperature " + sleeperMsg + ".\n\n" +
                 "Sense will continue to monitor your sleeping temperature and alert you of any changes.");
     }
 
     public static Text getTempMsgTooCold(final String commonMsg, final int temperature, final String unit) {
-        return new Text("It's Freezing in Here", commonMsg +
-                "It's **too cold** for sleeping.\n\n" +
+        return new Text("It's Cold in Here", commonMsg +
+                "It's **too cold** in your bedroom for ideal sleep conditions.\n\n" +
                 String.format("Try turning up the thermostat to a minimum of %d°%s. ", temperature, unit) +
                 "Alternatively, you could use a thicker blanket, or put on more layers before you go to bed.");
     }
@@ -41,20 +41,20 @@ public class TemperatureMsgEN {
     }
 
     public static Text getTempMsgCool(final String commonMsg) {
-        return new Text("It Might be a Little Chilly", commonMsg +
-                "You might feel **a little cold** in the early morning.\n\n" +
+        return new Text("It's a Bit Chilly", commonMsg +
+                "You might feel **a bit cold** in the early morning.\n\n" +
                 "Try programming the thermostat to a warmer temperature for the early morning.");
     }
 
     public static Text getTempMsgWarm(final String commonMsg) {
-        return new Text("It's a Little Warm", commonMsg +
-                "Your room is **a little warmer** than the ideal conditions.\n\n" +
+        return new Text("It's a Bit Warm", commonMsg +
+                "Your bedroom is **a bit warmer** than the recommended ideal conditions.\n\n" +
                 "Try to cool the bedroom a little before going to bed.");
     }
 
     public static Text getTempMsgBad(final String commonMsg, final String sleeperMsg,
                                      final int minTemp, final int maxTemp, final String unit) {
-        return new Text("Wild Temperature Swing!", commonMsg +
+        return new Text("Hot and Cold", commonMsg +
                 "The **temperature swing** in your bedroom is too large. The ideal temperature " +
                 sleeperMsg + " is between " +
                 String.format("%d°%s to %d°%s.", minTemp, unit, maxTemp, unit));

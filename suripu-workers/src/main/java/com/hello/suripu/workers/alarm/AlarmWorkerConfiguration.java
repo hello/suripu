@@ -37,11 +37,11 @@ public class AlarmWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
-    @JsonProperty("common_db")
-    private DatabaseConfiguration commonDB = new DatabaseConfiguration();
+    @JsonProperty("sensors_db")
+    private DatabaseConfiguration sensorsDB = new DatabaseConfiguration();
 
-    public DatabaseConfiguration getCommonDB() {
-        return commonDB;
+    public DatabaseConfiguration getSensorsDB() {
+        return sensorsDB;
     }
 
     @Valid

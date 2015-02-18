@@ -38,7 +38,7 @@ public class QuestionsResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(QuestionsResource.class);
     private static final int DEFAULT_NUM_QUESTIONS = 2;
-    private static final int DEFAULT_NUM_MORE_QUESTIONS = 4;
+    private static final int DEFAULT_NUM_MORE_QUESTIONS = 5;
 
     private final AccountDAO accountDAO;
     private final TimeZoneHistoryDAODynamoDB tzHistoryDAO;

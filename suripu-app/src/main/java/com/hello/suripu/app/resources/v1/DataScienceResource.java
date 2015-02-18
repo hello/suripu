@@ -95,31 +95,37 @@ public class DataScienceResource extends BaseResource {
     }
 
     @GET
-    @Path("/light/{query_date_local_utc}")
+    @Path("/light/{email}/{query_date_local_utc}")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Event> getLightOut(@Scope(OAuthScope.SENSORS_BASIC) final AccessToken accessToken,
-                                            @PathParam("query_date_local_utc") final String date) {
+                                            @PathParam("query_date_local_utc") final String date,
+                                            @PathParam("email") final String email) {
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withHourOfDay(20);
         final DateTime endDate = targetDate.plusHours(16);
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
 
-        final Optional<Long> internalSenseIdOptional = this.deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
+        final Optional<Long> accountId = getAccountIdByEmail(email);
+        if (!accountId.isPresent()) {
+            LOGGER.debug("ID not found for account {}", email);
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        final Optional<Long> internalSenseIdOptional = this.deviceDAO.getMostRecentSenseByAccountId(accountId.get());
 
         if(!internalSenseIdOptional.isPresent()){
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
-
-
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
-        if (deviceId.isPresent()) {
+        if (internalSenseIdOptional.isPresent()) {
             final int slotDurationMins = 1;
 
             final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
                     targetDate.getMillis(), endDate.getMillis(),
-                    accessToken.accountId, deviceId.get(), slotDurationMins, missingDataDefaultValue(accessToken.accountId));
+                    accountId.get(), internalSenseIdOptional.get(),
+                    slotDurationMins,
+                    missingDataDefaultValue(accountId.get()));
             final List<Sample> lightData = sensorData.get(Sensor.LIGHT);
             final List<Event> lightEvents = TimelineUtils.getLightEvents(lightData);
             return lightEvents;
@@ -130,25 +136,32 @@ public class DataScienceResource extends BaseResource {
 
 
     @GET
-    @Path("/sensors/{query_date_local_utc}/{type}")
+    @Path("/sensors/{email}/{query_date_local_utc}/{type}")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Sample> getSensors(@Scope(OAuthScope.SENSORS_BASIC) final AccessToken accessToken,
                                    @PathParam("query_date_local_utc") final String date,
-                                   @PathParam("type") final String dataType) {
+                                   @PathParam("type") final String dataType,
+                                   @PathParam("email") final String email) {
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withHourOfDay(20);
         final DateTime endDate = targetDate.plusHours(16);
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
 
-
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
+        final Optional<Long> accountId = getAccountIdByEmail(email);
+        if (!accountId.isPresent()) {
+            LOGGER.debug("ID not found for account {}", email);
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        final Optional<Long> deviceId = this.deviceDAO.getMostRecentSenseByAccountId(accountId.get());
         if (deviceId.isPresent()) {
             final int slotDurationMins = 1;
 
-            AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
+            AllSensorSampleList sensorData = this.deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
                     targetDate.getMillis(), endDate.getMillis(),
-                    accessToken.accountId, deviceId.get(), slotDurationMins, missingDataDefaultValue(accessToken.accountId));
+                    accountId.get(), deviceId.get(),
+                    slotDurationMins,
+                    missingDataDefaultValue(accountId.get()));
             final List<Sample> data = sensorData.get(Sensor.valueOf(dataType));
             return data;
         }

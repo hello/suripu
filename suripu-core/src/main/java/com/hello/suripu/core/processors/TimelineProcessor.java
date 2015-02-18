@@ -29,6 +29,7 @@ import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.models.RingTime;
+import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
@@ -50,6 +51,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -285,6 +287,7 @@ public class TimelineProcessor {
 
         // add partner movement data, check if there's a partner
         final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accountId);
+        int numPartnerMotion = 0;
         if (optionalPartnerAccountId.isPresent() && events.size() > 0) {
             LOGGER.debug("partner account {}", optionalPartnerAccountId.get());
             // get tracker motions for partner, query time is in UTC, not local_utc
@@ -302,6 +305,7 @@ public class TimelineProcessor {
                 for(PartnerMotionEvent partnerMotionEvent : partnerMotionEvents) {
                     timEvents.put(partnerMotionEvent.getStartTimestamp(), partnerMotionEvent);
                 }
+                numPartnerMotion = partnerMotionEvents.size();
             }
         }
 
@@ -330,7 +334,6 @@ public class TimelineProcessor {
 //            LOGGER.warn("No sun rise data for date {}", sunRiseQueryDateString);
 //        }
 //
-//        // TODO: add sound
 //
 //
 //        // merge similar segments (by motion & event-type), then categorize
@@ -401,7 +404,7 @@ public class TimelineProcessor {
         }
 
         final Boolean reportSleepDuration = false;
-        final String timeLineMessage = TimelineUtils.generateMessage(sleepStats, reportSleepDuration);
+        final String timeLineMessage = TimelineUtils.generateMessage(sleepStats, numPartnerMotion, 0, reportSleepDuration);
 
         LOGGER.debug("Score for account_id = {} is {}", accountId, sleepScore);
 
@@ -415,7 +418,9 @@ public class TimelineProcessor {
     }
 
 
-    public List<Timeline> retrieveTimelinesFast(final Long accountId, final String date, final Integer missingDataDefaultValue, final Boolean hasAlarmInTimeline) {
+    public List<Timeline> retrieveTimelinesFast(final Long accountId, final String date, final Integer missingDataDefaultValue,
+                                                final Boolean hasAlarmInTimeline,
+                                                final Boolean hasSoundInTimeline) {
 
 
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
@@ -451,18 +456,18 @@ public class TimelineProcessor {
                     accountId, deviceId.get(), slotDurationMins, missingDataDefaultValue);
         }
 
-        // compute lights-out events
+        // compute lights-out and sound-disturbance events
         Optional<DateTime> lightOutTimeOptional = Optional.absent();
         Optional<DateTime> wakeUpWaveTimeOptional = Optional.absent();
         final List<Event> lightEvents = Lists.newArrayList();
 
         if (!allSensorSampleList.isEmpty()) {
-            lightEvents.addAll(TimelineUtils.getLightEvents(allSensorSampleList.get(Sensor.LIGHT)));
 
+            // Light
+            lightEvents.addAll(TimelineUtils.getLightEvents(allSensorSampleList.get(Sensor.LIGHT)));
             if (lightEvents.size() > 0) {
                 lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
             }
-
 
             // TODO: refactor
 
@@ -522,12 +527,22 @@ public class TimelineProcessor {
         for(PartnerMotionEvent partnerMotionEvent : partnerMotionEvents) {
             timelineEvents.put(partnerMotionEvent.getStartTimestamp(), partnerMotionEvent);
         }
+        final int numPartnerMotion = partnerMotionEvents.size();
 
 
 
 
-        // TODO: SOUND
 
+        // SOUND
+        int numSoundEvents = 0;
+        if (hasSoundInTimeline) {
+            final List<Event> soundEvents = getSoundEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE),
+                    motionEvents, lightOutTimeOptional, sleepEventsFromAlgorithm);
+            for (final Event event : soundEvents) {
+                timelineEvents.put(event.getStartTimestamp(), event);
+            }
+            numSoundEvents = soundEvents.size();
+        }
 
         final List<Event> eventsWithSleepEvents = TimelineRefactored.mergeEvents(timelineEvents);
         final List<Event> smoothedEvents = TimelineUtils.smoothEvents(eventsWithSleepEvents);
@@ -547,7 +562,7 @@ public class TimelineProcessor {
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
 
-        Integer sleepScore = computeAndMaybeSaveScore(trackerMotions.get(0).offsetMillis, targetDate, accountId, sleepStats);
+            Integer sleepScore = computeAndMaybeSaveScore(trackerMotions.get(0).offsetMillis, targetDate, accountId, sleepStats);
 
         if(sleepStats.sleepDurationInMinutes < MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES) {
             LOGGER.warn("Score for account id {} was set to zero because sleep duration is too short ({} min)", accountId, sleepStats.sleepDurationInMinutes);
@@ -555,7 +570,7 @@ public class TimelineProcessor {
         }
 
         final Boolean reportSleepDuration = false;
-        final String timeLineMessage = TimelineUtils.generateMessage(sleepStats, reportSleepDuration);
+        final String timeLineMessage = TimelineUtils.generateMessage(sleepStats, numPartnerMotion, numSoundEvents, reportSleepDuration);
 
         LOGGER.debug("Score for account_id = {} is {}", accountId, sleepScore);
 
@@ -595,6 +610,51 @@ public class TimelineProcessor {
         return Collections.EMPTY_LIST;
     }
 
+    private List<Event> getSoundEvents(final List<Sample> soundSamples,
+                                       final List<MotionEvent> motionEvents,
+                                       final Optional<DateTime> lightOutTimeOptional,
+                                       final List<Optional<Event>> sleepEventsFromAlgorithm) {
+        if (soundSamples.isEmpty()) {
+            return Collections.EMPTY_LIST;
+        }
+
+        // TODO: refactor - ¡don't doubt it!
+        Optional<DateTime> optionalSleepTime = Optional.absent();
+        Optional<DateTime> optionalAwakeTime = Optional.absent();
+
+        if (sleepEventsFromAlgorithm.get(1).isPresent()) {
+            // sleep time
+            final Event event = sleepEventsFromAlgorithm.get(1).get();
+            optionalSleepTime = Optional.of(new DateTime(event.getStartTimestamp(),
+                    DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
+        } else if (sleepEventsFromAlgorithm.get(0).isPresent()) {
+            // in-bed time
+            final Event event = sleepEventsFromAlgorithm.get(0).get();
+            optionalSleepTime = Optional.of(new DateTime(event.getStartTimestamp(),
+                    DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
+        }
+
+        if (sleepEventsFromAlgorithm.get(2).isPresent()) {
+            // awake time
+            final Event event = sleepEventsFromAlgorithm.get(2).get();
+            optionalAwakeTime = Optional.of(new DateTime(event.getStartTimestamp(),
+                    DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
+        } else if (sleepEventsFromAlgorithm.get(3).isPresent()) {
+            // out-of-bed time
+            final Event event = sleepEventsFromAlgorithm.get(2).get();
+            optionalAwakeTime = Optional.of(new DateTime(event.getStartTimestamp(),
+                    DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
+        }
+
+        final Map<Long, Integer> sleepDepths = new HashMap<>();
+        for (final MotionEvent event : motionEvents) {
+            if (event.getSleepDepth() > 0) {
+                sleepDepths.put(event.getStartTimestamp(), event.getSleepDepth());
+            }
+        }
+
+        return TimelineUtils.getSoundEvents(soundSamples, sleepDepths, lightOutTimeOptional, optionalSleepTime, optionalAwakeTime);
+    }
 
 
     static private double getLocalTimeInFloatingPointHoursFromEvent(final Event event) {

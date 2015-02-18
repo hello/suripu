@@ -53,17 +53,27 @@ public final class SenseSaveWorkerCommand extends ConfiguredCommand<SenseSaveWor
                           SenseSaveWorkerConfiguration configuration) throws Exception {
 
         final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
-        final ManagedDataSource dataSource = managedDataSourceFactory.build(configuration.getCommonDB());
+        final ManagedDataSource commonDataSource = managedDataSourceFactory.build(configuration.getCommonDB());
 
-        final DBI jdbi = new DBI(dataSource);
-        jdbi.registerArgumentFactory(new OptionalArgumentFactory(configuration.getCommonDB().getDriverClass()));
-        jdbi.registerContainerFactory(new ImmutableListContainerFactory());
-        jdbi.registerContainerFactory(new ImmutableSetContainerFactory());
-        jdbi.registerContainerFactory(new OptionalContainerFactory());
-        jdbi.registerArgumentFactory(new JodaArgumentFactory());
+        final ManagedDataSource sensorsDataSource = managedDataSourceFactory.build(configuration.getSensorsDB());
 
-        final DeviceDataDAO deviceDataDAO = jdbi.onDemand(DeviceDataDAO.class);
-        final DeviceDAO deviceDAO = jdbi.onDemand(DeviceDAO.class);
+        final DBI commonDBI = new DBI(commonDataSource);
+        commonDBI.registerArgumentFactory(new OptionalArgumentFactory(configuration.getCommonDB().getDriverClass()));
+        commonDBI.registerContainerFactory(new ImmutableListContainerFactory());
+        commonDBI.registerContainerFactory(new ImmutableSetContainerFactory());
+        commonDBI.registerContainerFactory(new OptionalContainerFactory());
+        commonDBI.registerArgumentFactory(new JodaArgumentFactory());
+        final DeviceDAO deviceDAO = commonDBI.onDemand(DeviceDAO.class);
+
+
+        final DBI sensorsDBI = new DBI(sensorsDataSource);
+        sensorsDBI.registerArgumentFactory(new OptionalArgumentFactory(configuration.getCommonDB().getDriverClass()));
+        sensorsDBI.registerContainerFactory(new ImmutableListContainerFactory());
+        sensorsDBI.registerContainerFactory(new ImmutableSetContainerFactory());
+        sensorsDBI.registerContainerFactory(new OptionalContainerFactory());
+        sensorsDBI.registerArgumentFactory(new JodaArgumentFactory());
+        final DeviceDataDAO deviceDataDAO = sensorsDBI.onDemand(DeviceDataDAO.class);
+
 
         if(configuration.getMetricsEnabled()) {
             final String graphiteHostName = configuration.getGraphite().getHost();

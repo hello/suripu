@@ -5,11 +5,13 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.binders.BindDeviceData;
 import com.hello.suripu.core.db.mappers.DeviceDataBucketMapper;
 import com.hello.suripu.core.db.mappers.DeviceDataMapper;
+import com.hello.suripu.core.db.mappers.SenseDeviceStatusMapper;
 import com.hello.suripu.core.db.util.Bucketing;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.AllSensorSampleMap;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.yammer.metrics.annotation.Timed;
@@ -92,6 +94,10 @@ public abstract class DeviceDataDAO {
             @Bind("start_timestamp") DateTime startTimestampUTC,
             @Bind("end_timestamp") DateTime endTimestampUTC);
 
+    @RegisterMapper(SenseDeviceStatusMapper.class)
+    @SingleValueResult(DeviceStatus.class)
+    @SqlQuery("SELECT id, device_id, firmware_version, ts AS last_seen from device_sensors_master WHERE device_id = :sense_id ORDER BY id DESC LIMIT 1;")
+    public abstract Optional<DeviceStatus> senseStatus(@Bind("sense_id") final Long senseId);
 
     @RegisterMapper(DeviceDataMapper.class)
     @SqlQuery("SELECT * FROM device_sensors_master WHERE account_id = :account_id AND local_utc_ts >= :start_timestamp AND local_utc_ts <= :end_timestamp ORDER BY ts ASC")

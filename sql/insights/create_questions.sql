@@ -133,9 +133,9 @@ GRANT ALL PRIVILEGES ON SEQUENCE account_question_ask_time_id_seq TO ingress_use
 --    * first three questions are asked during onboarding
 --
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
-VALUES ('Do you sleep better when it''s hot or cold',
+VALUES ('Do you feel like you sleep better when it''s hot or cold?',
 'EN', 'one_time', 'choice',
-'{"Hot", "Cold", "No Effect"}', null, 'anytime', 'sleep_temperature');
+'{"Hot", "Cold", "Not Sure"}', null, 'anytime', 'sleep_temperature');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
 VALUES ('Do you snore in your sleep?',
@@ -145,27 +145,27 @@ VALUES ('Do you snore in your sleep?',
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
 VALUES ('Are you a light sleeper?',
 'EN', 'one_time', 'choice',
-'{"Yes", "No", "Somewhat"}', null, 'anytime', 'light_sleeper');
+'{"Yes", "Somewhat", "No"}', null, 'anytime', 'light_sleeper');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
-VALUES ('Do you consume any caffeine drinks?',
+VALUES ('Do you drink any caffeinated drinks?',
 'EN', 'one_time', 'checkbox',
 '{"Coffee", "Tea", "Others", "None"}', null, 'anytime', 'caffeine');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
-VALUES ('Do you workout regularly?',
-'EN', 'one_time', 'choice', '{"Everyday", "A few times a week", "Once a week", "None"}',
+VALUES ('Do you exercise?',
+'EN', 'one_time', 'choice', '{"Everyday", "A few times a week", "Once a week", "No"}',
 null, 'anytime', 'workout');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
 VALUES ('Do you take naps during the day?',
 'EN', 'one_time', 'choice',
-'{"Yes", "No", "Sometimes"}', null, 'anytime', 'nap');
+'{"Regularly", "Occasionally", "No"}', null, 'anytime', 'nap');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
 VALUES ('Do you usually have trouble falling asleep?',
 'EN', 'one_time', 'choice',
-'{"Yes", "No", "Sometimes"}', null, 'anytime', 'trouble_sleeping');
+'{"Regularly", "Occasionally", "No"}', null, 'anytime', 'trouble_sleeping');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
 VALUES ('Do you take any medication to help you fall asleep?',
@@ -173,14 +173,14 @@ VALUES ('Do you take any medication to help you fall asleep?',
 '{"Regularly", "Occasionally", "No"}', null, 'anytime');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
-VALUES ('What activities do you usually undertake before going to bed? (Check all that applies.)',
+VALUES ('What activities do you usually do before going to bed?',
 'EN', 'one_time', 'checkbox',
-'{"Reading", "Use tablet/phone/computer", "Watch TV", "Listen to Music", "Others"}', null, 'anytime');
+'{"Read a book", "Listen to Music", "Use tablet/phone/computer", "Watch TV", "None of the above"}', null, 'anytime');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
-VALUES ('Do you experience an uncomfortable sensation in your legs at night?',
+VALUES ('Do you ever experience an uncomfortable sensation in your legs at night?',
 'EN', 'one_time', 'choice',
-'{"Yes", "No", "Sometimes"}', null, 'anytime');
+'{"Regularly", "Occasionally", "No"}', null, 'anytime');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
 VALUES ('How often do you experience insomnia?',
@@ -195,12 +195,12 @@ VALUES ('Have you been diagnosed with any sleep disorders?',
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
 VALUES ('Have you ever woken up gasping for breath?',
 'EN', 'one_time', 'choice',
-'{"Yes", "No", "Sometimes"}', null, 'anytime');
+'{"Regularly", "Occasionally", "No"}', null, 'anytime');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
 VALUES ('Have you ever fallen asleep while driving?',
 'EN', 'one_time', 'choice',
-'{"Yes", "No"}', null, 'anytime');
+'{"Regularly", "Occasionally", "No"}', null, 'anytime');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
 VALUES ('Do you feel that you get enough sleep?',
@@ -215,7 +215,7 @@ VALUES ('Are you quick to recover from jet-lag?',
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
 VALUES ('Do you watch TV in your bedroom?',
 'EN', 'one_time', 'choice',
-'{"Yes", "No", "Sometimes"}', null, 'anytime');
+'{"Most nights", "Occasionally", "Never"}', null, 'anytime');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
 VALUES ('Do you practice meditation?',
@@ -225,22 +225,17 @@ VALUES ('Do you practice meditation?',
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
 VALUES ('What is your usual dinner time?',
 'EN', 'one_time', 'choice',
-'{"5pm or earlier", "6pm", "7pm", "8pm", "9pm or later"}', null, 'anytime', 'eat_late');
+'{"Before 6PM", "Between 6PM and 8PM", "After 8PM"}', null, 'anytime', 'eat_late');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
 VALUES ('What time do you usually go to bed?',
 'EN', 'one_time', 'choice',
-'{"Before 8pm", "Between 8 - 10:59pm", "Between 11pm - 12:59am", "1am or later"}', null, 'anytime', 'bedtime');
-
-INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
-VALUES ('Do you practice meditation?',
-'EN', 'one_time', 'choice',
-'{"Yes", "No", "Sometimes"}', null, 'anytime');
+'{"Before 8PM", "Between 8PM and 11PM", "After 11PM but before 1AM", "After 1AM"}', null, 'anytime', 'bedtime');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, account_info)
 VALUES ('Do you talk in your sleep?',
 'EN', 'one_time', 'choice',
-'{"Yes", "No", "Sometimes"}', null, 'anytime', 'sleep_talk');
+'{"Regularly", "Occasionally", "No"}', null, 'anytime', 'sleep_talk');
 
 
 --
@@ -254,12 +249,12 @@ VALUES ('How was your sleep last night?',
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
 VALUES ('How are you feeling today?',
 'EN', 'daily', 'choice',
-'{"Great", "Fine", "Okay", "Not good"}', null, 'evening');
+'{"Great", "Good", "Okay", "Not so good"}', null, 'evening');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
 VALUES ('How are you feeling right now?',
 'EN', 'occasionally', 'choice',
-'{"Great", "Fine", "Okay", "Not good"}', null, 'afternoon');
+'{"Great", "Good", "Okay", "Not so good"}', null, 'afternoon');
 
 
 --
@@ -290,12 +285,7 @@ VALUES ('Are you feeling sleepy?',
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
 VALUES ('How energetic do you feel today?',
 'EN', 'daily', 'choice',
-'{"Very energetic", "Somewhat energetic", "OK", "Lethargic"}', null, 'afternoon');
-
-INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
-VALUES ('How are you feeling right now?',
-'EN', 'occasionally', 'choice',
-'{"Great", "Fine", "Okay", "Not good"}', null, 'afternoon');
+'{"Energetic", "Somewhat energetic", "Lethargic"}', null, 'afternoon');
 
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
 VALUES ('Did you have any naps today?',

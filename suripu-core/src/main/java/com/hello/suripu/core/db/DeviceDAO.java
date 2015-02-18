@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.mappers.AccountMapper;
 import com.hello.suripu.core.db.mappers.DeviceAccountPairMapper;
 import com.hello.suripu.core.db.mappers.DeviceStatusMapper;
-import com.hello.suripu.core.db.mappers.SenseDeviceStatusMapper;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceStatus;
@@ -108,10 +107,6 @@ public interface DeviceDAO extends Transactional<DeviceDAO> {
     Integer deleteSensePairing(@Bind("device_id") final String senseId, @Bind("account_id") Long accountId);
 
     //    @SqlQuery("SELECT * FROM pill_status WHERE pill_id = :pill_id;")
-    @RegisterMapper(DeviceStatusMapper.class)
-    @SingleValueResult(DeviceStatus.class)
-    @SqlQuery("SELECT id, tracker_id AS pill_id, '1' AS firmware_version, 100 AS battery_level, ts AS last_seen, 0 AS uptime from tracker_motion_master WHERE tracker_id = :pill_id ORDER BY id DESC LIMIT 1;")
-    Optional<DeviceStatus> pillStatus(@Bind("pill_id") final Long pillId);
 
     @RegisterMapper(DeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
@@ -119,10 +114,6 @@ public interface DeviceDAO extends Transactional<DeviceDAO> {
     ImmutableList<DeviceStatus> pillStatusWithBatteryLevel(@Bind("pill_id") final Long pillId);
 
     //    @SqlQuery("SELECT * FROM pill_status WHERE pill_id = :pill_id;")
-    @RegisterMapper(SenseDeviceStatusMapper.class)
-    @SingleValueResult(DeviceStatus.class)
-    @SqlQuery("SELECT id, device_id, firmware_version, ts AS last_seen from device_sensors_master WHERE device_id = :sense_id ORDER BY id DESC LIMIT 1;")
-    Optional<DeviceStatus> senseStatus(@Bind("sense_id") final Long senseId);
 
     @RegisterMapper(AccountMapper.class)
     @SingleValueResult(Account.class)

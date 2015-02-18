@@ -7,8 +7,10 @@ import com.hello.suripu.app.models.RedisPaginator;
 import com.hello.suripu.core.configuration.ActiveDevicesTrackerConfiguration;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Device;
@@ -62,6 +64,8 @@ public class DeviceResources {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeviceResources.class);
 
     private final DeviceDAO deviceDAO;
+    private final DeviceDataDAO deviceDataDAO;
+    private final TrackerMotionDAO trackerMotionDAO;
     private final AccountDAO accountDAO;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final JedisPool jedisPool;
@@ -69,6 +73,8 @@ public class DeviceResources {
     private final KeyStore pillKeyStore;
 
     public DeviceResources(final DeviceDAO deviceDAO,
+                           final DeviceDataDAO deviceDataDAO,
+                           final TrackerMotionDAO trackerMotionDAO,
                            final AccountDAO accountDAO,
                            final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                            final JedisPool jedisPool,
@@ -80,6 +86,8 @@ public class DeviceResources {
         this.jedisPool = jedisPool;
         this.senseKeyStore = senseKeyStore;
         this.pillKeyStore = pillKeyStore;
+        this.deviceDataDAO = deviceDataDAO;
+        this.trackerMotionDAO = trackerMotionDAO;
     }
 
     @GET
@@ -302,7 +310,7 @@ public class DeviceResources {
 
         // TODO: device state will always be normal for now until more information is provided by the device
         for (final DeviceAccountPair sense : senses) {
-            final Optional<DeviceStatus> senseStatusOptional = deviceDAO.senseStatus(sense.internalDeviceId);
+            final Optional<DeviceStatus> senseStatusOptional = this.deviceDataDAO.senseStatus(sense.internalDeviceId);
             if(senseStatusOptional.isPresent()) {
                 devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.NORMAL, senseStatusOptional.get().firmwareVersion, senseStatusOptional.get().lastSeen));
             } else {
@@ -311,7 +319,7 @@ public class DeviceResources {
         }
 
         for (final DeviceAccountPair pill : pills) {
-            final Optional<DeviceStatus> pillStatusOptional = deviceDAO.pillStatus(pill.internalDeviceId);
+            final Optional<DeviceStatus> pillStatusOptional = this.trackerMotionDAO.pillStatus(pill.internalDeviceId);
             if(!pillStatusOptional.isPresent()) {
                 LOGGER.debug("No pill status found for pill_id = {} ({}) for account: {}", pill.externalDeviceId, pill.internalDeviceId, pill.accountId);
                 devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, Device.State.UNKNOWN, null, null));

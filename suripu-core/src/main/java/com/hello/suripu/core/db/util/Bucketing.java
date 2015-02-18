@@ -90,10 +90,16 @@ public class Bucketing {
                 sensorValue = (float) deviceData.ambientLight;
             } else if (sensorName.equals("sound")) {
                 sensorValue = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB));
-            }else if(sensorName.equals("wave_count")) {
+            } else if(sensorName.equals("wave_count")) {
                 sensorValue = deviceData.waveCount;
-            }else if(sensorName.equals("hold_count")) {
+            } else if(sensorName.equals("hold_count")) {
                 sensorValue = deviceData.holdCount;
+            } else if(sensorName.equals("num_disturb")) {
+                sensorValue = deviceData.audioNumDisturbances;
+            } else if(sensorName.equals("background")) {
+                sensorValue = DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB);
+            } else if(sensorName.equals("peak_disturb")) {
+                sensorValue = DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB);
             } else {
                 LOGGER.warn("Sensor {} is not supported for account_id: {}. Returning early", sensorName);
                 return Optional.absent();

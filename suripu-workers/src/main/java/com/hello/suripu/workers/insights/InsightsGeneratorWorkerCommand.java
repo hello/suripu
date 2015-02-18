@@ -64,17 +64,18 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
 
         // postgres setup
         final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
-        final ManagedDataSource dataSource = managedDataSourceFactory.build(configuration.getCommonDB());
+        final ManagedDataSource commonDBDataSource = managedDataSourceFactory.build(configuration.getCommonDB());
 
-        final DBI jdbi = new DBI(dataSource);
-        jdbi.registerArgumentFactory(new OptionalArgumentFactory(configuration.getCommonDB().getDriverClass()));
-        jdbi.registerContainerFactory(new ImmutableListContainerFactory());
-        jdbi.registerContainerFactory(new ImmutableSetContainerFactory());
-        jdbi.registerContainerFactory(new OptionalContainerFactory());
-        jdbi.registerArgumentFactory(new JodaArgumentFactory());
+        final DBI commonDBI = new DBI(commonDBDataSource);
+        commonDBI.registerArgumentFactory(new OptionalArgumentFactory(configuration.getCommonDB().getDriverClass()));
+        commonDBI.registerContainerFactory(new ImmutableListContainerFactory());
+        commonDBI.registerContainerFactory(new ImmutableSetContainerFactory());
+        commonDBI.registerContainerFactory(new OptionalContainerFactory());
+        commonDBI.registerArgumentFactory(new JodaArgumentFactory());
 
-        final AccountDAO accountDAO = jdbi.onDemand(AccountDAOImpl.class);
-        final SleepScoreDAO scoreDAO = jdbi.onDemand(SleepScoreDAO.class);
+        final AccountDAO accountDAO = commonDBI.onDemand(AccountDAOImpl.class);
+        final SleepScoreDAO scoreDAO = commonDBI.onDemand(SleepScoreDAO.class);
+        final DeviceDAO deviceDAO = commonDBI.onDemand(DeviceDAO.class);
 
         final ManagedDataSource sensorDataSource = managedDataSourceFactory.build(configuration.getSensorsDB());
         final DBI sensorDBI = new DBI(sensorDataSource);
@@ -84,12 +85,12 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
         sensorDBI.registerContainerFactory(new OptionalContainerFactory());
         sensorDBI.registerArgumentFactory(new JodaArgumentFactory());
 
-        final DeviceDAO deviceDAO = sensorDBI.onDemand(DeviceDAO.class);
+
         final DeviceDataDAO deviceDataDAO = sensorDBI.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorDBI.onDemand(TrackerMotionDAO.class);
 
         final ManagedDataSource insightsDataSource = managedDataSourceFactory.build(configuration.getInsightsDB());
-        final DBI insightsDBI = new DBI(sensorDataSource);
+        final DBI insightsDBI = new DBI(insightsDataSource);
         insightsDBI.registerArgumentFactory(new OptionalArgumentFactory(configuration.getInsightsDB().getDriverClass()));
         insightsDBI.registerContainerFactory(new ImmutableListContainerFactory());
         insightsDBI.registerContainerFactory(new ImmutableSetContainerFactory());

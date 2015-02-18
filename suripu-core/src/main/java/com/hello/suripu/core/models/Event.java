@@ -9,6 +9,7 @@ import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.LightEvent;
 import com.hello.suripu.core.models.Events.LightsOutEvent;
 import com.hello.suripu.core.models.Events.MotionEvent;
+import com.hello.suripu.core.models.Events.NoiseEvent;
 import com.hello.suripu.core.models.Events.NullEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.PartnerMotionEvent;
@@ -140,6 +141,8 @@ public abstract class Event {
                 return new LightsOutEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
             case ALARM:
                 return new AlarmEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
+            case NOISE:
+                return new NoiseEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
             default:
                 return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), event.getSleepDepth());
 
@@ -176,6 +179,8 @@ public abstract class Event {
                 return new AlarmEvent(startTimestamp, endTimestamp, event.getTimezoneOffset());
             case SLEEPING:
                 return new SleepingEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
+            case NOISE:
+                    return new NoiseEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
             default:
                 return new NullEvent(startTimestamp, endTimestamp, event.getTimezoneOffset(), sleepDepth);
 
@@ -250,6 +255,8 @@ public abstract class Event {
                     throw new InvalidArgumentException("message required.");
                 }
                 return new AlarmEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
+            case NOISE:
+                return new NoiseEvent(startTimestamp, endTimestamp, offsetMillis, sleepDepth.get());
             default:
                 if(!sleepDepth.isPresent()){
                     throw new InvalidArgumentException("sleepDepth required.");

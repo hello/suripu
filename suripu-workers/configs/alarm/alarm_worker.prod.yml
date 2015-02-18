@@ -8,18 +8,11 @@ graphite:
     - com.yammer
     - com.hello
 
-common_db:
-  # the name of your JDBC driver
+sensors_db:
   driverClass: org.postgresql.Driver
-
-  # the username
-  user: ingress_user
-
-  # the password
-  password: hello ingress user
-
-  # the JDBC URL
-  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
+  user: sensors
+  password: hello-sensors
+  url: jdbc:postgresql://sensors-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors1
 
   # any properties specific to your JDBC driver:
   properties:
@@ -51,7 +44,7 @@ kinesis:
   streams :
       sense_sensors_data : sense_sensors_data
 
-app_name: AlarmWorker
+app_name: AlarmWorkerProd
 
 max_records: 1000
 
@@ -71,17 +64,17 @@ logging:
 ring_time_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: ring_time
+  table_name: prod_ring_time
 
 timezone_history_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: timezone_history
+  table_name: prod_timezone_history
 
 alarm_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: alarm
+  table_name: prod_alarm
 
 features_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
@@ -97,4 +90,4 @@ light_sleep_init_threshold: 0.2
 alarm_info_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: alarm_info
+  table_name: prod_alarm_info
