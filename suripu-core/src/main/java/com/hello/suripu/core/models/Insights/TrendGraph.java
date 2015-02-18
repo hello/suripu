@@ -2,7 +2,7 @@ package com.hello.suripu.core.models.Insights;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
-
+import com.hello.suripu.core.translations.English;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -154,7 +154,7 @@ public class TrendGraph {
         this.timePeriod = timePeriod.getValue();
         this.dataPoints = dataPoints;
         this.options = Collections.emptyList();
-        this.title = dataType.toString() + " " + timePeriod.getTitle();
+        this.title = getTrendGraphTitle(dataType, timePeriod);
     }
 
     /**
@@ -166,7 +166,7 @@ public class TrendGraph {
         this.timePeriod = timePeriod.getValue();
         this.dataPoints = dataPoints;
         this.options = options;
-        this.title = dataType.toString() + " " + timePeriod.getTitle();
+        this.title = getTrendGraphTitle(dataType, timePeriod);
     }
 
     public static DataLabel getDataLabel(final DataType dataType, final float value) {
@@ -190,6 +190,23 @@ public class TrendGraph {
         } else {
             return DataLabel.OK;
         }
+    }
+
+    static String getTrendGraphTitle(final DataType dataType, final TimePeriodType timePeriod) {
+        if (dataType == DataType.SLEEP_SCORE) {
+            if (timePeriod == TimePeriodType.DAY_OF_WEEK) {
+                return English.TRENDS_SCORE_AVERAGE;
+            } else {
+                return English.TRENDS_SCORE_OVER_TIME;
+            }
+        } else if (dataType == DataType.SLEEP_DURATION) {
+            if (timePeriod == TimePeriodType.DAY_OF_WEEK) {
+                return English.TRENDS_DURATION_AVERAGE;
+            } else {
+                return English.TRENDS_DURATION_OVER_TIME;
+            }
+        }
+        return "";
     }
 
     public static int getTimePeriodDays(final TimePeriodType timePeriodType) {
