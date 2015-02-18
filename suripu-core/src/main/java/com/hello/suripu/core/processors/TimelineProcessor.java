@@ -114,11 +114,11 @@ public class TimelineProcessor {
 
         //8am, with a lot of uncertainty
         final GaussianDistributionDataModel wake = new GaussianDistributionDataModel(
-                new GaussianDistribution(8.0,2.0,0.0,0.0, GaussianDistribution.DistributionModel.RANDOM_MEAN));
+                new GaussianDistribution(8.0,2.0));
 
         //this is a relative time, so 0 mean means no bias
         final GaussianDistributionDataModel wake_prediction_bias = new GaussianDistributionDataModel(
-                new GaussianDistribution(0.0,0.5,0.0,0.0, GaussianDistribution.DistributionModel.RANDOM_MEAN));
+                new GaussianDistribution(0.0,0.5));
 
         this.defaultWakeDistribution =  new WakeProbabilityDistributions(wake_prediction_bias,wake,wake_prediction_bias,wake);
 
@@ -635,7 +635,7 @@ public class TimelineProcessor {
      * @param wakeFeedbackTime time user said they woke up
      * @return
      */
-    private final List<Optional<Event>>  BayesUpdate(final Long accountId,final DateTime targetDate,final List<Optional<Event>> predictions, final Optional<List<Event>> alarmTime, final Optional<DateTime> wakeFeedbackTime ) {
+    private final List<Optional<Event>>  BayesUpdate(final Long accountId,final DateTime targetDate,final List<Optional<Event>> predictions, final Optional<List<Event>> alarmTime, final Optional<DateTime> wakeFeedbackTime) {
 
 
         //TODO put hard-coded values somewhere else
@@ -649,7 +649,6 @@ public class TimelineProcessor {
         ArrayList<Optional<Event>> updatedSleepEvents = new ArrayList<Optional<Event>>();
 
         Optional<Event> newWakeEvent = Optional.absent();
-
 
         WakeProbabilityDistributions latestDayDist = this.defaultWakeDistribution;
 
@@ -735,8 +734,8 @@ public class TimelineProcessor {
 
 
                         GaussianDistribution priorWithBiasCompensation = new GaussianDistribution(unBiasedMean,
-                                                                            priorWithoutBiasCompensation.sigma,priorWithoutBiasCompensation.alpha,priorWithoutBiasCompensation.beta,
-                                                                               priorWithoutBiasCompensation.modelType);
+                                priorWithoutBiasCompensation.sigma,priorWithoutBiasCompensation.alpha,priorWithoutBiasCompensation.beta,
+                                priorWithoutBiasCompensation.kappa,priorWithoutBiasCompensation.modelType);
 
                         //inference
                         wakeTimePosterior = new GaussianDistributionDataModel(
@@ -780,12 +779,12 @@ public class TimelineProcessor {
 
         //repopulate, substituting the new wake event
         for (Optional<Event> ev : predictions) {
-            if (ev.isPresent() && ev.get().getType() == Event.Type.WAKE_UP && newWakeEvent.isPresent()) {
-                updatedSleepEvents.add(newWakeEvent);
-            }
-            else {
+            //if (ev.isPresent() && ev.get().getType() == Event.Type.WAKE_UP && newWakeEvent.isPresent()) {
+            //    updatedSleepEvents.add(newWakeEvent);
+            //}
+            //else {
                 updatedSleepEvents.add(ev);
-            }
+            //}
         }
 
         return updatedSleepEvents;

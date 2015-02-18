@@ -28,7 +28,7 @@ public class BayesianInferenceTest {
 
     @Test
     public void TestBayesRandomMeanUpdate() {
-        final GaussianDistribution prior = new GaussianDistribution(1.0,1.0,0.0,0.0, GaussianDistribution.DistributionModel.RANDOM_MEAN);
+        final GaussianDistribution prior = new GaussianDistribution(1.0,1.0);
 
         final GaussianDistribution posterior = GaussianInference.GetInferredDistribution(prior,2.0,1.0,1e-6);
 
@@ -41,8 +41,6 @@ public class BayesianInferenceTest {
 
         TestCase.assertEquals(posterior2.mean,1.2,1e-6);
         TestCase.assertEquals(posterior2.sigma,Math.sqrt(0.8),1e-6);
-
-
 
     }
 
