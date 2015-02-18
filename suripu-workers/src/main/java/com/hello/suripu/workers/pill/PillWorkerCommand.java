@@ -55,6 +55,7 @@ public final class PillWorkerCommand extends ConfiguredCommand<PillWorkerConfigu
         jdbiSensor.registerContainerFactory(new OptionalContainerFactory());
         jdbiSensor.registerArgumentFactory(new JodaArgumentFactory());
 
+        final TrackerMotionDAO trackerMotionDAO = jdbiSensor.onDemand(TrackerMotionDAO.class);
 
 
         final ManagedDataSource commonDataSource = managedDataSourceFactory.build(configuration.getCommonDB());
@@ -66,8 +67,9 @@ public final class PillWorkerCommand extends ConfiguredCommand<PillWorkerConfigu
         jdbiCommon.registerContainerFactory(new OptionalContainerFactory());
         jdbiCommon.registerArgumentFactory(new JodaArgumentFactory());
 
-        final TrackerMotionDAO trackerMotionDAO = jdbiSensor.onDemand(TrackerMotionDAO.class);
+
         final DeviceDAO deviceDAO = jdbiCommon.onDemand(DeviceDAO.class);
+        final PillHeartBeatDAO heartBeatDAO = jdbiCommon.onDemand(PillHeartBeatDAO.class);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
@@ -97,7 +99,6 @@ public final class PillWorkerCommand extends ConfiguredCommand<PillWorkerConfigu
         final AmazonDynamoDB mergedUserInfoDynamoDBClient = amazonDynamoDBClientFactory.getForEndpoint(configuration.getUserInfo().getEndpoint());
         final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(mergedUserInfoDynamoDBClient, configuration.getUserInfo().getTableName());
 
-        final PillHeartBeatDAO heartBeatDAO = jdbiSensor.onDemand(PillHeartBeatDAO.class);
         final AmazonDynamoDB pillKeyStoreDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(configuration.getKeyStore().getEndpoint());
         final KeyStore pillKeyStore = new KeyStoreDynamoDB(pillKeyStoreDynamoDB,configuration.getKeyStore().getTableName(), new byte[16], 120);
         final IRecordProcessorFactory factory = new SavePillDataProcessorFactory(trackerMotionDAO, configuration.getBatchSize(), mergedUserInfoDynamoDB, heartBeatDAO, pillKeyStore, deviceDAO);
