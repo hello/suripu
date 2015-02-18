@@ -8,7 +8,7 @@ graphite:
     - com.yammer
     - com.hello
 
-common_db:
+sensors_db:
   # the name of your JDBC driver
   driverClass: org.postgresql.Driver
 
