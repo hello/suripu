@@ -507,11 +507,12 @@ public class TimelineProcessor {
         if (dow != DateTimeConstants.FRIDAY && dow != DateTimeConstants.SATURDAY) {
 
             updatedSleepEvents = BayesUpdate(accountId, targetDate, sleepEventsFromAlgorithm, alarmEventsOptional, feedbackWakeTimes);
+
         }
 
         // WAKE UP , etc.
-        for(final Optional<Event> sleepEventOptional: updatedSleepEvents){
-            if(sleepEventOptional.isPresent()){
+        for (final Optional<Event> sleepEventOptional : updatedSleepEvents) {
+            if (sleepEventOptional.isPresent()) {
                 timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
             }
         }
@@ -742,9 +743,16 @@ public class TimelineProcessor {
                 optionalFeedback = eventFeedbackTimes.get(i);
             }
 
+
+
             //IF PREDICTION IS HERE
             if (optionalPredictions.isPresent()) {
                 Event event = optionalPredictions.get();
+
+                //IF ALARM EXISTS, BUT NO FEEDBACK IS PRESENT, AND THIS IS WAKE_UP, SET ALARM AS FEEDBACK
+                if (event.getType() == Event.Type.WAKE_UP && !optionalFeedback.isPresent() && alarm.isPresent()) {
+                    optionalFeedback = alarm;
+                }
 
                 //GET PRIOR FOR TODAY BY EVENT TYPE (IN-BED,SLEEP,WAKE,OUT-OF-BED)
                 Optional<SleepEventPredictionDistribution> optionalEventDist = todaysDist.get(event.getType());
@@ -752,6 +760,8 @@ public class TimelineProcessor {
                 //DO BAYES UPDATE
                 if (optionalEventDist.isPresent()) {
                     Optional<SleepEventPredictionDistribution> result = DoBayes(event, optionalFeedback, optionalEventDist.get());
+
+                    //PLACE IN RESULTS MAP
                     resultMap.put(event.getType(), result);
                 }
             }
@@ -785,6 +795,7 @@ public class TimelineProcessor {
                 if (result.isPresent()) {
                     //re-set time of event
                     event.updateTimeStamps(result.get().prediction.getMillis());
+                    updatedSleepEvents.add(Optional.of(event));
                 }
                 else {
                     //pass-through
