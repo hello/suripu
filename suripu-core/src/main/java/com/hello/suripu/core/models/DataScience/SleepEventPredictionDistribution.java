@@ -1,5 +1,6 @@
 package com.hello.suripu.core.models.DataScience;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hello.suripu.algorithm.bayes.GaussianDistribution;
 import org.joda.time.DateTime;
 
 /**
@@ -17,6 +18,59 @@ public class SleepEventPredictionDistribution {
         this.prediction = prediction;
     }
 
+   public static final double BIAS_PREDICTION_MEAN = 0.0; //hours
+   public static final double BIAS_PREDICTION_SIGMA = 2.0; //hours
+
+   //gamma distribution
+   // mean = alpha/beta, variance = alpha / beta^2
+   //so the bigger the beta, the peakier the distribution
+   //
+   public static final double SLEEP_EVENT_ALPHA = 0.2;
+   public static final double SLEEP_EVENT_BETA = 0.2;
+   public static final double SLEEP_EVENT_KAPPA = 0.0;
+
+   public static final SleepEventPredictionDistribution getDefault(final double eventTimeInHoursOfTheDay) {
+
+       GaussianPriorPosteriorPair biasPair = new GaussianPriorPosteriorPair(
+               new GaussianDistributionDataModel(
+                       new GaussianDistribution(BIAS_PREDICTION_MEAN,BIAS_PREDICTION_SIGMA,0.0,0.0,0.0,
+                               GaussianDistribution.DistributionModel.RANDOM_MEAN)),
+               new GaussianDistributionDataModel(
+                       new GaussianDistribution(BIAS_PREDICTION_MEAN,BIAS_PREDICTION_SIGMA,0.0,0.0,0.0,
+                            GaussianDistribution.DistributionModel.RANDOM_MEAN))
+               );
+
+
+       GaussianPriorPosteriorPair eventTimePair = new GaussianPriorPosteriorPair(
+               new GaussianDistributionDataModel(
+                    new GaussianDistribution(eventTimeInHoursOfTheDay,0.0,SLEEP_EVENT_ALPHA,SLEEP_EVENT_BETA,SLEEP_EVENT_KAPPA,
+                       GaussianDistribution.DistributionModel.RANDOM_MEAN_AND_VARIANCE)),
+               new GaussianDistributionDataModel(
+                       new GaussianDistribution(eventTimeInHoursOfTheDay,0.0,SLEEP_EVENT_ALPHA,SLEEP_EVENT_BETA,SLEEP_EVENT_KAPPA,
+                               GaussianDistribution.DistributionModel.RANDOM_MEAN_AND_VARIANCE)));
+
+
+
+       return new SleepEventPredictionDistribution(new DateTime(),biasPair,eventTimePair);
+    }
+
+    public final SleepEventPredictionDistribution getCopy() {
+        return new SleepEventPredictionDistribution(new DateTime(this.prediction),
+                this.biasDistributions.getCopy(),
+                this.eventTimeDistributions.getCopy());
+
+    }
+
+    public final SleepEventPredictionDistribution getCopyWithPosteriorAsPrior() {
+        return new SleepEventPredictionDistribution(new DateTime(this.prediction),
+                this.biasDistributions.getCopyWithPosteriorAsPrior(),
+                this.eventTimeDistributions.getCopyWithPosteriorAsPrior());
+
+    }
+
+
+
+
 
     @JsonProperty("prediction_bias_distributions")
     public final GaussianPriorPosteriorPair biasDistributions;
@@ -25,5 +79,5 @@ public class SleepEventPredictionDistribution {
     public final GaussianPriorPosteriorPair eventTimeDistributions;
 
     @JsonProperty("event_prediction_time")
-    final DateTime prediction;
+    public final DateTime prediction;
 }

@@ -3,8 +3,6 @@ package com.hello.suripu.core.processors;
 import com.amazonaws.services.s3.AmazonS3;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
-import com.hello.suripu.algorithm.bayes.GaussianDistribution;
-import com.hello.suripu.algorithm.bayes.GaussianInference;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.db.AccountDAO;
@@ -20,12 +18,13 @@ import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.DataScience.GaussianDistributionDataModel;
+import com.hello.suripu.core.models.DataScience.GaussianPriorPosteriorPair;
+import com.hello.suripu.core.models.DataScience.SleepEventDistributions;
 import com.hello.suripu.core.models.DataScience.SleepEventPredictionDistribution;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.PartnerMotionEvent;
-import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.models.RingTime;
@@ -35,6 +34,7 @@ import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.util.BayesUtils;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.SunData;
 import com.hello.suripu.core.util.TimelineRefactored;
@@ -44,7 +44,6 @@ import com.yammer.metrics.core.Histogram;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +59,7 @@ public class TimelineProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineProcessor.class);
     private static final Integer MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES = 3 * 60;
+    private static final double FEEDBACK_MEASUREMENT_SIGMA = 0.5;
     private final AccountDAO accountDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDAO deviceDAO;
@@ -75,7 +75,7 @@ public class TimelineProcessor {
     private final String bucketName;
     private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
     private final Histogram motionEventDistribution;
-    private final SleepEventPredictionDistribution defaultWakeDistribution;
+    private final SleepEventDistributions defaultWakeDistribution;
 
     public TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
                             final AccountDAO accountDAO,
@@ -108,21 +108,7 @@ public class TimelineProcessor {
         this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
 
 
-        //magical hard-coded constants
-        //wake times are in local time, in hours from midnight
-       //so -1.0 = 23:00
-       //and 23.0 == 23:00
-        //we will restrict times between 0 and 24, and just wrap after addition/subtraction
-
-        //8am, with a lot of uncertainty
-        final GaussianDistributionDataModel wake = new GaussianDistributionDataModel(
-                new GaussianDistribution(8.0,0.0,1.0,1.0,0.0, GaussianDistribution.DistributionModel.RANDOM_MEAN_AND_VARIANCE));
-
-        //this is a relative time, so 0 mean means no bias
-        final GaussianDistributionDataModel wake_prediction_bias = new GaussianDistributionDataModel(
-                new GaussianDistribution(0.0,0.5));
-
-        this.defaultWakeDistribution =  new SleepEventPredictionDistribution(wake_prediction_bias,wake,wake_prediction_bias,wake);
+        this.defaultWakeDistribution =  SleepEventDistributions.getDefault();
 
 
 
@@ -509,7 +495,7 @@ public class TimelineProcessor {
    //     }
 
         final List<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate, trackerMotions, lightOutTimeOptional, wakeUpWaveTimeOptional);
-        Optional<DateTime> feedbackWakeTime = Optional.absent();
+        List<Optional<Event>> feedbackWakeTimes = new ArrayList<Optional<Event>>();
 
         //BEJ - post-process sleep predictions using priors from previous day, if available
 
@@ -519,7 +505,8 @@ public class TimelineProcessor {
         final int dow = targetDate.toLocalDate().getDayOfWeek();
         //if an evening before a week day
         if (dow != DateTimeConstants.FRIDAY && dow != DateTimeConstants.SATURDAY) {
-            updatedSleepEvents = BayesUpdate(accountId, targetDate, sleepEventsFromAlgorithm, alarmEventsOptional, feedbackWakeTime);
+
+            updatedSleepEvents = BayesUpdate(accountId, targetDate, sleepEventsFromAlgorithm, alarmEventsOptional, feedbackWakeTimes);
         }
 
         // WAKE UP , etc.
@@ -665,6 +652,31 @@ public class TimelineProcessor {
     }
 
 
+    static private DateTime getDateTimeFromEvent(final Event event) {
+        return new DateTime(event.getStartTimestamp(),DateTimeZone.forOffsetMillis(event.getTimezoneOffset()));
+    }
+
+
+    static private Optional<SleepEventPredictionDistribution> DoBayes(final Event event, final Optional<Event> ofeedback, final SleepEventPredictionDistribution today) {
+
+
+        Optional<DateTime> predictedEventTime = Optional.of(getDateTimeFromEvent(event));
+        Optional<DateTime> measurement = Optional.absent();
+
+
+        if (ofeedback.isPresent()) {
+            measurement = Optional.of(getDateTimeFromEvent(ofeedback.get()));
+        }
+
+        //yesterday's posterior is today's prior
+        return BayesUtils.inferPredictionBiasAndDistributionTimes(
+                today.eventTimeDistributions.prior,
+                today.biasDistributions.prior,
+                predictedEventTime,
+                measurement,FEEDBACK_MEASUREMENT_SIGMA);
+
+
+}
 
 
     /*
@@ -675,165 +687,116 @@ public class TimelineProcessor {
      * @param wakeFeedbackTime time user said they woke up
      * @return
      */
-    private final List<Optional<Event>>  BayesUpdate(final Long accountId,final DateTime targetDate,final List<Optional<Event>> predictions, final Optional<List<Event>> alarmTime, final Optional<DateTime> wakeFeedbackTime) {
+    private final List<Optional<Event>>  BayesUpdate(final Long accountId,
+                                                     final DateTime targetDate,
+                                                     final List<Optional<Event>> predictions,
+                                                     final Optional<List<Event>> alarmTime,
+                                                     final List<Optional<Event>> eventFeedbackTimes) {
 
 
-        //TODO put hard-coded values somewhere else
-        //units are in hours
-        final double K_MIN_SIGMA_OF_PREDICTION = 0.5;
-        final double K_MIN_SIGMA_OF_BIAS = 0.05;
-
-        final double K_PREDICTION_SIGMA = 0.5;
-        final double K_ALARM_SIGMA = 0.5;
-        final double K_FEEDBACK_SIGMA = 0.17;
-
-        final double K_ACCEPTABLE_BIAS_UNCERTAINTY_FLOOR = 0.1;
-
+        //this is what we return
         ArrayList<Optional<Event>> updatedSleepEvents = new ArrayList<Optional<Event>>();
 
-        Optional<Event> newWakeEvent = Optional.absent();
 
-        SleepEventPredictionDistribution latestDayDist = this.defaultWakeDistribution;
+        //these are the distributions from the previous day (or the last time we saw data, up to a week)
+        //we set as default first
+        SleepEventDistributions latestDayDist = this.defaultWakeDistribution;
+
+
+        Optional<Event> alarm = Optional.absent();
 
         //go back a week, stop if you find a day that had something
         for (int i = 1; i < 7; i++) {
-            Optional<SleepEventPredictionDistribution> prevDist = this.sleepPriorsDAO.getWakeDistributionByDay(accountId,targetDate.minusDays(i));
+            Optional<SleepEventDistributions> prevDist = this.sleepPriorsDAO.getWakeDistributionByDay(accountId, targetDate.minusDays(i));
 
             if (prevDist.isPresent()) {
                 latestDayDist = prevDist.get();
                 break;
             }
-
         }
 
-        GaussianDistributionDataModel wakeTimePosterior = latestDayDist.eventTimePosterior;
-        GaussianDistributionDataModel predictionBiasPosterior = latestDayDist.biasPosterior;
+        //get today's priors
+        SleepEventDistributions todaysDist = latestDayDist.getCopyWithPosteriorAsPrior();
 
-        SleepEventPredictionDistribution todaysDistributions = latestDayDist;
+        //go through alarms, pick the earliest one (should be the last in the list)
+        if (alarmTime.isPresent()) {
+            List<Event> alarms = alarmTime.get();
+            alarm = Optional.of(alarms.get(alarms.size() - 1));
+        }
 
-        //iterate through all predictions, looking for wake
+        HashMap<Event.Type, Optional<SleepEventPredictionDistribution>> resultMap = new HashMap<Event.Type, Optional<SleepEventPredictionDistribution>>();
 
-        for (Optional<Event> ev : predictions) {
-            if (ev.isPresent()) {
-                if (ev.get().getType() == Event.Type.WAKE_UP) {
-                    Event wake = ev.get();
-                    boolean isInferingWakeFromPrediction = true;
-
-                    final double wakePredictionTimeInHoursLocalTime = getLocalTimeInFloatingPointHoursFromEvent(wake);
-
-                    //infer wake up from prediction if no alarm of feedback is present
-
-                    //if wake is present with feedback, or alarm, then we will try and estimate the prediction bias
-                    if (alarmTime.isPresent() && alarmTime.get().size() > 0) {
-                        isInferingWakeFromPrediction = false;
-
-                        //FIND ALARM THAT HAS OCCURRED -- so it must be in the past.  Assume this is already taken care of.
-                        //MULTIPLE ALARMS?  Agh.  Just pick the earliest one.
-                        //last one is the earliest.
-                        List<Event> alarmTimesList  = alarmTime.get();
-
-                        final Event alarm_time = alarmTimesList.get(alarmTimesList.size()-1);
-
-                        final double alarmTimeHours = getLocalTimeInFloatingPointHoursFromEvent(alarm_time);
+        //set defaults in map
+        for (Event.Type type : SleepEventDistributions.SUPPORTED_EVENT_TYPES) {
+            resultMap.put(type, todaysDist.get(type));
+        }
 
 
+        //go through all predictions, and if it's one that we care about then do something with it
+        for (int i = 0; i < predictions.size(); i++) {
+            Optional<Event> optionalPredictions = predictions.get(i);
+            Optional<Event> optionalFeedback = Optional.absent();
 
-                        //TODO perform sanity check on likeliness of alarm given prior.
-                        //if disagreement, then do what?  It's something uncharacteristic of the user.
+            //ASSUME THAT THE EVENT FEEDBACK LIST IS MATCHED WITH THE PREDICTIONS
+            if (i < eventFeedbackTimes.size()) {
+                optionalFeedback = eventFeedbackTimes.get(i);
+            }
 
-                        //perform inference on posterior
-                        wakeTimePosterior = new GaussianDistributionDataModel(
-                                GaussianInference.GetInferredDistribution(latestDayDist.eventTimePosterior.asGaussian(),
-                                        alarmTimeHours, K_ALARM_SIGMA, K_MIN_SIGMA_OF_PREDICTION)
-                        );
+            //IF PREDICTION IS HERE
+            if (optionalPredictions.isPresent()) {
+                Event event = optionalPredictions.get();
 
-                        final double predictionBias = addHours(alarmTimeHours,-wakePredictionTimeInHoursLocalTime);
+                //GET PRIOR FOR TODAY BY EVENT TYPE (IN-BED,SLEEP,WAKE,OUT-OF-BED)
+                Optional<SleepEventPredictionDistribution> optionalEventDist = todaysDist.get(event.getType());
 
-
-                        //TODO perform sanity check on likeliness of prediction bias given prior.
-                        //if disagreement, then do what? reject measurement.
-
-                        //perform inference on posterior of bias estimate
-                        predictionBiasPosterior = new GaussianDistributionDataModel(
-                                GaussianInference.GetInferredDistribution(latestDayDist.biasPosterior.asGaussian(),
-                                        predictionBias, K_ALARM_SIGMA, K_MIN_SIGMA_OF_BIAS)
-                        );
-
-                    }
-
-
-                    // TODO implement wake-time feedback
-                    if (wakeFeedbackTime.isPresent()) {
-                      //  isInferingWakeFromPrediction = false;
-                    }
-
-                    //infer on wake prediction, because an alarm did not sound
-                    if (isInferingWakeFromPrediction) {
-
-                        //add predicted bias compensation to prior, but only if its uncertainty is isn't so bad
-                        final GaussianDistribution priorWithoutBiasCompensation = latestDayDist.eventTimePosterior.asGaussian();
-
-                        double unBiasedMean = priorWithoutBiasCompensation.mean;
-
-                        if (predictionBiasPosterior.sigma < K_ACCEPTABLE_BIAS_UNCERTAINTY_FLOOR) {
-                            unBiasedMean = addHours(latestDayDist.biasPosterior.mean,priorWithoutBiasCompensation.mean);
-                        }
-
-
-                        GaussianDistribution priorWithBiasCompensation = new GaussianDistribution(unBiasedMean,
-                                priorWithoutBiasCompensation.sigma,priorWithoutBiasCompensation.alpha,priorWithoutBiasCompensation.beta,
-                                priorWithoutBiasCompensation.kappa,priorWithoutBiasCompensation.modelType);
-
-                        //inference
-                        wakeTimePosterior = new GaussianDistributionDataModel(
-                                GaussianInference.GetInferredDistribution(priorWithBiasCompensation,
-                                        wakePredictionTimeInHoursLocalTime, K_PREDICTION_SIGMA, K_MIN_SIGMA_OF_PREDICTION)
-                        );
-
-                    }
-
-
-                    //compute new wake time in absolute terms
-                    //B - A = C ---> A + C = B
-                    final double timeDeltaFromPredictionToPosteriorInHours = addHours(-getLocalTimeInFloatingPointHoursFromEvent(wake),wakeTimePosterior.mean);
-                    final long timeDeltaInMillis = (long)(timeDeltaFromPredictionToPosteriorInHours * 3600 * 1000);
-                    final long newStartTimestamp = wake.getStartTimestamp() + timeDeltaInMillis;
-                    final long newEndTimestamp = newStartTimestamp + 1 * DateTimeConstants.MILLIS_PER_MINUTE;
-
-                    newWakeEvent = Optional.of((Event)new WakeupEvent(newStartTimestamp,newEndTimestamp,wake.getTimezoneOffset()));
-
-
-                    //copy over posteriors and priors
-                    todaysDistributions = new SleepEventPredictionDistribution(
-                                                        latestDayDist.biasPosterior,
-                                                        latestDayDist.eventTimePosterior,
-                                                        predictionBiasPosterior,
-                                                        wakeTimePosterior);
-
-                    LOGGER.debug(String.format("new posterior wake time %f,%f,%f,%f,%f",
-                            wakeTimePosterior.mean, wakeTimePosterior.sigma,wakeTimePosterior.alpha,wakeTimePosterior.beta,wakeTimePosterior.kappa));
-
-                    LOGGER.debug(String.format("new posterior bias %f,%f",
-                            predictionBiasPosterior.mean,predictionBiasPosterior.sigma));
-
-
-
+                //DO BAYES UPDATE
+                if (optionalEventDist.isPresent()) {
+                    Optional<SleepEventPredictionDistribution> result = DoBayes(event, optionalFeedback, optionalEventDist.get());
+                    resultMap.put(event.getType(), result);
                 }
             }
         }
 
+        //map results back into new distribution, and put back in the data store.
+        try {
+            todaysDist = new SleepEventDistributions(
+                    resultMap.get(Event.Type.IN_BED).get(),
+                    resultMap.get(Event.Type.SLEEP).get(),
+                    resultMap.get(Event.Type.WAKE_UP).get(),
+                    resultMap.get(Event.Type.OUT_OF_BED).get());
 
+        }
+        catch (Exception e) {
+            LOGGER.warn("had problems mapping sleep distributions");
+        }
 
-        this.sleepPriorsDAO.updateWakeProbabilityDistributions(accountId,targetDate,todaysDistributions);
+        //update distributions in permanent store
+        this.sleepPriorsDAO.updateWakeProbabilityDistributions(accountId,targetDate,todaysDist);
 
-        //repopulate, substituting the new wake event
-        for (Optional<Event> ev : predictions) {
-            //if (ev.isPresent() && ev.get().getType() == Event.Type.WAKE_UP && newWakeEvent.isPresent()) {
-            //    updatedSleepEvents.add(newWakeEvent);
-            //}
-            //else {
-                updatedSleepEvents.add(ev);
-            //}
+        //update list of predictions
+        for (int i = 0; i < predictions.size(); i++) {
+            Optional<Event> optionalPrediction = predictions.get(i);
+
+            if (optionalPrediction.isPresent()) {
+                Event event = optionalPrediction.get();
+
+                Optional<SleepEventPredictionDistribution> result = todaysDist.get(event.getType());
+
+                if (result.isPresent()) {
+                    //re-set time of event
+                    event.updateTimeStamps(result.get().prediction.getMillis());
+                }
+                else {
+                    //pass-through
+                    updatedSleepEvents.add(optionalPrediction);
+                }
+
+            }
+            else {
+                //pass-through absent
+                updatedSleepEvents.add(optionalPrediction);
+            }
+
         }
 
         return updatedSleepEvents;

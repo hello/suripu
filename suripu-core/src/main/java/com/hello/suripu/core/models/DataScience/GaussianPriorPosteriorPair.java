@@ -12,6 +12,14 @@ public class GaussianPriorPosteriorPair {
         this.posterior = posterior;
     }
 
+    public final GaussianPriorPosteriorPair getCopy() {
+        return new GaussianPriorPosteriorPair(this.prior.getCopy(),this.posterior.getCopy());
+    }
+
+    public final GaussianPriorPosteriorPair getCopyWithPosteriorAsPrior() {
+        return new GaussianPriorPosteriorPair(this.posterior.getCopy(),this.posterior.getCopy());
+    }
+
     @JsonProperty("prior")
     public final GaussianDistributionDataModel prior;
 

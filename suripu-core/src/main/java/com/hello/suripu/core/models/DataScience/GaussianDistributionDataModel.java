@@ -20,6 +20,10 @@ public class GaussianDistributionDataModel {
         this.modelType = gaussian.modelType;
     }
 
+    public GaussianDistributionDataModel getCopy() {
+        return new GaussianDistributionDataModel(this.asGaussian());
+    }
+
     public GaussianDistribution asGaussian() {
         return new GaussianDistribution(this.mean,this.sigma,this.alpha,this.beta,this.kappa,this.modelType);
     }

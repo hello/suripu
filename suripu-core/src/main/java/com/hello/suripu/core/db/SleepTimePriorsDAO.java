@@ -1,7 +1,7 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
-import com.hello.suripu.core.models.DataScience.SleepEventPredictionDistribution;
+import com.hello.suripu.core.models.DataScience.SleepEventDistributions;
 import org.joda.time.DateTime;
 
 /**
@@ -9,9 +9,9 @@ import org.joda.time.DateTime;
  */
 public interface SleepTimePriorsDAO {
 
-    public Optional<SleepEventPredictionDistribution> getWakeDistributionByDay(final Long accountId, final DateTime day);
+    public Optional<SleepEventDistributions> getWakeDistributionByDay(final Long accountId, final DateTime day);
 
-    public SleepEventPredictionDistribution getWakeDistributionByDayEnforcingDefault(final Long accountId, final DateTime day, final SleepEventPredictionDistribution default_dist);
+    public SleepEventDistributions getWakeDistributionByDayEnforcingDefault(final Long accountId, final DateTime day, final SleepEventDistributions default_dist);
 
-    public void updateWakeProbabilityDistributions( final Long accountId,final DateTime day,final SleepEventPredictionDistribution newDist);
+    public void updateWakeProbabilityDistributions( final Long accountId,final DateTime day,final SleepEventDistributions newDist);
 }
