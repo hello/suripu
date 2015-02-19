@@ -15,8 +15,8 @@ public class GaussianInference {
         GaussianDistribution posterior = prior;
         switch (prior.modelType) {
 
-            case RANDOM_MEAN:
-                double variance = prior.sigma*prior.sigma;
+            case RANDOM_MEAN: {
+                double variance = prior.sigma * prior.sigma;
                 double conjugate_prior_variance = conjugate_prior_sigma * conjugate_prior_sigma;
 
                 if (variance < k_minimum_variance) {
@@ -33,7 +33,7 @@ public class GaussianInference {
                 final double conj_prior_information = 1.0 / conjugate_prior_variance;
                 final double prior_information = 1.0 / variance;
 
-                final double new_mean  = w1 * x + w2 * prior.mean;
+                final double new_mean = w1 * x + w2 * prior.mean;
                 final double new_variance = 1.0 / (conj_prior_information + prior_information);
 
                 double new_sigma = Math.sqrt(new_variance);
@@ -42,24 +42,24 @@ public class GaussianInference {
                     new_sigma = sigma_floor;
                 }
 
-                posterior = new GaussianDistribution(new_mean,new_sigma);
+                posterior = new GaussianDistribution(new_mean, new_sigma);
 
                 break;
+            }
             case RANDOM_VARIANCE:
                 /* not implemented yet! */
                 break;
-            case RANDOM_MEAN_AND_VARIANCE:
+            case RANDOM_MEAN_AND_VARIANCE: {
                 final double n = 1;
-                final double mu = (prior.kappa*prior.mean + n*x) / (prior.kappa + n);
+                final double mu = (prior.kappa * prior.mean + n * x) / (prior.kappa + n);
                 final double kappa = prior.kappa + n;
                 final double alpha = prior.alpha + n / 2.0;
-                final double beta = prior.beta + 0.5 * prior.kappa*n*(x - prior.mean)*(x - prior.mean) / (prior.kappa + n);
+                final double beta = prior.beta + 0.5 * prior.kappa * n * (x - prior.mean) * (x - prior.mean) / (prior.kappa + n);
 
-                posterior = new GaussianDistribution(mu,0.0,alpha,beta,kappa, GaussianDistribution.DistributionModel.RANDOM_MEAN_AND_VARIANCE);
-
+                posterior = new GaussianDistribution(mu, 0.0, alpha, beta, kappa, GaussianDistribution.DistributionModel.RANDOM_MEAN_AND_VARIANCE);
 
                 break;
-
+            }
 
         }
 

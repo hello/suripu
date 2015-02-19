@@ -1,7 +1,7 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
-import com.hello.suripu.core.models.DataScience.WakeProbabilityDistributions;
+import com.hello.suripu.core.models.DataScience.SleepEventPredictionDistribution;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -12,10 +12,10 @@ import java.util.HashMap;
  * Created by benjo on 2/15/15.
  */
 public class SleepTimePriorsLocalImpl implements SleepTimePriorsDAO {
-    HashMap<String,WakeProbabilityDistributions> _mymap;
+    HashMap<String,SleepEventPredictionDistribution> _mymap;
 
     public SleepTimePriorsLocalImpl() {
-        _mymap = new HashMap<String,WakeProbabilityDistributions>();
+        _mymap = new HashMap<String,SleepEventPredictionDistribution>();
     }
 
     private static String getKey(Long account_id, DateTime day) {
@@ -24,12 +24,12 @@ public class SleepTimePriorsLocalImpl implements SleepTimePriorsDAO {
     }
 
     @Override
-    public Optional<WakeProbabilityDistributions> getWakeDistributionByDay(Long accountId, DateTime day) {
+    public Optional<SleepEventPredictionDistribution> getWakeDistributionByDay(Long accountId, DateTime day) {
 
         final String key = this.getKey(accountId,day);
-        Optional<WakeProbabilityDistributions> ret = Optional.absent();
+        Optional<SleepEventPredictionDistribution> ret = Optional.absent();
 
-        WakeProbabilityDistributions value = null;
+        SleepEventPredictionDistribution value = null;
 
         synchronized (_mymap) {
             value = _mymap.get(key);
@@ -43,11 +43,11 @@ public class SleepTimePriorsLocalImpl implements SleepTimePriorsDAO {
     }
 
     @Override
-    public WakeProbabilityDistributions getWakeDistributionByDayEnforcingDefault(final Long accountId, DateTime day, final WakeProbabilityDistributions default_dist) {
+    public SleepEventPredictionDistribution getWakeDistributionByDayEnforcingDefault(final Long accountId, DateTime day, final SleepEventPredictionDistribution default_dist) {
 
         final String key = this.getKey(accountId,day);
 
-        WakeProbabilityDistributions value = null;
+        SleepEventPredictionDistribution value = null;
 
         synchronized (_mymap) {
             value = _mymap.get(key);
@@ -63,7 +63,7 @@ public class SleepTimePriorsLocalImpl implements SleepTimePriorsDAO {
     }
 
     @Override
-    public void updateWakeProbabilityDistributions( final Long accountId,final DateTime day,final WakeProbabilityDistributions newDist) {
+    public void updateWakeProbabilityDistributions( final Long accountId,final DateTime day,final SleepEventPredictionDistribution newDist) {
         final String key = this.getKey(accountId,day);
 
         synchronized (_mymap) {
