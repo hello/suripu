@@ -665,35 +665,7 @@ public class TimelineProcessor {
     }
 
 
-    static private double getLocalTimeInFloatingPointHoursFromEvent(final Event event) {
-        final DateTime dateTime  = new DateTime(event.getStartTimestamp());
-        final DateTimeZone zone = DateTimeZone.forOffsetMillis(event.getTimezoneOffset());
-        final DateTime withZone = dateTime.withZone(zone);
-        final LocalDateTime local = withZone.toLocalDateTime();
 
-
-        final double time_in_hours_local_time =
-                ((double)local.getHourOfDay()) +
-                ((double)local.getMinuteOfHour()) / 60.0; //which hour, floating point.
-
-        return time_in_hours_local_time;
-    }
-
-
-    static private double addHours(final double h1, final double h2) {
-
-        //check for wrapping
-        double h3 = h1 + h2;
-        if (h3 > 12.0) {
-            h3 -= 24.0;
-        }
-
-        if (h3 < -12.0) {
-            h3 += 24.0;
-        }
-
-        return h3;
-    }
 
     /*
      * Bayes' magic
