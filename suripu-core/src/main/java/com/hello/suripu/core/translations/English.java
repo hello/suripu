@@ -154,4 +154,10 @@ public class English {
 
     // TIMELINE
     public final static String TIMELINE_NO_SLEEP_DATA = " No sleep data recorded";
+
+    // Trends
+    public final static String TRENDS_SCORE_AVERAGE = "AVERAGE SLEEP SCORE";
+    public final static String TRENDS_SCORE_OVER_TIME = "SLEEP SCORE OVER TIME";
+    public final static String TRENDS_DURATION_AVERAGE = "AVERAGE SLEEP DURATION";
+    public final static String TRENDS_DURATION_OVER_TIME = "SLEEP DURATION OVER TIME";
 }
