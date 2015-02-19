@@ -34,6 +34,7 @@ import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.util.BayesInferenceResult;
 import com.hello.suripu.core.util.BayesUtils;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.SunData;
@@ -657,8 +658,13 @@ public class TimelineProcessor {
         return new DateTime(event.getStartTimestamp(),DateTimeZone.forOffsetMillis(event.getTimezoneOffset()));
     }
 
+    static private  DateTime getTimeFromAnotherPlusAnOffset(final DateTime t1, long millisOffset) {
+        DateTime t2 = new DateTime(t1);
+        t2.plus(millisOffset);
+        return t2;
+    }
 
-    static private Optional<SleepEventPredictionDistribution> DoBayes(final Event event, final Optional<Event> ofeedback, final SleepEventPredictionDistribution today) {
+    static private BayesInferenceResult DoBayes(final Event event, final Optional<Event> ofeedback, final SleepEventPredictionDistribution today) {
 
 
         Optional<DateTime> predictedEventTime = Optional.of(getDateTimeFromEvent(event));
@@ -725,11 +731,11 @@ public class TimelineProcessor {
             alarm = Optional.of(alarms.get(alarms.size() - 1));
         }
 
-        HashMap<Event.Type, Optional<SleepEventPredictionDistribution>> resultMap = new HashMap<Event.Type, Optional<SleepEventPredictionDistribution>>();
+        HashMap<Event.Type, BayesInferenceResult> resultMap = new HashMap<Event.Type, BayesInferenceResult>();
 
-        //set defaults in map
+        //set defaults in map -- ABSENT,ABSENT,ABSENT....
         for (Event.Type type : SleepEventDistributions.SUPPORTED_EVENT_TYPES) {
-            resultMap.put(type, todaysDist.get(type));
+            resultMap.put(type, new BayesInferenceResult(todaysDist.get(type)));
         }
 
 
@@ -759,7 +765,7 @@ public class TimelineProcessor {
 
                 //DO BAYES UPDATE
                 if (optionalEventDist.isPresent()) {
-                    Optional<SleepEventPredictionDistribution> result = DoBayes(event, optionalFeedback, optionalEventDist.get());
+                    BayesInferenceResult result = DoBayes(event, optionalFeedback, optionalEventDist.get());
 
                     //PLACE IN RESULTS MAP
                     resultMap.put(event.getType(), result);
@@ -767,13 +773,44 @@ public class TimelineProcessor {
             }
         }
 
+        //enforce consistency
+        //if in-bed happens after sleep, set in-bed to just before sleep.
+        //if out-of-bed happens before wake, set out-of-bed to just after wake
+        try {
+            Optional<DateTime> inBed = resultMap.get(Event.Type.IN_BED).eventTime;
+            Optional<DateTime> sleep = resultMap.get(Event.Type.SLEEP).eventTime;
+            Optional<DateTime> wake = resultMap.get(Event.Type.WAKE_UP).eventTime;
+            Optional<DateTime> outOfBed = resultMap.get(Event.Type.OUT_OF_BED).eventTime;
+
+
+            //sleep is after inbed
+            if (inBed.isPresent() && sleep.isPresent()) {
+                if (sleep.get().getMillis() < inBed.get().getMillis() ) {
+                    resultMap.get(Event.Type.IN_BED).eventTime = Optional.of(getTimeFromAnotherPlusAnOffset(sleep.get(),-DateTimeConstants.MILLIS_PER_MINUTE));
+                }
+            }
+
+            //wake is before out-of-bed
+           if (wake.isPresent() && outOfBed.isPresent()) {
+               if (outOfBed.get().getMillis() < wake.get().getMillis()) {
+                   resultMap.get(Event.Type.OUT_OF_BED).eventTime = Optional.of(getTimeFromAnotherPlusAnOffset(wake.get(),DateTimeConstants.MILLIS_PER_MINUTE));
+               }
+           }
+
+        }
+        catch (Exception e) {
+            LOGGER.warn("had problems enforcing consistency of event times");
+
+        }
+
+
         //map results back into new distribution, and put back in the data store.
         try {
             todaysDist = new SleepEventDistributions(
-                    resultMap.get(Event.Type.IN_BED).get(),
-                    resultMap.get(Event.Type.SLEEP).get(),
-                    resultMap.get(Event.Type.WAKE_UP).get(),
-                    resultMap.get(Event.Type.OUT_OF_BED).get());
+                    resultMap.get(Event.Type.IN_BED).distributions.get(),
+                    resultMap.get(Event.Type.SLEEP).distributions.get(),
+                    resultMap.get(Event.Type.WAKE_UP).distributions.get(),
+                    resultMap.get(Event.Type.OUT_OF_BED).distributions.get());
 
         }
         catch (Exception e) {
@@ -790,11 +827,11 @@ public class TimelineProcessor {
             if (optionalPrediction.isPresent()) {
                 Event event = optionalPrediction.get();
 
-                Optional<SleepEventPredictionDistribution> result = todaysDist.get(event.getType());
+               BayesInferenceResult result = resultMap.get(event.getType());
 
-                if (result.isPresent()) {
+                if (result.eventTime.isPresent()) {
                     //re-set time of event
-                    event.updateTimeStamps(result.get().prediction.getMillis());
+                    event.updateTimeStamps(result.eventTime.get().getMillis());
                     updatedSleepEvents.add(Optional.of(event));
                 }
                 else {

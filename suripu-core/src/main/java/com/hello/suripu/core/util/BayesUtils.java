@@ -76,19 +76,19 @@ public class BayesUtils {
     * @param wakeFeedbackTime time user said they woke up
     * @return
     */
-    static public final Optional<SleepEventPredictionDistribution> inferPredictionBiasAndDistributionTimes(
+
+    static public BayesInferenceResult inferPredictionBiasAndDistributionTimes(
             final GaussianDistributionDataModel priorEventTimeDist,
             final GaussianDistributionDataModel priorBiasDist,
             final Optional<DateTime> prediction,
             final Optional<DateTime> measurement, final double measurementSigma) {
 
 
-        Optional<SleepEventPredictionDistribution> result = Optional.absent();
-
+        BayesInferenceResult result = new BayesInferenceResult();
 
         //if neither prediction nor measurement is present, get out of here
         if (!prediction.isPresent() && !measurement.isPresent()) {
-            return Optional.absent();
+            return result;
         }
 
 
@@ -153,7 +153,8 @@ public class BayesUtils {
         final GaussianPriorPosteriorPair eventPair = new GaussianPriorPosteriorPair(priorEventTimeDist,posteriorEventTimeDist);
         final GaussianPriorPosteriorPair biasPair = new GaussianPriorPosteriorPair(priorBiasDist,posteriorBiasDist);
 
-        result = Optional.of(new SleepEventPredictionDistribution(eventTime,biasPair,eventPair));
+        result.eventTime = Optional.of(eventTime);
+        result.distributions = Optional.of(new SleepEventPredictionDistribution(biasPair,eventPair));
 
         return result;
 

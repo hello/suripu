@@ -8,14 +8,12 @@ import org.joda.time.DateTime;
  */
 public class SleepEventPredictionDistribution {
 
-    public SleepEventPredictionDistribution(final DateTime prediction,
-                                            final GaussianPriorPosteriorPair biasDistributions,
+    public SleepEventPredictionDistribution(final GaussianPriorPosteriorPair biasDistributions,
                                             final GaussianPriorPosteriorPair eventTimeDistributions) {
 
 
         this.biasDistributions = biasDistributions;
         this.eventTimeDistributions = eventTimeDistributions;
-        this.prediction = prediction;
     }
 
    public static final double BIAS_PREDICTION_MEAN = 0.0; //hours
@@ -51,18 +49,18 @@ public class SleepEventPredictionDistribution {
 
 
 
-       return new SleepEventPredictionDistribution(new DateTime(),biasPair,eventTimePair);
+       return new SleepEventPredictionDistribution(biasPair,eventTimePair);
     }
 
     public final SleepEventPredictionDistribution getCopy() {
-        return new SleepEventPredictionDistribution(new DateTime(this.prediction),
+        return new SleepEventPredictionDistribution(
                 this.biasDistributions.getCopy(),
                 this.eventTimeDistributions.getCopy());
 
     }
 
     public final SleepEventPredictionDistribution getCopyWithPosteriorAsPrior() {
-        return new SleepEventPredictionDistribution(new DateTime(this.prediction),
+        return new SleepEventPredictionDistribution(
                 this.biasDistributions.getCopyWithPosteriorAsPrior(),
                 this.eventTimeDistributions.getCopyWithPosteriorAsPrior());
 
@@ -78,6 +76,4 @@ public class SleepEventPredictionDistribution {
     @JsonProperty("event_time_distributions")
     public final GaussianPriorPosteriorPair eventTimeDistributions;
 
-    @JsonProperty("event_prediction_time")
-    public final DateTime prediction;
 }
