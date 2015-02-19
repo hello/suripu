@@ -211,10 +211,52 @@ public class TimelineUtils {
 
     }
 
+    public static List<Event> removeMotionEventsOutsideBedPeriod(final List<Event> events, final List<Optional<Event>> sleepEvents){
+        final LinkedList<Event> newEventList = new LinkedList<>();
+        final Optional<Event> inBedEventOptional = sleepEvents.get(0);
+        final Optional<Event> sleepEventOptional = sleepEvents.get(1);
+        final Optional<Event> wakeUpEventOptional = sleepEvents.get(2);
+        final Optional<Event> outOfBedEventOptional = sleepEvents.get(3);
+
+        // State is harmful, shall avoid it like plague
+        for(final Event event:events) {
+            if (event.getType() != Event.Type.MOTION) {
+                newEventList.add(event);
+                continue;
+            }
+
+            if(inBedEventOptional.isPresent() && event.getEndTimestamp() <= inBedEventOptional.get().getStartTimestamp()) {
+                newEventList.add(new NullEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth()));
+                continue;
+            }
+
+            if(outOfBedEventOptional.isPresent() && event.getStartTimestamp() >= outOfBedEventOptional.get().getEndTimestamp()){
+                newEventList.add(new NullEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth()));
+                continue;
+            }
+
+            if(outOfBedEventOptional.isPresent() == false && wakeUpEventOptional.isPresent() == false){
+                newEventList.add(new NullEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth()));
+                continue;
+            }
+
+            if(inBedEventOptional.isPresent() == false && sleepEventOptional.isPresent() == false){
+                newEventList.add(new NullEvent(event.getStartTimestamp(), event.getEndTimestamp(), event.getTimezoneOffset(), event.getSleepDepth()));
+                continue;
+            }
+
+            newEventList.add(event);
+        }
+
+        return newEventList;
+    }
+
+
     public static List<Event> removeMotionEventsOutsideBedPeriod(final List<Event> events,
                                                                  final Optional<Event> inBedEventOptional,
                                                                  final Optional<Event> outOfBedEventOptional){
         final LinkedList<Event> newEventList = new LinkedList<>();
+
         // State is harmful, shall avoid it like plague
         for(final Event event:events) {
             if (event.getType() != Event.Type.MOTION) {

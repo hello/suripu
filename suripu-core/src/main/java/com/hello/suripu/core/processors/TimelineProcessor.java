@@ -319,9 +319,7 @@ public class TimelineProcessor {
         final List<Event> eventsWithSleepEvents = TimelineRefactored.mergeEvents(timEvents);
         final List<Event> smoothedEvents = TimelineUtils.smoothEvents(eventsWithSleepEvents);
 
-        final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents,
-                                                            sleepEventsFromAlgorithm.get(0),
-                                                            sleepEventsFromAlgorithm.get(3));
+        final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents, sleepEventsFromAlgorithm);
 
         final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
                 sleepEventsFromAlgorithm.get(0),
@@ -504,9 +502,7 @@ public class TimelineProcessor {
         final List<Event> eventsWithSleepEvents = TimelineRefactored.mergeEvents(timelineEvents);
         final List<Event> smoothedEvents = TimelineUtils.smoothEvents(eventsWithSleepEvents);
 
-        final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents,
-                sleepEventsFromAlgorithm.get(0),
-                sleepEventsFromAlgorithm.get(3));
+        final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents, sleepEventsFromAlgorithm);
 
         final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
                 sleepEventsFromAlgorithm.get(0),
