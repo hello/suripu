@@ -20,6 +20,7 @@ import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
+import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
@@ -90,6 +91,7 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
 
         final SleepLabelDAO sleepLabelDAO = commonDB.onDemand(SleepLabelDAO.class);
         final SleepScoreDAO sleepScoreDAO = commonDB.onDemand(SleepScoreDAO.class);
+        final FeedbackDAO feedbackDAO = commonDB.onDemand(FeedbackDAO.class);
         final TrendsInsightsDAO trendsInsightsDAO = insightsDB.onDemand(TrendsInsightsDAO.class);
 
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
@@ -139,7 +141,8 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
                 new SunData(),
                 amazonS3,
                 "hello-audio",
-                ringTimeDAODynamoDB);
+                ringTimeDAODynamoDB,
+                feedbackDAO);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
