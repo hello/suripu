@@ -592,6 +592,7 @@ public class TimelineUtils {
 
             if(segment.getType() == Event.Type.WAKE_UP && sleepStarted){  //On purpose dangling case, if no wakeup present
                 sleepStarted = false;
+                wakeUpTimestampMillis = segment.getOffsetMillis();
                 sleepDurationInSecs = (int) (segment.getTimestamp() - sleepTimestampMillis) / DateTimeConstants.MILLIS_PER_SECOND;
             }
 
@@ -624,6 +625,9 @@ public class TimelineUtils {
             final long lastEventTimestamp = Math.max(wakeUpTimestampMillis, outBedTimestampMillis) == 0 ? sortedSegments.get(sortedSegments.size() - 1).getTimestamp() : Math.max(wakeUpTimestampMillis, outBedTimestampMillis);
             if(lastEventTimestamp - firstEventTimestamp > 4 * DateTimeConstants.MILLIS_PER_HOUR){
                 inBedDurationInSecs = (int) ((lastEventTimestamp - firstEventTimestamp) / DateTimeConstants.MILLIS_PER_SECOND);
+                if (wakeUpTimestampMillis == 0) {
+                    wakeUpTimestampMillis = lastEventTimestamp;
+                }
             }
         }
 
