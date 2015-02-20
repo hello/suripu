@@ -157,7 +157,7 @@ public class RingTimeDAODynamoDB {
     /**
      * TODO: this is awfully similar to getNextRingTimeForSense. Probably needs refactoring.
      * @param senseId
-     * @param eveningDayBefore
+     * @param upToOneWeekAgo
      * @return
      */
     public List<RingTime> getRingTimesBetween(final String senseId, final DateTime upToOneWeekAgo) {

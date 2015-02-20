@@ -325,7 +325,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 sunData,
                 amazonS3,
                 "hello-audio",
-                ringTimeDAODynamoDB);
+                ringTimeDAODynamoDB,
+                feedbackDAO);
 
         environment.addResource(new TimelineResource(accountDAO, timelineProcessor));
 

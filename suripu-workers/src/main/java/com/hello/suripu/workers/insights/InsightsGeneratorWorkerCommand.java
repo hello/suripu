@@ -152,7 +152,7 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
         final InsightsDAODynamoDB insightsDAODynamoDB = new InsightsDAODynamoDB(insightsDynamoDB, configuration.getInsightsDynamoDB().getTableName());
 
         final AmazonDynamoDB accountPreferencesDynamoDBClient = amazonDynamoDBClientFactory.getForEndpoint(configuration.getInsightsDynamoDB().getEndpoint());
-        final AccountPreferencesDAO accountPreferencesDynamoDB = AccountPreferencesDynamoDB.create(accountPreferencesDynamoDBClient, configuration.getInsightsDynamoDB().getTableName());
+        final AccountPreferencesDAO accountPreferencesDynamoDB = AccountPreferencesDynamoDB.create(accountPreferencesDynamoDBClient, configuration.getPreferencesDynamoDB().getTableName());
 
         final AmazonDynamoDBClient dynamoDBScoreClient = new AmazonDynamoDBClient(awsCredentialsProvider);
         dynamoDBScoreClient.setEndpoint(configuration.getSleepScoreDynamoDB().getEndpoint());

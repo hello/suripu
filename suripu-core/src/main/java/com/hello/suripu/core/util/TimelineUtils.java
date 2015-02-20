@@ -1190,5 +1190,4 @@ public class TimelineUtils {
         LOGGER.debug("Adding {} alarms to the timeline", events.size());
         return events;
     }
-
 }
