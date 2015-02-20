@@ -130,3 +130,8 @@ features_db:
     endpoint : http://localhost:7777
     region: us-east-1
     table_name: features
+
+preferences_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: preferences

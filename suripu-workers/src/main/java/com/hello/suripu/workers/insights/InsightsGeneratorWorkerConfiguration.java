@@ -64,4 +64,13 @@ public class InsightsGeneratorWorkerConfiguration extends WorkerConfiguration {
     @JsonProperty("sleep_score_version")
     private String sleepScoreVersion;
     public String getSleepScoreVersion() { return sleepScoreVersion; }
+
+    @Valid
+    @NotNull
+    @JsonProperty("preferences_db")
+    private DynamoDBConfiguration preferencesDynamoDB;
+
+    public DynamoDBConfiguration getPreferencesDynamoDB() {
+        return preferencesDynamoDB;
+    }
 }

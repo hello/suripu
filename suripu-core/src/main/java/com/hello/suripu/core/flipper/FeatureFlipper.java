@@ -16,4 +16,5 @@ public class FeatureFlipper {
     public final static String ALARM_IN_TIMELINE = "alarm_in_timeline";
     public final static String PUSH_NOTIFICATIONS_ENABLED = "push_notifications_enabled";
     public final static String SOUND_EVENTS_IN_TIMELINE = "sound_event_in_timeline";
+    public final static String FEEDBACK_IN_TIMELINE = "feedback_in_timeline";
 }
