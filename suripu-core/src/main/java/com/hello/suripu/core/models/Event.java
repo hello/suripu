@@ -82,6 +82,12 @@ public abstract class Event {
     private long endTimestamp;
     private int timezoneOffset;
 
+    public void updateTimeStamps(long newStartTimestamp) {
+        long delta = newStartTimestamp - this.startTimestamp;
+        this.startTimestamp += delta;
+        this.endTimestamp += delta;
+    }
+
     public Event(final Type type, final long startTimestamp, final long endTimestamp, final int timezoneOffset){
         setType(type);
         this.startTimestamp = startTimestamp;

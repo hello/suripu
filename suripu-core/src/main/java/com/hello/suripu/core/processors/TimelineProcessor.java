@@ -12,10 +12,15 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
+import com.hello.suripu.core.db.SleepTimePriorsDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.DataScience.GaussianDistributionDataModel;
+import com.hello.suripu.core.models.DataScience.GaussianPriorPosteriorPair;
+import com.hello.suripu.core.models.DataScience.SleepEventDistributions;
+import com.hello.suripu.core.models.DataScience.SleepEventPredictionDistribution;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.MotionEvent;
@@ -29,6 +34,8 @@ import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.util.BayesInferenceResult;
+import com.hello.suripu.core.util.BayesUtils;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.SunData;
 import com.hello.suripu.core.util.TimelineRefactored;
@@ -36,6 +43,7 @@ import com.hello.suripu.core.util.TimelineUtils;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Histogram;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
@@ -52,6 +60,7 @@ public class TimelineProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineProcessor.class);
     private static final Integer MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES = 3 * 60;
+    private static final double FEEDBACK_MEASUREMENT_SIGMA = 0.25;
     private final AccountDAO accountDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDAO deviceDAO;
@@ -59,6 +68,7 @@ public class TimelineProcessor {
     private final SleepScoreDAO sleepScoreDAO;
     private final SleepLabelDAO sleepLabelDAO;
     private final TrendsInsightsDAO trendsInsightsDAO;
+    private final SleepTimePriorsDAO sleepPriorsDAO;
     private final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB;
     private final int dateBucketPeriod;
     private final SunData sunData;
@@ -66,6 +76,7 @@ public class TimelineProcessor {
     private final String bucketName;
     private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
     private final Histogram motionEventDistribution;
+    private final SleepEventDistributions defaultWakeDistribution;
 
     public TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
                             final AccountDAO accountDAO,
@@ -74,6 +85,7 @@ public class TimelineProcessor {
                             final SleepLabelDAO sleepLabelDAO,
                             final SleepScoreDAO sleepScoreDAO,
                             final TrendsInsightsDAO trendsInsightsDAO,
+                            final SleepTimePriorsDAO sleepPriorsDAO,
                             final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
                             final int dateBucketPeriod,
                             final SunData sunData,
@@ -87,6 +99,7 @@ public class TimelineProcessor {
         this.sleepLabelDAO = sleepLabelDAO;
         this.sleepScoreDAO = sleepScoreDAO;
         this.trendsInsightsDAO = trendsInsightsDAO;
+        this.sleepPriorsDAO = sleepPriorsDAO;
         this.aggregateSleepScoreDAODynamoDB = aggregateSleepScoreDAODynamoDB;
         this.dateBucketPeriod = dateBucketPeriod;
         this.sunData = sunData;
@@ -94,6 +107,12 @@ public class TimelineProcessor {
         this.bucketName = bucketName;
         this.motionEventDistribution = Metrics.defaultRegistry().newHistogram(TimelineProcessor.class, "motion_event_distribution");
         this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
+
+
+        this.defaultWakeDistribution =  SleepEventDistributions.getDefault();
+
+
+
     }
 
     public boolean shouldProcessTimelineByWorker(final long accountId,
@@ -109,6 +128,7 @@ public class TimelineProcessor {
         }
         return false;
     }
+
 
     private List<Event> getAlarmEvents(final Long accountId, final DateTime evening, final DateTime morning, final Integer offsetMillis) {
 
@@ -463,32 +483,52 @@ public class TimelineProcessor {
             timelineEvents.put(event.getStartTimestamp(), event);
         }
 
+        // ALARM
+        Optional<List<Event>> alarmEventsOptional = Optional.absent();
+
+       // if(hasAlarmInTimeline) {
+            alarmEventsOptional = Optional.of(getAlarmEvents(accountId, targetDate, endDate, trackerMotions.get(0).offsetMillis));
+
+            //if we are here, there are events and the get is not null
+            for(final Event event : alarmEventsOptional.get()) {
+                timelineEvents.put(event.getStartTimestamp(), event);
+            }
+   //     }
 
         final List<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate, trackerMotions, lightOutTimeOptional, wakeUpWaveTimeOptional);
+        List<Optional<Event>> feedbackWakeTimes = new ArrayList<Optional<Event>>();
+
+        //BEJ - post-process sleep predictions using priors from previous day, if available
+
+
+        List<Optional<Event>> updatedSleepEvents = sleepEventsFromAlgorithm;
+
+        final int dow = targetDate.toLocalDate().getDayOfWeek();
+        //if an evening before a week day
+        if (dow != DateTimeConstants.FRIDAY && dow != DateTimeConstants.SATURDAY) {
+
+            updatedSleepEvents = BayesUpdate(accountId, targetDate, sleepEventsFromAlgorithm, alarmEventsOptional, feedbackWakeTimes);
+
+        }
 
         // WAKE UP , etc.
-        for(final Optional<Event> sleepEventOptional: sleepEventsFromAlgorithm){
-            if(sleepEventOptional.isPresent()){
+        for (final Optional<Event> sleepEventOptional : updatedSleepEvents) {
+            if (sleepEventOptional.isPresent()) {
                 timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
             }
         }
 
 
         // PARTNER MOTION
-        final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.get(1), sleepEventsFromAlgorithm.get(2), motionEvents, accountId);
+        final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(updatedSleepEvents.get(1), updatedSleepEvents.get(2), motionEvents, accountId);
         for(PartnerMotionEvent partnerMotionEvent : partnerMotionEvents) {
             timelineEvents.put(partnerMotionEvent.getStartTimestamp(), partnerMotionEvent);
         }
         final int numPartnerMotion = partnerMotionEvents.size();
 
 
-        // ALARM
-        if(hasAlarmInTimeline) {
-            final List<Event> alarmEvents = getAlarmEvents(accountId, targetDate, endDate, trackerMotions.get(0).offsetMillis);
-            for(final Event event : alarmEvents) {
-                timelineEvents.put(event.getStartTimestamp(), event);
-            }
-        }
+
+
 
         // SOUND
         int numSoundEvents = 0;
@@ -505,12 +545,12 @@ public class TimelineProcessor {
         final List<Event> smoothedEvents = TimelineUtils.smoothEvents(eventsWithSleepEvents);
 
         final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents,
-                sleepEventsFromAlgorithm.get(0),
-                sleepEventsFromAlgorithm.get(3));
+                updatedSleepEvents.get(0),
+                updatedSleepEvents.get(3));
 
         final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
-                sleepEventsFromAlgorithm.get(0),
-                sleepEventsFromAlgorithm.get(3));
+                updatedSleepEvents.get(0),
+                updatedSleepEvents.get(3));
 
         final List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(greyEvents);
 
@@ -613,6 +653,223 @@ public class TimelineProcessor {
         return TimelineUtils.getSoundEvents(soundSamples, sleepDepths, lightOutTimeOptional, optionalSleepTime, optionalAwakeTime);
     }
 
+
+    static private DateTime getDateTimeFromEvent(final Event event) {
+        return new DateTime(event.getStartTimestamp(),DateTimeZone.forOffsetMillis(event.getTimezoneOffset()));
+    }
+
+    static private  DateTime getTimeFromAnotherPlusAnOffset(final DateTime t1, long millisOffset) {
+        DateTime t2 = new DateTime(t1);
+        t2.plus(millisOffset);
+        return t2;
+    }
+
+    static private BayesInferenceResult DoBayes(final Event event, final Optional<Event> ofeedback, final SleepEventPredictionDistribution today) {
+
+
+        Optional<DateTime> predictedEventTime = Optional.of(getDateTimeFromEvent(event));
+        Optional<DateTime> measurement = Optional.absent();
+
+
+        if (ofeedback.isPresent()) {
+            measurement = Optional.of(getDateTimeFromEvent(ofeedback.get()));
+        }
+
+        //yesterday's posterior is today's prior
+        return BayesUtils.inferPredictionBiasAndDistributionTimes(
+                today.eventTimeDistributions.prior,
+                today.biasDistributions.prior,
+                predictedEventTime,
+                measurement,FEEDBACK_MEASUREMENT_SIGMA);
+
+
+}
+
+    private void PrintDistribution(SleepEventPredictionDistribution dist,String prefix) {
+
+        final double wakeBiasMean = dist.biasDistributions.posterior.mean;
+        final double wakeBiasSigma = dist.biasDistributions.posterior.sigma;
+        final double wakeMean = dist.eventTimeDistributions.posterior.mean;
+        final double wakeAlpha = dist.eventTimeDistributions.posterior.alpha;
+        final double wakeBeta = dist.eventTimeDistributions.posterior.beta;
+        final double wakeSigma = wakeBeta / wakeAlpha;
+
+        LOGGER.debug(String.format("%sb=[%f,%f], %st=[%f,%f]",prefix,wakeBiasMean,wakeBiasSigma,prefix,wakeMean,wakeSigma));
+
+    }
+    /*
+     * Bayes' magic
+     * @param targetDate
+     * @param predictions sleep predictions, list of optional events
+     * @param alarmTime optional list of events (confusing!)
+     * @param wakeFeedbackTime time user said they woke up
+     * @return
+     */
+    private final List<Optional<Event>>  BayesUpdate(final Long accountId,
+                                                     final DateTime targetDate,
+                                                     final List<Optional<Event>> predictions,
+                                                     final Optional<List<Event>> alarmTime,
+                                                     final List<Optional<Event>> eventFeedbackTimes) {
+
+
+        //this is what we return
+        ArrayList<Optional<Event>> updatedSleepEvents = new ArrayList<Optional<Event>>();
+
+
+        //these are the distributions from the previous day (or the last time we saw data, up to a week)
+        //we set as default first
+        SleepEventDistributions latestDayDist = this.defaultWakeDistribution;
+
+
+        Optional<Event> alarm = Optional.absent();
+
+        //go back a week, stop if you find a day that had something
+        for (int i = 1; i < 7; i++) {
+            Optional<SleepEventDistributions> prevDist = this.sleepPriorsDAO.getWakeDistributionByDay(accountId, targetDate.minusDays(i));
+
+            if (prevDist.isPresent()) {
+                latestDayDist = prevDist.get();
+                break;
+            }
+        }
+
+        //get today's priors
+        SleepEventDistributions todaysDist = latestDayDist.getCopyWithPosteriorAsPrior();
+
+        //go through alarms, pick the earliest one (should be the last in the list)
+        if (alarmTime.isPresent()) {
+            List<Event> alarms = alarmTime.get();
+
+            if (alarms.size() > 0) {
+                alarm = Optional.of(alarms.get(alarms.size() - 1));
+            }
+        }
+
+        HashMap<Event.Type, BayesInferenceResult> resultMap = new HashMap<Event.Type, BayesInferenceResult>();
+
+        //set defaults in map -- ABSENT,ABSENT,ABSENT....
+        for (Event.Type type : SleepEventDistributions.SUPPORTED_EVENT_TYPES) {
+            resultMap.put(type, new BayesInferenceResult(todaysDist.get(type)));
+        }
+
+
+        //go through all predictions, and if it's one that we care about then do something with it
+        for (int i = 0; i < predictions.size(); i++) {
+            Optional<Event> optionalPredictions = predictions.get(i);
+            Optional<Event> optionalFeedback = Optional.absent();
+
+            //ASSUME THAT THE EVENT FEEDBACK LIST IS MATCHED WITH THE PREDICTIONS
+            if (i < eventFeedbackTimes.size()) {
+                optionalFeedback = eventFeedbackTimes.get(i);
+            }
+
+
+
+            //IF PREDICTION IS HERE
+            if (optionalPredictions.isPresent()) {
+                Event event = optionalPredictions.get();
+
+                //IF ALARM EXISTS, BUT NO FEEDBACK IS PRESENT, AND THIS IS WAKE_UP, SET ALARM AS FEEDBACK
+                if (event.getType() == Event.Type.WAKE_UP && !optionalFeedback.isPresent() && alarm.isPresent()) {
+                    optionalFeedback = alarm;
+                }
+
+                //GET PRIOR FOR TODAY BY EVENT TYPE (IN-BED,SLEEP,WAKE,OUT-OF-BED)
+                Optional<SleepEventPredictionDistribution> optionalEventDist = todaysDist.get(event.getType());
+
+                //DO BAYES UPDATE
+                if (optionalEventDist.isPresent()) {
+                    BayesInferenceResult result = DoBayes(event, optionalFeedback, optionalEventDist.get());
+
+                    //PLACE IN RESULTS MAP
+                    resultMap.put(event.getType(), result);
+                }
+            }
+        }
+
+        //enforce consistency
+        //if in-bed happens after sleep, set in-bed to just before sleep.
+        //if out-of-bed happens before wake, set out-of-bed to just after wake
+        try {
+            Optional<DateTime> inBed = resultMap.get(Event.Type.IN_BED).eventTime;
+            Optional<DateTime> sleep = resultMap.get(Event.Type.SLEEP).eventTime;
+            Optional<DateTime> wake = resultMap.get(Event.Type.WAKE_UP).eventTime;
+            Optional<DateTime> outOfBed = resultMap.get(Event.Type.OUT_OF_BED).eventTime;
+
+
+            //sleep is after inbed
+            if (inBed.isPresent() && sleep.isPresent()) {
+                if (sleep.get().getMillis() < inBed.get().getMillis() ) {
+                    resultMap.get(Event.Type.IN_BED).eventTime = Optional.of(getTimeFromAnotherPlusAnOffset(sleep.get(),-DateTimeConstants.MILLIS_PER_MINUTE));
+                }
+            }
+
+            //wake is before out-of-bed
+           if (wake.isPresent() && outOfBed.isPresent()) {
+               if (outOfBed.get().getMillis() < wake.get().getMillis()) {
+                   resultMap.get(Event.Type.OUT_OF_BED).eventTime = Optional.of(getTimeFromAnotherPlusAnOffset(wake.get(),DateTimeConstants.MILLIS_PER_MINUTE));
+               }
+           }
+
+        }
+        catch (Exception e) {
+            LOGGER.warn("had problems enforcing consistency of event times");
+
+        }
+
+
+        //map results back into new distribution, and put back in the data store.
+        try {
+            todaysDist = new SleepEventDistributions(
+                    resultMap.get(Event.Type.IN_BED).distributions.get(),
+                    resultMap.get(Event.Type.SLEEP).distributions.get(),
+                    resultMap.get(Event.Type.WAKE_UP).distributions.get(),
+                    resultMap.get(Event.Type.OUT_OF_BED).distributions.get());
+
+        }
+        catch (Exception e) {
+            LOGGER.warn("had problems mapping sleep distributions");
+        }
+
+
+        PrintDistribution(todaysDist.inBedDistribution,"inbed");
+        PrintDistribution(todaysDist.sleepDistribution,"sleep");
+        PrintDistribution(todaysDist.wakeDistribution,"wake");
+        PrintDistribution(todaysDist.outOfBedDistribution,"outbed");
+
+        //update distributions in permanent store
+        this.sleepPriorsDAO.updateWakeProbabilityDistributions(accountId,targetDate,todaysDist);
+
+        //update list of predictions
+        for (int i = 0; i < predictions.size(); i++) {
+            Optional<Event> optionalPrediction = predictions.get(i);
+
+            if (optionalPrediction.isPresent()) {
+                Event event = optionalPrediction.get();
+
+               BayesInferenceResult result = resultMap.get(event.getType());
+
+                if (result.eventTime.isPresent()) {
+                    //re-set time of event
+                    event.updateTimeStamps(result.eventTime.get().getMillis());
+                    updatedSleepEvents.add(Optional.of(event));
+                }
+                else {
+                    //pass-through
+                    updatedSleepEvents.add(optionalPrediction);
+                }
+
+            }
+            else {
+                //pass-through absent
+                updatedSleepEvents.add(optionalPrediction);
+            }
+
+        }
+
+        return updatedSleepEvents;
+    }
+
     /**
      * Pang magic
      * @param targetDate
@@ -665,6 +922,9 @@ public class TimelineProcessor {
         }catch (Exception ex){ //TODO : catch a more specific exception
             LOGGER.error("Generate sleep period from Awake Detection Algorithm failed: {}", ex.getMessage());
         }
+
+
+
 
         return  sleepEventsFromAlgorithm;
     }

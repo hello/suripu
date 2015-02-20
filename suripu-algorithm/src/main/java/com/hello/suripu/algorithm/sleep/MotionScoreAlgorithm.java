@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Created by pangwu on 12/14/14.
  */
-public class MotionScoreAlgorithm {
+public class MotionScoreAlgorithm implements MotionScoreAlgorithmInterface {
     private final static Logger LOGGER = LoggerFactory.getLogger(MotionScoreAlgorithm.class);
     private final List<SleepDataScoringFunction> scoringFunctions = new ArrayList<>();
     private final Map<Long, List<AmplitudeData>> dimensions;
@@ -51,6 +51,7 @@ public class MotionScoreAlgorithm {
         return Optional.of(Ordering.natural().max(scores));
     }
 
+    @Override
     public List<Segment> getSleepEvents(final boolean debugMode) throws AlgorithmException {
         final List<List<AmplitudeData>> rawData = new ArrayList<>();
         long timestampOfLastData = 0;
