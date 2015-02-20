@@ -60,7 +60,7 @@ public class TimelineProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineProcessor.class);
     private static final Integer MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES = 3 * 60;
-    private static final double FEEDBACK_MEASUREMENT_SIGMA = 0.5;
+    private static final double FEEDBACK_MEASUREMENT_SIGMA = 0.25;
     private final AccountDAO accountDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDAO deviceDAO;
@@ -685,7 +685,18 @@ public class TimelineProcessor {
 
 }
 
+    private void PrintDistribution(SleepEventPredictionDistribution dist,String prefix) {
 
+        final double wakeBiasMean = dist.biasDistributions.posterior.mean;
+        final double wakeBiasSigma = dist.biasDistributions.posterior.sigma;
+        final double wakeMean = dist.eventTimeDistributions.posterior.mean;
+        final double wakeAlpha = dist.eventTimeDistributions.posterior.alpha;
+        final double wakeBeta = dist.eventTimeDistributions.posterior.beta;
+        final double wakeSigma = wakeBeta / wakeAlpha;
+
+        LOGGER.debug(String.format("%sb=[%f,%f], %st=[%f,%f]",prefix,wakeBiasMean,wakeBiasSigma,prefix,wakeMean,wakeSigma));
+
+    }
     /*
      * Bayes' magic
      * @param targetDate
@@ -728,7 +739,10 @@ public class TimelineProcessor {
         //go through alarms, pick the earliest one (should be the last in the list)
         if (alarmTime.isPresent()) {
             List<Event> alarms = alarmTime.get();
-            alarm = Optional.of(alarms.get(alarms.size() - 1));
+
+            if (alarms.size() > 0) {
+                alarm = Optional.of(alarms.get(alarms.size() - 1));
+            }
         }
 
         HashMap<Event.Type, BayesInferenceResult> resultMap = new HashMap<Event.Type, BayesInferenceResult>();
@@ -816,6 +830,12 @@ public class TimelineProcessor {
         catch (Exception e) {
             LOGGER.warn("had problems mapping sleep distributions");
         }
+
+
+        PrintDistribution(todaysDist.inBedDistribution,"inbed");
+        PrintDistribution(todaysDist.sleepDistribution,"sleep");
+        PrintDistribution(todaysDist.wakeDistribution,"wake");
+        PrintDistribution(todaysDist.outOfBedDistribution,"outbed");
 
         //update distributions in permanent store
         this.sleepPriorsDAO.updateWakeProbabilityDistributions(accountId,targetDate,todaysDist);

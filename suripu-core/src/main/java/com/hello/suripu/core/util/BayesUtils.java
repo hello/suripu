@@ -22,7 +22,7 @@ import java.util.List;
 public class BayesUtils {
 
     //units are in hours
-    static final double K_MIN_SIGMA_OF_PREDICTION = 0.5;
+    static final double K_MIN_SIGMA_OF_PREDICTION = 0.25;
     static final double K_MIN_SIGMA_OF_BIAS = 0.05;
 
     static final double K_PREDICTION_SIGMA = 1.0;
@@ -40,22 +40,46 @@ public class BayesUtils {
         return time_in_hours_local_time;
     }
 
-    static private double mod24(final double h) {
 
-        double h2 = h % 24.0;
-        if (h2 < 0.0) {
+    static private double recomputeMeasurementFromMean(final double meas, final double x) {
+        final double dx = subHours(x,meas);
+        final double h3 = meas + dx; //x - meas + meas = x
+        return h3;
+    }
+
+    static private double mod24(double h) {
+        h = h % 24.0;
+        if (h < 0) {
+            h += 24.0;
+        }
+
+        return h;
+    }
+
+    static private double subHours(double h1, double h2) {
+
+        double h3;
+        //11 - 13 = -2
+
+        //23 - 1 == -2
+       // 23 - 1 > 12 ---> 23 - 25
+
+        //1 - 23 == 2
+        //23 - 1 > 12? 25 - 23
+
+        if (h1 - h2 > 12.0) {
             h2 += 24.0;
         }
 
-        return h2;
-    }
+        if (h2 - h1 > 12.0) {
+            h1 += 24.0;
+        }
 
-    static private double addHours(final double h1, final double h2) {
 
-        //check for wrapping
-        double h3 = h1 + h2;
+        h3 = h1 - h2;
 
-        return mod24(h3);
+
+        return h3;
     }
 
     static DateTime addBiasInHoursToDateTime(final DateTime time,final double hbias) {
@@ -67,6 +91,8 @@ public class BayesUtils {
 
         return newTime;
     }
+
+
 
     /*
     * Bayes' magic
@@ -100,17 +126,21 @@ public class BayesUtils {
 
             //estimate the distribution (as a Student's T distribution) of the event
             final double measurementTimeInHours = getLocalTimeInFloatingPointHoursFromDateTime(measurement.get());
-
             final GaussianDistribution priorPred = priorEventTimeDist.asGaussian();
-
-            posteriorEventTimeDist = new GaussianDistributionDataModel(
-                    GaussianInference.GetInferredDistribution(priorPred, measurementTimeInHours, measurementSigma, K_MIN_SIGMA_OF_PREDICTION));
+            final double meas2 = recomputeMeasurementFromMean(priorPred.mean,measurementTimeInHours);
 
 
-            //estimate the bias of the prediction, as random mean gaussian
+            GaussianDistribution posterior2 = GaussianInference.GetInferredDistribution(priorPred, meas2, measurementSigma, K_MIN_SIGMA_OF_PREDICTION);
+            posterior2.mean = mod24(posterior2.mean);
+
+            posteriorEventTimeDist = new GaussianDistributionDataModel(posterior2);
+
+
+
+                    //estimate the bias of the prediction, as random mean gaussian
             if (prediction.isPresent()) {
                 final double predictionTimeInHours = getLocalTimeInFloatingPointHoursFromDateTime(prediction.get());
-                final double biasMeasurementInHours = addHours(measurementTimeInHours, -predictionTimeInHours);
+                final double biasMeasurementInHours = subHours(measurementTimeInHours, predictionTimeInHours);
 
                 final GaussianDistribution priorBias = priorBiasDist.asGaussian();
 
@@ -130,8 +160,15 @@ public class BayesUtils {
 
             final GaussianDistribution priorPred = priorEventTimeDist.asGaussian();
 
-            posteriorEventTimeDist = new GaussianDistributionDataModel(
-                    GaussianInference.GetInferredDistribution(priorPred, predictionTimeInHours, K_PREDICTION_SIGMA, K_MIN_SIGMA_OF_PREDICTION));
+            final double meas2 = recomputeMeasurementFromMean(priorPred.mean,predictionTimeInHours);
+
+
+            GaussianDistribution posterior2 = GaussianInference.GetInferredDistribution(priorPred, meas2, K_PREDICTION_SIGMA, K_MIN_SIGMA_OF_PREDICTION);
+            posterior2.mean = mod24(posterior2.mean);
+
+            posteriorEventTimeDist = new GaussianDistributionDataModel(posterior2);
+
+
         }
 
 

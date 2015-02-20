@@ -29,10 +29,10 @@ public class GaussianDistribution {
         this.modelType = modelType;
     }
 
-    public final double sigma;
-    public final double mean;
-    public final double alpha;
-    public final double beta;
-    public final double kappa;
-    public final DistributionModel modelType;
+    public double sigma;
+    public double mean;
+    public double alpha;
+    public double beta;
+    public double kappa;
+    public DistributionModel modelType;
 }
