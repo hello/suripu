@@ -399,16 +399,25 @@ public class TimelineProcessor {
         // TODO: compute this threshold dynamically
         final int threshold = 10; // events with scores < threshold will be considered motion events
 
-        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
-        LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
+        final List<TrackerMotion> originalTrackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
+        LOGGER.debug("Length of trackerMotion: {}", originalTrackerMotions.size());
 
-        if(trackerMotions.size() < 20) {
+        if(originalTrackerMotions.size() < 20) {
             LOGGER.debug("No data for account_id = {} and day = {}", accountId, targetDate);
             final Timeline timeline = Timeline.createEmpty();
             final List<Timeline> timelines = Lists.newArrayList(timeline);
             return timelines;
         }
 
+        // get partner tracker motion, if available
+        final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
+        List<TrackerMotion> trackerMotions = new ArrayList<>();
+        if (!partnerMotions.isEmpty()) {
+            // OKAY BENJO, do your magic in this function
+            trackerMotions.addAll(filterTrackerMotion(originalTrackerMotions, partnerMotions));
+        } else {
+            trackerMotions.addAll(originalTrackerMotions);
+        }
 
         // get all sensor data, used for light and sound disturbances, and presleep-insights
         AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
@@ -539,6 +548,16 @@ public class TimelineProcessor {
         return Lists.newArrayList(timeline);
     }
 
+
+    private List<TrackerMotion> getPartnerTrackerMotion(final Long accountId, final DateTime startTime, final DateTime endTime) {
+        final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accountId);
+        if (optionalPartnerAccountId.isPresent()) {
+            final Long partnerAccountId = optionalPartnerAccountId.get();
+            LOGGER.debug("partner account {}", partnerAccountId);
+            return this.trackerMotionDAO.getBetweenLocalUTC(partnerAccountId, startTime, endTime);
+        }
+        return Collections.EMPTY_LIST;
+    }
 
     /**
      * Fetch partner motion events
@@ -722,5 +741,11 @@ public class TimelineProcessor {
         }
 
         histogram.update(count);
+    }
+
+    private List<TrackerMotion> filterTrackerMotion(final List<TrackerMotion> originalTrackerMotions, final List<TrackerMotion> partnerMotions) {
+        // BENJO magic
+        final List<TrackerMotion> filteredMotions = new ArrayList<>();
+        return filteredMotions;
     }
 }
