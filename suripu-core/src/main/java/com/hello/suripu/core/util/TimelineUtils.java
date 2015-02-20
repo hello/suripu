@@ -592,7 +592,7 @@ public class TimelineUtils {
 
             if(segment.getType() == Event.Type.WAKE_UP && sleepStarted){  //On purpose dangling case, if no wakeup present
                 sleepStarted = false;
-                wakeUpTimestampMillis = segment.getOffsetMillis();
+                wakeUpTimestampMillis = segment.getTimestamp();
                 sleepDurationInSecs = (int) (segment.getTimestamp() - sleepTimestampMillis) / DateTimeConstants.MILLIS_PER_SECOND;
             }
 
