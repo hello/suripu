@@ -39,6 +39,7 @@ public class InsightProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(InsightProcessor.class);
 
     private static final int RECENT_DAYS = 10; // last 10 days
+    private static final int NEW_ACCOUNT_THRESHOLD = 2;
 
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
@@ -87,7 +88,7 @@ public class InsightProcessor {
 
         final Long deviceId = deviceIdOptional.get();
 
-        if (accountAge <= 10) {
+        if (accountAge <= NEW_ACCOUNT_THRESHOLD) {
             generateNewUserInsights(accountId, deviceId, accountAge);
         } else {
             generateGeneralInsights(accountId, deviceId);
