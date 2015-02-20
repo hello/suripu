@@ -411,9 +411,10 @@ public class TimelineProcessor {
 
         // get partner tracker motion, if available
         final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
+
         List<TrackerMotion> trackerMotions = new ArrayList<>();
         if (!partnerMotions.isEmpty()) {
-            // OKAY BENJO, do your magic in this function
+            // OKAY BENJO magic is happending here
             trackerMotions.addAll(filterTrackerMotion(originalTrackerMotions, partnerMotions));
         } else {
             trackerMotions.addAll(originalTrackerMotions);
@@ -746,6 +747,6 @@ public class TimelineProcessor {
     private List<TrackerMotion> filterTrackerMotion(final List<TrackerMotion> originalTrackerMotions, final List<TrackerMotion> partnerMotions) {
         // BENJO magic
         final List<TrackerMotion> filteredMotions = new ArrayList<>();
-        return filteredMotions;
+        return originalTrackerMotions; // <--- change this to filteredMotions
     }
 }
