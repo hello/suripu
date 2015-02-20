@@ -475,6 +475,7 @@ public class TimelineProcessor {
         final Integer offsetMillis = trackerMotions.get(0).offsetMillis;
         final Map<Event.Type, Event> feedbackEvents = fromFeedback(accountId, targetDate, offsetMillis, hasFeedbackInTimelineEnabled);
         for(final Event event : feedbackEvents.values()) {
+            LOGGER.info("Overriding {} with {} for account {}", event.getType().name(), event, accountId);
             timelineEvents.put(event.getStartTimestamp(), event);
         }
 
@@ -730,14 +731,15 @@ public class TimelineProcessor {
 
     private Map<Event.Type, Event> fromFeedback(final Long accountId, final DateTime nightOf, final Integer offsetMillis, Boolean enabled) {
         if(!enabled) {
+            LOGGER.debug("Timeline feedback not enabled for account {}", accountId);
             return Maps.newHashMap();
         }
         // this is needed to match the datetime created when receiving user feedback
         // I believe we should change how we create datetime in feedback once we have time
         // TODO: tim
-        final DateTime nighOfUTC = new DateTime(nightOf.getYear(),
-                nightOf.getMonthOfYear(), nightOf.getDayOfMonth(), 8, 0, 0, DateTimeZone.UTC);
-        final ImmutableList<TimelineFeedback> feedbackList = feedbackDAO.getForNight(accountId, nighOfUTC);
+        final DateTime nightOfUTC = new DateTime(nightOf.getYear(),
+                nightOf.getMonthOfYear(), nightOf.getDayOfMonth(), 0, 0, 0, DateTimeZone.UTC);
+        final ImmutableList<TimelineFeedback> feedbackList = feedbackDAO.getForNight(accountId, nightOfUTC);
         return FeedbackUtils.convertFeedbackToDateTime(feedbackList, offsetMillis);
     }
 
