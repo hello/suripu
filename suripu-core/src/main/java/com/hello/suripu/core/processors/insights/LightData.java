@@ -10,7 +10,7 @@ import java.util.Map;
  */
 public class LightData {
     // see https://s3.amazonaws.com/hello-data/insights-raw-data/light_distribution_2014_12_23.csv
-    private static String DISTRIBUTION_DATA = "0,1.0" +
+    private static String DISTRIBUTION_DATA = "0,1.0\n" +
             "1,2.8\n" +
             "2,3.1\n" +
             "3,5.8\n" +

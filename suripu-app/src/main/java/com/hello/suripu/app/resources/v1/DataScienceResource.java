@@ -186,8 +186,8 @@ public class DataScienceResource extends BaseResource {
                 return;
             }
 
-            insightProcessor.generateInsights(accountId, accountOptional.get().created);
-//            insightProcessor.generateInsightsByCategory(accountId, deviceIdOptional.get(), category);
+//            insightProcessor.generateInsights(accountId, accountOptional.get().created);
+            insightProcessor.generateInsightsByCategory(accountId, deviceIdOptional.get(), category);
         }
     }
 
