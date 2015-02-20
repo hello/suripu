@@ -25,10 +25,23 @@ public class JoinedSensorsMinuteData {
     @JsonProperty("kickoff_counts")
     public final Long kickoffCounts;
 
+    @JsonProperty("motion_range")
+    public final Long motionRange;
+
+    @JsonProperty("on_duration_seconds")
+    public final Long onDurationSeconds;
+
     @JsonProperty("offset_millis")
     public final Integer offsetMillis;
 
-    public JoinedSensorsMinuteData(final Long ts, final Long accountId, final Float light, final Float soundNumDisturbances, final Float soundPeakDisturbances, final Integer svmNoGravity, final Long kickoffCounts, final Integer offsetMillis) {
+    public JoinedSensorsMinuteData(final Long ts, final Long accountId,
+                                   final Float light,
+                                   final Float soundNumDisturbances, final Float soundPeakDisturbances,
+                                   final Integer svmNoGravity,
+                                   final Long kickoffCounts,
+                                   final Long motionRange,
+                                   final Long onDurationSeconds,
+                                   final Integer offsetMillis) {
         this.ts = ts;
         this.accountId = accountId;
         this.light = light;
@@ -36,6 +49,8 @@ public class JoinedSensorsMinuteData {
         this.soundPeakDisturbances = soundPeakDisturbances;
         this.svmNoGravity = svmNoGravity;
         this.kickoffCounts = kickoffCounts;
+        this.motionRange = motionRange;
+        this.onDurationSeconds = onDurationSeconds;
         this.offsetMillis = offsetMillis;
     }
 
