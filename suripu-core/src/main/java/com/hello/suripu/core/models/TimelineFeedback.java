@@ -30,4 +30,8 @@ public class TimelineFeedback {
         final Event.Type eventType = Event.Type.fromString(eventTypeString);
         return new TimelineFeedback(date, oldTimeOfEvent, newTimeOfEvent, eventType);
     }
+
+    public static TimelineFeedback create(final DateTime dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType) {
+        return new TimelineFeedback(dateOfNight,oldTimeOfEvent,newTimeOfEvent,eventType);
+    }
 }

@@ -37,4 +37,8 @@ public class BaseResource {
         return featureFlipper.userFeatureActive(FeatureFlipper.SOUND_EVENTS_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasFeedbackInTimeline(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.FEEDBACK_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
+    }
+
 }
