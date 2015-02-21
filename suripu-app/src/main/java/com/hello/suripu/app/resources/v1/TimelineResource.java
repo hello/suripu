@@ -52,7 +52,9 @@ public class TimelineResource extends BaseResource {
         return timelineProcessor.retrieveTimelinesFast(accessToken.accountId, date, missingDataDefaultValue(accessToken.accountId),
                 hasAlarmInTimeline(accessToken.accountId),
                 hasSoundInTimeline(accessToken.accountId),
-                hasFeedbackInTimeline(accessToken.accountId));
+                hasFeedbackInTimeline(accessToken.accountId),
+                hasInOrOutOfBedEvents(accessToken.accountId)
+                );
 
     }
 
@@ -61,7 +63,7 @@ public class TimelineResource extends BaseResource {
     @Produces(MediaType.APPLICATION_JSON)
     @GET
     public List<Timeline> getAdminTimelines(
-            @Scope(OAuthScope.ADMINISTRATION_READ)final AccessToken accessToken,
+//            @Scope(OAuthScope.ADMINISTRATION_READ)final AccessToken accessToken,
             @PathParam("email") String email,
             @PathParam("date") String date) {
         final Optional<Long> accountId = getAccountIdByEmail(email);
@@ -69,10 +71,12 @@ public class TimelineResource extends BaseResource {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
         // TODO: Pass a config/map object to avoid changing the signature of this method for the next FeatureFlipper
-        return timelineProcessor.retrieveTimelinesFast(accountId.get(), date, missingDataDefaultValue(accessToken.accountId),
+        return timelineProcessor.retrieveTimelinesFast(accountId.get(), date, missingDataDefaultValue(accountId.get()),
                 hasAlarmInTimeline(accountId.get()),
                 hasSoundInTimeline(accountId.get()),
-                hasFeedbackInTimeline(accountId.get()));
+                hasFeedbackInTimeline(accountId.get()),
+                hasInOrOutOfBedEvents(accountId.get())
+        );
     }
 
     private Optional<Long> getAccountIdByEmail(final String email) {
