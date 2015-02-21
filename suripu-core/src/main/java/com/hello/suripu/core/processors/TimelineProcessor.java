@@ -611,7 +611,7 @@ public class TimelineProcessor {
                     DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
         } else if (sleepEventsFromAlgorithm.get(3).isPresent()) {
             // out-of-bed time
-            final Event event = sleepEventsFromAlgorithm.get(2).get();
+            final Event event = sleepEventsFromAlgorithm.get(3).get();
             optionalAwakeTime = Optional.of(new DateTime(event.getStartTimestamp(),
                     DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
         }
