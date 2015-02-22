@@ -101,9 +101,13 @@ public class HiddenMarkovModel {
         double [][] phi = new double[this.numStates][numObs];
         int [][] viterbiIndices = new int[this.numStates][numObs];
 
+        for (int i = 0; i < this.numStates; i++) {
+            viterbiIndices[i][0] = 0;
+        }
+
         // init
         for (int i = 0; i < this.numStates; i++) {
-            phi[i][0] = -Math.log(this.initialState[i]+1e-15) - Math.log(bmap[i][0] + 1e-15)
+            phi[i][0] = -Math.log(this.initialState[i]+1e-15) - Math.log(bmap[i][0] + 1e-15);
         }
 
 
@@ -111,7 +115,7 @@ public class HiddenMarkovModel {
         double [] cost = new double[this.numStates];
 
         double obscost;
-        for (int t = 0; t < numObs; t++) {
+        for (int t = 1; t < numObs; t++) {
             for (int j = 0; j < this.numStates; j++) {
                 //#"j" mean THIS (the jth) hidden state
                 obscost = -Math.log(bmap[j][t] + 1e-15);

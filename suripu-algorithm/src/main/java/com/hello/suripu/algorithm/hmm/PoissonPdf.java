@@ -18,7 +18,7 @@ public class PoissonPdf implements  HmmPdfInterface {
 
     @Override
     public double [] getLikelihood(final double [][] measurements) {
-        double [] result = new double[measurements.length];
+        double [] result = new double[measurements[0].length];
         //row major or column major? assume it's like C
         final double [] col =  measurements[_measnum];
 

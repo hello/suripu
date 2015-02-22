@@ -29,7 +29,7 @@ public class PdfComposite implements HmmPdfInterface {
     }
 
     public double [] getLikelihood(final double [][] meas) {
-        double [] liks = new double[meas.length];
+        double [] liks = new double[meas[0].length];
 
         //set all ones
         for (int j = 0; j < liks.length; j++) {
