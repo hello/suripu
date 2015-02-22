@@ -35,6 +35,7 @@ import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
+import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SunData;
 import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineUtils;
@@ -396,8 +397,7 @@ public class TimelineProcessor {
     public List<Timeline> retrieveTimelinesFast(final Long accountId, final String date, final Integer missingDataDefaultValue,
                                                 final Boolean hasAlarmInTimeline,
                                                 final Boolean hasSoundInTimeline,
-                                                final Boolean hasFeedbackInTimelineEnabled,
-                                                final Boolean hasInOrOutOfBedEvents) {
+                                                final Boolean hasFeedbackInTimelineEnabled) {
 
 
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
@@ -409,16 +409,35 @@ public class TimelineProcessor {
         // TODO: compute this threshold dynamically
         final int threshold = 10; // events with scores < threshold will be considered motion events
 
-        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
-        LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
+        final List<TrackerMotion> originalTrackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
+        LOGGER.debug("Length of trackerMotion: {}", originalTrackerMotions.size());
 
-        if(trackerMotions.size() < 20) {
+        if(originalTrackerMotions.size() < 20) {
             LOGGER.debug("No data for account_id = {} and day = {}", accountId, targetDate);
             final Timeline timeline = Timeline.createEmpty();
             final List<Timeline> timelines = Lists.newArrayList(timeline);
             return timelines;
         }
 
+        // get partner tracker motion, if available
+        final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
+
+        List<TrackerMotion> trackerMotions = new ArrayList<>();
+
+        if (true) {
+            if (!partnerMotions.isEmpty()) {
+                try {
+                    trackerMotions.addAll(PartnerDataUtils.getMyMotion(originalTrackerMotions, partnerMotions));
+                }
+                catch (Exception e) {
+                    trackerMotions.addAll(originalTrackerMotions);
+                }
+            } else {
+                trackerMotions.addAll(originalTrackerMotions);
+            }
+        } else{
+            trackerMotions.addAll(originalTrackerMotions);
+        }
 
         // get all sensor data, used for light and sound disturbances, and presleep-insights
         AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
@@ -483,11 +502,16 @@ public class TimelineProcessor {
         final List<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate, trackerMotions, lightOutTimeOptional, wakeUpWaveTimeOptional);
 
 
+        // WAKE UP , etc.
+        for(final Optional<Event> sleepEventOptional: sleepEventsFromAlgorithm){
+            if(sleepEventOptional.isPresent() && !feedbackEvents.containsKey(sleepEventOptional.get().getType())){
+                timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
+            }
+        }
 
 
         // PARTNER MOTION
-        final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accountId);
-        final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.get(1), sleepEventsFromAlgorithm.get(2), motionEvents, accountId, optionalPartnerAccountId);
+        final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.get(1), sleepEventsFromAlgorithm.get(2), motionEvents, accountId);
         for(PartnerMotionEvent partnerMotionEvent : partnerMotionEvents) {
             timelineEvents.put(partnerMotionEvent.getStartTimestamp(), partnerMotionEvent);
         }
@@ -495,18 +519,6 @@ public class TimelineProcessor {
 
 
 
-        // WAKE UP , etc.
-        for(final Optional<Event> sleepEventOptional: sleepEventsFromAlgorithm){
-            if(sleepEventOptional.isPresent() && !feedbackEvents.containsKey(sleepEventOptional.get().getType())){
-                if(!optionalPartnerAccountId.isPresent() || hasInOrOutOfBedEvents) {
-                    timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
-                } else {
-                    if(sleepEventOptional.get().getType() == Event.Type.SLEEP || sleepEventOptional.get().getType() == Event.Type.WAKE_UP) {
-                        timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
-                    }
-                }
-            }
-        }
 
         // ALARM
         if(hasAlarmInTimeline) {
@@ -530,11 +542,13 @@ public class TimelineProcessor {
         final List<Event> eventsWithSleepEvents = TimelineRefactored.mergeEvents(timelineEvents);
         final List<Event> smoothedEvents = TimelineUtils.smoothEvents(eventsWithSleepEvents);
 
-        final Optional<Event> inBedEvent = (feedbackEvents.containsKey(Event.Type.IN_BED)) ? Optional.fromNullable(feedbackEvents.get(Event.Type.IN_BED)) : sleepEventsFromAlgorithm.get(0);
-        final Optional<Event> outOfBedEvent = (feedbackEvents.containsKey(Event.Type.OUT_OF_BED)) ? Optional.fromNullable(feedbackEvents.get(Event.Type.OUT_OF_BED)) : sleepEventsFromAlgorithm.get(3);
-        final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents, inBedEvent, outOfBedEvent);
+        final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents,
+                sleepEventsFromAlgorithm.get(0),
+                sleepEventsFromAlgorithm.get(3));
 
-        final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents, inBedEvent, outOfBedEvent);
+        final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
+                sleepEventsFromAlgorithm.get(0),
+                sleepEventsFromAlgorithm.get(3));
 
         final List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(greyEvents);
 
@@ -564,6 +578,15 @@ public class TimelineProcessor {
     }
 
 
+    private List<TrackerMotion> getPartnerTrackerMotion(final Long accountId, final DateTime startTime, final DateTime endTime) {
+        final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accountId);
+        if (optionalPartnerAccountId.isPresent()) {
+            final Long partnerAccountId = optionalPartnerAccountId.get();
+            LOGGER.debug("partner account {}", partnerAccountId);
+            return this.trackerMotionDAO.getBetweenLocalUTC(partnerAccountId, startTime, endTime);
+        }
+        return Collections.EMPTY_LIST;
+    }
     /**
      * Fetch partner motion events
      * @param fallingAsleepEvent
@@ -572,9 +595,10 @@ public class TimelineProcessor {
      * @param accountId
      * @return
      */
-    private List<PartnerMotionEvent> getPartnerMotionEvents(final Optional<Event> fallingAsleepEvent, final Optional<Event> wakeupEvent, final List<MotionEvent> motionEvents, final Long accountId, final Optional<Long> optionalPartnerAccountId) {
+    private List<PartnerMotionEvent> getPartnerMotionEvents(final Optional<Event> fallingAsleepEvent, final Optional<Event> wakeupEvent, final List<MotionEvent> motionEvents, final Long accountId) {
         // add partner movement data, check if there's a partner
 
+        final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accountId);
         if (optionalPartnerAccountId.isPresent() && fallingAsleepEvent.isPresent() && wakeupEvent.isPresent()) {
             LOGGER.debug("partner account {}", optionalPartnerAccountId.get());
             // get tracker motions for partner, query time is in UTC, not local_utc
@@ -622,7 +646,7 @@ public class TimelineProcessor {
                     DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
         } else if (sleepEventsFromAlgorithm.get(3).isPresent()) {
             // out-of-bed time
-            final Event event = sleepEventsFromAlgorithm.get(3).get();
+            final Event event = sleepEventsFromAlgorithm.get(2).get();
             optionalAwakeTime = Optional.of(new DateTime(event.getStartTimestamp(),
                     DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
         }
