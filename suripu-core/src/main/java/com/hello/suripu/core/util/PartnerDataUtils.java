@@ -2,6 +2,8 @@ package com.hello.suripu.core.util;
 
 import com.hello.suripu.algorithm.signals.TwoPillsClassifier;
 import com.hello.suripu.core.models.TrackerMotion;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -79,6 +81,15 @@ public class PartnerDataUtils {
 
             if (classes[idx] > 0) {
                 myMotion.add(m);
+            }
+            else {
+                DateTime dt = new DateTime(m.timestamp);
+                DateTime dt2 = dt.withZone(DateTimeZone.forOffsetMillis(m.offsetMillis));
+                String time = dt2.toLocalDateTime().toString();
+
+
+                int foo = 3;
+                foo++;
             }
 
         }

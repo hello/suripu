@@ -75,29 +75,32 @@ public class TwoPillsClassifier {
      *
      *
      */
-    private static double EIGEN_MODE_THRESHOLD = 0.5;
-    private static double NORMALIZED_FEATURE_THRESHOLD = 0.25;
+    private static double EIGEN_MODE_THRESHOLD = 1.0;
+    private static double NORMALIZED_FEATURE_THRESHOLD = 0.30;
 
     public static int [] classifyPillOwnership(final double[][] data, int numFeaturesPerAxis)  {
 
         final int nFeats = data.length;
-        double [][] x = clone2D(data);
+        double [][] dataCopy = clone2D(data);
+        int Ndatapoints = data[0].length;
 
         int [] classes = new int[data[0].length];
         Arrays.fill(classes, 1);
 
         //remove mean
         for (int i = 0; i < nFeats; i++ ) {
-            final double theMean = getMean(x[i]);
-            double [] row = x[i];
+            final double theMean = getMean(dataCopy[i]);
+            double [] row = dataCopy[i];
             for (int j = 0; j < row.length; j++) {
                 row[j] -= theMean;
             }
         }
 
         //compute covariance
-        RealMatrix nomean = MatrixUtils.createRealMatrix(x);
-        RealMatrix P = nomean.multiply(nomean.transpose());
+        RealMatrix noMean = MatrixUtils.createRealMatrix(dataCopy);
+        RealMatrix P = noMean.multiply(noMean.transpose());
+
+        P = P.scalarMultiply(1.0 / (double)Ndatapoints);
 
         double [] sqrtDiags = new double[nFeats];
         for (int i = 0; i < nFeats; i++ ) {
@@ -113,15 +116,15 @@ public class TwoPillsClassifier {
 
         //normalize the data by the std devs
         for (int i = 0; i < nFeats; i++ ) {
-            final double theMean = getMean(x[i]);
-            double [] row = x[i];
+            final double theMean = getMean(dataCopy[i]);
+            double [] row = dataCopy[i];
             double d = sqrtDiags[i];
             for (int j = 0; j < row.length; j++) {
                 row[j] /= d;
             }
         }
 
-        RealMatrix normalizedByStdDev = MatrixUtils.createRealMatrix(x);
+        RealMatrix normalizedByStdDev = MatrixUtils.createRealMatrix(dataCopy);
 
         //turn covariance into correlation matrix
         RealMatrix Pnormalized = normalizedByStdDev.multiply(normalizedByStdDev.transpose());
@@ -140,18 +143,27 @@ public class TwoPillsClassifier {
             componentSum += diffvec.getEntry(i);
         }
 
-        //if this condition is not met, it might mean the mode we're looking for isn't here.
+        for (int i = numFeaturesPerAxis; i < 2*numFeaturesPerAxis; i++) {
+            componentSum -= diffvec.getEntry(i);
+        }
+
+            //if this condition is not met, it might mean the mode we're looking for isn't here.
         if (Math.abs(componentSum) > EIGEN_MODE_THRESHOLD) {
             if (componentSum < 0.0) {
                 diffvec.mapMultiplyToSelf(-1.0);
             }
 
+
+
+            //project in to eigen vector direction
             RealMatrix eigvec = MatrixUtils.createRowRealMatrix(diffvec.toArray());
-
-
             RealMatrix feats = eigvec.multiply(normalizedByStdDev);
 
             double [] projectedData = feats.getData()[0];
+
+         //   for (int i = 0; i < projectedData.length; i++) {
+         //       System.out.printf("%f,",projectedData[i]);
+         //   }
 
             for (int i = 0; i < projectedData.length; i++) {
                 if (projectedData[i] < -NORMALIZED_FEATURE_THRESHOLD) {
