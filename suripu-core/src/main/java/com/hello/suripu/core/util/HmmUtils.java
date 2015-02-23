@@ -1,16 +1,26 @@
 package com.hello.suripu.core.util;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
 import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.TrackerMotion;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Created by benjo on 2/22/15.
@@ -21,6 +31,10 @@ public class HmmUtils {
     final static private int MOT_COUNT_INDEX = 1;
     final static private int ENERGY_INDEX = 2;
     final static private int SOUND_INDEX = 3;
+
+    final static private int NUM_MINUTES_IN_WINDOW = 15;
+
+    final static private double LIGHT_PREMULTIPLIER = 4.0;
 
     static private void maxInBin(double[][] data, long t,double value, final int idx, final long t0, final int numMinutesInWindow) {
         final int tIdx = (int)(t - t0) / 1000 / 60 / numMinutesInWindow;
@@ -51,12 +65,84 @@ public class HmmUtils {
         double [][] data;
         long t0;
         int numMinutesInWindow;
+        int timezoneOffset;
     }
-    static public void getSleepEventsFromHMM(final BinnedData data) {
-        HiddenMarkovModel hmm = HiddenMarkovModel.createPoissonOnlyModel(load up model!);
 
-        int [] path = hmm.getViterbiPath(data.data);
+    static public class PoissonModel {
 
+        @JsonCreator
+        public PoissonModel(@JsonProperty("A") double[][] A,@JsonProperty("obsModel") double [][] obsModel,@JsonProperty("pi") double [] pi, @JsonProperty("myType")String myType) {
+            this.A = A;
+            this.obsModel = obsModel;
+            this.myType = myType;
+            this.pi = pi;
+        }
+
+        @JsonProperty("myType")
+        final String myType;
+
+        @JsonProperty("A")
+        final double [][] A;
+
+        @JsonProperty("pi")
+        final double [] pi;
+
+
+        @JsonProperty("obsModel")
+        final double [][] obsModel;
+
+    }
+
+    static Optional<PoissonModel> loadfile() {
+
+        Optional<PoissonModel> ret = Optional.absent();
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+
+            PoissonModel myModel = mapper.readValue(new File("hello.txt").toString(), PoissonModel.class);
+
+            ret = Optional.of(myModel);
+        }
+        catch (Exception e) {
+
+        }
+
+        return ret;
+    }
+
+    List<Optional<Event>> getSleepEventsUsingHMM(AllSensorSampleList sensors, List<TrackerMotion> pillData) {
+
+        List<Optional<Event>> res = new ArrayList<Optional<Event>>();
+
+        Optional<BinnedData> binnedData = getBinnedSensorData(sensors,pillData,NUM_MINUTES_IN_WINDOW);
+
+        if (binnedData.isPresent()) {
+
+            getSleepEventsFromHMM(binnedData.get());
+            .
+
+
+        }
+
+        return  res;
+    }
+
+    static public List<Optional<Event>> getSleepEventsFromHMM(final BinnedData data) {
+
+        double [][] A = {{}};
+        double [] initialStateProbs = {};
+        double [][] poissonMeans = {{},{}};
+
+        Optional<PoissonModel> model = loadfile();
+
+        if (model.isPresent()) {
+            HiddenMarkovModel hmm = HiddenMarkovModel.createPoissonOnlyModel(model.get().A, model.get().pi, model.get().obsModel);
+
+            int[] path = hmm.getViterbiPath(data.data);
+
+            interpretPath(path, data);
+        }
         //figure out sleep
     }
 
@@ -69,6 +155,7 @@ public class HmmUtils {
 
         //get start and end of window
         long t0 = light.get(0).dateTime;
+        int timezoneOffset = light.get(0).offsetMillis;
         long tf = light.get(light.size()-1).dateTime;
 
         int dataLength =(int) (tf-t0) / 1000 / 60 / numMinutesInWindow;
@@ -91,7 +178,7 @@ public class HmmUtils {
             }
 
             //TODO transform this back to raw counts before taking log
-            value = Math.log(value + 1.0);
+            value = Math.log(value*LIGHT_PREMULTIPLIER + 1.0) / Math.log(2);
 
             maxInBin(data,sample.dateTime,value,LIGHT_INDEX,t0,numMinutesInWindow);
         }
@@ -119,8 +206,87 @@ public class HmmUtils {
         res.data = data;
         res.numMinutesInWindow = numMinutesInWindow;
         res.t0 = t0;
+        res.timezoneOffset = timezoneOffset;
 
         return Optional.of(res);
+    }
+
+    static public class  BoundaryResult {
+        public int [][] pairs;
+        public int [][] disturbances;
+    }
+    static public int [][]  getSetBoundaries(final int[] path, Set<Integer> inSet, int gapwidth) {
+        boolean first = true;
+
+        ArrayList<Integer> t1 = new ArrayList<Integer>();
+        ArrayList<Integer> t2 = new ArrayList<Integer>();
+
+        for (int i = 1; i < path.length; i++) {
+            int prev = path[i-1];
+            int current = path[i];
+
+            if (inSet.contains(current) && !inSet.contains(prev)) {
+                first = false;
+                t1.add(current); //start
+
+            }
+
+            if (!inSet.contains(current) && inSet.contains(prev) && !first) {
+                t2.add(prev); // stop
+            }
+
+        }
+
+        int [][] times = new int[2][t2.size()];
+        for (int i = 0; i < t2.size(); i++) {
+            times[0][i] = t1.get(i);
+            times[1][i] = t2.get(i);
+        }
+
+
+
+        return times;
+
+    }
+
+    DateTime getTimeFromBin(int bin, int binWidthMinutes, long t0, int offset) {
+        long t = bin * binWidthMinutes;
+        t *= 60 * 1000;
+        t += t0;
+
+        DateTime dt = new DateTime(t);
+        return dt.withZone(DateTimeZone.forOffsetMillis(offset));
+    }
+
+    static public void interpretPath(final int [] path, final BinnedData origdata) {
+        Set<Integer> sleepSet = new TreeSet<Integer>();
+        sleepSet.add(3);
+        sleepSet.add(4);
+        sleepSet.add(5);
+
+        Set<Integer> bedSet = new TreeSet<Integer>();
+        bedSet.add(1);
+        bedSet.add(2);
+        bedSet.add(3);
+        bedSet.add(4);
+        bedSet.add(5);
+        bedSet.add(6);
+
+        //make sure that bed-set is a superset of sleepset, otherwise weird shit will happen
+
+        int [][] sleeps = getSetBoundaries(path,sleepSet,30 / origdata.numMinutesInWindow);
+
+        int [][] beds = getSetBoundaries(path,bedSet,30 / origdata.numMinutesInWindow);
+
+
+
+
+
+
+
+
+
+
     }
 
 }

@@ -35,6 +35,7 @@ import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
+import com.hello.suripu.core.util.HmmUtils;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SunData;
 import com.hello.suripu.core.util.TimelineRefactored;
@@ -436,6 +437,7 @@ public class TimelineProcessor {
             trackerMotions.addAll(originalTrackerMotions);
         }
 
+
         // get all sensor data, used for light and sound disturbances, and presleep-insights
         AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
 
@@ -448,6 +450,9 @@ public class TimelineProcessor {
                     targetDate.getMillis(), endDate.getMillis(),
                     accountId, deviceId.get(), slotDurationMins, missingDataDefaultValue);
         }
+
+        HmmUtils.getBinnedSensorData(allSensorSampleList,trackerMotions,5);
+
 
         // compute lights-out and sound-disturbance events
         Optional<DateTime> lightOutTimeOptional = Optional.absent();
