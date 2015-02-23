@@ -26,6 +26,7 @@ import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.core.util.RoomConditionUtil;
 import com.hello.suripu.service.SignedMessage;
 import com.hello.suripu.service.configuration.SenseUploadConfiguration;
+import com.hello.suripu.service.configuration.OTAConfiguration;
 import com.hello.suripu.service.models.UploadSettings;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
@@ -49,6 +50,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Arrays;
+import java.util.TimeZone;
 
 
 @Path("/in")
@@ -70,6 +73,7 @@ public class ReceiveResource extends BaseResource {
     private final FirmwareUpdateStore firmwareUpdateStore;
     private final GroupFlipper groupFlipper;
     private final SenseUploadConfiguration senseUploadConfiguration;
+    private final OTAConfiguration otaConfiguration;
 
     @Context
     HttpServletRequest request;
@@ -80,7 +84,8 @@ public class ReceiveResource extends BaseResource {
                            final Boolean debug,
                            final FirmwareUpdateStore firmwareUpdateStore,
                            final GroupFlipper groupFlipper,
-                           final SenseUploadConfiguration senseUploadConfiguration) {
+                           final SenseUploadConfiguration senseUploadConfiguration,
+                           final OTAConfiguration otaConfiguration) {
 
         this.keyStore = keyStore;
         this.kinesisLoggerFactory = kinesisLoggerFactory;
@@ -92,6 +97,7 @@ public class ReceiveResource extends BaseResource {
         this.firmwareUpdateStore = firmwareUpdateStore;
         this.groupFlipper = groupFlipper;
         this.senseUploadConfiguration = senseUploadConfiguration;
+        this.otaConfiguration = otaConfiguration;
     }
 
 
@@ -332,6 +338,7 @@ public class ReceiveResource extends BaseResource {
         }
 
         final Optional<DateTimeZone> userTimeZone = getUserTimeZone(userInfoList);
+        
         if(userTimeZone.isPresent()) {
             final RingTime nextRingTime = RingProcessor.getNextRingTimeForSense(deviceName, userInfoList, DateTime.now());
 
@@ -366,6 +373,8 @@ public class ReceiveResource extends BaseResource {
 
             final String firmwareFeature = String.format("firmware_release_%s", firmwareVersion);
             final List<String> groups = groupFlipper.getGroups(deviceName);
+            final List<String> alwaysOTAGroups = Arrays.asList(this.otaConfiguration.getAlwaysOTAGroups());
+            
             if (featureFlipper.deviceFeatureActive(firmwareFeature, deviceName, groups)) {
                 LOGGER.debug("Feature is active!");
             }
@@ -377,16 +386,30 @@ public class ReceiveResource extends BaseResource {
                 LOGGER.warn("{} files added to syncResponse to be downloaded", fileDownloadList.size());
                 responseBuilder.addAllFiles(fileDownloadList);
             } else {
-                // groups take precedence over feature
+
+                final DateTime startOTAWindow = new DateTime(userTimeZone.get()).withHourOfDay(this.otaConfiguration.getStartUpdateWindowHour());
+                final DateTime endOTAWindow = new DateTime(userTimeZone.get()).withHourOfDay(this.otaConfiguration.getEndUpdateWindowHour());
+                final Integer deviceUptimeDelay = this.otaConfiguration.getDeviceUptimeDelay();
                 boolean canOTA = false;
-                if (batch.hasUptimeInSecond()) {
-                    canOTA = (batch.getUptimeInSecond() > 20 * DateTimeConstants.SECONDS_PER_MINUTE);
-                }
 
-                if (groups.contains("chris-dev") || groups.contains("video-photoshoot") || groups.contains("victor")) {
+                //Allow OTA Updates only in config-defined update window
+                if (now.isAfter(startOTAWindow) && now.isBefore(endOTAWindow)) {
                     canOTA = true;
+                    LOGGER.debug("Allowing OTA update because time falls within OTA update window.");
+                }
+                
+                //Has the device been running long enough to receive an OTA Update?
+                if (batch.hasUptimeInSecond()) {
+                    canOTA = (batch.getUptimeInSecond() > deviceUptimeDelay * DateTimeConstants.SECONDS_PER_MINUTE);
+                }
+                
+                //Check for alwaysOTAGroups as defined in the OTA configuration
+                if (!Collections.disjoint(groups, alwaysOTAGroups)) {
+                    canOTA = true;
+                    LOGGER.debug("Device exists in an OTA override group.");
                 }
 
+                // groups take precedence over feature
                 if (!groups.isEmpty() && canOTA) {
                     // TODO check for sense uptime instead and do not OTA if it was just plugged in
 
@@ -562,7 +585,7 @@ public class ReceiveResource extends BaseResource {
     }
 
     private Optional<DateTimeZone> getUserTimeZone(List<UserInfo> userInfoList) {
-        DateTimeZone userTimeZone = DateTimeZone.getDefault();
+        //DateTimeZone userTimeZone = DateTimeZone.UTC;
         for(final UserInfo info: userInfoList){
             if(info.timeZone.isPresent()){
                 return info.timeZone;

@@ -154,4 +154,8 @@ public class SuripuConfiguration extends Configuration {
     public KinesisLoggerConfiguration kinesisLoggerConfiguration() {
         return kinesisLoggerConfiguration;
     }
+
+    @JsonProperty("ota_configuration")
+    private OTAConfiguration otaConfiguration;
+    public OTAConfiguration getOTAConfiguration() { return this.otaConfiguration; }
 }

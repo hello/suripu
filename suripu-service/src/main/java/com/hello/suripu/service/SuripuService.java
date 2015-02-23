@@ -191,7 +191,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 // Let's remove it in the next next deploy.
                 firmwareUpdateStore,
                 groupFlipper,
-                configuration.getSenseUploadConfiguration()
+                configuration.getSenseUploadConfiguration(),
+                configuration.getOTAConfiguration()
         );
 
 
