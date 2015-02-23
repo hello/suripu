@@ -155,6 +155,13 @@ sense_upload_configuration:
   week_days_only: true
   long_interval: 5
   short_interval: 3
+  
+ota_configuration:
+  start_update_window_hour: 18
+  end_update_window_hour: 20
+  device_uptime_delay: 20
+  release_name: super_stable_release
+  always_ota_groups: [josef_group, chris-dev, video-photoshoot, victor]
 
 kinesis_logger:
   stream_name: logs
