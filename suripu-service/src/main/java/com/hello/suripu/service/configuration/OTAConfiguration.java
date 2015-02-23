@@ -7,6 +7,7 @@ import com.yammer.dropwizard.config.Configuration;
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import java.util.Set;
 
 public class OTAConfiguration extends Configuration {
     private static final Integer DEFAULT_START_UPDATE_WINDOW_HOUR = 11;  // non peak periods start at 11:00:00
@@ -29,7 +30,7 @@ public class OTAConfiguration extends Configuration {
     private String releaseName;
 
     @JsonProperty("always_ota_groups")
-    private String[] alwaysOTAGroups;
+    private Set<String> alwaysOTAGroups;
 
 
     public Integer getStartUpdateWindowHour() {
@@ -48,7 +49,7 @@ public class OTAConfiguration extends Configuration {
         return this.releaseName;
     }
 
-    public String[] getAlwaysOTAGroups() {
+    public Set<String> getAlwaysOTAGroups() {
         return this.alwaysOTAGroups;
     }
 }

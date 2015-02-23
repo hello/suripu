@@ -47,11 +47,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Arrays;
-import java.util.TimeZone;
+import java.util.*;
 
 
 @Path("/in")
@@ -373,7 +369,7 @@ public class ReceiveResource extends BaseResource {
 
             final String firmwareFeature = String.format("firmware_release_%s", firmwareVersion);
             final List<String> groups = groupFlipper.getGroups(deviceName);
-            final List<String> alwaysOTAGroups = Arrays.asList(this.otaConfiguration.getAlwaysOTAGroups());
+            final Set<String> alwaysOTAGroups = this.otaConfiguration.getAlwaysOTAGroups();
             
             if (featureFlipper.deviceFeatureActive(firmwareFeature, deviceName, groups)) {
                 LOGGER.debug("Feature is active!");
@@ -591,6 +587,7 @@ public class ReceiveResource extends BaseResource {
                 return info.timeZone;
             }
         }
+        //return Optional.of(userTimeZone);
         return Optional.absent();
     }
 }
