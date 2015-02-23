@@ -424,18 +424,15 @@ public class TimelineProcessor {
 
         List<TrackerMotion> trackerMotions = new ArrayList<>();
 
-        if (true) {
-            if (!partnerMotions.isEmpty()) {
-                try {
-                    trackerMotions.addAll(PartnerDataUtils.getMyMotion(originalTrackerMotions, partnerMotions));
-                }
-                catch (Exception e) {
-                    trackerMotions.addAll(originalTrackerMotions);
-                }
-            } else {
+        if (!partnerMotions.isEmpty()) {
+            try {
+                trackerMotions.addAll(PartnerDataUtils.getMyMotion(originalTrackerMotions, partnerMotions));
+            }
+            catch (Exception e) {
+                LOGGER.info(e.getMessage());
                 trackerMotions.addAll(originalTrackerMotions);
             }
-        } else{
+        } else {
             trackerMotions.addAll(originalTrackerMotions);
         }
 
