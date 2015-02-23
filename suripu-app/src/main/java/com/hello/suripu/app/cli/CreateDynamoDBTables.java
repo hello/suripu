@@ -18,6 +18,7 @@ import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
+import com.hello.suripu.core.passwordreset.PasswordResetDB;
 import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -45,6 +46,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createSenseKeyStoreTable(configuration, awsCredentialsProvider);
         createPillKeyStoreTable(configuration, awsCredentialsProvider);
         createTimelineTable(configuration, awsCredentialsProvider);
+        createPasswordResetTable(configuration, awsCredentialsProvider);
 
     }
 
@@ -232,6 +234,22 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
             final CreateTableResult result = TimelineDAODynamoDB.createTable(tableName, client);
             final TableDescription description = result.getTableDescription();
             System.out.println(description.getTableStatus());
+        }
+    }
+
+
+    private void createPasswordResetTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+
+        client.setEndpoint(configuration.getPasswordResetDBConfiguration().getEndpoint());
+        final String tableName = configuration.getPasswordResetDBConfiguration().getTableName();
+        try {
+            client.describeTable(tableName);
+            System.out.println(String.format("%s already exists.", tableName));
+        } catch (AmazonServiceException exception) {
+            final CreateTableResult result = PasswordResetDB.createTable(tableName, client);
+            final TableDescription description = result.getTableDescription();
+            System.out.println("Table: " + tableName + " " + description.getTableStatus());
         }
     }
 }
