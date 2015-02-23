@@ -71,6 +71,11 @@ public class InMemoryAccountDAOImpl implements AccountDAO{
     }
 
     @Override
+    public Boolean updatePasswordFromResetEmail(Long accountId, String encryptedPassword, final String state) {
+        return Boolean.FALSE;
+    }
+
+    @Override
     public Optional<Account> updateEmail(Account account) {
         return Optional.absent();
     }
