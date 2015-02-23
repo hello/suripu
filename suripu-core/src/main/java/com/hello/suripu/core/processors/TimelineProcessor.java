@@ -35,6 +35,7 @@ import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
+import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SunData;
 import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineUtils;
@@ -423,8 +424,10 @@ public class TimelineProcessor {
 
         List<TrackerMotion> trackerMotions = new ArrayList<>();
         if (!partnerMotions.isEmpty()) {
-            // OKAY BENJO magic is happending here
-            trackerMotions.addAll(filterTrackerMotion(originalTrackerMotions, partnerMotions));
+
+            List<TrackerMotion> filteredMotions = PartnerDataUtils.getMyMotion(originalTrackerMotions,partnerMotions);
+            trackerMotions.addAll(filteredMotions);
+
         } else {
             trackerMotions.addAll(originalTrackerMotions);
         }
@@ -774,9 +777,4 @@ public class TimelineProcessor {
         histogram.update(count);
     }
 
-    private List<TrackerMotion> filterTrackerMotion(final List<TrackerMotion> originalTrackerMotions, final List<TrackerMotion> partnerMotions) {
-        // BENJO magic
-        final List<TrackerMotion> filteredMotions = new ArrayList<>();
-        return originalTrackerMotions; // <--- change this to filteredMotions
-    }
 }

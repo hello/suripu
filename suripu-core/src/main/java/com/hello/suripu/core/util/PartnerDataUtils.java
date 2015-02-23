@@ -61,8 +61,11 @@ public class PartnerDataUtils {
     }
 
     static public  List<TrackerMotion> getMyMotion(final List<TrackerMotion> motData1,final List<TrackerMotion> motData2) {
+
+        //turn motion data into indexed data, where i = 0 ---> t0, and i = 1 is 1 minute ahead if i = 0
         MotionDataSignalWithT0 motData = getMotionFeatureVectorsByTheMinute(motData1,motData2,true);
 
+        //returns classification of what's probably in motData1
         int[] classes = TwoPillsClassifier.classifyPillOwnership(motData.x, NUM_SIGNALS);
 
 
