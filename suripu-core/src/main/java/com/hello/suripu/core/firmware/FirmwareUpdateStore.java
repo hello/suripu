@@ -171,7 +171,7 @@ public class FirmwareUpdateStore {
             generatePresignedUrlRequest.setMethod(HttpMethod.GET); // Default.
             generatePresignedUrlRequest.setExpiration(expiration);
 
-            final URL s = s3.generatePresignedUrl(generatePresignedUrlRequest);
+            final URL s = s3Signer.generatePresignedUrl(generatePresignedUrlRequest);
             LOGGER.debug("S3 URL: {}", s);
 
             final SyncResponse.FileDownload.Builder fileDownloadBuilder = SyncResponse.FileDownload.newBuilder()
