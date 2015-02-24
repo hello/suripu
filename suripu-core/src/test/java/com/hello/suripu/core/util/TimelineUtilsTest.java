@@ -745,6 +745,106 @@ public class TimelineUtilsTest {
 
 
     @Test
+    public void testGetFullSleepEventsRoomMaidMadeBed2(){
+        final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/millionaires_challenge2_2015_02_21_raw.csv");
+        final List<TrackerMotion> trackerMotions = new ArrayList<>();
+        try {
+            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
+            final String[] lines = csvString.split("\\n");
+            for(int i = 1; i < lines.length; i++){
+                final String[] columns = lines[i].split(",");
+                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
+                //if(trackerMotion.value > 0){
+                trackerMotions.add(trackerMotion);
+                //}
+            }
+        }catch (IOException ex){
+            ex.printStackTrace();
+        }
+
+        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 2, 21, 0, 0, DateTimeZone.UTC),
+                trackerMotions,
+                Optional.of(new DateTime(1424579760000L, DateTimeZone.UTC)),
+                Optional.<DateTime>absent(),
+                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
+                true);
+
+        final FallingAsleepEvent sleepSegment = (FallingAsleepEvent) sleepEvents.get(1).get();
+        final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
+        final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2).get();
+        final OutOfBedEvent outOfBedSegment = (OutOfBedEvent) sleepEvents.get(3).get();
+
+        final DateTime goToBedTime = new DateTime(goToBedSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBedSegment.getTimezoneOffset()));
+        final DateTime sleepTime = new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getTimezoneOffset()));
+
+        final DateTime wakeUpTime = new DateTime(wakeUpSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUpSegment.getTimezoneOffset()));
+        final DateTime outOfBedTime = new DateTime(outOfBedSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBedSegment.getTimezoneOffset()));
+
+        final DateTime goToBedLocalUTC = new DateTime(goToBedTime.getYear(), goToBedTime.getMonthOfYear(), goToBedTime.getDayOfMonth(), goToBedTime.getHourOfDay(), goToBedTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime sleepLocalUTC = new DateTime(sleepTime.getYear(), sleepTime.getMonthOfYear(), sleepTime.getDayOfMonth(), sleepTime.getHourOfDay(), sleepTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime wakeUpLocalUTC = new DateTime(wakeUpTime.getYear(), wakeUpTime.getMonthOfYear(), wakeUpTime.getDayOfMonth(), wakeUpTime.getHourOfDay(), wakeUpTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime outOfBedLocalUTC = new DateTime(outOfBedTime.getYear(), outOfBedTime.getMonthOfYear(), outOfBedTime.getDayOfMonth(), outOfBedTime.getHourOfDay(), outOfBedTime.getMinuteOfHour(), DateTimeZone.UTC);
+
+        assertThat(goToBedLocalUTC, is(new DateTime(2015, 2, 21, 22, 06, DateTimeZone.UTC)));
+        assertThat(sleepLocalUTC, is(new DateTime(2015, 2, 21, 22, 07, DateTimeZone.UTC)));
+        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 2, 22, 8, 56, DateTimeZone.UTC)));
+        assertThat(outOfBedLocalUTC, is(new DateTime(2015, 2, 22, 9, 07, DateTimeZone.UTC)));
+    }
+
+    @Test
+    public void testGetFullSleepEventsPetOrRoomMaidMotionMultipleTimes(){
+        final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/carlgish_motion_2015_01_20_raw.csv");
+        final List<TrackerMotion> trackerMotions = new ArrayList<>();
+        try {
+            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
+            final String[] lines = csvString.split("\\n");
+            for(int i = 1; i < lines.length; i++){
+                final String[] columns = lines[i].split(",");
+                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
+                //if(trackerMotion.value > 0){
+                trackerMotions.add(trackerMotion);
+                //}
+            }
+        }catch (IOException ex){
+            ex.printStackTrace();
+        }
+
+        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 20, 0, 0, DateTimeZone.UTC),
+                trackerMotions,
+                Optional.of(new DateTime(1421823120000L, DateTimeZone.UTC)),
+                Optional.of(new DateTime(1421849760000L, DateTimeZone.UTC)),
+                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
+                true);
+
+        final FallingAsleepEvent sleepSegment = (FallingAsleepEvent) sleepEvents.get(1).get();
+        final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
+
+        final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2).get();
+        final OutOfBedEvent outOfBedSegment = (OutOfBedEvent) sleepEvents.get(3).get();
+
+        final DateTime goToBedTime = new DateTime(goToBedSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBedSegment.getTimezoneOffset()));
+        final DateTime sleepTime = new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getTimezoneOffset()));
+
+        final DateTime wakeUpTime = new DateTime(wakeUpSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUpSegment.getTimezoneOffset()));
+        final DateTime outOfBedTime = new DateTime(outOfBedSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBedSegment.getTimezoneOffset()));
+
+        final DateTime goToBedLocalUTC = new DateTime(goToBedTime.getYear(), goToBedTime.getMonthOfYear(), goToBedTime.getDayOfMonth(), goToBedTime.getHourOfDay(), goToBedTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime sleepLocalUTC = new DateTime(sleepTime.getYear(), sleepTime.getMonthOfYear(), sleepTime.getDayOfMonth(), sleepTime.getHourOfDay(), sleepTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime wakeUpLocalUTC = new DateTime(wakeUpTime.getYear(), wakeUpTime.getMonthOfYear(), wakeUpTime.getDayOfMonth(), wakeUpTime.getHourOfDay(), wakeUpTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime outOfBedLocalUTC = new DateTime(outOfBedTime.getYear(), outOfBedTime.getMonthOfYear(), outOfBedTime.getDayOfMonth(), outOfBedTime.getHourOfDay(), outOfBedTime.getMinuteOfHour(), DateTimeZone.UTC);
+
+        assertThat(goToBedLocalUTC, is(new DateTime(2015, 1, 20, 22, 59, DateTimeZone.UTC)));
+        assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 20, 23, 00, DateTimeZone.UTC)));
+        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 21, 6, 30, DateTimeZone.UTC)));
+        assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 21, 6, 52, DateTimeZone.UTC)));
+    }
+
+
+    @Test
     public void testGetFullSleepEventsUserLeftBed(){
         final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/mark_motion_2015_02_14_raw.csv");
         final List<TrackerMotion> trackerMotions = new ArrayList<>();

@@ -225,7 +225,7 @@ public class SleepEventSafeGuard {
 
         }
 
-        if(userLeftBedInBetweenForALongTime(fixedSleepEvents, features.get(MotionFeatures.FeatureType.HOURLY_MOTION_DENSITY))){
+        if(userLeftBedInBetweenForALongTime(fixedSleepEvents, features.get(MotionFeatures.FeatureType.HOURLY_MOTION_COUNT))){
             LOGGER.warn("User left bed too long, dismiss in bed and fall asleep events");
             fixedSleepEvents.set(0, Optional.<Event>absent());
             fixedSleepEvents.set(1, Optional.<Event>absent());
