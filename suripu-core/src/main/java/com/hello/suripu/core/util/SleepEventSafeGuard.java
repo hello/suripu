@@ -182,7 +182,7 @@ public class SleepEventSafeGuard {
                         wakeUp.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                         wakeUp.getTimezoneOffset())));
             }else{
-                LOGGER.warn("Wake up later than out of bed too much, wake up {}, out of bed {}, set out of bed as wake up and remove out of bed.",
+                LOGGER.warn("Wake up later than out of bed too much, wake up {}, out of bed {}, remove out of bed.",
                         new DateTime(wakeUp.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUp.getTimezoneOffset())),
                         new DateTime(outOfBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBed.getTimezoneOffset())));
 
