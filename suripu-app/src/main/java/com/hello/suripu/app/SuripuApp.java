@@ -356,7 +356,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final FirmwareUpdateDAO firmwareUpdateDAO = commonDB.onDemand(FirmwareUpdateDAO.class);
         final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);
-        final FirmwareUpdateStore firmwareUpdateStore = new FirmwareUpdateStore(firmwareUpdateDAO, s3Client, "hello-firmware");
+        final FirmwareUpdateStore firmwareUpdateStore = FirmwareUpdateStore.create(firmwareUpdateDAO, s3Client, "hello-firmware");
         environment.addResource(new FirmwareResource(firmwareUpdateStore, "hello-firmware", amazonS3)); // TODO: move logic from resource to FirmwareUpdateStore
 
         final InsightProcessor.Builder insightBuilder = new InsightProcessor.Builder()
