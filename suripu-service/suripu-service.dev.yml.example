@@ -161,3 +161,6 @@ kinesis_logger:
   enabled : false
   buffer_size: 100
   origin: suripu-service
+
+aws_access_key_s3: AKIAJVQV7XJU23UWILSQ
+aws_access_secret_s3: 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

@@ -35,11 +35,17 @@ public class FirmwareUpdateStore {
     private final FirmwareUpdateDAO firmwareUpdateDAO;
     private final AmazonS3 s3;
     private final String bucketName;
+    private final AmazonS3 s3Signer;
 
-    public FirmwareUpdateStore(final FirmwareUpdateDAO firmwareUpdateDAOImpl, final AmazonS3 s3, final String bucketName) {
+    public FirmwareUpdateStore(final FirmwareUpdateDAO firmwareUpdateDAOImpl, final AmazonS3 s3, final String bucketName, final AmazonS3 s3Signer) {
         this.firmwareUpdateDAO = firmwareUpdateDAOImpl;
         this.s3 = s3;
         this.bucketName = bucketName;
+        this.s3Signer = s3Signer;
+    }
+
+    public static FirmwareUpdateStore create(final FirmwareUpdateDAO firmwareUpdateDAOImpl, final AmazonS3 s3, final String bucketName) {
+        return new FirmwareUpdateStore(firmwareUpdateDAOImpl, s3, bucketName, s3);
     }
 
 
@@ -74,7 +80,7 @@ public class FirmwareUpdateStore {
             generatePresignedUrlRequest.setMethod(HttpMethod.GET); // Default.
             generatePresignedUrlRequest.setExpiration(expiration);
 
-            final URL s = s3.generatePresignedUrl(generatePresignedUrlRequest);
+            final URL s = s3Signer.generatePresignedUrl(generatePresignedUrlRequest);
             LOGGER.debug("{}", s);
 
             final SyncResponse.FileDownload.Builder fileDownloadBuilder = SyncResponse.FileDownload.newBuilder()
