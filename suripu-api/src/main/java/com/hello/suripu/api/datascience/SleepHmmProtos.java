@@ -2075,6 +2075,20 @@ public final class SleepHmmProtos {
      * <code>repeated double state_transition_matrix = 7;</code>
      */
     double getStateTransitionMatrix(int index);
+
+    // repeated double initial_state_probabilities = 8;
+    /**
+     * <code>repeated double initial_state_probabilities = 8;</code>
+     */
+    java.util.List<java.lang.Double> getInitialStateProbabilitiesList();
+    /**
+     * <code>repeated double initial_state_probabilities = 8;</code>
+     */
+    int getInitialStateProbabilitiesCount();
+    /**
+     * <code>repeated double initial_state_probabilities = 8;</code>
+     */
+    double getInitialStateProbabilities(int index);
   }
   /**
    * Protobuf type {@code SleepHmm}
@@ -2237,6 +2251,27 @@ public final class SleepHmmProtos {
               input.popLimit(limit);
               break;
             }
+            case 65: {
+              if (!((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
+                initialStateProbabilities_ = new java.util.ArrayList<java.lang.Double>();
+                mutable_bitField0_ |= 0x00000080;
+              }
+              initialStateProbabilities_.add(input.readDouble());
+              break;
+            }
+            case 66: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00000080) == 0x00000080) && input.getBytesUntilLimit() > 0) {
+                initialStateProbabilities_ = new java.util.ArrayList<java.lang.Double>();
+                mutable_bitField0_ |= 0x00000080;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                initialStateProbabilities_.add(input.readDouble());
+              }
+              input.popLimit(limit);
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -2256,6 +2291,9 @@ public final class SleepHmmProtos {
         }
         if (((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
           stateTransitionMatrix_ = java.util.Collections.unmodifiableList(stateTransitionMatrix_);
+        }
+        if (((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
+          initialStateProbabilities_ = java.util.Collections.unmodifiableList(initialStateProbabilities_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -2494,6 +2532,29 @@ public final class SleepHmmProtos {
       return stateTransitionMatrix_.get(index);
     }
 
+    // repeated double initial_state_probabilities = 8;
+    public static final int INITIAL_STATE_PROBABILITIES_FIELD_NUMBER = 8;
+    private java.util.List<java.lang.Double> initialStateProbabilities_;
+    /**
+     * <code>repeated double initial_state_probabilities = 8;</code>
+     */
+    public java.util.List<java.lang.Double>
+        getInitialStateProbabilitiesList() {
+      return initialStateProbabilities_;
+    }
+    /**
+     * <code>repeated double initial_state_probabilities = 8;</code>
+     */
+    public int getInitialStateProbabilitiesCount() {
+      return initialStateProbabilities_.size();
+    }
+    /**
+     * <code>repeated double initial_state_probabilities = 8;</code>
+     */
+    public double getInitialStateProbabilities(int index) {
+      return initialStateProbabilities_.get(index);
+    }
+
     private void initFields() {
       userId_ = "";
       source_ = "";
@@ -2502,6 +2563,7 @@ public final class SleepHmmProtos {
       bedModeOfStates_ = java.util.Collections.emptyList();
       numStates_ = 0;
       stateTransitionMatrix_ = java.util.Collections.emptyList();
+      initialStateProbabilities_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -2541,6 +2603,9 @@ public final class SleepHmmProtos {
       }
       for (int i = 0; i < stateTransitionMatrix_.size(); i++) {
         output.writeDouble(7, stateTransitionMatrix_.get(i));
+      }
+      for (int i = 0; i < initialStateProbabilities_.size(); i++) {
+        output.writeDouble(8, initialStateProbabilities_.get(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -2590,6 +2655,12 @@ public final class SleepHmmProtos {
         dataSize = 8 * getStateTransitionMatrixList().size();
         size += dataSize;
         size += 1 * getStateTransitionMatrixList().size();
+      }
+      {
+        int dataSize = 0;
+        dataSize = 8 * getInitialStateProbabilitiesList().size();
+        size += dataSize;
+        size += 1 * getInitialStateProbabilitiesList().size();
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -2726,6 +2797,8 @@ public final class SleepHmmProtos {
         bitField0_ = (bitField0_ & ~0x00000020);
         stateTransitionMatrix_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000040);
+        initialStateProbabilities_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
 
@@ -2790,6 +2863,11 @@ public final class SleepHmmProtos {
           bitField0_ = (bitField0_ & ~0x00000040);
         }
         result.stateTransitionMatrix_ = stateTransitionMatrix_;
+        if (((bitField0_ & 0x00000080) == 0x00000080)) {
+          initialStateProbabilities_ = java.util.Collections.unmodifiableList(initialStateProbabilities_);
+          bitField0_ = (bitField0_ & ~0x00000080);
+        }
+        result.initialStateProbabilities_ = initialStateProbabilities_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2872,6 +2950,16 @@ public final class SleepHmmProtos {
           } else {
             ensureStateTransitionMatrixIsMutable();
             stateTransitionMatrix_.addAll(other.stateTransitionMatrix_);
+          }
+          onChanged();
+        }
+        if (!other.initialStateProbabilities_.isEmpty()) {
+          if (initialStateProbabilities_.isEmpty()) {
+            initialStateProbabilities_ = other.initialStateProbabilities_;
+            bitField0_ = (bitField0_ & ~0x00000080);
+          } else {
+            ensureInitialStateProbabilitiesIsMutable();
+            initialStateProbabilities_.addAll(other.initialStateProbabilities_);
           }
           onChanged();
         }
@@ -3539,6 +3627,72 @@ public final class SleepHmmProtos {
         return this;
       }
 
+      // repeated double initial_state_probabilities = 8;
+      private java.util.List<java.lang.Double> initialStateProbabilities_ = java.util.Collections.emptyList();
+      private void ensureInitialStateProbabilitiesIsMutable() {
+        if (!((bitField0_ & 0x00000080) == 0x00000080)) {
+          initialStateProbabilities_ = new java.util.ArrayList<java.lang.Double>(initialStateProbabilities_);
+          bitField0_ |= 0x00000080;
+         }
+      }
+      /**
+       * <code>repeated double initial_state_probabilities = 8;</code>
+       */
+      public java.util.List<java.lang.Double>
+          getInitialStateProbabilitiesList() {
+        return java.util.Collections.unmodifiableList(initialStateProbabilities_);
+      }
+      /**
+       * <code>repeated double initial_state_probabilities = 8;</code>
+       */
+      public int getInitialStateProbabilitiesCount() {
+        return initialStateProbabilities_.size();
+      }
+      /**
+       * <code>repeated double initial_state_probabilities = 8;</code>
+       */
+      public double getInitialStateProbabilities(int index) {
+        return initialStateProbabilities_.get(index);
+      }
+      /**
+       * <code>repeated double initial_state_probabilities = 8;</code>
+       */
+      public Builder setInitialStateProbabilities(
+          int index, double value) {
+        ensureInitialStateProbabilitiesIsMutable();
+        initialStateProbabilities_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated double initial_state_probabilities = 8;</code>
+       */
+      public Builder addInitialStateProbabilities(double value) {
+        ensureInitialStateProbabilitiesIsMutable();
+        initialStateProbabilities_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated double initial_state_probabilities = 8;</code>
+       */
+      public Builder addAllInitialStateProbabilities(
+          java.lang.Iterable<? extends java.lang.Double> values) {
+        ensureInitialStateProbabilitiesIsMutable();
+        super.addAll(values, initialStateProbabilities_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated double initial_state_probabilities = 8;</code>
+       */
+      public Builder clearInitialStateProbabilities() {
+        initialStateProbabilities_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000080);
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:SleepHmm)
     }
 
@@ -3584,16 +3738,16 @@ public final class SleepHmmProtos {
       "abilities\030\001 \003(\001\"v\n\nStateModel\022\034\n\005light\030\001" +
       " \001(\0132\r.PoissonModel\022#\n\014motion_count\030\002 \001(" +
       "\0132\r.PoissonModel\022%\n\005waves\030\003 \001(\0132\026.Discre" +
-      "teAlphabetModel\"\315\001\n\010SleepHmm\022\017\n\007user_id\030" +
+      "teAlphabetModel\"\362\001\n\010SleepHmm\022\017\n\007user_id\030" +
       "\001 \001(\t\022\016\n\006source\030\002 \001(\t\022\033\n\006states\030\003 \003(\0132\013." +
       "StateModel\022(\n\024sleep_mode_of_states\030\004 \003(\016" +
       "2\n.SleepMode\022$\n\022bed_mode_of_states\030\005 \003(\016" +
       "2\010.BedMode\022\022\n\nnum_states\030\006 \001(\005\022\037\n\027state_",
-      "transition_matrix\030\007 \003(\001*1\n\tSleepMode\022\t\n\005" +
-      "SLEEP\020\000\022\017\n\013LIGHT_SLEEP\020\001\022\010\n\004WAKE\020\002*\"\n\007Be" +
-      "dMode\022\n\n\006ON_BED\020\000\022\013\n\007OFF_BED\020\001B2\n com.he" +
-      "llo.suripu.api.datascienceB\016SleepHmmProt" +
-      "os"
+      "transition_matrix\030\007 \003(\001\022#\n\033initial_state" +
+      "_probabilities\030\010 \003(\001*1\n\tSleepMode\022\t\n\005SLE" +
+      "EP\020\000\022\017\n\013LIGHT_SLEEP\020\001\022\010\n\004WAKE\020\002*\"\n\007BedMo" +
+      "de\022\n\n\006ON_BED\020\000\022\013\n\007OFF_BED\020\001B2\n com.hello" +
+      ".suripu.api.datascienceB\016SleepHmmProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -3623,7 +3777,7 @@ public final class SleepHmmProtos {
           internal_static_SleepHmm_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_SleepHmm_descriptor,
-              new java.lang.String[] { "UserId", "Source", "States", "SleepModeOfStates", "BedModeOfStates", "NumStates", "StateTransitionMatrix", });
+              new java.lang.String[] { "UserId", "Source", "States", "SleepModeOfStates", "BedModeOfStates", "NumStates", "StateTransitionMatrix", "InitialStateProbabilities", });
           return null;
         }
       };

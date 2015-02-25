@@ -3,6 +3,8 @@ package com.hello.suripu.algorithm.hmm;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 
+import java.util.List;
+
 /**
  * Created by benjo on 2/21/15.
  *
@@ -50,6 +52,29 @@ public class HiddenMarkovModel {
         this.initialState = initialStateProbs;
         this.obsModels = obsModels;
     }
+
+    public HiddenMarkovModel(int numStates,List<Double> stm,List<Double> initialProbs,HmmPdfInterface [] obsModels) {
+
+
+        //turn state transition matrix into something we like
+        this.A = new double[numStates][numStates];
+
+        int k = 0;
+        for (int j = 0; j < numStates; j++) {
+            for (int i = 0; i < numStates; i++) {
+                this.A[j][i] = stm.get(k);
+                k++;
+            }
+        }
+
+        this.initialState = new double[numStates];
+        for (int j = 0; j < numStates; j++) {
+            this.initialState[j] = initialProbs.get(j);
+        }
+
+        this.obsModels = obsModels;
+    }
+
 
     double [][] mapB(final double [][] observations) {
         double [][] bmap = new double[this.numStates][];

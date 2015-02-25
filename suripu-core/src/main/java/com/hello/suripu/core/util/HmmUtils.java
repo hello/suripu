@@ -5,7 +5,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.hello.suripu.algorithm.hmm.DiscreteAlphabetPdf;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
+import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
+import com.hello.suripu.algorithm.hmm.PdfComposite;
+import com.hello.suripu.algorithm.hmm.PoissonPdf;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
@@ -40,9 +44,32 @@ public class HmmUtils {
 
 
 
-    static public void GetModelFromProtobuf(final SleepHmmProtos.SleepHmm hmmModelData) {
+    static public HiddenMarkovModel GetModelFromProtobuf(final SleepHmmProtos.SleepHmm hmmModelData) {
+        List<SleepHmmProtos.StateModel> states =  hmmModelData.getStatesList();
+        List<SleepHmmProtos.BedMode> bedModes = hmmModelData.getBedModeOfStatesList();
+        List<SleepHmmProtos.SleepMode> sleepModes = hmmModelData.getSleepModeOfStatesList();
+
+        final int numStates = hmmModelData.getNumStates();
+
+        List<Double> stateTransitionMatrix = hmmModelData.getStateTransitionMatrixList();
+        List<Double> initialStateProbabilities = hmmModelData.getInitialStateProbabilitiesList();
 
 
+        ArrayList<HmmPdfInterface> obsModel = new  ArrayList<HmmPdfInterface>();
+        //TODO do something with the interpretation (bed states and whatnot)
+        for (SleepHmmProtos.StateModel model : states) {
+            PdfComposite pdf = new PdfComposite();
+
+            pdf.addPdf(new PoissonPdf(model.getLight().getMean(),0));
+            pdf.addPdf(new PoissonPdf(model.getMotionCount().getMean(),1));
+            pdf.addPdf(new DiscreteAlphabetPdf(model.getWaves().getProbabilitiesList(),2));
+
+            obsModel.add(pdf);
+
+        }
+
+
+        return new HiddenMarkovModel(numStates,stateTransitionMatrix,initialStateProbabilities,(HmmPdfInterface[])obsModel.toArray());
 
     }
 
