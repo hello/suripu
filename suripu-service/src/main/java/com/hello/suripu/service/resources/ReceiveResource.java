@@ -368,7 +368,7 @@ public class ReceiveResource extends BaseResource {
             // End generate protobuf for alarm
             
             //Perform all OTA checks and compute the update file list (if necessary)
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, userTimeZone, batch);
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, userTimeZone.get(), batch);
             if(!fileDownloadList.isEmpty()) {
                 responseBuilder.addAllFiles(fileDownloadList);
             }
@@ -549,12 +549,12 @@ public class ReceiveResource extends BaseResource {
      */
     private List<OutputProtos.SyncResponse.FileDownload> computeOTAFileList(final String deviceID,
                                                                             final List<String> deviceGroups,
-                                                                            final Optional<DateTimeZone> userTimeZone,
+                                                                            final DateTimeZone userTimeZone,
                                                                             final DataInputProtos.batched_periodic_data batchData) {
         
         final Set<String> alwaysOTAGroups = otaConfiguration.getAlwaysOTAGroups();
         final int currentFirmwareVersion = batchData.getFirmwareVersion();
-        final DateTime currentDTZ = DateTime.now().withZone(userTimeZone.get());
+        final DateTime currentDTZ = DateTime.now().withZone(userTimeZone);
         
         final String firmwareFeature = String.format("firmware_release_%s", currentFirmwareVersion);
         if (featureFlipper.deviceFeatureActive(firmwareFeature, deviceID, deviceGroups)) {
@@ -570,8 +570,8 @@ public class ReceiveResource extends BaseResource {
 
         } else {
 
-            final DateTime startOTAWindow = new DateTime(userTimeZone.get()).withHourOfDay(otaConfiguration.getStartUpdateWindowHour());
-            final DateTime endOTAWindow = new DateTime(userTimeZone.get()).withHourOfDay(otaConfiguration.getEndUpdateWindowHour()).plusSeconds(3599);
+            final DateTime startOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getStartUpdateWindowHour());
+            final DateTime endOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getEndUpdateWindowHour()).plusSeconds(3599);
             final Integer deviceUptimeDelay = otaConfiguration.getDeviceUptimeDelay();
             boolean canOTA = false;
 
