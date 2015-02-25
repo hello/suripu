@@ -123,8 +123,12 @@ public class PasswordResetResource {
         final PasswordReset passwordReset = passwordResetOptional.get();
         final String password = updatePasswordRequestOptional.get().password;
         final String state = updatePasswordRequestOptional.get().state;
-        accountDAO.updatePasswordFromResetEmail(passwordReset.accountId, password, state);
-
+        final Boolean updated = accountDAO.updatePasswordFromResetEmail(passwordReset.accountId, password, state);
+        if(updated) {
+            LOGGER.warn("Password successfully updated for account: {}", passwordReset.accountId);
+            final Boolean deleted = passwordResetDB.delete(passwordReset.uuid, passwordReset.accountId);
+            LOGGER.debug("Password Request reset deleted");
+        }
         return Response.ok().build();
     }
 

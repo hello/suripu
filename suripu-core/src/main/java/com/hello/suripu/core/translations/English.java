@@ -177,5 +177,5 @@ public class English {
             "</body>\n" +
             "</html>";
 
-    public final static String EMAIL_PASSWORD_RESET_SUBJECT = "Pasword reset";
+    public final static String EMAIL_PASSWORD_RESET_SUBJECT = "Password reset";
 }
