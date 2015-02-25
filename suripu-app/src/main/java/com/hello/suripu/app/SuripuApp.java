@@ -382,6 +382,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final AmazonDynamoDB passwordResetDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getPasswordResetDBConfiguration().getEndpoint());
         final PasswordResetDB passwordResetDB = PasswordResetDB.create(passwordResetDynamoDBClient, configuration.getPasswordResetDBConfiguration().getTableName());
-        environment.addResource(new PasswordResetResource(accountDAO, passwordResetDB));
+
+        environment.addResource(PasswordResetResource.create(accountDAO, passwordResetDB, configuration.emailConfiguration()));
     }
 }
