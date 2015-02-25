@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
+import com.hello.suripu.api.datascience.SleepHmmProtos;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
@@ -35,6 +37,15 @@ public class HmmUtils {
     final static private int NUM_MINUTES_IN_WINDOW = 15;
 
     final static private double LIGHT_PREMULTIPLIER = 4.0;
+
+
+
+    static public void GetModelFromProtobuf(final SleepHmmProtos.SleepHmm hmmModelData) {
+
+
+
+    }
+
 
     static private void maxInBin(double[][] data, long t,double value, final int idx, final long t0, final int numMinutesInWindow) {
         final int tIdx = (int)(t - t0) / 1000 / 60 / numMinutesInWindow;
