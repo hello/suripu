@@ -240,3 +240,7 @@ timeline_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: prod_timeline
+
+email:
+   api_key: XnAIQfmDpMYIapDWGigfwA
+   link_host: https://account.hello.is/password_update

@@ -5,6 +5,7 @@ import com.hello.suripu.core.configuration.DynamoDBConfiguration;
 import com.hello.suripu.core.configuration.GraphiteConfiguration;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
+import com.hello.suripu.core.configuration.EmailConfiguration;
 import com.hello.suripu.core.configuration.PushNotificationsConfiguration;
 import com.hello.suripu.core.configuration.QuestionConfiguration;
 import com.yammer.dropwizard.config.Configuration;
@@ -255,6 +256,14 @@ public class SuripuAppConfiguration extends Configuration {
     private DynamoDBConfiguration passwordResetDBConfiguration;
     public DynamoDBConfiguration getPasswordResetDBConfiguration(){
         return this.passwordResetDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("email")
+    private EmailConfiguration emailConfiguration;
+    public EmailConfiguration emailConfiguration() {
+        return emailConfiguration;
     }
 
 }
