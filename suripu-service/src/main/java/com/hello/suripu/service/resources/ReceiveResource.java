@@ -391,37 +391,42 @@ public class ReceiveResource extends BaseResource {
                 //Allow OTA Updates only in config-defined update window
                 if (now.isAfter(startOTAWindow) && now.isBefore(endOTAWindow)) {
                     canOTA = true;
-                    LOGGER.debug("Allowing OTA update because time falls within OTA update window.");
+                    LOGGER.debug("Device within OTAU window.");
+                } else {
+                    canOTA = false;
+                    LOGGER.debug("Device outside OTAU window.");
                 }
                 
                 //Has the device been running long enough to receive an OTA Update?
                 if (batch.hasUptimeInSecond()) {
                     canOTA = (batch.getUptimeInSecond() > deviceUptimeDelay * DateTimeConstants.SECONDS_PER_MINUTE);
+                    LOGGER.debug("Device up-time check: {}", canOTA);
                 }
                 
                 //Check for alwaysOTAGroups as defined in the OTA configuration
                 if (!Collections.disjoint(groups, alwaysOTAGroups)) {
                     canOTA = true;
-                    LOGGER.debug("Device exists in an OTA override group.");
-                }
-
-                // groups take precedence over feature
-                if (!groups.isEmpty() && canOTA) {
-                    // TODO check for sense uptime instead and do not OTA if it was just plugged in
-
-                    LOGGER.debug("DeviceId {} belongs to groups: {}", deviceName, groups);
-                    final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName, groups.get(0), firmwareVersion);
-                    LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
-                    responseBuilder.addAllFiles(fileDownloadList);
-                } else {
-
-                    if (featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceName, groups)) {
-                        LOGGER.debug("Feature release is active!");
-                        final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName, FeatureFlipper.OTA_RELEASE, firmwareVersion);
+                    LOGGER.debug("Device belongs to OTAU check override group");
+                } 
+                
+                if(canOTA) {
+                    // groups take precedence over feature
+                    if (!groups.isEmpty()) {
+                        LOGGER.debug("DeviceId {} belongs to groups: {}", deviceName, groups);
+                        final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName, groups.get(0), firmwareVersion);
                         LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
                         responseBuilder.addAllFiles(fileDownloadList);
+                    } else {
+                        if (featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceName, groups)) {
+                            LOGGER.debug("Feature release is active!");
+                            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceName, FeatureFlipper.OTA_RELEASE, firmwareVersion);
+                            LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+                            responseBuilder.addAllFiles(fileDownloadList);
+                        }
                     }
+                    
                 }
+                
             }
 
             final AudioControlProtos.AudioControl.Builder audioControl = AudioControlProtos.AudioControl
@@ -581,13 +586,11 @@ public class ReceiveResource extends BaseResource {
     }
 
     private Optional<DateTimeZone> getUserTimeZone(List<UserInfo> userInfoList) {
-        //DateTimeZone userTimeZone = DateTimeZone.UTC;
         for(final UserInfo info: userInfoList){
             if(info.timeZone.isPresent()){
                 return info.timeZone;
             }
         }
-        //return Optional.of(userTimeZone);
         return Optional.absent();
     }
 }

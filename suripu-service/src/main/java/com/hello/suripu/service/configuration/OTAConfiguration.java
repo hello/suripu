@@ -26,9 +26,6 @@ public class OTAConfiguration extends Configuration {
     @JsonProperty("device_uptime_delay")
     private Integer deviceUptimeDelay = DEFAULT_DEVICE_UPTIME_DELAY;
 
-    @JsonProperty("release_name")
-    private String releaseName;
-
     @JsonProperty("always_ota_groups")
     private Set<String> alwaysOTAGroups;
 
@@ -43,10 +40,6 @@ public class OTAConfiguration extends Configuration {
     
     public Integer getDeviceUptimeDelay() {
         return this.deviceUptimeDelay;
-    }
-
-    public String getReleaseName() {
-        return this.releaseName;
     }
 
     public Set<String> getAlwaysOTAGroups() {
