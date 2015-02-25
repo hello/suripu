@@ -249,4 +249,12 @@ public class SuripuAppConfiguration extends Configuration {
         return this.timelineDBConfiguration;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty("password_reset_db")
+    private DynamoDBConfiguration passwordResetDBConfiguration;
+    public DynamoDBConfiguration getPasswordResetDBConfiguration(){
+        return this.passwordResetDBConfiguration;
+    }
+
 }

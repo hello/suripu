@@ -41,4 +41,9 @@ public class BaseResource {
         return featureFlipper.userFeatureActive(FeatureFlipper.FEEDBACK_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
     }
 
+
+    protected Boolean hasInOrOutOfBedEvents(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.IN_OUT_BED_EVENTS, accountId, Collections.EMPTY_LIST);
+    }
+
 }
