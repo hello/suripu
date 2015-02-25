@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -70,6 +71,8 @@ public class SleepHmmDAODynamoDB {
     public static final String CREATED_DATE_ATTRIBUTE_NAME = "create_date";
     public static final String DATA_BLOB_ATTRIBUTE_NAME = "model";
 
+    public static final long DEFAULT_ACCOUNT_ID = -1;
+
     public final String JSON_CHARSET = "UTF-8";
 
     private static ObjectMapper mapper = new ObjectMapper();
@@ -83,17 +86,65 @@ public class SleepHmmDAODynamoDB {
         mapper.registerModule(new JodaModule());
     }
 
+    public Optional<SleepHmmProtos.SleepHmm> getLatestModelForDate(long accountId,long timeOfInterestMillis) {
+
+        byte [] sleepHmmBlob = null;
+
+        //get with my account ID
+        ImmutableMap<Long, byte []> queryResult = this.getLatestModelForDateInternal(accountId,timeOfInterestMillis);
+
+        if (queryResult.containsKey(accountId)) {
+            sleepHmmBlob = queryResult.get(accountId);
+        }
+        else {
+            //if that failed, then try with default account ID
+            queryResult = this.getLatestModelForDateInternal(DEFAULT_ACCOUNT_ID,timeOfInterestMillis);
+
+            if (queryResult.containsKey(DEFAULT_ACCOUNT_ID)) {
+                sleepHmmBlob = queryResult.get(DEFAULT_ACCOUNT_ID);
+            }
+        }
+
+
+        Optional<SleepHmmProtos.SleepHmm> result = Optional.absent();
+
+        if (sleepHmmBlob != null) {
+            //decode blob if it exists
+
+            try {
+
+                SleepHmmProtos.SleepHmm hmmModelData = null;
+
+
+                hmmModelData = SleepHmmProtos.SleepHmm.parseFrom(sleepHmmBlob);
+
+
+                //got me my model, let's turn it into an object!
+                HmmUtils.GetModelFromProtobuf(hmmModelData);
+
+
+            }
+            catch (InvalidProtocolBufferException e) {
+                LOGGER.error(e.toString());
+            }
+        }
+
+        return result;
+
+
+    }
+
     /*
      * Get most up-to-date model for a given date
      */
-    private ImmutableMap<Long, byte []> getLatestModelForDate(long accountId, long time_of_interest_millis){
+    private ImmutableMap<Long, byte []> getLatestModelForDateInternal(long accountId, long timeOfInterestMillis){
 
         final Map<Long, byte []> finalResult = new HashMap<>();
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
 
         final Condition selectDateCondition = new Condition()
                 .withComparisonOperator(ComparisonOperator.LT.toString())
-                .withAttributeValueList(new AttributeValue().withN(String.valueOf(time_of_interest_millis)));
+                .withAttributeValueList(new AttributeValue().withN(String.valueOf(timeOfInterestMillis)));
 
         queryConditions.put(CREATED_DATE_ATTRIBUTE_NAME, selectDateCondition);
 
@@ -130,8 +181,6 @@ public class SleepHmmDAODynamoDB {
         }
 
 
-        SleepHmmProtos.SleepHmm hmmModelData = null;
-
         //iterate through items
         for(final Map<String, AttributeValue> item : items) {
             if (!item.keySet().containsAll(targetAttributeSet)) {
@@ -140,25 +189,19 @@ public class SleepHmmDAODynamoDB {
             }
 
             final Long dateInMillis = Long.valueOf(item.get(CREATED_DATE_ATTRIBUTE_NAME).getN());
+            final Long accountID = Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN());
+
             final ArrayList<Timeline> eventsWithAllTypes = new ArrayList<>();
 
             final ByteBuffer byteBuffer = item.get(DATA_BLOB_ATTRIBUTE_NAME).getB();
-            final byte[] proto_data = byteBuffer.array();
+            final byte[] protoData = byteBuffer.array();
 
-            try {
-                hmmModelData = SleepHmmProtos.SleepHmm.parseFrom(proto_data);
+            finalResult.put(accountID,protoData);
 
-                //stop after first one
-                break;
-            } catch (InvalidProtocolBufferException e) {
-                LOGGER.error(e.toString());
-            }
 
         }
 
-        if (hmmModelData != null) {
-             HmmUtils.GetModelFromProtobuf(hmmModelData);
-        }
+
 
         return ImmutableMap.copyOf(finalResult);
     }

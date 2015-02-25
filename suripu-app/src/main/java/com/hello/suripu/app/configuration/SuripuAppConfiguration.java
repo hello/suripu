@@ -249,4 +249,12 @@ public class SuripuAppConfiguration extends Configuration {
         return this.timelineDBConfiguration;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty("sleephmm_db")
+    private DynamoDBConfiguration sleepHmmDBConfiguration;
+    public DynamoDBConfiguration getSleepHmmDBConfiguration(){
+        return this.sleepHmmDBConfiguration;
+    }
+
 }

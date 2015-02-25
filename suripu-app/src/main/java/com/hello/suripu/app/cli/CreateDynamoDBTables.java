@@ -15,6 +15,7 @@ import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
+import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
@@ -45,6 +46,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createSenseKeyStoreTable(configuration, awsCredentialsProvider);
         createPillKeyStoreTable(configuration, awsCredentialsProvider);
         createTimelineTable(configuration, awsCredentialsProvider);
+        createSleepHmmTable(configuration,awsCredentialsProvider);
 
     }
 
@@ -233,5 +235,21 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
             final TableDescription description = result.getTableDescription();
             System.out.println(description.getTableStatus());
         }
+    }
+
+    private void createSleepHmmTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+
+        final String tableName = configuration.getSleepHmmDBConfiguration().getTableName();
+
+        try {
+            client.describeTable(tableName);
+            System.out.println(String.format("%s already exists.", tableName));
+        } catch (AmazonServiceException exception) {
+            final CreateTableResult result = SleepHmmDAODynamoDB.createTable(tableName, client);
+            final TableDescription description = result.getTableDescription();
+            System.out.println(description.getTableStatus());
+        }
+
     }
 }
