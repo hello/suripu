@@ -5,6 +5,7 @@ import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
+import com.amazonaws.services.dynamodbv2.model.DeleteItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
@@ -18,11 +19,16 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.UUID;
 
 public class PasswordResetDB {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PasswordResetDB.class);
+
     private final static String UUID_ATTRIBUTE_NAME = "uuid";
     private final static String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
     private final static String EXPIRES_AT_ATTRIBUTE_NAME = "expires_at";
@@ -137,6 +143,33 @@ public class PasswordResetDB {
     }
 
 
+    /**
+     * Remove the PasswordReset request
+     * @param uuid
+     * @param accountId
+     * @return
+     */
+    public Boolean delete(final UUID uuid, final Long accountId) {
+        final DeleteItemRequest deleteItemRequest = new DeleteItemRequest();
+        final Map key = Maps.newHashMap();
+        key.put(UUID_ATTRIBUTE_NAME, new AttributeValue().withS(uuid.toString()));
+        deleteItemRequest.withTableName(tableName).withKey(key);
+        try {
+            amazonDynamoDB.deleteItem(deleteItemRequest);
+            return Boolean.TRUE;
+        } catch (Exception e) {
+            LOGGER.error("Error deleting passwordReset {} for account {}. Reason: {}", uuid, accountId, e.getMessage());
+        }
+
+        return Boolean.FALSE;
+    }
+
+    /**
+     * Create DynamoDB Table
+     * @param tableName
+     * @param amazonDynamoDB
+     * @return
+     */
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDB amazonDynamoDB) {
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 

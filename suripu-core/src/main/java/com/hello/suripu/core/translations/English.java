@@ -160,4 +160,22 @@ public class English {
     public final static String TRENDS_SCORE_OVER_TIME = "SLEEP SCORE OVER TIME";
     public final static String TRENDS_DURATION_AVERAGE = "AVERAGE SLEEP DURATION";
     public final static String TRENDS_DURATION_OVER_TIME = "SLEEP DURATION OVER TIME";
+
+
+
+
+    // EMAIL
+    public final static String EMAIL_PASSWORD_RESET_HTML_TEMPLATE = "<html>\n" +
+            "<head>\n" +
+            "    <title>Password Reset</title>\n" +
+            "</head>\n" +
+            "<body>\n" +
+            "    <p>Hi %s,</p>\n" +
+            "    <p>Forgot your password? You can reset it <a href=\"%s\">here</a>.</p>\n" +
+            "    <p>Please reset it right away. This link will expire in 1 day.</p>\n" +
+            "    <p>If you did not initiate this password reset request, you can safely ignore this email.</p>\n" +
+            "</body>\n" +
+            "</html>";
+
+    public final static String EMAIL_PASSWORD_RESET_SUBJECT = "Password reset";
 }
