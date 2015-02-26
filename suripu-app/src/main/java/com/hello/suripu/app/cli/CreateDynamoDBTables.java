@@ -35,12 +35,12 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
     protected void run(Bootstrap<SuripuAppConfiguration> bootstrap, Namespace namespace, SuripuAppConfiguration configuration) throws Exception {
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
 
-        createAlarmInfoTable(configuration, awsCredentialsProvider);
+        createUserInfoTable(configuration, awsCredentialsProvider);
         createAlarmTable(configuration, awsCredentialsProvider);
         createFeaturesTable(configuration, awsCredentialsProvider);
         createTeamsTable(configuration, awsCredentialsProvider);
         createSleepScoreTable(configuration, awsCredentialsProvider);
-        createRingTimeTable(configuration, awsCredentialsProvider);
+        createScheduledRingTimeHistoryTable(configuration, awsCredentialsProvider);
         createTimeZoneHistoryTable(configuration, awsCredentialsProvider);
         createInsightsTable(configuration, awsCredentialsProvider);
         createAccountPreferencesTable(configuration, awsCredentialsProvider);
@@ -67,7 +67,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         }
     }
 
-    private void createRingTimeTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+    private void createScheduledRingTimeHistoryTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
         DynamoDBConfiguration config = configuration.getScheduledRingTimeHistoryDBConfiguration();
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
         final String tableName = config.getTableName();
@@ -130,7 +130,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         }
     }
 
-    private void createAlarmInfoTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+    private void createUserInfoTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
 
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
 
