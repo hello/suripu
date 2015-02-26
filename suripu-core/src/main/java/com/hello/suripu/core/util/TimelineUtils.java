@@ -1153,6 +1153,10 @@ public class TimelineUtils {
         final List<Event> events = Lists.newArrayList();
 
         for(final RingTime ringTime : ringTimes) {
+            if(ringTime.isEmpty()){
+                continue;
+            }
+            
             final DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC);
 
             final DateTime localNow = nowInUTC.plusMillis(offsetMillis);
