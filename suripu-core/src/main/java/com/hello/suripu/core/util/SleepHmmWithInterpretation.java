@@ -333,9 +333,9 @@ CREATE CREATE CREATE
             }
 
             //TODO transform this back to raw counts before taking log
-            value = Math.log(value * LIGHT_PREMULTIPLIER + 1.0) / Math.log(2);
+            final double value2 = (double)(int)(Math.log(value * LIGHT_PREMULTIPLIER + 1.0) / Math.log(2));
 
-            maxInBin(data, sample.dateTime, value, LIGHT_INDEX, t0, numMinutesInWindow);
+            maxInBin(data, sample.dateTime, value2, LIGHT_INDEX, t0, numMinutesInWindow);
 
         }
 
@@ -347,6 +347,11 @@ CREATE CREATE CREATE
             TrackerMotion m = it2.next();
 
             double value = m.value;
+
+            //heartbeat value
+            if (value == -1) {
+                continue;
+            }
 
             if (value < 0) {
                 value = 0;
@@ -369,7 +374,7 @@ CREATE CREATE CREATE
                 value = 1.0;
             }
             else {
-                value = 1.0;
+                value = 0.0;
             }
 
             maxInBin(data, sample.dateTime, value, WAVE_INDEX, t0, numMinutesInWindow);
