@@ -10,6 +10,7 @@ import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
+import com.google.common.cache.CacheStats;
 import com.google.common.collect.Ordering;
 import com.google.common.io.CharStreams;
 import com.google.common.cache.CacheBuilder;
@@ -38,7 +39,7 @@ public class FirmwareUpdateStore {
     private final AmazonS3 s3;
     private final String bucketName;
     private final AmazonS3 s3Signer;
-    final CacheLoader s3Cacheloader = new CacheLoader <String, Map<Integer, List<SyncResponse.FileDownload>>>() {
+    final CacheLoader s3CacheLoader = new CacheLoader <String, Map<Integer, List<SyncResponse.FileDownload>>>() {
         public Map<Integer, List<SyncResponse.FileDownload>> load(String key) {
             LOGGER.debug("No cached filelist exists for group: [{}]. Retrieving from S3.", key);
             return getFirmwareFilesForGroup(key);
@@ -53,10 +54,10 @@ public class FirmwareUpdateStore {
         this.bucketName = bucketName;
         this.s3Signer = s3Signer;
         //TODO: Build this from spec in the config
-        //String spec = "maximumSize=200,expireAfterWrite=2m";
+        //CacheBuilder.from("maximumSize=200,expireAfterAccess=60m")
         this.s3FWCache = CacheBuilder.newBuilder()
                 .expireAfterAccess(60, TimeUnit.MINUTES)
-                .build(s3Cacheloader);
+                .build(s3CacheLoader);
     }
 
     public static FirmwareUpdateStore create(final FirmwareUpdateDAO firmwareUpdateDAOImpl, final AmazonS3 s3, final String bucketName) {
@@ -269,6 +270,23 @@ public class FirmwareUpdateStore {
             LOGGER.warn("Versions match: {}, current version = {}", firmwareVersion, currentFirmwareVersion);
             return Collections.EMPTY_LIST;
         }
+        
+        /**
+        // Cache Stats
+        CacheStats stats = s3FWCache.stats();
+        LOGGER.debug("Hit Rate: {}", stats.hitRate());
+        LOGGER.debug("Miss Rate: {}", stats.missRate());
+        LOGGER.debug("loadException Rate: {}", stats.loadExceptionRate());
+        LOGGER.debug("Load Penalty: {}", stats.averageLoadPenalty());
+        
+        CacheStats delta = s3FWCache.stats()
+                .minus(stats);
+        LOGGER.debug("Hit Count: {}", delta.hitCount());
+        LOGGER.debug("Miss Count: {}", delta.missCount());
+        LOGGER.debug("Load Success Count: {}", delta.loadSuccessCount());
+        LOGGER.debug("Load Exception Count: {}", delta.loadExceptionCount());
+        LOGGER.debug("Total Load Time: {}", delta.totalLoadTime());
+        **/
         
         return fw_files.get(firmwareVersion);
     }
