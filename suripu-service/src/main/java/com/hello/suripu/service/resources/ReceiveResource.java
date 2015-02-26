@@ -10,6 +10,7 @@ import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.firmware.FirmwareUpdateStore;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.flipper.GroupFlipper;
@@ -63,6 +64,7 @@ public class ReceiveResource extends BaseResource {
 
     private final KeyStore keyStore;
     private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
+    private final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
 
     private final KinesisLoggerFactory kinesisLoggerFactory;
     private final Boolean debug;
@@ -77,6 +79,7 @@ public class ReceiveResource extends BaseResource {
     public ReceiveResource(final KeyStore keyStore,
                            final KinesisLoggerFactory kinesisLoggerFactory,
                            final MergedUserInfoDynamoDB mergedInfoDynamoDB,
+                           final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
                            final Boolean debug,
                            final FirmwareUpdateStore firmwareUpdateStore,
                            final GroupFlipper groupFlipper,
@@ -86,6 +89,7 @@ public class ReceiveResource extends BaseResource {
         this.kinesisLoggerFactory = kinesisLoggerFactory;
 
         this.mergedInfoDynamoDB = mergedInfoDynamoDB;
+        this.ringTimeHistoryDAODynamoDB = ringTimeHistoryDAODynamoDB;
 
         this.debug = debug;
 
@@ -427,6 +431,11 @@ public class ReceiveResource extends BaseResource {
 
             }
 
+            if(now.plusMinutes(responseBuilder.getBatchSize()).isBefore(nextRingTime.actualRingTimeUTC) == false &&
+                    nextRingTime.isEmpty() == false){
+                this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceName, nextRingTime, now);
+            }
+
             LOGGER.info("{} batch size set to {}", deviceName, responseBuilder.getBatchSize());
             responseBuilder.setAudioControl(audioControl);
             setPillColors(userInfoList, responseBuilder);
@@ -474,9 +483,16 @@ public class ReceiveResource extends BaseResource {
         return uploadInterval;
     }
 
+    public static boolean isNextUploadCrossRingBound(final RingTime nextRingTime, final DateTime now){
+        final int ringTimeOffsetFromNowMillis = (int)(nextRingTime.actualRingTimeUTC - now.getMillis());
+        return nextRingTime.isEmpty() == false &&
+                ringTimeOffsetFromNowMillis <= 2 * DateTimeConstants.MILLIS_PER_MINUTE &&
+                ringTimeOffsetFromNowMillis > 0;
+    }
+
     public static int computePassRingTimeUploadInterval(final RingTime nextRingTime, final DateTime now, final int adjustedUploadCycle){
         final int ringTimeOffsetFromNowMillis = (int)(nextRingTime.actualRingTimeUTC - now.getMillis());
-        if(ringTimeOffsetFromNowMillis <= 2 * DateTimeConstants.MILLIS_PER_MINUTE && ringTimeOffsetFromNowMillis > 0){
+        if(isNextUploadCrossRingBound(nextRingTime, now)){
             final int uploadCycleThatPassRingTime = ringTimeOffsetFromNowMillis / DateTimeConstants.MILLIS_PER_MINUTE + 1;
             return uploadCycleThatPassRingTime;
         }

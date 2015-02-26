@@ -23,8 +23,8 @@ public class CreateKeyStoreDynamoDBTable extends ConfiguredCommand<SuripuConfigu
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
 
-        client.setEndpoint(configuration.getRingTimeDBConfiguration().getEndpoint());
-        final String tableName = configuration.getRingTimeDBConfiguration().getTableName();
+        client.setEndpoint(configuration.getScheduledRingTimeHistoryDBConfiguration().getEndpoint());
+        final String tableName = configuration.getScheduledRingTimeHistoryDBConfiguration().getTableName();
 
         final CreateTableResult result = KeyStoreDynamoDB.createTable(tableName, client);
         final TableDescription description = result.getTableDescription();

@@ -27,14 +27,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Created by pangwu on 9/19/14.
  */
-public class RingTimeDAODynamoDBIT {
+public class ScheduledRingTimeHistoryDAODynamoDBIT {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(RingTimeDAODynamoDBIT.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(ScheduledRingTimeHistoryDAODynamoDBIT.class);
 
     private BasicAWSCredentials awsCredentials;
     private AmazonDynamoDBClient amazonDynamoDBClient;
     private ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB;
-    private final String tableName = "ring_time_test";
+    private final String tableName = "scheduled_ring_time_history_test";
 
     @Before
     public void setUp(){

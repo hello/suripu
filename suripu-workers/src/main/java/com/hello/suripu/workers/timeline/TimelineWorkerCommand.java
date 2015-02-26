@@ -22,7 +22,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
@@ -111,8 +111,8 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
                 configuration.getUserInfoDynamoDBConfiguration().getTableName());
 
 
-        final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getRingTimeDBConfiguration().getEndpoint());
-        final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB = new ScheduledRingTimeHistoryDAODynamoDB(ringTimeDynamoDBClient, configuration.getRingTimeDBConfiguration().getTableName());
+        final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getRingTimeHistoryDBConfiguration().getEndpoint());
+        final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(ringTimeDynamoDBClient, configuration.getRingTimeHistoryDBConfiguration().getTableName());
 
         final AmazonDynamoDB featureDynamoDB = dynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
         final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
@@ -141,7 +141,7 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
                 new SunData(),
                 amazonS3,
                 "hello-audio",
-                scheduledRingTimeHistoryDAODynamoDB,
+                ringTimeHistoryDAODynamoDB,
                 feedbackDAO);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
@@ -165,7 +165,7 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
         final IRecordProcessorFactory factory = new TimelineRecordProcessorFactory(timelineProcessor,
                 deviceDAO,
                 mergedUserInfoDynamoDB,
-                scheduledRingTimeHistoryDAODynamoDB,
+                ringTimeHistoryDAODynamoDB,
                 timelineDAODynamoDB,
                 configuration);
         final Worker worker = new Worker(factory, kinesisConfig);

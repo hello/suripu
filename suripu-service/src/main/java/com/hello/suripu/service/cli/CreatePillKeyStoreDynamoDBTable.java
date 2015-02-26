@@ -23,7 +23,7 @@ public class CreatePillKeyStoreDynamoDBTable extends ConfiguredCommand<SuripuCon
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
 
-        client.setEndpoint(configuration.getRingTimeDBConfiguration().getEndpoint());
+        client.setEndpoint(configuration.getScheduledRingTimeHistoryDBConfiguration().getEndpoint());
 
         final CreateTableResult result = KeyStoreDynamoDB.createTable("pill_key_store", client);
         final TableDescription description = result.getTableDescription();

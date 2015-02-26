@@ -10,7 +10,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.processors.TimelineProcessor;
@@ -34,21 +34,21 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
     private final TimelineProcessor timelineProcessor;
     private final TimelineWorkerConfiguration configuration;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
-    private final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB;
+    private final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
     private final DeviceDAO deviceDAO;
 
     public TimelineRecordProcessor(final TimelineProcessor timelineProcessor,
                                    final DeviceDAO deviceDAO,
                                    final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
-                                   final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB,
+                                   final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
                                    final TimelineDAODynamoDB timelineDAODynamoDB,
                                    final TimelineWorkerConfiguration configuration){
 
         this.timelineProcessor = timelineProcessor;
         this.configuration = configuration;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
-        this.scheduledRingTimeHistoryDAODynamoDB = scheduledRingTimeHistoryDAODynamoDB;
+        this.ringTimeHistoryDAODynamoDB = ringTimeHistoryDAODynamoDB;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
         this.deviceDAO = deviceDAO;
 
