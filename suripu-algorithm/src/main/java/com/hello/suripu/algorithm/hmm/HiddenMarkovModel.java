@@ -53,8 +53,9 @@ public class HiddenMarkovModel {
         this.obsModels = obsModels;
     }
 
-    public HiddenMarkovModel(int numStates,List<Double> stm,List<Double> initialProbs,HmmPdfInterface [] obsModels) {
+    public HiddenMarkovModel(final int numStates,List<Double> stm,List<Double> initialProbs,HmmPdfInterface [] obsModels) {
 
+        this.numStates = numStates;
 
         //turn state transition matrix into something we like
         this.A = new double[numStates][numStates];

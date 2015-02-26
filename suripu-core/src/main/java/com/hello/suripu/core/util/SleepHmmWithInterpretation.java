@@ -13,8 +13,6 @@ import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,7 +25,7 @@ import java.util.TreeSet;
 /**
  * Created by benjo on 2/25/15.
  */
-public class HiddenMarkovModelWithStateInterpretation {
+public class SleepHmmWithInterpretation {
 
     final static protected int NUM_DATA_DIMENSIONS = 3;
     final static protected int LIGHT_INDEX = 0;
@@ -78,7 +76,7 @@ public class HiddenMarkovModelWithStateInterpretation {
     ///////////////////////////////
 
     //protected ctor -- only create from static create methods
-    protected HiddenMarkovModelWithStateInterpretation(final HiddenMarkovModel hmm, final Set<Integer> sleepStates, final Set<Integer> onBedStates) {
+    protected SleepHmmWithInterpretation(final HiddenMarkovModel hmm, final Set<Integer> sleepStates, final Set<Integer> onBedStates) {
         this.hmmWithStates = hmm;
         this.sleepStates = sleepStates;
         this.onBedStates = onBedStates;
@@ -94,7 +92,7 @@ CREATE CREATE CREATE
     Return Sleep HMM model from the SleepHMM protbuf
 
     */
-    static public HiddenMarkovModelWithStateInterpretation createModelFromProtobuf(final SleepHmmProtos.SleepHmm hmmModelData) {
+    static public SleepHmmWithInterpretation createModelFromProtobuf(final SleepHmmProtos.SleepHmm hmmModelData) {
 
         //get the data in the form of lists
         List<SleepHmmProtos.StateModel> states = hmmModelData.getStatesList();
@@ -141,9 +139,9 @@ CREATE CREATE CREATE
         }
 
         //return the HMM
-        final HiddenMarkovModel hmm = new HiddenMarkovModel(numStates, stateTransitionMatrix, initialStateProbabilities, (HmmPdfInterface[]) obsModel.toArray())
+        final HiddenMarkovModel hmm = new HiddenMarkovModel(numStates, stateTransitionMatrix, initialStateProbabilities, (HmmPdfInterface[]) obsModel.toArray());
 
-        return new HiddenMarkovModelWithStateInterpretation(hmm, sleepStates, onBedStates);
+        return new SleepHmmWithInterpretation(hmm, sleepStates, onBedStates);
     }
 
 /* MAIN METHOD TO BE USED FOR DATA PROCESSING IS HERE */

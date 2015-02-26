@@ -14,25 +14,19 @@ import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
-import com.hello.suripu.core.db.util.Compression;
 import com.hello.suripu.core.models.Timeline;
-import com.hello.suripu.core.util.HmmUtils;
+import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import com.yammer.dropwizard.json.GuavaExtrasModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -86,7 +80,7 @@ public class SleepHmmDAODynamoDB {
         mapper.registerModule(new JodaModule());
     }
 
-    public Optional<SleepHmmProtos.SleepHmm> getLatestModelForDate(long accountId,long timeOfInterestMillis) {
+    public Optional<SleepHmmWithInterpretation> getLatestModelForDate(long accountId,long timeOfInterestMillis) {
 
         byte [] sleepHmmBlob = null;
 
@@ -106,7 +100,7 @@ public class SleepHmmDAODynamoDB {
         }
 
 
-        Optional<SleepHmmProtos.SleepHmm> result = Optional.absent();
+        Optional<SleepHmmWithInterpretation> optionalModel = Optional.absent();
 
         if (sleepHmmBlob != null) {
             //decode blob if it exists
@@ -119,8 +113,7 @@ public class SleepHmmDAODynamoDB {
                 hmmModelData = SleepHmmProtos.SleepHmm.parseFrom(sleepHmmBlob);
 
 
-                //got me my model, let's turn it into an object!
-                HmmUtils.GetModelFromProtobuf(hmmModelData);
+                optionalModel = Optional.of(SleepHmmWithInterpretation.createModelFromProtobuf(hmmModelData));
 
 
             }
@@ -129,7 +122,7 @@ public class SleepHmmDAODynamoDB {
             }
         }
 
-        return result;
+        return optionalModel;
 
 
     }

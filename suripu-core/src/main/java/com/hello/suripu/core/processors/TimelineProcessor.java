@@ -13,6 +13,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
+import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
@@ -35,7 +36,7 @@ import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
-import com.hello.suripu.core.util.HmmUtils;
+import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SunData;
 import com.hello.suripu.core.util.TimelineRefactored;
@@ -74,6 +75,7 @@ public class TimelineProcessor {
     private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
     private final Histogram motionEventDistribution;
     private final FeedbackDAO feedbackDAO;
+    private final SleepHmmDAODynamoDB sleepHmmDAODynamoDB;
 
     public TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
                             final AccountDAO accountDAO,
@@ -88,7 +90,8 @@ public class TimelineProcessor {
                             final AmazonS3 s3,
                             final String bucketName,
                             final RingTimeDAODynamoDB ringTimeDAODynamoDB,
-                            final FeedbackDAO feedbackDAO) {
+                            final FeedbackDAO feedbackDAO,
+                            final SleepHmmDAODynamoDB sleepHmmDAODynamoDB) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.accountDAO = accountDAO;
         this.deviceDAO = deviceDAO;
@@ -104,6 +107,7 @@ public class TimelineProcessor {
         this.motionEventDistribution = Metrics.defaultRegistry().newHistogram(TimelineProcessor.class, "motion_event_distribution");
         this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
         this.feedbackDAO = feedbackDAO;
+        this.sleepHmmDAODynamoDB = sleepHmmDAODynamoDB;
     }
 
     public boolean shouldProcessTimelineByWorker(final long accountId,
@@ -451,7 +455,15 @@ public class TimelineProcessor {
                     accountId, deviceId.get(), slotDurationMins, missingDataDefaultValue);
         }
 
-        HmmUtils.getBinnedSensorData(allSensorSampleList,trackerMotions,5);
+
+        Optional <SleepHmmWithInterpretation> hmmOptional = sleepHmmDAODynamoDB.getLatestModelForDate(accountId,targetDate.getMillis());
+
+        if (hmmOptional.isPresent()) {
+            List<Optional<Event>> predictions = hmmOptional.get().getSleepEventsUsingHMM(allSensorSampleList,trackerMotions);
+            int foo = 3;
+
+            foo++;
+        }
 
 
         // compute lights-out and sound-disturbance events
