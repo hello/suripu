@@ -11,6 +11,7 @@ import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -36,6 +37,8 @@ public class HiddenMarkovModelWithStateInterpretation {
     final static protected int ACCEPTABLE_GAP_IN_MINUTES_FOR_SLEEP_DISTURBANCE = 90;
     final static protected int NUM_MINUTES_IN_WINDOW = 15;
     final static protected int ACCEPTABLE_GAP_IN_INDEX_COUNTS = ACCEPTABLE_GAP_IN_MINUTES_FOR_SLEEP_DISTURBANCE / NUM_MINUTES_IN_WINDOW;
+
+    final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
 
     final static private double LIGHT_PREMULTIPLIER = 4.0;
 
@@ -139,9 +142,8 @@ CREATE CREATE CREATE
 
         //return the HMM
         final HiddenMarkovModel hmm = new HiddenMarkovModel(numStates, stateTransitionMatrix, initialStateProbabilities, (HmmPdfInterface[]) obsModel.toArray())
-        HiddenMarkovModelWithStateInterpretation result = new HiddenMarkovModelWithStateInterpretation(hmm, sleepStates, onBedStates);
 
-        return result;
+        return new HiddenMarkovModelWithStateInterpretation(hmm, sleepStates, onBedStates);
     }
 
 /* MAIN METHOD TO BE USED FOR DATA PROCESSING IS HERE */
@@ -152,30 +154,53 @@ CREATE CREATE CREATE
 
         //get sensor data as fixed time-step array of values
         //sensor data will get put into NUM_MINUTES_IN_WINDOW duration bins, somehow (either by adding, averaging, maxing, or whatever)
-        Optional<BinnedData> binnedData = getBinnedSensorData(sensors, pillData, NUM_MINUTES_IN_WINDOW);
+        Optional<BinnedData> binnedDataOptional = getBinnedSensorData(sensors, pillData, NUM_MINUTES_IN_WINDOW);
 
-        if (binnedData.isPresent()) {
+        if (binnedDataOptional.isPresent()) {
+            BinnedData binnedData = binnedDataOptional.get();
 
-            int[] path = hmmWithStates.getViterbiPath(binnedData.get().data);
+            final int[] path = hmmWithStates.getViterbiPath(binnedData.data);
 
+            //TODO use gaps to find disturbances / when people woke up in the night
+            //TODO add in sleep depth via HMM states
             SegmentPairWithGaps sleep = mindTheGapsAndReturnTheLongestSegment(getSetBoundaries(path, sleepStates), ACCEPTABLE_GAP_IN_INDEX_COUNTS);
-
-            if (sleep != null) {
-
-
-            }
-
             SegmentPairWithGaps bed = mindTheGapsAndReturnTheLongestSegment(getSetBoundaries(path, onBedStates), ACCEPTABLE_GAP_IN_INDEX_COUNTS);
 
-            if (bed != null) {
+            final long t0 = binnedData.t0;
+            final int timezoneOffset = binnedData.timezoneOffset;
 
+            if (sleep != null && bed != null) {
 
+                res.add(Optional.of(getEventFromIndex(Event.Type.IN_BED,bed.bounds.i1,t0,timezoneOffset)));
+                res.add(Optional.of(getEventFromIndex(Event.Type.SLEEP,sleep.bounds.i1,t0,timezoneOffset)));
+                res.add(Optional.of(getEventFromIndex(Event.Type.WAKE_UP,sleep.bounds.i2,t0,timezoneOffset)));
+                res.add(Optional.of(getEventFromIndex(Event.Type.OUT_OF_BED,bed.bounds.i2,t0,timezoneOffset)));
             }
-
-
         }
 
         return res;
+    }
+
+    protected  Event getEventFromIndex(Event.Type eventType, final int index, final long t0, final int timezoneOffset) {
+        Long eventTime =  getTimeFromBin(index,NUM_MINUTES_IN_WINDOW,t0);
+
+        //  final long startTimestamp, final long endTimestamp, final int offsetMillis,
+        //  final Optional<String> messageOptional,
+        //  final Optional<SleepSegment.SoundInfo> soundInfoOptional,
+        //  final Optional<Integer> sleepDepth){
+
+
+        final Event e = Event.createFromType(eventType,
+                eventTime,
+                eventTime + NUMBER_OF_MILLIS_IN_A_MINUTE,
+                timezoneOffset,
+                Optional.<String>absent(),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.<Integer>absent());
+
+        return e;
+
+
     }
 
 
@@ -187,19 +212,51 @@ CREATE CREATE CREATE
             return null;
         }
 
+        List<SegmentPairWithGaps> candidates = new ArrayList<SegmentPairWithGaps>();
+
         SegmentPair pair = pairs.get(0);
-        int segmentI1 = pair.i1;
-        int segmentI2 = pair.i2;
+
+        SegmentPairWithGaps candidate = new SegmentPairWithGaps(pair,new ArrayList<SegmentPair>());
+
 
 
         for (int i = 1; i < pairs.size(); i++) {
             pair = pairs.get(i);
+            final int i1 = candidate.bounds.i2;
+            final int i2 = pair.i1;
+            final int gap = i2 - i1;
 
-            if (i != )
+            //either we smooth it over (gap is less than threshold)
+            //or we start a new candidate segment
+            if (gap > acceptableGap) {
+                //start a new segment here, but first update and save off the old one
+                candidates.add(new SegmentPairWithGaps(new SegmentPair(candidate.bounds.i1,pair.i1),candidate.gaps));
+
+                //new segment
+                candidate = new SegmentPairWithGaps(pair,new ArrayList<SegmentPair>());
+
+            }
+            else {
+                candidate.gaps.add(new SegmentPair(i1,i2));
+            }
         }
 
+        candidates.add(candidate);
 
+        //find max duration candidate
+        int maxDuration = -1;
 
+        for (SegmentPairWithGaps c : candidates) {
+            int duration = c.bounds.i2 - c.bounds.i1;
+
+            if (duration > maxDuration) {
+                candidate = c;
+                maxDuration = duration;
+            }
+
+        }
+
+        return  candidate;
 
     }
 
@@ -255,7 +312,7 @@ CREATE CREATE CREATE
         int timezoneOffset = light.get(0).offsetMillis;
         long tf = light.get(light.size() - 1).dateTime;
 
-        int dataLength = (int) (tf - t0) / 1000 / 60 / numMinutesInWindow;
+        int dataLength = (int) (tf - t0) / NUMBER_OF_MILLIS_IN_A_MINUTE / numMinutesInWindow;
 
         double[][] data = new double[NUM_DATA_DIMENSIONS][dataLength];
 
@@ -327,18 +384,17 @@ CREATE CREATE CREATE
     }
 
 
-    protected DateTime getTimeFromBin(int bin, int binWidthMinutes, long t0, int offset) {
+    protected long getTimeFromBin(int bin, int binWidthMinutes, long t0) {
         long t = bin * binWidthMinutes;
-        t *= 60 * 1000;
+        t *= NUMBER_OF_MILLIS_IN_A_MINUTE;
         t += t0;
 
-        DateTime dt = new DateTime(t);
-        return dt.withZone(DateTimeZone.forOffsetMillis(offset));
+        return t;
     }
 
 
     protected void maxInBin(double[][] data, long t, double value, final int idx, final long t0, final int numMinutesInWindow) {
-        final int tIdx = (int) (t - t0) / 1000 / 60 / numMinutesInWindow;
+        final int tIdx = (int) (t - t0) / NUMBER_OF_MILLIS_IN_A_MINUTE / numMinutesInWindow;
 
         if (tIdx >= 0 && tIdx < data[0].length) {
             double v1 = data[idx][tIdx];
@@ -354,7 +410,7 @@ CREATE CREATE CREATE
     }
 
     protected void addToBin(double[][] data, long t, double value, final int idx, final long t0, final int numMinutesInWindow) {
-        final int tIdx = (int) (t - t0) / 1000 / 60 / numMinutesInWindow;
+        final int tIdx = (int) (t - t0) / NUMBER_OF_MILLIS_IN_A_MINUTE / numMinutesInWindow;
 
         if (tIdx >= 0 && tIdx < data[0].length) {
             data[idx][tIdx] += value;
