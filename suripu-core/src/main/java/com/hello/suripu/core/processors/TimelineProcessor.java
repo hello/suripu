@@ -17,6 +17,7 @@ import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
+import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -35,6 +36,7 @@ import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
+import com.hello.suripu.core.util.SleepScoreUtils;
 import com.hello.suripu.core.util.SunData;
 import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineUtils;
@@ -409,25 +411,14 @@ public class TimelineProcessor {
         // TODO: compute this threshold dynamically
         final int threshold = 10; // events with scores < threshold will be considered motion events
 
-        final List<TrackerMotion> originalTrackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
-        LOGGER.debug("Length of trackerMotion: {}", originalTrackerMotions.size());
+        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
+        LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
 
-        if(originalTrackerMotions.size() < 20) {
+        if(trackerMotions.size() < 20) {
             LOGGER.debug("No data for account_id = {} and day = {}", accountId, targetDate);
             final Timeline timeline = Timeline.createEmpty();
             final List<Timeline> timelines = Lists.newArrayList(timeline);
             return timelines;
-        }
-
-        // get partner tracker motion, if available
-        final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
-
-        List<TrackerMotion> trackerMotions = new ArrayList<>();
-        if (!partnerMotions.isEmpty()) {
-            // OKAY BENJO magic is happending here
-            trackerMotions.addAll(filterTrackerMotion(originalTrackerMotions, partnerMotions));
-        } else {
-            trackerMotions.addAll(originalTrackerMotions);
         }
 
         // get all sensor data, used for light and sound disturbances, and presleep-insights
@@ -573,17 +564,6 @@ public class TimelineProcessor {
         return Lists.newArrayList(timeline);
     }
 
-
-    private List<TrackerMotion> getPartnerTrackerMotion(final Long accountId, final DateTime startTime, final DateTime endTime) {
-        final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accountId);
-        if (optionalPartnerAccountId.isPresent()) {
-            final Long partnerAccountId = optionalPartnerAccountId.get();
-            LOGGER.debug("partner account {}", partnerAccountId);
-            return this.trackerMotionDAO.getBetweenLocalUTC(partnerAccountId, startTime, endTime);
-        }
-        return Collections.EMPTY_LIST;
-    }
-
     /**
      * Fetch partner motion events
      * @param fallingAsleepEvent
@@ -727,12 +707,27 @@ public class TimelineProcessor {
         final String targetDateString = DateTimeUtil.dateToYmdString(targetDate);
 
         final AggregateScore targetDateScore = this.aggregateSleepScoreDAODynamoDB.getSingleScore(accountId, targetDateString);
-        Integer sleepScore = targetDateScore.score;
+        Integer sleepScore = 0; // targetDateScore.score;
 
         if (sleepScore == 0) {
             // score may not have been computed yet, recompute
-            sleepScore = sleepScoreDAO.getSleepScoreForNight(accountId, targetDate.withTimeAtStartOfDay(),
+
+            // score based on amount of movement during sleep
+            final Integer motionScore = sleepScoreDAO.getSleepScoreForNight(accountId, targetDate.withTimeAtStartOfDay(),
                     userOffsetMillis, this.dateBucketPeriod, sleepLabelDAO);
+
+            // score due to duration, and user age
+            final Optional<Account> optionalAccount = accountDAO.getById(accountId);
+            final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
+            final Integer durationScore = SleepScoreUtils.getSleepDurationScore(userAge, sleepStats.sleepDurationInMinutes);
+
+            // TODO: score the external environment (lights, sound, temp and humidity)
+            final Integer environmentScore = 100;
+
+            // combine all the scores
+            sleepScore = SleepScoreUtils.aggregateSleepScore(motionScore, durationScore, environmentScore);
+
+            LOGGER.trace("SCORES: motion {}, duration {}, final {}", motionScore, durationScore, sleepScore);
 
             final DateTime lastNight = new DateTime(DateTime.now(), DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
             if (targetDate.isBefore(lastNight)) {
@@ -783,9 +778,4 @@ public class TimelineProcessor {
         histogram.update(count);
     }
 
-    private List<TrackerMotion> filterTrackerMotion(final List<TrackerMotion> originalTrackerMotions, final List<TrackerMotion> partnerMotions) {
-        // BENJO magic
-        final List<TrackerMotion> filteredMotions = new ArrayList<>();
-        return originalTrackerMotions; // <--- change this to filteredMotions
-    }
 }
