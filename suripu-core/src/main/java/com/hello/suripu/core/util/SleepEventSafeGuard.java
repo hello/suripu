@@ -162,7 +162,10 @@ public class SleepEventSafeGuard {
                         sleep.getEndTimestamp() - DateTimeConstants.MILLIS_PER_MINUTE,
                         sleep.getTimezoneOffset())));
             }else{
-                fixedSleepEvents.set(0, Optional.<Event>absent());
+                //fixedSleepEvents.set(0, Optional.<Event>absent());
+                fixedSleepEvents.set(0, Optional.of((Event) new InBedEvent(sleep.getStartTimestamp() - 5 * DateTimeConstants.MILLIS_PER_MINUTE,
+                        sleep.getEndTimestamp() - 5 * DateTimeConstants.MILLIS_PER_MINUTE,
+                        sleep.getTimezoneOffset())));
             }
 
         }
@@ -186,7 +189,10 @@ public class SleepEventSafeGuard {
                         new DateTime(wakeUp.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUp.getTimezoneOffset())),
                         new DateTime(outOfBed.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBed.getTimezoneOffset())));
 
-                fixedSleepEvents.set(3, Optional.<Event>absent());
+                //fixedSleepEvents.set(3, Optional.<Event>absent());
+                fixedSleepEvents.set(3, Optional.of((Event) new OutOfBedEvent(wakeUp.getEndTimestamp(),
+                        wakeUp.getEndTimestamp() + 5 * DateTimeConstants.MILLIS_PER_MINUTE,
+                        wakeUp.getTimezoneOffset())));
 
             }
 
