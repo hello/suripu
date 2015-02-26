@@ -22,7 +22,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.RingTimeDAODynamoDB;
+import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
@@ -112,7 +112,7 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
 
 
         final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getRingTimeDBConfiguration().getEndpoint());
-        final RingTimeDAODynamoDB ringTimeDAODynamoDB = new RingTimeDAODynamoDB(ringTimeDynamoDBClient, configuration.getRingTimeDBConfiguration().getTableName());
+        final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB = new ScheduledRingTimeHistoryDAODynamoDB(ringTimeDynamoDBClient, configuration.getRingTimeDBConfiguration().getTableName());
 
         final AmazonDynamoDB featureDynamoDB = dynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
         final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
@@ -141,7 +141,7 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
                 new SunData(),
                 amazonS3,
                 "hello-audio",
-                ringTimeDAODynamoDB,
+                scheduledRingTimeHistoryDAODynamoDB,
                 feedbackDAO);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
@@ -165,7 +165,7 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
         final IRecordProcessorFactory factory = new TimelineRecordProcessorFactory(timelineProcessor,
                 deviceDAO,
                 mergedUserInfoDynamoDB,
-                ringTimeDAODynamoDB,
+                scheduledRingTimeHistoryDAODynamoDB,
                 timelineDAODynamoDB,
                 configuration);
         final Worker worker = new Worker(factory, kinesisConfig);

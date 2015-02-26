@@ -13,7 +13,7 @@ import com.google.common.io.Resources;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.RingTimeDAODynamoDB;
+import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmSound;
@@ -50,7 +50,7 @@ public class RingProcessorSingleUserIT {
 
     private final AlarmDAODynamoDB alarmDAODynamoDB = mock(AlarmDAODynamoDB.class);
 
-    private RingTimeDAODynamoDB ringTimeDAODynamoDB;
+    private ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB;
     private BasicAWSCredentials awsCredentials;
     private AmazonDynamoDBClient amazonDynamoDBClient;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = mock(MergedUserInfoDynamoDB.class);
@@ -124,8 +124,8 @@ public class RingProcessorSingleUserIT {
         this.amazonDynamoDBClient.setEndpoint("http://localhost:7777");
 
         try {
-            RingTimeDAODynamoDB.createTable(ringTimeTableName, this.amazonDynamoDBClient);
-            this.ringTimeDAODynamoDB = new RingTimeDAODynamoDB(
+            ScheduledRingTimeHistoryDAODynamoDB.createTable(ringTimeTableName, this.amazonDynamoDBClient);
+            this.scheduledRingTimeHistoryDAODynamoDB = new ScheduledRingTimeHistoryDAODynamoDB(
                     this.amazonDynamoDBClient,
                     ringTimeTableName
             );
@@ -167,7 +167,7 @@ public class RingProcessorSingleUserIT {
                 0));
 
         RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 7, 0, DateTimeZone.forID("America/Los_Angeles")),
@@ -188,7 +188,7 @@ public class RingProcessorSingleUserIT {
 
         // For minute that triggered smart alarm computation
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles")),
@@ -224,7 +224,7 @@ public class RingProcessorSingleUserIT {
 
         // For minutes that not yet trigger smart alarm computation
         RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")),
@@ -245,7 +245,7 @@ public class RingProcessorSingleUserIT {
         // For the minute trigger smart alarm computation
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 dataCollectionTime,
@@ -279,7 +279,7 @@ public class RingProcessorSingleUserIT {
 
         // For moments that not yet trigger smart alarm computation
         RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")),
@@ -299,7 +299,7 @@ public class RingProcessorSingleUserIT {
 
         // For moments that triggered smart alarm computation
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles")),
@@ -339,7 +339,7 @@ public class RingProcessorSingleUserIT {
 
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
         final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 dataCollectionTime,
@@ -367,7 +367,7 @@ public class RingProcessorSingleUserIT {
 
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
         final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 dataCollectionTime,
@@ -395,7 +395,7 @@ public class RingProcessorSingleUserIT {
 
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
         final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 dataCollectionTime,
@@ -425,7 +425,7 @@ public class RingProcessorSingleUserIT {
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
         final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 dataCollectionTime,
@@ -461,7 +461,7 @@ public class RingProcessorSingleUserIT {
 
         // Minutes before smart alarm triggered.
         RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 7, 0, DateTimeZone.forID("America/Los_Angeles")),
@@ -477,7 +477,7 @@ public class RingProcessorSingleUserIT {
 
         // Minutes after smart alarm triggered but before deadline.
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 dataCollectionTime,
@@ -516,7 +516,7 @@ public class RingProcessorSingleUserIT {
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
         final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 dataCollectionTime,
@@ -554,7 +554,7 @@ public class RingProcessorSingleUserIT {
         final DateTime deadline = new DateTime(2014, 9, 22, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
         final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 dataCollectionTime,
@@ -591,7 +591,7 @@ public class RingProcessorSingleUserIT {
         final DateTime deadline = new DateTime(2014, 9, 22, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
         final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 dataCollectionTime,
@@ -643,7 +643,7 @@ public class RingProcessorSingleUserIT {
         // Now: 2014-9-23 07:20
         // Minutes before alarm triggered
         RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")),
@@ -669,7 +669,7 @@ public class RingProcessorSingleUserIT {
         // Now: 2014-9-23 08:00
         // Minute that trigger smart alarm processing
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 dataCollectionTime,
@@ -695,7 +695,7 @@ public class RingProcessorSingleUserIT {
         // Now: [actual ring time + 1 minute]
         // Minutes after smart alarm processing but before next smart alarm process triggered.
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 actualRingTime.plusMinutes(1),
@@ -713,7 +713,7 @@ public class RingProcessorSingleUserIT {
         // smart alarm.
         deadline = new DateTime(2014, 9, 24, 9, 20, DateTimeZone.forID("America/Los_Angeles"));
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 8, 21, DateTimeZone.forID("America/Los_Angeles")),
@@ -768,7 +768,7 @@ public class RingProcessorSingleUserIT {
         // Now: 2014-9-23 07:20
         // Minutes before alarm triggered
         RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")),
@@ -794,7 +794,7 @@ public class RingProcessorSingleUserIT {
         // Now: 2014-9-23 08:00
         // Minute that trigger smart alarm processing
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 dataCollectionTime,
@@ -820,7 +820,7 @@ public class RingProcessorSingleUserIT {
         // Now: [actual ring time + 1 minute]
         // Minutes after smart alarm processing but before next smart alarm process triggered.
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 actualRingTime.plusMinutes(1),
@@ -848,7 +848,7 @@ public class RingProcessorSingleUserIT {
         // Now: [actual ring time + 2 minute]
         // Minutes after smart alarm processing but before next smart alarm process triggered.
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 actualRingTime.plusMinutes(2),
@@ -866,7 +866,7 @@ public class RingProcessorSingleUserIT {
         // Now: [actual ring time + 2 minute]
         // Minutes after smart alarm processing but before next smart alarm process triggered.
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 8, 21, DateTimeZone.forID("America/Los_Angeles")),
@@ -887,7 +887,7 @@ public class RingProcessorSingleUserIT {
         // smart alarm.
         deadline = new DateTime(2014, 9, 24, 9, 20, DateTimeZone.forID("America/Los_Angeles"));
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 10, 1, DateTimeZone.forID("America/Los_Angeles")),
@@ -922,7 +922,7 @@ public class RingProcessorSingleUserIT {
 
         // For moments that not yet trigger smart alarm computation
         RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 7, 0, DateTimeZone.forID("America/Los_Angeles")),
@@ -943,7 +943,7 @@ public class RingProcessorSingleUserIT {
 
         // For moments that triggered smart alarm computation
         ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.ringTimeDAODynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
                 this.trackerMotionDAO,
                 this.testDeviceId,
                 new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles")),

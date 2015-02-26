@@ -12,7 +12,7 @@ import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
-import com.hello.suripu.core.db.RingTimeDAODynamoDB;
+import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
@@ -69,7 +69,7 @@ public class TimelineProcessor {
     private final SunData sunData;
     private final AmazonS3 s3;
     private final String bucketName;
-    private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
+    private final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB;
     private final Histogram motionEventDistribution;
     private final FeedbackDAO feedbackDAO;
 
@@ -85,7 +85,7 @@ public class TimelineProcessor {
                             final SunData sunData,
                             final AmazonS3 s3,
                             final String bucketName,
-                            final RingTimeDAODynamoDB ringTimeDAODynamoDB,
+                            final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB,
                             final FeedbackDAO feedbackDAO) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.accountDAO = accountDAO;
@@ -100,7 +100,7 @@ public class TimelineProcessor {
         this.s3 = s3;
         this.bucketName = bucketName;
         this.motionEventDistribution = Metrics.defaultRegistry().newHistogram(TimelineProcessor.class, "motion_event_distribution");
-        this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
+        this.scheduledRingTimeHistoryDAODynamoDB = scheduledRingTimeHistoryDAODynamoDB;
         this.feedbackDAO = feedbackDAO;
     }
 
@@ -131,7 +131,7 @@ public class TimelineProcessor {
         }
         final String senseId = pairs.get(0).externalDeviceId;
 
-        final List<RingTime> ringTimes = ringTimeDAODynamoDB.getRingTimesBetween(senseId, evening.minusWeeks(1));
+        final List<RingTime> ringTimes = scheduledRingTimeHistoryDAODynamoDB.getRingTimesBetween(senseId, evening.minusWeeks(1));
 
         return TimelineUtils.getAlarmEvents(ringTimes, evening, morning, offsetMillis, DateTime.now(DateTimeZone.UTC));
     }

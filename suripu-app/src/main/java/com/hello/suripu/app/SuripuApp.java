@@ -58,7 +58,7 @@ import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.QuestionResponseDAO;
-import com.hello.suripu.core.db.RingTimeDAODynamoDB;
+import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TeamStore;
@@ -228,7 +228,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final ImmutableMap<String, String> arns = ImmutableMap.copyOf(configuration.getPushNotificationsConfiguration().getArns());
 
         final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getRingTimeDBConfiguration().getEndpoint());
-        final RingTimeDAODynamoDB ringTimeDAODynamoDB = new RingTimeDAODynamoDB(ringTimeDynamoDBClient, configuration.getRingTimeDBConfiguration().getTableName());
+        final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB = new ScheduledRingTimeHistoryDAODynamoDB(ringTimeDynamoDBClient, configuration.getRingTimeDBConfiguration().getTableName());
 
         final NotificationSubscriptionDAOWrapper notificationSubscriptionDAOWrapper = NotificationSubscriptionDAOWrapper.create(
                 notificationSubscriptionsDAO,
@@ -327,7 +327,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 sunData,
                 amazonS3,
                 "hello-audio",
-                ringTimeDAODynamoDB,
+                scheduledRingTimeHistoryDAODynamoDB,
                 feedbackDAO);
 
         environment.addResource(new TimelineResource(accountDAO, timelineProcessor));

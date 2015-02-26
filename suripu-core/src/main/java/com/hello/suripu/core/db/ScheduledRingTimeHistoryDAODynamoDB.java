@@ -39,7 +39,7 @@ import java.util.Set;
 /**
  * Created by pangwu on 9/23/14.
  */
-public class RingTimeDAODynamoDB {
+public class ScheduledRingTimeHistoryDAODynamoDB {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(AlarmDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
@@ -52,7 +52,7 @@ public class RingTimeDAODynamoDB {
 
 
 
-    public RingTimeDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
+    public ScheduledRingTimeHistoryDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
     }

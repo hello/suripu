@@ -13,7 +13,7 @@ import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.RingTimeDAODynamoDB;
+import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
@@ -68,7 +68,7 @@ public class AlarmWorkerCommand extends ConfiguredCommand<AlarmWorkerConfigurati
 
 
         final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getRingTimeDBConfiguration().getEndpoint());
-        final RingTimeDAODynamoDB ringTimeDAODynamoDB = new RingTimeDAODynamoDB(ringTimeDynamoDBClient, configuration.getRingTimeDBConfiguration().getTableName());
+        final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB = new ScheduledRingTimeHistoryDAODynamoDB(ringTimeDynamoDBClient, configuration.getRingTimeDBConfiguration().getTableName());
 
         final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
         final AmazonDynamoDB featureDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
@@ -96,7 +96,7 @@ public class AlarmWorkerCommand extends ConfiguredCommand<AlarmWorkerConfigurati
         kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
 
         final IRecordProcessorFactory factory = new AlarmRecordProcessorFactory(mergedUserInfoDynamoDB,
-                ringTimeDAODynamoDB,
+                scheduledRingTimeHistoryDAODynamoDB,
                 trackerMotionDAO,
                 configuration);
         final Worker worker = new Worker(factory, kinesisConfig);
