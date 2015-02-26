@@ -399,8 +399,7 @@ public class ReceiveResource extends BaseResource {
 
             }
 
-            if(now.plusMinutes(responseBuilder.getBatchSize()).isBefore(nextRingTime.actualRingTimeUTC) == false &&
-                    nextRingTime.isEmpty() == false){
+            if(shouldWriteRingTimeHistory(now, nextRingTime, responseBuilder.getBatchSize())){
                 this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceName, nextRingTime, now);
             }
 
@@ -426,6 +425,12 @@ public class ReceiveResource extends BaseResource {
         }
 
         return signedResponse.get();
+    }
+
+    public static boolean shouldWriteRingTimeHistory(final DateTime now, final RingTime nextRingTime, final int uploadIntervalInMinutes){
+        return now.plusMinutes(uploadIntervalInMinutes).isBefore(nextRingTime.actualRingTimeUTC) == false &&  // now + upload_cycle >= next_ring
+                now.isAfter(nextRingTime.actualRingTimeUTC) == false &&
+                nextRingTime.isEmpty() == false;
     }
 
 
