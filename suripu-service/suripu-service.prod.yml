@@ -141,6 +141,12 @@ sense_upload_configuration:
   week_days_only: true
   long_interval: 5
   short_interval: 3
+  
+ota_configuration:
+  start_update_window_hour: 11
+  end_update_window_hour: 22
+  device_uptime_delay: 20
+  always_ota_groups: [chris-dev, video-photoshoot, victor]
 
 kinesis_logger:
   stream_name: logs
