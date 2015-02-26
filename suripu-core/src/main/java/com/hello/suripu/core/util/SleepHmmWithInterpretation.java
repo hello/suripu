@@ -281,13 +281,13 @@ CREATE CREATE CREATE
 
             if (inSet.contains(current) && !inSet.contains(prev)) {
                 foundBeginning = true;
-                t1 = prev;
+                t1 = i;
             }
 
             if (!inSet.contains(current) && inSet.contains(prev)) {
                 foundBeginning = false;
 
-                pairList.add(new SegmentPair(t1, current));
+                pairList.add(new SegmentPair(t1, i));
             }
         }
 
