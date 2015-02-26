@@ -111,15 +111,18 @@ CREATE CREATE CREATE
         //each model corresponds to a state---by order it appears in the list.
         //each model (for the moment) is a poisson, poisson, and discrete
         //for light, motion, and waves respectively
-        ArrayList<HmmPdfInterface> obsModel = new ArrayList<HmmPdfInterface>();
-        for (SleepHmmProtos.StateModel model : states) {
+        HmmPdfInterface [] obsModel = new HmmPdfInterface[numStates];
+
+        for (int iState = 0; iState <  numStates; iState++) {
+
+            SleepHmmProtos.StateModel model = states.get(iState);
             PdfComposite pdf = new PdfComposite();
 
             pdf.addPdf(new PoissonPdf(model.getLight().getMean(), 0));
             pdf.addPdf(new PoissonPdf(model.getMotionCount().getMean(), 1));
             pdf.addPdf(new DiscreteAlphabetPdf(model.getWaves().getProbabilitiesList(), 2));
 
-            obsModel.add(pdf);
+            obsModel[iState] = pdf;
         }
 
         //go through list of enums and turn them into sets of ints
@@ -139,7 +142,7 @@ CREATE CREATE CREATE
         }
 
         //return the HMM
-        final HiddenMarkovModel hmm = new HiddenMarkovModel(numStates, stateTransitionMatrix, initialStateProbabilities, (HmmPdfInterface[]) obsModel.toArray());
+        final HiddenMarkovModel hmm = new HiddenMarkovModel(numStates, stateTransitionMatrix, initialStateProbabilities, obsModel);
 
         return new SleepHmmWithInterpretation(hmm, sleepStates, onBedStates);
     }
