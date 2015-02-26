@@ -9,22 +9,13 @@ import java.util.Map;
 /**
  * Created by pangwu on 2/9/15.
  */
-public class HourlyMotionCountScoreFunction implements SleepDataScoringFunction<AmplitudeData> {
-    private final int roomMaidMotionCountThreshold;
-
-    public HourlyMotionCountScoreFunction(final int roomMaidMakeBedMotionDensityThreshold){
-        this.roomMaidMotionCountThreshold = roomMaidMakeBedMotionDensityThreshold;
-    }
+public class ZeroToMaxMotionCountDurationScoreFunction implements SleepDataScoringFunction<AmplitudeData> {
 
     @Override
     public Map<AmplitudeData, EventScores> getPDF(final Collection<AmplitudeData> data) {
         final Map<AmplitudeData, EventScores> pdf = new HashMap<>();
         for(final AmplitudeData datum:data){
-            if(datum.amplitude > this.roomMaidMotionCountThreshold){
-                pdf.put(datum, new EventScores(1d, 1d, 1d, 1d));
-                continue;
-            }
-            pdf.put(datum, new EventScores(1d, 0d, 1d, 0d));
+            pdf.put(datum, new EventScores(1d, datum.amplitude, 1d, datum.amplitude));
         }
         return pdf;
     }

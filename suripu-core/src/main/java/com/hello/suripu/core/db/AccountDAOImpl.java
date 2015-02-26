@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.PasswordUpdate;
 import com.hello.suripu.core.models.Registration;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.joda.time.DateTime;
 import org.mindrot.jbcrypt.BCrypt;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
@@ -47,6 +48,9 @@ public abstract class AccountDAOImpl implements AccountDAO {
 
     @SqlUpdate("UPDATE accounts SET password_hash = :new_password_hash WHERE password_hash = :current_password_hash AND id = :account_id;")
     public abstract int updatePassword(@Bind("new_password_hash") final String newPasswordHash, @Bind("current_password_hash") final String currentPasswordHash, @Bind("account_id") final Long accountId);
+
+    @SqlUpdate("UPDATE accounts SET password_hash = :new_password_hash WHERE id = :account_id;")
+    protected abstract int updatePasswordFromResetEmail(@Bind("new_password_hash") final String newPasswordHash, @Bind("account_id") final Long accountId);
 
     @SqlUpdate("UPDATE accounts SET email = :email, last_modified = :new_last_modified WHERE id = :account_id AND last_modified = :last_modified;")
     protected abstract int updateEmail(@Bind("email") final String email, @Bind("account_id") final Long accountId, @Bind("last_modified") final Long lastModified, @Bind("new_last_modified") final Long newLastModified);
@@ -149,6 +153,23 @@ public abstract class AccountDAOImpl implements AccountDAO {
         }
 
         int updated = updatePassword(passwordUpdate.newPassword, passwordHashFromDB, accountId);
+        LOGGER.warn("Updated {} rows during update password for user = {}", updated, accountId);
+        return updated > 0;
+    }
+
+    public Boolean updatePasswordFromResetEmail(final Long accountId, final String password, final String state) {
+        final Optional<Account> accountOptional = getById(accountId);
+        if(!accountOptional.isPresent()) {
+            LOGGER.warn("Account {} not found for password update");
+            return Boolean.FALSE;
+        }
+
+        final String stateFromDB = DigestUtils.md5Hex(accountOptional.get().password);
+        if(!stateFromDB.equals(state)) {
+            LOGGER.error("State doesn't match for password update account = {} (expected = {}, received = {}", accountId, stateFromDB, state);
+            return Boolean.FALSE;
+        }
+        int updated = updatePasswordFromResetEmail(password, accountId);
         LOGGER.warn("Updated {} rows during update password for user = {}", updated, accountId);
         return updated > 0;
     }

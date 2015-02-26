@@ -218,6 +218,11 @@ pill_key_store_dynamo_db:
   region: us-east-1
   table_name: pill_key_store
 
+password_reset_db:
+    endpoint : http://dynamodb.us-east-1.amazonaws.com
+    region: us-east-1
+    table_name: prod_password_reset
+
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
@@ -235,3 +240,7 @@ timeline_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: prod_timeline
+
+email:
+   api_key: XnAIQfmDpMYIapDWGigfwA
+   link_host: https://account.hello.is/password_update

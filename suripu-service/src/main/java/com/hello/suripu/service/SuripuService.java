@@ -1,9 +1,11 @@
 package com.hello.suripu.service;
 
+import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.common.base.Joiner;
 import com.hello.dropwizard.mikkusu.helpers.JacksonProtobufProvider;
@@ -93,7 +95,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
     }
 
     @Override
-    public void run(SuripuConfiguration configuration, Environment environment) throws Exception {
+    public void run(final SuripuConfiguration configuration, Environment environment) throws Exception {
         environment.addProvider(new JacksonProtobufProvider());
         environment.getJerseyResourceConfig()
                 .getResourceFilterFactories().add(CacheFilterFactory.class);
@@ -120,13 +122,25 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final String bucketName = configuration.getAudioBucketName();
 
         final AmazonDynamoDBClientFactory dynamoDBFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
-        AmazonDynamoDB mergedInfoDynamoDBClient = dynamoDBFactory.getForEndpoint(configuration.getAlarmDBConfiguration().getEndpoint());
+        AmazonDynamoDB mergedInfoDynamoDBClient = dynamoDBFactory.getForEndpoint(configuration.getAlarmInfoDynamoDBConfiguration().getEndpoint());
 
         final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(mergedInfoDynamoDBClient,
                 configuration.getAlarmInfoDynamoDBConfiguration().getTableName());
 
+        // This is used to sign S3 urls with a shorter signature
+        final AWSCredentials s3credentials = new AWSCredentials() {
+            @Override
+            public String getAWSAccessKeyId() {
+                return configuration.getAwsAccessKeyS3();
+            }
 
+            @Override
+            public String getAWSSecretKey() {
+                return configuration.getAwsAccessSecretS3();
+            }
+        };
 
+        final AmazonS3 amazonS3UrlSigner = new AmazonS3Client(s3credentials);
 
         final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider);
         kinesisClient.setEndpoint(configuration.getKinesisConfiguration().getEndpoint());
@@ -171,7 +185,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
             LOGGER.warn("Metrics not enabled.");
         }
 
-        final FirmwareUpdateStore firmwareUpdateStore = new FirmwareUpdateStore(firmwareUpdateDAO, s3Client, "hello-firmware");
+        final FirmwareUpdateStore firmwareUpdateStore = new FirmwareUpdateStore(firmwareUpdateDAO, s3Client, "hello-firmware", amazonS3UrlSigner);
 
         final DataLogger activityLogger = kinesisLoggerFactory.get(QueueName.ACTIVITY_STREAM);
         environment.addProvider(new OAuthProvider(new OAuthAuthenticator(tokenStore), "protected-resources", activityLogger));

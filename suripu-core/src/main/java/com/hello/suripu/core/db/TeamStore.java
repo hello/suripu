@@ -111,7 +111,7 @@ public class TeamStore {
 
         final List<Team> teams = new ArrayList<>();
         for(Map<String, AttributeValue> attributeValueMap : result.getItems()) {
-            Optional<Team> team = makeTeam(attributeValueMap, type);
+            final Optional<Team> team = makeTeam(attributeValueMap, type);
             if(team.isPresent()) {
                 teams.add(team.get());
             }
