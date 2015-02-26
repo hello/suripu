@@ -13,6 +13,7 @@ import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
+import org.joda.time.DateTime;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,6 +37,11 @@ public class SleepHmmWithInterpretation {
     final static protected int NUM_MINUTES_IN_WINDOW = 15;
     final static protected int ACCEPTABLE_GAP_IN_INDEX_COUNTS = ACCEPTABLE_GAP_IN_MINUTES_FOR_SLEEP_DISTURBANCE / NUM_MINUTES_IN_WINDOW;
 
+    final static protected int SLEEP_DEPTH_NONE = 0;
+    final static protected int SLEEP_DEPTH_LIGHT = 66;
+    final static protected int SLEEP_DEPTH_REGULAR = 100;
+    final static protected int SLEEP_DEPTH_DISTURBED = 33;
+
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
 
     final static private double LIGHT_PREMULTIPLIER = 4.0;
@@ -43,6 +49,26 @@ public class SleepHmmWithInterpretation {
     protected final HiddenMarkovModel hmmWithStates;
     protected final Set<Integer> sleepStates;
     protected final Set<Integer> onBedStates;
+    protected final List<Integer> sleepDepthByStates;
+
+    ////////////////////////////
+    //Externally available results class
+
+    public static class SleepHmmResult {
+        public final Optional<Event> inBed;
+        public final Optional<Event> fallAsleep;
+        public final Optional<Event> wakeUp;
+        public final Optional<Event> outOfBed;
+        public final Optional<List<Event>> disturbances;
+
+        public SleepHmmResult(Optional<Event> inBed, Optional<Event> fallAsleep, Optional<Event> wakeUp, Optional<Event> outOfBed, Optional<List<Event>> disturbances) {
+            this.inBed = inBed;
+            this.fallAsleep = fallAsleep;
+            this.wakeUp = wakeUp;
+            this.outOfBed = outOfBed;
+            this.disturbances = disturbances;
+        }
+    }
 
     //////////////////////////////////////////
     //result classes -- internal use
@@ -76,10 +102,11 @@ public class SleepHmmWithInterpretation {
     ///////////////////////////////
 
     //protected ctor -- only create from static create methods
-    protected SleepHmmWithInterpretation(final HiddenMarkovModel hmm, final Set<Integer> sleepStates, final Set<Integer> onBedStates) {
+    protected SleepHmmWithInterpretation(final HiddenMarkovModel hmm, final Set<Integer> sleepStates, final Set<Integer> onBedStates,final List<Integer> sleepDepthByStates) {
         this.hmmWithStates = hmm;
         this.sleepStates = sleepStates;
         this.onBedStates = onBedStates;
+        this.sleepDepthByStates = sleepDepthByStates;
     }
 
 
@@ -96,9 +123,6 @@ CREATE CREATE CREATE
 
         //get the data in the form of lists
         List<SleepHmmProtos.StateModel> states = hmmModelData.getStatesList();
-        List<SleepHmmProtos.BedMode> bedModes = hmmModelData.getBedModeOfStatesList();
-        List<SleepHmmProtos.SleepMode> sleepModes = hmmModelData.getSleepModeOfStatesList();
-
 
         // TODO assert that numStates == length of all the lists above
         final int numStates = hmmModelData.getNumStates();
@@ -106,6 +130,15 @@ CREATE CREATE CREATE
         //1-D arrays, but that matrix actually corresponds to a numStates x numStates matrix, stored in row-major format
         List<Double> stateTransitionMatrix = hmmModelData.getStateTransitionMatrixList();
         List<Double> initialStateProbabilities = hmmModelData.getInitialStateProbabilitiesList();
+
+
+        //go through list of enums and turn them into sets of ints
+        // i.e. state 0 means not sleeping, state 1 means you're sleeping, state 2 means you're sleeping... etc.
+        //so later we can say "path[i] is in sleep set?  No? Then you're not sleeping."
+        Set<Integer> sleepStates = new TreeSet<Integer>();
+        Set<Integer> onBedStates = new TreeSet<Integer>();
+        List<Integer> sleepDepthsByState = new ArrayList<Integer>();
+
 
         //Populate the list of composite models
         //each model corresponds to a state---by order it appears in the list.
@@ -122,36 +155,62 @@ CREATE CREATE CREATE
             pdf.addPdf(new PoissonPdf(model.getMotionCount().getMean(), 1));
             pdf.addPdf(new DiscreteAlphabetPdf(model.getWaves().getProbabilitiesList(), 2));
 
+            if (model.hasBedMode() && model.getBedMode() == SleepHmmProtos.BedMode.ON_BED) {
+                onBedStates.add(iState);
+            }
+
+            if (model.hasSleepMode() && model.getSleepMode() == SleepHmmProtos.SleepMode.SLEEP) {
+                sleepStates.add(iState);
+            }
+
+            if (model.hasSleepDepth()) {
+                switch (model.getSleepDepth()) {
+
+                    case NOT_APPLICABLE:
+                        sleepDepthsByState.add(SLEEP_DEPTH_NONE);
+                        break;
+                    case LIGHT:
+                        sleepDepthsByState.add(SLEEP_DEPTH_LIGHT);
+                        break;
+                    case REGULAR:
+                        sleepDepthsByState.add(SLEEP_DEPTH_REGULAR);
+                        break;
+                    case DISTURBED:
+                        sleepDepthsByState.add(SLEEP_DEPTH_DISTURBED);
+                        break;
+                    default:
+                        sleepDepthsByState.add(SLEEP_DEPTH_NONE);
+                        break;
+                }
+            }
+            else {
+                sleepDepthsByState.add(SLEEP_DEPTH_NONE);
+            }
+
             obsModel[iState] = pdf;
         }
 
-        //go through list of enums and turn them into sets of ints
-        // i.e. state 0 means not sleeping, state 1 means you're sleeping, state 2 means you're sleeping... etc.
-        //so later we can say "path[i] is in sleep set?  No? Then you're not sleeping."
-        Set<Integer> sleepStates = new TreeSet<Integer>();
-        Set<Integer> onBedStates = new TreeSet<Integer>();
 
         for (int i = 0; i < numStates; i++) {
-            if (hmmModelData.getBedModeOfStates(i) == SleepHmmProtos.BedMode.ON_BED) {
-                onBedStates.add(i);
-            }
 
-            if (hmmModelData.getSleepModeOfStates(i) == SleepHmmProtos.SleepMode.SLEEP) {
-                sleepStates.add(i);
-            }
         }
 
         //return the HMM
         final HiddenMarkovModel hmm = new HiddenMarkovModel(numStates, stateTransitionMatrix, initialStateProbabilities, obsModel);
 
-        return new SleepHmmWithInterpretation(hmm, sleepStates, onBedStates);
+        return new SleepHmmWithInterpretation(hmm, sleepStates, onBedStates,sleepDepthsByState);
     }
 
 /* MAIN METHOD TO BE USED FOR DATA PROCESSING IS HERE */
     /* Use this method to get all the sleep / bed events from ALL the sensor data and ALL the pill data */
-    public List<Optional<Event>> getSleepEventsUsingHMM(AllSensorSampleList sensors, List<TrackerMotion> pillData) {
+    public SleepHmmResult getSleepEventsUsingHMM(AllSensorSampleList sensors, List<TrackerMotion> pillData) {
 
-        List<Optional<Event>> res = new ArrayList<Optional<Event>>();
+        Optional<Event> inBed = Optional.absent();
+        Optional<Event> fallAsleep = Optional.absent();
+        Optional<Event> wakeUp = Optional.absent();
+        Optional<Event> outOfBed = Optional.absent();
+        Optional<List<Event>> disturbances = Optional.absent();
+
 
         //get sensor data as fixed time-step array of values
         //sensor data will get put into NUM_MINUTES_IN_WINDOW duration bins, somehow (either by adding, averaging, maxing, or whatever)
@@ -171,15 +230,15 @@ CREATE CREATE CREATE
             final int timezoneOffset = binnedData.timezoneOffset;
 
             if (sleep != null && bed != null) {
-
-                res.add(Optional.of(getEventFromIndex(Event.Type.IN_BED,bed.bounds.i1,t0,timezoneOffset)));
-                res.add(Optional.of(getEventFromIndex(Event.Type.SLEEP,sleep.bounds.i1,t0,timezoneOffset)));
-                res.add(Optional.of(getEventFromIndex(Event.Type.WAKE_UP,sleep.bounds.i2,t0,timezoneOffset)));
-                res.add(Optional.of(getEventFromIndex(Event.Type.OUT_OF_BED,bed.bounds.i2,t0,timezoneOffset)));
+                inBed = Optional.of(getEventFromIndex(Event.Type.IN_BED,bed.bounds.i1,t0,timezoneOffset));
+                fallAsleep = Optional.of(getEventFromIndex(Event.Type.SLEEP,sleep.bounds.i1,t0,timezoneOffset));
+                wakeUp = Optional.of(getEventFromIndex(Event.Type.WAKE_UP,sleep.bounds.i2,t0,timezoneOffset));
+                outOfBed = Optional.of(getEventFromIndex(Event.Type.OUT_OF_BED,bed.bounds.i2,t0,timezoneOffset));
             }
         }
 
-        return res;
+
+        return new SleepHmmResult(inBed,fallAsleep,wakeUp,outOfBed,disturbances);
     }
 
     protected  Event getEventFromIndex(Event.Type eventType, final int index, final long t0, final int timezoneOffset) {
@@ -189,7 +248,6 @@ CREATE CREATE CREATE
         //  final Optional<String> messageOptional,
         //  final Optional<SleepSegment.SoundInfo> soundInfoOptional,
         //  final Optional<Integer> sleepDepth){
-
 
         final Event e = Event.createFromType(eventType,
                 eventTime,

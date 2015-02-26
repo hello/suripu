@@ -459,7 +459,7 @@ public class TimelineProcessor {
         Optional <SleepHmmWithInterpretation> hmmOptional = sleepHmmDAODynamoDB.getLatestModelForDate(accountId,targetDate.getMillis());
 
         if (hmmOptional.isPresent()) {
-            List<Optional<Event>> predictions = hmmOptional.get().getSleepEventsUsingHMM(allSensorSampleList,trackerMotions);
+            SleepHmmWithInterpretation.SleepHmmResult predictions = hmmOptional.get().getSleepEventsUsingHMM(allSensorSampleList,trackerMotions);
             int foo = 3;
 
             foo++;

@@ -10,6 +10,10 @@ public final class SleepHmmProtos {
   }
   /**
    * Protobuf enum {@code SleepMode}
+   *
+   * <pre>
+   * Descriptions of the sleep states (by index)  
+   * </pre>
    */
   public enum SleepMode
       implements com.google.protobuf.ProtocolMessageEnum {
@@ -18,13 +22,9 @@ public final class SleepHmmProtos {
      */
     SLEEP(0, 0),
     /**
-     * <code>LIGHT_SLEEP = 1;</code>
+     * <code>WAKE = 1;</code>
      */
-    LIGHT_SLEEP(1, 1),
-    /**
-     * <code>WAKE = 2;</code>
-     */
-    WAKE(2, 2),
+    WAKE(1, 1),
     ;
 
     /**
@@ -32,13 +32,9 @@ public final class SleepHmmProtos {
      */
     public static final int SLEEP_VALUE = 0;
     /**
-     * <code>LIGHT_SLEEP = 1;</code>
+     * <code>WAKE = 1;</code>
      */
-    public static final int LIGHT_SLEEP_VALUE = 1;
-    /**
-     * <code>WAKE = 2;</code>
-     */
-    public static final int WAKE_VALUE = 2;
+    public static final int WAKE_VALUE = 1;
 
 
     public final int getNumber() { return value; }
@@ -46,8 +42,7 @@ public final class SleepHmmProtos {
     public static SleepMode valueOf(int value) {
       switch (value) {
         case 0: return SLEEP;
-        case 1: return LIGHT_SLEEP;
-        case 2: return WAKE;
+        case 1: return WAKE;
         default: return null;
       }
     }
@@ -181,6 +176,130 @@ public final class SleepHmmProtos {
     // @@protoc_insertion_point(enum_scope:BedMode)
   }
 
+  /**
+   * Protobuf enum {@code SleepDepth}
+   */
+  public enum SleepDepth
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>NOT_APPLICABLE = 0;</code>
+     */
+    NOT_APPLICABLE(0, 0),
+    /**
+     * <code>LIGHT = 1;</code>
+     *
+     * <pre>
+     *just before wakeup (lights are on, but you're still sleeping)
+     * </pre>
+     */
+    LIGHT(1, 1),
+    /**
+     * <code>REGULAR = 2;</code>
+     *
+     * <pre>
+     *"normal" sleep
+     * </pre>
+     */
+    REGULAR(2, 2),
+    /**
+     * <code>DISTURBED = 3;</code>
+     *
+     * <pre>
+     *tossing turning, or probably just not sleeping
+     * </pre>
+     */
+    DISTURBED(3, 3),
+    ;
+
+    /**
+     * <code>NOT_APPLICABLE = 0;</code>
+     */
+    public static final int NOT_APPLICABLE_VALUE = 0;
+    /**
+     * <code>LIGHT = 1;</code>
+     *
+     * <pre>
+     *just before wakeup (lights are on, but you're still sleeping)
+     * </pre>
+     */
+    public static final int LIGHT_VALUE = 1;
+    /**
+     * <code>REGULAR = 2;</code>
+     *
+     * <pre>
+     *"normal" sleep
+     * </pre>
+     */
+    public static final int REGULAR_VALUE = 2;
+    /**
+     * <code>DISTURBED = 3;</code>
+     *
+     * <pre>
+     *tossing turning, or probably just not sleeping
+     * </pre>
+     */
+    public static final int DISTURBED_VALUE = 3;
+
+
+    public final int getNumber() { return value; }
+
+    public static SleepDepth valueOf(int value) {
+      switch (value) {
+        case 0: return NOT_APPLICABLE;
+        case 1: return LIGHT;
+        case 2: return REGULAR;
+        case 3: return DISTURBED;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<SleepDepth>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static com.google.protobuf.Internal.EnumLiteMap<SleepDepth>
+        internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<SleepDepth>() {
+            public SleepDepth findValueByNumber(int number) {
+              return SleepDepth.valueOf(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(index);
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return com.hello.suripu.api.datascience.SleepHmmProtos.getDescriptor().getEnumTypes().get(2);
+    }
+
+    private static final SleepDepth[] VALUES = values();
+
+    public static SleepDepth valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int index;
+    private final int value;
+
+    private SleepDepth(int index, int value) {
+      this.index = index;
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:SleepDepth)
+  }
+
   public interface PoissonModelOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
@@ -196,6 +315,10 @@ public final class SleepHmmProtos {
   }
   /**
    * Protobuf type {@code PoissonModel}
+   *
+   * <pre>
+   * Observational model types  
+   * </pre>
    */
   public static final class PoissonModel extends
       com.google.protobuf.GeneratedMessage
@@ -421,6 +544,10 @@ public final class SleepHmmProtos {
     }
     /**
      * Protobuf type {@code PoissonModel}
+     *
+     * <pre>
+     * Observational model types  
+     * </pre>
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
@@ -1095,9 +1222,43 @@ public final class SleepHmmProtos {
      * <code>optional .DiscreteAlphabetModel waves = 3;</code>
      */
     com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder getWavesOrBuilder();
+
+    // optional .SleepMode sleep_mode = 4;
+    /**
+     * <code>optional .SleepMode sleep_mode = 4;</code>
+     */
+    boolean hasSleepMode();
+    /**
+     * <code>optional .SleepMode sleep_mode = 4;</code>
+     */
+    com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode getSleepMode();
+
+    // optional .BedMode bed_mode = 5;
+    /**
+     * <code>optional .BedMode bed_mode = 5;</code>
+     */
+    boolean hasBedMode();
+    /**
+     * <code>optional .BedMode bed_mode = 5;</code>
+     */
+    com.hello.suripu.api.datascience.SleepHmmProtos.BedMode getBedMode();
+
+    // optional .SleepDepth sleep_depth = 6;
+    /**
+     * <code>optional .SleepDepth sleep_depth = 6;</code>
+     */
+    boolean hasSleepDepth();
+    /**
+     * <code>optional .SleepDepth sleep_depth = 6;</code>
+     */
+    com.hello.suripu.api.datascience.SleepHmmProtos.SleepDepth getSleepDepth();
   }
   /**
    * Protobuf type {@code StateModel}
+   *
+   * <pre>
+   * Description of each state    
+   * </pre>
    */
   public static final class StateModel extends
       com.google.protobuf.GeneratedMessage
@@ -1184,6 +1345,39 @@ public final class SleepHmmProtos {
                 waves_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000004;
+              break;
+            }
+            case 32: {
+              int rawValue = input.readEnum();
+              com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode value = com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(4, rawValue);
+              } else {
+                bitField0_ |= 0x00000008;
+                sleepMode_ = value;
+              }
+              break;
+            }
+            case 40: {
+              int rawValue = input.readEnum();
+              com.hello.suripu.api.datascience.SleepHmmProtos.BedMode value = com.hello.suripu.api.datascience.SleepHmmProtos.BedMode.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(5, rawValue);
+              } else {
+                bitField0_ |= 0x00000010;
+                bedMode_ = value;
+              }
+              break;
+            }
+            case 48: {
+              int rawValue = input.readEnum();
+              com.hello.suripu.api.datascience.SleepHmmProtos.SleepDepth value = com.hello.suripu.api.datascience.SleepHmmProtos.SleepDepth.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(6, rawValue);
+              } else {
+                bitField0_ |= 0x00000020;
+                sleepDepth_ = value;
+              }
               break;
             }
           }
@@ -1292,10 +1486,61 @@ public final class SleepHmmProtos {
       return waves_;
     }
 
+    // optional .SleepMode sleep_mode = 4;
+    public static final int SLEEP_MODE_FIELD_NUMBER = 4;
+    private com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode sleepMode_;
+    /**
+     * <code>optional .SleepMode sleep_mode = 4;</code>
+     */
+    public boolean hasSleepMode() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional .SleepMode sleep_mode = 4;</code>
+     */
+    public com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode getSleepMode() {
+      return sleepMode_;
+    }
+
+    // optional .BedMode bed_mode = 5;
+    public static final int BED_MODE_FIELD_NUMBER = 5;
+    private com.hello.suripu.api.datascience.SleepHmmProtos.BedMode bedMode_;
+    /**
+     * <code>optional .BedMode bed_mode = 5;</code>
+     */
+    public boolean hasBedMode() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional .BedMode bed_mode = 5;</code>
+     */
+    public com.hello.suripu.api.datascience.SleepHmmProtos.BedMode getBedMode() {
+      return bedMode_;
+    }
+
+    // optional .SleepDepth sleep_depth = 6;
+    public static final int SLEEP_DEPTH_FIELD_NUMBER = 6;
+    private com.hello.suripu.api.datascience.SleepHmmProtos.SleepDepth sleepDepth_;
+    /**
+     * <code>optional .SleepDepth sleep_depth = 6;</code>
+     */
+    public boolean hasSleepDepth() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional .SleepDepth sleep_depth = 6;</code>
+     */
+    public com.hello.suripu.api.datascience.SleepHmmProtos.SleepDepth getSleepDepth() {
+      return sleepDepth_;
+    }
+
     private void initFields() {
       light_ = com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.getDefaultInstance();
       motionCount_ = com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.getDefaultInstance();
       waves_ = com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.getDefaultInstance();
+      sleepMode_ = com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode.SLEEP;
+      bedMode_ = com.hello.suripu.api.datascience.SleepHmmProtos.BedMode.ON_BED;
+      sleepDepth_ = com.hello.suripu.api.datascience.SleepHmmProtos.SleepDepth.NOT_APPLICABLE;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1330,6 +1575,15 @@ public final class SleepHmmProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeMessage(3, waves_);
       }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeEnum(4, sleepMode_.getNumber());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeEnum(5, bedMode_.getNumber());
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeEnum(6, sleepDepth_.getNumber());
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -1350,6 +1604,18 @@ public final class SleepHmmProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, waves_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(4, sleepMode_.getNumber());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(5, bedMode_.getNumber());
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(6, sleepDepth_.getNumber());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1431,6 +1697,10 @@ public final class SleepHmmProtos {
     }
     /**
      * Protobuf type {@code StateModel}
+     *
+     * <pre>
+     * Description of each state    
+     * </pre>
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
@@ -1488,6 +1758,12 @@ public final class SleepHmmProtos {
           wavesBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000004);
+        sleepMode_ = com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode.SLEEP;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        bedMode_ = com.hello.suripu.api.datascience.SleepHmmProtos.BedMode.ON_BED;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        sleepDepth_ = com.hello.suripu.api.datascience.SleepHmmProtos.SleepDepth.NOT_APPLICABLE;
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -1540,6 +1816,18 @@ public final class SleepHmmProtos {
         } else {
           result.waves_ = wavesBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.sleepMode_ = sleepMode_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.bedMode_ = bedMode_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.sleepDepth_ = sleepDepth_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1564,6 +1852,15 @@ public final class SleepHmmProtos {
         }
         if (other.hasWaves()) {
           mergeWaves(other.getWaves());
+        }
+        if (other.hasSleepMode()) {
+          setSleepMode(other.getSleepMode());
+        }
+        if (other.hasBedMode()) {
+          setBedMode(other.getBedMode());
+        }
+        if (other.hasSleepDepth()) {
+          setSleepDepth(other.getSleepDepth());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1955,6 +2252,114 @@ public final class SleepHmmProtos {
         return wavesBuilder_;
       }
 
+      // optional .SleepMode sleep_mode = 4;
+      private com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode sleepMode_ = com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode.SLEEP;
+      /**
+       * <code>optional .SleepMode sleep_mode = 4;</code>
+       */
+      public boolean hasSleepMode() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional .SleepMode sleep_mode = 4;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode getSleepMode() {
+        return sleepMode_;
+      }
+      /**
+       * <code>optional .SleepMode sleep_mode = 4;</code>
+       */
+      public Builder setSleepMode(com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000008;
+        sleepMode_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .SleepMode sleep_mode = 4;</code>
+       */
+      public Builder clearSleepMode() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        sleepMode_ = com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode.SLEEP;
+        onChanged();
+        return this;
+      }
+
+      // optional .BedMode bed_mode = 5;
+      private com.hello.suripu.api.datascience.SleepHmmProtos.BedMode bedMode_ = com.hello.suripu.api.datascience.SleepHmmProtos.BedMode.ON_BED;
+      /**
+       * <code>optional .BedMode bed_mode = 5;</code>
+       */
+      public boolean hasBedMode() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional .BedMode bed_mode = 5;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmProtos.BedMode getBedMode() {
+        return bedMode_;
+      }
+      /**
+       * <code>optional .BedMode bed_mode = 5;</code>
+       */
+      public Builder setBedMode(com.hello.suripu.api.datascience.SleepHmmProtos.BedMode value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000010;
+        bedMode_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .BedMode bed_mode = 5;</code>
+       */
+      public Builder clearBedMode() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        bedMode_ = com.hello.suripu.api.datascience.SleepHmmProtos.BedMode.ON_BED;
+        onChanged();
+        return this;
+      }
+
+      // optional .SleepDepth sleep_depth = 6;
+      private com.hello.suripu.api.datascience.SleepHmmProtos.SleepDepth sleepDepth_ = com.hello.suripu.api.datascience.SleepHmmProtos.SleepDepth.NOT_APPLICABLE;
+      /**
+       * <code>optional .SleepDepth sleep_depth = 6;</code>
+       */
+      public boolean hasSleepDepth() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional .SleepDepth sleep_depth = 6;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmProtos.SleepDepth getSleepDepth() {
+        return sleepDepth_;
+      }
+      /**
+       * <code>optional .SleepDepth sleep_depth = 6;</code>
+       */
+      public Builder setSleepDepth(com.hello.suripu.api.datascience.SleepHmmProtos.SleepDepth value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000020;
+        sleepDepth_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .SleepDepth sleep_depth = 6;</code>
+       */
+      public Builder clearSleepDepth() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        sleepDepth_ = com.hello.suripu.api.datascience.SleepHmmProtos.SleepDepth.NOT_APPLICABLE;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:StateModel)
     }
 
@@ -2024,69 +2429,41 @@ public final class SleepHmmProtos {
     com.hello.suripu.api.datascience.SleepHmmProtos.StateModelOrBuilder getStatesOrBuilder(
         int index);
 
-    // repeated .SleepMode sleep_mode_of_states = 4;
+    // optional int32 num_states = 4;
     /**
-     * <code>repeated .SleepMode sleep_mode_of_states = 4;</code>
-     */
-    java.util.List<com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode> getSleepModeOfStatesList();
-    /**
-     * <code>repeated .SleepMode sleep_mode_of_states = 4;</code>
-     */
-    int getSleepModeOfStatesCount();
-    /**
-     * <code>repeated .SleepMode sleep_mode_of_states = 4;</code>
-     */
-    com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode getSleepModeOfStates(int index);
-
-    // repeated .BedMode bed_mode_of_states = 5;
-    /**
-     * <code>repeated .BedMode bed_mode_of_states = 5;</code>
-     */
-    java.util.List<com.hello.suripu.api.datascience.SleepHmmProtos.BedMode> getBedModeOfStatesList();
-    /**
-     * <code>repeated .BedMode bed_mode_of_states = 5;</code>
-     */
-    int getBedModeOfStatesCount();
-    /**
-     * <code>repeated .BedMode bed_mode_of_states = 5;</code>
-     */
-    com.hello.suripu.api.datascience.SleepHmmProtos.BedMode getBedModeOfStates(int index);
-
-    // optional int32 num_states = 6;
-    /**
-     * <code>optional int32 num_states = 6;</code>
+     * <code>optional int32 num_states = 4;</code>
      */
     boolean hasNumStates();
     /**
-     * <code>optional int32 num_states = 6;</code>
+     * <code>optional int32 num_states = 4;</code>
      */
     int getNumStates();
 
-    // repeated double state_transition_matrix = 7;
+    // repeated double state_transition_matrix = 5;
     /**
-     * <code>repeated double state_transition_matrix = 7;</code>
+     * <code>repeated double state_transition_matrix = 5;</code>
      */
     java.util.List<java.lang.Double> getStateTransitionMatrixList();
     /**
-     * <code>repeated double state_transition_matrix = 7;</code>
+     * <code>repeated double state_transition_matrix = 5;</code>
      */
     int getStateTransitionMatrixCount();
     /**
-     * <code>repeated double state_transition_matrix = 7;</code>
+     * <code>repeated double state_transition_matrix = 5;</code>
      */
     double getStateTransitionMatrix(int index);
 
-    // repeated double initial_state_probabilities = 8;
+    // repeated double initial_state_probabilities = 6;
     /**
-     * <code>repeated double initial_state_probabilities = 8;</code>
+     * <code>repeated double initial_state_probabilities = 6;</code>
      */
     java.util.List<java.lang.Double> getInitialStateProbabilitiesList();
     /**
-     * <code>repeated double initial_state_probabilities = 8;</code>
+     * <code>repeated double initial_state_probabilities = 6;</code>
      */
     int getInitialStateProbabilitiesCount();
     /**
-     * <code>repeated double initial_state_probabilities = 8;</code>
+     * <code>repeated double initial_state_probabilities = 6;</code>
      */
     double getInitialStateProbabilities(int index);
   }
@@ -2160,90 +2537,24 @@ public final class SleepHmmProtos {
               break;
             }
             case 32: {
-              int rawValue = input.readEnum();
-              com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode value = com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode.valueOf(rawValue);
-              if (value == null) {
-                unknownFields.mergeVarintField(4, rawValue);
-              } else {
-                if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
-                  sleepModeOfStates_ = new java.util.ArrayList<com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode>();
-                  mutable_bitField0_ |= 0x00000008;
-                }
-                sleepModeOfStates_.add(value);
-              }
-              break;
-            }
-            case 34: {
-              int length = input.readRawVarint32();
-              int oldLimit = input.pushLimit(length);
-              while(input.getBytesUntilLimit() > 0) {
-                int rawValue = input.readEnum();
-                com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode value = com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode.valueOf(rawValue);
-                if (value == null) {
-                  unknownFields.mergeVarintField(4, rawValue);
-                } else {
-                  if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
-                    sleepModeOfStates_ = new java.util.ArrayList<com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode>();
-                    mutable_bitField0_ |= 0x00000008;
-                  }
-                  sleepModeOfStates_.add(value);
-                }
-              }
-              input.popLimit(oldLimit);
-              break;
-            }
-            case 40: {
-              int rawValue = input.readEnum();
-              com.hello.suripu.api.datascience.SleepHmmProtos.BedMode value = com.hello.suripu.api.datascience.SleepHmmProtos.BedMode.valueOf(rawValue);
-              if (value == null) {
-                unknownFields.mergeVarintField(5, rawValue);
-              } else {
-                if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
-                  bedModeOfStates_ = new java.util.ArrayList<com.hello.suripu.api.datascience.SleepHmmProtos.BedMode>();
-                  mutable_bitField0_ |= 0x00000010;
-                }
-                bedModeOfStates_.add(value);
-              }
-              break;
-            }
-            case 42: {
-              int length = input.readRawVarint32();
-              int oldLimit = input.pushLimit(length);
-              while(input.getBytesUntilLimit() > 0) {
-                int rawValue = input.readEnum();
-                com.hello.suripu.api.datascience.SleepHmmProtos.BedMode value = com.hello.suripu.api.datascience.SleepHmmProtos.BedMode.valueOf(rawValue);
-                if (value == null) {
-                  unknownFields.mergeVarintField(5, rawValue);
-                } else {
-                  if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
-                    bedModeOfStates_ = new java.util.ArrayList<com.hello.suripu.api.datascience.SleepHmmProtos.BedMode>();
-                    mutable_bitField0_ |= 0x00000010;
-                  }
-                  bedModeOfStates_.add(value);
-                }
-              }
-              input.popLimit(oldLimit);
-              break;
-            }
-            case 48: {
               bitField0_ |= 0x00000004;
               numStates_ = input.readInt32();
               break;
             }
-            case 57: {
-              if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+            case 41: {
+              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
                 stateTransitionMatrix_ = new java.util.ArrayList<java.lang.Double>();
-                mutable_bitField0_ |= 0x00000040;
+                mutable_bitField0_ |= 0x00000010;
               }
               stateTransitionMatrix_.add(input.readDouble());
               break;
             }
-            case 58: {
+            case 42: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000040) == 0x00000040) && input.getBytesUntilLimit() > 0) {
+              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010) && input.getBytesUntilLimit() > 0) {
                 stateTransitionMatrix_ = new java.util.ArrayList<java.lang.Double>();
-                mutable_bitField0_ |= 0x00000040;
+                mutable_bitField0_ |= 0x00000010;
               }
               while (input.getBytesUntilLimit() > 0) {
                 stateTransitionMatrix_.add(input.readDouble());
@@ -2251,20 +2562,20 @@ public final class SleepHmmProtos {
               input.popLimit(limit);
               break;
             }
-            case 65: {
-              if (!((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
+            case 49: {
+              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
                 initialStateProbabilities_ = new java.util.ArrayList<java.lang.Double>();
-                mutable_bitField0_ |= 0x00000080;
+                mutable_bitField0_ |= 0x00000020;
               }
               initialStateProbabilities_.add(input.readDouble());
               break;
             }
-            case 66: {
+            case 50: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000080) == 0x00000080) && input.getBytesUntilLimit() > 0) {
+              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020) && input.getBytesUntilLimit() > 0) {
                 initialStateProbabilities_ = new java.util.ArrayList<java.lang.Double>();
-                mutable_bitField0_ |= 0x00000080;
+                mutable_bitField0_ |= 0x00000020;
               }
               while (input.getBytesUntilLimit() > 0) {
                 initialStateProbabilities_.add(input.readDouble());
@@ -2283,16 +2594,10 @@ public final class SleepHmmProtos {
         if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
           states_ = java.util.Collections.unmodifiableList(states_);
         }
-        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
-          sleepModeOfStates_ = java.util.Collections.unmodifiableList(sleepModeOfStates_);
-        }
         if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
-          bedModeOfStates_ = java.util.Collections.unmodifiableList(bedModeOfStates_);
-        }
-        if (((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
           stateTransitionMatrix_ = java.util.Collections.unmodifiableList(stateTransitionMatrix_);
         }
-        if (((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
           initialStateProbabilities_ = java.util.Collections.unmodifiableList(initialStateProbabilities_);
         }
         this.unknownFields = unknownFields.build();
@@ -2449,107 +2754,63 @@ public final class SleepHmmProtos {
       return states_.get(index);
     }
 
-    // repeated .SleepMode sleep_mode_of_states = 4;
-    public static final int SLEEP_MODE_OF_STATES_FIELD_NUMBER = 4;
-    private java.util.List<com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode> sleepModeOfStates_;
-    /**
-     * <code>repeated .SleepMode sleep_mode_of_states = 4;</code>
-     */
-    public java.util.List<com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode> getSleepModeOfStatesList() {
-      return sleepModeOfStates_;
-    }
-    /**
-     * <code>repeated .SleepMode sleep_mode_of_states = 4;</code>
-     */
-    public int getSleepModeOfStatesCount() {
-      return sleepModeOfStates_.size();
-    }
-    /**
-     * <code>repeated .SleepMode sleep_mode_of_states = 4;</code>
-     */
-    public com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode getSleepModeOfStates(int index) {
-      return sleepModeOfStates_.get(index);
-    }
-
-    // repeated .BedMode bed_mode_of_states = 5;
-    public static final int BED_MODE_OF_STATES_FIELD_NUMBER = 5;
-    private java.util.List<com.hello.suripu.api.datascience.SleepHmmProtos.BedMode> bedModeOfStates_;
-    /**
-     * <code>repeated .BedMode bed_mode_of_states = 5;</code>
-     */
-    public java.util.List<com.hello.suripu.api.datascience.SleepHmmProtos.BedMode> getBedModeOfStatesList() {
-      return bedModeOfStates_;
-    }
-    /**
-     * <code>repeated .BedMode bed_mode_of_states = 5;</code>
-     */
-    public int getBedModeOfStatesCount() {
-      return bedModeOfStates_.size();
-    }
-    /**
-     * <code>repeated .BedMode bed_mode_of_states = 5;</code>
-     */
-    public com.hello.suripu.api.datascience.SleepHmmProtos.BedMode getBedModeOfStates(int index) {
-      return bedModeOfStates_.get(index);
-    }
-
-    // optional int32 num_states = 6;
-    public static final int NUM_STATES_FIELD_NUMBER = 6;
+    // optional int32 num_states = 4;
+    public static final int NUM_STATES_FIELD_NUMBER = 4;
     private int numStates_;
     /**
-     * <code>optional int32 num_states = 6;</code>
+     * <code>optional int32 num_states = 4;</code>
      */
     public boolean hasNumStates() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
-     * <code>optional int32 num_states = 6;</code>
+     * <code>optional int32 num_states = 4;</code>
      */
     public int getNumStates() {
       return numStates_;
     }
 
-    // repeated double state_transition_matrix = 7;
-    public static final int STATE_TRANSITION_MATRIX_FIELD_NUMBER = 7;
+    // repeated double state_transition_matrix = 5;
+    public static final int STATE_TRANSITION_MATRIX_FIELD_NUMBER = 5;
     private java.util.List<java.lang.Double> stateTransitionMatrix_;
     /**
-     * <code>repeated double state_transition_matrix = 7;</code>
+     * <code>repeated double state_transition_matrix = 5;</code>
      */
     public java.util.List<java.lang.Double>
         getStateTransitionMatrixList() {
       return stateTransitionMatrix_;
     }
     /**
-     * <code>repeated double state_transition_matrix = 7;</code>
+     * <code>repeated double state_transition_matrix = 5;</code>
      */
     public int getStateTransitionMatrixCount() {
       return stateTransitionMatrix_.size();
     }
     /**
-     * <code>repeated double state_transition_matrix = 7;</code>
+     * <code>repeated double state_transition_matrix = 5;</code>
      */
     public double getStateTransitionMatrix(int index) {
       return stateTransitionMatrix_.get(index);
     }
 
-    // repeated double initial_state_probabilities = 8;
-    public static final int INITIAL_STATE_PROBABILITIES_FIELD_NUMBER = 8;
+    // repeated double initial_state_probabilities = 6;
+    public static final int INITIAL_STATE_PROBABILITIES_FIELD_NUMBER = 6;
     private java.util.List<java.lang.Double> initialStateProbabilities_;
     /**
-     * <code>repeated double initial_state_probabilities = 8;</code>
+     * <code>repeated double initial_state_probabilities = 6;</code>
      */
     public java.util.List<java.lang.Double>
         getInitialStateProbabilitiesList() {
       return initialStateProbabilities_;
     }
     /**
-     * <code>repeated double initial_state_probabilities = 8;</code>
+     * <code>repeated double initial_state_probabilities = 6;</code>
      */
     public int getInitialStateProbabilitiesCount() {
       return initialStateProbabilities_.size();
     }
     /**
-     * <code>repeated double initial_state_probabilities = 8;</code>
+     * <code>repeated double initial_state_probabilities = 6;</code>
      */
     public double getInitialStateProbabilities(int index) {
       return initialStateProbabilities_.get(index);
@@ -2559,8 +2820,6 @@ public final class SleepHmmProtos {
       userId_ = "";
       source_ = "";
       states_ = java.util.Collections.emptyList();
-      sleepModeOfStates_ = java.util.Collections.emptyList();
-      bedModeOfStates_ = java.util.Collections.emptyList();
       numStates_ = 0;
       stateTransitionMatrix_ = java.util.Collections.emptyList();
       initialStateProbabilities_ = java.util.Collections.emptyList();
@@ -2592,20 +2851,14 @@ public final class SleepHmmProtos {
       for (int i = 0; i < states_.size(); i++) {
         output.writeMessage(3, states_.get(i));
       }
-      for (int i = 0; i < sleepModeOfStates_.size(); i++) {
-        output.writeEnum(4, sleepModeOfStates_.get(i).getNumber());
-      }
-      for (int i = 0; i < bedModeOfStates_.size(); i++) {
-        output.writeEnum(5, bedModeOfStates_.get(i).getNumber());
-      }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeInt32(6, numStates_);
+        output.writeInt32(4, numStates_);
       }
       for (int i = 0; i < stateTransitionMatrix_.size(); i++) {
-        output.writeDouble(7, stateTransitionMatrix_.get(i));
+        output.writeDouble(5, stateTransitionMatrix_.get(i));
       }
       for (int i = 0; i < initialStateProbabilities_.size(); i++) {
-        output.writeDouble(8, initialStateProbabilities_.get(i));
+        output.writeDouble(6, initialStateProbabilities_.get(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -2628,27 +2881,9 @@ public final class SleepHmmProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, states_.get(i));
       }
-      {
-        int dataSize = 0;
-        for (int i = 0; i < sleepModeOfStates_.size(); i++) {
-          dataSize += com.google.protobuf.CodedOutputStream
-            .computeEnumSizeNoTag(sleepModeOfStates_.get(i).getNumber());
-        }
-        size += dataSize;
-        size += 1 * sleepModeOfStates_.size();
-      }
-      {
-        int dataSize = 0;
-        for (int i = 0; i < bedModeOfStates_.size(); i++) {
-          dataSize += com.google.protobuf.CodedOutputStream
-            .computeEnumSizeNoTag(bedModeOfStates_.get(i).getNumber());
-        }
-        size += dataSize;
-        size += 1 * bedModeOfStates_.size();
-      }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(6, numStates_);
+          .computeInt32Size(4, numStates_);
       }
       {
         int dataSize = 0;
@@ -2789,16 +3024,12 @@ public final class SleepHmmProtos {
         } else {
           statesBuilder_.clear();
         }
-        sleepModeOfStates_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000008);
-        bedModeOfStates_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000010);
         numStates_ = 0;
-        bitField0_ = (bitField0_ & ~0x00000020);
+        bitField0_ = (bitField0_ & ~0x00000008);
         stateTransitionMatrix_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000040);
+        bitField0_ = (bitField0_ & ~0x00000010);
         initialStateProbabilities_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000080);
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -2844,28 +3075,18 @@ public final class SleepHmmProtos {
         } else {
           result.states_ = statesBuilder_.build();
         }
-        if (((bitField0_ & 0x00000008) == 0x00000008)) {
-          sleepModeOfStates_ = java.util.Collections.unmodifiableList(sleepModeOfStates_);
-          bitField0_ = (bitField0_ & ~0x00000008);
-        }
-        result.sleepModeOfStates_ = sleepModeOfStates_;
-        if (((bitField0_ & 0x00000010) == 0x00000010)) {
-          bedModeOfStates_ = java.util.Collections.unmodifiableList(bedModeOfStates_);
-          bitField0_ = (bitField0_ & ~0x00000010);
-        }
-        result.bedModeOfStates_ = bedModeOfStates_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
           to_bitField0_ |= 0x00000004;
         }
         result.numStates_ = numStates_;
-        if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
           stateTransitionMatrix_ = java.util.Collections.unmodifiableList(stateTransitionMatrix_);
-          bitField0_ = (bitField0_ & ~0x00000040);
+          bitField0_ = (bitField0_ & ~0x00000010);
         }
         result.stateTransitionMatrix_ = stateTransitionMatrix_;
-        if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
           initialStateProbabilities_ = java.util.Collections.unmodifiableList(initialStateProbabilities_);
-          bitField0_ = (bitField0_ & ~0x00000080);
+          bitField0_ = (bitField0_ & ~0x00000020);
         }
         result.initialStateProbabilities_ = initialStateProbabilities_;
         result.bitField0_ = to_bitField0_;
@@ -2920,33 +3141,13 @@ public final class SleepHmmProtos {
             }
           }
         }
-        if (!other.sleepModeOfStates_.isEmpty()) {
-          if (sleepModeOfStates_.isEmpty()) {
-            sleepModeOfStates_ = other.sleepModeOfStates_;
-            bitField0_ = (bitField0_ & ~0x00000008);
-          } else {
-            ensureSleepModeOfStatesIsMutable();
-            sleepModeOfStates_.addAll(other.sleepModeOfStates_);
-          }
-          onChanged();
-        }
-        if (!other.bedModeOfStates_.isEmpty()) {
-          if (bedModeOfStates_.isEmpty()) {
-            bedModeOfStates_ = other.bedModeOfStates_;
-            bitField0_ = (bitField0_ & ~0x00000010);
-          } else {
-            ensureBedModeOfStatesIsMutable();
-            bedModeOfStates_.addAll(other.bedModeOfStates_);
-          }
-          onChanged();
-        }
         if (other.hasNumStates()) {
           setNumStates(other.getNumStates());
         }
         if (!other.stateTransitionMatrix_.isEmpty()) {
           if (stateTransitionMatrix_.isEmpty()) {
             stateTransitionMatrix_ = other.stateTransitionMatrix_;
-            bitField0_ = (bitField0_ & ~0x00000040);
+            bitField0_ = (bitField0_ & ~0x00000010);
           } else {
             ensureStateTransitionMatrixIsMutable();
             stateTransitionMatrix_.addAll(other.stateTransitionMatrix_);
@@ -2956,7 +3157,7 @@ public final class SleepHmmProtos {
         if (!other.initialStateProbabilities_.isEmpty()) {
           if (initialStateProbabilities_.isEmpty()) {
             initialStateProbabilities_ = other.initialStateProbabilities_;
-            bitField0_ = (bitField0_ & ~0x00000080);
+            bitField0_ = (bitField0_ & ~0x00000020);
           } else {
             ensureInitialStateProbabilitiesIsMutable();
             initialStateProbabilities_.addAll(other.initialStateProbabilities_);
@@ -3384,212 +3585,68 @@ public final class SleepHmmProtos {
         return statesBuilder_;
       }
 
-      // repeated .SleepMode sleep_mode_of_states = 4;
-      private java.util.List<com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode> sleepModeOfStates_ =
-        java.util.Collections.emptyList();
-      private void ensureSleepModeOfStatesIsMutable() {
-        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
-          sleepModeOfStates_ = new java.util.ArrayList<com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode>(sleepModeOfStates_);
-          bitField0_ |= 0x00000008;
-        }
-      }
-      /**
-       * <code>repeated .SleepMode sleep_mode_of_states = 4;</code>
-       */
-      public java.util.List<com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode> getSleepModeOfStatesList() {
-        return java.util.Collections.unmodifiableList(sleepModeOfStates_);
-      }
-      /**
-       * <code>repeated .SleepMode sleep_mode_of_states = 4;</code>
-       */
-      public int getSleepModeOfStatesCount() {
-        return sleepModeOfStates_.size();
-      }
-      /**
-       * <code>repeated .SleepMode sleep_mode_of_states = 4;</code>
-       */
-      public com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode getSleepModeOfStates(int index) {
-        return sleepModeOfStates_.get(index);
-      }
-      /**
-       * <code>repeated .SleepMode sleep_mode_of_states = 4;</code>
-       */
-      public Builder setSleepModeOfStates(
-          int index, com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode value) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureSleepModeOfStatesIsMutable();
-        sleepModeOfStates_.set(index, value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated .SleepMode sleep_mode_of_states = 4;</code>
-       */
-      public Builder addSleepModeOfStates(com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode value) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureSleepModeOfStatesIsMutable();
-        sleepModeOfStates_.add(value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated .SleepMode sleep_mode_of_states = 4;</code>
-       */
-      public Builder addAllSleepModeOfStates(
-          java.lang.Iterable<? extends com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode> values) {
-        ensureSleepModeOfStatesIsMutable();
-        super.addAll(values, sleepModeOfStates_);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated .SleepMode sleep_mode_of_states = 4;</code>
-       */
-      public Builder clearSleepModeOfStates() {
-        sleepModeOfStates_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000008);
-        onChanged();
-        return this;
-      }
-
-      // repeated .BedMode bed_mode_of_states = 5;
-      private java.util.List<com.hello.suripu.api.datascience.SleepHmmProtos.BedMode> bedModeOfStates_ =
-        java.util.Collections.emptyList();
-      private void ensureBedModeOfStatesIsMutable() {
-        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
-          bedModeOfStates_ = new java.util.ArrayList<com.hello.suripu.api.datascience.SleepHmmProtos.BedMode>(bedModeOfStates_);
-          bitField0_ |= 0x00000010;
-        }
-      }
-      /**
-       * <code>repeated .BedMode bed_mode_of_states = 5;</code>
-       */
-      public java.util.List<com.hello.suripu.api.datascience.SleepHmmProtos.BedMode> getBedModeOfStatesList() {
-        return java.util.Collections.unmodifiableList(bedModeOfStates_);
-      }
-      /**
-       * <code>repeated .BedMode bed_mode_of_states = 5;</code>
-       */
-      public int getBedModeOfStatesCount() {
-        return bedModeOfStates_.size();
-      }
-      /**
-       * <code>repeated .BedMode bed_mode_of_states = 5;</code>
-       */
-      public com.hello.suripu.api.datascience.SleepHmmProtos.BedMode getBedModeOfStates(int index) {
-        return bedModeOfStates_.get(index);
-      }
-      /**
-       * <code>repeated .BedMode bed_mode_of_states = 5;</code>
-       */
-      public Builder setBedModeOfStates(
-          int index, com.hello.suripu.api.datascience.SleepHmmProtos.BedMode value) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureBedModeOfStatesIsMutable();
-        bedModeOfStates_.set(index, value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated .BedMode bed_mode_of_states = 5;</code>
-       */
-      public Builder addBedModeOfStates(com.hello.suripu.api.datascience.SleepHmmProtos.BedMode value) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureBedModeOfStatesIsMutable();
-        bedModeOfStates_.add(value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated .BedMode bed_mode_of_states = 5;</code>
-       */
-      public Builder addAllBedModeOfStates(
-          java.lang.Iterable<? extends com.hello.suripu.api.datascience.SleepHmmProtos.BedMode> values) {
-        ensureBedModeOfStatesIsMutable();
-        super.addAll(values, bedModeOfStates_);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated .BedMode bed_mode_of_states = 5;</code>
-       */
-      public Builder clearBedModeOfStates() {
-        bedModeOfStates_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000010);
-        onChanged();
-        return this;
-      }
-
-      // optional int32 num_states = 6;
+      // optional int32 num_states = 4;
       private int numStates_ ;
       /**
-       * <code>optional int32 num_states = 6;</code>
+       * <code>optional int32 num_states = 4;</code>
        */
       public boolean hasNumStates() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
-       * <code>optional int32 num_states = 6;</code>
+       * <code>optional int32 num_states = 4;</code>
        */
       public int getNumStates() {
         return numStates_;
       }
       /**
-       * <code>optional int32 num_states = 6;</code>
+       * <code>optional int32 num_states = 4;</code>
        */
       public Builder setNumStates(int value) {
-        bitField0_ |= 0x00000020;
+        bitField0_ |= 0x00000008;
         numStates_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional int32 num_states = 6;</code>
+       * <code>optional int32 num_states = 4;</code>
        */
       public Builder clearNumStates() {
-        bitField0_ = (bitField0_ & ~0x00000020);
+        bitField0_ = (bitField0_ & ~0x00000008);
         numStates_ = 0;
         onChanged();
         return this;
       }
 
-      // repeated double state_transition_matrix = 7;
+      // repeated double state_transition_matrix = 5;
       private java.util.List<java.lang.Double> stateTransitionMatrix_ = java.util.Collections.emptyList();
       private void ensureStateTransitionMatrixIsMutable() {
-        if (!((bitField0_ & 0x00000040) == 0x00000040)) {
+        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
           stateTransitionMatrix_ = new java.util.ArrayList<java.lang.Double>(stateTransitionMatrix_);
-          bitField0_ |= 0x00000040;
+          bitField0_ |= 0x00000010;
          }
       }
       /**
-       * <code>repeated double state_transition_matrix = 7;</code>
+       * <code>repeated double state_transition_matrix = 5;</code>
        */
       public java.util.List<java.lang.Double>
           getStateTransitionMatrixList() {
         return java.util.Collections.unmodifiableList(stateTransitionMatrix_);
       }
       /**
-       * <code>repeated double state_transition_matrix = 7;</code>
+       * <code>repeated double state_transition_matrix = 5;</code>
        */
       public int getStateTransitionMatrixCount() {
         return stateTransitionMatrix_.size();
       }
       /**
-       * <code>repeated double state_transition_matrix = 7;</code>
+       * <code>repeated double state_transition_matrix = 5;</code>
        */
       public double getStateTransitionMatrix(int index) {
         return stateTransitionMatrix_.get(index);
       }
       /**
-       * <code>repeated double state_transition_matrix = 7;</code>
+       * <code>repeated double state_transition_matrix = 5;</code>
        */
       public Builder setStateTransitionMatrix(
           int index, double value) {
@@ -3599,7 +3656,7 @@ public final class SleepHmmProtos {
         return this;
       }
       /**
-       * <code>repeated double state_transition_matrix = 7;</code>
+       * <code>repeated double state_transition_matrix = 5;</code>
        */
       public Builder addStateTransitionMatrix(double value) {
         ensureStateTransitionMatrixIsMutable();
@@ -3608,7 +3665,7 @@ public final class SleepHmmProtos {
         return this;
       }
       /**
-       * <code>repeated double state_transition_matrix = 7;</code>
+       * <code>repeated double state_transition_matrix = 5;</code>
        */
       public Builder addAllStateTransitionMatrix(
           java.lang.Iterable<? extends java.lang.Double> values) {
@@ -3618,44 +3675,44 @@ public final class SleepHmmProtos {
         return this;
       }
       /**
-       * <code>repeated double state_transition_matrix = 7;</code>
+       * <code>repeated double state_transition_matrix = 5;</code>
        */
       public Builder clearStateTransitionMatrix() {
         stateTransitionMatrix_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000040);
+        bitField0_ = (bitField0_ & ~0x00000010);
         onChanged();
         return this;
       }
 
-      // repeated double initial_state_probabilities = 8;
+      // repeated double initial_state_probabilities = 6;
       private java.util.List<java.lang.Double> initialStateProbabilities_ = java.util.Collections.emptyList();
       private void ensureInitialStateProbabilitiesIsMutable() {
-        if (!((bitField0_ & 0x00000080) == 0x00000080)) {
+        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
           initialStateProbabilities_ = new java.util.ArrayList<java.lang.Double>(initialStateProbabilities_);
-          bitField0_ |= 0x00000080;
+          bitField0_ |= 0x00000020;
          }
       }
       /**
-       * <code>repeated double initial_state_probabilities = 8;</code>
+       * <code>repeated double initial_state_probabilities = 6;</code>
        */
       public java.util.List<java.lang.Double>
           getInitialStateProbabilitiesList() {
         return java.util.Collections.unmodifiableList(initialStateProbabilities_);
       }
       /**
-       * <code>repeated double initial_state_probabilities = 8;</code>
+       * <code>repeated double initial_state_probabilities = 6;</code>
        */
       public int getInitialStateProbabilitiesCount() {
         return initialStateProbabilities_.size();
       }
       /**
-       * <code>repeated double initial_state_probabilities = 8;</code>
+       * <code>repeated double initial_state_probabilities = 6;</code>
        */
       public double getInitialStateProbabilities(int index) {
         return initialStateProbabilities_.get(index);
       }
       /**
-       * <code>repeated double initial_state_probabilities = 8;</code>
+       * <code>repeated double initial_state_probabilities = 6;</code>
        */
       public Builder setInitialStateProbabilities(
           int index, double value) {
@@ -3665,7 +3722,7 @@ public final class SleepHmmProtos {
         return this;
       }
       /**
-       * <code>repeated double initial_state_probabilities = 8;</code>
+       * <code>repeated double initial_state_probabilities = 6;</code>
        */
       public Builder addInitialStateProbabilities(double value) {
         ensureInitialStateProbabilitiesIsMutable();
@@ -3674,7 +3731,7 @@ public final class SleepHmmProtos {
         return this;
       }
       /**
-       * <code>repeated double initial_state_probabilities = 8;</code>
+       * <code>repeated double initial_state_probabilities = 6;</code>
        */
       public Builder addAllInitialStateProbabilities(
           java.lang.Iterable<? extends java.lang.Double> values) {
@@ -3684,11 +3741,11 @@ public final class SleepHmmProtos {
         return this;
       }
       /**
-       * <code>repeated double initial_state_probabilities = 8;</code>
+       * <code>repeated double initial_state_probabilities = 6;</code>
        */
       public Builder clearInitialStateProbabilities() {
         initialStateProbabilities_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000080);
+        bitField0_ = (bitField0_ & ~0x00000020);
         onChanged();
         return this;
       }
@@ -3735,19 +3792,21 @@ public final class SleepHmmProtos {
     java.lang.String[] descriptorData = {
       "\n\017sleep_hmm.proto\"\034\n\014PoissonModel\022\014\n\004mea" +
       "n\030\001 \002(\001\".\n\025DiscreteAlphabetModel\022\025\n\rprob" +
-      "abilities\030\001 \003(\001\"v\n\nStateModel\022\034\n\005light\030\001" +
-      " \001(\0132\r.PoissonModel\022#\n\014motion_count\030\002 \001(" +
-      "\0132\r.PoissonModel\022%\n\005waves\030\003 \001(\0132\026.Discre" +
-      "teAlphabetModel\"\362\001\n\010SleepHmm\022\017\n\007user_id\030" +
-      "\001 \001(\t\022\016\n\006source\030\002 \001(\t\022\033\n\006states\030\003 \003(\0132\013." +
-      "StateModel\022(\n\024sleep_mode_of_states\030\004 \003(\016" +
-      "2\n.SleepMode\022$\n\022bed_mode_of_states\030\005 \003(\016" +
-      "2\010.BedMode\022\022\n\nnum_states\030\006 \001(\005\022\037\n\027state_",
-      "transition_matrix\030\007 \003(\001\022#\n\033initial_state" +
-      "_probabilities\030\010 \003(\001*1\n\tSleepMode\022\t\n\005SLE" +
-      "EP\020\000\022\017\n\013LIGHT_SLEEP\020\001\022\010\n\004WAKE\020\002*\"\n\007BedMo" +
-      "de\022\n\n\006ON_BED\020\000\022\013\n\007OFF_BED\020\001B2\n com.hello" +
-      ".suripu.api.datascienceB\016SleepHmmProtos"
+      "abilities\030\001 \003(\001\"\324\001\n\nStateModel\022\034\n\005light\030" +
+      "\001 \001(\0132\r.PoissonModel\022#\n\014motion_count\030\002 \001" +
+      "(\0132\r.PoissonModel\022%\n\005waves\030\003 \001(\0132\026.Discr" +
+      "eteAlphabetModel\022\036\n\nsleep_mode\030\004 \001(\0162\n.S" +
+      "leepMode\022\032\n\010bed_mode\030\005 \001(\0162\010.BedMode\022 \n\013" +
+      "sleep_depth\030\006 \001(\0162\013.SleepDepth\"\242\001\n\010Sleep" +
+      "Hmm\022\017\n\007user_id\030\001 \001(\t\022\016\n\006source\030\002 \001(\t\022\033\n\006" +
+      "states\030\003 \003(\0132\013.StateModel\022\022\n\nnum_states\030",
+      "\004 \001(\005\022\037\n\027state_transition_matrix\030\005 \003(\001\022#" +
+      "\n\033initial_state_probabilities\030\006 \003(\001* \n\tS" +
+      "leepMode\022\t\n\005SLEEP\020\000\022\010\n\004WAKE\020\001*\"\n\007BedMode" +
+      "\022\n\n\006ON_BED\020\000\022\013\n\007OFF_BED\020\001*G\n\nSleepDepth\022" +
+      "\022\n\016NOT_APPLICABLE\020\000\022\t\n\005LIGHT\020\001\022\013\n\007REGULA" +
+      "R\020\002\022\r\n\tDISTURBED\020\003B2\n com.hello.suripu.a" +
+      "pi.datascienceB\016SleepHmmProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -3771,13 +3830,13 @@ public final class SleepHmmProtos {
           internal_static_StateModel_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_StateModel_descriptor,
-              new java.lang.String[] { "Light", "MotionCount", "Waves", });
+              new java.lang.String[] { "Light", "MotionCount", "Waves", "SleepMode", "BedMode", "SleepDepth", });
           internal_static_SleepHmm_descriptor =
             getDescriptor().getMessageTypes().get(3);
           internal_static_SleepHmm_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_SleepHmm_descriptor,
-              new java.lang.String[] { "UserId", "Source", "States", "SleepModeOfStates", "BedModeOfStates", "NumStates", "StateTransitionMatrix", "InitialStateProbabilities", });
+              new java.lang.String[] { "UserId", "Source", "States", "NumStates", "StateTransitionMatrix", "InitialStateProbabilities", });
           return null;
         }
       };
