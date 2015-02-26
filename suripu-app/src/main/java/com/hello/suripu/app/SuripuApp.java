@@ -197,8 +197,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final String eventTableName = configuration.getEventDBConfiguration().getTableName();
         final TimelineDAODynamoDB timelineDAODynamoDB = new TimelineDAODynamoDB(eventDynamoDBClient, eventTableName);
 
+        final AmazonDynamoDB sleepHmmDynamoDbClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepHmmDBConfiguration().getEndpoint());
         final String sleepHmmTableName = configuration.getSleepHmmDBConfiguration().getTableName();
-        final SleepHmmDAODynamoDB sleepHmmDAODynamoDB = new SleepHmmDAODynamoDB(eventDynamoDBClient,sleepHmmTableName);
+        final SleepHmmDAODynamoDB sleepHmmDAODynamoDB = new SleepHmmDAODynamoDB(sleepHmmDynamoDbClient,sleepHmmTableName);
 
         final AmazonDynamoDB alarmDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getAlarmDBConfiguration().getEndpoint());
         final AlarmDAODynamoDB alarmDAODynamoDB = new AlarmDAODynamoDB(
