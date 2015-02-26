@@ -429,7 +429,8 @@ public class TimelineProcessor {
 
         List<TrackerMotion> trackerMotions = new ArrayList<>();
 
-        if (!partnerMotions.isEmpty()) {
+        /* PARTNER FILTERING --THIS NEEDS TO BE FEATURE FLIPPED */
+        if (!partnerMotions.isEmpty() && false) {
             try {
                 trackerMotions.addAll(PartnerDataUtils.getMyMotion(originalTrackerMotions, partnerMotions));
             }
@@ -458,11 +459,10 @@ public class TimelineProcessor {
 
         Optional <SleepHmmWithInterpretation> hmmOptional = sleepHmmDAODynamoDB.getLatestModelForDate(accountId,targetDate.getMillis());
 
-        if (hmmOptional.isPresent()) {
-            SleepHmmWithInterpretation.SleepHmmResult predictions = hmmOptional.get().getSleepEventsUsingHMM(allSensorSampleList,trackerMotions);
-            int foo = 3;
+        Optional <SleepHmmWithInterpretation.SleepHmmResult> optionalHmmPredictions = Optional.absent();
 
-            foo++;
+        if (hmmOptional.isPresent()) {
+            optionalHmmPredictions = Optional.of(hmmOptional.get().getSleepEventsUsingHMM(allSensorSampleList,trackerMotions));
         }
 
 
@@ -513,15 +513,32 @@ public class TimelineProcessor {
             timelineEvents.put(event.getStartTimestamp(), event);
         }
 
-        final List<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate, trackerMotions, lightOutTimeOptional, wakeUpWaveTimeOptional);
+        List<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate, trackerMotions, lightOutTimeOptional, wakeUpWaveTimeOptional);
 
 
         // WAKE UP , etc.
-        for(final Optional<Event> sleepEventOptional: sleepEventsFromAlgorithm){
-            if(sleepEventOptional.isPresent() && !feedbackEvents.containsKey(sleepEventOptional.get().getType())){
+        if (optionalHmmPredictions.isPresent()) {
+            //MAN WHAT A HACK -- let's clean this up sometime -- BEJ
+            //if the HMM is here (i.e. eventually feature-flipped, we use its predictions)
+            List<Optional<Event>> eventsList = new ArrayList<Optional<Event>>();
+            eventsList.add(optionalHmmPredictions.get().inBed);
+            eventsList.add(optionalHmmPredictions.get().fallAsleep);
+            eventsList.add(optionalHmmPredictions.get().wakeUp);
+            eventsList.add(optionalHmmPredictions.get().outOfBed);
+
+            sleepEventsFromAlgorithm = eventsList;
+
+        }
+
+        for (final Optional<Event> sleepEventOptional : sleepEventsFromAlgorithm) {
+            if (sleepEventOptional.isPresent() && !feedbackEvents.containsKey(sleepEventOptional.get().getType())) {
                 timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
             }
         }
+
+
+
+
 
 
         // PARTNER MOTION

@@ -42,6 +42,14 @@ public class SleepHmmWithInterpretation {
     final static protected int SLEEP_DEPTH_REGULAR = 100;
     final static protected int SLEEP_DEPTH_DISTURBED = 33;
 
+    //isn't this stuff supposed to be internationalized?
+    //why do I have to specifiy these things for events?  arrrrgggghhhh.
+    final static protected String TEXT_IN_BED = "You went to bed.";
+    final static protected String TEXT_FELL_ASLEEP = "You fell asleep.";
+    final static protected String TEXT_WOKE_UP = "You woke up.";
+    final static protected String TEXT_OUT_OF_BED = "You got out of bed.";
+
+
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
 
     final static private double LIGHT_PREMULTIPLIER = 4.0;
@@ -230,10 +238,18 @@ CREATE CREATE CREATE
             final int timezoneOffset = binnedData.timezoneOffset;
 
             if (sleep != null && bed != null) {
-                inBed = Optional.of(getEventFromIndex(Event.Type.IN_BED,bed.bounds.i1,t0,timezoneOffset));
-                fallAsleep = Optional.of(getEventFromIndex(Event.Type.SLEEP,sleep.bounds.i1,t0,timezoneOffset));
-                wakeUp = Optional.of(getEventFromIndex(Event.Type.WAKE_UP,sleep.bounds.i2,t0,timezoneOffset));
-                outOfBed = Optional.of(getEventFromIndex(Event.Type.OUT_OF_BED,bed.bounds.i2,t0,timezoneOffset));
+                inBed = Optional.of(getEventFromIndex(Event.Type.IN_BED,bed.bounds.i1,t0,timezoneOffset,TEXT_IN_BED));
+                fallAsleep = Optional.of(getEventFromIndex(Event.Type.SLEEP,sleep.bounds.i1,t0,timezoneOffset,TEXT_FELL_ASLEEP));
+                wakeUp = Optional.of(getEventFromIndex(Event.Type.WAKE_UP,sleep.bounds.i2,t0,timezoneOffset,TEXT_WOKE_UP));
+                outOfBed = Optional.of(getEventFromIndex(Event.Type.OUT_OF_BED,bed.bounds.i2,t0,timezoneOffset,TEXT_OUT_OF_BED));
+
+
+                if (!sleep.gaps.isEmpty()) {
+                    List<Event> foo = new ArrayList<Event>();
+                    disturbances = Optional.of(foo);
+
+                }
+
             }
         }
 
@@ -241,7 +257,7 @@ CREATE CREATE CREATE
         return new SleepHmmResult(inBed,fallAsleep,wakeUp,outOfBed,disturbances);
     }
 
-    protected  Event getEventFromIndex(Event.Type eventType, final int index, final long t0, final int timezoneOffset) {
+    protected  Event getEventFromIndex(Event.Type eventType, final int index, final long t0, final int timezoneOffset,final String description) {
         Long eventTime =  getTimeFromBin(index,NUM_MINUTES_IN_WINDOW,t0);
 
         //  final long startTimestamp, final long endTimestamp, final int offsetMillis,
@@ -253,7 +269,7 @@ CREATE CREATE CREATE
                 eventTime,
                 eventTime + NUMBER_OF_MILLIS_IN_A_MINUTE,
                 timezoneOffset,
-                Optional.of("test"),
+                Optional.of(description),
                 Optional.<SleepSegment.SoundInfo>absent(),
                 Optional.<Integer>absent());
 
@@ -277,7 +293,7 @@ CREATE CREATE CREATE
 
         SegmentPairWithGaps candidate = new SegmentPairWithGaps(pair,new ArrayList<SegmentPair>());
 
-
+        int prevI1 = pair.i1;
 
         for (int i = 1; i < pairs.size(); i++) {
             pair = pairs.get(i);
@@ -293,10 +309,13 @@ CREATE CREATE CREATE
 
                 //new segment
                 candidate = new SegmentPairWithGaps(pair,new ArrayList<SegmentPair>());
+                prevI1 = pair.i1;
 
             }
             else {
                 candidate.gaps.add(new SegmentPair(i1,i2));
+                candidate = new SegmentPairWithGaps(new SegmentPair(prevI1,pair.i2),candidate.gaps);
+
             }
         }
 
