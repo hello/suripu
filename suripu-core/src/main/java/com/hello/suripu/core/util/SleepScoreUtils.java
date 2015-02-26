@@ -33,8 +33,8 @@ public class SleepScoreUtils {
             return DURATION_MIN_SCORE;
         }
 
-        float diffMinutes = 0;
-        float scaleMinutes = 0;
+        Float diffMinutes = 0.0f;
+        Float scaleMinutes = 0.0f;
         if (sleepDurationHours < (float) idealHours.minHours) {
             diffMinutes = (float) (idealHours.minHours * 60  - sleepDurationMinutes);
             scaleMinutes = (idealHours.minHours - idealHours.absoluteMinHours + 1) * 60.0f;
@@ -42,7 +42,7 @@ public class SleepScoreUtils {
             diffMinutes = (float) (sleepDurationMinutes - idealHours.maxHours * 60);
             scaleMinutes = (idealHours.absoluteMaxHours + TOO_MUCH_SLEEP_ALLOWANCE - idealHours.maxHours) * 60.0f;
         }
-        final int score = DURATION_MAX_SCORE - Math.round((diffMinutes / scaleMinutes) * DURATION_SCORE_SCALE);
+        final Integer score = DURATION_MAX_SCORE - Math.round((diffMinutes / scaleMinutes) * DURATION_SCORE_SCALE);
         return score;
     }
 
