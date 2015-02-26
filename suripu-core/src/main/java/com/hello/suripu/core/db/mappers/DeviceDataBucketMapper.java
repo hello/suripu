@@ -14,9 +14,13 @@ public class DeviceDataBucketMapper implements ResultSetMapper<DeviceData>{
     @Override
     public DeviceData map(int index, ResultSet r, StatementContext ctx) throws SQLException {
         final DateTime dateTime = new DateTime(r.getTimestamp("ts_bucket"), DateTimeZone.UTC);
-        int lux = r.getInt("ambient_light");
+        final int rawLight = r.getInt("ambient_light");
+        int lux = rawLight;
+        float fLux = (float)rawLight;
+
         if (dateTime.getYear() > 2014) {
-            lux = DataUtils.convertLightCountsToLux(lux);
+            fLux = DataUtils.convertLightCountsToLux(rawLight);
+            lux = (int)fLux;
         }
 
         final DeviceData deviceData = new DeviceData(
@@ -30,6 +34,7 @@ public class DeviceDataBucketMapper implements ResultSetMapper<DeviceData>{
                 r.getInt("ambient_dust_min"),
                 r.getInt("ambient_dust_max"),
                 lux,
+                fLux,
                 r.getInt("ambient_light_variance"),
                 r.getInt("ambient_light_peakiness"),
                 dateTime,
