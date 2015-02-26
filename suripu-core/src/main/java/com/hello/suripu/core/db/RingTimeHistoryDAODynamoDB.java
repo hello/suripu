@@ -132,7 +132,7 @@ public class RingTimeHistoryDAODynamoDB {
 
         Collections.sort(ringTimes, new Comparator<RingTime>() {
             @Override
-            public int compare(RingTime o1, RingTime o2) {
+            public int compare(final RingTime o1, final RingTime o2) {
                 return Long.compare(o1.actualRingTimeUTC, o2.actualRingTimeUTC);
             }
         });
