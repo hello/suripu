@@ -509,8 +509,25 @@ public class TimelineProcessor {
         }
 
         // ALARM
-        if(hasAlarmInTimeline) {
-            final List<Event> alarmEvents = getAlarmEvents(accountId, targetDate, endDate, trackerMotions.get(0).offsetMillis);
+        if(hasAlarmInTimeline && trackerMotions.size() > 0) {
+            final DateTimeZone userTimeZone = DateTimeZone.forOffsetMillis(trackerMotions.get(0).offsetMillis);
+            final DateTime alarmQueryStartTime = new DateTime(targetDate.getYear(),
+                    targetDate.getMonthOfYear(),
+                    targetDate.getDayOfMonth(),
+                    targetDate.getHourOfDay(),
+                    targetDate.getMinuteOfHour(),
+                    0,
+                    userTimeZone).minusMinutes(1);
+
+            final DateTime alarmQueryEndTime = new DateTime(endDate.getYear(),
+                    endDate.getMonthOfYear(),
+                    endDate.getDayOfMonth(),
+                    endDate.getHourOfDay(),
+                    endDate.getMinuteOfHour(),
+                    0,
+                    userTimeZone).plusMinutes(1);
+
+            final List<Event> alarmEvents = getAlarmEvents(accountId, alarmQueryStartTime, alarmQueryEndTime, userTimeZone.getOffset(alarmQueryEndTime));
             for(final Event event : alarmEvents) {
                 timelineEvents.put(event.getStartTimestamp(), event);
             }
