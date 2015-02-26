@@ -195,7 +195,7 @@ CREATE CREATE CREATE
                 eventTime,
                 eventTime + NUMBER_OF_MILLIS_IN_A_MINUTE,
                 timezoneOffset,
-                Optional.<String>absent(),
+                Optional.of("test"),
                 Optional.<SleepSegment.SoundInfo>absent(),
                 Optional.<Integer>absent());
 
