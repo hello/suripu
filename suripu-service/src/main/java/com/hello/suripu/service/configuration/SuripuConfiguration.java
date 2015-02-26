@@ -162,6 +162,10 @@ public class SuripuConfiguration extends Configuration {
         return kinesisLoggerConfiguration;
     }
 
+    @JsonProperty("ota_configuration")
+    private OTAConfiguration otaConfiguration;
+    public OTAConfiguration getOTAConfiguration() { return this.otaConfiguration; }
+
     @JsonProperty("aws_access_key_s3")
     private String awsAccessKeyS3;
     public String getAwsAccessKeyS3() {
@@ -173,4 +177,5 @@ public class SuripuConfiguration extends Configuration {
     public String getAwsAccessSecretS3() {
         return awsAccessSecretS3;
     }
+
 }
