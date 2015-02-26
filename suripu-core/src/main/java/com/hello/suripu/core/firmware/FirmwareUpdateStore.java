@@ -40,7 +40,7 @@ public class FirmwareUpdateStore {
     private final AmazonS3 s3Signer;
     final CacheLoader s3Cacheloader = new CacheLoader <String, Map<Integer, List<SyncResponse.FileDownload>>>() {
         public Map<Integer, List<SyncResponse.FileDownload>> load(String key) {
-            LOGGER.debug("No Cached filelist exists for group: [{}]. Retrieving from S3.", key);
+            LOGGER.debug("No cached filelist exists for group: [{}]. Retrieving from S3.", key);
             return getFirmwareFilesForGroup(key);
         }
     };
@@ -147,8 +147,7 @@ public class FirmwareUpdateStore {
                     text = CharStreams.toString(new InputStreamReader(s3ObjectInputStream, Charsets.UTF_8));
                 } catch (IOException e) {
                     LOGGER.error("Failed reading build_info from s3: {}", e.getMessage());
-                    //return Collections.EMPTY_LIST;
-                    return Collections.emptyMap();
+                    return Collections.EMPTY_MAP;
                 }
 
                 final Iterable<String> strings = Splitter.on("\n").split(text);
@@ -158,7 +157,7 @@ public class FirmwareUpdateStore {
                     firmwareVersion = Integer.parseInt(parts[1].trim(), 16);
                 } catch (NumberFormatException nfe) {
                     LOGGER.error("Firmware version in {} is not a valid firmware version. Ignoring this update", group);
-                    return Collections.emptyMap();
+                    return Collections.EMPTY_MAP;
                 }
             }
         }
@@ -245,21 +244,22 @@ public class FirmwareUpdateStore {
         return firmwareFileList;
     }
     /**
-     * Downloads files from s3 bucket matching the group name
+     * Attempts retrieval of file list for group from S3 cache and compares fw version number to see if update is needed
      * @param group
      * @return
      */
     public List<SyncResponse.FileDownload> getFirmwareUpdate(final String deviceId, final String group, final int currentFirmwareVersion) {
-        
-        //TODO: Add caching lookup here
+
         Map<Integer, List<SyncResponse.FileDownload>> fw_files = Collections.emptyMap();
 
         try {
-            
             fw_files = s3FWCache.get(group);
-            
         } catch (ExecutionException e) {
+            LOGGER.error("Exception while retrieving S3 file list.");
+        }
+        if (fw_files.isEmpty()) {
             LOGGER.error("Failed to retrieve S3 file list.");
+            return Collections.EMPTY_LIST;
         }
         
         final Integer firmwareVersion = new ArrayList<>(fw_files.keySet()).get(0);
@@ -270,12 +270,7 @@ public class FirmwareUpdateStore {
             return Collections.EMPTY_LIST;
         }
         
-        if (firmwareVersion > 0) {
-            return fw_files.get(firmwareVersion);    
-        } else {
-            return Collections.EMPTY_LIST;
-        }
-        
+        return fw_files.get(firmwareVersion);
     }
 
     private byte[] computeSha1ForS3File(final String bucketName, final String fileName) {
