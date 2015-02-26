@@ -30,99 +30,32 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by pangwu on 9/23/14.
+ * Created by pangwu on 2/26/15.
  */
-public class RingTimeDAODynamoDB {
-
+public class RingTimeHistoryDAODynamoDB {
     private final static Logger LOGGER = LoggerFactory.getLogger(AlarmDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
 
+    private ObjectMapper mapper = new ObjectMapper();
+
     public static final String MORPHEUS_ID_ATTRIBUTE_NAME = "device_id";
 
-    public static final String RING_TIME_ATTRIBUTE_NAME = "ring_time";
+    public static final String ACTUAL_RING_TIME_ATTRIBUTE_NAME = "actual_ring_time";
+    public static final String EXPECTED_RING_TIME_ATTRIBUTE_NAME = "expected_ring_time";
+    public static final String RINGTIME_OBJECT_ATTRIBUTE_NAME = "ring_time_object";
     public static final String CREATED_AT_ATTRIBUTE_NAME = "created_at_utc";
 
-
-
-    public RingTimeDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
+    public RingTimeHistoryDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
-    }
-
-
-    @Timed
-    public RingTime getNextRingTime(final String deviceId){
-        final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
-        final Condition selectDateCondition = new Condition()
-                .withComparisonOperator(ComparisonOperator.LE.toString())
-                .withAttributeValueList(new AttributeValue().withN(String.valueOf(DateTime.now().getMillis())));
-
-
-        queryConditions.put(CREATED_AT_ATTRIBUTE_NAME, selectDateCondition);
-
-
-        final Condition selectAccountIdCondition = new Condition()
-                .withComparisonOperator(ComparisonOperator.EQ)
-                .withAttributeValueList(new AttributeValue().withS(deviceId));
-        queryConditions.put(MORPHEUS_ID_ATTRIBUTE_NAME, selectAccountIdCondition);
-
-        final Collection<String> targetAttributeSet = new HashSet<String>();
-        Collections.addAll(targetAttributeSet,
-                MORPHEUS_ID_ATTRIBUTE_NAME,
-                RING_TIME_ATTRIBUTE_NAME,
-                CREATED_AT_ATTRIBUTE_NAME);
-
-        final QueryRequest queryRequest = new QueryRequest(this.tableName)
-                .withKeyConditions(queryConditions)
-                .withAttributesToGet(targetAttributeSet)
-                .withLimit(1)
-                .withScanIndexForward(false);
-
-        final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
-        if(queryResult.getItems() == null){
-            return RingTime.createEmpty();
-        }
-
-        final List<Map<String, AttributeValue>> items = queryResult.getItems();
-
-        for(final Map<String, AttributeValue> item:items){
-            final RingTime ringTime = ringTimeFromItemSet(deviceId, targetAttributeSet, item);
-            if(ringTime != null){
-                return ringTime;
-            }
-        }
-
-        return RingTime.createEmpty();
-    }
-
-    @Timed
-    public static RingTime ringTimeFromItemSet(final String deviceId, final Collection<String> targetAttributeSet, final Map<String, AttributeValue> item){
-
-        if(!item.keySet().containsAll(targetAttributeSet)){
-            LOGGER.warn("Missing field in item {}", item);
-            return null;
-        }
-
-        try {
-            final String ringTimeJSON = item.get(RING_TIME_ATTRIBUTE_NAME).getS();
-            final ObjectMapper mapper = new ObjectMapper();
-            final RingTime ringTime = mapper.readValue(ringTimeJSON, RingTime.class);
-
-            return ringTime;
-        }catch (Exception ex){
-            LOGGER.error("Get ring time failed for device {}.", deviceId);
-        }
-
-        return null;
-
     }
 
     @Timed
@@ -136,44 +69,34 @@ public class RingTimeDAODynamoDB {
 
         final HashMap<String, AttributeValue> items = new HashMap<String, AttributeValue>();
         items.put(MORPHEUS_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
-        final ObjectMapper mapper = new ObjectMapper();
+
+        items.put(CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(currentTime.getMillis())));
+        items.put(ACTUAL_RING_TIME_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(ringTime.actualRingTimeUTC)));
+        items.put(EXPECTED_RING_TIME_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(ringTime.expectedRingTimeUTC)));
+
+
         try {
-            final String ringTimeJSON = mapper.writeValueAsString(ringTime);
-            items.put(CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(currentTime.getMillis())));
-            items.put(RING_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(ringTimeJSON));
-
-            final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, items);
-            final PutItemResult result = this.dynamoDBClient.putItem(putItemRequest);
-
-        } catch (JsonProcessingException ex) {
-            LOGGER.error("Set ring time for device {} failed, error: {}", deviceId, ex.getMessage());
+            final String ringTimeJSON = this.mapper.writeValueAsString(ringTime);
+            items.put(RINGTIME_OBJECT_ATTRIBUTE_NAME, new AttributeValue().withS(ringTimeJSON));
+        } catch (JsonProcessingException e) {
+            LOGGER.error("set next ringtime for device {} failed: {}", deviceId, e.getMessage());
         }
 
-
-
+        final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, items);
+        final PutItemResult result = this.dynamoDBClient.putItem(putItemRequest);
     }
 
-
-    /**
-     * TODO: this is awfully similar to getNextRingTimeForSense. Probably needs refactoring.
-     * @param senseId
-     * @param upToOneWeekAgo
-     * @return
-     */
-    public List<RingTime> getRingTimesBetween(final String senseId, final DateTime upToOneWeekAgo) {
+    public List<RingTime> getRingTimesBetween(final String senseId, final DateTime startTime, final DateTime endTime) {
         final Map<String, Condition> queryConditions = Maps.newHashMap();
         final List<AttributeValue> values = Lists.newArrayList();
-        final String eveningMillis = String.valueOf(upToOneWeekAgo.getMillis());
 
-        LOGGER.debug("Evening: {} ({})", upToOneWeekAgo.toString(), upToOneWeekAgo.getMillis());
-
-        values.add(new AttributeValue().withN(eveningMillis));
-//        values.add(new AttributeValue().withN(morningMillis));
+        values.add(new AttributeValue().withN(String.valueOf(startTime.getMillis())));
+        values.add(new AttributeValue().withN(String.valueOf(endTime.getMillis())));
 
         final Condition selectDateCondition = new Condition()
-                .withComparisonOperator(ComparisonOperator.GT.toString())
+                .withComparisonOperator(ComparisonOperator.BETWEEN.toString())
                 .withAttributeValueList(values);
-        queryConditions.put(CREATED_AT_ATTRIBUTE_NAME, selectDateCondition);
+        queryConditions.put(EXPECTED_RING_TIME_ATTRIBUTE_NAME, selectDateCondition);
 
 
         final Condition selectAccountIdCondition = new Condition()
@@ -181,7 +104,11 @@ public class RingTimeDAODynamoDB {
                 .withAttributeValueList(new AttributeValue().withS(senseId));
         queryConditions.put(MORPHEUS_ID_ATTRIBUTE_NAME, selectAccountIdCondition);
 
-        final Set<String> targetAttributeSet = Sets.newHashSet(MORPHEUS_ID_ATTRIBUTE_NAME,RING_TIME_ATTRIBUTE_NAME, CREATED_AT_ATTRIBUTE_NAME);
+        final Set<String> targetAttributeSet = Sets.newHashSet(MORPHEUS_ID_ATTRIBUTE_NAME,
+                EXPECTED_RING_TIME_ATTRIBUTE_NAME,
+                ACTUAL_RING_TIME_ATTRIBUTE_NAME,
+                RINGTIME_OBJECT_ATTRIBUTE_NAME,
+                CREATED_AT_ATTRIBUTE_NAME);
 
         final QueryRequest queryRequest = new QueryRequest(tableName).withKeyConditions(queryConditions)
                 .withAttributesToGet(targetAttributeSet)
@@ -203,20 +130,49 @@ public class RingTimeDAODynamoDB {
             }
         }
 
+        Collections.sort(ringTimes, new Comparator<RingTime>() {
+            @Override
+            public int compare(final RingTime o1, final RingTime o2) {
+                return Long.compare(o1.actualRingTimeUTC, o2.actualRingTimeUTC);
+            }
+        });
+
         return ringTimes;
     }
+
+    @Timed
+    public RingTime ringTimeFromItemSet(final String deviceId, final Collection<String> targetAttributeSet, final Map<String, AttributeValue> item){
+
+        if(!item.keySet().containsAll(targetAttributeSet)){
+            LOGGER.warn("Missing field in item {}", item);
+            return null;
+        }
+
+        try {
+            final String ringTimeJSONString = item.get(RINGTIME_OBJECT_ATTRIBUTE_NAME).getS();
+            final RingTime ringTime = this.mapper.readValue(ringTimeJSONString, RingTime.class);
+
+            return ringTime;
+        }catch (Exception ex){
+            LOGGER.error("Get ring time failed for device {}.", deviceId);
+        }
+
+        return null;
+
+    }
+
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(
                 new KeySchemaElement().withAttributeName(MORPHEUS_ID_ATTRIBUTE_NAME).withKeyType(KeyType.HASH),
-                new KeySchemaElement().withAttributeName(CREATED_AT_ATTRIBUTE_NAME).withKeyType(KeyType.RANGE)
+                new KeySchemaElement().withAttributeName(EXPECTED_RING_TIME_ATTRIBUTE_NAME).withKeyType(KeyType.RANGE)
         );
 
         request.withAttributeDefinitions(
                 new AttributeDefinition().withAttributeName(MORPHEUS_ID_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.S),
-                new AttributeDefinition().withAttributeName(CREATED_AT_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.N)
+                new AttributeDefinition().withAttributeName(EXPECTED_RING_TIME_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.N)
 
         );
 
@@ -228,6 +184,4 @@ public class RingTimeDAODynamoDB {
         final CreateTableResult result = dynamoDBClient.createTable(request);
         return result;
     }
-
-
 }

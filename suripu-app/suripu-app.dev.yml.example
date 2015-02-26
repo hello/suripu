@@ -198,3 +198,8 @@ timeline_db:
 email:
    api_key: XnAIQfmDpMYIapDWGigfwA
    link_host: http://localhost:5000/password_update
+
+ring_history_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: ring_history

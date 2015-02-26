@@ -102,10 +102,10 @@ logging:
     com.hello.suripu.workers: DEBUG
 
 
-ring_time_db:
+ring_history_db:
   endpoint : http://localhost:7777
   region: us-east-1
-  table_name: ring_time
+  table_name: ring_history
 
 timezone_history_db:
   endpoint : http://localhost:7777

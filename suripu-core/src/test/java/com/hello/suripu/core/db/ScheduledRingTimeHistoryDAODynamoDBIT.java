@@ -27,14 +27,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Created by pangwu on 9/19/14.
  */
-public class RingTimeDAODynamoDBIT {
+public class ScheduledRingTimeHistoryDAODynamoDBIT {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(RingTimeDAODynamoDBIT.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(ScheduledRingTimeHistoryDAODynamoDBIT.class);
 
     private BasicAWSCredentials awsCredentials;
     private AmazonDynamoDBClient amazonDynamoDBClient;
-    private RingTimeDAODynamoDB ringTimeDAODynamoDB;
-    private final String tableName = "ring_time_test";
+    private ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB;
+    private final String tableName = "scheduled_ring_time_history_test";
 
     @Before
     public void setUp(){
@@ -48,8 +48,8 @@ public class RingTimeDAODynamoDBIT {
         cleanUp();
 
         try {
-            RingTimeDAODynamoDB.createTable(tableName, this.amazonDynamoDBClient);
-            this.ringTimeDAODynamoDB = new RingTimeDAODynamoDB(
+            ScheduledRingTimeHistoryDAODynamoDB.createTable(tableName, this.amazonDynamoDBClient);
+            this.scheduledRingTimeHistoryDAODynamoDB = new ScheduledRingTimeHistoryDAODynamoDB(
                     this.amazonDynamoDBClient,
                     tableName
             );
@@ -85,10 +85,10 @@ public class RingTimeDAODynamoDBIT {
         final DateTime actualTime2 = new DateTime(2014, 9, 24, 9, 0, 0, localTimeZone);
         final RingTime ringTime2 = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0, true);
 
-        this.ringTimeDAODynamoDB.setNextRingTime(deviceId, ringTime1);
-        this.ringTimeDAODynamoDB.setNextRingTime(deviceId, ringTime2);
+        this.scheduledRingTimeHistoryDAODynamoDB.setNextRingTime(deviceId, ringTime1);
+        this.scheduledRingTimeHistoryDAODynamoDB.setNextRingTime(deviceId, ringTime2);
 
-        final RingTime nextRingTime = this.ringTimeDAODynamoDB.getNextRingTime(deviceId);
+        final RingTime nextRingTime = this.scheduledRingTimeHistoryDAODynamoDB.getNextRingTime(deviceId);
         final RingTime expected = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0, true);
 
         assertThat(nextRingTime, is(expected));
@@ -97,7 +97,7 @@ public class RingTimeDAODynamoDBIT {
 
     @Test
     public void testGetEmptyRingTime(){
-        final RingTime ringTimeOptional = this.ringTimeDAODynamoDB.getNextRingTime("test morpheus");
+        final RingTime ringTimeOptional = this.scheduledRingTimeHistoryDAODynamoDB.getNextRingTime("test morpheus");
         assertThat(ringTimeOptional, is(RingTime.createEmpty()));
     }
 
@@ -107,16 +107,16 @@ public class RingTimeDAODynamoDBIT {
         final String deviceId = "morpheus";
         final String ringTimeJSON = "{\"actual_ring_time_utc\":1418311800000,\"expected_ring_time_utc\":1418311800000,\"sound_ids\":[0]}";
         final HashMap<String, AttributeValue> items = new HashMap<String, AttributeValue>();
-        items.put(RingTimeDAODynamoDB.MORPHEUS_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
+        items.put(ScheduledRingTimeHistoryDAODynamoDB.MORPHEUS_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
         final ObjectMapper mapper = new ObjectMapper();
 
-        items.put(RingTimeDAODynamoDB.CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(DateTime.now().getMillis())));
-        items.put(RingTimeDAODynamoDB.RING_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(ringTimeJSON));
+        items.put(ScheduledRingTimeHistoryDAODynamoDB.CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(DateTime.now().getMillis())));
+        items.put(ScheduledRingTimeHistoryDAODynamoDB.RING_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(ringTimeJSON));
 
         final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, items);
         final PutItemResult result = this.amazonDynamoDBClient.putItem(putItemRequest);
 
-        final RingTime actual = this.ringTimeDAODynamoDB.getNextRingTime(deviceId);
+        final RingTime actual = this.scheduledRingTimeHistoryDAODynamoDB.getNextRingTime(deviceId);
         assertThat(actual.actualRingTimeUTC, is(1418311800000L));
         assertThat(actual.expectedRingTimeUTC, is(1418311800000L));
         assertThat(actual.fromSmartAlarm, is(false));

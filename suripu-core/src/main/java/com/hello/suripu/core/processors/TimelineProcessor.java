@@ -12,7 +12,7 @@ import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
-import com.hello.suripu.core.db.RingTimeDAODynamoDB;
+import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
@@ -69,7 +69,7 @@ public class TimelineProcessor {
     private final SunData sunData;
     private final AmazonS3 s3;
     private final String bucketName;
-    private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
+    private final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
     private final Histogram motionEventDistribution;
     private final FeedbackDAO feedbackDAO;
 
@@ -85,7 +85,7 @@ public class TimelineProcessor {
                             final SunData sunData,
                             final AmazonS3 s3,
                             final String bucketName,
-                            final RingTimeDAODynamoDB ringTimeDAODynamoDB,
+                            final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
                             final FeedbackDAO feedbackDAO) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.accountDAO = accountDAO;
@@ -100,7 +100,7 @@ public class TimelineProcessor {
         this.s3 = s3;
         this.bucketName = bucketName;
         this.motionEventDistribution = Metrics.defaultRegistry().newHistogram(TimelineProcessor.class, "motion_event_distribution");
-        this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
+        this.ringTimeHistoryDAODynamoDB = ringTimeHistoryDAODynamoDB;
         this.feedbackDAO = feedbackDAO;
     }
 
@@ -118,7 +118,7 @@ public class TimelineProcessor {
         return false;
     }
 
-    private List<Event> getAlarmEvents(final Long accountId, final DateTime evening, final DateTime morning, final Integer offsetMillis) {
+    private List<Event> getAlarmEvents(final Long accountId, final DateTime startQueryTime, final DateTime endQueryTime, final Integer offsetMillis) {
 
         final List<DeviceAccountPair> pairs = deviceDAO.getSensesForAccountId(accountId);
         if(pairs.size() > 1) {
@@ -131,9 +131,9 @@ public class TimelineProcessor {
         }
         final String senseId = pairs.get(0).externalDeviceId;
 
-        final List<RingTime> ringTimes = ringTimeDAODynamoDB.getRingTimesBetween(senseId, evening.minusWeeks(1));
+        final List<RingTime> ringTimes = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(senseId, startQueryTime, endQueryTime);
 
-        return TimelineUtils.getAlarmEvents(ringTimes, evening, morning, offsetMillis, DateTime.now(DateTimeZone.UTC));
+        return TimelineUtils.getAlarmEvents(ringTimes, startQueryTime, endQueryTime, offsetMillis, DateTime.now(DateTimeZone.UTC));
     }
 
     public List<Timeline> retrieveTimelines(final Long accountId, final String date, final Integer missingDataDefaultValue, final Boolean hasAlarmInTimeline) {

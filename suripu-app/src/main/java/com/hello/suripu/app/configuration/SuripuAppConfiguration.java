@@ -151,10 +151,17 @@ public class SuripuAppConfiguration extends Configuration {
     @NotNull
     @JsonProperty("ring_time_db")
     private DynamoDBConfiguration ringTimeDBConfiguration;
-    public DynamoDBConfiguration getRingTimeDBConfiguration(){
+    public DynamoDBConfiguration getScheduledRingTimeHistoryDBConfiguration(){
         return this.ringTimeDBConfiguration;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty("ring_history_db")
+    private DynamoDBConfiguration ringTimeHistoryDBConfiguration;
+    public DynamoDBConfiguration getRingTimeHistoryDBConfiguration(){
+        return this.ringTimeHistoryDBConfiguration;
+    }
 
     @Valid
     @NotNull
