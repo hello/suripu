@@ -7,7 +7,7 @@ import com.hello.suripu.core.processors.insights.SleepDuration;
  */
 public class SleepScoreUtils {
 
-    public static Integer DURATION_MAX_SCORE = 90;
+    public static Integer DURATION_MAX_SCORE = 80;
     public static Integer DURATION_MIN_SCORE = 10;
     public static Float DURATION_SCORE_SCALE = (float) (DURATION_MAX_SCORE - DURATION_MIN_SCORE);
     public static Integer TOO_MUCH_SLEEP_ALLOWANCE = 4; // allow too much sleep recommendation to exceed by 4 hours
