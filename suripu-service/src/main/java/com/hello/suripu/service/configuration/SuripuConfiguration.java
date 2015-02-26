@@ -158,4 +158,17 @@ public class SuripuConfiguration extends Configuration {
     @JsonProperty("ota_configuration")
     private OTAConfiguration otaConfiguration;
     public OTAConfiguration getOTAConfiguration() { return this.otaConfiguration; }
+
+    @JsonProperty("aws_access_key_s3")
+    private String awsAccessKeyS3;
+    public String getAwsAccessKeyS3() {
+        return awsAccessKeyS3;
+    }
+
+    @JsonProperty("aws_access_secret_s3")
+    private String awsAccessSecretS3;
+    public String getAwsAccessSecretS3() {
+        return awsAccessSecretS3;
+    }
+
 }

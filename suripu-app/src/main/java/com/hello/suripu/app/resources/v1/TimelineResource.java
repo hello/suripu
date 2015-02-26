@@ -51,7 +51,10 @@ public class TimelineResource extends BaseResource {
         // TODO: Pass a config/map object to avoid changing the signature of this method for the next FeatureFlipper
         return timelineProcessor.retrieveTimelinesFast(accessToken.accountId, date, missingDataDefaultValue(accessToken.accountId),
                 hasAlarmInTimeline(accessToken.accountId),
-                hasSoundInTimeline(accessToken.accountId));
+                hasSoundInTimeline(accessToken.accountId),
+                hasFeedbackInTimeline(accessToken.accountId),
+                hasInOrOutOfBedEvents(accessToken.accountId)
+                );
 
     }
 
@@ -68,9 +71,12 @@ public class TimelineResource extends BaseResource {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
         // TODO: Pass a config/map object to avoid changing the signature of this method for the next FeatureFlipper
-        return timelineProcessor.retrieveTimelinesFast(accountId.get(), date, missingDataDefaultValue(accessToken.accountId),
+        return timelineProcessor.retrieveTimelinesFast(accountId.get(), date, missingDataDefaultValue(accountId.get()),
                 hasAlarmInTimeline(accountId.get()),
-                hasSoundInTimeline(accountId.get()));
+                hasSoundInTimeline(accountId.get()),
+                hasFeedbackInTimeline(accountId.get()),
+                hasInOrOutOfBedEvents(accountId.get())
+        );
     }
 
     private Optional<Long> getAccountIdByEmail(final String email) {

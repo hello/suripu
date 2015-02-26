@@ -172,6 +172,11 @@ pill_key_store_dynamo_db:
   region: us-east-1
   table_name: pill_key_store
 
+password_reset_db:
+    endpoint : http://localhost:7777
+    region: us-east-1
+    table_name: password_reset
+
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
@@ -189,3 +194,7 @@ timeline_db:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: timeline
+
+email:
+   api_key: XnAIQfmDpMYIapDWGigfwA
+   link_host: http://localhost:5000/password_update

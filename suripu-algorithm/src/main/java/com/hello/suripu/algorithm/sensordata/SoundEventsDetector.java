@@ -63,7 +63,7 @@ public class SoundEventsDetector {
 
         for (final AmplitudeData datum : rawDataMinutes) {
 
-            if (datum.amplitude < avgPeakDisturbance) {
+            if (datum.amplitude < 60.0f) {
                 continue;
             }
 

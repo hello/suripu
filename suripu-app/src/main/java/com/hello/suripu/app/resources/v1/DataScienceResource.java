@@ -186,8 +186,8 @@ public class DataScienceResource extends BaseResource {
                 return;
             }
 
-            insightProcessor.generateInsights(accountId, accountOptional.get().created);
-//            insightProcessor.generateInsightsByCategory(accountId, deviceIdOptional.get(), category);
+//            insightProcessor.generateInsights(accountId, accountOptional.get().created);
+            insightProcessor.generateInsightsByCategory(accountId, deviceIdOptional.get(), category);
         }
     }
 
@@ -445,6 +445,8 @@ public class DataScienceResource extends BaseResource {
                     sensorSamples.get(Sensor.SOUND_PEAK_DISTURBANCE).get(i).value,
                     motionSamples.containsKey(timestamp) ? motionSamples.get(timestamp).value : null,
                     motionSamples.containsKey(timestamp) ? motionSamples.get(timestamp).kickOffCounts : null,
+                    motionSamples.containsKey(timestamp) ? motionSamples.get(timestamp).motionRange : null,
+                    motionSamples.containsKey(timestamp) ? motionSamples.get(timestamp).onDurationInSeconds : null,
                     lightSamples.get(i).offsetMillis));
         }
 

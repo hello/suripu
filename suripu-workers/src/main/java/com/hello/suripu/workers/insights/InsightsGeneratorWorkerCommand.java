@@ -26,6 +26,8 @@ import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
+import com.hello.suripu.core.preferences.AccountPreferencesDAO;
+import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
@@ -64,17 +66,18 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
 
         // postgres setup
         final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
-        final ManagedDataSource dataSource = managedDataSourceFactory.build(configuration.getCommonDB());
+        final ManagedDataSource commonDBDataSource = managedDataSourceFactory.build(configuration.getCommonDB());
 
-        final DBI jdbi = new DBI(dataSource);
-        jdbi.registerArgumentFactory(new OptionalArgumentFactory(configuration.getCommonDB().getDriverClass()));
-        jdbi.registerContainerFactory(new ImmutableListContainerFactory());
-        jdbi.registerContainerFactory(new ImmutableSetContainerFactory());
-        jdbi.registerContainerFactory(new OptionalContainerFactory());
-        jdbi.registerArgumentFactory(new JodaArgumentFactory());
+        final DBI commonDBI = new DBI(commonDBDataSource);
+        commonDBI.registerArgumentFactory(new OptionalArgumentFactory(configuration.getCommonDB().getDriverClass()));
+        commonDBI.registerContainerFactory(new ImmutableListContainerFactory());
+        commonDBI.registerContainerFactory(new ImmutableSetContainerFactory());
+        commonDBI.registerContainerFactory(new OptionalContainerFactory());
+        commonDBI.registerArgumentFactory(new JodaArgumentFactory());
 
-        final AccountDAO accountDAO = jdbi.onDemand(AccountDAOImpl.class);
-        final SleepScoreDAO scoreDAO = jdbi.onDemand(SleepScoreDAO.class);
+        final AccountDAO accountDAO = commonDBI.onDemand(AccountDAOImpl.class);
+        final SleepScoreDAO scoreDAO = commonDBI.onDemand(SleepScoreDAO.class);
+        final DeviceDAO deviceDAO = commonDBI.onDemand(DeviceDAO.class);
 
         final ManagedDataSource sensorDataSource = managedDataSourceFactory.build(configuration.getSensorsDB());
         final DBI sensorDBI = new DBI(sensorDataSource);
@@ -84,12 +87,12 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
         sensorDBI.registerContainerFactory(new OptionalContainerFactory());
         sensorDBI.registerArgumentFactory(new JodaArgumentFactory());
 
-        final DeviceDAO deviceDAO = sensorDBI.onDemand(DeviceDAO.class);
+
         final DeviceDataDAO deviceDataDAO = sensorDBI.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorDBI.onDemand(TrackerMotionDAO.class);
 
         final ManagedDataSource insightsDataSource = managedDataSourceFactory.build(configuration.getInsightsDB());
-        final DBI insightsDBI = new DBI(sensorDataSource);
+        final DBI insightsDBI = new DBI(insightsDataSource);
         insightsDBI.registerArgumentFactory(new OptionalArgumentFactory(configuration.getInsightsDB().getDriverClass()));
         insightsDBI.registerContainerFactory(new ImmutableListContainerFactory());
         insightsDBI.registerContainerFactory(new ImmutableSetContainerFactory());
@@ -148,6 +151,9 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
         final AmazonDynamoDB insightsDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(configuration.getInsightsDynamoDB().getEndpoint());
         final InsightsDAODynamoDB insightsDAODynamoDB = new InsightsDAODynamoDB(insightsDynamoDB, configuration.getInsightsDynamoDB().getTableName());
 
+        final AmazonDynamoDB accountPreferencesDynamoDBClient = amazonDynamoDBClientFactory.getForEndpoint(configuration.getInsightsDynamoDB().getEndpoint());
+        final AccountPreferencesDAO accountPreferencesDynamoDB = AccountPreferencesDynamoDB.create(accountPreferencesDynamoDBClient, configuration.getPreferencesDynamoDB().getTableName());
+
         final AmazonDynamoDBClient dynamoDBScoreClient = new AmazonDynamoDBClient(awsCredentialsProvider);
         dynamoDBScoreClient.setEndpoint(configuration.getSleepScoreDynamoDB().getEndpoint());
         final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB = new AggregateSleepScoreDAODynamoDB(
@@ -172,7 +178,8 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
                 trendsInsightsDAO,
                 questionResponseDAO,
                 scoreDAO,
-                lightData);
+                lightData,
+                accountPreferencesDynamoDB);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
     }

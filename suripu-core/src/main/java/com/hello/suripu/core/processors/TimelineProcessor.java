@@ -2,13 +2,16 @@ package com.hello.suripu.core.processors;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.RingTimeDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
@@ -28,8 +31,10 @@ import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.Timeline;
+import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.DateTimeUtil;
+import com.hello.suripu.core.util.FeedbackUtils;
 import com.hello.suripu.core.util.SunData;
 import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineUtils;
@@ -66,6 +71,7 @@ public class TimelineProcessor {
     private final String bucketName;
     private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
     private final Histogram motionEventDistribution;
+    private final FeedbackDAO feedbackDAO;
 
     public TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
                             final AccountDAO accountDAO,
@@ -79,7 +85,8 @@ public class TimelineProcessor {
                             final SunData sunData,
                             final AmazonS3 s3,
                             final String bucketName,
-                            final RingTimeDAODynamoDB ringTimeDAODynamoDB) {
+                            final RingTimeDAODynamoDB ringTimeDAODynamoDB,
+                            final FeedbackDAO feedbackDAO) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.accountDAO = accountDAO;
         this.deviceDAO = deviceDAO;
@@ -94,6 +101,7 @@ public class TimelineProcessor {
         this.bucketName = bucketName;
         this.motionEventDistribution = Metrics.defaultRegistry().newHistogram(TimelineProcessor.class, "motion_event_distribution");
         this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
+        this.feedbackDAO = feedbackDAO;
     }
 
     public boolean shouldProcessTimelineByWorker(final long accountId,
@@ -387,7 +395,9 @@ public class TimelineProcessor {
 
     public List<Timeline> retrieveTimelinesFast(final Long accountId, final String date, final Integer missingDataDefaultValue,
                                                 final Boolean hasAlarmInTimeline,
-                                                final Boolean hasSoundInTimeline) {
+                                                final Boolean hasSoundInTimeline,
+                                                final Boolean hasFeedbackInTimelineEnabled,
+                                                final Boolean hasInOrOutOfBedEvents) {
 
 
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
@@ -463,24 +473,40 @@ public class TimelineProcessor {
             timelineEvents.put(event.getStartTimestamp(), event);
         }
 
+        final Integer offsetMillis = trackerMotions.get(0).offsetMillis;
+        final Map<Event.Type, Event> feedbackEvents = fromFeedback(accountId, targetDate, offsetMillis, hasFeedbackInTimelineEnabled);
+        for(final Event event : feedbackEvents.values()) {
+            LOGGER.info("Overriding {} with {} for account {}", event.getType().name(), event, accountId);
+            timelineEvents.put(event.getStartTimestamp(), event);
+        }
 
         final List<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate, trackerMotions, lightOutTimeOptional, wakeUpWaveTimeOptional);
 
-        // WAKE UP , etc.
-        for(final Optional<Event> sleepEventOptional: sleepEventsFromAlgorithm){
-            if(sleepEventOptional.isPresent()){
-                timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
-            }
-        }
+
 
 
         // PARTNER MOTION
-        final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.get(1), sleepEventsFromAlgorithm.get(2), motionEvents, accountId);
+        final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accountId);
+        final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.get(1), sleepEventsFromAlgorithm.get(2), motionEvents, accountId, optionalPartnerAccountId);
         for(PartnerMotionEvent partnerMotionEvent : partnerMotionEvents) {
             timelineEvents.put(partnerMotionEvent.getStartTimestamp(), partnerMotionEvent);
         }
         final int numPartnerMotion = partnerMotionEvents.size();
 
+
+
+        // WAKE UP , etc.
+        for(final Optional<Event> sleepEventOptional: sleepEventsFromAlgorithm){
+            if(sleepEventOptional.isPresent() && !feedbackEvents.containsKey(sleepEventOptional.get().getType())){
+                if(!optionalPartnerAccountId.isPresent() || hasInOrOutOfBedEvents) {
+                    timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
+                } else {
+                    if(sleepEventOptional.get().getType() == Event.Type.SLEEP || sleepEventOptional.get().getType() == Event.Type.WAKE_UP) {
+                        timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
+                    }
+                }
+            }
+        }
 
         // ALARM
         if(hasAlarmInTimeline) {
@@ -504,13 +530,11 @@ public class TimelineProcessor {
         final List<Event> eventsWithSleepEvents = TimelineRefactored.mergeEvents(timelineEvents);
         final List<Event> smoothedEvents = TimelineUtils.smoothEvents(eventsWithSleepEvents);
 
-        final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents,
-                sleepEventsFromAlgorithm.get(0),
-                sleepEventsFromAlgorithm.get(3));
+        final Optional<Event> inBedEvent = (feedbackEvents.containsKey(Event.Type.IN_BED)) ? Optional.fromNullable(feedbackEvents.get(Event.Type.IN_BED)) : sleepEventsFromAlgorithm.get(0);
+        final Optional<Event> outOfBedEvent = (feedbackEvents.containsKey(Event.Type.OUT_OF_BED)) ? Optional.fromNullable(feedbackEvents.get(Event.Type.OUT_OF_BED)) : sleepEventsFromAlgorithm.get(3);
+        final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents, inBedEvent, outOfBedEvent);
 
-        final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
-                sleepEventsFromAlgorithm.get(0),
-                sleepEventsFromAlgorithm.get(3));
+        final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents, inBedEvent, outOfBedEvent);
 
         final List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(greyEvents);
 
@@ -519,7 +543,7 @@ public class TimelineProcessor {
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
 
-            Integer sleepScore = computeAndMaybeSaveScore(trackerMotions.get(0).offsetMillis, targetDate, accountId, sleepStats);
+        Integer sleepScore = computeAndMaybeSaveScore(trackerMotions.get(0).offsetMillis, targetDate, accountId, sleepStats);
 
         if(sleepStats.sleepDurationInMinutes < MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES) {
             LOGGER.warn("Score for account id {} was set to zero because sleep duration is too short ({} min)", accountId, sleepStats.sleepDurationInMinutes);
@@ -548,9 +572,9 @@ public class TimelineProcessor {
      * @param accountId
      * @return
      */
-    private List<PartnerMotionEvent> getPartnerMotionEvents(final Optional<Event> fallingAsleepEvent, final Optional<Event> wakeupEvent, final List<MotionEvent> motionEvents, final Long accountId) {
+    private List<PartnerMotionEvent> getPartnerMotionEvents(final Optional<Event> fallingAsleepEvent, final Optional<Event> wakeupEvent, final List<MotionEvent> motionEvents, final Long accountId, final Optional<Long> optionalPartnerAccountId) {
         // add partner movement data, check if there's a partner
-        final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accountId);
+
         if (optionalPartnerAccountId.isPresent() && fallingAsleepEvent.isPresent() && wakeupEvent.isPresent()) {
             LOGGER.debug("partner account {}", optionalPartnerAccountId.get());
             // get tracker motions for partner, query time is in UTC, not local_utc
@@ -598,7 +622,7 @@ public class TimelineProcessor {
                     DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
         } else if (sleepEventsFromAlgorithm.get(3).isPresent()) {
             // out-of-bed time
-            final Event event = sleepEventsFromAlgorithm.get(2).get();
+            final Event event = sleepEventsFromAlgorithm.get(3).get();
             optionalAwakeTime = Optional.of(new DateTime(event.getStartTimestamp(),
                     DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
         }
@@ -711,6 +735,21 @@ public class TimelineProcessor {
         }
 
         return sleepScore;
+    }
+
+
+    private Map<Event.Type, Event> fromFeedback(final Long accountId, final DateTime nightOf, final Integer offsetMillis, Boolean enabled) {
+        if(!enabled) {
+            LOGGER.debug("Timeline feedback not enabled for account {}", accountId);
+            return Maps.newHashMap();
+        }
+        // this is needed to match the datetime created when receiving user feedback
+        // I believe we should change how we create datetime in feedback once we have time
+        // TODO: tim
+        final DateTime nightOfUTC = new DateTime(nightOf.getYear(),
+                nightOf.getMonthOfYear(), nightOf.getDayOfMonth(), 0, 0, 0, DateTimeZone.UTC);
+        final ImmutableList<TimelineFeedback> feedbackList = feedbackDAO.getForNight(accountId, nightOfUTC);
+        return FeedbackUtils.convertFeedbackToDateTime(feedbackList, offsetMillis);
     }
 
     private static void writeMotionMetrics(final Histogram histogram, final List<Event> alignedAndConvertedEvents){

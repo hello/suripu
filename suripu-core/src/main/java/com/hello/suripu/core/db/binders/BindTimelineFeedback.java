@@ -1,8 +1,6 @@
 package com.hello.suripu.core.db.binders;
 
 import com.hello.suripu.core.models.TimelineFeedback;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
@@ -24,14 +22,12 @@ public @interface BindTimelineFeedback{
     public static class BindTimelineFeedbackFactory implements BinderFactory {
         public Binder build(Annotation annotation) {
 
-            final Long now = DateTime.now(DateTimeZone.UTC).getMillis();
-
             return new Binder<BindTimelineFeedback, TimelineFeedback>() {
                 public void bind(SQLStatement q, BindTimelineFeedback bind, TimelineFeedback arg) {
-                    q.bind("day", arg.day);
+                    q.bind("date_of_night", arg.dateOfNight);
                     q.bind("event_type", arg.eventType.getValue());
-                    q.bind("event_datetime", arg.eventDateTime);
-                    q.bind("now", DateTime.now(DateTimeZone.UTC));
+                    q.bind("old_time", arg.oldTimeOfEvent);
+                    q.bind("new_time", arg.newTimeOfEvent);
                 }
             };
         }
