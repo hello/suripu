@@ -9,7 +9,6 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Ordering;
 import com.google.common.io.CharStreams;
@@ -28,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class FirmwareUpdateStore {
@@ -40,6 +40,7 @@ public class FirmwareUpdateStore {
     private final AmazonS3 s3Signer;
     final CacheLoader s3Cacheloader = new CacheLoader <String, Map<Integer, List<SyncResponse.FileDownload>>>() {
         public Map<Integer, List<SyncResponse.FileDownload>> load(String key) {
+            LOGGER.debug("No Cached filelist exists for group: [{}]. Retrieving from S3.", key);
             return getFirmwareFilesForGroup(key);
         }
     };
@@ -54,7 +55,7 @@ public class FirmwareUpdateStore {
         //TODO: Build this from spec in the config
         //String spec = "maximumSize=200,expireAfterWrite=2m";
         this.s3FWCache = CacheBuilder.newBuilder()
-                .expireAfterAccess(10000, TimeUnit.SECONDS)
+                .expireAfterAccess(60, TimeUnit.MINUTES)
                 .build(s3Cacheloader);
     }
 
@@ -251,7 +252,15 @@ public class FirmwareUpdateStore {
     public List<SyncResponse.FileDownload> getFirmwareUpdate(final String deviceId, final String group, final int currentFirmwareVersion) {
         
         //TODO: Add caching lookup here
-        final Map<Integer, List<SyncResponse.FileDownload>> fw_files = getFirmwareFilesForGroup(group);
+        Map<Integer, List<SyncResponse.FileDownload>> fw_files = Collections.emptyMap();
+
+        try {
+            
+            fw_files = s3FWCache.get(group);
+            
+        } catch (ExecutionException e) {
+            LOGGER.error("Failed to retrieve S3 file list.");
+        }
         
         final Integer firmwareVersion = new ArrayList<>(fw_files.keySet()).get(0);
         
