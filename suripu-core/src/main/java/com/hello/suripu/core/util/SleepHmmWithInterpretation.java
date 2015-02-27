@@ -14,6 +14,8 @@ import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.translations.English;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +39,7 @@ public class SleepHmmWithInterpretation {
     final static protected int MOT_COUNT_INDEX = 1;
     final static protected int WAVE_INDEX = 2;
 
-    final static protected int ACCEPTABLE_GAP_IN_MINUTES_FOR_SLEEP_DISTURBANCE = 90;
+    final static protected int ACCEPTABLE_GAP_IN_MINUTES_FOR_SLEEP_DISTURBANCE = 45;
     final static protected int NUM_MINUTES_IN_WINDOW = 15;
     final static protected int ACCEPTABLE_GAP_IN_INDEX_COUNTS = ACCEPTABLE_GAP_IN_MINUTES_FOR_SLEEP_DISTURBANCE / NUM_MINUTES_IN_WINDOW;
 
@@ -346,7 +348,7 @@ CREATE CREATE CREATE
             //or we start a new candidate segment
             if (gap > acceptableGap) {
                 //start a new segment here, but first update and save off the old one
-                candidates.add(new SegmentPairWithGaps(new SegmentPair(candidate.bounds.i1,pair.i1),candidate.gaps));
+                candidates.add(candidate);
 
                 //new segment
                 candidate = new SegmentPairWithGaps(pair,new ArrayList<SegmentPair>());
@@ -504,10 +506,13 @@ CREATE CREATE CREATE
         res.t0 = t0;
         res.timezoneOffset = timezoneOffset;
 
+        final DateTime dateTimeBegin = new DateTime(t0).withZone(DateTimeZone.forOffsetMillis(timezoneOffset));
+        final DateTime dateTimeEnd = new DateTime(t0 + numMinutesInWindow * NUMBER_OF_MILLIS_IN_A_MINUTE * dataLength).withZone(DateTimeZone.forOffsetMillis(timezoneOffset));
 
+        LOGGER.debug("t0={},tf={}",dateTimeBegin.toLocalTime().toString(),dateTimeEnd.toLocalTime().toString());
         LOGGER.debug("light={}",getDoubleVectorAsString(data[LIGHT_INDEX]));
         LOGGER.debug("motion={}",getDoubleVectorAsString(data[MOT_COUNT_INDEX]));
-        LOGGER.debug("waves={}",getDoubleVectorAsString(data[WAVE_INDEX]));
+        LOGGER.debug("waves={}", getDoubleVectorAsString(data[WAVE_INDEX]));
 
 
         return Optional.of(res);
