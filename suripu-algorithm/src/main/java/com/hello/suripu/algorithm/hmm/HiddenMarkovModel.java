@@ -101,8 +101,16 @@ public class HiddenMarkovModel {
         return minIdx;
     }
 
+    protected static double getPathCost(final int [] path, final double [][] phi) {
+        double cost = 0.0;
+        for (int t = 0; t < path.length; t++) {
+            cost += phi[path[t]][t];
+        }
 
-    public int [] getViterbiPath(final double [][] observations) {
+        return cost;
+    }
+
+    public int [] getViterbiPath(final double [][] observations, final int [] possibleEndStates) {
         /*
 
         returns optimal path given observations and state transition matrix "A"
@@ -167,12 +175,38 @@ public class HiddenMarkovModel {
         int [] path = new int[numObs];
         //#let's just say you wind up in state zero at the end?
         //otherwise, we have to test each possible ending, bleh.
-        path[numObs-1] = 0;
 
+        //go through each path, and find the least cost one.
+        //we do this because we are really not sure about which end-state is the best
+        double [] costs = new double[possibleEndStates.length];
+
+        for (int i = 0; i < possibleEndStates.length; i++) {
+            path[numObs - 1] = possibleEndStates[i];
+
+            //#backtrack to get optimal path
+            for (int t = numObs - 2; t >= 0; t--) {
+                path[t] = viterbiIndices[path[t + 1]][t];
+            }
+
+            costs[i] = getPathCost(path,phi);
+        }
+
+        double minCost = costs[0];
+        int minIdx = 0;
+        for (int i = 1; i < possibleEndStates.length; i++) {
+            if (costs[i] < minCost) {
+                minIdx = i;
+                minCost = costs[i];
+            }
+        }
+
+        path[numObs - 1] = possibleEndStates[minIdx];
         //#backtrack to get optimal path
         for (int t = numObs - 2; t >= 0; t--) {
-            path[t] = viterbiIndices[path[t+1]][t];
+            path[t] = viterbiIndices[path[t + 1]][t];
         }
+
+
 
 
         return path;

@@ -13,7 +13,6 @@ import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
-import org.joda.time.DateTime;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,6 +56,8 @@ public class SleepHmmWithInterpretation {
     protected final HiddenMarkovModel hmmWithStates;
     protected final Set<Integer> sleepStates;
     protected final Set<Integer> onBedStates;
+    protected final Set<Integer> allowableEndingStates;
+
     protected final List<Integer> sleepDepthByStates;
 
     ////////////////////////////
@@ -110,10 +111,11 @@ public class SleepHmmWithInterpretation {
     ///////////////////////////////
 
     //protected ctor -- only create from static create methods
-    protected SleepHmmWithInterpretation(final HiddenMarkovModel hmm, final Set<Integer> sleepStates, final Set<Integer> onBedStates,final List<Integer> sleepDepthByStates) {
+    protected SleepHmmWithInterpretation(final HiddenMarkovModel hmm, final Set<Integer> sleepStates, final Set<Integer> onBedStates,final Set<Integer> allowableEndingStates,final List<Integer> sleepDepthByStates) {
         this.hmmWithStates = hmm;
         this.sleepStates = sleepStates;
         this.onBedStates = onBedStates;
+        this.allowableEndingStates = allowableEndingStates;
         this.sleepDepthByStates = sleepDepthByStates;
     }
 
@@ -145,6 +147,8 @@ CREATE CREATE CREATE
         //so later we can say "path[i] is in sleep set?  No? Then you're not sleeping."
         Set<Integer> sleepStates = new TreeSet<Integer>();
         Set<Integer> onBedStates = new TreeSet<Integer>();
+        Set<Integer> allowableEndingStates = new TreeSet<Integer>();
+
         List<Integer> sleepDepthsByState = new ArrayList<Integer>();
 
 
@@ -157,19 +161,42 @@ CREATE CREATE CREATE
         for (int iState = 0; iState <  numStates; iState++) {
 
             SleepHmmProtos.StateModel model = states.get(iState);
+
+            //compose measurement model
             PdfComposite pdf = new PdfComposite();
 
             pdf.addPdf(new PoissonPdf(model.getLight().getMean(), 0));
             pdf.addPdf(new PoissonPdf(model.getMotionCount().getMean(), 1));
             pdf.addPdf(new DiscreteAlphabetPdf(model.getWaves().getProbabilitiesList(), 2));
 
+
+            //assign states of onbed, sleeping
             if (model.hasBedMode() && model.getBedMode() == SleepHmmProtos.BedMode.ON_BED) {
                 onBedStates.add(iState);
             }
 
+
             if (model.hasSleepMode() && model.getSleepMode() == SleepHmmProtos.SleepMode.SLEEP) {
                 sleepStates.add(iState);
             }
+
+            //assign allowable ending states
+            //BIG ASSUMPTION HERE!!!!
+            //allow to end on any state that is not sleeping
+            //because if you're querying this code here... you are sure as fuck not sleeping
+            // (LATER THIS MAY BE DIFFERENT)
+
+
+            if (model.hasSleepMode() && model.getSleepMode() != SleepHmmProtos.SleepMode.SLEEP) {
+                allowableEndingStates.add(iState);
+            }
+
+            //alternative -- not on bed at all instead of not sleeping
+            //if (model.hasBedMode() && model.getBedMode() == SleepHmmProtos.BedMode.OFF_BED) {
+            //    allowableEndingStates.add(iState);
+            //}
+
+
 
             if (model.hasSleepDepth()) {
                 switch (model.getSleepDepth()) {
@@ -199,14 +226,10 @@ CREATE CREATE CREATE
         }
 
 
-        for (int i = 0; i < numStates; i++) {
-
-        }
-
         //return the HMM
         final HiddenMarkovModel hmm = new HiddenMarkovModel(numStates, stateTransitionMatrix, initialStateProbabilities, obsModel);
 
-        return new SleepHmmWithInterpretation(hmm, sleepStates, onBedStates,sleepDepthsByState);
+        return new SleepHmmWithInterpretation(hmm, sleepStates, onBedStates,allowableEndingStates,sleepDepthsByState);
     }
 
 /* MAIN METHOD TO BE USED FOR DATA PROCESSING IS HERE */
@@ -227,7 +250,9 @@ CREATE CREATE CREATE
         if (binnedDataOptional.isPresent()) {
             BinnedData binnedData = binnedDataOptional.get();
 
-            final int[] path = hmmWithStates.getViterbiPath(binnedData.data);
+            //only allow ending up in an off-bed state or wake state
+            int [] allowableEndings = IntegerSetToArray(allowableEndingStates);
+            final int[] path = hmmWithStates.getViterbiPath(binnedData.data,allowableEndings);
 
             //TODO use gaps to find disturbances / when people woke up in the night
             //TODO add in sleep depth via HMM states
@@ -498,6 +523,19 @@ CREATE CREATE CREATE
         if (tIdx >= 0 && tIdx < data[0].length) {
             data[idx][tIdx] += value;
         }
+    }
+
+    protected int [] IntegerSetToArray(final Set<Integer> mySet) {
+        int [] myArray = new int[mySet.size()];
+
+        Iterator<Integer> it = mySet.iterator();
+        int idx = 0;
+        while (it.hasNext()) {
+            myArray[idx] = it.next();
+            idx++;
+        }
+
+        return myArray;
     }
 
 

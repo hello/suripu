@@ -129,8 +129,8 @@ public class HmmTest {
     public void testDecode() {
         HiddenMarkovModel hmm = HiddenMarkovModel.createPoissonOnlyModel(A,pi,model);
 
-
-        int[] path2 = hmm.getViterbiPath(this.mydata);
+        final int [] possibleEndStates = {0};
+        int[] path2 = hmm.getViterbiPath(this.mydata,possibleEndStates);
 
         for (int t = 0; t < path2.length; t++) {
             if (path2[t] != this.path[t]) {
