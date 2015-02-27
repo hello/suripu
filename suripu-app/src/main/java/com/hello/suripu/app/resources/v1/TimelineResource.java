@@ -52,7 +52,8 @@ public class TimelineResource extends BaseResource {
         return timelineProcessor.retrieveTimelinesFast(accessToken.accountId, date, missingDataDefaultValue(accessToken.accountId),
                 hasAlarmInTimeline(accessToken.accountId),
                 hasSoundInTimeline(accessToken.accountId),
-                hasFeedbackInTimeline(accessToken.accountId));
+                hasFeedbackInTimeline(accessToken.accountId),
+                hasHmmEnabled(accessToken.accountId));
 
     }
 
@@ -72,7 +73,8 @@ public class TimelineResource extends BaseResource {
         return timelineProcessor.retrieveTimelinesFast(accountId.get(), date, missingDataDefaultValue(accessToken.accountId),
                 hasAlarmInTimeline(accountId.get()),
                 hasSoundInTimeline(accountId.get()),
-                hasFeedbackInTimeline(accountId.get()));
+                hasFeedbackInTimeline(accountId.get()),
+                hasHmmEnabled(accountId.get()));
     }
 
     private Optional<Long> getAccountIdByEmail(final String email) {

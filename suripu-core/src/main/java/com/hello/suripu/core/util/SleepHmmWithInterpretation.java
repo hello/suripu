@@ -14,6 +14,8 @@ import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.translations.English;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,6 +29,8 @@ import java.util.TreeSet;
  * Created by benjo on 2/25/15.
  */
 public class SleepHmmWithInterpretation {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SleepHmmWithInterpretation.class);
 
     final static protected int NUM_DATA_DIMENSIONS = 3;
     final static protected int LIGHT_INDEX = 0;

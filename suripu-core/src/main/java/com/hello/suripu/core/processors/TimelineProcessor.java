@@ -402,7 +402,8 @@ public class TimelineProcessor {
     public List<Timeline> retrieveTimelinesFast(final Long accountId, final String date, final Integer missingDataDefaultValue,
                                                 final Boolean hasAlarmInTimeline,
                                                 final Boolean hasSoundInTimeline,
-                                                final Boolean hasFeedbackInTimelineEnabled) {
+                                                final Boolean hasFeedbackInTimelineEnabled,
+                                                final Boolean hasHmmEnabled) {
 
 
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
@@ -504,23 +505,27 @@ public class TimelineProcessor {
         }
 
 
-        final Optional <SleepHmmWithInterpretation> hmmOptional = sleepHmmDAODynamoDB.getLatestModelForDate(accountId,targetDate.getMillis());
-
+        /*  This can get overided by the HMM if the feature is enabled */
         List<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate, trackerMotions, lightOutTimeOptional, wakeUpWaveTimeOptional);
 
+        if (hasHmmEnabled) {
+            LOGGER.info("Using HMM for account {}",accountId);
 
-        if (hmmOptional.isPresent()) {
-            final Optional <SleepHmmWithInterpretation.SleepHmmResult> optionalHmmPredictions = hmmOptional.get().getSleepEventsUsingHMM(allSensorSampleList,trackerMotions);
+            final Optional<SleepHmmWithInterpretation> hmmOptional = sleepHmmDAODynamoDB.getLatestModelForDate(accountId, targetDate.getMillis());
 
-            if (optionalHmmPredictions.isPresent()) {
-                final List<Optional<Event>> eventsList = new ArrayList<>();
+            if (hmmOptional.isPresent()) {
+                final Optional<SleepHmmWithInterpretation.SleepHmmResult> optionalHmmPredictions = hmmOptional.get().getSleepEventsUsingHMM(allSensorSampleList, trackerMotions);
 
-                eventsList.add(optionalHmmPredictions.get().inBed);
-                eventsList.add(optionalHmmPredictions.get().fallAsleep);
-                eventsList.add(optionalHmmPredictions.get().wakeUp);
-                eventsList.add(optionalHmmPredictions.get().outOfBed);
+                if (optionalHmmPredictions.isPresent()) {
+                    final List<Optional<Event>> eventsList = new ArrayList<>();
 
-                sleepEventsFromAlgorithm = eventsList;
+                    eventsList.add(optionalHmmPredictions.get().inBed);
+                    eventsList.add(optionalHmmPredictions.get().fallAsleep);
+                    eventsList.add(optionalHmmPredictions.get().wakeUp);
+                    eventsList.add(optionalHmmPredictions.get().outOfBed);
+
+                    sleepEventsFromAlgorithm = eventsList;
+                }
             }
         }
 
