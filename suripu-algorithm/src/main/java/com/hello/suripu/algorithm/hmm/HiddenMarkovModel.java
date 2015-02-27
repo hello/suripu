@@ -129,11 +129,11 @@ public class HiddenMarkovModel {
 
         // similar to the forward-backward algorithm, we need to make sure that we're using fresh data for the given observations.
 
-        int numObs = observations[0].length;
-        double [][] bmap = this.mapB(observations);
+        final int numObs = observations[0].length;
+        final double [][] bmap = this.mapB(observations);
 
-        double [][] phi = new double[this.numStates][numObs];
-        int [][] viterbiIndices = new int[this.numStates][numObs];
+        final double [][] phi = new double[this.numStates][numObs];
+        final int [][] viterbiIndices = new int[this.numStates][numObs];
 
         for (int i = 0; i < this.numStates; i++) {
             viterbiIndices[i][0] = 0;
@@ -146,24 +146,22 @@ public class HiddenMarkovModel {
 
 
         //do viterbi
-        double [] cost = new double[this.numStates];
+        final double [] cost = new double[this.numStates];
 
-        double obscost;
         for (int t = 1; t < numObs; t++) {
             for (int j = 0; j < this.numStates; j++) {
                 //#"j" mean THIS (the jth) hidden state
-                obscost = -Math.log(bmap[j][t] + 1e-15);
+                final double obscost = -Math.log(bmap[j][t] + 1e-15);
                 for (int i = 0; i < this.numStates; i++) {
                    cost[i] = -Math.log(this.A[i][j] + 1e-15) + obscost;
                 }
-
 
                 for (int i = 0; i < this.numStates; i++) {
                     cost[i] += phi[i][t-1];
                 }
 
-                int minidx = findMinIndexOfDoubleArray(cost);
-                double minval = cost[minidx];
+                final int minidx = findMinIndexOfDoubleArray(cost);
+                final double minval = cost[minidx];
 
                 phi[j][t] = minval;
 
@@ -172,13 +170,13 @@ public class HiddenMarkovModel {
             }
         }
 
-        int [] path = new int[numObs];
+        final int [] path = new int[numObs];
         //#let's just say you wind up in state zero at the end?
         //otherwise, we have to test each possible ending, bleh.
 
         //go through each path, and find the least cost one.
         //we do this because we are really not sure about which end-state is the best
-        double [] costs = new double[possibleEndStates.length];
+        final double [] costs = new double[possibleEndStates.length];
 
         for (int i = 0; i < possibleEndStates.length; i++) {
             path[numObs - 1] = possibleEndStates[i];
@@ -205,8 +203,6 @@ public class HiddenMarkovModel {
         for (int t = numObs - 2; t >= 0; t--) {
             path[t] = viterbiIndices[path[t + 1]][t];
         }
-
-
 
 
         return path;
