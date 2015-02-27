@@ -33,7 +33,7 @@ public class RoomConditionUtil {
         float percentage = currentScore / totalScore * 100;
         if(percentage > WARNING_PERCENTAGE){
             return CurrentRoomState.State.Condition.IDEAL;
-        }else if(percentage >= BAD_PERCENTAGE){
+        }else if(percentage > BAD_PERCENTAGE){
             return CurrentRoomState.State.Condition.WARNING;
         }else{
             return CurrentRoomState.State.Condition.ALERT;
