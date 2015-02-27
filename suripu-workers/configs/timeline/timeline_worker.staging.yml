@@ -170,6 +170,11 @@ timeline_db:
   region: us-east-1
   table_name: timeline
 
+sleephmm_db:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: sleephmm
+
 max_no_motion_period_minutes: 90
 hour_of_day_trigger: 5
 end_process_time: 11
