@@ -140,7 +140,7 @@ public class FirmwareUpdateStore {
 
     public Pair<Integer, List<SyncResponse.FileDownload>> getFirmwareFilesForGroup(final String group) {
 
-        final Pair<Integer, List<SyncResponse.FileDownload>> nullPair = new Pair<>(null, null);
+        final Pair<Integer, List<SyncResponse.FileDownload>> emptyPair = new Pair(-1, Collections.EMPTY_LIST);
 
         final ListObjectsRequest listObjectsRequest = new ListObjectsRequest();
         listObjectsRequest.withBucketName(bucketName);
@@ -163,7 +163,7 @@ public class FirmwareUpdateStore {
                     text = CharStreams.toString(new InputStreamReader(s3ObjectInputStream, Charsets.UTF_8));
                 } catch (IOException e) {
                     LOGGER.error("Failed reading build_info from s3: {}", e.getMessage());
-                    return nullPair;
+                    return emptyPair;
                 }
 
                 final Iterable<String> strings = Splitter.on("\n").split(text);
@@ -173,7 +173,7 @@ public class FirmwareUpdateStore {
                     firmwareVersion = Integer.parseInt(parts[1].trim(), 16);
                 } catch (NumberFormatException nfe) {
                     LOGGER.error("Firmware version in {} is not a valid firmware version. Ignoring this update", group);
-                    return nullPair;
+                    return emptyPair;
                 }
             }
         }
@@ -266,7 +266,7 @@ public class FirmwareUpdateStore {
      */
     public List<SyncResponse.FileDownload> getFirmwareUpdate(final String deviceId, final String group, final int currentFirmwareVersion) {
 
-        Pair<Integer, List<SyncResponse.FileDownload>> fw_files = new Pair<>(null, null);
+        Pair<Integer, List<SyncResponse.FileDownload>> fw_files = new Pair(-1, Collections.EMPTY_LIST);
         
         try {
             fw_files = s3FWCache.get(group, new Callable<Pair<Integer, List<SyncResponse.FileDownload>>>() {
@@ -280,14 +280,14 @@ public class FirmwareUpdateStore {
             } catch (ExecutionException e) {
                 LOGGER.error("Exception while retrieving S3 file list.");
             }
+
+        final Integer firmwareVersion = fw_files.getKey();
         
-        if (fw_files.getValue().isEmpty()) {
+        if (firmwareVersion == -1) {
             LOGGER.error("Failed to retrieve S3 file list.");
             return Collections.EMPTY_LIST;
         }
 
-        final Integer firmwareVersion = fw_files.getKey();
-        
         LOGGER.warn("Versions to update: {}, current version = {} for deviceId = {}", firmwareVersion, currentFirmwareVersion, deviceId);
         if (firmwareVersion.equals(currentFirmwareVersion)) {
             LOGGER.warn("Versions match: {}, current version = {}", firmwareVersion, currentFirmwareVersion);
