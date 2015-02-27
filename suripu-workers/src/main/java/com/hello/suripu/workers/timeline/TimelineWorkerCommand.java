@@ -132,7 +132,8 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
         final AmazonDynamoDB dynamoDBTimelineClient = dynamoDBClientFactory.getForEndpoint(configuration.getTimelineDBConfiguration().getEndpoint());
         final TimelineDAODynamoDB timelineDAODynamoDB = new TimelineDAODynamoDB(
                 dynamoDBTimelineClient,
-                configuration.getTimelineDBConfiguration().getTableName());
+                configuration.getTimelineDBConfiguration().getTableName(),
+                configuration.getMaxCacheRefreshDay());
 
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);

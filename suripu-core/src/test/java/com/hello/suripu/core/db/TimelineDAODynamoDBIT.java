@@ -87,7 +87,8 @@ public class TimelineDAODynamoDBIT {
             TimelineDAODynamoDB.createTable(tableName, this.amazonDynamoDBClient);
             this.timelineDAODynamoDB = new TimelineDAODynamoDB(
                     this.amazonDynamoDBClient,
-                    tableName
+                    tableName,
+                    20
             );
 
 

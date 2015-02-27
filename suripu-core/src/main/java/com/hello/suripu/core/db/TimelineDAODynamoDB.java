@@ -73,6 +73,7 @@ public class TimelineDAODynamoDB {
 
     private final int MAX_CALL_COUNT = 5;
     private final int MAX_BATCH_SIZE = 25;  // Based on: http://docs.aws.amazon.com/cli/latest/reference/dynamodb/batch-write-item.html
+    private final int maxBackTrackDays;
 
     public static final int MAX_REQUEST_DAYS = 31;
 
@@ -80,13 +81,15 @@ public class TimelineDAODynamoDB {
 
     private static ObjectMapper mapper = new ObjectMapper();
 
-    public TimelineDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
+    public TimelineDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName, final int maxBackTrackDays){
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
 
         mapper.registerModule(new GuavaModule());
         mapper.registerModule(new GuavaExtrasModule());
         mapper.registerModule(new JodaModule());
+
+        this.maxBackTrackDays = maxBackTrackDays;
     }
 
     @Timed
@@ -115,7 +118,7 @@ public class TimelineDAODynamoDB {
         final DateTime now = DateTime.now();
         for(final Long dateInMillis:cachedData.keySet()){
             if(dateToStringMapping.containsKey(dateInMillis)){
-                if(cachedData.get(dateInMillis).shouldInvalidate(TimelineProcessor.VERSION, new DateTime(dateInMillis, DateTimeZone.UTC), now)){
+                if(cachedData.get(dateInMillis).shouldInvalidate(TimelineProcessor.VERSION, new DateTime(dateInMillis, DateTimeZone.UTC), now, this.maxBackTrackDays)){
                     continue;  // Do not return out-dated timeline from dynamoDB.
                 }
 
