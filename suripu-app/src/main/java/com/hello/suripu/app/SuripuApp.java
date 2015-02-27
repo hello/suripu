@@ -350,8 +350,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AmazonDynamoDB prefsClient = dynamoDBClientFactory.getForEndpoint(configuration.getPreferencesDBConfiguration().getEndpoint());
         final AccountPreferencesDAO accountPreferencesDAO = AccountPreferencesDynamoDB.create(prefsClient, configuration.getPreferencesDBConfiguration().getTableName());
         environment.addResource(new AccountPreferencesResource(accountPreferencesDAO));
-
-        //environment.addResource(new FirmwareResource(firmwareUpdateStore, "hello-firmware", amazonS3)); // TODO: move logic from resource to FirmwareUpdateStore
+        
 
         final InsightProcessor.Builder insightBuilder = new InsightProcessor.Builder()
                 .withSenseDAOs(deviceDataDAO, deviceDAO)
