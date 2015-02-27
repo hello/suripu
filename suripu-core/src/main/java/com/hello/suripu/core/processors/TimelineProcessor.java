@@ -12,7 +12,7 @@ import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
-import com.hello.suripu.core.db.RingTimeDAODynamoDB;
+import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
@@ -72,7 +72,7 @@ public class TimelineProcessor {
     private final SunData sunData;
     private final AmazonS3 s3;
     private final String bucketName;
-    private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
+    private final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
     private final Histogram motionEventDistribution;
     private final FeedbackDAO feedbackDAO;
     private final SleepHmmDAODynamoDB sleepHmmDAODynamoDB;
@@ -89,7 +89,7 @@ public class TimelineProcessor {
                             final SunData sunData,
                             final AmazonS3 s3,
                             final String bucketName,
-                            final RingTimeDAODynamoDB ringTimeDAODynamoDB,
+                            final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
                             final FeedbackDAO feedbackDAO,
                             final SleepHmmDAODynamoDB sleepHmmDAODynamoDB) {
         this.trackerMotionDAO = trackerMotionDAO;
@@ -105,7 +105,7 @@ public class TimelineProcessor {
         this.s3 = s3;
         this.bucketName = bucketName;
         this.motionEventDistribution = Metrics.defaultRegistry().newHistogram(TimelineProcessor.class, "motion_event_distribution");
-        this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
+        this.ringTimeHistoryDAODynamoDB = ringTimeHistoryDAODynamoDB;
         this.feedbackDAO = feedbackDAO;
         this.sleepHmmDAODynamoDB = sleepHmmDAODynamoDB;
     }
@@ -124,7 +124,7 @@ public class TimelineProcessor {
         return false;
     }
 
-    private List<Event> getAlarmEvents(final Long accountId, final DateTime evening, final DateTime morning, final Integer offsetMillis) {
+    private List<Event> getAlarmEvents(final Long accountId, final DateTime startQueryTime, final DateTime endQueryTime, final Integer offsetMillis) {
 
         final List<DeviceAccountPair> pairs = deviceDAO.getSensesForAccountId(accountId);
         if(pairs.size() > 1) {
@@ -137,9 +137,9 @@ public class TimelineProcessor {
         }
         final String senseId = pairs.get(0).externalDeviceId;
 
-        final List<RingTime> ringTimes = ringTimeDAODynamoDB.getRingTimesBetween(senseId, evening.minusWeeks(1));
+        final List<RingTime> ringTimes = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(senseId, startQueryTime, endQueryTime);
 
-        return TimelineUtils.getAlarmEvents(ringTimes, evening, morning, offsetMillis, DateTime.now(DateTimeZone.UTC));
+        return TimelineUtils.getAlarmEvents(ringTimes, startQueryTime, endQueryTime, offsetMillis, DateTime.now(DateTimeZone.UTC));
     }
 
     public List<Timeline> retrieveTimelines(final Long accountId, final String date, final Integer missingDataDefaultValue, final Boolean hasAlarmInTimeline) {
@@ -442,7 +442,6 @@ public class TimelineProcessor {
             trackerMotions.addAll(originalTrackerMotions);
         }
 
-
         // get all sensor data, used for light and sound disturbances, and presleep-insights
         AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
 
@@ -456,7 +455,6 @@ public class TimelineProcessor {
                     accountId, deviceId.get(), slotDurationMins, missingDataDefaultValue);
         }
 
-
         Optional <SleepHmmWithInterpretation> hmmOptional = sleepHmmDAODynamoDB.getLatestModelForDate(accountId,targetDate.getMillis());
 
         Optional <SleepHmmWithInterpretation.SleepHmmResult> optionalHmmPredictions = Optional.absent();
@@ -464,8 +462,6 @@ public class TimelineProcessor {
         if (hmmOptional.isPresent()) {
             optionalHmmPredictions = Optional.of(hmmOptional.get().getSleepEventsUsingHMM(allSensorSampleList,trackerMotions));
         }
-
-
         // compute lights-out and sound-disturbance events
         Optional<DateTime> lightOutTimeOptional = Optional.absent();
         Optional<DateTime> wakeUpWaveTimeOptional = Optional.absent();
@@ -530,30 +526,40 @@ public class TimelineProcessor {
 
         }
 
-        for (final Optional<Event> sleepEventOptional : sleepEventsFromAlgorithm) {
-            if (sleepEventOptional.isPresent() && !feedbackEvents.containsKey(sleepEventOptional.get().getType())) {
-                timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
-            }
-        }
 
 
-
-
-
-
+        for(final Optional<Event> sleepEventOptional: sleepEventsFromAlgorithm){
+            if(sleepEventOptional.isPresent() && !feedbackEvents.containsKey(sleepEventOptional.get().getType())){
+                        timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
+                    }
+                }
         // PARTNER MOTION
         final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.get(1), sleepEventsFromAlgorithm.get(2), motionEvents, accountId);
         for(PartnerMotionEvent partnerMotionEvent : partnerMotionEvents) {
             timelineEvents.put(partnerMotionEvent.getStartTimestamp(), partnerMotionEvent);
-        }
+            }
         final int numPartnerMotion = partnerMotionEvents.size();
 
-
-
-
         // ALARM
-        if(hasAlarmInTimeline) {
-            final List<Event> alarmEvents = getAlarmEvents(accountId, targetDate, endDate, trackerMotions.get(0).offsetMillis);
+        if(hasAlarmInTimeline && trackerMotions.size() > 0) {
+            final DateTimeZone userTimeZone = DateTimeZone.forOffsetMillis(trackerMotions.get(0).offsetMillis);
+            final DateTime alarmQueryStartTime = new DateTime(targetDate.getYear(),
+                    targetDate.getMonthOfYear(),
+                    targetDate.getDayOfMonth(),
+                    targetDate.getHourOfDay(),
+                    targetDate.getMinuteOfHour(),
+                    0,
+                    userTimeZone).minusMinutes(1);
+
+            final DateTime alarmQueryEndTime = new DateTime(endDate.getYear(),
+                    endDate.getMonthOfYear(),
+                    endDate.getDayOfMonth(),
+                    endDate.getHourOfDay(),
+                    endDate.getMinuteOfHour(),
+                    0,
+                    userTimeZone).plusMinutes(1);
+
+            final List<Event> alarmEvents = getAlarmEvents(accountId, alarmQueryStartTime, alarmQueryEndTime, userTimeZone.getOffset(alarmQueryEndTime));
             for(final Event event : alarmEvents) {
                 timelineEvents.put(event.getStartTimestamp(), event);
             }

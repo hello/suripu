@@ -23,6 +23,7 @@ import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
@@ -122,10 +123,16 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final String bucketName = configuration.getAudioBucketName();
 
         final AmazonDynamoDBClientFactory dynamoDBFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
-        AmazonDynamoDB mergedInfoDynamoDBClient = dynamoDBFactory.getForEndpoint(configuration.getAlarmInfoDynamoDBConfiguration().getEndpoint());
+        final AmazonDynamoDB mergedInfoDynamoDBClient = dynamoDBFactory.getForEndpoint(configuration.getAlarmInfoDynamoDBConfiguration().getEndpoint());
 
         final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(mergedInfoDynamoDBClient,
                 configuration.getAlarmInfoDynamoDBConfiguration().getTableName());
+
+        final AmazonDynamoDBClientFactory ringTimeHistoryDynamoDBFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
+        final AmazonDynamoDB ringTimeHistoryDynamoDBClient = ringTimeHistoryDynamoDBFactory.getForEndpoint(configuration.getRingTimeHistoryDBConfiguration().getEndpoint());
+
+        final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(ringTimeHistoryDynamoDBClient,
+                configuration.getRingTimeHistoryDBConfiguration().getTableName());
 
         // This is used to sign S3 urls with a shorter signature
         final AWSCredentials s3credentials = new AWSCredentials() {
@@ -203,12 +210,14 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 senseKeyStore,
                 kinesisLoggerFactory,
                 mergedUserInfoDynamoDB,
+                ringTimeHistoryDAODynamoDB,
                 configuration.getDebug(),
                 // the room condition in config file is intentionally left there, just in case we figure out it is still useful.
                 // Let's remove it in the next next deploy.
                 firmwareUpdateStore,
                 groupFlipper,
-                configuration.getSenseUploadConfiguration()
+                configuration.getSenseUploadConfiguration(),
+                configuration.getOTAConfiguration()
         );
 
 

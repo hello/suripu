@@ -1144,37 +1144,40 @@ public class TimelineUtils {
     /**
      * Returns a list of Alarm Events containing alarms within the window and that have rang.
      * @param ringTimes
-     * @param evening
-     * @param morning
+     * @param queryStartTime
+     * @param queryEndTime
      * @param offsetMillis
      * @return
      */
-    public static List<Event> getAlarmEvents(final List<RingTime> ringTimes, final DateTime evening, final DateTime morning, final Integer offsetMillis, final DateTime nowInUTC) {
+    public static List<Event> getAlarmEvents(final List<RingTime> ringTimes, final DateTime queryStartTime, final DateTime queryEndTime, final Integer offsetMillis, final DateTime nowInUTC) {
         final List<Event> events = Lists.newArrayList();
-        final DateTime localMorning = new DateTime(morning.getMillis(), DateTimeZone.UTC);
+
         for(final RingTime ringTime : ringTimes) {
-            final DateTime alarmLocalTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC).plusMillis(offsetMillis).plusMinutes(1);
+            if(ringTime.isEmpty()){
+                continue;
+            }
+            
+            final DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC);
 
             final DateTime localNow = nowInUTC.plusMillis(offsetMillis);
-            final Long diffInMillis = localNow.getMillis() - alarmLocalTime.getMillis();
-            if(diffInMillis < 0) {
+            if(actualRingTime.isAfter(nowInUTC)) {
                 LOGGER.debug("{} is in the future. It is now {}", ringTime, localNow);
                 continue;
             }
 
-            if(ringTime.expectedRingTimeUTC > evening.getMillis() && alarmLocalTime .getMillis() < localMorning.getMillis()) {
+            if(ringTime.actualRingTimeUTC >= queryStartTime.getMillis() && ringTime.actualRingTimeUTC <= queryEndTime.getMillis()) {
                 LOGGER.debug("{} is valid. Adding to list", ringTime);
 
-                final DateTime alarmRingLocalTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC).plusMillis(offsetMillis);
-                final String ringTimeString = alarmRingLocalTime.toString(DateTimeFormat.forPattern("HH:mm"));
+                final DateTime actualRingLocalUTC = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC).plusMillis(offsetMillis);
+                final String ringTimeString = actualRingLocalUTC.toString(DateTimeFormat.forPattern("HH:mm"));
                 String message = String.format(English.ALARM_NORMAL_MESSAGE, ringTimeString);
 
                 if (ringTime.fromSmartAlarm) {
-                    final DateTime alarmSetLocalTime = new DateTime(ringTime.expectedRingTimeUTC, DateTimeZone.UTC).plusMillis(offsetMillis);
-                    if (alarmRingLocalTime.equals(alarmSetLocalTime)) {
+                    final DateTime alarmSetLocalUTC = new DateTime(ringTime.expectedRingTimeUTC, DateTimeZone.UTC).plusMillis(offsetMillis);
+                    if (actualRingLocalUTC.equals(alarmSetLocalUTC)) {
                         message = String.format(English.ALARM_NOT_SO_SMART_MESSAGE, ringTimeString);
                     } else {
-                        final String setTimeString = alarmSetLocalTime.toString(DateTimeFormat.forPattern("HH:mm"));
+                        final String setTimeString = alarmSetLocalUTC.toString(DateTimeFormat.forPattern("HH:mm"));
                         message = String.format(English.ALARM_SMART_MESSAGE, ringTimeString, setTimeString);
                     }
                 }

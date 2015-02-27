@@ -8,7 +8,7 @@ import com.hello.suripu.algorithm.core.DataSource;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.event.SleepCycleAlgorithm;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.RingTimeDAODynamoDB;
+import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.Alarm;
@@ -74,7 +74,7 @@ public class RingProcessor {
 
     @Timed
     public static RingTime updateAndReturnNextRingTimeForSense(final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
-                                                               final RingTimeDAODynamoDB ringTimeDAODynamoDB,
+                                                               final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB,
                                                                final TrackerMotionDAO trackerMotionDAO,
                                                                final String morpheusId,
                                                                final DateTime currentTimeNotAligned,
@@ -146,7 +146,7 @@ public class RingProcessor {
         final RingTime mostRecentRingTime = getMostRecentRingTimeFromList(ringTimes);
 
         // Optional, just for backup
-        appendNextRingTimeToSenseRingTimeHistory(morpheusId, mostRecentRingTime, ringTimeDAODynamoDB);
+        appendNextRingTimeToSenseRingTimeHistory(morpheusId, mostRecentRingTime, scheduledRingTimeHistoryDAODynamoDB);
         return mostRecentRingTime;
     }
 
@@ -289,12 +289,12 @@ public class RingProcessor {
     }
 
     public static boolean appendNextRingTimeToSenseRingTimeHistory(final String morpheusId, final RingTime nextRingTime,
-                                                                   final RingTimeDAODynamoDB ringTimeDAODynamoDB){
+                                                                   final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB){
 
         try {
-            final RingTime lastRingTimeFromHistory = ringTimeDAODynamoDB.getNextRingTime(morpheusId);
+            final RingTime lastRingTimeFromHistory = scheduledRingTimeHistoryDAODynamoDB.getNextRingTime(morpheusId);
             if (lastRingTimeFromHistory.actualRingTimeUTC != nextRingTime.actualRingTimeUTC) {
-                ringTimeDAODynamoDB.setNextRingTime(morpheusId, nextRingTime);  // Just for backing up the history.
+                scheduledRingTimeHistoryDAODynamoDB.setNextRingTime(morpheusId, nextRingTime);  // Just for backing up the history.
                 return true;
             }
         }catch (AmazonServiceException awsException){

@@ -62,10 +62,10 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
-    @JsonProperty("ring_time_db")
-    private DynamoDBConfiguration ringTimeDBConfiguration;
-    public DynamoDBConfiguration getRingTimeDBConfiguration(){
-        return this.ringTimeDBConfiguration;
+    @JsonProperty("ring_history_db")
+    private DynamoDBConfiguration ringTimeHistoryDBConfiguration;
+    public DynamoDBConfiguration getRingTimeHistoryDBConfiguration(){
+        return this.ringTimeHistoryDBConfiguration;
     }
 
     @Valid

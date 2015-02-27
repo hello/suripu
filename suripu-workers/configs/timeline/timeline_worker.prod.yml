@@ -129,10 +129,10 @@ logging:
     com.hello.suripu.workers: DEBUG
 
 
-ring_time_db:
+ring_history_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: prod_ring_time
+  table_name: prod_ring_history
 
 timezone_history_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com

@@ -108,11 +108,18 @@ public class SuripuConfiguration extends Configuration {
     @Valid
     @NotNull
     @JsonProperty("ring_time_db")
-    private DynamoDBConfiguration ringTimeDBConfiguration;
-    public DynamoDBConfiguration getRingTimeDBConfiguration(){
-        return this.ringTimeDBConfiguration;
+    private DynamoDBConfiguration scheduledRingTimeHistoryDBConfiguration;
+    public DynamoDBConfiguration getScheduledRingTimeHistoryDBConfiguration(){
+        return this.scheduledRingTimeHistoryDBConfiguration;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty("ring_history_db")
+    private DynamoDBConfiguration ringTimeHistoryDBConfiguration;
+    public DynamoDBConfiguration getRingTimeHistoryDBConfiguration(){
+        return this.ringTimeHistoryDBConfiguration;
+    }
 
     @Valid
     @NotNull
@@ -155,6 +162,10 @@ public class SuripuConfiguration extends Configuration {
         return kinesisLoggerConfiguration;
     }
 
+    @JsonProperty("ota_configuration")
+    private OTAConfiguration otaConfiguration;
+    public OTAConfiguration getOTAConfiguration() { return this.otaConfiguration; }
+
     @JsonProperty("aws_access_key_s3")
     private String awsAccessKeyS3;
     public String getAwsAccessKeyS3() {
@@ -166,4 +177,5 @@ public class SuripuConfiguration extends Configuration {
     public String getAwsAccessSecretS3() {
         return awsAccessSecretS3;
     }
+
 }
