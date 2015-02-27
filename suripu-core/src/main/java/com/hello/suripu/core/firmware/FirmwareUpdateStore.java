@@ -17,14 +17,16 @@ import com.google.common.io.CharStreams;
 import com.google.protobuf.ByteString;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.api.output.OutputProtos.SyncResponse;
+
 import java.util.Date;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.math3.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +35,6 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
 public class FirmwareUpdateStore {
@@ -45,13 +46,13 @@ public class FirmwareUpdateStore {
     private final String bucketName;
     private final AmazonS3 s3Signer;
 
-    final Cache<String, Map<Integer, List<SyncResponse.FileDownload>>> s3FWCache;
+    final Cache<String, Pair<Integer, List<SyncResponse.FileDownload>>> s3FWCache;
 
     public FirmwareUpdateStore(final FirmwareUpdateDAO firmwareUpdateDAOImpl, 
                                final AmazonS3 s3, 
                                final String bucketName, 
                                final AmazonS3 s3Signer,
-                               final Cache<String, Map<Integer, List<SyncResponse.FileDownload>>> s3FWCache) {
+                               final Cache<String, Pair<Integer, List<SyncResponse.FileDownload>>> s3FWCache) {
         this.firmwareUpdateDAO = firmwareUpdateDAOImpl;
         this.s3 = s3;
         this.bucketName = bucketName;
@@ -63,7 +64,7 @@ public class FirmwareUpdateStore {
                                              final AmazonS3 s3,
                                              final String bucketName,
                                              final AmazonS3 s3Signer,
-                                             final Cache<String, Map<Integer, List<SyncResponse.FileDownload>>> s3Cache) {
+                                             final Cache<String, Pair<Integer, List<SyncResponse.FileDownload>>> s3Cache) {
         return new FirmwareUpdateStore(firmwareUpdateDAOImpl, s3, bucketName, s3Signer, s3Cache);
     }
 
@@ -72,7 +73,7 @@ public class FirmwareUpdateStore {
                                              final String bucketName,
                                              final AmazonS3 s3Signer,
                                              final Integer s3CacheExpireMinutes) {
-        final Cache<String, Map<Integer, List<OutputProtos.SyncResponse.FileDownload>>> s3Cache = CacheBuilder.newBuilder()
+        final Cache<String, Pair<Integer, List<OutputProtos.SyncResponse.FileDownload>>> s3Cache = CacheBuilder.newBuilder()
                 .expireAfterAccess(s3CacheExpireMinutes, TimeUnit.MINUTES)
                 .build();
         return new FirmwareUpdateStore(firmwareUpdateDAOImpl, s3, bucketName, s3Signer, s3Cache);
@@ -137,9 +138,10 @@ public class FirmwareUpdateStore {
         return fileDownloadList;
     }
 
-    public Map<Integer, List<SyncResponse.FileDownload>> getFirmwareFilesForGroup(final String group) {
-        
-        final Map<Integer, List<SyncResponse.FileDownload>> firmwareFileList = new HashMap<>();
+    public Pair<Integer, List<SyncResponse.FileDownload>> getFirmwareFilesForGroup(final String group) {
+
+        final Pair<Integer, List<SyncResponse.FileDownload>> nullPair = new Pair<>(null, null);
+
         final ListObjectsRequest listObjectsRequest = new ListObjectsRequest();
         listObjectsRequest.withBucketName(bucketName);
         listObjectsRequest.withPrefix("sense/" + group);
@@ -161,7 +163,7 @@ public class FirmwareUpdateStore {
                     text = CharStreams.toString(new InputStreamReader(s3ObjectInputStream, Charsets.UTF_8));
                 } catch (IOException e) {
                     LOGGER.error("Failed reading build_info from s3: {}", e.getMessage());
-                    return Collections.EMPTY_MAP;
+                    return nullPair;
                 }
 
                 final Iterable<String> strings = Splitter.on("\n").split(text);
@@ -171,7 +173,7 @@ public class FirmwareUpdateStore {
                     firmwareVersion = Integer.parseInt(parts[1].trim(), 16);
                 } catch (NumberFormatException nfe) {
                     LOGGER.error("Firmware version in {} is not a valid firmware version. Ignoring this update", group);
-                    return Collections.EMPTY_MAP;
+                    return nullPair;
                 }
             }
         }
@@ -253,7 +255,7 @@ public class FirmwareUpdateStore {
         };
 
         final List<SyncResponse.FileDownload> sortedFiles = byResetApplicationProcessor.sortedCopy(fileDownloadList);
-        firmwareFileList.put(firmwareVersion, sortedFiles);
+        final Pair<Integer, List<SyncResponse.FileDownload>> firmwareFileList = new Pair<>(firmwareVersion, sortedFiles);
         
         return firmwareFileList;
     }
@@ -264,26 +266,27 @@ public class FirmwareUpdateStore {
      */
     public List<SyncResponse.FileDownload> getFirmwareUpdate(final String deviceId, final String group, final int currentFirmwareVersion) {
 
-        Map<Integer, List<SyncResponse.FileDownload>> fw_files = Collections.EMPTY_MAP;
+        Pair<Integer, List<SyncResponse.FileDownload>> fw_files = new Pair<>(null, null);
         
         try {
-            fw_files = s3FWCache.get(group, new Callable<Map<Integer, List<SyncResponse.FileDownload>>>() {
-                            @Override
-                            public Map<Integer, List<SyncResponse.FileDownload>> call() throws Exception {
-                                LOGGER.debug("Nothing in cache found for group: [{}]. Grabbing info from S3.", group);
-                                return getFirmwareFilesForGroup(group);
-                            }
-                        });
+            fw_files = s3FWCache.get(group, new Callable<Pair<Integer, List<SyncResponse.FileDownload>>>() {
+                @Override
+                public Pair<Integer, List<SyncResponse.FileDownload>> call() throws Exception {
+                    LOGGER.debug("Nothing in cache found for group: [{}]. Grabbing info from S3.", group);
+                    return getFirmwareFilesForGroup(group);
+                }
+            });
+            
             } catch (ExecutionException e) {
                 LOGGER.error("Exception while retrieving S3 file list.");
             }
         
-        if (fw_files.isEmpty()) {
+        if (fw_files.getValue().isEmpty()) {
             LOGGER.error("Failed to retrieve S3 file list.");
             return Collections.EMPTY_LIST;
         }
-        
-        final Integer firmwareVersion = new ArrayList<>(fw_files.keySet()).get(0);
+
+        final Integer firmwareVersion = fw_files.getKey();
         
         LOGGER.warn("Versions to update: {}, current version = {} for deviceId = {}", firmwareVersion, currentFirmwareVersion, deviceId);
         if (firmwareVersion.equals(currentFirmwareVersion)) {
@@ -308,7 +311,7 @@ public class FirmwareUpdateStore {
         LOGGER.debug("Total Load Time: {}", delta.totalLoadTime());
         **/
         
-        return fw_files.get(firmwareVersion);
+        return fw_files.getValue();
     }
 
     private byte[] computeSha1ForS3File(final String bucketName, final String fileName) {
