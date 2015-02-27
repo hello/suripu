@@ -29,10 +29,13 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.db.util.Compression;
+import com.hello.suripu.core.models.CachedTimelines;
 import com.hello.suripu.core.models.Timeline;
+import com.hello.suripu.core.processors.TimelineProcessor;
 import com.yammer.dropwizard.json.GuavaExtrasModule;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,6 +68,8 @@ public class TimelineDAODynamoDB {
     public static final String COMPRESS_TYPE_ATTRIBUTE_NAME = "compression_type";
     public static final String UPDATED_AT_ATTRIBUTE_NAME = "updated_at";
 
+    public static final String VERSION = "version";
+
 
     private final int MAX_CALL_COUNT = 5;
     private final int MAX_BATCH_SIZE = 25;  // Based on: http://docs.aws.amazon.com/cli/latest/reference/dynamodb/batch-write-item.html
@@ -89,7 +94,11 @@ public class TimelineDAODynamoDB {
         final Collection<DateTime> convertedParam = new ArrayList<DateTime>();
         convertedParam.add(targetDateOfNightLocalUTC);
         final ImmutableMap<DateTime, ImmutableList<Timeline>> result = this.getTimelinesForDates(accountId, convertedParam);
-        return result.get(targetDateOfNightLocalUTC);
+        if(result.containsKey(targetDateOfNightLocalUTC)){
+            return result.get(targetDateOfNightLocalUTC);
+        }
+
+        return ImmutableList.copyOf(Collections.EMPTY_LIST);
     }
 
     @Timed
@@ -100,28 +109,51 @@ public class TimelineDAODynamoDB {
         }
 
         final Collection<Long> datesInMillis = dateToStringMapping.keySet();
-        final ImmutableMap<Long, ImmutableList<Timeline>> data = this.getTimelinesForDatesImpl(accountId, datesInMillis);
+        final ImmutableMap<Long, CachedTimelines> cachedData = this.getTimelinesForDatesImpl(accountId, datesInMillis);
 
         final Map<DateTime, ImmutableList<Timeline>> finalResultMap = new HashMap<>();
-        for(final Long dateInMillis:data.keySet()){
+        final DateTime now = DateTime.now();
+        for(final Long dateInMillis:cachedData.keySet()){
             if(dateToStringMapping.containsKey(dateInMillis)){
-                finalResultMap.put(dateToStringMapping.get(dateInMillis), data.get(dateInMillis));
+                if(shouldInvalidateCache(cachedData.get(dateInMillis), TimelineProcessor.VERSION, new DateTime(dateInMillis, DateTimeZone.UTC), now)){
+                    continue;  // Do not return out-dated timeline from dynamoDB.
+                }
+
+                finalResultMap.put(dateToStringMapping.get(dateInMillis), ImmutableList.copyOf(cachedData.get(dateInMillis).timeline));
             }
         }
 
         return ImmutableMap.copyOf(finalResultMap);
     }
 
+    public static boolean shouldInvalidateCache(final CachedTimelines cachedTimelines, final String currentVersion,
+                                                final DateTime targetDateUTC,
+                                                final DateTime nowUTC){
+        if(nowUTC.minusDays(20).isAfter(targetDateUTC)){
+            if(cachedTimelines.isEmpty()){
+                return true;   // Empty, timeline not yet computed, force re-generate.
+            }
+
+            if(cachedTimelines.version.equals(currentVersion)){
+                return false;  // same version, up to date
+            }
+
+            return true;
+        }
+
+        return false;  // data too old, never invalidate, always use old timeline.
+    }
+
     /*
     * Get events for maybe not consecutive days, internal use only
      */
-    private ImmutableMap<Long, ImmutableList<Timeline>> getTimelinesForDatesImpl(long accountId, final Collection<Long> datesInMillis){
+    private ImmutableMap<Long, CachedTimelines> getTimelinesForDatesImpl(long accountId, final Collection<Long> datesInMillis){
         if(datesInMillis.size() > MAX_REQUEST_DAYS){
             LOGGER.warn("Request too large for events, num of days requested: {}, accountId: {}, table: {}", datesInMillis.size(), accountId, this.tableName);
             throw new RuntimeException("Request too many days event.");
         }
 
-        final Map<Long, ImmutableList<Timeline>> finalResult = new HashMap<>();
+        final Map<Long, CachedTimelines> finalResult = new HashMap<>();
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
 
         final Long[] sortedDateMillis = datesInMillis.toArray(new Long[0]);
@@ -151,7 +183,8 @@ public class TimelineDAODynamoDB {
                 TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME,
                 DATA_BLOB_ATTRIBUTE_NAME,
                 UPDATED_AT_ATTRIBUTE_NAME,
-                COMPRESS_TYPE_ATTRIBUTE_NAME);
+                COMPRESS_TYPE_ATTRIBUTE_NAME,
+                VERSION);
 
 
         int loopCount = 0;
@@ -185,7 +218,7 @@ public class TimelineDAODynamoDB {
                 final byte[] compressed = byteBuffer.array();
 
                 final Compression.CompressionType compressionType = Compression.CompressionType.fromInt(Integer.valueOf(item.get(COMPRESS_TYPE_ATTRIBUTE_NAME).getN()));
-
+                final String version = item.get(VERSION).getS();
 
                 try {
                     final byte[] decompressed = Compression.decompress(compressed, compressionType);
@@ -213,7 +246,8 @@ public class TimelineDAODynamoDB {
                             ioe.getMessage());
                 }
 
-                finalResult.put(dateInMillis, ImmutableList.copyOf(eventsWithAllTypes));
+                final CachedTimelines cachedTimelines = CachedTimelines.create(eventsWithAllTypes, version);
+                finalResult.put(dateInMillis, cachedTimelines);
 
             }
 
@@ -233,7 +267,7 @@ public class TimelineDAODynamoDB {
         // Fill the non-exist days with empty lists
         for(final Long dateInMillis:datesInMillis){
             if(!finalResult.containsKey(dateInMillis)){
-                finalResult.put(dateInMillis, ImmutableList.copyOf(Collections.<Timeline>emptyList()));
+                finalResult.put(dateInMillis, CachedTimelines.createEmpty());
             }
         }
 
@@ -286,7 +320,7 @@ public class TimelineDAODynamoDB {
                 item.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
                 item.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(targetDateOfNightLocalUTC)));
                 item.put(UPDATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(DateTime.now().getMillis())));
-
+                item.put(VERSION, new AttributeValue().withS(TimelineProcessor.VERSION));
 
                 final int compressType = Compression.CompressionType.NONE.getValue();
                 item.put(COMPRESS_TYPE_ATTRIBUTE_NAME, new AttributeValue().withN(

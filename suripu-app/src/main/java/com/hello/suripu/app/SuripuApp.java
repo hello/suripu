@@ -92,7 +92,6 @@ import com.hello.suripu.core.provision.PillProvisionDAO;
 import com.hello.suripu.core.util.CustomJSONExceptionMapper;
 import com.hello.suripu.core.util.DropwizardServiceUtil;
 import com.hello.suripu.core.util.KeyStoreUtils;
-import com.hello.suripu.core.util.SunData;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -185,16 +184,15 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
         final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
 
-        final AmazonDynamoDB eventDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getEventDBConfiguration().getEndpoint());
+
 
         final AmazonSNSClient snsClient = new AmazonSNSClient(awsCredentialsProvider, clientConfiguration);
         final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider, clientConfiguration);
 
         final AmazonS3 amazonS3 = new AmazonS3Client(awsCredentialsProvider, clientConfiguration);
 
-        final String eventTableName = configuration.getEventDBConfiguration().getTableName();
-
-        final TimelineDAODynamoDB timelineDAODynamoDB = new TimelineDAODynamoDB(eventDynamoDBClient, eventTableName);
+        final AmazonDynamoDB timelineDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTimelineDBConfiguration().getEndpoint());
+        final TimelineDAODynamoDB timelineDAODynamoDB = new TimelineDAODynamoDB(timelineDynamoDBClient, configuration.getTimelineDBConfiguration().getTableName());
 
         final AmazonDynamoDB alarmDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getAlarmDBConfiguration().getEndpoint());
         final AlarmDAODynamoDB alarmDAODynamoDB = new AlarmDAODynamoDB(
@@ -312,10 +310,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addResource(new ScoresResource(trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), configuration.getSleepScoreVersion()));
 
-        final SunData sunData = new SunData();
         final TimelineProcessor timelineProcessor = new TimelineProcessor(
                 trackerMotionDAO,
-                accountDAO,
                 deviceDAO,
                 deviceDataDAO,
                 sleepLabelDAO,
@@ -323,11 +319,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 trendsInsightsDAO,
                 aggregateSleepScoreDAODynamoDB,
                 configuration.getScoreThreshold(),
-                sunData,
-                amazonS3,
-                "hello-audio",
                 ringTimeHistoryDAODynamoDB,
-                feedbackDAO);
+                feedbackDAO,
+                timelineDAODynamoDB);
 
         environment.addResource(new TimelineResource(accountDAO, timelineProcessor));
 

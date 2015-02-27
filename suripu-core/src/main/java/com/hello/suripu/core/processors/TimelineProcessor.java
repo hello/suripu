@@ -1,13 +1,12 @@
 package com.hello.suripu.core.processors;
 
-import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
-import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -15,6 +14,7 @@ import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
+import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.AggregateScore;
@@ -35,11 +35,8 @@ import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
-import com.hello.suripu.core.util.SunData;
 import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineUtils;
-import com.yammer.metrics.Metrics;
-import com.yammer.metrics.core.Histogram;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -55,9 +52,9 @@ import java.util.Map;
 
 public class TimelineProcessor {
 
+    public static final String VERSION = "0.0.1";
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineProcessor.class);
     private static final Integer MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES = 3 * 60;
-    private final AccountDAO accountDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDAO deviceDAO;
     private final DeviceDataDAO deviceDataDAO;
@@ -66,15 +63,11 @@ public class TimelineProcessor {
     private final TrendsInsightsDAO trendsInsightsDAO;
     private final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB;
     private final int dateBucketPeriod;
-    private final SunData sunData;
-    private final AmazonS3 s3;
-    private final String bucketName;
     private final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
-    private final Histogram motionEventDistribution;
     private final FeedbackDAO feedbackDAO;
+    private final TimelineDAODynamoDB timelineDAODynamoDB;
 
     public TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
-                            final AccountDAO accountDAO,
                             final DeviceDAO deviceDAO,
                             final DeviceDataDAO deviceDataDAO,
                             final SleepLabelDAO sleepLabelDAO,
@@ -82,13 +75,10 @@ public class TimelineProcessor {
                             final TrendsInsightsDAO trendsInsightsDAO,
                             final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
                             final int dateBucketPeriod,
-                            final SunData sunData,
-                            final AmazonS3 s3,
-                            final String bucketName,
                             final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
-                            final FeedbackDAO feedbackDAO) {
+                            final FeedbackDAO feedbackDAO,
+                            final TimelineDAODynamoDB timelineDAODynamoDB) {
         this.trackerMotionDAO = trackerMotionDAO;
-        this.accountDAO = accountDAO;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAO = deviceDataDAO;
         this.sleepLabelDAO = sleepLabelDAO;
@@ -96,12 +86,9 @@ public class TimelineProcessor {
         this.trendsInsightsDAO = trendsInsightsDAO;
         this.aggregateSleepScoreDAODynamoDB = aggregateSleepScoreDAODynamoDB;
         this.dateBucketPeriod = dateBucketPeriod;
-        this.sunData = sunData;
-        this.s3 = s3;
-        this.bucketName = bucketName;
-        this.motionEventDistribution = Metrics.defaultRegistry().newHistogram(TimelineProcessor.class, "motion_event_distribution");
         this.ringTimeHistoryDAODynamoDB = ringTimeHistoryDAODynamoDB;
         this.feedbackDAO = feedbackDAO;
+        this.timelineDAODynamoDB = timelineDAODynamoDB;
     }
 
     public boolean shouldProcessTimelineByWorker(final long accountId,
@@ -406,8 +393,13 @@ public class TimelineProcessor {
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
 
-        // TODO: compute this threshold dynamically
-        final int threshold = 10; // events with scores < threshold will be considered motion events
+        final ImmutableList<Timeline> cachedTimelines = this.timelineDAODynamoDB.getTimelinesForDate(accountId, targetDate.withTimeAtStartOfDay());
+        if(!cachedTimelines.isEmpty()){
+            LOGGER.info("Timeline for account {}, date {} returned from cache.", accountId, date);
+            return cachedTimelines;
+        }
+
+        LOGGER.info("No cached timeline, reprocess timeline for account {}, date {}", accountId, date);
 
         final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
         LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
@@ -416,6 +408,7 @@ public class TimelineProcessor {
             LOGGER.debug("No data for account_id = {} and day = {}", accountId, targetDate);
             final Timeline timeline = Timeline.createEmpty();
             final List<Timeline> timelines = Lists.newArrayList(timeline);
+            cacheTimeline(accountId, targetDate.withTimeAtStartOfDay(), timelines);
             return timelines;
         }
 
@@ -577,7 +570,22 @@ public class TimelineProcessor {
         final List<SleepSegment>  reversedSegments = Lists.reverse(reversed);
         final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, date, reversedSegments, insights, sleepStats);
 
-        return Lists.newArrayList(timeline);
+        final List<Timeline> timelines = Lists.newArrayList(timeline);
+        cacheTimeline(accountId, targetDate, timelines);
+        return timelines;
+    }
+
+    private boolean cacheTimeline(final long accountId, final DateTime targetDateLocalUTC, final List<Timeline> timelines){
+        try{
+            this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC.withTimeAtStartOfDay(), timelines);
+            return true;
+        }catch (AmazonServiceException awsExp){
+            LOGGER.error("AWS error, Save timeline for account {} date {} failed, {}", accountId, targetDateLocalUTC, awsExp.getErrorMessage());
+        }catch (Exception ex){
+            LOGGER.error("General error, saving timeline for account {}, date {}, failed, {}", accountId, targetDateLocalUTC, ex.getMessage());
+        }
+
+        return false;
     }
 
 
@@ -769,14 +777,4 @@ public class TimelineProcessor {
         return FeedbackUtils.convertFeedbackToDateTime(feedbackList, offsetMillis);
     }
 
-    private static void writeMotionMetrics(final Histogram histogram, final List<Event> alignedAndConvertedEvents){
-        int count = 0;
-        for(final Event event:alignedAndConvertedEvents){
-            if(event.getType() == Event.Type.MOTION){
-                count++;
-            }
-        }
-
-        histogram.update(count);
-    }
 }

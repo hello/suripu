@@ -31,7 +31,6 @@ import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.processors.TimelineProcessor;
-import com.hello.suripu.core.util.SunData;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -134,15 +133,13 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
         final TimelineProcessor timelineProcessor = new TimelineProcessor(trackerMotionDAO,
-                accountDAO, deviceDAO, deviceDataDAO,
+                deviceDAO, deviceDataDAO,
                 sleepLabelDAO, sleepScoreDAO, trendsInsightsDAO,
                 aggregateSleepScoreDAODynamoDB,
                 configuration.getScoreThreshold(),
-                new SunData(),
-                amazonS3,
-                "hello-audio",
                 ringTimeHistoryDAODynamoDB,
-                feedbackDAO);
+                feedbackDAO,
+                timelineDAODynamoDB);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
