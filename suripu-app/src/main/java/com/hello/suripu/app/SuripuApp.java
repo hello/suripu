@@ -59,6 +59,7 @@ import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TeamStore;
@@ -196,6 +197,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final TimelineDAODynamoDB timelineDAODynamoDB = new TimelineDAODynamoDB(eventDynamoDBClient, eventTableName);
 
+        final AmazonDynamoDB sleepHmmDynamoDbClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepHmmDBConfiguration().getEndpoint());
+        final String sleepHmmTableName = configuration.getSleepHmmDBConfiguration().getTableName();
+        final SleepHmmDAODynamoDB sleepHmmDAODynamoDB = new SleepHmmDAODynamoDB(sleepHmmDynamoDbClient,sleepHmmTableName);
         final AmazonDynamoDB alarmDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getAlarmDBConfiguration().getEndpoint());
         final AlarmDAODynamoDB alarmDAODynamoDB = new AlarmDAODynamoDB(
                 alarmDynamoDBClient, configuration.getAlarmDBConfiguration().getTableName()
@@ -327,7 +331,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 amazonS3,
                 "hello-audio",
                 ringTimeHistoryDAODynamoDB,
-                feedbackDAO);
+                feedbackDAO,
+                sleepHmmDAODynamoDB);
 
         environment.addResource(new TimelineResource(accountDAO, timelineProcessor));
 
