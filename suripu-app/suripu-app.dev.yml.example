@@ -203,3 +203,8 @@ ring_history_db:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: ring_history
+
+sleephmm_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: sleephmm

@@ -53,8 +53,7 @@ public class TimelineResource extends BaseResource {
                 hasAlarmInTimeline(accessToken.accountId),
                 hasSoundInTimeline(accessToken.accountId),
                 hasFeedbackInTimeline(accessToken.accountId),
-                hasInOrOutOfBedEvents(accessToken.accountId)
-                );
+                hasHmmEnabled(accessToken.accountId));
 
     }
 
@@ -71,12 +70,11 @@ public class TimelineResource extends BaseResource {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
         // TODO: Pass a config/map object to avoid changing the signature of this method for the next FeatureFlipper
-        return timelineProcessor.retrieveTimelinesFast(accountId.get(), date, missingDataDefaultValue(accountId.get()),
+        return timelineProcessor.retrieveTimelinesFast(accountId.get(), date, missingDataDefaultValue(accessToken.accountId),
                 hasAlarmInTimeline(accountId.get()),
                 hasSoundInTimeline(accountId.get()),
                 hasFeedbackInTimeline(accountId.get()),
-                hasInOrOutOfBedEvents(accountId.get())
-        );
+                hasHmmEnabled(accountId.get()));
     }
 
     private Optional<Long> getAccountIdByEmail(final String email) {

@@ -15,9 +15,13 @@ public class DeviceDataMapper implements ResultSetMapper<DeviceData>{
     public DeviceData map(int index, ResultSet r, StatementContext ctx) throws SQLException {
         // convert light from raw counts to lux -- DVT units or later
         final DateTime dateTime = new DateTime(r.getTimestamp("ts"), DateTimeZone.UTC);
-        int lux = r.getInt("ambient_light");
+        final int rawLight = r.getInt("ambient_light");
+        int lux = rawLight;
+        float fLux = (float)rawLight;
+
         if (dateTime.getYear() > 2014) {
-            lux = DataUtils.convertLightCountsToLux(lux);
+            fLux = DataUtils.convertLightCountsToLux(lux);
+            lux = (int)fLux;
         }
 
         final DeviceData deviceData = new DeviceData(
@@ -31,6 +35,7 @@ public class DeviceDataMapper implements ResultSetMapper<DeviceData>{
                 r.getInt("ambient_dust_min"),
                 r.getInt("ambient_dust_max"),
                 lux,
+                fLux,
                 r.getInt("ambient_light_variance"),
                 r.getInt("ambient_light_peakiness"),
                 dateTime,

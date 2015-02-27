@@ -263,6 +263,7 @@ public class SuripuAppConfiguration extends Configuration {
     private DynamoDBConfiguration passwordResetDBConfiguration;
     public DynamoDBConfiguration getPasswordResetDBConfiguration(){
         return this.passwordResetDBConfiguration;
+   
     }
 
     @Valid
@@ -273,4 +274,9 @@ public class SuripuAppConfiguration extends Configuration {
         return emailConfiguration;
     }
 
+    @JsonProperty("sleephmm_db")
+    private DynamoDBConfiguration sleepHmmDBConfiguration;
+    public DynamoDBConfiguration getSleepHmmDBConfiguration(){
+        return this.sleepHmmDBConfiguration;
+    }
 }
