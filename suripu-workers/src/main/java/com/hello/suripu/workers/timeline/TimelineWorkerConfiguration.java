@@ -152,4 +152,12 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
     public Integer getLastProcessTime(){
         return this.lastProcessTime;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("sleephmm_db")
+    private DynamoDBConfiguration sleepHmmDBConfiguration;
+    public DynamoDBConfiguration getSleepHmmDBConfiguration(){
+        return this.sleepHmmDBConfiguration;
+    }
 }
