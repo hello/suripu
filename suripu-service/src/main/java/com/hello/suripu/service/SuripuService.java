@@ -8,12 +8,9 @@ import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.common.base.Joiner;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.hello.dropwizard.mikkusu.helpers.JacksonProtobufProvider;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
-import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
@@ -66,7 +63,6 @@ import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
 import com.yammer.dropwizard.jdbi.bundles.DBIExceptionsBundle;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.reporting.GraphiteReporter;
-import java.util.Map;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -188,16 +184,13 @@ public class SuripuService extends Service<SuripuConfiguration> {
         } else {
             LOGGER.warn("Metrics not enabled.");
         }
-        final Cache<String, Map<Integer, List<OutputProtos.SyncResponse.FileDownload>>> s3FWCache = CacheBuilder.newBuilder()
-                .expireAfterAccess(configuration.getOTAConfiguration().getS3CacheExpireMinutes(), TimeUnit.MINUTES)
-                .build();
-        
+
         final FirmwareUpdateStore firmwareUpdateStore = FirmwareUpdateStore.create(
                 firmwareUpdateDAO, 
                 s3Client,
                 "hello-firmware",
                 amazonS3UrlSigner,
-                s3FWCache);
+                configuration.getOTAConfiguration().getS3CacheExpireMinutes());
 
         final DataLogger activityLogger = kinesisLoggerFactory.get(QueueName.ACTIVITY_STREAM);
         environment.addProvider(new OAuthProvider(new OAuthAuthenticator(tokenStore), "protected-resources", activityLogger));

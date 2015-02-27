@@ -11,14 +11,17 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Ordering;
 import com.google.common.io.CharStreams;
 import com.google.protobuf.ByteString;
+import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.api.output.OutputProtos.SyncResponse;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -64,6 +67,17 @@ public class FirmwareUpdateStore {
         return new FirmwareUpdateStore(firmwareUpdateDAOImpl, s3, bucketName, s3Signer, s3Cache);
     }
 
+    public static FirmwareUpdateStore create(final FirmwareUpdateDAO firmwareUpdateDAOImpl,
+                                             final AmazonS3 s3,
+                                             final String bucketName,
+                                             final AmazonS3 s3Signer,
+                                             final Integer s3CacheExpireMinutes) {
+        final Cache<String, Map<Integer, List<OutputProtos.SyncResponse.FileDownload>>> s3Cache = CacheBuilder.newBuilder()
+                .expireAfterAccess(s3CacheExpireMinutes, TimeUnit.MINUTES)
+                .build();
+        return new FirmwareUpdateStore(firmwareUpdateDAOImpl, s3, bucketName, s3Signer, s3Cache);
+    }
+    
     public void insertFile(final FirmwareFile firmwareFile, final String deviceId, final Integer firmwareVersion) {
         firmwareUpdateDAO.insert(firmwareFile, deviceId, firmwareVersion);
     }
