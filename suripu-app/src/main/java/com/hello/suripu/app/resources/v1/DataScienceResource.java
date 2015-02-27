@@ -78,17 +78,24 @@ public class DataScienceResource extends BaseResource {
     }
 
     @GET
-    @Path("/pill/{query_date_local_utc}")
+    @Path("/pill/{email}/{query_date_local_utc}")
     @Produces(MediaType.APPLICATION_JSON)
     public List<TrackerMotion> getMotion(@Scope(OAuthScope.SENSORS_BASIC) final AccessToken accessToken,
-                             @PathParam("query_date_local_utc") String date) {
+                             @PathParam("query_date_local_utc") final String date,
+                             @PathParam("email") final String email) {
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withHourOfDay(20);
         final DateTime endDate = targetDate.plusHours(16);
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
 
-        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenLocalUTC(accessToken.accountId, targetDate, endDate);
+        final Optional<Long> accountId = getAccountIdByEmail(email);
+        if (!accountId.isPresent()) {
+            LOGGER.debug("ID not found for account {}", email);
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId.get(), targetDate, endDate);
         LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
 
         return trackerMotions;
