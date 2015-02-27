@@ -1,5 +1,7 @@
 package com.hello.suripu.core.models;
 
+import org.joda.time.DateTime;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -20,10 +22,26 @@ public class CachedTimelines {
     }
 
     public static CachedTimelines createEmpty(){
-        return new CachedTimelines(Collections.<Timeline>emptyList(), new String(""));
+        return new CachedTimelines(Collections.<Timeline>emptyList(), "");
     }
 
     public boolean isEmpty(){
         return this.timeline.size() == 0 && this.version.isEmpty();
+    }
+
+    public boolean shouldInvalidate(final String latestVersion, final DateTime targetDateUTC, final DateTime nowUTC){
+        if(nowUTC.minusDays(20).isAfter(targetDateUTC)){
+            if(this.isEmpty()){
+                return true;   // Empty, timeline not yet computed, force re-generate.
+            }
+
+            if(this.version.equals(latestVersion)){
+                return false;  // same version, up to date
+            }
+
+            return true;
+        }
+
+        return false;  // data too old, never invalidate, always use old timeline.
     }
 }

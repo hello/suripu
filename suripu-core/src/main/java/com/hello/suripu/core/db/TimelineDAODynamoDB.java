@@ -115,7 +115,7 @@ public class TimelineDAODynamoDB {
         final DateTime now = DateTime.now();
         for(final Long dateInMillis:cachedData.keySet()){
             if(dateToStringMapping.containsKey(dateInMillis)){
-                if(shouldInvalidateCache(cachedData.get(dateInMillis), TimelineProcessor.VERSION, new DateTime(dateInMillis, DateTimeZone.UTC), now)){
+                if(cachedData.get(dateInMillis).shouldInvalidate(TimelineProcessor.VERSION, new DateTime(dateInMillis, DateTimeZone.UTC), now)){
                     continue;  // Do not return out-dated timeline from dynamoDB.
                 }
 
@@ -126,23 +126,7 @@ public class TimelineDAODynamoDB {
         return ImmutableMap.copyOf(finalResultMap);
     }
 
-    public static boolean shouldInvalidateCache(final CachedTimelines cachedTimelines, final String currentVersion,
-                                                final DateTime targetDateUTC,
-                                                final DateTime nowUTC){
-        if(nowUTC.minusDays(20).isAfter(targetDateUTC)){
-            if(cachedTimelines.isEmpty()){
-                return true;   // Empty, timeline not yet computed, force re-generate.
-            }
 
-            if(cachedTimelines.version.equals(currentVersion)){
-                return false;  // same version, up to date
-            }
-
-            return true;
-        }
-
-        return false;  // data too old, never invalidate, always use old timeline.
-    }
 
     /*
     * Get events for maybe not consecutive days, internal use only
