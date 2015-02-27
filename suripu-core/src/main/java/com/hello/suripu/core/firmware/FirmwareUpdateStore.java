@@ -10,14 +10,15 @@ import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
-import com.google.common.cache.CacheStats;
+import com.google.common.cache.Cache;
 import com.google.common.collect.Ordering;
 import com.google.common.io.CharStreams;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.protobuf.ByteString;
 import com.hello.suripu.api.output.OutputProtos.SyncResponse;
+import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -27,9 +28,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
 public class FirmwareUpdateStore {
 
@@ -39,31 +41,28 @@ public class FirmwareUpdateStore {
     private final AmazonS3 s3;
     private final String bucketName;
     private final AmazonS3 s3Signer;
-    final CacheLoader s3CacheLoader = new CacheLoader <String, Map<Integer, List<SyncResponse.FileDownload>>>() {
-        public Map<Integer, List<SyncResponse.FileDownload>> load(String key) {
-            LOGGER.debug("No cached filelist exists for group: [{}]. Retrieving from S3.", key);
-            return getFirmwareFilesForGroup(key);
-        }
-    };
-    final LoadingCache<String, Map<Integer, List<SyncResponse.FileDownload>>> s3FWCache;
-    
 
-    public FirmwareUpdateStore(final FirmwareUpdateDAO firmwareUpdateDAOImpl, final AmazonS3 s3, final String bucketName, final AmazonS3 s3Signer) {
+    final Cache<String, Map<Integer, List<SyncResponse.FileDownload>>> s3FWCache;
+
+    public FirmwareUpdateStore(final FirmwareUpdateDAO firmwareUpdateDAOImpl, 
+                               final AmazonS3 s3, 
+                               final String bucketName, 
+                               final AmazonS3 s3Signer,
+                               final Cache<String, Map<Integer, List<SyncResponse.FileDownload>>> s3FWCache) {
         this.firmwareUpdateDAO = firmwareUpdateDAOImpl;
         this.s3 = s3;
         this.bucketName = bucketName;
         this.s3Signer = s3Signer;
-        //TODO: Build this from spec in the config
-        //CacheBuilder.from("maximumSize=200,expireAfterAccess=60m")
-        this.s3FWCache = CacheBuilder.newBuilder()
-                .expireAfterAccess(60, TimeUnit.MINUTES)
-                .build(s3CacheLoader);
+        this.s3FWCache = s3FWCache;
     }
 
-    public static FirmwareUpdateStore create(final FirmwareUpdateDAO firmwareUpdateDAOImpl, final AmazonS3 s3, final String bucketName) {
-        return new FirmwareUpdateStore(firmwareUpdateDAOImpl, s3, bucketName, s3);
+    public static FirmwareUpdateStore create(final FirmwareUpdateDAO firmwareUpdateDAOImpl,
+                                             final AmazonS3 s3,
+                                             final String bucketName,
+                                             final AmazonS3 s3Signer,
+                                             final Cache<String, Map<Integer, List<SyncResponse.FileDownload>>> s3Cache) {
+        return new FirmwareUpdateStore(firmwareUpdateDAOImpl, s3, bucketName, s3Signer, s3Cache);
     }
-
 
     public void insertFile(final FirmwareFile firmwareFile, final String deviceId, final Integer firmwareVersion) {
         firmwareUpdateDAO.insert(firmwareFile, deviceId, firmwareVersion);
@@ -251,13 +250,20 @@ public class FirmwareUpdateStore {
      */
     public List<SyncResponse.FileDownload> getFirmwareUpdate(final String deviceId, final String group, final int currentFirmwareVersion) {
 
-        Map<Integer, List<SyncResponse.FileDownload>> fw_files = Collections.emptyMap();
-
+        Map<Integer, List<SyncResponse.FileDownload>> fw_files = Collections.EMPTY_MAP;
+        
         try {
-            fw_files = s3FWCache.get(group);
-        } catch (ExecutionException e) {
-            LOGGER.error("Exception while retrieving S3 file list.");
-        }
+            fw_files = s3FWCache.get(group, new Callable<Map<Integer, List<SyncResponse.FileDownload>>>() {
+                            @Override
+                            public Map<Integer, List<SyncResponse.FileDownload>> call() throws Exception {
+                                LOGGER.debug("Nothing in cache found for group: [{}]. Grabbing info from S3.", group);
+                                return getFirmwareFilesForGroup(group);
+                            }
+                        });
+            } catch (ExecutionException e) {
+                LOGGER.error("Exception while retrieving S3 file list.");
+            }
+        
         if (fw_files.isEmpty()) {
             LOGGER.error("Failed to retrieve S3 file list.");
             return Collections.EMPTY_LIST;

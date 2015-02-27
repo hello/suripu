@@ -161,6 +161,7 @@ ota_configuration:
   end_update_window_hour: 22
   device_uptime_delay: 20
   always_ota_groups: [chris-dev, video-photoshoot, victor]
+  s3cache_expire_minutes: 60
 
 kinesis_logger:
   stream_name: logs
