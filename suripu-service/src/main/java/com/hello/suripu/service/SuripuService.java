@@ -190,7 +190,12 @@ public class SuripuService extends Service<SuripuConfiguration> {
             LOGGER.warn("Metrics not enabled.");
         }
 
-        final FirmwareUpdateStore firmwareUpdateStore = new FirmwareUpdateStore(firmwareUpdateDAO, s3Client, "hello-firmware", amazonS3UrlSigner);
+        final FirmwareUpdateStore firmwareUpdateStore = FirmwareUpdateStore.create(
+                firmwareUpdateDAO, 
+                s3Client,
+                "hello-firmware",
+                amazonS3UrlSigner,
+                configuration.getOTAConfiguration().getS3CacheExpireMinutes());
 
         final DataLogger activityLogger = kinesisLoggerFactory.get(QueueName.ACTIVITY_STREAM);
         environment.addProvider(new OAuthProvider(new OAuthAuthenticator(tokenStore), "protected-resources", activityLogger));

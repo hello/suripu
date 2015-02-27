@@ -13,6 +13,7 @@ public class OTAConfiguration extends Configuration {
     private static final Integer DEFAULT_START_UPDATE_WINDOW_HOUR = 11;  // non peak periods start at 11:00:00
     private static final Integer DEFAULT_END_UPDATE_WINDOW_HOUR = 22;  // non peak periods end at 22:59:59
     private static final Integer DEFAULT_DEVICE_UPTIME_DELAY = 20;  // How long to wait (in minutes) after device boot before allowing updates
+    private static final Integer DEFAULT_S3_CACHE_EXPIRE_MINUTES = 60;  // How long to wait (in minutes) after device boot before allowing updates
 
     @Valid
     @Max(10)
@@ -28,7 +29,9 @@ public class OTAConfiguration extends Configuration {
 
     @JsonProperty("always_ota_groups")
     private Set<String> alwaysOTAGroups;
-
+    
+    @JsonProperty("s3cache_expire_minutes")
+    private Integer s3CacheExpireMinutes = DEFAULT_S3_CACHE_EXPIRE_MINUTES;
 
     public Integer getStartUpdateWindowHour() {
         return this.startUpdateWindowHour;
@@ -44,5 +47,9 @@ public class OTAConfiguration extends Configuration {
 
     public Set<String> getAlwaysOTAGroups() {
         return this.alwaysOTAGroups;
+    }
+
+    public Integer getS3CacheExpireMinutes() {
+        return this.s3CacheExpireMinutes;
     }
 }
