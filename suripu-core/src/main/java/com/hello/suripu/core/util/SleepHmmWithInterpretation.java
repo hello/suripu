@@ -13,6 +13,7 @@ import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.translations.English;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,13 +42,6 @@ public class SleepHmmWithInterpretation {
     final static protected int SLEEP_DEPTH_REGULAR = 100;
     final static protected int SLEEP_DEPTH_DISTURBED = 33;
 
-    //isn't this stuff supposed to be internationalized?
-    //why do I have to specifiy these things for events?  arrrrgggghhhh.
-    final static protected String TEXT_IN_BED = "You went to bed.";
-    final static protected String TEXT_FELL_ASLEEP = "You fell asleep.";
-    final static protected String TEXT_WOKE_UP = "You woke up.";
-    final static protected String TEXT_OUT_OF_BED = "You got out of bed.";
-
 
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
 
@@ -64,13 +58,19 @@ public class SleepHmmWithInterpretation {
     //Externally available results class
 
     public static class SleepHmmResult {
+
         public final Optional<Event> inBed;
         public final Optional<Event> fallAsleep;
         public final Optional<Event> wakeUp;
         public final Optional<Event> outOfBed;
-        public final Optional<List<Event>> disturbances;
+        public final List<Event> disturbances;
 
-        public SleepHmmResult(Optional<Event> inBed, Optional<Event> fallAsleep, Optional<Event> wakeUp, Optional<Event> outOfBed, Optional<List<Event>> disturbances) {
+        public SleepHmmResult(Optional<Event> inBed,
+                              Optional<Event> fallAsleep,
+                              Optional<Event> wakeUp,
+                              Optional<Event> outOfBed,
+                              List<Event> disturbances) {
+
             this.inBed = inBed;
             this.fallAsleep = fallAsleep;
             this.wakeUp = wakeUp;
@@ -234,52 +234,49 @@ CREATE CREATE CREATE
 
 /* MAIN METHOD TO BE USED FOR DATA PROCESSING IS HERE */
     /* Use this method to get all the sleep / bed events from ALL the sensor data and ALL the pill data */
-    public SleepHmmResult getSleepEventsUsingHMM(AllSensorSampleList sensors, List<TrackerMotion> pillData) {
+    public Optional<SleepHmmResult> getSleepEventsUsingHMM(final AllSensorSampleList sensors,final List<TrackerMotion> pillData) {
 
-        Optional<Event> inBed = Optional.absent();
-        Optional<Event> fallAsleep = Optional.absent();
-        Optional<Event> wakeUp = Optional.absent();
-        Optional<Event> outOfBed = Optional.absent();
-        Optional<List<Event>> disturbances = Optional.absent();
+
 
 
         //get sensor data as fixed time-step array of values
         //sensor data will get put into NUM_MINUTES_IN_WINDOW duration bins, somehow (either by adding, averaging, maxing, or whatever)
-        Optional<BinnedData> binnedDataOptional = getBinnedSensorData(sensors, pillData, NUM_MINUTES_IN_WINDOW);
+        final Optional<BinnedData> binnedDataOptional = getBinnedSensorData(sensors, pillData, NUM_MINUTES_IN_WINDOW);
 
-        if (binnedDataOptional.isPresent()) {
-            BinnedData binnedData = binnedDataOptional.get();
-
-            //only allow ending up in an off-bed state or wake state
-            int [] allowableEndings = IntegerSetToArray(allowableEndingStates);
-            final int[] path = hmmWithStates.getViterbiPath(binnedData.data,allowableEndings);
-
-            //TODO use gaps to find disturbances / when people woke up in the night
-            //TODO add in sleep depth via HMM states
-            SegmentPairWithGaps sleep = mindTheGapsAndReturnTheLongestSegment(getSetBoundaries(path, sleepStates), ACCEPTABLE_GAP_IN_INDEX_COUNTS);
-            SegmentPairWithGaps bed = mindTheGapsAndReturnTheLongestSegment(getSetBoundaries(path, onBedStates), ACCEPTABLE_GAP_IN_INDEX_COUNTS);
-
-            final long t0 = binnedData.t0;
-            final int timezoneOffset = binnedData.timezoneOffset;
-
-            if (sleep != null && bed != null) {
-                inBed = Optional.of(getEventFromIndex(Event.Type.IN_BED,bed.bounds.i1,t0,timezoneOffset,TEXT_IN_BED));
-                fallAsleep = Optional.of(getEventFromIndex(Event.Type.SLEEP,sleep.bounds.i1,t0,timezoneOffset,TEXT_FELL_ASLEEP));
-                wakeUp = Optional.of(getEventFromIndex(Event.Type.WAKE_UP,sleep.bounds.i2,t0,timezoneOffset,TEXT_WOKE_UP));
-                outOfBed = Optional.of(getEventFromIndex(Event.Type.OUT_OF_BED,bed.bounds.i2,t0,timezoneOffset,TEXT_OUT_OF_BED));
-
-
-                if (!sleep.gaps.isEmpty()) {
-                    List<Event> foo = new ArrayList<Event>();
-                    disturbances = Optional.of(foo);
-
-                }
-
-            }
+        if (!binnedDataOptional.isPresent()) {
+            return Optional.absent();
         }
 
+        final BinnedData binnedData = binnedDataOptional.get();
 
-        return new SleepHmmResult(inBed,fallAsleep,wakeUp,outOfBed,disturbances);
+        //only allow ending up in an off-bed state or wake state
+
+        final Integer [] allowableEndings = allowableEndingStates.toArray(new Integer[allowableEndingStates.size()]);
+
+        final int[] path = hmmWithStates.getViterbiPath(binnedData.data,allowableEndings);
+
+        //TODO use gaps to find disturbances / when people woke up in the night
+        //TODO add in sleep depth via HMM states
+        final Optional<SegmentPairWithGaps> sleep = mindTheGapsAndReturnTheLongestSegment(getSetBoundaries(path, sleepStates), ACCEPTABLE_GAP_IN_INDEX_COUNTS);
+        final Optional<SegmentPairWithGaps> bed = mindTheGapsAndReturnTheLongestSegment(getSetBoundaries(path, onBedStates), ACCEPTABLE_GAP_IN_INDEX_COUNTS);
+
+        final long t0 = binnedData.t0;
+        final int timezoneOffset = binnedData.timezoneOffset;
+
+        if (!sleep.isPresent() || !bed.isPresent()) {
+            return Optional.absent();
+        }
+
+        final Optional<Event> inBed = Optional.of(getEventFromIndex(Event.Type.IN_BED,bed.get().bounds.i1,t0,timezoneOffset, English.IN_BED_MESSAGE));
+        final Optional<Event> fallAsleep = Optional.of(getEventFromIndex(Event.Type.SLEEP,sleep.get().bounds.i1,t0,timezoneOffset,English.FALL_ASLEEP_MESSAGE));
+        final Optional<Event> wakeUp = Optional.of(getEventFromIndex(Event.Type.WAKE_UP,sleep.get().bounds.i2,t0,timezoneOffset,English.WAKE_UP_MESSAGE));
+        final Optional<Event> outOfBed = Optional.of(getEventFromIndex(Event.Type.OUT_OF_BED,bed.get().bounds.i2,t0,timezoneOffset,English.OUT_OF_BED_MESSAGE));
+
+        final List<Event> disturbances = new ArrayList<Event>();
+
+        return Optional.of(new SleepHmmResult(inBed,fallAsleep,wakeUp,outOfBed,disturbances));
+
+
     }
 
     protected  Event getEventFromIndex(Event.Type eventType, final int index, final long t0, final int timezoneOffset,final String description) {
@@ -290,7 +287,7 @@ CREATE CREATE CREATE
         //  final Optional<SleepSegment.SoundInfo> soundInfoOptional,
         //  final Optional<Integer> sleepDepth){
 
-        final Event e = Event.createFromType(eventType,
+       return Event.createFromType(eventType,
                 eventTime,
                 eventTime + NUMBER_OF_MILLIS_IN_A_MINUTE,
                 timezoneOffset,
@@ -298,21 +295,19 @@ CREATE CREATE CREATE
                 Optional.<SleepSegment.SoundInfo>absent(),
                 Optional.<Integer>absent());
 
-        return e;
-
 
     }
 
 
     //tells me when my events were, smoothing over gaps
     //if there are multiple candidates for segments still, pick the largest
-    protected SegmentPairWithGaps mindTheGapsAndReturnTheLongestSegment(final List<SegmentPair> pairs, int acceptableGap) {
+    protected Optional<SegmentPairWithGaps> mindTheGapsAndReturnTheLongestSegment(final List<SegmentPair> pairs, int acceptableGap) {
 
         if (pairs.isEmpty()) {
-            return null;
+            return Optional.absent();
         }
 
-        List<SegmentPairWithGaps> candidates = new ArrayList<SegmentPairWithGaps>();
+        final List<SegmentPairWithGaps> candidates = new ArrayList<>();
 
         SegmentPair pair = pairs.get(0);
 
@@ -350,7 +345,7 @@ CREATE CREATE CREATE
         int maxDuration = -1;
 
         for (SegmentPairWithGaps c : candidates) {
-            int duration = c.bounds.i2 - c.bounds.i1;
+            final int duration = c.bounds.i2 - c.bounds.i1;
 
             if (duration > maxDuration) {
                 candidate = c;
@@ -359,7 +354,7 @@ CREATE CREATE CREATE
 
         }
 
-        return  candidate;
+        return  Optional.of(candidate);
 
     }
 
@@ -403,21 +398,21 @@ CREATE CREATE CREATE
     }
 
     protected Optional<BinnedData> getBinnedSensorData(AllSensorSampleList sensors, List<TrackerMotion> pillData, final int numMinutesInWindow) {
-        List<Sample> light = sensors.get(Sensor.LIGHT);
-        List<Sample> wave = sensors.get(Sensor.WAVE_COUNT);
+        final List<Sample> light = sensors.get(Sensor.LIGHT);
+        final List<Sample> wave = sensors.get(Sensor.WAVE_COUNT);
 
         if (light == Collections.EMPTY_LIST || light.isEmpty()) {
             return Optional.absent();
         }
 
         //get start and end of window
-        long t0 = light.get(0).dateTime;
-        int timezoneOffset = light.get(0).offsetMillis;
-        long tf = light.get(light.size() - 1).dateTime;
+        final long t0 = light.get(0).dateTime;
+        final int timezoneOffset = light.get(0).offsetMillis;
+        final long tf = light.get(light.size() - 1).dateTime;
 
-        int dataLength = (int) (tf - t0) / NUMBER_OF_MILLIS_IN_A_MINUTE / numMinutesInWindow;
+        final int dataLength = (int) (tf - t0) / NUMBER_OF_MILLIS_IN_A_MINUTE / numMinutesInWindow;
 
-        double[][] data = new double[NUM_DATA_DIMENSIONS][dataLength];
+        final double[][] data = new double[NUM_DATA_DIMENSIONS][dataLength];
 
         //zero out data
         for (int i = 0; i < NUM_DATA_DIMENSIONS; i++) {
@@ -426,9 +421,9 @@ CREATE CREATE CREATE
 
         //start filling in the sensor data.  Pick the max of the 5 minute bins for light
         //compute log of light
-        Iterator<Sample> it1 = light.iterator();
+        final Iterator<Sample> it1 = light.iterator();
         while (it1.hasNext()) {
-            Sample sample = it1.next();
+            final Sample sample = it1.next();
             double value = sample.value;
             if (value < 0) {
                 value = 0.0;
@@ -444,9 +439,9 @@ CREATE CREATE CREATE
 
         //max of "energy"
         //add counts to bin
-        Iterator<TrackerMotion> it2 = pillData.iterator();
+        final Iterator<TrackerMotion> it2 = pillData.iterator();
         while (it2.hasNext()) {
-            TrackerMotion m = it2.next();
+            final TrackerMotion m = it2.next();
 
             double value = m.value;
 
@@ -466,9 +461,9 @@ CREATE CREATE CREATE
 
         }
 
-        Iterator<Sample> it3 = wave.iterator();
+        final Iterator<Sample> it3 = wave.iterator();
         while (it3.hasNext()) {
-            Sample sample = it3.next();
+            final Sample sample = it3.next();
             double value = sample.value;
 
             //either wave happened or it didn't.. value can be 1.0 or 0.0
@@ -482,7 +477,7 @@ CREATE CREATE CREATE
             maxInBin(data, sample.dateTime, value, WAVE_INDEX, t0, numMinutesInWindow);
         }
 
-        BinnedData res = new BinnedData();
+        final BinnedData res = new BinnedData();
         res.data = data;
         res.numMinutesInWindow = numMinutesInWindow;
         res.t0 = t0;

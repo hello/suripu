@@ -110,7 +110,7 @@ public class HiddenMarkovModel {
         return cost;
     }
 
-    public int [] getViterbiPath(final double [][] observations, final int [] possibleEndStates) {
+    public int [] getViterbiPath(final double [][] observations, final Integer [] possibleEndStates) {
         /*
 
         returns optimal path given observations and state transition matrix "A"

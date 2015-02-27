@@ -455,13 +455,7 @@ public class TimelineProcessor {
                     accountId, deviceId.get(), slotDurationMins, missingDataDefaultValue);
         }
 
-        Optional <SleepHmmWithInterpretation> hmmOptional = sleepHmmDAODynamoDB.getLatestModelForDate(accountId,targetDate.getMillis());
 
-        Optional <SleepHmmWithInterpretation.SleepHmmResult> optionalHmmPredictions = Optional.absent();
-
-        if (hmmOptional.isPresent()) {
-            optionalHmmPredictions = Optional.of(hmmOptional.get().getSleepEventsUsingHMM(allSensorSampleList,trackerMotions));
-        }
         // compute lights-out and sound-disturbance events
         Optional<DateTime> lightOutTimeOptional = Optional.absent();
         Optional<DateTime> wakeUpWaveTimeOptional = Optional.absent();
@@ -509,30 +503,33 @@ public class TimelineProcessor {
             timelineEvents.put(event.getStartTimestamp(), event);
         }
 
+
+        final Optional <SleepHmmWithInterpretation> hmmOptional = sleepHmmDAODynamoDB.getLatestModelForDate(accountId,targetDate.getMillis());
+
         List<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate, trackerMotions, lightOutTimeOptional, wakeUpWaveTimeOptional);
 
 
-        // WAKE UP , etc.
-        if (optionalHmmPredictions.isPresent()) {
-            //MAN WHAT A HACK -- let's clean this up sometime -- BEJ
-            //if the HMM is here (i.e. eventually feature-flipped, we use its predictions)
-            List<Optional<Event>> eventsList = new ArrayList<Optional<Event>>();
-            eventsList.add(optionalHmmPredictions.get().inBed);
-            eventsList.add(optionalHmmPredictions.get().fallAsleep);
-            eventsList.add(optionalHmmPredictions.get().wakeUp);
-            eventsList.add(optionalHmmPredictions.get().outOfBed);
+        if (hmmOptional.isPresent()) {
+            final Optional <SleepHmmWithInterpretation.SleepHmmResult> optionalHmmPredictions = hmmOptional.get().getSleepEventsUsingHMM(allSensorSampleList,trackerMotions);
 
-            sleepEventsFromAlgorithm = eventsList;
+            if (optionalHmmPredictions.isPresent()) {
+                final List<Optional<Event>> eventsList = new ArrayList<>();
 
+                eventsList.add(optionalHmmPredictions.get().inBed);
+                eventsList.add(optionalHmmPredictions.get().fallAsleep);
+                eventsList.add(optionalHmmPredictions.get().wakeUp);
+                eventsList.add(optionalHmmPredictions.get().outOfBed);
+
+                sleepEventsFromAlgorithm = eventsList;
+            }
         }
-
-
 
         for(final Optional<Event> sleepEventOptional: sleepEventsFromAlgorithm){
             if(sleepEventOptional.isPresent() && !feedbackEvents.containsKey(sleepEventOptional.get().getType())){
-                        timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
-                    }
-                }
+                timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
+            }
+        }
+
         // PARTNER MOTION
         final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.get(1), sleepEventsFromAlgorithm.get(2), motionEvents, accountId);
         for(PartnerMotionEvent partnerMotionEvent : partnerMotionEvents) {
