@@ -135,6 +135,18 @@ CREATE CREATE CREATE
     */
     static public SleepHmmWithInterpretation createModelFromProtobuf(final SleepHmmProtos.SleepHmm hmmModelData) {
 
+        String source = "no_source";
+
+        if (hmmModelData.hasSource()) {
+            source = hmmModelData.getSource();
+        }
+
+        String id = "no_id";
+
+        if (hmmModelData.hasUserId()) {
+            id = hmmModelData.getUserId();
+        }
+
         //get the data in the form of lists
         final List<SleepHmmProtos.StateModel> states = hmmModelData.getStatesList();
 
@@ -233,6 +245,8 @@ CREATE CREATE CREATE
         //return the HMM
         final HiddenMarkovModel hmm = new HiddenMarkovModel(numStates, stateTransitionMatrix, initialStateProbabilities, obsModel);
 
+        LOGGER.debug("deserialized sleep HMM source={}, id={}, numStates={}",source,id,numStates);
+
         return new SleepHmmWithInterpretation(hmm, sleepStates, onBedStates,allowableEndingStates,sleepDepthsByState);
     }
 
@@ -258,6 +272,9 @@ CREATE CREATE CREATE
         final Integer [] allowableEndings = allowableEndingStates.toArray(new Integer[allowableEndingStates.size()]);
 
         final int[] path = hmmWithStates.getViterbiPath(binnedData.data,allowableEndings);
+
+
+        LOGGER.debug("decoded path = {} ",getPathAsString(path));
 
         //TODO use gaps to find disturbances / when people woke up in the night
         //TODO add in sleep depth via HMM states
@@ -487,6 +504,12 @@ CREATE CREATE CREATE
         res.t0 = t0;
         res.timezoneOffset = timezoneOffset;
 
+
+        LOGGER.debug("light={}",getDoubleVectorAsString(data[LIGHT_INDEX]));
+        LOGGER.debug("motion={}",getDoubleVectorAsString(data[MOT_COUNT_INDEX]));
+        LOGGER.debug("waves={}",getDoubleVectorAsString(data[WAVE_INDEX]));
+
+
         return Optional.of(res);
     }
 
@@ -535,6 +558,37 @@ CREATE CREATE CREATE
         }
 
         return myArray;
+    }
+
+    protected String getPathAsString(final int [] path) {
+        String pathString = "";
+        boolean first = true;
+        for (int alpha : path) {
+
+            if (!first) {
+                pathString += ",";
+            }
+            pathString += String.format("%d",alpha);
+            first = false;
+        }
+
+        return pathString;
+    }
+
+
+    protected String getDoubleVectorAsString(final double [] vec) {
+        String vecString = "";
+        boolean first = true;
+        for (double f : vec) {
+
+            if (!first) {
+                vecString += ",";
+            }
+            vecString += String.format("%.1f",f);
+            first = false;
+        }
+
+        return vecString;
     }
 
 
