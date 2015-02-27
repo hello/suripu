@@ -177,7 +177,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
             final String env = (configuration.getDebug()) ? "dev" : "prod";
 
-            final String prefix = String.format("%s.%s", apiKey, env);
+            final String prefix = String.format("%s.%s.%s", apiKey, env, "suripu-service");
 
             final List<String> metrics = configuration.getGraphite().getIncludeMetrics();
             final RegexMetricPredicate predicate = new RegexMetricPredicate(metrics);

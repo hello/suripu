@@ -252,7 +252,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
             final String env = (configuration.getDebug()) ? "dev" : "prod";
 
-            final String prefix = String.format("%s.%s", apiKey, env);
+            final String prefix = String.format("%s.%s.%s", apiKey, env, "suripu-app");
 
             final List<String> metrics = configuration.getGraphite().getIncludeMetrics();
             final RegexMetricPredicate predicate = new RegexMetricPredicate(metrics);
