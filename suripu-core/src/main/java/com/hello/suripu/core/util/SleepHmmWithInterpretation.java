@@ -136,38 +136,38 @@ CREATE CREATE CREATE
     static public SleepHmmWithInterpretation createModelFromProtobuf(final SleepHmmProtos.SleepHmm hmmModelData) {
 
         //get the data in the form of lists
-        List<SleepHmmProtos.StateModel> states = hmmModelData.getStatesList();
+        final List<SleepHmmProtos.StateModel> states = hmmModelData.getStatesList();
 
         // TODO assert that numStates == length of all the lists above
         final int numStates = hmmModelData.getNumStates();
 
         //1-D arrays, but that matrix actually corresponds to a numStates x numStates matrix, stored in row-major format
-        List<Double> stateTransitionMatrix = hmmModelData.getStateTransitionMatrixList();
-        List<Double> initialStateProbabilities = hmmModelData.getInitialStateProbabilitiesList();
+        final List<Double> stateTransitionMatrix = hmmModelData.getStateTransitionMatrixList();
+        final List<Double> initialStateProbabilities = hmmModelData.getInitialStateProbabilitiesList();
 
 
         //go through list of enums and turn them into sets of ints
         // i.e. state 0 means not sleeping, state 1 means you're sleeping, state 2 means you're sleeping... etc.
         //so later we can say "path[i] is in sleep set?  No? Then you're not sleeping."
-        Set<Integer> sleepStates = new TreeSet<Integer>();
-        Set<Integer> onBedStates = new TreeSet<Integer>();
-        Set<Integer> allowableEndingStates = new TreeSet<Integer>();
+        final Set<Integer> sleepStates = new TreeSet<Integer>();
+        final Set<Integer> onBedStates = new TreeSet<Integer>();
+        final Set<Integer> allowableEndingStates = new TreeSet<Integer>();
 
-        List<Integer> sleepDepthsByState = new ArrayList<Integer>();
+        final List<Integer> sleepDepthsByState = new ArrayList<Integer>();
 
 
         //Populate the list of composite models
         //each model corresponds to a state---by order it appears in the list.
         //each model (for the moment) is a poisson, poisson, and discrete
         //for light, motion, and waves respectively
-        HmmPdfInterface [] obsModel = new HmmPdfInterface[numStates];
+        final HmmPdfInterface [] obsModel = new HmmPdfInterface[numStates];
 
         for (int iState = 0; iState <  numStates; iState++) {
 
-            SleepHmmProtos.StateModel model = states.get(iState);
+            final SleepHmmProtos.StateModel model = states.get(iState);
 
             //compose measurement model
-            PdfComposite pdf = new PdfComposite();
+            final PdfComposite pdf = new PdfComposite();
 
             pdf.addPdf(new PoissonPdf(model.getLight().getMean(), 0));
             pdf.addPdf(new PoissonPdf(model.getMotionCount().getMean(), 1));
