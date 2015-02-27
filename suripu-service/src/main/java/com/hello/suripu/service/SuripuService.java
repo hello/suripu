@@ -68,7 +68,6 @@ import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
@@ -177,9 +176,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
             final Integer interval = configuration.getGraphite().getReportingIntervalInSeconds();
 
             final String env = (configuration.getDebug()) ? "dev" : "prod";
-            final String hostName = InetAddress.getLocalHost().getHostName();
 
-            final String prefix = String.format("%s.%s.%s", apiKey, env, hostName);
+            final String prefix = String.format("%s.%s", apiKey, env);
 
             final List<String> metrics = configuration.getGraphite().getIncludeMetrics();
             final RegexMetricPredicate predicate = new RegexMetricPredicate(metrics);
