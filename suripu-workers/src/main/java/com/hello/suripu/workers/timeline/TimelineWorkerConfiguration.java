@@ -160,15 +160,4 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
     public DynamoDBConfiguration getSleepHmmDBConfiguration(){
         return this.sleepHmmDBConfiguration;
     }
-
-
-    @Valid
-    @NotNull
-    @Min(1)
-    @Max(100)
-    @JsonProperty("max_cache_refresh_days")
-    private int maxCacheRefreshDay;
-    public Integer getMaxCacheRefreshDay(){
-        return this.maxCacheRefreshDay;
-    }
 }
