@@ -134,14 +134,14 @@ public class TimelineDAODynamoDB {
         return ImmutableMap.copyOf(finalResultMap);
     }
 
-    public boolean invalidateCache(final long accountId, final DateTime targetDateLocalUTC, final DateTime now){
+    public boolean invalidateCache(final Long accountId, final DateTime targetDateLocalUTC, final DateTime now){
         final DateTime nowLocalUTC = new DateTime(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), 0, 0, 0, DateTimeZone.UTC);
         if(nowLocalUTC.minusDays(this.maxBackTrackDays).isAfter(targetDateLocalUTC.withTimeAtStartOfDay())){
             return false;
         }
 
         try {
-            final Map<String, ExpectedAttributeValue> deleteConditions = new HashMap<String, ExpectedAttributeValue>();
+            final Map<String, ExpectedAttributeValue> deleteConditions = new HashMap<>();
 
             deleteConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, new ExpectedAttributeValue(
                     new AttributeValue().withN(String.valueOf(accountId))
@@ -150,7 +150,7 @@ public class TimelineDAODynamoDB {
                     new AttributeValue().withN(String.valueOf(targetDateLocalUTC.withTimeAtStartOfDay().getMillis()))
             ));
 
-            HashMap<String, AttributeValue> keys = new HashMap<String, AttributeValue>();
+            HashMap<String, AttributeValue> keys = new HashMap<>();
             keys.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
             keys.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(targetDateLocalUTC.withTimeAtStartOfDay().getMillis())));
 
@@ -178,7 +178,7 @@ public class TimelineDAODynamoDB {
     /*
     * Get events for maybe not consecutive days, internal use only
      */
-    private ImmutableMap<Long, CachedTimelines> getTimelinesForDatesImpl(long accountId, final Collection<Long> datesInMillis){
+    private ImmutableMap<Long, CachedTimelines> getTimelinesForDatesImpl(final Long accountId, final Collection<Long> datesInMillis){
         if(datesInMillis.size() > MAX_REQUEST_DAYS){
             LOGGER.warn("Request too large for events, num of days requested: {}, accountId: {}, table: {}", datesInMillis.size(), accountId, this.tableName);
             throw new RuntimeException("Request too many days event.");
@@ -307,14 +307,14 @@ public class TimelineDAODynamoDB {
 
 
     @Timed
-    public void saveTimelinesForDate(long accountId, final DateTime dateOfTheNightLocalUTC, final List<Timeline> data){
+    public void saveTimelinesForDate(final Long accountId, final DateTime dateOfTheNightLocalUTC, final List<Timeline> data){
         final Map<DateTime, List<Timeline>> convertedParam = new HashMap<>();
         convertedParam.put(dateOfTheNightLocalUTC, data);
         saveTimelinesForDates(accountId, convertedParam);
     }
 
     @Timed
-    public void saveTimelinesForDates(long accountId, final Map<DateTime, List<Timeline>> data){
+    public void saveTimelinesForDates(final Long accountId, final Map<DateTime, List<Timeline>> data){
         final Map<Long, List<Timeline>> dataWithStringDates = new HashMap<>();
 
         for(final DateTime dateOfTheNightLocalUTC:data.keySet()){
@@ -324,7 +324,7 @@ public class TimelineDAODynamoDB {
         setTimelinesForDatesLong(accountId, dataWithStringDates);
     }
 
-    private void setTimelinesForDatesLong(long accountId, final Map<Long, List<Timeline>> data){
+    private void setTimelinesForDatesLong(final Long accountId, final Map<Long, List<Timeline>> data){
         if(data.size() == 0){
             LOGGER.info("Empty motion data for account_id = {}", accountId);
             return;
@@ -413,7 +413,7 @@ public class TimelineDAODynamoDB {
         }
     }
 
-    private void batchWrite(final long accountId, final List<WriteRequest> writeRequests){
+    private void batchWrite(final Long accountId, final List<WriteRequest> writeRequests){
         LOGGER.info("WriteRequest number per batch: {}", writeRequests.size());
 
         Map<String, List<WriteRequest>> requestItems = new HashMap<String, List<WriteRequest>>();
