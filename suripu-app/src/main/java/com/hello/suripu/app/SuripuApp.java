@@ -341,7 +341,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new QuestionsResource(accountDAO, questionResponseDAO, timeZoneHistoryDAODynamoDB, configuration.getQuestionConfigs().getNumSkips()));
         environment.addResource(new InsightsResource(accountDAO, trendsInsightsDAO, aggregateSleepScoreDAODynamoDB, trackerMotionDAO, insightsDAODynamoDB));
         environment.addResource(new TeamsResource(teamStore));
-        environment.addResource(new FeedbackResource(feedbackDAO));
+        environment.addResource(new FeedbackResource(feedbackDAO, timelineDAODynamoDB));
         environment.addResource(new AppCheckinResource(false, "")); // TODO: replace this with real app version. Maybe move it to admin tool?
 
         // data science resource stuff
