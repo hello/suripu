@@ -87,7 +87,8 @@ public class TimelineDAODynamoDBIT {
             TimelineDAODynamoDB.createTable(tableName, this.amazonDynamoDBClient);
             this.timelineDAODynamoDB = new TimelineDAODynamoDB(
                     this.amazonDynamoDBClient,
-                    tableName
+                    tableName,
+                    20
             );
 
 
@@ -188,6 +189,45 @@ public class TimelineDAODynamoDBIT {
         }
 
 
+
+    }
+
+
+    @Test
+    public void testInvalidateCache(){
+        final DateTime startOfDay1 = DateTime.now().withTimeAtStartOfDay();
+        final ArrayList<Timeline> timelinesForDay1 = new ArrayList<>();
+
+        timelinesForDay1.add(this.timeline1);
+        long accountId = 1;
+
+
+        final Map<DateTime, List<Timeline>> dateTimelinesMap = new HashMap<>();
+        dateTimelinesMap.put(startOfDay1, timelinesForDay1);
+        this.timelineDAODynamoDB.saveTimelinesForDates(accountId, dateTimelinesMap);
+        final HashSet<DateTime> queryDates = new HashSet<>();
+        queryDates.add(startOfDay1);
+
+        Map<DateTime, ImmutableList<Timeline>> actual = this.timelineDAODynamoDB.getTimelinesForDates(accountId, queryDates);
+
+        assertThat(actual.size(), is(1));
+        for(final DateTime targetDay:actual.keySet()){
+            assertThat(actual.get(targetDay).size(), is(1));
+
+
+            assertThat(targetDay, is(startOfDay1));
+            assertThat(actual.get(targetDay).get(0).statistics.isPresent(), is(false));
+            //assertThat(actual.get(targetDay).get(0).statistics.get(), is((SleepStats)null));
+            assertThat(actual.get(targetDay).get(0).score, is(80));
+            assertThat(actual.get(targetDay).get(0).message, is("test1"));
+
+        }
+
+        final boolean invalidateResult = this.timelineDAODynamoDB.invalidateCache(accountId, startOfDay1, startOfDay1);
+        assertThat(invalidateResult, is(true));
+        actual = this.timelineDAODynamoDB.getTimelinesForDates(accountId, queryDates);
+        assertThat(actual.size(), is(1));
+        assertThat(actual.get(startOfDay1).isEmpty(), is(true));
 
     }
 
