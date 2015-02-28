@@ -1,5 +1,6 @@
 package com.hello.suripu.core.db;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
@@ -10,6 +11,9 @@ import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
+import com.amazonaws.services.dynamodbv2.model.DeleteItemRequest;
+import com.amazonaws.services.dynamodbv2.model.DeleteItemResult;
+import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
@@ -17,6 +21,7 @@ import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ReturnConsumedCapacity;
+import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -127,6 +132,45 @@ public class TimelineDAODynamoDB {
         }
 
         return ImmutableMap.copyOf(finalResultMap);
+    }
+
+    public boolean invalidateCache(final long accountId, final DateTime targetDateLocalUTC, final DateTime now){
+        final DateTime nowLocalUTC = new DateTime(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), 0, 0, 0, DateTimeZone.UTC);
+        if(nowLocalUTC.minusDays(this.maxBackTrackDays).isAfter(targetDateLocalUTC.withTimeAtStartOfDay())){
+            return false;
+        }
+
+        try {
+            final Map<String, ExpectedAttributeValue> deleteConditions = new HashMap<String, ExpectedAttributeValue>();
+
+            deleteConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, new ExpectedAttributeValue(
+                    new AttributeValue().withN(String.valueOf(accountId))
+            ));
+            deleteConditions.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new ExpectedAttributeValue(
+                    new AttributeValue().withN(String.valueOf(targetDateLocalUTC.withTimeAtStartOfDay().getMillis()))
+            ));
+
+            HashMap<String, AttributeValue> keys = new HashMap<String, AttributeValue>();
+            keys.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
+            keys.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(targetDateLocalUTC.withTimeAtStartOfDay().getMillis())));
+
+            final DeleteItemRequest deleteItemRequest = new DeleteItemRequest()
+                    .withTableName(tableName)
+                    .withKey(keys)
+                    .withExpected(deleteConditions)
+                    .withReturnValues(ReturnValue.ALL_OLD);
+
+            final DeleteItemResult result = this.dynamoDBClient.deleteItem(deleteItemRequest);
+
+            return true;
+        }  catch (AmazonServiceException ase) {
+            LOGGER.error("Failed to invalidate cache after for account {} and date {}, error {}",
+                    accountId,
+                    targetDateLocalUTC.withTimeAtStartOfDay(),
+                    ase.getMessage());
+        }
+
+        return false;
     }
 
 
