@@ -45,12 +45,4 @@ public class LinearRankDescendingScoringFunction<T> implements ScoringFunction<T
         }
         return rankingPositions;
     }
-
-    @Override
-    public Double getScore(final T data, final Map<T, Double> pdf) {
-        if(pdf.containsKey(data)){
-            return pdf.get(data);
-        }
-        return 0d;
-    }
 }

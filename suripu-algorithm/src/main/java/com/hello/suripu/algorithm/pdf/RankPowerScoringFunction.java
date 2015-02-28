@@ -34,11 +34,4 @@ public class RankPowerScoringFunction implements ScoringFunction<Double, Double>
         return rankingPositions;
     }
 
-    @Override
-    public Double getScore(final Double data, final Map<Double, Double> pdf) {
-        if(pdf.containsKey(data)){
-            return pdf.get(data);
-        }
-        return 0d;
-    }
 }

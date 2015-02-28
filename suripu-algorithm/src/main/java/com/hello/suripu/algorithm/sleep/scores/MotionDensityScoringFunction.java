@@ -59,9 +59,8 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
 
         for(final AmplitudeData datum:data){
             if(type == ScoreType.SLEEP) {
-                final double sleepMotionDensityScore = datum.amplitude == 0 ? 0 : sleepMotionScoringFunction.getScore(datum.amplitude,
-                        sleepMotionDensityRankPDF);
-                final double sleepTimeScore = sleepTimeScoreFunction.getScore(datum.timestamp, sleepTimePDF);
+                final double sleepMotionDensityScore = datum.amplitude == 0 ? 0 : sleepMotionDensityRankPDF.get(datum.amplitude);
+                final double sleepTimeScore = sleepTimePDF.get(datum.timestamp);
                 pdf.put(datum, new EventScores(Math.pow(sleepMotionDensityScore, this.motionMaxPower) * sleepTimeScore,
                         1d, 1d, 1d));
                 /*
@@ -74,9 +73,8 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
             }
 
             if(this.type == ScoreType.WAKE_UP) {
-                final double wakeUpMotionDensityScore = datum.amplitude == 0 ? 0 : wakeUpMotionScoringFunction.getScore(datum.amplitude,
-                        wakeUpMotionDensityRankPDF);
-                final double wakeUpTimeScore = wakeUpTimeScoreFunction.getScore(datum.timestamp, wakeUpTimePDF);
+                final double wakeUpMotionDensityScore = datum.amplitude == 0 ? 0 : wakeUpMotionDensityRankPDF.get(datum.amplitude);
+                final double wakeUpTimeScore = wakeUpTimePDF.get(datum.timestamp);
                 pdf.put(datum, new EventScores(1d,
                         Math.pow(wakeUpMotionDensityScore, this.motionMaxPower) * wakeUpTimeScore, 1d, 1d));
                 /*
@@ -91,18 +89,5 @@ public class MotionDensityScoringFunction implements SleepDataScoringFunction<Am
 
         }
         return pdf;
-    }
-
-    @Override
-    public EventScores getScore(AmplitudeData data, Map<AmplitudeData, EventScores> pdf) {
-        if(pdf.containsKey(data)){
-            return pdf.get(data);
-        }
-
-        if(this.type == ScoreType.SLEEP) {
-            return new EventScores(0d, 1d, 1d, 1d);
-        }
-
-        return new EventScores(1d, 0d, 1d, 1d);
     }
 }

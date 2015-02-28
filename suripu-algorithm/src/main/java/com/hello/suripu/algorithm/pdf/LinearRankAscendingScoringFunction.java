@@ -31,7 +31,6 @@ public class LinearRankAscendingScoringFunction<T> implements ScoringFunction<T,
         final int startCutBound = (int) (data.size() * this.cutPercentages[0]);
         final int endCutBound = (int) (data.size() * this.cutPercentages[1]);
 
-        final int dataSize = data.size();
         for(int i = 0; i < sortedCopy.length; i++){
             double score = 0;
             if(i >= startCutBound && i <= endCutBound){
@@ -45,13 +44,5 @@ public class LinearRankAscendingScoringFunction<T> implements ScoringFunction<T,
             rankingPositions.put(value, score);
         }
         return rankingPositions;
-    }
-
-    @Override
-    public Double getScore(final T data, final Map<T, Double> pdf) {
-        if(pdf.containsKey(data)){
-            return pdf.get(data);
-        }
-        return 0d;
     }
 }

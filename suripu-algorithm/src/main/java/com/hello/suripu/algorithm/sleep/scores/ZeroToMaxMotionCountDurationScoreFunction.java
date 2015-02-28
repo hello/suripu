@@ -19,13 +19,4 @@ public class ZeroToMaxMotionCountDurationScoreFunction implements SleepDataScori
         }
         return pdf;
     }
-
-    @Override
-    public EventScores getScore(final AmplitudeData data, final Map<AmplitudeData, EventScores> pdf) {
-        if(pdf.containsKey(data)){
-            return pdf.get(data);
-        }
-
-        return new EventScores(1d, 1d, 1d, 1d);
-    }
 }
