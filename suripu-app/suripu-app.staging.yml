@@ -256,3 +256,5 @@ sleephmm_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
     region: us-east-1
     table_name: sleephmm
+
+max_cache_refresh_days: 20

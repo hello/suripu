@@ -28,8 +28,9 @@ public class Timeline {
     @JsonProperty("insights")
     public final List<Insight> insights;
 
-
-    public Timeline(final Integer score,  final String message, final String date, final List<SleepSegment> events, final List<Insight> insights, final SleepStats sleepStats) {
+    private Timeline(final Integer score,  final String message, final String date,
+                     final List<SleepSegment> events, final List<Insight> insights,
+                     final SleepStats sleepStats) {
         this.score = score;
         this.message = message;
         this.date = date;
