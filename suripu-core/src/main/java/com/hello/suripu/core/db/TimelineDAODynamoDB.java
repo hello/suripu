@@ -1,6 +1,5 @@
 package com.hello.suripu.core.db;
 
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
@@ -11,9 +10,6 @@ import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
-import com.amazonaws.services.dynamodbv2.model.DeleteItemRequest;
-import com.amazonaws.services.dynamodbv2.model.DeleteItemResult;
-import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
@@ -21,7 +17,6 @@ import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ReturnConsumedCapacity;
-import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -34,13 +29,10 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.db.util.Compression;
-import com.hello.suripu.core.models.CachedTimelines;
 import com.hello.suripu.core.models.Timeline;
-import com.hello.suripu.core.processors.TimelineProcessor;
 import com.yammer.dropwizard.json.GuavaExtrasModule;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,12 +65,9 @@ public class TimelineDAODynamoDB {
     public static final String COMPRESS_TYPE_ATTRIBUTE_NAME = "compression_type";
     public static final String UPDATED_AT_ATTRIBUTE_NAME = "updated_at";
 
-    public static final String VERSION = "version";
-
 
     private final int MAX_CALL_COUNT = 5;
     private final int MAX_BATCH_SIZE = 25;  // Based on: http://docs.aws.amazon.com/cli/latest/reference/dynamodb/batch-write-item.html
-    private final int maxBackTrackDays;
 
     public static final int MAX_REQUEST_DAYS = 31;
 
@@ -86,15 +75,13 @@ public class TimelineDAODynamoDB {
 
     private static ObjectMapper mapper = new ObjectMapper();
 
-    public TimelineDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName, final int maxBackTrackDays){
+    public TimelineDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
 
         mapper.registerModule(new GuavaModule());
         mapper.registerModule(new GuavaExtrasModule());
         mapper.registerModule(new JodaModule());
-
-        this.maxBackTrackDays = maxBackTrackDays;
     }
 
     @Timed
@@ -102,11 +89,7 @@ public class TimelineDAODynamoDB {
         final Collection<DateTime> convertedParam = new ArrayList<DateTime>();
         convertedParam.add(targetDateOfNightLocalUTC);
         final ImmutableMap<DateTime, ImmutableList<Timeline>> result = this.getTimelinesForDates(accountId, convertedParam);
-        if(result.containsKey(targetDateOfNightLocalUTC)){
-            return result.get(targetDateOfNightLocalUTC);
-        }
-
-        return ImmutableList.copyOf(Collections.EMPTY_LIST);
+        return result.get(targetDateOfNightLocalUTC);
     }
 
     @Timed
@@ -117,74 +100,28 @@ public class TimelineDAODynamoDB {
         }
 
         final Collection<Long> datesInMillis = dateToStringMapping.keySet();
-        final ImmutableMap<Long, CachedTimelines> cachedData = this.getTimelinesForDatesImpl(accountId, datesInMillis);
+        final ImmutableMap<Long, ImmutableList<Timeline>> data = this.getTimelinesForDatesImpl(accountId, datesInMillis);
 
         final Map<DateTime, ImmutableList<Timeline>> finalResultMap = new HashMap<>();
-        final DateTime now = DateTime.now();
-        for(final Long dateInMillis:cachedData.keySet()){
+        for(final Long dateInMillis:data.keySet()){
             if(dateToStringMapping.containsKey(dateInMillis)){
-                if(cachedData.get(dateInMillis).shouldInvalidate(TimelineProcessor.VERSION, new DateTime(dateInMillis, DateTimeZone.UTC), now, this.maxBackTrackDays)){
-                    continue;  // Do not return out-dated timeline from dynamoDB.
-                }
-
-                finalResultMap.put(dateToStringMapping.get(dateInMillis), ImmutableList.copyOf(cachedData.get(dateInMillis).timeline));
+                finalResultMap.put(dateToStringMapping.get(dateInMillis), data.get(dateInMillis));
             }
         }
 
         return ImmutableMap.copyOf(finalResultMap);
     }
 
-    public boolean invalidateCache(final Long accountId, final DateTime targetDateLocalUTC, final DateTime now){
-        final DateTime nowLocalUTC = new DateTime(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), 0, 0, 0, DateTimeZone.UTC);
-        if(nowLocalUTC.minusDays(this.maxBackTrackDays).isAfter(targetDateLocalUTC.withTimeAtStartOfDay())){
-            return false;
-        }
-
-        try {
-            final Map<String, ExpectedAttributeValue> deleteConditions = new HashMap<>();
-
-            deleteConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, new ExpectedAttributeValue(
-                    new AttributeValue().withN(String.valueOf(accountId))
-            ));
-            deleteConditions.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new ExpectedAttributeValue(
-                    new AttributeValue().withN(String.valueOf(targetDateLocalUTC.withTimeAtStartOfDay().getMillis()))
-            ));
-
-            HashMap<String, AttributeValue> keys = new HashMap<>();
-            keys.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
-            keys.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(targetDateLocalUTC.withTimeAtStartOfDay().getMillis())));
-
-            final DeleteItemRequest deleteItemRequest = new DeleteItemRequest()
-                    .withTableName(tableName)
-                    .withKey(keys)
-                    .withExpected(deleteConditions)
-                    .withReturnValues(ReturnValue.ALL_OLD);
-
-            final DeleteItemResult result = this.dynamoDBClient.deleteItem(deleteItemRequest);
-
-            return true;
-        }  catch (AmazonServiceException ase) {
-            LOGGER.error("Failed to invalidate cache after for account {} and date {}, error {}",
-                    accountId,
-                    targetDateLocalUTC.withTimeAtStartOfDay(),
-                    ase.getMessage());
-        }
-
-        return false;
-    }
-
-
-
     /*
     * Get events for maybe not consecutive days, internal use only
      */
-    private ImmutableMap<Long, CachedTimelines> getTimelinesForDatesImpl(final Long accountId, final Collection<Long> datesInMillis){
+    private ImmutableMap<Long, ImmutableList<Timeline>> getTimelinesForDatesImpl(long accountId, final Collection<Long> datesInMillis){
         if(datesInMillis.size() > MAX_REQUEST_DAYS){
             LOGGER.warn("Request too large for events, num of days requested: {}, accountId: {}, table: {}", datesInMillis.size(), accountId, this.tableName);
             throw new RuntimeException("Request too many days event.");
         }
 
-        final Map<Long, CachedTimelines> finalResult = new HashMap<>();
+        final Map<Long, ImmutableList<Timeline>> finalResult = new HashMap<>();
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
 
         final Long[] sortedDateMillis = datesInMillis.toArray(new Long[0]);
@@ -214,8 +151,7 @@ public class TimelineDAODynamoDB {
                 TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME,
                 DATA_BLOB_ATTRIBUTE_NAME,
                 UPDATED_AT_ATTRIBUTE_NAME,
-                COMPRESS_TYPE_ATTRIBUTE_NAME,
-                VERSION);
+                COMPRESS_TYPE_ATTRIBUTE_NAME);
 
 
         int loopCount = 0;
@@ -249,7 +185,7 @@ public class TimelineDAODynamoDB {
                 final byte[] compressed = byteBuffer.array();
 
                 final Compression.CompressionType compressionType = Compression.CompressionType.fromInt(Integer.valueOf(item.get(COMPRESS_TYPE_ATTRIBUTE_NAME).getN()));
-                final String version = item.get(VERSION).getS();
+
 
                 try {
                     final byte[] decompressed = Compression.decompress(compressed, compressionType);
@@ -277,8 +213,7 @@ public class TimelineDAODynamoDB {
                             ioe.getMessage());
                 }
 
-                final CachedTimelines cachedTimelines = CachedTimelines.create(eventsWithAllTypes, version);
-                finalResult.put(dateInMillis, cachedTimelines);
+                finalResult.put(dateInMillis, ImmutableList.copyOf(eventsWithAllTypes));
 
             }
 
@@ -298,7 +233,7 @@ public class TimelineDAODynamoDB {
         // Fill the non-exist days with empty lists
         for(final Long dateInMillis:datesInMillis){
             if(!finalResult.containsKey(dateInMillis)){
-                finalResult.put(dateInMillis, CachedTimelines.createEmpty());
+                finalResult.put(dateInMillis, ImmutableList.copyOf(Collections.<Timeline>emptyList()));
             }
         }
 
@@ -307,14 +242,14 @@ public class TimelineDAODynamoDB {
 
 
     @Timed
-    public void saveTimelinesForDate(final Long accountId, final DateTime dateOfTheNightLocalUTC, final List<Timeline> data){
+    public void saveTimelinesForDate(long accountId, final DateTime dateOfTheNightLocalUTC, final List<Timeline> data){
         final Map<DateTime, List<Timeline>> convertedParam = new HashMap<>();
         convertedParam.put(dateOfTheNightLocalUTC, data);
         saveTimelinesForDates(accountId, convertedParam);
     }
 
     @Timed
-    public void saveTimelinesForDates(final Long accountId, final Map<DateTime, List<Timeline>> data){
+    public void saveTimelinesForDates(long accountId, final Map<DateTime, List<Timeline>> data){
         final Map<Long, List<Timeline>> dataWithStringDates = new HashMap<>();
 
         for(final DateTime dateOfTheNightLocalUTC:data.keySet()){
@@ -324,7 +259,7 @@ public class TimelineDAODynamoDB {
         setTimelinesForDatesLong(accountId, dataWithStringDates);
     }
 
-    private void setTimelinesForDatesLong(final Long accountId, final Map<Long, List<Timeline>> data){
+    private void setTimelinesForDatesLong(long accountId, final Map<Long, List<Timeline>> data){
         if(data.size() == 0){
             LOGGER.info("Empty motion data for account_id = {}", accountId);
             return;
@@ -351,7 +286,7 @@ public class TimelineDAODynamoDB {
                 item.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
                 item.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(targetDateOfNightLocalUTC)));
                 item.put(UPDATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(DateTime.now().getMillis())));
-                item.put(VERSION, new AttributeValue().withS(TimelineProcessor.VERSION));
+
 
                 final int compressType = Compression.CompressionType.NONE.getValue();
                 item.put(COMPRESS_TYPE_ATTRIBUTE_NAME, new AttributeValue().withN(
@@ -413,7 +348,7 @@ public class TimelineDAODynamoDB {
         }
     }
 
-    private void batchWrite(final Long accountId, final List<WriteRequest> writeRequests){
+    private void batchWrite(final long accountId, final List<WriteRequest> writeRequests){
         LOGGER.info("WriteRequest number per batch: {}", writeRequests.size());
 
         Map<String, List<WriteRequest>> requestItems = new HashMap<String, List<WriteRequest>>();

@@ -2,18 +2,16 @@ package com.hello.suripu.app.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hello.suripu.core.configuration.DynamoDBConfiguration;
-import com.hello.suripu.core.configuration.EmailConfiguration;
 import com.hello.suripu.core.configuration.GraphiteConfiguration;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
+import com.hello.suripu.core.configuration.EmailConfiguration;
 import com.hello.suripu.core.configuration.PushNotificationsConfiguration;
 import com.hello.suripu.core.configuration.QuestionConfiguration;
 import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 public class SuripuAppConfiguration extends Configuration {
@@ -276,22 +274,9 @@ public class SuripuAppConfiguration extends Configuration {
         return emailConfiguration;
     }
 
-    @Valid
-    @NotNull
     @JsonProperty("sleephmm_db")
     private DynamoDBConfiguration sleepHmmDBConfiguration;
     public DynamoDBConfiguration getSleepHmmDBConfiguration(){
         return this.sleepHmmDBConfiguration;
-    }
-
-
-    @Valid
-    @NotNull
-    @Min(1)
-    @Max(100)
-    @JsonProperty("max_cache_refresh_days")
-    private int maxCacheRefreshDay;
-    public Integer getMaxCacheRefreshDay(){
-        return this.maxCacheRefreshDay;
     }
 }
