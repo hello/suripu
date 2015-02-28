@@ -46,7 +46,6 @@ import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.HEAD;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -401,12 +400,12 @@ public class TimelineProcessor {
         LOGGER.debug("End date: {}", endDate);
 
         final ImmutableList<Timeline> cachedTimelines = this.timelineDAODynamoDB.getTimelinesForDate(accountId, targetDate.withTimeAtStartOfDay());
-        if(!cachedTimelines.isEmpty()){
-            LOGGER.info("Timeline for account {}, date {} returned from cache.", accountId, date);
+        if (!cachedTimelines.isEmpty()) {
+            LOGGER.debug("Timeline for account {}, date {} returned from cache.", accountId, date);
             return cachedTimelines;
         }
 
-        LOGGER.info("No cached timeline, reprocess timeline for account {}, date {}", accountId, date);
+        LOGGER.debug("No cached timeline, reprocess timeline for account {}, date {}", accountId, date);
 
         final List<TrackerMotion> originalTrackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
         LOGGER.debug("Length of trackerMotion: {}", originalTrackerMotions.size());
