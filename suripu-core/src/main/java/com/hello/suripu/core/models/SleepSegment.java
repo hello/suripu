@@ -97,14 +97,14 @@ public class SleepSegment implements Comparable {
                         @JsonProperty("sleep_depth") final int sleepDepth,
                         @JsonProperty("sound") final SoundInfo soundInfo,
                         @JsonProperty("timestamp") final long timestamp,
-                        @JsonProperty("duration") final long duration,
+                        @JsonProperty("duration") final long durationInSeconds,
                         @JsonProperty("offset_millis") final int offsetMillis,
                         @JsonProperty("event_type") final Event.Type type,
                         @JsonProperty("message") final String message){
         this.id = id;
         this.sensors = sensors;
         this.event = Event.createFromType(type,
-                timestamp, timestamp + duration, offsetMillis,
+                timestamp, timestamp + durationInSeconds * DateTimeConstants.MILLIS_PER_SECOND, offsetMillis,
                 message == null ? Optional.<String>absent() : Optional.of(message),
                 soundInfo == null ? Optional.<SoundInfo>absent() : Optional.of(soundInfo),
                 Optional.of(sleepDepth));
