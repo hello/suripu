@@ -13,6 +13,7 @@ import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 
 /**
  * Created by pangwu on 12/14/14.
@@ -33,7 +34,7 @@ public class MotionScoreAlgorithmTest {
         assertThat(rankingMap.get(now.getMillis()), is(0d));
         assertThat(rankingMap.get(now.plusMinutes(1).getMillis()), is(1d / tsArray.size()));
         assertThat(rankingMap.get(now.plusMinutes(2).getMillis()), is(2d / tsArray.size()));
-        assertThat(linearRankAscendingScoringFunction.getScore(0L, rankingMap), is(0d));
+        assertThat(rankingMap.get(0L), is(nullValue()));
 
         // Test order by DESC
         final LinearRankDescendingScoringFunction linearRankDescendingScoringFunction = new LinearRankDescendingScoringFunction(1d, 0, new double[]{0d, 1d});
@@ -43,7 +44,7 @@ public class MotionScoreAlgorithmTest {
         assertThat(rankingMap.get(now.plusMinutes(1).getMillis()), is(2d / tsArray.size()));
         assertThat(rankingMap.get(now.plusMinutes(2).getMillis()), is(1d / tsArray.size()));
 
-        assertThat(linearRankDescendingScoringFunction.getScore(0L, rankingMap), is(0d));
+        assertThat(rankingMap.get(0L), is(nullValue()));
 
     }
 
@@ -75,16 +76,12 @@ public class MotionScoreAlgorithmTest {
         Map<Double, Double> pdf = rankPowerScoringFunction.getPDF(ampArray);
 
         // We should expect a linear result
-        assertThat(rankPowerScoringFunction.getScore(startAmplitude, pdf),
+        assertThat(pdf.get(startAmplitude),
                 is(Math.pow(0, 10)));
-        assertThat(rankPowerScoringFunction.getScore(startAmplitude + 1, pdf),
+        assertThat(pdf.get(startAmplitude + 1),
                 is(Math.pow(1d / 3, 10)));
-        assertThat(rankPowerScoringFunction.getScore(startAmplitude + 2, pdf),
+        assertThat(pdf.get(startAmplitude + 2),
                 is(Math.pow(2d / 3, 10)));
-
-
-        // Test something not exists in the ranking map
-        assertThat(rankPowerScoringFunction.getScore(0d, pdf), is(0d));
     }
 
 }

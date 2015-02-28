@@ -8,5 +8,4 @@ import java.util.Map;
  */
 public interface ScoringFunction<T, V> {
     Map<T, V> getPDF(final Collection<T> data);
-    V getScore(final T data, final Map<T, V> pdf);
 }

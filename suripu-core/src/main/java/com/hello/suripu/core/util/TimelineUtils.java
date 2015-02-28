@@ -11,12 +11,11 @@ import com.hello.suripu.algorithm.sensordata.LightEventsDetector;
 import com.hello.suripu.algorithm.sensordata.SoundEventsDetector;
 import com.hello.suripu.algorithm.sleep.MotionScoreAlgorithm;
 import com.hello.suripu.algorithm.sleep.scores.AmplitudeDataScoringFunction;
-import com.hello.suripu.algorithm.sleep.scores.ZeroToMaxMotionCountDurationScoreFunction;
 import com.hello.suripu.algorithm.sleep.scores.LightOutCumulatedMotionMixScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.LightOutScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.MotionDensityScoringFunction;
-import com.hello.suripu.algorithm.sleep.scores.SleepDataScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.WaveAccumulateMotionScoreFunction;
+import com.hello.suripu.algorithm.sleep.scores.ZeroToMaxMotionCountDurationScoreFunction;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.CurrentRoomState;
@@ -1047,21 +1046,11 @@ public class TimelineUtils {
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures = MotionFeatures.aggregateData(motionFeatures, smoothWindowSizeInMinutes);
         LOGGER.info("smoothed data size {}", aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE).size());
 
-        final ArrayList<SleepDataScoringFunction> scoringFunctions = new ArrayList<>();
-
-        int featureDimension = 1;
-
-        final Map<Long, List<AmplitudeData>> matrix = MotionScoreAlgorithm.createFeatureMatrix(aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE));
-        scoringFunctions.add(new AmplitudeDataScoringFunction());
-
-        featureDimension = MotionScoreAlgorithm.addToFeatureMatrix(matrix, aggregatedFeatures.get(MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE));
-        scoringFunctions.add(new MotionDensityScoringFunction(MotionDensityScoringFunction.ScoreType.SLEEP));
-
-        featureDimension = MotionScoreAlgorithm.addToFeatureMatrix(matrix, aggregatedFeatures.get(MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE));
-        scoringFunctions.add(new MotionDensityScoringFunction(MotionDensityScoringFunction.ScoreType.WAKE_UP));
-
-        featureDimension = MotionScoreAlgorithm.addToFeatureMatrix(matrix, aggregatedFeatures.get(MotionFeatures.FeatureType.ZERO_TO_MAX_MOTION_COUNT_DURATION));
-        scoringFunctions.add(new ZeroToMaxMotionCountDurationScoreFunction());
+        final MotionScoreAlgorithm sleepDetectionAlgorithm = new MotionScoreAlgorithm();
+        sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE), new AmplitudeDataScoringFunction());
+        sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE), new MotionDensityScoringFunction(MotionDensityScoringFunction.ScoreType.SLEEP));
+        sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE), new MotionDensityScoringFunction(MotionDensityScoringFunction.ScoreType.WAKE_UP));
+        sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.ZERO_TO_MAX_MOTION_COUNT_DURATION), new ZeroToMaxMotionCountDurationScoreFunction());
 
         if(lightOutTimeOptional.isPresent()) {
             final LinkedList<AmplitudeData> lightFeature = new LinkedList<>();
@@ -1070,13 +1059,11 @@ public class TimelineUtils {
                 lightFeature.add(new AmplitudeData(amplitudeData.timestamp, 0, amplitudeData.offsetMillis));
 
             }
-            featureDimension = MotionScoreAlgorithm.addToFeatureMatrix(matrix, lightFeature);
-
             if(dataWithGapFilled.size() > 0) {
                 LOGGER.info("Light out time {}", lightOutTimeOptional.get()
                         .withZone(DateTimeZone.forOffsetMillis(dataWithGapFilled.get(0).offsetMillis)));
             }
-            scoringFunctions.add(new LightOutScoringFunction(lightOutTimeOptional.get(), 3d));
+            sleepDetectionAlgorithm.addFeature(lightFeature, new LightOutScoringFunction(lightOutTimeOptional.get(), 3d));
 
             final LinkedList<AmplitudeData> lightAndCumulatedMotionFeature = new LinkedList<>();
             for (final AmplitudeData amplitudeData : aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_MOTION_PERIOD)) {
@@ -1086,8 +1073,7 @@ public class TimelineUtils {
                         amplitudeData.offsetMillis));
 
             }
-            featureDimension = MotionScoreAlgorithm.addToFeatureMatrix(matrix, lightAndCumulatedMotionFeature);
-            scoringFunctions.add(new LightOutCumulatedMotionMixScoringFunction(lightOutTimeOptional.get()));
+            sleepDetectionAlgorithm.addFeature(lightAndCumulatedMotionFeature, new LightOutCumulatedMotionMixScoringFunction(lightOutTimeOptional.get()));
         }
 
         if(firstWaveTimeOptional.isPresent()) {
@@ -1099,14 +1085,8 @@ public class TimelineUtils {
                         amplitudeData.offsetMillis));
 
             }
-            featureDimension = MotionScoreAlgorithm.addToFeatureMatrix(matrix, waveAndCumulatedMotionFeature);
-            scoringFunctions.add(new WaveAccumulateMotionScoreFunction(firstWaveTimeOptional.get()));
+            sleepDetectionAlgorithm.addFeature(waveAndCumulatedMotionFeature, new WaveAccumulateMotionScoreFunction(firstWaveTimeOptional.get()));
         }
-
-        final MotionScoreAlgorithm sleepDetectionAlgorithm = new MotionScoreAlgorithm(matrix,
-                featureDimension,  // modality
-                aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE).size(),  // num of data.
-                scoringFunctions);
 
         final List<Segment> segments = sleepDetectionAlgorithm.getSleepEvents(debugMode);
         final ArrayList<Event> events = new ArrayList<>();

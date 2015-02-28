@@ -44,13 +44,4 @@ public class WaveAccumulateMotionScoreFunction implements SleepDataScoringFuncti
         }
         return lightOutPDF;
     }
-
-    @Override
-    public EventScores getScore(final AmplitudeData data, final Map<AmplitudeData, EventScores> pdf) {
-        if(pdf.containsKey(data)){
-            return pdf.get(data);
-        }
-
-        return new EventScores(1d, 1d, 1d, 1d);  // Not found, keep everything as it is.
-    }
 }
