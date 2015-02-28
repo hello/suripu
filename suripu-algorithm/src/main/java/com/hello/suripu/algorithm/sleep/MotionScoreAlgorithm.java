@@ -33,7 +33,7 @@ public class MotionScoreAlgorithm {
         return Optional.of(Ordering.natural().max(scores));
     }
 
-    public List<Segment> getSleepEvents(final boolean debugMode) throws AlgorithmException {
+    public SleepEvents<Segment> getSleepEvents(final boolean debugMode) throws AlgorithmException {
 
         final ArrayList<InternalScore> fallAsleepScores = new ArrayList<>();
         final ArrayList<InternalScore> wakeUpScores = new ArrayList<>();
@@ -131,18 +131,12 @@ public class MotionScoreAlgorithm {
                     DateTimeZone.forOffsetMillis(outOfBedData.offsetMillis)),
                 outOfBedScore.get().score);
 
-        final ArrayList<Segment> sleepEvents = new ArrayList<>();
         Segment goToBed = new Segment(goToBedScore.get().timestamp, goToBedScore.get().timestamp, goToBedData.offsetMillis);
         Segment sleep = new Segment(fallAsleepScore.get().timestamp, fallAsleepScore.get().timestamp, fallAsleepData.offsetMillis);
         Segment wakeUp = new Segment(wakeUpScore.get().timestamp, wakeUpScore.get().timestamp, wakeUpData.offsetMillis);
         Segment outOfBed = new Segment(outOfBedScore.get().timestamp, outOfBedScore.get().timestamp, outOfBedData.offsetMillis);
 
-        sleepEvents.add(goToBed);
-        sleepEvents.add(sleep);
-        sleepEvents.add(wakeUp);
-        sleepEvents.add(outOfBed);
-
-        return sleepEvents;
+        return SleepEvents.create(goToBed, sleep, wakeUp, outOfBed);
     }
 
     private Optional<AmplitudeData> getDataByTimestamp(final long timestamp, final List<AmplitudeData> feature){

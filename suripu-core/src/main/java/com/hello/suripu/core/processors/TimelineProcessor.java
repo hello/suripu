@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.Segment;
+import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -209,10 +210,10 @@ public class TimelineProcessor {
 
         Optional<Segment> sleepSegmentOptional = Optional.absent();
         Optional<Segment> inBedSegmentOptional = Optional.absent();
-        List<Optional<Event>> sleepEventsFromAlgorithm = new ArrayList<>();
-        for(int i = 0; i < 4; i++){
-            sleepEventsFromAlgorithm.add(Optional.<Event>absent());
-        }
+        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.create(Optional.<Event>absent(),
+                Optional.<Event>absent(),
+                Optional.<Event>absent(),
+                Optional.<Event>absent());
 
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
@@ -224,28 +225,28 @@ public class TimelineProcessor {
                     MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                     MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
                     false);
-
-            for(final Optional<Event> sleepEventOptional:sleepEventsFromAlgorithm){
+            final List<Optional<Event>> eventList = sleepEventsFromAlgorithm.toList();
+            for(final Optional<Event> sleepEventOptional:eventList){
                 if(sleepEventOptional.isPresent()){
                     sleepEvents.add(sleepEventOptional.get());
                     timEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
                 }
             }
 
-            if(sleepEventsFromAlgorithm.get(1).isPresent() && sleepEventsFromAlgorithm.get(2).isPresent()){
-                sleepSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.get(1).get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.get(2).get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.get(2).get().getTimezoneOffset()));
+            if(sleepEventsFromAlgorithm.fallAsleep.isPresent() && sleepEventsFromAlgorithm.wakeUp.isPresent()){
+                sleepSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.fallAsleep.get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.wakeUp.get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.wakeUp.get().getTimezoneOffset()));
 
                 LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
                         new DateTime(sleepSegmentOptional.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegmentOptional.get().getOffsetMillis())),
                         new DateTime(sleepSegmentOptional.get().getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegmentOptional.get().getOffsetMillis())));
             }
 
-            if(sleepEventsFromAlgorithm.get(0).isPresent() && sleepEventsFromAlgorithm.get(3).isPresent()){
-                inBedSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.get(0).get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.get(3).get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.get(3).get().getTimezoneOffset()));
+            if(sleepEventsFromAlgorithm.goToBed.isPresent() && sleepEventsFromAlgorithm.outOfBed.isPresent()){
+                inBedSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.goToBed.get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.outOfBed.get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.outOfBed.get().getTimezoneOffset()));
             }
 
 
@@ -321,12 +322,12 @@ public class TimelineProcessor {
         final List<Event> smoothedEvents = TimelineUtils.smoothEvents(eventsWithSleepEvents);
 
         final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents,
-                                                            sleepEventsFromAlgorithm.get(0),
-                                                            sleepEventsFromAlgorithm.get(3));
+                                                            sleepEventsFromAlgorithm.goToBed,
+                                                            sleepEventsFromAlgorithm.outOfBed);
 
         final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
-                sleepEventsFromAlgorithm.get(0),
-                sleepEventsFromAlgorithm.get(3));
+                sleepEventsFromAlgorithm.goToBed,
+                sleepEventsFromAlgorithm.outOfBed);
 
         List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(greyEvents);
 
@@ -499,7 +500,7 @@ public class TimelineProcessor {
 
 
         /*  This can get overided by the HMM if the feature is enabled */
-        List<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate, trackerMotions, lightOutTimeOptional, wakeUpWaveTimeOptional);
+        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate, trackerMotions, lightOutTimeOptional, wakeUpWaveTimeOptional);
 
         if (hasHmmEnabled) {
             LOGGER.info("Using HMM for account {}",accountId);
@@ -510,26 +511,25 @@ public class TimelineProcessor {
                 final Optional<SleepHmmWithInterpretation.SleepHmmResult> optionalHmmPredictions = hmmOptional.get().getSleepEventsUsingHMM(allSensorSampleList, trackerMotions);
 
                 if (optionalHmmPredictions.isPresent()) {
-                    final List<Optional<Event>> eventsList = new ArrayList<>();
+                    final SleepEvents<Optional<Event>> hmmSleepEvents = SleepEvents.create(optionalHmmPredictions.get().inBed,
+                            optionalHmmPredictions.get().fallAsleep,
+                            optionalHmmPredictions.get().wakeUp,
+                            optionalHmmPredictions.get().outOfBed);
 
-                    eventsList.add(optionalHmmPredictions.get().inBed);
-                    eventsList.add(optionalHmmPredictions.get().fallAsleep);
-                    eventsList.add(optionalHmmPredictions.get().wakeUp);
-                    eventsList.add(optionalHmmPredictions.get().outOfBed);
-
-                    sleepEventsFromAlgorithm = eventsList;
+                    sleepEventsFromAlgorithm = hmmSleepEvents;
                 }
             }
         }
 
-        for(final Optional<Event> sleepEventOptional: sleepEventsFromAlgorithm){
+        final List<Optional<Event>> eventList = sleepEventsFromAlgorithm.toList();
+        for(final Optional<Event> sleepEventOptional: eventList){
             if(sleepEventOptional.isPresent() && !feedbackEvents.containsKey(sleepEventOptional.get().getType())){
                 timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
             }
         }
 
         // PARTNER MOTION
-        final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.get(1), sleepEventsFromAlgorithm.get(2), motionEvents, accountId);
+        final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.fallAsleep, sleepEventsFromAlgorithm.wakeUp, motionEvents, accountId);
         for(PartnerMotionEvent partnerMotionEvent : partnerMotionEvents) {
             timelineEvents.put(partnerMotionEvent.getStartTimestamp(), partnerMotionEvent);
             }
@@ -575,12 +575,12 @@ public class TimelineProcessor {
         final List<Event> smoothedEvents = TimelineUtils.smoothEvents(eventsWithSleepEvents);
 
         final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents,
-                sleepEventsFromAlgorithm.get(0),
-                sleepEventsFromAlgorithm.get(3));
+                sleepEventsFromAlgorithm.goToBed,
+                sleepEventsFromAlgorithm.outOfBed);
 
         final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
-                sleepEventsFromAlgorithm.get(0),
-                sleepEventsFromAlgorithm.get(3));
+                sleepEventsFromAlgorithm.goToBed,
+                sleepEventsFromAlgorithm.outOfBed);
 
         final List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(greyEvents);
 
@@ -665,7 +665,7 @@ public class TimelineProcessor {
     private List<Event> getSoundEvents(final List<Sample> soundSamples,
                                        final List<MotionEvent> motionEvents,
                                        final Optional<DateTime> lightOutTimeOptional,
-                                       final List<Optional<Event>> sleepEventsFromAlgorithm) {
+                                       final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm) {
         if (soundSamples.isEmpty()) {
             return Collections.EMPTY_LIST;
         }
@@ -674,26 +674,26 @@ public class TimelineProcessor {
         Optional<DateTime> optionalSleepTime = Optional.absent();
         Optional<DateTime> optionalAwakeTime = Optional.absent();
 
-        if (sleepEventsFromAlgorithm.get(1).isPresent()) {
+        if (sleepEventsFromAlgorithm.fallAsleep.isPresent()) {
             // sleep time
-            final Event event = sleepEventsFromAlgorithm.get(1).get();
+            final Event event = sleepEventsFromAlgorithm.fallAsleep.get();
             optionalSleepTime = Optional.of(new DateTime(event.getStartTimestamp(),
                     DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
-        } else if (sleepEventsFromAlgorithm.get(0).isPresent()) {
+        } else if (sleepEventsFromAlgorithm.goToBed.isPresent()) {
             // in-bed time
-            final Event event = sleepEventsFromAlgorithm.get(0).get();
+            final Event event = sleepEventsFromAlgorithm.goToBed.get();
             optionalSleepTime = Optional.of(new DateTime(event.getStartTimestamp(),
                     DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
         }
 
-        if (sleepEventsFromAlgorithm.get(2).isPresent()) {
+        if (sleepEventsFromAlgorithm.wakeUp.isPresent()) {
             // awake time
-            final Event event = sleepEventsFromAlgorithm.get(2).get();
+            final Event event = sleepEventsFromAlgorithm.wakeUp.get();
             optionalAwakeTime = Optional.of(new DateTime(event.getStartTimestamp(),
                     DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
-        } else if (sleepEventsFromAlgorithm.get(3).isPresent()) {
+        } else if (sleepEventsFromAlgorithm.outOfBed.isPresent()) {
             // out-of-bed time
-            final Event event = sleepEventsFromAlgorithm.get(2).get();
+            final Event event = sleepEventsFromAlgorithm.outOfBed.get();
             optionalAwakeTime = Optional.of(new DateTime(event.getStartTimestamp(),
                     DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
         }
@@ -716,13 +716,13 @@ public class TimelineProcessor {
      * @param wakeUpWaveTimeOptional
      * @return
      */
-    private List<Optional<Event>> fromAlgorithm(final DateTime targetDate, final List<TrackerMotion> trackerMotions, final Optional<DateTime> lightOutTimeOptional, final Optional<DateTime> wakeUpWaveTimeOptional) {
+    private SleepEvents<Optional<Event>> fromAlgorithm(final DateTime targetDate, final List<TrackerMotion> trackerMotions, final Optional<DateTime> lightOutTimeOptional, final Optional<DateTime> wakeUpWaveTimeOptional) {
         Optional<Segment> sleepSegmentOptional;
         Optional<Segment> inBedSegmentOptional = Optional.absent();
-        List<Optional<Event>> sleepEventsFromAlgorithm = new ArrayList<>();
-        for(int i = 0; i < 4; i++){
-            sleepEventsFromAlgorithm.add(Optional.<Event>absent());
-        }
+        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.create(Optional.<Event>absent(),
+                Optional.<Event>absent(),
+                Optional.<Event>absent(),
+                Optional.<Event>absent());
 
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
@@ -737,20 +737,20 @@ public class TimelineProcessor {
 
 
 
-            if(sleepEventsFromAlgorithm.get(1).isPresent() && sleepEventsFromAlgorithm.get(2).isPresent()){
-                sleepSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.get(1).get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.get(2).get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.get(2).get().getTimezoneOffset()));
+            if(sleepEventsFromAlgorithm.fallAsleep.isPresent() && sleepEventsFromAlgorithm.wakeUp.isPresent()){
+                sleepSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.fallAsleep.get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.wakeUp.get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.wakeUp.get().getTimezoneOffset()));
 
                 LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
                         new DateTime(sleepSegmentOptional.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegmentOptional.get().getOffsetMillis())),
                         new DateTime(sleepSegmentOptional.get().getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegmentOptional.get().getOffsetMillis())));
             }
 
-            if(sleepEventsFromAlgorithm.get(0).isPresent() && sleepEventsFromAlgorithm.get(3).isPresent()){
-                inBedSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.get(0).get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.get(3).get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.get(3).get().getTimezoneOffset()));
+            if(sleepEventsFromAlgorithm.goToBed.isPresent() && sleepEventsFromAlgorithm.outOfBed.isPresent()){
+                inBedSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.goToBed.get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.outOfBed.get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.outOfBed.get().getTimezoneOffset()));
                 LOGGER.info("In Bed Time From Awake Detection Algorithm: {} - {}",
                         new DateTime(inBedSegmentOptional.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(inBedSegmentOptional.get().getOffsetMillis())),
                         new DateTime(inBedSegmentOptional.get().getEndTimestamp(), DateTimeZone.forOffsetMillis(inBedSegmentOptional.get().getOffsetMillis())));
