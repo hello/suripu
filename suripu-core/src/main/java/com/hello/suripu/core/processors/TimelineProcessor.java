@@ -785,7 +785,7 @@ public class TimelineProcessor {
         final String targetDateString = DateTimeUtil.dateToYmdString(targetDate);
 
         final AggregateScore targetDateScore = this.aggregateSleepScoreDAODynamoDB.getSingleScore(accountId, targetDateString);
-        Integer sleepScore = 0; // targetDateScore.score;
+        Integer sleepScore = targetDateScore.score;
 
         if (sleepScore == 0) {
             // score may not have been computed yet, recompute
