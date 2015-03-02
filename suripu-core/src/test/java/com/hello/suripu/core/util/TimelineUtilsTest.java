@@ -376,7 +376,7 @@ public class TimelineUtilsTest {
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
-                true);
+                true).toList();
 //        final FallingAsleepEvent sleepSegment = (FallingAsleepEvent) sleepEvents.get(1).get();
 //        final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
 
@@ -436,7 +436,7 @@ public class TimelineUtilsTest {
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
-                true);
+                true).toList();
         final FallingAsleepEvent sleepSegment = (FallingAsleepEvent) sleepEvents.get(1).get();
         final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
         final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2).get();
@@ -487,7 +487,7 @@ public class TimelineUtilsTest {
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
-                true);
+                true).toList();
 
         final FallingAsleepEvent sleepSegment = (FallingAsleepEvent) sleepEvents.get(1).get();
         final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
@@ -544,7 +544,7 @@ public class TimelineUtilsTest {
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
-                true);
+                true).toList();
 
         final FallingAsleepEvent sleepSegment = (FallingAsleepEvent) sleepEvents.get(1).get();
         final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
@@ -605,7 +605,7 @@ public class TimelineUtilsTest {
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
-                true);
+                true).toList();
 
         final FallingAsleepEvent sleepSegment = (FallingAsleepEvent) sleepEvents.get(1).get();
         final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
@@ -662,7 +662,7 @@ public class TimelineUtilsTest {
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
-                true);
+                true).toList();
         final FallingAsleepEvent sleepSegment = (FallingAsleepEvent) sleepEvents.get(1).get();
         final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
         final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2).get();
@@ -719,7 +719,7 @@ public class TimelineUtilsTest {
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
-                true);
+                true).toList();
 
         final FallingAsleepEvent sleepSegment = (FallingAsleepEvent) sleepEvents.get(1).get();
         final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
@@ -769,7 +769,7 @@ public class TimelineUtilsTest {
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
-                true);
+                true).toList();
 
 //        final FallingAsleepEvent sleepSegment = (FallingAsleepEvent) sleepEvents.get(1).get();
         //final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
@@ -822,7 +822,7 @@ public class TimelineUtilsTest {
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
-                true);
+                true).toList();
 
         final FallingAsleepEvent sleepSegment = (FallingAsleepEvent) sleepEvents.get(1).get();
         final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
@@ -873,7 +873,7 @@ public class TimelineUtilsTest {
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
-                true);
+                true).toList();
 
         //final FallingAsleepEvent sleepSegment = (FallingAsleepEvent) sleepEvents.get(1).get();
         //final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();

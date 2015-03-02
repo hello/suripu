@@ -62,10 +62,10 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
-    @JsonProperty("ring_time_db")
-    private DynamoDBConfiguration ringTimeDBConfiguration;
-    public DynamoDBConfiguration getRingTimeDBConfiguration(){
-        return this.ringTimeDBConfiguration;
+    @JsonProperty("ring_history_db")
+    private DynamoDBConfiguration ringTimeHistoryDBConfiguration;
+    public DynamoDBConfiguration getRingTimeHistoryDBConfiguration(){
+        return this.ringTimeHistoryDBConfiguration;
     }
 
     @Valid
@@ -151,5 +151,24 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
     private Integer lastProcessTime;
     public Integer getLastProcessTime(){
         return this.lastProcessTime;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("sleephmm_db")
+    private DynamoDBConfiguration sleepHmmDBConfiguration;
+    public DynamoDBConfiguration getSleepHmmDBConfiguration(){
+        return this.sleepHmmDBConfiguration;
+    }
+
+
+    @Valid
+    @NotNull
+    @Min(1)
+    @Max(100)
+    @JsonProperty("max_cache_refresh_days")
+    private int maxCacheRefreshDay;
+    public Integer getMaxCacheRefreshDay(){
+        return this.maxCacheRefreshDay;
     }
 }

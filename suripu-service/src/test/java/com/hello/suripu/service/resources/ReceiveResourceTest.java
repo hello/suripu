@@ -17,7 +17,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class ReceiveResourceTest {
 
     @Test
-    public void testcomputeNextUploadInterval(){
+    public void testComputeNextUploadInterval(){
         final SenseUploadConfiguration senseUploadConfiguration = new SenseUploadConfiguration();
         final long actualRingTime = DateTime.now().plusMinutes(3).withSecondOfMinute(0).withMillisOfSecond(0).getMillis();
 
@@ -25,6 +25,18 @@ public class ReceiveResourceTest {
         final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now(), senseUploadConfiguration);
         assertThat(uploadCycle, is(1));
 
+    }
+
+    @Test
+    public void testShouldWriteRingHistory(){
+        final DateTime now = DateTime.now();
+        final DateTime actualRingTime = now.plusMinutes(2);
+        final DateTime expectedRingTime = now.plusMinutes(3);
+        final RingTime ringTime = new RingTime(actualRingTime.getMillis(), expectedRingTime.getMillis(), new long[0], true);
+
+        assertThat(ReceiveResource.shouldWriteRingTimeHistory(now, ringTime, 3), is(true));
+        assertThat(ReceiveResource.shouldWriteRingTimeHistory(now, ringTime, 1), is(false));
+        assertThat(ReceiveResource.shouldWriteRingTimeHistory(now.plusMinutes(5), ringTime, 1), is(false));
     }
 
 

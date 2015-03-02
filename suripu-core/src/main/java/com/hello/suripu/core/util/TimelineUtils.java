@@ -10,13 +10,13 @@ import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sensordata.LightEventsDetector;
 import com.hello.suripu.algorithm.sensordata.SoundEventsDetector;
 import com.hello.suripu.algorithm.sleep.MotionScoreAlgorithm;
+import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.sleep.scores.AmplitudeDataScoringFunction;
-import com.hello.suripu.algorithm.sleep.scores.ZeroToMaxMotionCountDurationScoreFunction;
 import com.hello.suripu.algorithm.sleep.scores.LightOutCumulatedMotionMixScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.LightOutScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.MotionDensityScoringFunction;
-import com.hello.suripu.algorithm.sleep.scores.SleepDataScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.WaveAccumulateMotionScoreFunction;
+import com.hello.suripu.algorithm.sleep.scores.ZeroToMaxMotionCountDurationScoreFunction;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.CurrentRoomState;
@@ -1029,7 +1029,7 @@ public class TimelineUtils {
         return events;
     }
 
-    public static List<Optional<Event>> getSleepEvents(final DateTime targetDateLocalUTC,
+    public static SleepEvents<Optional<Event>> getSleepEvents(final DateTime targetDateLocalUTC,
                                          final List<TrackerMotion> trackerMotions,
                                          final Optional<DateTime> lightOutTimeOptional,
                                          final Optional<DateTime> firstWaveTimeOptional,
@@ -1047,21 +1047,11 @@ public class TimelineUtils {
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures = MotionFeatures.aggregateData(motionFeatures, smoothWindowSizeInMinutes);
         LOGGER.info("smoothed data size {}", aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE).size());
 
-        final ArrayList<SleepDataScoringFunction> scoringFunctions = new ArrayList<>();
-
-        int featureDimension = 1;
-
-        final Map<Long, List<AmplitudeData>> matrix = MotionScoreAlgorithm.createFeatureMatrix(aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE));
-        scoringFunctions.add(new AmplitudeDataScoringFunction());
-
-        featureDimension = MotionScoreAlgorithm.addToFeatureMatrix(matrix, aggregatedFeatures.get(MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE));
-        scoringFunctions.add(new MotionDensityScoringFunction(MotionDensityScoringFunction.ScoreType.SLEEP));
-
-        featureDimension = MotionScoreAlgorithm.addToFeatureMatrix(matrix, aggregatedFeatures.get(MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE));
-        scoringFunctions.add(new MotionDensityScoringFunction(MotionDensityScoringFunction.ScoreType.WAKE_UP));
-
-        featureDimension = MotionScoreAlgorithm.addToFeatureMatrix(matrix, aggregatedFeatures.get(MotionFeatures.FeatureType.ZERO_TO_MAX_MOTION_COUNT_DURATION));
-        scoringFunctions.add(new ZeroToMaxMotionCountDurationScoreFunction());
+        final MotionScoreAlgorithm sleepDetectionAlgorithm = new MotionScoreAlgorithm();
+        sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE), new AmplitudeDataScoringFunction());
+        sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE), new MotionDensityScoringFunction(MotionDensityScoringFunction.ScoreType.SLEEP));
+        sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE), new MotionDensityScoringFunction(MotionDensityScoringFunction.ScoreType.WAKE_UP));
+        sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.ZERO_TO_MAX_MOTION_COUNT_DURATION), new ZeroToMaxMotionCountDurationScoreFunction());
 
         if(lightOutTimeOptional.isPresent()) {
             final LinkedList<AmplitudeData> lightFeature = new LinkedList<>();
@@ -1070,13 +1060,11 @@ public class TimelineUtils {
                 lightFeature.add(new AmplitudeData(amplitudeData.timestamp, 0, amplitudeData.offsetMillis));
 
             }
-            featureDimension = MotionScoreAlgorithm.addToFeatureMatrix(matrix, lightFeature);
-
             if(dataWithGapFilled.size() > 0) {
                 LOGGER.info("Light out time {}", lightOutTimeOptional.get()
                         .withZone(DateTimeZone.forOffsetMillis(dataWithGapFilled.get(0).offsetMillis)));
             }
-            scoringFunctions.add(new LightOutScoringFunction(lightOutTimeOptional.get(), 3d));
+            sleepDetectionAlgorithm.addFeature(lightFeature, new LightOutScoringFunction(lightOutTimeOptional.get(), 3d));
 
             final LinkedList<AmplitudeData> lightAndCumulatedMotionFeature = new LinkedList<>();
             for (final AmplitudeData amplitudeData : aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_MOTION_PERIOD)) {
@@ -1086,8 +1074,7 @@ public class TimelineUtils {
                         amplitudeData.offsetMillis));
 
             }
-            featureDimension = MotionScoreAlgorithm.addToFeatureMatrix(matrix, lightAndCumulatedMotionFeature);
-            scoringFunctions.add(new LightOutCumulatedMotionMixScoringFunction(lightOutTimeOptional.get()));
+            sleepDetectionAlgorithm.addFeature(lightAndCumulatedMotionFeature, new LightOutCumulatedMotionMixScoringFunction(lightOutTimeOptional.get()));
         }
 
         if(firstWaveTimeOptional.isPresent()) {
@@ -1099,38 +1086,33 @@ public class TimelineUtils {
                         amplitudeData.offsetMillis));
 
             }
-            featureDimension = MotionScoreAlgorithm.addToFeatureMatrix(matrix, waveAndCumulatedMotionFeature);
-            scoringFunctions.add(new WaveAccumulateMotionScoreFunction(firstWaveTimeOptional.get()));
+            sleepDetectionAlgorithm.addFeature(waveAndCumulatedMotionFeature, new WaveAccumulateMotionScoreFunction(firstWaveTimeOptional.get()));
         }
 
-        final MotionScoreAlgorithm sleepDetectionAlgorithm = new MotionScoreAlgorithm(matrix,
-                featureDimension,  // modality
-                aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE).size(),  // num of data.
-                scoringFunctions);
-
-        final List<Segment> segments = sleepDetectionAlgorithm.getSleepEvents(debugMode);
-        final ArrayList<Event> events = new ArrayList<>();
-        final Segment goToBedSegment = segments.get(0);
-        final Segment fallAsleepSegment = segments.get(1);
-        final Segment wakeUpSegment = segments.get(2);
-        final Segment outOfBedSegment = segments.get(3);
+        final SleepEvents<Segment> segments = sleepDetectionAlgorithm.getSleepEvents(debugMode);
+        final Segment goToBedSegment = segments.goToBed;
+        final Segment fallAsleepSegment = segments.fallAsleep;
+        final Segment wakeUpSegment = segments.wakeUp;
+        final Segment outOfBedSegment = segments.outOfBed;
 
         //final int smoothWindowSizeInMillis = smoothWindowSizeInMinutes * DateTimeConstants.MILLIS_PER_MINUTE;
-        events.add(new InBedEvent(goToBedSegment.getStartTimestamp(),
+        final Event inBedEvent = new InBedEvent(goToBedSegment.getStartTimestamp(),
                 goToBedSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
-                goToBedSegment.getOffsetMillis()));
+                goToBedSegment.getOffsetMillis());
 
-        events.add(new FallingAsleepEvent(fallAsleepSegment.getStartTimestamp(),
+        final Event fallAsleepEvent = new FallingAsleepEvent(fallAsleepSegment.getStartTimestamp(),
                 fallAsleepSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
-                fallAsleepSegment.getOffsetMillis()));
+                fallAsleepSegment.getOffsetMillis());
 
-        events.add(new WakeupEvent(wakeUpSegment.getStartTimestamp(),
+        final Event wakeUpEvent = new WakeupEvent(wakeUpSegment.getStartTimestamp(),
                 wakeUpSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
-                wakeUpSegment.getOffsetMillis()));
+                wakeUpSegment.getOffsetMillis());
 
-        events.add(new OutOfBedEvent(outOfBedSegment.getStartTimestamp(),
+        final Event outOfBedEvent = new OutOfBedEvent(outOfBedSegment.getStartTimestamp(),
                 outOfBedSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
-                outOfBedSegment.getOffsetMillis()));
+                outOfBedSegment.getOffsetMillis());
+
+        final SleepEvents<Event> events = SleepEvents.create(inBedEvent, fallAsleepEvent, wakeUpEvent, outOfBedEvent);
 
         return SleepEventSafeGuard.sleepEventsHeuristicFix(events, aggregatedFeatures);
 
@@ -1144,37 +1126,40 @@ public class TimelineUtils {
     /**
      * Returns a list of Alarm Events containing alarms within the window and that have rang.
      * @param ringTimes
-     * @param evening
-     * @param morning
+     * @param queryStartTime
+     * @param queryEndTime
      * @param offsetMillis
      * @return
      */
-    public static List<Event> getAlarmEvents(final List<RingTime> ringTimes, final DateTime evening, final DateTime morning, final Integer offsetMillis, final DateTime nowInUTC) {
+    public static List<Event> getAlarmEvents(final List<RingTime> ringTimes, final DateTime queryStartTime, final DateTime queryEndTime, final Integer offsetMillis, final DateTime nowInUTC) {
         final List<Event> events = Lists.newArrayList();
-        final DateTime localMorning = new DateTime(morning.getMillis(), DateTimeZone.UTC);
+
         for(final RingTime ringTime : ringTimes) {
-            final DateTime alarmLocalTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC).plusMillis(offsetMillis).plusMinutes(1);
+            if(ringTime.isEmpty()){
+                continue;
+            }
+            
+            final DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC);
 
             final DateTime localNow = nowInUTC.plusMillis(offsetMillis);
-            final Long diffInMillis = localNow.getMillis() - alarmLocalTime.getMillis();
-            if(diffInMillis < 0) {
+            if(actualRingTime.isAfter(nowInUTC)) {
                 LOGGER.debug("{} is in the future. It is now {}", ringTime, localNow);
                 continue;
             }
 
-            if(ringTime.expectedRingTimeUTC > evening.getMillis() && alarmLocalTime .getMillis() < localMorning.getMillis()) {
+            if(ringTime.actualRingTimeUTC >= queryStartTime.getMillis() && ringTime.actualRingTimeUTC <= queryEndTime.getMillis()) {
                 LOGGER.debug("{} is valid. Adding to list", ringTime);
 
-                final DateTime alarmRingLocalTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC).plusMillis(offsetMillis);
-                final String ringTimeString = alarmRingLocalTime.toString(DateTimeFormat.forPattern("HH:mm"));
+                final DateTime actualRingLocalUTC = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.UTC).plusMillis(offsetMillis);
+                final String ringTimeString = actualRingLocalUTC.toString(DateTimeFormat.forPattern("HH:mm"));
                 String message = String.format(English.ALARM_NORMAL_MESSAGE, ringTimeString);
 
                 if (ringTime.fromSmartAlarm) {
-                    final DateTime alarmSetLocalTime = new DateTime(ringTime.expectedRingTimeUTC, DateTimeZone.UTC).plusMillis(offsetMillis);
-                    if (alarmRingLocalTime.equals(alarmSetLocalTime)) {
+                    final DateTime alarmSetLocalUTC = new DateTime(ringTime.expectedRingTimeUTC, DateTimeZone.UTC).plusMillis(offsetMillis);
+                    if (actualRingLocalUTC.equals(alarmSetLocalUTC)) {
                         message = String.format(English.ALARM_NOT_SO_SMART_MESSAGE, ringTimeString);
                     } else {
-                        final String setTimeString = alarmSetLocalTime.toString(DateTimeFormat.forPattern("HH:mm"));
+                        final String setTimeString = alarmSetLocalUTC.toString(DateTimeFormat.forPattern("HH:mm"));
                         message = String.format(English.ALARM_SMART_MESSAGE, ringTimeString, setTimeString);
                     }
                 }

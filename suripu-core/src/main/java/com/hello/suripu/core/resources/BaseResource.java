@@ -46,4 +46,8 @@ public class BaseResource {
         return featureFlipper.userFeatureActive(FeatureFlipper.IN_OUT_BED_EVENTS, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasHmmEnabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.HMM_ALGORITHM, accountId, Collections.EMPTY_LIST);
+    }
+
 }

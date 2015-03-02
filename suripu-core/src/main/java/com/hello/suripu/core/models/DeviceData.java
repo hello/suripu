@@ -43,6 +43,9 @@ public class DeviceData {
     @JsonProperty("ambient_light")
     public final int ambientLight;  // raw counts when inserting to DB, lux when retrieved from DB
 
+    @JsonIgnore
+    public final float ambientLightFloat; //for internal use only; use as directed.  If symptoms persist for more than one day, consult a doctor.
+
     @JsonProperty("ambient_light_variance")
     public final int ambientLightVariance;
 
@@ -84,6 +87,7 @@ public class DeviceData {
             final int ambientDustMin,
             final int ambientDustMax,
             final int ambientLight,
+            final float ambientLightFloat,
             final int ambientLightVariance,
             final int ambientLightPeakiness,
             final DateTime dateTimeUTC,
@@ -104,6 +108,7 @@ public class DeviceData {
         this.ambientDustMin = ambientDustMin;
         this.ambientDustMax = ambientDustMax;
         this.ambientLight = ambientLight;
+        this.ambientLightFloat = ambientLightFloat;
         this.dateTimeUTC = dateTimeUTC;
         this.ambientLightVariance = ambientLightVariance;
         this.ambientLightPeakiness = ambientLightPeakiness;
@@ -134,6 +139,7 @@ public class DeviceData {
         private int ambientDustMin;
         private int ambientDustMax;
         private int ambientLight;
+        private float ambientLightFloat;
         private int ambientLightVariance;
         private int ambientLightPeakiness;
         private DateTime dateTimeUTC;
@@ -196,6 +202,11 @@ public class DeviceData {
             return this;
         }
 
+        public Builder withAmbientLightFloat(final float ambientLightFloat){
+            this.ambientLightFloat = ambientLightFloat;
+            return this;
+        }
+
         public Builder withAmbientLightVariance(final int ambientLightVariance){
             this.ambientLightVariance = ambientLightVariance;
             return this;
@@ -251,7 +262,7 @@ public class DeviceData {
         public DeviceData build(){
             return new DeviceData(this.accountId, this.deviceId, this.ambientTemperature, this.ambientHumidity,
                     this.ambientAirQuality, this.ambientAirQualityRaw, this.ambientDustVariance, this.ambientDustMin, this.ambientDustMax,
-                    this.ambientLight, this.ambientLightVariance, this.ambientLightPeakiness, this.dateTimeUTC, this.offsetMillis,
+                    this.ambientLight,this.ambientLightFloat, this.ambientLightVariance, this.ambientLightPeakiness, this.dateTimeUTC, this.offsetMillis,
                     this.firmwareVersion, this.waveCount, this.holdCount,
                     this.audioNumDisturbances, this.audioPeakDisturbancesDB, this.audioPeakBackgroundDB);
         }

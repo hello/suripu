@@ -45,23 +45,13 @@ public class AmplitudeDataScoringFunction implements SleepDataScoringFunction<Am
         final HashMap<AmplitudeData, EventScores> pdf = new HashMap<>();
 
         for(final AmplitudeData datum:data){
-            final double motionScore = amplitudeScoringFunction.getScore((long)datum.amplitude, amplitudePDF);
-            final double goToBedTimeScore = goToBedTimeScoreFunction.getScore(datum.timestamp, goToBedTimePDF);
-            final double outOfBedTimeScore = wakeUpTimeScoreFunction.getScore(datum.timestamp, outOfBedTimePDF);
+            final double motionScore = amplitudePDF.get((long) datum.amplitude);
+            final double goToBedTimeScore = goToBedTimePDF.get(datum.timestamp);
+            final double outOfBedTimeScore = outOfBedTimePDF.get(datum.timestamp);
 
             pdf.put(datum, new EventScores(1d, 1d, goToBedTimeScore * Math.pow(motionScore, this.motionMaxPower),
                     outOfBedTimeScore * Math.pow(motionScore, this.motionMaxPower)));
         }
         return pdf;
-    }
-
-    @Override
-    public EventScores getScore(final AmplitudeData data, final Map<AmplitudeData, EventScores> pdf) {
-        if(pdf.containsKey(data)){
-            return pdf.get(data);
-        }
-
-        // Not found, keep fall asleep score as it is, ground the wake up and go to bed scores.
-        return new EventScores(1d, 1d, 0d, 0d);
     }
 }

@@ -25,7 +25,6 @@ import com.hello.suripu.app.resources.v1.DataScienceResource;
 import com.hello.suripu.app.resources.v1.DeviceResources;
 import com.hello.suripu.app.resources.v1.FeaturesResource;
 import com.hello.suripu.app.resources.v1.FeedbackResource;
-import com.hello.suripu.app.resources.v1.FirmwareResource;
 import com.hello.suripu.app.resources.v1.InsightsResource;
 import com.hello.suripu.app.resources.v1.MobilePushRegistrationResource;
 import com.hello.suripu.app.resources.v1.OAuthResource;
@@ -58,7 +57,8 @@ import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.QuestionResponseDAO;
-import com.hello.suripu.core.db.RingTimeDAODynamoDB;
+import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TeamStore;
@@ -69,8 +69,6 @@ import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.filters.CacheFilterFactory;
-import com.hello.suripu.core.firmware.FirmwareUpdateDAO;
-import com.hello.suripu.core.firmware.FirmwareUpdateStore;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
@@ -92,7 +90,6 @@ import com.hello.suripu.core.provision.PillProvisionDAO;
 import com.hello.suripu.core.util.CustomJSONExceptionMapper;
 import com.hello.suripu.core.util.DropwizardServiceUtil;
 import com.hello.suripu.core.util.KeyStoreUtils;
-import com.hello.suripu.core.util.SunData;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -111,7 +108,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisPool;
 
-import java.net.InetAddress;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
@@ -186,17 +182,21 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
         final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
 
-        final AmazonDynamoDB eventDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getEventDBConfiguration().getEndpoint());
+
 
         final AmazonSNSClient snsClient = new AmazonSNSClient(awsCredentialsProvider, clientConfiguration);
         final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider, clientConfiguration);
 
         final AmazonS3 amazonS3 = new AmazonS3Client(awsCredentialsProvider, clientConfiguration);
 
-        final String eventTableName = configuration.getEventDBConfiguration().getTableName();
+        final AmazonDynamoDB timelineDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTimelineDBConfiguration().getEndpoint());
+        final TimelineDAODynamoDB timelineDAODynamoDB = new TimelineDAODynamoDB(timelineDynamoDBClient,
+                configuration.getTimelineDBConfiguration().getTableName(),
+                configuration.getMaxCacheRefreshDay());
 
-        final TimelineDAODynamoDB timelineDAODynamoDB = new TimelineDAODynamoDB(eventDynamoDBClient, eventTableName);
-
+        final AmazonDynamoDB sleepHmmDynamoDbClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepHmmDBConfiguration().getEndpoint());
+        final String sleepHmmTableName = configuration.getSleepHmmDBConfiguration().getTableName();
+        final SleepHmmDAODynamoDB sleepHmmDAODynamoDB = new SleepHmmDAODynamoDB(sleepHmmDynamoDbClient,sleepHmmTableName);
         final AmazonDynamoDB alarmDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getAlarmDBConfiguration().getEndpoint());
         final AlarmDAODynamoDB alarmDAODynamoDB = new AlarmDAODynamoDB(
                 alarmDynamoDBClient, configuration.getAlarmDBConfiguration().getTableName()
@@ -227,8 +227,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final JedisPool jedisPool = new JedisPool("localhost", 6379);
         final ImmutableMap<String, String> arns = ImmutableMap.copyOf(configuration.getPushNotificationsConfiguration().getArns());
 
-        final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getRingTimeDBConfiguration().getEndpoint());
-        final RingTimeDAODynamoDB ringTimeDAODynamoDB = new RingTimeDAODynamoDB(ringTimeDynamoDBClient, configuration.getRingTimeDBConfiguration().getTableName());
+        final AmazonDynamoDB ringTimeHistoryDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getRingTimeHistoryDBConfiguration().getEndpoint());
+        final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(ringTimeHistoryDynamoDBClient,
+                configuration.getRingTimeHistoryDBConfiguration().getTableName());
 
         final NotificationSubscriptionDAOWrapper notificationSubscriptionDAOWrapper = NotificationSubscriptionDAOWrapper.create(
                 notificationSubscriptionsDAO,
@@ -251,9 +252,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
             final Integer interval = configuration.getGraphite().getReportingIntervalInSeconds();
 
             final String env = (configuration.getDebug()) ? "dev" : "prod";
-            final String hostName = InetAddress.getLocalHost().getHostName();
 
-            final String prefix = String.format("%s.%s.%s", apiKey, env, hostName);
+            final String prefix = String.format("%s.%s.%s", apiKey, env, "suripu-app");
 
             final List<String> metrics = configuration.getGraphite().getIncludeMetrics();
             final RegexMetricPredicate predicate = new RegexMetricPredicate(metrics);
@@ -313,10 +313,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addResource(new ScoresResource(trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), configuration.getSleepScoreVersion()));
 
-        final SunData sunData = new SunData();
         final TimelineProcessor timelineProcessor = new TimelineProcessor(
                 trackerMotionDAO,
-                accountDAO,
                 deviceDAO,
                 deviceDataDAO,
                 sleepLabelDAO,
@@ -324,11 +322,11 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 trendsInsightsDAO,
                 aggregateSleepScoreDAODynamoDB,
                 configuration.getScoreThreshold(),
-                sunData,
-                amazonS3,
-                "hello-audio",
-                ringTimeDAODynamoDB,
-                feedbackDAO);
+                ringTimeHistoryDAODynamoDB,
+                feedbackDAO,
+                timelineDAODynamoDB,
+                sleepHmmDAODynamoDB,
+                accountDAO);
 
         environment.addResource(new TimelineResource(accountDAO, timelineProcessor));
 
@@ -341,7 +339,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new QuestionsResource(accountDAO, questionResponseDAO, timeZoneHistoryDAODynamoDB, configuration.getQuestionConfigs().getNumSkips()));
         environment.addResource(new InsightsResource(accountDAO, trendsInsightsDAO, aggregateSleepScoreDAODynamoDB, trackerMotionDAO, insightsDAODynamoDB));
         environment.addResource(new TeamsResource(teamStore));
-        environment.addResource(new FeedbackResource(feedbackDAO));
+        environment.addResource(new FeedbackResource(feedbackDAO, timelineDAODynamoDB));
         environment.addResource(new AppCheckinResource(false, "")); // TODO: replace this with real app version. Maybe move it to admin tool?
 
         // data science resource stuff
@@ -353,11 +351,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AmazonDynamoDB prefsClient = dynamoDBClientFactory.getForEndpoint(configuration.getPreferencesDBConfiguration().getEndpoint());
         final AccountPreferencesDAO accountPreferencesDAO = AccountPreferencesDynamoDB.create(prefsClient, configuration.getPreferencesDBConfiguration().getTableName());
         environment.addResource(new AccountPreferencesResource(accountPreferencesDAO));
-
-        final FirmwareUpdateDAO firmwareUpdateDAO = commonDB.onDemand(FirmwareUpdateDAO.class);
-        final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);
-        final FirmwareUpdateStore firmwareUpdateStore = FirmwareUpdateStore.create(firmwareUpdateDAO, s3Client, "hello-firmware");
-        environment.addResource(new FirmwareResource(firmwareUpdateStore, "hello-firmware", amazonS3)); // TODO: move logic from resource to FirmwareUpdateStore
 
         final InsightProcessor.Builder insightBuilder = new InsightProcessor.Builder()
                 .withSenseDAOs(deviceDataDAO, deviceDAO)

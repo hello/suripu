@@ -8,8 +8,11 @@ import com.hello.suripu.core.models.CurrentRoomState;
  */
 public class RoomConditionUtil {
     private static final int FULL_SCORE = 100;
-    private static final int WARNING_SCORE = 70;
-    private static final int BAD_SCORE = 30;
+    private static final int WARNING_SCORE = 60;
+    private static final int BAD_SCORE = 10;
+
+    private static final int WARNING_PERCENTAGE = 75;
+    private static final int BAD_PERCENTAGE = 30;
 
     public static CurrentRoomState.State.Condition getGeneralRoomCondition(final CurrentRoomState currentRoomState) {
         float totalScore = 3 * 100;  // Temp, humid, dust
@@ -28,9 +31,9 @@ public class RoomConditionUtil {
         currentScore += BAD_SCORE * getAlertCountFromSate(currentRoomState.temperature);
 
         float percentage = currentScore / totalScore * 100;
-        if(percentage > WARNING_SCORE){
+        if(percentage > WARNING_PERCENTAGE){
             return CurrentRoomState.State.Condition.IDEAL;
-        }else if(percentage > BAD_SCORE){
+        }else if(percentage > BAD_PERCENTAGE){
             return CurrentRoomState.State.Condition.WARNING;
         }else{
             return CurrentRoomState.State.Condition.ALERT;

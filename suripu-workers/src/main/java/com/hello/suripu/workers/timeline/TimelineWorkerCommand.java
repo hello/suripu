@@ -22,7 +22,8 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.RingTimeDAODynamoDB;
+import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
@@ -31,7 +32,6 @@ import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.processors.TimelineProcessor;
-import com.hello.suripu.core.util.SunData;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -111,12 +111,16 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
                 configuration.getUserInfoDynamoDBConfiguration().getTableName());
 
 
-        final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getRingTimeDBConfiguration().getEndpoint());
-        final RingTimeDAODynamoDB ringTimeDAODynamoDB = new RingTimeDAODynamoDB(ringTimeDynamoDBClient, configuration.getRingTimeDBConfiguration().getTableName());
+        final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getRingTimeHistoryDBConfiguration().getEndpoint());
+        final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(ringTimeDynamoDBClient, configuration.getRingTimeHistoryDBConfiguration().getTableName());
 
         final AmazonDynamoDB featureDynamoDB = dynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
         final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
         final FeatureStore featureStore = new FeatureStore(featureDynamoDB, "features", featureNamespace);
+
+        final AmazonDynamoDB sleepHmmDynamoDbClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepHmmDBConfiguration().getEndpoint());
+        final String sleepHmmTableName = configuration.getSleepHmmDBConfiguration().getTableName();
+        final SleepHmmDAODynamoDB sleepHmmDAODynamoDB = new SleepHmmDAODynamoDB(sleepHmmDynamoDbClient,sleepHmmTableName);
 
         final AmazonDynamoDB dynamoDBScoreClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepScoreDBConfiguration().getEndpoint());
         final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB = new AggregateSleepScoreDAODynamoDB(
@@ -128,21 +132,22 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
         final AmazonDynamoDB dynamoDBTimelineClient = dynamoDBClientFactory.getForEndpoint(configuration.getTimelineDBConfiguration().getEndpoint());
         final TimelineDAODynamoDB timelineDAODynamoDB = new TimelineDAODynamoDB(
                 dynamoDBTimelineClient,
-                configuration.getTimelineDBConfiguration().getTableName());
+                configuration.getTimelineDBConfiguration().getTableName(),
+                configuration.getMaxCacheRefreshDay());
 
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
         final TimelineProcessor timelineProcessor = new TimelineProcessor(trackerMotionDAO,
-                accountDAO, deviceDAO, deviceDataDAO,
+                deviceDAO, deviceDataDAO,
                 sleepLabelDAO, sleepScoreDAO, trendsInsightsDAO,
                 aggregateSleepScoreDAODynamoDB,
                 configuration.getScoreThreshold(),
-                new SunData(),
-                amazonS3,
-                "hello-audio",
-                ringTimeDAODynamoDB,
-                feedbackDAO);
+                ringTimeHistoryDAODynamoDB,
+                feedbackDAO,
+                timelineDAODynamoDB,
+                sleepHmmDAODynamoDB,
+                accountDAO);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
@@ -165,7 +170,7 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
         final IRecordProcessorFactory factory = new TimelineRecordProcessorFactory(timelineProcessor,
                 deviceDAO,
                 mergedUserInfoDynamoDB,
-                ringTimeDAODynamoDB,
+                ringTimeHistoryDAODynamoDB,
                 timelineDAODynamoDB,
                 configuration);
         final Worker worker = new Worker(factory, kinesisConfig);

@@ -1,20 +1,23 @@
 package com.hello.suripu.core.processors;
 
-import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.Segment;
+import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
-import com.hello.suripu.core.db.RingTimeDAODynamoDB;
+import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
+import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.Account;
@@ -36,12 +39,11 @@ import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
+import com.hello.suripu.core.util.PartnerDataUtils;
+import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import com.hello.suripu.core.util.SleepScoreUtils;
-import com.hello.suripu.core.util.SunData;
 import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineUtils;
-import com.yammer.metrics.Metrics;
-import com.yammer.metrics.core.Histogram;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -57,9 +59,9 @@ import java.util.Map;
 
 public class TimelineProcessor {
 
+    public static final String VERSION = "0.0.1";
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineProcessor.class);
     private static final Integer MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES = 3 * 60;
-    private final AccountDAO accountDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDAO deviceDAO;
     private final DeviceDataDAO deviceDataDAO;
@@ -68,15 +70,13 @@ public class TimelineProcessor {
     private final TrendsInsightsDAO trendsInsightsDAO;
     private final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB;
     private final int dateBucketPeriod;
-    private final SunData sunData;
-    private final AmazonS3 s3;
-    private final String bucketName;
-    private final RingTimeDAODynamoDB ringTimeDAODynamoDB;
-    private final Histogram motionEventDistribution;
+    private final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
     private final FeedbackDAO feedbackDAO;
+    private final TimelineDAODynamoDB timelineDAODynamoDB;
+    private final SleepHmmDAODynamoDB sleepHmmDAODynamoDB;
+    private final AccountDAO accountDAO;
 
     public TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
-                            final AccountDAO accountDAO,
                             final DeviceDAO deviceDAO,
                             final DeviceDataDAO deviceDataDAO,
                             final SleepLabelDAO sleepLabelDAO,
@@ -84,13 +84,12 @@ public class TimelineProcessor {
                             final TrendsInsightsDAO trendsInsightsDAO,
                             final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
                             final int dateBucketPeriod,
-                            final SunData sunData,
-                            final AmazonS3 s3,
-                            final String bucketName,
-                            final RingTimeDAODynamoDB ringTimeDAODynamoDB,
-                            final FeedbackDAO feedbackDAO) {
+                            final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
+                            final FeedbackDAO feedbackDAO,
+                            final TimelineDAODynamoDB timelineDAODynamoDB,
+                            final SleepHmmDAODynamoDB sleepHmmDAODynamoDB,
+                            final AccountDAO accountDAO) {
         this.trackerMotionDAO = trackerMotionDAO;
-        this.accountDAO = accountDAO;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAO = deviceDataDAO;
         this.sleepLabelDAO = sleepLabelDAO;
@@ -98,12 +97,11 @@ public class TimelineProcessor {
         this.trendsInsightsDAO = trendsInsightsDAO;
         this.aggregateSleepScoreDAODynamoDB = aggregateSleepScoreDAODynamoDB;
         this.dateBucketPeriod = dateBucketPeriod;
-        this.sunData = sunData;
-        this.s3 = s3;
-        this.bucketName = bucketName;
-        this.motionEventDistribution = Metrics.defaultRegistry().newHistogram(TimelineProcessor.class, "motion_event_distribution");
-        this.ringTimeDAODynamoDB = ringTimeDAODynamoDB;
+        this.ringTimeHistoryDAODynamoDB = ringTimeHistoryDAODynamoDB;
         this.feedbackDAO = feedbackDAO;
+        this.timelineDAODynamoDB = timelineDAODynamoDB;
+        this.sleepHmmDAODynamoDB = sleepHmmDAODynamoDB;
+        this.accountDAO = accountDAO;
     }
 
     public boolean shouldProcessTimelineByWorker(final long accountId,
@@ -120,7 +118,7 @@ public class TimelineProcessor {
         return false;
     }
 
-    private List<Event> getAlarmEvents(final Long accountId, final DateTime evening, final DateTime morning, final Integer offsetMillis) {
+    private List<Event> getAlarmEvents(final Long accountId, final DateTime startQueryTime, final DateTime endQueryTime, final Integer offsetMillis) {
 
         final List<DeviceAccountPair> pairs = deviceDAO.getSensesForAccountId(accountId);
         if(pairs.size() > 1) {
@@ -133,9 +131,9 @@ public class TimelineProcessor {
         }
         final String senseId = pairs.get(0).externalDeviceId;
 
-        final List<RingTime> ringTimes = ringTimeDAODynamoDB.getRingTimesBetween(senseId, evening.minusWeeks(1));
+        final List<RingTime> ringTimes = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(senseId, startQueryTime, endQueryTime);
 
-        return TimelineUtils.getAlarmEvents(ringTimes, evening, morning, offsetMillis, DateTime.now(DateTimeZone.UTC));
+        return TimelineUtils.getAlarmEvents(ringTimes, startQueryTime, endQueryTime, offsetMillis, DateTime.now(DateTimeZone.UTC));
     }
 
     public List<Timeline> retrieveTimelines(final Long accountId, final String date, final Integer missingDataDefaultValue, final Boolean hasAlarmInTimeline) {
@@ -218,10 +216,10 @@ public class TimelineProcessor {
 
         Optional<Segment> sleepSegmentOptional = Optional.absent();
         Optional<Segment> inBedSegmentOptional = Optional.absent();
-        List<Optional<Event>> sleepEventsFromAlgorithm = new ArrayList<>();
-        for(int i = 0; i < 4; i++){
-            sleepEventsFromAlgorithm.add(Optional.<Event>absent());
-        }
+        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.create(Optional.<Event>absent(),
+                Optional.<Event>absent(),
+                Optional.<Event>absent(),
+                Optional.<Event>absent());
 
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
@@ -233,28 +231,28 @@ public class TimelineProcessor {
                     MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                     MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
                     false);
-
-            for(final Optional<Event> sleepEventOptional:sleepEventsFromAlgorithm){
+            final List<Optional<Event>> eventList = sleepEventsFromAlgorithm.toList();
+            for(final Optional<Event> sleepEventOptional:eventList){
                 if(sleepEventOptional.isPresent()){
                     sleepEvents.add(sleepEventOptional.get());
                     timEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
                 }
             }
 
-            if(sleepEventsFromAlgorithm.get(1).isPresent() && sleepEventsFromAlgorithm.get(2).isPresent()){
-                sleepSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.get(1).get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.get(2).get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.get(2).get().getTimezoneOffset()));
+            if(sleepEventsFromAlgorithm.fallAsleep.isPresent() && sleepEventsFromAlgorithm.wakeUp.isPresent()){
+                sleepSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.fallAsleep.get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.wakeUp.get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.wakeUp.get().getTimezoneOffset()));
 
                 LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
                         new DateTime(sleepSegmentOptional.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegmentOptional.get().getOffsetMillis())),
                         new DateTime(sleepSegmentOptional.get().getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegmentOptional.get().getOffsetMillis())));
             }
 
-            if(sleepEventsFromAlgorithm.get(0).isPresent() && sleepEventsFromAlgorithm.get(3).isPresent()){
-                inBedSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.get(0).get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.get(3).get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.get(3).get().getTimezoneOffset()));
+            if(sleepEventsFromAlgorithm.goToBed.isPresent() && sleepEventsFromAlgorithm.outOfBed.isPresent()){
+                inBedSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.goToBed.get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.outOfBed.get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.outOfBed.get().getTimezoneOffset()));
             }
 
 
@@ -330,12 +328,12 @@ public class TimelineProcessor {
         final List<Event> smoothedEvents = TimelineUtils.smoothEvents(eventsWithSleepEvents);
 
         final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents,
-                                                            sleepEventsFromAlgorithm.get(0),
-                                                            sleepEventsFromAlgorithm.get(3));
+                                                            sleepEventsFromAlgorithm.goToBed,
+                                                            sleepEventsFromAlgorithm.outOfBed);
 
         final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
-                sleepEventsFromAlgorithm.get(0),
-                sleepEventsFromAlgorithm.get(3));
+                sleepEventsFromAlgorithm.goToBed,
+                sleepEventsFromAlgorithm.outOfBed);
 
         List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(greyEvents);
 
@@ -399,7 +397,7 @@ public class TimelineProcessor {
                                                 final Boolean hasAlarmInTimeline,
                                                 final Boolean hasSoundInTimeline,
                                                 final Boolean hasFeedbackInTimelineEnabled,
-                                                final Boolean hasInOrOutOfBedEvents) {
+                                                final Boolean hasHmmEnabled) {
 
 
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
@@ -408,17 +406,41 @@ public class TimelineProcessor {
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
 
-        // TODO: compute this threshold dynamically
-        final int threshold = 10; // events with scores < threshold will be considered motion events
+        final ImmutableList<Timeline> cachedTimelines = this.timelineDAODynamoDB.getTimelinesForDate(accountId, targetDate.withTimeAtStartOfDay());
+        if (!cachedTimelines.isEmpty()) {
+            LOGGER.debug("Timeline for account {}, date {} returned from cache.", accountId, date);
+            return cachedTimelines;
+        }
 
-        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
-        LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
+        LOGGER.debug("No cached timeline, reprocess timeline for account {}, date {}", accountId, date);
 
-        if(trackerMotions.size() < 20) {
+        final List<TrackerMotion> originalTrackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
+        LOGGER.debug("Length of trackerMotion: {}", originalTrackerMotions.size());
+
+        if(originalTrackerMotions.size() < 20) {
             LOGGER.debug("No data for account_id = {} and day = {}", accountId, targetDate);
             final Timeline timeline = Timeline.createEmpty();
             final List<Timeline> timelines = Lists.newArrayList(timeline);
+            cacheTimeline(accountId, targetDate.withTimeAtStartOfDay(), timelines);
             return timelines;
+        }
+
+        // get partner tracker motion, if available
+        final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
+
+        List<TrackerMotion> trackerMotions = new ArrayList<>();
+
+        /* PARTNER FILTERING --THIS NEEDS TO BE FEATURE FLIPPED */
+        if (!partnerMotions.isEmpty() && false) {
+            try {
+                trackerMotions.addAll(PartnerDataUtils.getMyMotion(originalTrackerMotions, partnerMotions));
+            }
+            catch (Exception e) {
+                LOGGER.info(e.getMessage());
+                trackerMotions.addAll(originalTrackerMotions);
+            }
+        } else {
+            trackerMotions.addAll(originalTrackerMotions);
         }
 
         // get all sensor data, used for light and sound disturbances, and presleep-insights
@@ -433,6 +455,7 @@ public class TimelineProcessor {
                     targetDate.getMillis(), endDate.getMillis(),
                     accountId, deviceId.get(), slotDurationMins, missingDataDefaultValue);
         }
+
 
         // compute lights-out and sound-disturbance events
         Optional<DateTime> lightOutTimeOptional = Optional.absent();
@@ -481,37 +504,63 @@ public class TimelineProcessor {
             timelineEvents.put(event.getStartTimestamp(), event);
         }
 
-        final List<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate, trackerMotions, lightOutTimeOptional, wakeUpWaveTimeOptional);
 
+        /*  This can get overided by the HMM if the feature is enabled */
+        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate, trackerMotions, lightOutTimeOptional, wakeUpWaveTimeOptional);
 
+        if (hasHmmEnabled) {
+            LOGGER.info("Using HMM for account {}",accountId);
 
+            final Optional<SleepHmmWithInterpretation> hmmOptional = sleepHmmDAODynamoDB.getLatestModelForDate(accountId, targetDate.getMillis());
 
-        // PARTNER MOTION
-        final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accountId);
-        final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.get(1), sleepEventsFromAlgorithm.get(2), motionEvents, accountId, optionalPartnerAccountId);
-        for(PartnerMotionEvent partnerMotionEvent : partnerMotionEvents) {
-            timelineEvents.put(partnerMotionEvent.getStartTimestamp(), partnerMotionEvent);
-        }
-        final int numPartnerMotion = partnerMotionEvents.size();
+            if (hmmOptional.isPresent()) {
+                final Optional<SleepHmmWithInterpretation.SleepHmmResult> optionalHmmPredictions = hmmOptional.get().getSleepEventsUsingHMM(allSensorSampleList, trackerMotions);
 
+                if (optionalHmmPredictions.isPresent()) {
+                    final SleepEvents<Optional<Event>> hmmSleepEvents = SleepEvents.create(optionalHmmPredictions.get().inBed,
+                            optionalHmmPredictions.get().fallAsleep,
+                            optionalHmmPredictions.get().wakeUp,
+                            optionalHmmPredictions.get().outOfBed);
 
-
-        // WAKE UP , etc.
-        for(final Optional<Event> sleepEventOptional: sleepEventsFromAlgorithm){
-            if(sleepEventOptional.isPresent() && !feedbackEvents.containsKey(sleepEventOptional.get().getType())){
-                if(!optionalPartnerAccountId.isPresent() || hasInOrOutOfBedEvents) {
-                    timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
-                } else {
-                    if(sleepEventOptional.get().getType() == Event.Type.SLEEP || sleepEventOptional.get().getType() == Event.Type.WAKE_UP) {
-                        timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
-                    }
+                    sleepEventsFromAlgorithm = hmmSleepEvents;
                 }
             }
         }
 
+        final List<Optional<Event>> eventList = sleepEventsFromAlgorithm.toList();
+        for(final Optional<Event> sleepEventOptional: eventList){
+            if(sleepEventOptional.isPresent() && !feedbackEvents.containsKey(sleepEventOptional.get().getType())){
+                timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
+            }
+        }
+
+        // PARTNER MOTION
+        final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.fallAsleep, sleepEventsFromAlgorithm.wakeUp, motionEvents, accountId);
+        for(PartnerMotionEvent partnerMotionEvent : partnerMotionEvents) {
+            timelineEvents.put(partnerMotionEvent.getStartTimestamp(), partnerMotionEvent);
+            }
+        final int numPartnerMotion = partnerMotionEvents.size();
+
         // ALARM
-        if(hasAlarmInTimeline) {
-            final List<Event> alarmEvents = getAlarmEvents(accountId, targetDate, endDate, trackerMotions.get(0).offsetMillis);
+        if(hasAlarmInTimeline && trackerMotions.size() > 0) {
+            final DateTimeZone userTimeZone = DateTimeZone.forOffsetMillis(trackerMotions.get(0).offsetMillis);
+            final DateTime alarmQueryStartTime = new DateTime(targetDate.getYear(),
+                    targetDate.getMonthOfYear(),
+                    targetDate.getDayOfMonth(),
+                    targetDate.getHourOfDay(),
+                    targetDate.getMinuteOfHour(),
+                    0,
+                    userTimeZone).minusMinutes(1);
+
+            final DateTime alarmQueryEndTime = new DateTime(endDate.getYear(),
+                    endDate.getMonthOfYear(),
+                    endDate.getDayOfMonth(),
+                    endDate.getHourOfDay(),
+                    endDate.getMinuteOfHour(),
+                    0,
+                    userTimeZone).plusMinutes(1);
+
+            final List<Event> alarmEvents = getAlarmEvents(accountId, alarmQueryStartTime, alarmQueryEndTime, userTimeZone.getOffset(alarmQueryEndTime));
             for(final Event event : alarmEvents) {
                 timelineEvents.put(event.getStartTimestamp(), event);
             }
@@ -531,11 +580,13 @@ public class TimelineProcessor {
         final List<Event> eventsWithSleepEvents = TimelineRefactored.mergeEvents(timelineEvents);
         final List<Event> smoothedEvents = TimelineUtils.smoothEvents(eventsWithSleepEvents);
 
-        final Optional<Event> inBedEvent = (feedbackEvents.containsKey(Event.Type.IN_BED)) ? Optional.fromNullable(feedbackEvents.get(Event.Type.IN_BED)) : sleepEventsFromAlgorithm.get(0);
-        final Optional<Event> outOfBedEvent = (feedbackEvents.containsKey(Event.Type.OUT_OF_BED)) ? Optional.fromNullable(feedbackEvents.get(Event.Type.OUT_OF_BED)) : sleepEventsFromAlgorithm.get(3);
-        final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents, inBedEvent, outOfBedEvent);
+        final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents,
+                sleepEventsFromAlgorithm.goToBed,
+                sleepEventsFromAlgorithm.outOfBed);
 
-        final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents, inBedEvent, outOfBedEvent);
+        final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
+                sleepEventsFromAlgorithm.goToBed,
+                sleepEventsFromAlgorithm.outOfBed);
 
         final List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(greyEvents);
 
@@ -561,7 +612,33 @@ public class TimelineProcessor {
         final List<SleepSegment>  reversedSegments = Lists.reverse(reversed);
         final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, date, reversedSegments, insights, sleepStats);
 
-        return Lists.newArrayList(timeline);
+        final List<Timeline> timelines = Lists.newArrayList(timeline);
+        cacheTimeline(accountId, targetDate, timelines);
+        return timelines;
+    }
+
+    private boolean cacheTimeline(final long accountId, final DateTime targetDateLocalUTC, final List<Timeline> timelines){
+        try{
+            this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC.withTimeAtStartOfDay(), timelines);
+            return true;
+        }catch (AmazonServiceException awsExp){
+            LOGGER.error("AWS error, Save timeline for account {} date {} failed, {}", accountId, targetDateLocalUTC, awsExp.getErrorMessage());
+        }catch (Exception ex){
+            LOGGER.error("General error, saving timeline for account {}, date {}, failed, {}", accountId, targetDateLocalUTC, ex.getMessage());
+        }
+
+        return false;
+    }
+
+
+    private List<TrackerMotion> getPartnerTrackerMotion(final Long accountId, final DateTime startTime, final DateTime endTime) {
+        final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accountId);
+        if (optionalPartnerAccountId.isPresent()) {
+            final Long partnerAccountId = optionalPartnerAccountId.get();
+            LOGGER.debug("partner account {}", partnerAccountId);
+            return this.trackerMotionDAO.getBetweenLocalUTC(partnerAccountId, startTime, endTime);
+        }
+        return Collections.EMPTY_LIST;
     }
 
     /**
@@ -572,9 +649,10 @@ public class TimelineProcessor {
      * @param accountId
      * @return
      */
-    private List<PartnerMotionEvent> getPartnerMotionEvents(final Optional<Event> fallingAsleepEvent, final Optional<Event> wakeupEvent, final List<MotionEvent> motionEvents, final Long accountId, final Optional<Long> optionalPartnerAccountId) {
+    private List<PartnerMotionEvent> getPartnerMotionEvents(final Optional<Event> fallingAsleepEvent, final Optional<Event> wakeupEvent, final List<MotionEvent> motionEvents, final Long accountId) {
         // add partner movement data, check if there's a partner
 
+        final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accountId);
         if (optionalPartnerAccountId.isPresent() && fallingAsleepEvent.isPresent() && wakeupEvent.isPresent()) {
             LOGGER.debug("partner account {}", optionalPartnerAccountId.get());
             // get tracker motions for partner, query time is in UTC, not local_utc
@@ -594,7 +672,7 @@ public class TimelineProcessor {
     private List<Event> getSoundEvents(final List<Sample> soundSamples,
                                        final List<MotionEvent> motionEvents,
                                        final Optional<DateTime> lightOutTimeOptional,
-                                       final List<Optional<Event>> sleepEventsFromAlgorithm) {
+                                       final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm) {
         if (soundSamples.isEmpty()) {
             return Collections.EMPTY_LIST;
         }
@@ -603,26 +681,26 @@ public class TimelineProcessor {
         Optional<DateTime> optionalSleepTime = Optional.absent();
         Optional<DateTime> optionalAwakeTime = Optional.absent();
 
-        if (sleepEventsFromAlgorithm.get(1).isPresent()) {
+        if (sleepEventsFromAlgorithm.fallAsleep.isPresent()) {
             // sleep time
-            final Event event = sleepEventsFromAlgorithm.get(1).get();
+            final Event event = sleepEventsFromAlgorithm.fallAsleep.get();
             optionalSleepTime = Optional.of(new DateTime(event.getStartTimestamp(),
                     DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
-        } else if (sleepEventsFromAlgorithm.get(0).isPresent()) {
+        } else if (sleepEventsFromAlgorithm.goToBed.isPresent()) {
             // in-bed time
-            final Event event = sleepEventsFromAlgorithm.get(0).get();
+            final Event event = sleepEventsFromAlgorithm.goToBed.get();
             optionalSleepTime = Optional.of(new DateTime(event.getStartTimestamp(),
                     DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
         }
 
-        if (sleepEventsFromAlgorithm.get(2).isPresent()) {
+        if (sleepEventsFromAlgorithm.wakeUp.isPresent()) {
             // awake time
-            final Event event = sleepEventsFromAlgorithm.get(2).get();
+            final Event event = sleepEventsFromAlgorithm.wakeUp.get();
             optionalAwakeTime = Optional.of(new DateTime(event.getStartTimestamp(),
                     DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
-        } else if (sleepEventsFromAlgorithm.get(3).isPresent()) {
+        } else if (sleepEventsFromAlgorithm.outOfBed.isPresent()) {
             // out-of-bed time
-            final Event event = sleepEventsFromAlgorithm.get(3).get();
+            final Event event = sleepEventsFromAlgorithm.outOfBed.get();
             optionalAwakeTime = Optional.of(new DateTime(event.getStartTimestamp(),
                     DateTimeZone.UTC).plusMillis(event.getTimezoneOffset()));
         }
@@ -645,13 +723,13 @@ public class TimelineProcessor {
      * @param wakeUpWaveTimeOptional
      * @return
      */
-    private List<Optional<Event>> fromAlgorithm(final DateTime targetDate, final List<TrackerMotion> trackerMotions, final Optional<DateTime> lightOutTimeOptional, final Optional<DateTime> wakeUpWaveTimeOptional) {
+    private SleepEvents<Optional<Event>> fromAlgorithm(final DateTime targetDate, final List<TrackerMotion> trackerMotions, final Optional<DateTime> lightOutTimeOptional, final Optional<DateTime> wakeUpWaveTimeOptional) {
         Optional<Segment> sleepSegmentOptional;
         Optional<Segment> inBedSegmentOptional = Optional.absent();
-        List<Optional<Event>> sleepEventsFromAlgorithm = new ArrayList<>();
-        for(int i = 0; i < 4; i++){
-            sleepEventsFromAlgorithm.add(Optional.<Event>absent());
-        }
+        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.create(Optional.<Event>absent(),
+                Optional.<Event>absent(),
+                Optional.<Event>absent(),
+                Optional.<Event>absent());
 
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
@@ -666,20 +744,20 @@ public class TimelineProcessor {
 
 
 
-            if(sleepEventsFromAlgorithm.get(1).isPresent() && sleepEventsFromAlgorithm.get(2).isPresent()){
-                sleepSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.get(1).get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.get(2).get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.get(2).get().getTimezoneOffset()));
+            if(sleepEventsFromAlgorithm.fallAsleep.isPresent() && sleepEventsFromAlgorithm.wakeUp.isPresent()){
+                sleepSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.fallAsleep.get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.wakeUp.get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.wakeUp.get().getTimezoneOffset()));
 
                 LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
                         new DateTime(sleepSegmentOptional.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegmentOptional.get().getOffsetMillis())),
                         new DateTime(sleepSegmentOptional.get().getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegmentOptional.get().getOffsetMillis())));
             }
 
-            if(sleepEventsFromAlgorithm.get(0).isPresent() && sleepEventsFromAlgorithm.get(3).isPresent()){
-                inBedSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.get(0).get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.get(3).get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.get(3).get().getTimezoneOffset()));
+            if(sleepEventsFromAlgorithm.goToBed.isPresent() && sleepEventsFromAlgorithm.outOfBed.isPresent()){
+                inBedSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.goToBed.get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.outOfBed.get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.outOfBed.get().getTimezoneOffset()));
                 LOGGER.info("In Bed Time From Awake Detection Algorithm: {} - {}",
                         new DateTime(inBedSegmentOptional.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(inBedSegmentOptional.get().getOffsetMillis())),
                         new DateTime(inBedSegmentOptional.get().getEndTimestamp(), DateTimeZone.forOffsetMillis(inBedSegmentOptional.get().getOffsetMillis())));
@@ -766,16 +844,4 @@ public class TimelineProcessor {
         final ImmutableList<TimelineFeedback> feedbackList = feedbackDAO.getForNight(accountId, nightOfUTC);
         return FeedbackUtils.convertFeedbackToDateTime(feedbackList, offsetMillis);
     }
-
-    private static void writeMotionMetrics(final Histogram histogram, final List<Event> alignedAndConvertedEvents){
-        int count = 0;
-        for(final Event event:alignedAndConvertedEvents){
-            if(event.getType() == Event.Type.MOTION){
-                count++;
-            }
-        }
-
-        histogram.update(count);
-    }
-
 }

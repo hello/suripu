@@ -155,6 +155,13 @@ sense_upload_configuration:
   week_days_only: true
   long_interval: 5
   short_interval: 3
+  
+ota_configuration:
+  start_update_window_hour: 11
+  end_update_window_hour: 22
+  device_uptime_delay: 20
+  always_ota_groups: [chris-dev, video-photoshoot, victor]
+  s3cache_expire_minutes: 60
 
 kinesis_logger:
   stream_name: logs
@@ -164,3 +171,7 @@ kinesis_logger:
 
 aws_access_key_s3: AKIAJVQV7XJU23UWILSQ
 aws_access_secret_s3: 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
+ring_history_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: ring_history
