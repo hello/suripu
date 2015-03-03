@@ -255,4 +255,9 @@ sleephmm_db:
   region: us-east-1
   table_name: prod_sleephmm
 
+
 max_cache_refresh_days: 20
+
+redis:
+  host: stats.xoe7je.0001.use1.cache.amazonaws.com
+  port: 6379

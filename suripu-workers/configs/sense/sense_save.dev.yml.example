@@ -116,3 +116,6 @@ merged_info_db:
   region: us-east-1
   table_name: alarm_info
 
+redis:
+  host: localhost
+  port: 6379

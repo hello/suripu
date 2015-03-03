@@ -8,6 +8,7 @@ import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.configuration.PushNotificationsConfiguration;
 import com.hello.suripu.core.configuration.QuestionConfiguration;
+import com.hello.suripu.core.configuration.RedisConfiguration;
 import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
@@ -284,14 +285,21 @@ public class SuripuAppConfiguration extends Configuration {
         return this.sleepHmmDBConfiguration;
     }
 
-
     @Valid
     @NotNull
     @Min(1)
     @Max(100)
     @JsonProperty("max_cache_refresh_days")
     private int maxCacheRefreshDay;
-    public Integer getMaxCacheRefreshDay(){
+    public Integer getMaxCacheRefreshDay() {
         return this.maxCacheRefreshDay;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("redis")
+    private RedisConfiguration redisConfiguration;
+    public RedisConfiguration getRedisConfiguration() {
+        return redisConfiguration;
     }
 }

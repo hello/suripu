@@ -123,7 +123,10 @@ public final class PillScoreWorkerCommand extends ConfiguredCommand<PillScoreWor
         final AmazonDynamoDB mergedUserInfoDynamoDBClient = amazonDynamoDBClientFactory.getForEndpoint(configuration.getUserInfo().getEndpoint());
         final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(mergedUserInfoDynamoDBClient, configuration.getUserInfo().getTableName());
 
-        final JedisPool pool = new JedisPool("localhost", 6379);
+        final JedisPool pool = new JedisPool(
+                configuration.getRedisConfiguration().getHost(),
+                configuration.getRedisConfiguration().getPort()
+        );
         final IRecordProcessorFactory factory = new PillScoreProcessorFactory(
                 sleepScoreDAO,
                 configuration.getDateMinuteBucket(),
