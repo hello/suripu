@@ -11,22 +11,24 @@ import java.util.List;
 public class CachedTimelines {
     public final List<Timeline> timeline;
     public final String version;
+    public final Long expiredAtMillis;
 
-    private CachedTimelines(final List<Timeline> timeline, final String version){
+    private CachedTimelines(final List<Timeline> timeline, final String version, final Long expiredAtMillis){
         this.timeline = timeline;
         this.version = version;
+        this.expiredAtMillis = expiredAtMillis;
     }
 
-    public static CachedTimelines create(final List<Timeline> timeline, final String version){
-        return new CachedTimelines(timeline, version);
+    public static CachedTimelines create(final List<Timeline> timeline, final String version, final Long expiredAtMillis){
+        return new CachedTimelines(timeline, version, expiredAtMillis);
     }
 
     public static CachedTimelines createEmpty(){
-        return new CachedTimelines(Collections.<Timeline>emptyList(), "");
+        return new CachedTimelines(Collections.<Timeline>emptyList(), "", -1L);
     }
 
     public boolean isEmpty(){
-        return this.timeline.size() == 0 && this.version.isEmpty();
+        return this.timeline.size() == 0 && this.version.isEmpty() && this.expiredAtMillis == -1;
     }
 
     public boolean shouldInvalidate(final String latestVersion, final DateTime targetDateUTC, final DateTime nowUTC, final int maxBackTrackDays){
@@ -36,6 +38,9 @@ public class CachedTimelines {
             }
 
             if(this.version.equals(latestVersion)){
+                if(this.expiredAtMillis != -1 && nowUTC.isAfter(this.expiredAtMillis)){
+                    return true;
+                }
                 return false;  // same version, up to date
             }
 

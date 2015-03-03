@@ -11,17 +11,16 @@ import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
-import com.amazonaws.services.dynamodbv2.model.DeleteItemRequest;
-import com.amazonaws.services.dynamodbv2.model.DeleteItemResult;
 import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
+import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
+import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ReturnConsumedCapacity;
-import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -74,6 +73,9 @@ public class TimelineDAODynamoDB {
     public static final String UPDATED_AT_ATTRIBUTE_NAME = "updated_at";
 
     public static final String VERSION = "version";
+    public static final String EXPIRED_AT_MILLIS = "expired_at_millis";
+
+    public static final Long NEVER_EXPIRED = -1L;
 
 
     private final int MAX_CALL_COUNT = 5;
@@ -134,33 +136,29 @@ public class TimelineDAODynamoDB {
         return ImmutableMap.copyOf(finalResultMap);
     }
 
-    public boolean invalidateCache(final Long accountId, final DateTime targetDateLocalUTC, final DateTime now){
-        final DateTime nowLocalUTC = new DateTime(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), 0, 0, 0, DateTimeZone.UTC);
-        if(nowLocalUTC.minusDays(this.maxBackTrackDays).isAfter(targetDateLocalUTC.withTimeAtStartOfDay())){
-            return false;
-        }
+    public boolean setExpiredAt(final Long accountId, DateTime targetDateLocalUTC, final DateTime expiredAtUTC){
 
         try {
-            final Map<String, ExpectedAttributeValue> deleteConditions = new HashMap<>();
+            final Map<String, ExpectedAttributeValue> putConditions = new HashMap<>();
 
-            deleteConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, new ExpectedAttributeValue(
+            putConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, new ExpectedAttributeValue(
                     new AttributeValue().withN(String.valueOf(accountId))
             ));
-            deleteConditions.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new ExpectedAttributeValue(
+            putConditions.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new ExpectedAttributeValue(
                     new AttributeValue().withN(String.valueOf(targetDateLocalUTC.withTimeAtStartOfDay().getMillis()))
             ));
 
-            HashMap<String, AttributeValue> keys = new HashMap<>();
-            keys.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
-            keys.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(targetDateLocalUTC.withTimeAtStartOfDay().getMillis())));
+            HashMap<String, AttributeValue> items = new HashMap<>();
+            items.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
+            items.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(targetDateLocalUTC.withTimeAtStartOfDay().getMillis())));
+            items.put(EXPIRED_AT_MILLIS, new AttributeValue().withN(String.valueOf(expiredAtUTC.getMillis())));
 
-            final DeleteItemRequest deleteItemRequest = new DeleteItemRequest()
+            final PutItemRequest putItemRequest = new PutItemRequest()
                     .withTableName(tableName)
-                    .withKey(keys)
-                    .withExpected(deleteConditions)
-                    .withReturnValues(ReturnValue.ALL_OLD);
+                    .withItem(items)
+                    .withExpected(putConditions);
 
-            final DeleteItemResult result = this.dynamoDBClient.deleteItem(deleteItemRequest);
+            final PutItemResult result = this.dynamoDBClient.putItem(putItemRequest);
 
             return true;
         }  catch (AmazonServiceException ase) {
@@ -171,6 +169,10 @@ public class TimelineDAODynamoDB {
         }
 
         return false;
+    }
+
+    public boolean invalidateCache(final Long accountId, final DateTime targetDateLocalUTC, final DateTime now){
+        return setExpiredAt(accountId, targetDateLocalUTC, now.minusMinutes(1));
     }
 
 
@@ -215,6 +217,7 @@ public class TimelineDAODynamoDB {
                 DATA_BLOB_ATTRIBUTE_NAME,
                 UPDATED_AT_ATTRIBUTE_NAME,
                 COMPRESS_TYPE_ATTRIBUTE_NAME,
+                EXPIRED_AT_MILLIS,
                 VERSION);
 
 
@@ -250,6 +253,7 @@ public class TimelineDAODynamoDB {
 
                 final Compression.CompressionType compressionType = Compression.CompressionType.fromInt(Integer.valueOf(item.get(COMPRESS_TYPE_ATTRIBUTE_NAME).getN()));
                 final String version = item.get(VERSION).getS();
+                final Long expiredAtMillis = Long.valueOf(item.get(EXPIRED_AT_MILLIS).getN());
 
                 try {
                     final byte[] decompressed = Compression.decompress(compressed, compressionType);
@@ -277,7 +281,7 @@ public class TimelineDAODynamoDB {
                             ioe.getMessage());
                 }
 
-                final CachedTimelines cachedTimelines = CachedTimelines.create(eventsWithAllTypes, version);
+                final CachedTimelines cachedTimelines = CachedTimelines.create(eventsWithAllTypes, version, expiredAtMillis);
                 finalResult.put(dateInMillis, cachedTimelines);
 
             }
@@ -352,6 +356,7 @@ public class TimelineDAODynamoDB {
                 item.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(targetDateOfNightLocalUTC)));
                 item.put(UPDATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(DateTime.now().getMillis())));
                 item.put(VERSION, new AttributeValue().withS(TimelineProcessor.VERSION));
+                item.put(EXPIRED_AT_MILLIS, new AttributeValue().withN(NEVER_EXPIRED.toString()));
 
                 final int compressType = Compression.CompressionType.NONE.getValue();
                 item.put(COMPRESS_TYPE_ATTRIBUTE_NAME, new AttributeValue().withN(
