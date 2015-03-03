@@ -257,4 +257,9 @@ sleephmm_db:
     region: us-east-1
     table_name: sleephmm
 
+
 max_cache_refresh_days: 20
+
+redis:
+  host: localhost
+  port: 6379
