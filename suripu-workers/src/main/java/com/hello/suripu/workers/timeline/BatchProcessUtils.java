@@ -22,19 +22,36 @@ import java.util.Set;
 public class BatchProcessUtils {
     private final static Logger LOGGER = LoggerFactory.getLogger(BatchProcessUtils.class);
 
-    public static Map<String, Set<DateTime>> groupRequestingPillIds(final List<SenseCommandProtos.batched_pill_data> batchedPillData){
+    public static enum DataTypeFilter{
+        PILL_HEARTBEAT,
+        PILL_DATA
+    }
+
+    public static Map<String, Set<DateTime>> groupRequestingPillIdsByDataType(final List<SenseCommandProtos.batched_pill_data> batchedPillData,
+                                                                              final DataTypeFilter filter){
         final HashMap<String, Set<DateTime>> pillIdTargetDatesMap = new HashMap<>();
 
         for (final SenseCommandProtos.batched_pill_data data : batchedPillData) {
             for(final SenseCommandProtos.pill_data pillData:data.getPillsList()) {
-                if (pillData.hasUptime()) {  // Only triggered by heartbeat
-                    if (!pillIdTargetDatesMap.containsKey(pillData.getDeviceId())) {
-                        pillIdTargetDatesMap.put(pillData.getDeviceId(), new HashSet<DateTime>());
-                    }
-
-                    final DateTime targetDateUTC = new DateTime(pillData.getTimestamp() * 1000L, DateTimeZone.UTC);
-                    pillIdTargetDatesMap.get(pillData.getDeviceId()).add(targetDateUTC);
+                boolean shouldProcess = false;
+                if (pillData.hasUptime() && filter == DataTypeFilter.PILL_HEARTBEAT) {  // Only triggered by heartbeat
+                    shouldProcess = true;
                 }
+
+                if(pillData.hasMotionDataEntrypted() && filter == DataTypeFilter.PILL_DATA){
+                    shouldProcess = true;
+                }
+
+                if(!shouldProcess){
+                    continue;
+                }
+
+                if (!pillIdTargetDatesMap.containsKey(pillData.getDeviceId())) {
+                    pillIdTargetDatesMap.put(pillData.getDeviceId(), new HashSet<DateTime>());
+                }
+
+                final DateTime targetDateUTC = new DateTime(pillData.getTimestamp() * 1000L, DateTimeZone.UTC);
+                pillIdTargetDatesMap.get(pillData.getDeviceId()).add(targetDateUTC);
             }
 
         }

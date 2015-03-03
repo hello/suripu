@@ -10,7 +10,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.processors.TimelineProcessor;
@@ -34,21 +33,18 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
     private final TimelineProcessor timelineProcessor;
     private final TimelineWorkerConfiguration configuration;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
-    private final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
     private final DeviceDAO deviceDAO;
 
     public TimelineRecordProcessor(final TimelineProcessor timelineProcessor,
                                    final DeviceDAO deviceDAO,
                                    final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
-                                   final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
                                    final TimelineDAODynamoDB timelineDAODynamoDB,
                                    final TimelineWorkerConfiguration configuration){
 
         this.timelineProcessor = timelineProcessor;
         this.configuration = configuration;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
-        this.ringTimeHistoryDAODynamoDB = ringTimeHistoryDAODynamoDB;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
         this.deviceDAO = deviceDAO;
 
@@ -71,15 +67,30 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
             }
         }
 
-        final Map<String, Set<DateTime>> pillIdTargetDatesMap = BatchProcessUtils.groupRequestingPillIds(batchedPillData);
-        final Map<Long, DateTime> groupedAccountIdTargetDateLocalUTCMap = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(pillIdTargetDatesMap,
+        final Map<String, Set<DateTime>> pillIdTargetDatesMapByHeartbeat = BatchProcessUtils.groupRequestingPillIdsByDataType(batchedPillData,
+                BatchProcessUtils.DataTypeFilter.PILL_HEARTBEAT);
+        final Map<String, Set<DateTime>> pillIdTargetDatesMapByData = BatchProcessUtils.groupRequestingPillIdsByDataType(batchedPillData,
+                BatchProcessUtils.DataTypeFilter.PILL_DATA);
+
+        final Map<Long, DateTime> groupedAccountIdAndRegenerateTimelineTargetDateLocalUTCMap = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(pillIdTargetDatesMapByHeartbeat,
                 DateTime.now().withZone(DateTimeZone.UTC),
                 this.configuration.getEarliestProcessTime(),
                 this.configuration.getLastProcessTime(),
                 this.deviceDAO,
                 this.mergedUserInfoDynamoDB);
 
-        batchProcess(groupedAccountIdTargetDateLocalUTCMap);
+        final Map<Long, DateTime> groupedAccountIdAndExpiredTargetDateLocalUTCMap = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(pillIdTargetDatesMapByData,
+                DateTime.now().withZone(DateTimeZone.UTC),
+                this.configuration.getEarliestProcessTime(),
+                this.configuration.getLastProcessTime(),
+                this.deviceDAO,
+                this.mergedUserInfoDynamoDB);
+
+        // Expires all out dated timeline
+        expires(groupedAccountIdAndExpiredTargetDateLocalUTCMap, DateTime.now());
+
+        // Reprocess
+        batchProcess(groupedAccountIdAndRegenerateTimelineTargetDateLocalUTCMap);
 
         try {
             iRecordProcessorCheckpointer.checkpoint();
@@ -118,6 +129,24 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
             }
         }
 
+    }
+
+    private void expires(final Map<Long, DateTime> groupedAccountIdTargetDateLocalUTCMap, final DateTime expiresAtUTC){
+        for(final Long accountId:groupedAccountIdTargetDateLocalUTCMap.keySet()) {
+            try {
+                final boolean expired = this.timelineDAODynamoDB.invalidateCache(accountId,
+                        groupedAccountIdTargetDateLocalUTCMap.get(accountId),
+                        expiresAtUTC);
+                LOGGER.info("Timeline expired {} for account {} at local utc {}",
+                        expired,
+                        accountId,
+                        groupedAccountIdTargetDateLocalUTCMap.get(accountId).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT));
+            }catch (AmazonServiceException awsException){
+                LOGGER.error("Failed to expire timeline: {}", awsException.getErrorMessage());
+            }catch (Exception ex){
+                LOGGER.error("Failed to expire timeline. General error {}", ex.getMessage());
+            }
+        }
     }
 
 
