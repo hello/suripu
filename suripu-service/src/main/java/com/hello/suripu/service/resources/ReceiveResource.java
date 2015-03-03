@@ -575,30 +575,42 @@ public class ReceiveResource extends BaseResource {
                                                                             final List<String> deviceGroups,
                                                                             final DateTimeZone userTimeZone,
                                                                             final DataInputProtos.batched_periodic_data batchData) {
+        final int currentFirmwareVersion = batchData.getFirmwareVersion();
+        if(canDeviceOTA(deviceID, deviceGroups, userTimeZone, batchData, otaConfiguration, featureFlipper)) {
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore
+                    .getFirmwareUpdate(deviceID, deviceGroups.get(0), currentFirmwareVersion); //TODO: Create a better way of knowing which group the device will belong to
+            LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+            return fileDownloadList;
+        }
+        return Collections.emptyList();
+    }
+    
+    public static Boolean canDeviceOTA(final String deviceID,
+                                       final List<String> deviceGroups,
+                                       final DateTimeZone userTimeZone,
+                                       final DataInputProtos.batched_periodic_data batchData,
+                                       final OTAConfiguration otaConfiguration,
+                                       final RolloutClient featureFlipper) {
         
         final Set<String> alwaysOTAGroups = otaConfiguration.getAlwaysOTAGroups();
         final int currentFirmwareVersion = batchData.getFirmwareVersion();
         final DateTime currentDTZ = DateTime.now().withZone(userTimeZone);
-        
         final String firmwareFeature = String.format("firmware_release_%s", currentFirmwareVersion);
+        final DateTime startOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getStartUpdateWindowHour()).withMinuteOfHour(0);
+        final DateTime endOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getEndUpdateWindowHour()).withMinuteOfHour(0);
+        final Integer deviceUptimeDelay = otaConfiguration.getDeviceUptimeDelay();
+        
+        boolean canOTA = false;
+        
         if (featureFlipper.deviceFeatureActive(firmwareFeature, deviceID, deviceGroups)) {
             LOGGER.debug("Feature is active!");
         }
 
         if (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceID, deviceGroups)) {
             LOGGER.warn("Always OTA is on for device: ", deviceID);
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceID,
-                    FeatureFlipper.ALWAYS_OTA_RELEASE, currentFirmwareVersion);
-            LOGGER.warn("{} files added to syncResponse to be downloaded", fileDownloadList.size());
-            return fileDownloadList;
-
+            canOTA = true;
         } else {
-
-            final DateTime startOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getStartUpdateWindowHour());
-            final DateTime endOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getEndUpdateWindowHour()).plusSeconds(3599);
-            final Integer deviceUptimeDelay = otaConfiguration.getDeviceUptimeDelay();
-            boolean canOTA = false;
-
+            
             //Allow OTA Updates only in config-defined update window
             if (currentDTZ.isAfter(startOTAWindow) && currentDTZ.isBefore(endOTAWindow)) {
                 canOTA = true;
@@ -614,7 +626,7 @@ public class ReceiveResource extends BaseResource {
                     canOTA = false;
                     LOGGER.debug("Device failed up-time check.");
                 }
-                
+
             }
 
             //Check for alwaysOTAGroups as defined in the OTA configuration
@@ -627,15 +639,11 @@ public class ReceiveResource extends BaseResource {
                 // groups take precedence over feature
                 if (!deviceGroups.isEmpty()) {
                     LOGGER.debug("DeviceId {} belongs to groups: {}", deviceID, deviceGroups);
-                    final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceID, deviceGroups.get(0), currentFirmwareVersion);
-                    LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
-                    return fileDownloadList;
+                    canOTA = true;
                 } else {
                     if (featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceID, deviceGroups)) {
                         LOGGER.debug("Feature release is active!");
-                        final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceID, FeatureFlipper.OTA_RELEASE, currentFirmwareVersion);
-                        LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
-                        return fileDownloadList;
+                        canOTA = true;
                     }
                 }
 
@@ -643,7 +651,7 @@ public class ReceiveResource extends BaseResource {
 
         }
         
-        return Collections.emptyList();
-        
+        return canOTA;
     }
+    
 }
