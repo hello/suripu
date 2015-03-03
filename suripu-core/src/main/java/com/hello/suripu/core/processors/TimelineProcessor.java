@@ -527,19 +527,31 @@ public class TimelineProcessor {
             }
         }
 
-        final List<Optional<Event>> eventList = sleepEventsFromAlgorithm.toList();
-        for(final Optional<Event> sleepEventOptional: eventList){
-            if(sleepEventOptional.isPresent() && !feedbackEvents.containsKey(sleepEventOptional.get().getType())){
-                timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
-            }
-        }
-
         // PARTNER MOTION
         final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.fallAsleep, sleepEventsFromAlgorithm.wakeUp, motionEvents, accountId);
         for(PartnerMotionEvent partnerMotionEvent : partnerMotionEvents) {
             timelineEvents.put(partnerMotionEvent.getStartTimestamp(), partnerMotionEvent);
-            }
+        }
         final int numPartnerMotion = partnerMotionEvents.size();
+
+        // SOUND
+        int numSoundEvents = 0;
+        if (hasSoundInTimeline) {
+            final List<Event> soundEvents = getSoundEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE),
+                    motionEvents, lightOutTimeOptional, sleepEventsFromAlgorithm);
+            for (final Event event : soundEvents) {
+                timelineEvents.put(event.getStartTimestamp(), event);
+            }
+            numSoundEvents = soundEvents.size();
+        }
+
+        // insert IN-BED, SLEEP, WAKE, OUT-of-BED
+        final List<Optional<Event>> eventList = sleepEventsFromAlgorithm.toList();
+        for (final Optional<Event> sleepEventOptional: eventList){
+            if(sleepEventOptional.isPresent() && !feedbackEvents.containsKey(sleepEventOptional.get().getType())){
+                timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
+            }
+        }
 
         // ALARM
         if(hasAlarmInTimeline && trackerMotions.size() > 0) {
@@ -564,17 +576,6 @@ public class TimelineProcessor {
             for(final Event event : alarmEvents) {
                 timelineEvents.put(event.getStartTimestamp(), event);
             }
-        }
-
-        // SOUND
-        int numSoundEvents = 0;
-        if (hasSoundInTimeline) {
-            final List<Event> soundEvents = getSoundEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE),
-                    motionEvents, lightOutTimeOptional, sleepEventsFromAlgorithm);
-            for (final Event event : soundEvents) {
-                timelineEvents.put(event.getStartTimestamp(), event);
-            }
-            numSoundEvents = soundEvents.size();
         }
 
         final List<Event> eventsWithSleepEvents = TimelineRefactored.mergeEvents(timelineEvents);
