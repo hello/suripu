@@ -80,7 +80,7 @@ public class SleepHmmDAODynamoDB {
         mapper.registerModule(new JodaModule());
     }
 
-    public Optional<SleepHmmWithInterpretation> getLatestModelForDate(long accountId,long timeOfInterestMillis) {
+    public Optional<SleepHmmWithInterpretation> getLatestModelForDate(final long accountId,final long timeOfInterestMillis) {
 
         byte [] sleepHmmBlob = null;
 

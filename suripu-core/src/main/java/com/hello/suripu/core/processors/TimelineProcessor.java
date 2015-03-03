@@ -394,6 +394,7 @@ public class TimelineProcessor {
                                                 final Boolean hasHmmEnabled) {
 
 
+        final long  currentTimeMillis = System.currentTimeMillis();
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withHourOfDay(20);
         final DateTime endDate = targetDate.plusHours(16);
@@ -508,10 +509,12 @@ public class TimelineProcessor {
             final Optional<SleepHmmWithInterpretation> hmmOptional = sleepHmmDAODynamoDB.getLatestModelForDate(accountId, targetDate.getMillis());
 
             if (hmmOptional.isPresent()) {
-                final Optional<SleepHmmWithInterpretation.SleepHmmResult> optionalHmmPredictions = hmmOptional.get().getSleepEventsUsingHMM(allSensorSampleList, trackerMotions);
+                final Optional<SleepHmmWithInterpretation.SleepHmmResult> optionalHmmPredictions = hmmOptional.get().getSleepEventsUsingHMM(
+                        allSensorSampleList, trackerMotions,targetDate.getMillis(),endDate.getMillis(),currentTimeMillis);
 
                 if (optionalHmmPredictions.isPresent()) {
-                    final SleepEvents<Optional<Event>> hmmSleepEvents = SleepEvents.create(optionalHmmPredictions.get().inBed,
+                    final SleepEvents<Optional<Event>> hmmSleepEvents = SleepEvents.create(
+                            optionalHmmPredictions.get().inBed,
                             optionalHmmPredictions.get().fallAsleep,
                             optionalHmmPredictions.get().wakeUp,
                             optionalHmmPredictions.get().outOfBed);

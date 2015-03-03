@@ -254,14 +254,18 @@ CREATE CREATE CREATE
 
 /* MAIN METHOD TO BE USED FOR DATA PROCESSING IS HERE */
     /* Use this method to get all the sleep / bed events from ALL the sensor data and ALL the pill data */
-    public Optional<SleepHmmResult> getSleepEventsUsingHMM(final AllSensorSampleList sensors,final List<TrackerMotion> pillData) {
+    public Optional<SleepHmmResult> getSleepEventsUsingHMM(final AllSensorSampleList sensors,
+                                                           final List<TrackerMotion> pillData,
+                                                           final long sleepPeriodStartTime,
+                                                           final long sleepPeriodEndTime,
+                                                           final long currentTimeInMillis) {
 
 
 
 
         //get sensor data as fixed time-step array of values
         //sensor data will get put into NUM_MINUTES_IN_WINDOW duration bins, somehow (either by adding, averaging, maxing, or whatever)
-        final Optional<BinnedData> binnedDataOptional = getBinnedSensorData(sensors, pillData, NUM_MINUTES_IN_WINDOW);
+        final Optional<BinnedData> binnedDataOptional = getBinnedSensorData(sensors, pillData, NUM_MINUTES_IN_WINDOW,sleepPeriodStartTime,sleepPeriodEndTime,currentTimeInMillis);
 
         if (!binnedDataOptional.isPresent()) {
             return Optional.absent();
@@ -420,7 +424,8 @@ CREATE CREATE CREATE
         return pairList;
     }
 
-    protected Optional<BinnedData> getBinnedSensorData(AllSensorSampleList sensors, List<TrackerMotion> pillData, final int numMinutesInWindow) {
+    protected Optional<BinnedData> getBinnedSensorData(AllSensorSampleList sensors, List<TrackerMotion> pillData, final int numMinutesInWindow,
+                                                       final long startTimeMillis, final long endTimeMillis, final long currentTimeInMillis) {
         final List<Sample> light = sensors.get(Sensor.LIGHT);
         final List<Sample> wave = sensors.get(Sensor.WAVE_COUNT);
 
@@ -429,9 +434,14 @@ CREATE CREATE CREATE
         }
 
         //get start and end of window
-        final long t0 = light.get(0).dateTime;
+        final long t0 = startTimeMillis;
         final int timezoneOffset = light.get(0).offsetMillis;
-        final long tf = light.get(light.size() - 1).dateTime;
+        long tf = endTimeMillis;
+
+        //somehow, the light data is returned for
+        if (currentTimeInMillis < tf && currentTimeInMillis >= t0) {
+            tf = currentTimeInMillis;
+        }
 
         final int dataLength = (int) (tf - t0) / NUMBER_OF_MILLIS_IN_A_MINUTE / numMinutesInWindow;
 
