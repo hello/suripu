@@ -56,13 +56,13 @@ public class FeatureStore {
 
         final int queryLimit = 100; //TODO: scan table instead?
 
-        final QueryRequest query = new QueryRequest(tableName)
+        final QueryRequest query = new QueryRequest(this.tableName)
                 .withKeyConditions(conditions)
                 .withLimit(queryLimit)
                 .withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
 
 
-        final QueryResult results = amazonDynamoDB.query(query);
+        final QueryResult results = this.amazonDynamoDB.query(query);
 
 
         final Map<String, Feature> finalMap = new HashMap<>();
