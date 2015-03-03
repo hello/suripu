@@ -80,7 +80,7 @@ public class DataScienceResource extends BaseResource {
     @GET
     @Path("/pill/{email}/{query_date_local_utc}")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<TrackerMotion> getMotion(@Scope(OAuthScope.SENSORS_BASIC) final AccessToken accessToken,
+    public List<TrackerMotion> getMotion(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                              @PathParam("query_date_local_utc") final String date,
                              @PathParam("email") final String email) {
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
@@ -104,7 +104,7 @@ public class DataScienceResource extends BaseResource {
     @GET
     @Path("/light/{email}/{query_date_local_utc}")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Event> getLightOut(@Scope(OAuthScope.SENSORS_BASIC) final AccessToken accessToken,
+    public List<Event> getLightOut(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                             @PathParam("query_date_local_utc") final String date,
                                             @PathParam("email") final String email) {
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
@@ -145,7 +145,7 @@ public class DataScienceResource extends BaseResource {
     @GET
     @Path("/sensors/{email}/{query_date_local_utc}/{type}")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Sample> getSensors(@Scope(OAuthScope.SENSORS_BASIC) final AccessToken accessToken,
+    public List<Sample> getSensors(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                    @PathParam("query_date_local_utc") final String date,
                                    @PathParam("type") final String dataType,
                                    @PathParam("email") final String email) {
@@ -179,7 +179,7 @@ public class DataScienceResource extends BaseResource {
     @PUT
     @Path("insights/{category}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void createLightInsight(@Scope(OAuthScope.SENSORS_BASIC) final AccessToken accessToken,
+    public void createLightInsight(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                    @PathParam("category") int value) {
 
         final InsightCard.Category category = InsightCard.Category.fromInteger(value);
