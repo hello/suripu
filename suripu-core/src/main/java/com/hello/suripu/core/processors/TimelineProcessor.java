@@ -13,7 +13,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
-import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
+import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
@@ -70,7 +70,7 @@ public class TimelineProcessor {
     private final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
     private final FeedbackDAO feedbackDAO;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
-    private final SleepHmmDAODynamoDB sleepHmmDAODynamoDB;
+    private final SleepHmmDAO sleepHmmDAO;
 
     public TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
                             final DeviceDAO deviceDAO,
@@ -83,7 +83,7 @@ public class TimelineProcessor {
                             final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
                             final FeedbackDAO feedbackDAO,
                             final TimelineDAODynamoDB timelineDAODynamoDB,
-                            final SleepHmmDAODynamoDB sleepHmmDAODynamoDB) {
+                            final SleepHmmDAO sleepHmmDAO) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAO = deviceDataDAO;
@@ -95,7 +95,7 @@ public class TimelineProcessor {
         this.ringTimeHistoryDAODynamoDB = ringTimeHistoryDAODynamoDB;
         this.feedbackDAO = feedbackDAO;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
-        this.sleepHmmDAODynamoDB = sleepHmmDAODynamoDB;
+        this.sleepHmmDAO = sleepHmmDAO;
     }
 
     public boolean shouldProcessTimelineByWorker(final long accountId,
@@ -506,7 +506,7 @@ public class TimelineProcessor {
         if (hasHmmEnabled) {
             LOGGER.info("Using HMM for account {}",accountId);
 
-            final Optional<SleepHmmWithInterpretation> hmmOptional = sleepHmmDAODynamoDB.getLatestModelForDate(accountId, targetDate.getMillis());
+            final Optional<SleepHmmWithInterpretation> hmmOptional = sleepHmmDAO.getLatestModelForDate(accountId, targetDate.getMillis());
 
             if (hmmOptional.isPresent()) {
                 final Optional<SleepHmmWithInterpretation.SleepHmmResult> optionalHmmPredictions = hmmOptional.get().getSleepEventsUsingHMM(

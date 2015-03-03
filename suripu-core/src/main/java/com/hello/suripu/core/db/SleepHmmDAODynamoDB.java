@@ -55,7 +55,7 @@ import java.util.Map;
 
  */
 
-public class SleepHmmDAODynamoDB {
+public class SleepHmmDAODynamoDB implements SleepHmmDAO {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(TimelineDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
@@ -80,7 +80,8 @@ public class SleepHmmDAODynamoDB {
         mapper.registerModule(new JodaModule());
     }
 
-    public Optional<SleepHmmWithInterpretation> getLatestModelForDate(final long accountId,final long timeOfInterestMillis) {
+    @Override
+    public Optional<SleepHmmWithInterpretation> getLatestModelForDate(final long accountId, final long timeOfInterestMillis) {
 
         byte [] sleepHmmBlob = null;
 

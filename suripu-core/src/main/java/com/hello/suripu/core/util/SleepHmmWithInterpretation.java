@@ -34,13 +34,14 @@ public class SleepHmmWithInterpretation {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepHmmWithInterpretation.class);
 
+    final static public int NUM_MINUTES_IN_WINDOW = 15;
+
     final static protected int NUM_DATA_DIMENSIONS = 3;
     final static protected int LIGHT_INDEX = 0;
     final static protected int MOT_COUNT_INDEX = 1;
     final static protected int WAVE_INDEX = 2;
 
     final static protected int ACCEPTABLE_GAP_IN_MINUTES_FOR_SLEEP_DISTURBANCE = 45;
-    final static protected int NUM_MINUTES_IN_WINDOW = 15;
     final static protected int ACCEPTABLE_GAP_IN_INDEX_COUNTS = ACCEPTABLE_GAP_IN_MINUTES_FOR_SLEEP_DISTURBANCE / NUM_MINUTES_IN_WINDOW;
 
     final static protected int SLEEP_DEPTH_NONE = 0;
@@ -70,18 +71,21 @@ public class SleepHmmWithInterpretation {
         public final Optional<Event> wakeUp;
         public final Optional<Event> outOfBed;
         public final List<Event> disturbances;
+        public final int [] path;
 
         public SleepHmmResult(Optional<Event> inBed,
                               Optional<Event> fallAsleep,
                               Optional<Event> wakeUp,
                               Optional<Event> outOfBed,
-                              List<Event> disturbances) {
+                              List<Event> disturbances,
+                              final int [] path) {
 
             this.inBed = inBed;
             this.fallAsleep = fallAsleep;
             this.wakeUp = wakeUp;
             this.outOfBed = outOfBed;
             this.disturbances = disturbances;
+            this.path = path;
         }
     }
 
@@ -301,7 +305,7 @@ CREATE CREATE CREATE
 
         final List<Event> disturbances = new ArrayList<Event>();
 
-        return Optional.of(new SleepHmmResult(inBed,fallAsleep,wakeUp,outOfBed,disturbances));
+        return Optional.of(new SleepHmmResult(inBed,fallAsleep,wakeUp,outOfBed,disturbances,path));
 
 
     }
