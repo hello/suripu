@@ -126,7 +126,11 @@ public final class SenseSaveWorkerCommand extends ConfiguredCommand<SenseSaveWor
 
         final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(dynamoDBClient, configuration.getMergedInfoDB().getTableName());
 
-        final JedisPool jedisPool = new JedisPool("localhost");
+        final JedisPool jedisPool = new JedisPool(
+                configuration.getRedisConfiguration().getHost(),
+                configuration.getRedisConfiguration().getPort()
+        );
+
         final IRecordProcessorFactory factory = new SenseSaveProcessorFactory(deviceDAO, mergedUserInfoDynamoDB, deviceDataDAO, jedisPool);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();

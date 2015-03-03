@@ -2,7 +2,6 @@ package com.hello.suripu.research.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hello.suripu.core.configuration.DynamoDBConfiguration;
-import com.hello.suripu.core.configuration.GraphiteConfiguration;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.yammer.dropwizard.config.Configuration;
@@ -35,29 +34,11 @@ public class SuripuResearchConfiguration extends Configuration {
 
 
     @Valid
-    @NotNull
-    @JsonProperty("metrics_enabled")
-    private Boolean metricsEnabled;
-
-    public Boolean getMetricsEnabled() {
-        return metricsEnabled;
-    }
-
-    @Valid
     @JsonProperty("debug")
     private Boolean debug = Boolean.FALSE;
 
     public Boolean getDebug() {
         return debug;
-    }
-
-    @Valid
-    @NotNull
-    @JsonProperty("graphite")
-    private GraphiteConfiguration graphite;
-
-    public GraphiteConfiguration getGraphite() {
-        return graphite;
     }
 
     @Valid

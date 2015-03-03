@@ -84,5 +84,5 @@ features_db:
     table_name: features
 
 redis:
-  host: localhost # redis is running locally for now
+  host: localhost
   port: 6379

@@ -224,7 +224,11 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 configuration.getSleepScoreVersion()
         );
 
-        final JedisPool jedisPool = new JedisPool("localhost", 6379);
+        final JedisPool jedisPool = new JedisPool(
+                configuration.getRedisConfiguration().getHost(),
+                configuration.getRedisConfiguration().getPort()
+        );
+
         final ImmutableMap<String, String> arns = ImmutableMap.copyOf(configuration.getPushNotificationsConfiguration().getArns());
 
         final AmazonDynamoDB ringTimeHistoryDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getRingTimeHistoryDBConfiguration().getEndpoint());
