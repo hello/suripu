@@ -576,9 +576,31 @@ public class ReceiveResource extends BaseResource {
                                                                             final DateTimeZone userTimeZone,
                                                                             final DataInputProtos.batched_periodic_data batchData) {
         final int currentFirmwareVersion = batchData.getFirmwareVersion();
-        if(canDeviceOTA(deviceID, deviceGroups, userTimeZone, batchData, otaConfiguration, featureFlipper)) {
+        final int uptimeInSeconds = (batchData.hasUptimeInSecond()) ? batchData.getUptimeInSecond() : -1;
+        final DateTime currentDTZ = DateTime.now().withZone(userTimeZone);
+        final DateTime startOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getStartUpdateWindowHour()).withMinuteOfHour(0);
+        final DateTime endOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getEndUpdateWindowHour()).withMinuteOfHour(0);
+        final Set<String> alwaysOTAGroups = otaConfiguration.getAlwaysOTAGroups();
+        final Integer deviceUptimeDelay = otaConfiguration.getDeviceUptimeDelay();
+        final Boolean alwaysOTA = (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceID, deviceGroups));
+        
+        final boolean canOTA = canDeviceOTA(deviceID, deviceGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, alwaysOTA);
+        
+        if(canOTA) {
+            
             final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore
                     .getFirmwareUpdate(deviceID, deviceGroups.get(0), currentFirmwareVersion); //TODO: Create a better way of knowing which group the device will belong to
+            
+            //TODO: Reconcile behavior of feature flipper as it relates to firmware releases & remove this code
+            // groups take precedence over feature
+            if (!deviceGroups.isEmpty()) {
+                LOGGER.debug("DeviceId {} belongs to groups: {}", deviceID, deviceGroups);
+            } else {
+                if (featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceID, deviceGroups)) {
+                    LOGGER.debug("Feature release is active!");
+                }
+            }
+            
             LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
             return fileDownloadList;
         }
@@ -587,27 +609,18 @@ public class ReceiveResource extends BaseResource {
     
     public static Boolean canDeviceOTA(final String deviceID,
                                        final List<String> deviceGroups,
-                                       final DateTimeZone userTimeZone,
-                                       final DataInputProtos.batched_periodic_data batchData,
-                                       final OTAConfiguration otaConfiguration,
-                                       final RolloutClient featureFlipper) {
+                                       final Set<String> overrideOTAGroups,
+                                       final Integer deviceUptimeDelayMinutes,
+                                       final Integer uptimeInSeconds,
+                                       final DateTime currentDTZ,
+                                       final DateTime startOTAWindow,
+                                       final DateTime endOTAWindow,
+                                       final Boolean isAlwaysOTA) {
         
-        final Set<String> alwaysOTAGroups = otaConfiguration.getAlwaysOTAGroups();
-        final int currentFirmwareVersion = batchData.getFirmwareVersion();
-        final DateTime currentDTZ = DateTime.now().withZone(userTimeZone);
-        final String firmwareFeature = String.format("firmware_release_%s", currentFirmwareVersion);
-        final DateTime startOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getStartUpdateWindowHour()).withMinuteOfHour(0);
-        final DateTime endOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getEndUpdateWindowHour()).withMinuteOfHour(0);
-        final Integer deviceUptimeDelay = otaConfiguration.getDeviceUptimeDelay();
-        
-        boolean canOTA = false;
-        
-        if (featureFlipper.deviceFeatureActive(firmwareFeature, deviceID, deviceGroups)) {
-            LOGGER.debug("Feature is active!");
-        }
+        boolean canOTA;
 
-        if (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceID, deviceGroups)) {
-            LOGGER.warn("Always OTA is on for device: ", deviceID);
+        if (isAlwaysOTA) {
+            LOGGER.debug("Always OTA is on for device: ", deviceID);
             canOTA = true;
         } else {
             
@@ -621,36 +634,20 @@ public class ReceiveResource extends BaseResource {
             }
 
             //Has the device been running long enough to receive an OTA Update?
-            if (batchData.hasUptimeInSecond()) {
-                if (!(batchData.getUptimeInSecond() > deviceUptimeDelay * DateTimeConstants.SECONDS_PER_MINUTE)) {
+            if (uptimeInSeconds != -1)
+            {
+                if (!(uptimeInSeconds > deviceUptimeDelayMinutes * DateTimeConstants.SECONDS_PER_MINUTE)) {
                     canOTA = false;
                     LOGGER.debug("Device failed up-time check.");
                 }
-
             }
 
-            //Check for alwaysOTAGroups as defined in the OTA configuration
-            if (!Collections.disjoint(deviceGroups, alwaysOTAGroups)) {
+            //Check for overrideOTAGroups as defined in the OTA configuration
+            if (!Collections.disjoint(deviceGroups, overrideOTAGroups)) {
                 canOTA = true;
                 LOGGER.debug("Device belongs to OTAU check override group");
             }
-
-            if(canOTA) {
-                // groups take precedence over feature
-                if (!deviceGroups.isEmpty()) {
-                    LOGGER.debug("DeviceId {} belongs to groups: {}", deviceID, deviceGroups);
-                    canOTA = true;
-                } else {
-                    if (featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceID, deviceGroups)) {
-                        LOGGER.debug("Feature release is active!");
-                        canOTA = true;
-                    }
-                }
-
-            }
-
         }
-        
         return canOTA;
     }
     
