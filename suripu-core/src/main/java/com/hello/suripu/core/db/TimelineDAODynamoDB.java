@@ -75,8 +75,6 @@ public class TimelineDAODynamoDB {
     public static final String VERSION = "version";
     public static final String EXPIRED_AT_MILLIS = "expired_at_millis";
 
-    public static final Long NEVER_EXPIRED = -1L;
-
 
     private final int MAX_CALL_COUNT = 5;
     private final int MAX_BATCH_SIZE = 25;  // Based on: http://docs.aws.amazon.com/cli/latest/reference/dynamodb/batch-write-item.html
@@ -356,7 +354,7 @@ public class TimelineDAODynamoDB {
                 item.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(targetDateOfNightLocalUTC)));
                 item.put(UPDATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(DateTime.now().getMillis())));
                 item.put(VERSION, new AttributeValue().withS(TimelineProcessor.VERSION));
-                item.put(EXPIRED_AT_MILLIS, new AttributeValue().withN(NEVER_EXPIRED.toString()));
+                item.put(EXPIRED_AT_MILLIS, new AttributeValue().withN(CachedTimelines.NEVER_EXPIRE.toString()));
 
                 final int compressType = Compression.CompressionType.NONE.getValue();
                 item.put(COMPRESS_TYPE_ATTRIBUTE_NAME, new AttributeValue().withN(

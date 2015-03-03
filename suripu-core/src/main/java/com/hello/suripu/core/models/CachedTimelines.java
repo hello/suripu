@@ -9,6 +9,8 @@ import java.util.List;
  * Created by pangwu on 2/27/15.
  */
 public class CachedTimelines {
+    public static final Long NEVER_EXPIRE = -1L;
+
     public final List<Timeline> timeline;
     public final String version;
     public final Long expiredAtMillis;
