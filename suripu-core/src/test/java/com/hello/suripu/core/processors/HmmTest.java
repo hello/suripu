@@ -105,8 +105,8 @@ public class HmmTest {
         final int expectedLength1 =  6*60 / SleepHmmWithInterpretation.NUM_MINUTES_IN_WINDOW;
         final int expectedLength2 =  7*60 / SleepHmmWithInterpretation.NUM_MINUTES_IN_WINDOW;
 
-        assertTrue(res.get().path.length ==  expectedLength1);
-        assertTrue(res2.get().path.length ==  expectedLength2);
+        assertTrue(res.get().path.size() ==  expectedLength1);
+        assertTrue(res2.get().path.size() ==  expectedLength2);
 
 
 

@@ -1,6 +1,7 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.hmm.DiscreteAlphabetPdf;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
 import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
@@ -71,14 +72,14 @@ public class SleepHmmWithInterpretation {
         public final Optional<Event> wakeUp;
         public final Optional<Event> outOfBed;
         public final List<Event> disturbances;
-        public final int [] path;
+        public final ImmutableList<Integer> path;
 
         public SleepHmmResult(Optional<Event> inBed,
                               Optional<Event> fallAsleep,
                               Optional<Event> wakeUp,
                               Optional<Event> outOfBed,
                               List<Event> disturbances,
-                              final int [] path) {
+                              ImmutableList<Integer> path) {
 
             this.inBed = inBed;
             this.fallAsleep = fallAsleep;
@@ -283,7 +284,6 @@ CREATE CREATE CREATE
 
         final int[] path = hmmWithStates.getViterbiPath(binnedData.data,allowableEndings);
 
-
         LOGGER.debug("decoded path = {} ",getPathAsString(path));
 
         //TODO use gaps to find disturbances / when people woke up in the night
@@ -305,7 +305,7 @@ CREATE CREATE CREATE
 
         final List<Event> disturbances = new ArrayList<Event>();
 
-        return Optional.of(new SleepHmmResult(inBed,fallAsleep,wakeUp,outOfBed,disturbances,path));
+        return Optional.of(new SleepHmmResult(inBed,fallAsleep,wakeUp,outOfBed,disturbances,getIntArrayAsImmutableList(path)));
 
 
     }
@@ -566,19 +566,6 @@ CREATE CREATE CREATE
         }
     }
 
-    protected int [] IntegerSetToArray(final Set<Integer> mySet) {
-        int [] myArray = new int[mySet.size()];
-
-        Iterator<Integer> it = mySet.iterator();
-        int idx = 0;
-        while (it.hasNext()) {
-            myArray[idx] = it.next();
-            idx++;
-        }
-
-        return myArray;
-    }
-
     protected String getPathAsString(final int [] path) {
         String pathString = "";
         boolean first = true;
@@ -610,6 +597,17 @@ CREATE CREATE CREATE
         return vecString;
     }
 
+    protected ImmutableList<Integer> getIntArrayAsImmutableList(final int[] path) {
+        List<Integer> newlist = new ArrayList<Integer>();
+
+        for (int x : path) {
+            newlist.add(x);
+        }
+
+        return ImmutableList.copyOf(newlist);
+
+
+    }
 
 
 }
