@@ -24,6 +24,17 @@ public class CachedTimelinesTest {
     }
 
     @Test
+    public void testShouldNotInvalidateDifferentVersionButTargetDateTooOld(){
+        final long expireMillis = DateTime.now().getMillis();
+        final CachedTimelines cachedTimelines = CachedTimelines.create(new ArrayList<Timeline>(), new Integer(1).toString(), expireMillis);
+        assertThat(cachedTimelines.shouldInvalidate(new Integer(2).toString(),
+                        DateTime.now().withTimeAtStartOfDay().minusDays(20),
+                        DateTime.now().withTimeAtStartOfDay(),
+                        5),
+                is(false));
+    }
+
+    @Test
     public void shouldNotInvalidateTargetDateTooOld(){
         final long expireMillis = DateTime.now().getMillis();
         final CachedTimelines cachedTimelines = CachedTimelines.create(new ArrayList<Timeline>(), new Integer(1).toString(), expireMillis);
