@@ -21,6 +21,7 @@ import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.processors.RingProcessor;
+import com.hello.suripu.core.processors.OTAProcessor;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DeviceIdUtil;
 import com.hello.suripu.core.util.HelloHttpHeader;
@@ -575,75 +576,36 @@ public class ReceiveResource extends BaseResource {
                                                                             final List<String> deviceGroups,
                                                                             final DateTimeZone userTimeZone,
                                                                             final DataInputProtos.batched_periodic_data batchData) {
-        
-        final Set<String> alwaysOTAGroups = otaConfiguration.getAlwaysOTAGroups();
         final int currentFirmwareVersion = batchData.getFirmwareVersion();
+        final int uptimeInSeconds = (batchData.hasUptimeInSecond()) ? batchData.getUptimeInSecond() : -1;
         final DateTime currentDTZ = DateTime.now().withZone(userTimeZone);
+        final DateTime startOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getStartUpdateWindowHour()).withMinuteOfHour(0);
+        final DateTime endOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getEndUpdateWindowHour()).withMinuteOfHour(0);
+        final Set<String> alwaysOTAGroups = otaConfiguration.getAlwaysOTAGroups();
+        final Integer deviceUptimeDelay = otaConfiguration.getDeviceUptimeDelay();
+        final Boolean alwaysOTA = (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceID, deviceGroups));
         
-        final String firmwareFeature = String.format("firmware_release_%s", currentFirmwareVersion);
-        if (featureFlipper.deviceFeatureActive(firmwareFeature, deviceID, deviceGroups)) {
-            LOGGER.debug("Feature is active!");
-        }
-
-        if (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceID, deviceGroups)) {
-            LOGGER.warn("Always OTA is on for device: ", deviceID);
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceID,
-                    FeatureFlipper.ALWAYS_OTA_RELEASE, currentFirmwareVersion);
-            LOGGER.warn("{} files added to syncResponse to be downloaded", fileDownloadList.size());
-            return fileDownloadList;
-
-        } else {
-
-            final DateTime startOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getStartUpdateWindowHour());
-            final DateTime endOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getEndUpdateWindowHour()).plusSeconds(3599);
-            final Integer deviceUptimeDelay = otaConfiguration.getDeviceUptimeDelay();
-            boolean canOTA = false;
-
-            //Allow OTA Updates only in config-defined update window
-            if (currentDTZ.isAfter(startOTAWindow) && currentDTZ.isBefore(endOTAWindow)) {
-                canOTA = true;
-                LOGGER.debug("Device within OTAU window.");
+        final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, alwaysOTA);
+        
+        if(canOTA) {
+            
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore
+                    .getFirmwareUpdate(deviceID, deviceGroups.get(0), currentFirmwareVersion); //TODO: Create a better way of knowing which group the device will belong to
+            
+            //TODO: Reconcile behavior of feature flipper as it relates to firmware releases & remove this code
+            // groups take precedence over feature
+            if (!deviceGroups.isEmpty()) {
+                LOGGER.debug("DeviceId {} belongs to groups: {}", deviceID, deviceGroups);
             } else {
-                canOTA = false;
-                LOGGER.debug("Device outside OTAU window.");
-            }
-
-            //Has the device been running long enough to receive an OTA Update?
-            if (batchData.hasUptimeInSecond()) {
-                if (!(batchData.getUptimeInSecond() > deviceUptimeDelay * DateTimeConstants.SECONDS_PER_MINUTE)) {
-                    canOTA = false;
-                    LOGGER.debug("Device failed up-time check.");
+                if (featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceID, deviceGroups)) {
+                    LOGGER.debug("Feature release is active!");
                 }
-                
             }
-
-            //Check for alwaysOTAGroups as defined in the OTA configuration
-            if (!Collections.disjoint(deviceGroups, alwaysOTAGroups)) {
-                canOTA = true;
-                LOGGER.debug("Device belongs to OTAU check override group");
-            }
-
-            if(canOTA) {
-                // groups take precedence over feature
-                if (!deviceGroups.isEmpty()) {
-                    LOGGER.debug("DeviceId {} belongs to groups: {}", deviceID, deviceGroups);
-                    final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceID, deviceGroups.get(0), currentFirmwareVersion);
-                    LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
-                    return fileDownloadList;
-                } else {
-                    if (featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceID, deviceGroups)) {
-                        LOGGER.debug("Feature release is active!");
-                        final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceID, FeatureFlipper.OTA_RELEASE, currentFirmwareVersion);
-                        LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
-                        return fileDownloadList;
-                    }
-                }
-
-            }
-
+            
+            LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+            return fileDownloadList;
         }
-        
         return Collections.emptyList();
-        
     }
+    
 }
