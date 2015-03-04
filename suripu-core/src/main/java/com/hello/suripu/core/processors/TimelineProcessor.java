@@ -400,7 +400,7 @@ public class TimelineProcessor {
                                                 final Boolean hasHmmEnabled) {
 
 
-        final long  currentTimeMillis = System.currentTimeMillis();
+        final long  currentTimeMillis = DateTime.now().withZone(DateTimeZone.UTC).getMillis();
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withHourOfDay(20);
         final DateTime endDate = targetDate.plusHours(16);
