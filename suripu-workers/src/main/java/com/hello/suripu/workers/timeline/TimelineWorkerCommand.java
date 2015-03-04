@@ -146,7 +146,8 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
                 ringTimeHistoryDAODynamoDB,
                 feedbackDAO,
                 timelineDAODynamoDB,
-                sleepHmmDAODynamoDB);
+                sleepHmmDAODynamoDB,
+                accountDAO);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
@@ -169,7 +170,6 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
         final IRecordProcessorFactory factory = new TimelineRecordProcessorFactory(timelineProcessor,
                 deviceDAO,
                 mergedUserInfoDynamoDB,
-                ringTimeHistoryDAODynamoDB,
                 timelineDAODynamoDB,
                 configuration);
         final Worker worker = new Worker(factory, kinesisConfig);

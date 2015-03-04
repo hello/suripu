@@ -157,7 +157,7 @@ public class SleepEventSafeGuard {
                         sleep.get().getEndTimestamp() - DateTimeConstants.MILLIS_PER_MINUTE,
                         sleep.get().getTimezoneOffset()));
             }else{
-                goToBed = Optional.absent();
+                goToBed = Optional.absent(); // TODO: add it back
             }
 
         }
@@ -181,7 +181,7 @@ public class SleepEventSafeGuard {
                         new DateTime(wakeUp.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUp.get().getTimezoneOffset())),
                         new DateTime(outOfBed.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBed.get().getTimezoneOffset())));
 
-                outOfBed = Optional.absent();
+                outOfBed = Optional.absent(); // TODO: add it back
 
             }
 
@@ -189,10 +189,10 @@ public class SleepEventSafeGuard {
 
 
         if(goToBed.isPresent() && isTwoSupposedCloseEventsDeviateTooMuch(sleep.get(), goToBed.get(), 120 * DateTimeConstants.MILLIS_PER_MINUTE)){
-            LOGGER.warn("Go to bed and sleep off too much, out of bed {}, sleep {}, eliminate sleep.",
+            LOGGER.warn("Go to bed and sleep off too much, go to bed {}, sleep {}, eliminate sleep.",
                     new DateTime(goToBed.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBed.get().getTimezoneOffset())),
                     new DateTime(sleep.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(sleep.get().getTimezoneOffset())));
-            sleep = Optional.absent();
+            sleep = Optional.absent(); // TODO: add it back - pick the first time motion becomes zero??
         }
 
         if(outOfBed.isPresent() && isTwoSupposedCloseEventsDeviateTooMuch(wakeUp.get(), outOfBed.get(), 120 * DateTimeConstants.MILLIS_PER_MINUTE)){
@@ -205,7 +205,7 @@ public class SleepEventSafeGuard {
                             new DateTime(outOfBed.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBed.get().getTimezoneOffset())),
                             new DateTime(wakeUp.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUp.get().getTimezoneOffset())));
                     wakeUp = Optional.<Event>absent();
-                    outOfBed = Optional.<Event>absent();
+                    outOfBed = Optional.<Event>absent(); // TODO: maids fix??
 
                 }else{
                     LOGGER.warn("Wake up and out of bed off too much, out of bed {}, wake up {}, eliminate wake up.",
@@ -213,7 +213,7 @@ public class SleepEventSafeGuard {
                             new DateTime(wakeUp.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUp.get().getTimezoneOffset())));
 
                     // The one more close to last motion is more likely to be correct
-                    wakeUp = Optional.<Event>absent();
+                    wakeUp = Optional.<Event>absent(); // todo: out of bed closer to last motion, more likely to be correct. set wake up to be between?
                 }
             }
 

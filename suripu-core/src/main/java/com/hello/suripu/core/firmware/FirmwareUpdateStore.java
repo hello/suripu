@@ -272,7 +272,7 @@ public class FirmwareUpdateStore {
             fw_files = s3FWCache.get(group, new Callable<Pair<Integer, List<SyncResponse.FileDownload>>>() {
                 @Override
                 public Pair<Integer, List<SyncResponse.FileDownload>> call() throws Exception {
-                    LOGGER.debug("Nothing in cache found for group: [{}]. Grabbing info from S3.", group);
+                    LOGGER.info("Nothing in cache found for group: [{}]. Grabbing info from S3.", group);
                     return getFirmwareFilesForGroup(group);
                 }
             });

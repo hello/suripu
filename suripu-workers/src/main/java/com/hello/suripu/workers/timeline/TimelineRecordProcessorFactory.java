@@ -4,7 +4,6 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.processors.TimelineProcessor;
 
@@ -15,7 +14,6 @@ public class TimelineRecordProcessorFactory implements IRecordProcessorFactory {
 
     private final TimelineProcessor timelineProcessor;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
-    private final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
     private final TimelineWorkerConfiguration configuration;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
     private final DeviceDAO deviceDAO;
@@ -23,13 +21,11 @@ public class TimelineRecordProcessorFactory implements IRecordProcessorFactory {
     public TimelineRecordProcessorFactory(final TimelineProcessor timelineProcessor,
                                           final DeviceDAO deviceDAO,
                                           final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
-                                          final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
                                           final TimelineDAODynamoDB timelineDAODynamoDB,
                                           final TimelineWorkerConfiguration configuration) {
         this.timelineProcessor = timelineProcessor;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.configuration = configuration;
-        this.ringTimeHistoryDAODynamoDB = ringTimeHistoryDAODynamoDB;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
         this.deviceDAO = deviceDAO;
     }
@@ -40,7 +36,6 @@ public class TimelineRecordProcessorFactory implements IRecordProcessorFactory {
         return new TimelineRecordProcessor(this.timelineProcessor,
                 this.deviceDAO,
                 this.mergedUserInfoDynamoDB,
-                this.ringTimeHistoryDAODynamoDB,
                 this.timelineDAODynamoDB,
                 this.configuration);
     }
