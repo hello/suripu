@@ -58,12 +58,12 @@ public class HmmTest {
     @Test
     public void TestHmm() {
         final int offset = -3600*1000;
-        Optional<SleepHmmWithInterpretation>  hmm = sleepHmmDAO.getLatestModelForDate(0,0);
+        final Optional<SleepHmmWithInterpretation>  hmm = sleepHmmDAO.getLatestModelForDate(0,0);
 
         assertTrue(hmm.isPresent());
 
-        AllSensorSampleList sensorSampleList = new AllSensorSampleList();
-        List<TrackerMotion> motionList = new ArrayList<TrackerMotion>();
+        final AllSensorSampleList sensorSampleList = new AllSensorSampleList();
+        final List<TrackerMotion> motionList = new ArrayList<TrackerMotion>();
 
         for (int i = 0; i < 24; i++) {
             /*
@@ -78,7 +78,7 @@ public class HmmTest {
             final Long onDurationInSeconds
             */
             final long t = t0 + i*3600/3*1000;
-            TrackerMotion m = new TrackerMotion(0,0,0L,t,500,offset,0L,1L,1L);
+            final TrackerMotion m = new TrackerMotion(0,0,0L,t,500,offset,0L,1L,1L);
 
             motionList.add(m);
 
@@ -87,8 +87,8 @@ public class HmmTest {
         List<Sample> light = new ArrayList<Sample>();
 
         for (int i = 1; i < 7*3600; i++) {
-            Long t = t0 + i*60*1000;
-            Sample s = new Sample(t,0.1f,offset);
+            final Long t = t0 + i*60*1000;
+            final Sample s = new Sample(t,0.1f,offset);
             light.add(s);
         }
 
