@@ -109,12 +109,9 @@ public class SleepHmmDAODynamoDB {
 
                 SleepHmmProtos.SleepHmm hmmModelData = null;
 
-
                 hmmModelData = SleepHmmProtos.SleepHmm.parseFrom(sleepHmmBlob);
 
-
-                optionalModel = Optional.of(SleepHmmWithInterpretation.createModelFromProtobuf(hmmModelData));
-
+                optionalModel = SleepHmmWithInterpretation.createModelFromProtobuf(hmmModelData);
 
             }
             catch (InvalidProtocolBufferException e) {

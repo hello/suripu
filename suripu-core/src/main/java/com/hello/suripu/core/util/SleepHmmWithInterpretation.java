@@ -2,6 +2,7 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.algorithm.hmm.DiscreteAlphabetPdf;
+import com.hello.suripu.algorithm.hmm.GammaPdf;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
 import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
 import com.hello.suripu.algorithm.hmm.PdfComposite;
@@ -135,7 +136,7 @@ CREATE CREATE CREATE
     Return Sleep HMM model from the SleepHMM protbuf
 
     */
-    static public SleepHmmWithInterpretation createModelFromProtobuf(final SleepHmmProtos.SleepHmm hmmModelData) {
+    static public Optional<SleepHmmWithInterpretation> createModelFromProtobuf(final SleepHmmProtos.SleepHmm hmmModelData) {
 
         String source = "no_source";
 
@@ -180,12 +181,16 @@ CREATE CREATE CREATE
 
             final SleepHmmProtos.StateModel model = states.get(iState);
 
+            if (! (model.hasLight() && model.hasDisturbances() && model.hasMotionCount())  ) {
+                return Optional.absent();
+            }
+
             //compose measurement model
             final PdfComposite pdf = new PdfComposite();
 
-            pdf.addPdf(new PoissonPdf(model.getLight().getMean(), 0));
+            pdf.addPdf(new GammaPdf(model.getLight().getMean(),model.getLight().getStddev(), 0));
             pdf.addPdf(new PoissonPdf(model.getMotionCount().getMean(), 1));
-            pdf.addPdf(new DiscreteAlphabetPdf(model.getWaves().getProbabilitiesList(), 2));
+            pdf.addPdf(new DiscreteAlphabetPdf(model.getDisturbances().getProbabilitiesList(), 2));
 
 
             //assign states of onbed, sleeping
@@ -249,7 +254,7 @@ CREATE CREATE CREATE
 
         LOGGER.debug("deserialized sleep HMM source={}, id={}, numStates={}",source,id,numStates);
 
-        return new SleepHmmWithInterpretation(hmm, sleepStates, onBedStates,allowableEndingStates,sleepDepthsByState);
+        return Optional.of( new  SleepHmmWithInterpretation(hmm, sleepStates, onBedStates,allowableEndingStates,sleepDepthsByState));
     }
 
 /* MAIN METHOD TO BE USED FOR DATA PROCESSING IS HERE */
