@@ -159,10 +159,11 @@ public class TimelineUtilsTest {
         final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
         final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
 
-        assertThat(greyEvents.size(), is(events.size()));
-        assertThat(greyEvents.get(0).getType(), is(Event.Type.NONE));
-        assertThat(greyEvents.get(2).getType(), is(Event.Type.SLEEPING));
-        assertThat(greyEvents.get(filteredEvents.size() - 1).getType(), is(Event.Type.NONE));
+        // motion events outside of first meaningful event is removed
+        assertThat(greyEvents.size(), is(events.size() - 1));
+        assertThat(greyEvents.get(0).getType(), is(Event.Type.IN_BED));
+        assertThat(greyEvents.get(1).getType(), is(Event.Type.SLEEPING));
+        assertThat(greyEvents.get(filteredEvents.size() - 2).getType(), is(Event.Type.NONE));
 
     }
 
@@ -183,11 +184,11 @@ public class TimelineUtilsTest {
         final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
         final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
 
-        assertThat(greyEvents.size(), is(events.size()));
-        assertThat(greyEvents.get(0).getType(), is(Event.Type.NONE));
-        assertThat(greyEvents.get(2).getType(), is(Event.Type.SLEEPING));
-        assertThat(greyEvents.get(filteredEvents.size() - 2).getType(), is(Event.Type.MOTION));
-        assertThat(greyEvents.get(filteredEvents.size() - 1).getType(), is(Event.Type.SLEEPING));
+        assertThat(greyEvents.size(), is(events.size() - 1));
+        assertThat(greyEvents.get(0).getType(), is(Event.Type.IN_BED));
+        assertThat(greyEvents.get(1).getType(), is(Event.Type.SLEEPING));
+        assertThat(greyEvents.get(filteredEvents.size() - 3).getType(), is(Event.Type.MOTION));
+        assertThat(greyEvents.get(filteredEvents.size() - 2).getType(), is(Event.Type.SLEEPING));
 
     }
 
@@ -208,11 +209,11 @@ public class TimelineUtilsTest {
         final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
         final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
 
-        assertThat(greyEvents.size(), is(events.size()));
-        assertThat(greyEvents.get(0).getType(), is(Event.Type.MOTION));
-        assertThat(greyEvents.get(2).getType(), is(Event.Type.SLEEPING));
+        assertThat(greyEvents.size(), is(events.size() - 1));
+        assertThat(greyEvents.get(0).getType(), is(Event.Type.IN_BED));
+        assertThat(greyEvents.get(1).getType(), is(Event.Type.SLEEPING));
+        assertThat(greyEvents.get(filteredEvents.size() - 3).getType(), is(Event.Type.NONE));
         assertThat(greyEvents.get(filteredEvents.size() - 2).getType(), is(Event.Type.NONE));
-        assertThat(greyEvents.get(filteredEvents.size() - 1).getType(), is(Event.Type.NONE));
 
     }
 
@@ -233,10 +234,10 @@ public class TimelineUtilsTest {
         final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
         final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
 
-        for(int i = 0; i < events.size(); i++){
+        for(int i = 0; i < events.size() - 1; i++){
             assertThat(greyEvents.get(i).getType() == Event.Type.NONE, is(false));
         }
-        assertThat(greyEvents.get(2).getType(), is(Event.Type.SLEEPING));
+        assertThat(greyEvents.get(1).getType(), is(Event.Type.SLEEPING));
 
     }
 
