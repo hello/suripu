@@ -41,7 +41,7 @@ public class SleepHmmWithInterpretation {
     final static protected int NUM_DATA_DIMENSIONS = 3;
     final static protected int LIGHT_INDEX = 0;
     final static protected int MOT_COUNT_INDEX = 1;
-    final static protected int WAVE_INDEX = 2;
+    final static protected int DISTURBANCE_INDEX = 2;
 
     final static protected int ACCEPTABLE_GAP_IN_MINUTES_FOR_SLEEP_DISTURBANCE = 45;
     final static protected int ACCEPTABLE_GAP_IN_INDEX_COUNTS = ACCEPTABLE_GAP_IN_MINUTES_FOR_SLEEP_DISTURBANCE / NUM_MINUTES_IN_WINDOW;
@@ -55,6 +55,8 @@ public class SleepHmmWithInterpretation {
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
 
     final static private double LIGHT_PREMULTIPLIER = 4.0;
+    final static private int RAW_PILL_MAGNITUDE_DISTURBANCE_THRESHOLD = 15000;
+    final static private double SOUND_DISTURBANCE_MAGNITUDE_DB = 55.0;
 
     protected final HiddenMarkovModel hmmWithStates;
     protected final Set<Integer> sleepStates;
@@ -437,6 +439,7 @@ CREATE CREATE CREATE
                                                        final long startTimeMillis, final long endTimeMillis, final long currentTimeInMillis) {
         final List<Sample> light = sensors.get(Sensor.LIGHT);
         final List<Sample> wave = sensors.get(Sensor.WAVE_COUNT);
+        final List<Sample> sound = sensors.get(Sensor.SOUND_PEAK_DISTURBANCE);
 
         if (light == Collections.EMPTY_LIST || light.isEmpty()) {
             return Optional.absent();
@@ -462,7 +465,7 @@ CREATE CREATE CREATE
         }
 
         //start filling in the sensor data.  Pick the max of the 5 minute bins for light
-        //compute log of light
+        //LOG OF LIGHT, CONTINUOUS
         final Iterator<Sample> it1 = light.iterator();
         while (it1.hasNext()) {
             final Sample sample = it1.next();
@@ -471,16 +474,14 @@ CREATE CREATE CREATE
                 value = 0.0;
             }
 
-            //TODO transform this back to raw counts before taking log
-            final double value2 = (double)(int)(Math.log(value * LIGHT_PREMULTIPLIER + 1.0) / Math.log(2));
+            final double value2 = Math.log(value * LIGHT_PREMULTIPLIER + 1.0) / Math.log(2);
 
             maxInBin(data, sample.dateTime, value2, LIGHT_INDEX, t0, numMinutesInWindow);
 
         }
 
 
-        //max of "energy"
-        //add counts to bin
+        //PILL MOTION
         final Iterator<TrackerMotion> it2 = pillData.iterator();
         while (it2.hasNext()) {
             final TrackerMotion m = it2.next();
@@ -492,17 +493,17 @@ CREATE CREATE CREATE
                 continue;
             }
 
-            if (value < 0) {
-                value = 0;
+            //if there's a disturbance, register it in the disturbance index
+            if (value > RAW_PILL_MAGNITUDE_DISTURBANCE_THRESHOLD) {
+                maxInBin(data, m.timestamp, 1.0, DISTURBANCE_INDEX, t0, numMinutesInWindow);
+
             }
 
-            value = Math.log(value / 2000 + 1);
-
             addToBin(data, m.timestamp, 1.0, MOT_COUNT_INDEX, t0, numMinutesInWindow);
-            //maxInBin(data, m.timestamp, value, ENERGY_INDEX, t0, numMinutesInWindow);
 
         }
 
+        //WAVES
         final Iterator<Sample> it3 = wave.iterator();
         while (it3.hasNext()) {
             final Sample sample = it3.next();
@@ -510,13 +511,19 @@ CREATE CREATE CREATE
 
             //either wave happened or it didn't.. value can be 1.0 or 0.0
             if (value > 0.0) {
-                value = 1.0;
+                maxInBin(data, sample.dateTime, 1.0, DISTURBANCE_INDEX, t0, numMinutesInWindow);
             }
-            else {
-                value = 0.0;
-            }
+        }
 
-            maxInBin(data, sample.dateTime, value, WAVE_INDEX, t0, numMinutesInWindow);
+        //SOUND
+        final Iterator<Sample> it4 = sound.iterator();
+        while (it4.hasNext()) {
+            final Sample sample = it4.next();
+            double value = sample.value;
+
+            if (value > SOUND_DISTURBANCE_MAGNITUDE_DB) {
+                maxInBin(data, sample.dateTime, 1.0, DISTURBANCE_INDEX, t0, numMinutesInWindow);
+            }
         }
 
         final BinnedData res = new BinnedData();
@@ -531,7 +538,7 @@ CREATE CREATE CREATE
         LOGGER.debug("t0={},tf={}",dateTimeBegin.toLocalTime().toString(),dateTimeEnd.toLocalTime().toString());
         LOGGER.debug("light={}",getDoubleVectorAsString(data[LIGHT_INDEX]));
         LOGGER.debug("motion={}",getDoubleVectorAsString(data[MOT_COUNT_INDEX]));
-        LOGGER.debug("waves={}", getDoubleVectorAsString(data[WAVE_INDEX]));
+        LOGGER.debug("waves={}", getDoubleVectorAsString(data[DISTURBANCE_INDEX]));
 
 
         return Optional.of(res);

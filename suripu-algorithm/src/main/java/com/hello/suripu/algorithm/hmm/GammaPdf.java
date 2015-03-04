@@ -13,19 +13,19 @@ public class GammaPdf implements HmmPdfInterface {
     public GammaPdf(final double mean, final double stdDev, final int measNum) {
         this.measNum = measNum;
 
-        // alpha/beta = mean
-        // alpha/beta^2  = variance
+        // k*theta = mean
+        // k*theta^2  = variance
         //
-        // alpha = beta * mean
-        // beta * mean / beta^2 = variance
-        // mean / beta = variance
-        // beta = mean / variance
+        // k = mean / theta
+        // mean / theta * theta^2 = mean * theta = variance
+        // theta = variance / mean
+        // k = mean / (variance / mean) = mean*mean / variance
+
         final double variance = stdDev*stdDev;
-        final double beta = mean / variance;
-        final double alpha = beta * mean;
+        final double theta  = variance / mean;
+        final double k = mean*mean / variance;
 
-
-        this.gammaDistribution = new GammaDistribution(alpha,beta);
+        this.gammaDistribution = new GammaDistribution(k,theta);
     }
     @Override
     public double[] getLikelihood(double[][] measurements) {
@@ -35,8 +35,7 @@ public class GammaPdf implements HmmPdfInterface {
 
         for (int i = 0; i < col.length; i++) {
             //god I hope this is its likelihood function
-
-            result[i] = gammaDistribution.probability(col[i]);
+            result[i] = gammaDistribution.density(col[i]);
         }
 
         return result;
