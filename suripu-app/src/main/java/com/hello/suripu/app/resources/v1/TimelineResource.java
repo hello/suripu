@@ -53,7 +53,8 @@ public class TimelineResource extends BaseResource {
                 hasAlarmInTimeline(accessToken.accountId),
                 hasSoundInTimeline(accessToken.accountId),
                 hasFeedbackInTimeline(accessToken.accountId),
-                hasHmmEnabled(accessToken.accountId));
+                hasHmmEnabled(accessToken.accountId),
+                false);
 
     }
 
@@ -74,7 +75,8 @@ public class TimelineResource extends BaseResource {
                 hasAlarmInTimeline(accountId.get()),
                 hasSoundInTimeline(accountId.get()),
                 hasFeedbackInTimeline(accountId.get()),
-                hasHmmEnabled(accountId.get()));
+                hasHmmEnabled(accountId.get()),
+                false);
     }
 
     private Optional<Long> getAccountIdByEmail(final String email) {

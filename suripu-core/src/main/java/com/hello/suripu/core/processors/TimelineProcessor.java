@@ -59,7 +59,7 @@ import java.util.Map;
 
 public class TimelineProcessor {
 
-    public static final String VERSION = "0.0.1";
+    public static final String VERSION = "0.0.2";
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineProcessor.class);
     private static final Integer MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES = 3 * 60;
     private final TrackerMotionDAO trackerMotionDAO;
@@ -397,7 +397,8 @@ public class TimelineProcessor {
                                                 final Boolean hasAlarmInTimeline,
                                                 final Boolean hasSoundInTimeline,
                                                 final Boolean hasFeedbackInTimelineEnabled,
-                                                final Boolean hasHmmEnabled) {
+                                                final Boolean hasHmmEnabled,
+                                                final Boolean forceUpdate) {
 
 
         final long  currentTimeMillis = DateTime.now().withZone(DateTimeZone.UTC).getMillis();
@@ -407,13 +408,17 @@ public class TimelineProcessor {
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
 
-        final ImmutableList<Timeline> cachedTimelines = this.timelineDAODynamoDB.getTimelinesForDate(accountId, targetDate.withTimeAtStartOfDay());
-        if (!cachedTimelines.isEmpty()) {
-            LOGGER.debug("Timeline for account {}, date {} returned from cache.", accountId, date);
-            return cachedTimelines;
-        }
+        if(!forceUpdate) {
+            final ImmutableList<Timeline> cachedTimelines = this.timelineDAODynamoDB.getTimelinesForDate(accountId, targetDate.withTimeAtStartOfDay());
+            if (!cachedTimelines.isEmpty()) {
+                LOGGER.debug("Timeline for account {}, date {} returned from cache.", accountId, date);
+                return cachedTimelines;
+            }
 
-        LOGGER.debug("No cached timeline, reprocess timeline for account {}, date {}", accountId, date);
+            LOGGER.debug("No cached timeline, reprocess timeline for account {}, date {}", accountId, date);
+        }else{
+            LOGGER.debug("Force updating timeline for account {}, date {}", accountId, date);
+        }
 
         final List<TrackerMotion> originalTrackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
         LOGGER.debug("Length of trackerMotion: {}", originalTrackerMotions.size());
