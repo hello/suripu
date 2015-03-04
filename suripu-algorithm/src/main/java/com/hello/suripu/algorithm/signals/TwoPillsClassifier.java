@@ -16,8 +16,8 @@ import java.util.Arrays;
  */
 public class TwoPillsClassifier {
 
-    private final static double SIMILARITY_THRESHOLD = 0.90;
-    private final static double LOG_RATIO_THRESHOLD = 2.0;
+    private final static double SIMILARITY_THRESHOLD = 0.707;
+    private final static double LOG_RATIO_THRESHOLD = 0.2;
 
 
     public static double [][] clone2D(double [][] x) {

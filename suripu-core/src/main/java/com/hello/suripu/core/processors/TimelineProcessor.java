@@ -401,10 +401,10 @@ public class TimelineProcessor {
         LOGGER.debug("End date: {}", endDate);
 
         final ImmutableList<Timeline> cachedTimelines = this.timelineDAODynamoDB.getTimelinesForDate(accountId, targetDate.withTimeAtStartOfDay());
-        if (!cachedTimelines.isEmpty()) {
-            LOGGER.debug("Timeline for account {}, date {} returned from cache.", accountId, date);
-            return cachedTimelines;
-        }
+        //if (!cachedTimelines.isEmpty()) {
+        //    LOGGER.debug("Timeline for account {}, date {} returned from cache.", accountId, date);
+        //    return cachedTimelines;
+        //}
 
         LOGGER.debug("No cached timeline, reprocess timeline for account {}, date {}", accountId, date);
 
@@ -427,7 +427,8 @@ public class TimelineProcessor {
         /* PARTNER FILTERING --THIS NEEDS TO BE FEATURE FLIPPED */
         if (!partnerMotions.isEmpty() && false) {
             try {
-                trackerMotions.addAll(PartnerDataUtils.getMyMotion(originalTrackerMotions, partnerMotions));
+                PartnerDataUtils.PartnerMotions motions = PartnerDataUtils.getMyMotion(originalTrackerMotions, partnerMotions);
+                trackerMotions.addAll(motions.myMotions);
             }
             catch (Exception e) {
                 LOGGER.info(e.getMessage());

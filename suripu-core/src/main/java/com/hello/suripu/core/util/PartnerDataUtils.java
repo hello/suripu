@@ -61,13 +61,24 @@ public class PartnerDataUtils {
         long t0;
     }
 
-    static public  List<TrackerMotion> getMyMotion(final List<TrackerMotion> motData1,final List<TrackerMotion> motData2) {
+    static public class PartnerMotions {
+        final public List<TrackerMotion> myMotions;
+        final public List<TrackerMotion> yourMotions;
+
+        public PartnerMotions(final List<TrackerMotion> myMotions, final List<TrackerMotion> yourMotions) {
+            this.myMotions = myMotions;
+            this.yourMotions = yourMotions;
+        }
+
+    }
+    static public PartnerMotions getMyMotion(final List<TrackerMotion> motData1,final List<TrackerMotion> motData2) {
         MotionDataSignalWithT0 motData = getMotionFeatureVectorsByTheMinute(motData1,motData2,true);
 
         int[] classes = TwoPillsClassifier.classifyPillOwnershipByMovingSimilarity(motData.xAppendedInTime);
 
 
         List<TrackerMotion> myMotion = new ArrayList<TrackerMotion>();
+        List<TrackerMotion> yourMotion = new ArrayList<TrackerMotion>();
 
         Iterator<TrackerMotion> it = motData1.iterator();
 
@@ -80,22 +91,17 @@ public class PartnerDataUtils {
                 break; //this should never happen
             }
 
-            if (classes[idx] > 0) {
+            //class 0 is uncertain, class 1 is mine -- I just say these are mine
+            if (classes[idx] >= 0) {
                 myMotion.add(m);
             }
             else {
-                DateTime dt = new DateTime(m.timestamp);
-                DateTime dt2 = dt.withZone(DateTimeZone.forOffsetMillis(m.offsetMillis));
-                String time = dt2.toLocalDateTime().toString();
-
-
-                int foo = 3;
-                foo++;
+                yourMotion.add(m);
             }
 
         }
 
-        return myMotion;
+        return new PartnerMotions(myMotion,yourMotion);
     }
 
 
