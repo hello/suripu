@@ -59,7 +59,7 @@ import java.util.Map;
 
 public class TimelineProcessor {
 
-    public static final String VERSION = "0.0.1";
+    public static final String VERSION = "0.0.2";
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineProcessor.class);
     private static final Integer MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES = 3 * 60;
     private final TrackerMotionDAO trackerMotionDAO;
