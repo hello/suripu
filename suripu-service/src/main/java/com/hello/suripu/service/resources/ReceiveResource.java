@@ -21,6 +21,7 @@ import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.processors.RingProcessor;
+import com.hello.suripu.core.processors.OTAProcessor;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DeviceIdUtil;
 import com.hello.suripu.core.util.HelloHttpHeader;
@@ -584,7 +585,7 @@ public class ReceiveResource extends BaseResource {
         final Integer deviceUptimeDelay = otaConfiguration.getDeviceUptimeDelay();
         final Boolean alwaysOTA = (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceID, deviceGroups));
         
-        final boolean canOTA = canDeviceOTA(deviceID, deviceGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, alwaysOTA);
+        final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, alwaysOTA);
         
         if(canOTA) {
             
@@ -605,50 +606,6 @@ public class ReceiveResource extends BaseResource {
             return fileDownloadList;
         }
         return Collections.emptyList();
-    }
-    
-    public static Boolean canDeviceOTA(final String deviceID,
-                                       final List<String> deviceGroups,
-                                       final Set<String> overrideOTAGroups,
-                                       final Integer deviceUptimeDelayMinutes,
-                                       final Integer uptimeInSeconds,
-                                       final DateTime currentDTZ,
-                                       final DateTime startOTAWindow,
-                                       final DateTime endOTAWindow,
-                                       final Boolean isAlwaysOTA) {
-        
-        boolean canOTA;
-
-        if (isAlwaysOTA) {
-            LOGGER.debug("Always OTA is on for device: ", deviceID);
-            canOTA = true;
-        } else {
-            
-            //Allow OTA Updates only in config-defined update window
-            if (currentDTZ.isAfter(startOTAWindow) && currentDTZ.isBefore(endOTAWindow)) {
-                canOTA = true;
-                LOGGER.debug("Device within OTAU window.");
-            } else {
-                canOTA = false;
-                LOGGER.debug("Device outside OTAU window.");
-            }
-
-            //Has the device been running long enough to receive an OTA Update?
-            if (uptimeInSeconds != -1)
-            {
-                if (!(uptimeInSeconds > deviceUptimeDelayMinutes * DateTimeConstants.SECONDS_PER_MINUTE)) {
-                    canOTA = false;
-                    LOGGER.debug("Device failed up-time check.");
-                }
-            }
-
-            //Check for overrideOTAGroups as defined in the OTA configuration
-            if (!Collections.disjoint(deviceGroups, overrideOTAGroups)) {
-                canOTA = true;
-                LOGGER.debug("Device belongs to OTAU check override group");
-            }
-        }
-        return canOTA;
     }
     
 }
