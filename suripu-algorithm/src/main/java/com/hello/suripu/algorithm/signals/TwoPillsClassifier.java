@@ -1,7 +1,10 @@
 package com.hello.suripu.algorithm.signals;
 
+import com.google.common.base.Optional;
 import org.apache.commons.math3.exception.MathArithmeticException;
+import org.apache.commons.math3.linear.CholeskyDecomposition;
 import org.apache.commons.math3.linear.EigenDecomposition;
+import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -12,6 +15,10 @@ import java.util.Arrays;
  * Created by benjo on 2/21/15.
  */
 public class TwoPillsClassifier {
+
+    private final static double SIMILARITY_THRESHOLD = 0.90;
+    private final static double LOG_RATIO_THRESHOLD = 2.0;
+
 
     public static double [][] clone2D(double [][] x) {
         double [][] x2 = new double [x.length][] ;
@@ -36,56 +43,162 @@ public class TwoPillsClassifier {
         return mean;
     }
 
-    /*  classifyPillOwnership
-     *
-     *  What does this do? Returns classification of which person/pill the data actually belonged to.
-     *
-     *  class = 1 ===> my pill
-     *  class = -1 ==> other pill
-     *
-     *  -There are two sources and two measurements, as time series (person1, pill1_vecs(t), person2, pill2_vecs(t) )
-     *  -person 1 moves and it shows up on pill1, and to a lesser extent pill2
-     *  -person 2 moves and it shows up on pill2, and to a lesser extend pill1.
-     *  -I can go and compute the covariance between pill1 and pill2 data.  What does this tell us?
-     *
-     *   It tells us how correlated pill1 and pill2 are, and on what feature (magnitude, duration, kickoff counts, etc.).
-     *
-     *   Great, now what?
-     *
-     *   If I do an Eigen value decomposition on this covariance matrix, I will find find the independent combination of features
-     *   that is present in the data, ranked by how much variance/"energy" of the data is in that dimension.  And, I would hope that this
-     *   corresponds to something meaningful.
-     *
-     *   Fooling around with this, we consistently see that the first most energy combination (the Eigen vector) is
-     *   a1 * x1 + a2*x2 + a3*x3.... where ai > 0.3
-     *   this is basically saying "yeah, the most energy is in the data amplitude"  Well that's comforting
-     *
-     *   Almost always the next most energetic Eigen vector is
-     *   a1*x2 + a2*x2 + a3*x3...  a1,a2,a3 > 0.3, and a3,a4,a5 < -0.3
-     *
-     *   This is saying that the difference between pill1 feats and pill2 feats is an important feature.  And, it gave us the optimal
-     *   weights to calculate this feature.
-     *
-     *   So, we check to make sure the second eigenvectors what we expect.  If it's not, we just return the original data.
-     *   Then, we transform the data into the direction of this eigenvector, and say if it's really greater than zero, it came from pill1
-     *   and if it's really less than 0 it came from pill2.
-     *
-     *   In our case, if it came from pill2, we remove the data point.
-     *
-     *
-     *
-     */
-    private static double EIGEN_MODE_THRESHOLD = 1.0;
-    private static double NORMALIZED_FEATURE_THRESHOLD = 0.30;
 
-    public static int [] classifyPillOwnership(final double[][] data, int numFeaturesPerAxis)  {
+    public static int CORRELATION_WINDOW_SIZE = 5; //pick an odd number please
+
+
+    private static class DotProdResut {
+        public DotProdResut(final double cosAngle, final double v1mag,final double v2mag) {
+            this.cosAngle = cosAngle;
+            this.v1mag = v1mag;
+            this.v2mag = v2mag;
+        }
+
+        public final double cosAngle;
+        public final double v1mag;
+        public final double v2mag;
+    }
+
+    private static Optional<Double> normalize(final double [] v) {
+        final int n = v.length;
+
+        double sumsquare = 0.0;
+        for (int i = 0; i < n; i++) {
+            sumsquare += v[i]*v[i];
+        }
+
+        final double norm = Math.sqrt(sumsquare);
+
+        if (norm < 1e-8) {
+            return Optional.absent();
+        }
+
+
+        for (int i = 0; i < n; i++) {
+            v[i] /= norm;
+        }
+
+        return Optional.of(norm);
+
+
+    }
+
+    private static Optional<DotProdResut> dotProd(final double [] v1, final double [] v2) {
+        final int n = v1.length;
+
+        final double [] v1copy = v1.clone();
+        final double [] v2copy = v2.clone();
+
+        final Optional<Double> v1mag = normalize(v1copy);
+
+        final Optional<Double> v2mag  = normalize(v2copy);
+
+        if (!v1mag.isPresent() || !v2mag.isPresent()) {
+            return Optional.absent();
+        }
+
+        double sum = 0.0;
+        for (int i = 0; i < n; i++) {
+            sum += v1copy[i] * v2copy[i];
+        }
+
+        sum /= v1mag.get();
+        sum /= v2mag.get();
+
+        return Optional.of(new DotProdResut(sum,v1mag.get(),v2mag.get()));
+    }
+
+
+
+    public static int [] classifyPillOwnershipByMovingSimilarity(final double[][] xAppendedInTime) {
+        final int nFeats = xAppendedInTime.length;
+        double [][] dataCopy = clone2D(xAppendedInTime);
+        final int numberDataPoints = xAppendedInTime[0].length/2;
+
+        //default == every data point is mine
+        final int [] classes = new int[numberDataPoints];
+        Arrays.fill(classes, 1);
+
+        //this data is normalized by variance too.
+        final Optional<RealMatrix> uncorrelatedDataOptional = getUncorrelatedDataPoints(xAppendedInTime);
+
+        //if the decorrelation didn't go well, return the default
+        if (!uncorrelatedDataOptional.isPresent()) {
+            return classes;
+        }
+
+        final RealMatrix uncorrelatedData = uncorrelatedDataOptional.get();
+
+        //go through and compute dot products, normalized, in a sliding window
+        //closer to 1.0 it is, the more similar the vectors are
+        //if the vectors are similar, we then decide which person generated them.
+        //we do this by comparing the vector magnitudes.  If one vector is significantly larger
+        //then then the larger vector is the winner.
+        //THERFORE we get 3 classes, mine, yours, and unsure.
+        for (int i = 0; i < numberDataPoints; i++) {
+            final double [] v1 = uncorrelatedData.getColumn(i);
+            final double [] v2 = uncorrelatedData.getColumn(i + numberDataPoints);
+
+            Optional<DotProdResut> dotProdOptional = dotProd(v1,v2);
+
+            if (!dotProdOptional.isPresent()) {
+                continue;
+            }
+
+            final DotProdResut dotProd = dotProdOptional.get();
+
+            if (dotProd.cosAngle > SIMILARITY_THRESHOLD) {
+                final double logRatio = Math.log( (dotProd.v1mag + 1e-15) / (dotProd.v2mag + 1e-15)) ;
+
+                if (logRatio > LOG_RATIO_THRESHOLD) {
+                    classes[i] = 1; //v1 mag is much larger, so it's mine
+                }
+                else if (logRatio < -LOG_RATIO_THRESHOLD) { //v2mag is much larger, so not mine
+                    classes[i] = -1;
+                }
+                else {
+                    classes[i] = 0; //don't know
+                }
+
+            }
+        }
+
+
+
+
+
+        return classes;
+
+    }
+
+    static private void copySection(final double [][] orig, final double [][] section, final int startIdx, final int stopIdx) {
+
+
+        for (int j = startIdx; j < stopIdx; j++) {
+            final double [] rowOrig =  orig[j];
+            final double [] rowSection =  section[j];
+
+            int k = 0;
+            for (int i = 0; i < orig.length; i++) {
+                rowSection[k] = rowOrig[k];
+                k++;
+            }
+        }
+
+    }
+
+
+    /*
+    *  step 1) Get covariance matrix, normalize by sqrt of diagonals to get correlation matrix
+    *  step 2) Get cholesky factor of correlation matrix, and invert this.  Call this the "decorrelation transform matrix"
+    *  step 3) multiply data by the decorrelation transform matrix, and now you have magically decorrelated data
+    *
+    */
+    static private Optional<RealMatrix> getUncorrelatedDataPoints(final double [][] data) {
 
         final int nFeats = data.length;
-        double [][] dataCopy = clone2D(data);
-        int Ndatapoints = data[0].length;
-
-        int [] classes = new int[data[0].length];
-        Arrays.fill(classes, 1);
+        final double [][] dataCopy = clone2D(data);
+        final int numberOfDataPoints = data[0].length;
 
         //remove mean
         for (int i = 0; i < nFeats; i++ ) {
@@ -96,87 +209,52 @@ public class TwoPillsClassifier {
             }
         }
 
+
         //compute covariance
-        RealMatrix noMean = MatrixUtils.createRealMatrix(dataCopy);
-        RealMatrix P = noMean.multiply(noMean.transpose());
+        final RealMatrix noMean = MatrixUtils.createRealMatrix(dataCopy);
+        final RealMatrix noMeanSquared = noMean.multiply(noMean.transpose());
 
-        P = P.scalarMultiply(1.0 / (double)Ndatapoints);
+        final RealMatrix covariance = noMeanSquared.scalarMultiply(1.0 / (double)numberOfDataPoints);
 
-        double [] sqrtDiags = new double[nFeats];
+        final double [] squareRootMatrixDiagonals = new double[nFeats];
         for (int i = 0; i < nFeats; i++ ) {
-            sqrtDiags[i] = Math.sqrt(P.getEntry(i,i));
+            squareRootMatrixDiagonals[i] = Math.sqrt(covariance.getEntry(i, i));
         }
 
         for (int i = 0; i < nFeats; i++ ) {
-            if (Double.isNaN(sqrtDiags[i]) || sqrtDiags[i] < 1e-6) {
+            if (Double.isNaN(squareRootMatrixDiagonals[i]) || squareRootMatrixDiagonals[i] < 1e-6) {
                 //FUCK
-                return classes;
+                return Optional.absent();
             }
         }
 
         //normalize the data by the std devs
         for (int i = 0; i < nFeats; i++ ) {
-            final double theMean = getMean(dataCopy[i]);
-            double [] row = dataCopy[i];
-            double d = sqrtDiags[i];
+            final double [] row = dataCopy[i];
+            final double d = squareRootMatrixDiagonals[i];
             for (int j = 0; j < row.length; j++) {
                 row[j] /= d;
             }
         }
 
-        RealMatrix normalizedByStdDev = MatrixUtils.createRealMatrix(dataCopy);
+        final RealMatrix normalizedByStdDevAndNoMean = MatrixUtils.createRealMatrix(dataCopy);
 
         //turn covariance into correlation matrix
-        RealMatrix Pnormalized = normalizedByStdDev.multiply(normalizedByStdDev.transpose());
+        final RealMatrix correlationMatrix = normalizedByStdDevAndNoMean.multiply(normalizedByStdDevAndNoMean.transpose());
 
 
-        EigenDecomposition decomposition = new EigenDecomposition(Pnormalized);
+        final CholeskyDecomposition choleskyDecomposition = new CholeskyDecomposition(correlationMatrix);
 
-        RealVector magnitudevec = decomposition.getEigenvector(0);
-        RealVector diffvec = decomposition.getEigenvector(1);
+        final LUDecomposition inverter = new LUDecomposition(choleskyDecomposition.getL());
 
-        //so I am expecting mode 1, the "diffvec" to look like [0.4,0.4,0.4,-0.4,-0.4,-0.4] or something like this
-        //these should be the optimal weights to decide who the data belongs to (person 1 or person 2)
-        double componentSum = 0.0;
-
-        for (int i = 0; i < numFeaturesPerAxis; i++) {
-            componentSum += diffvec.getEntry(i);
-        }
-
-        for (int i = numFeaturesPerAxis; i < 2*numFeaturesPerAxis; i++) {
-            componentSum -= diffvec.getEntry(i);
-        }
-
-            //if this condition is not met, it might mean the mode we're looking for isn't here.
-        if (Math.abs(componentSum) > EIGEN_MODE_THRESHOLD) {
-            if (componentSum < 0.0) {
-                diffvec.mapMultiplyToSelf(-1.0);
-            }
+        final RealMatrix decorrelated = inverter.getSolver().solve(normalizedByStdDevAndNoMean);
 
 
-
-            //project in to eigen vector direction
-            RealMatrix eigvec = MatrixUtils.createRowRealMatrix(diffvec.toArray());
-            RealMatrix feats = eigvec.multiply(normalizedByStdDev);
-
-            double [] projectedData = feats.getData()[0];
-
-         //   for (int i = 0; i < projectedData.length; i++) {
-         //       System.out.printf("%f,",projectedData[i]);
-         //   }
-
-            for (int i = 0; i < projectedData.length; i++) {
-                if (projectedData[i] < -NORMALIZED_FEATURE_THRESHOLD) {
-                    classes[i] = -1; //came from the other pill
-                }
-            }
-
-        }
+        return Optional.of(decorrelated);
 
 
-
-
-        return classes;
     }
+
+   
 
 }

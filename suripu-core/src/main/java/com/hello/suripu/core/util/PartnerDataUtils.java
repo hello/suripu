@@ -56,14 +56,15 @@ public class PartnerDataUtils {
 
 
     static private class MotionDataSignalWithT0 {
-        double [][] x;
+        double [][] x; // 6 x N
+        double [][] xAppendedInTime; // 3 x 2N
         long t0;
     }
 
     static public  List<TrackerMotion> getMyMotion(final List<TrackerMotion> motData1,final List<TrackerMotion> motData2) {
         MotionDataSignalWithT0 motData = getMotionFeatureVectorsByTheMinute(motData1,motData2,true);
 
-        int[] classes = TwoPillsClassifier.classifyPillOwnership(motData.x, NUM_SIGNALS);
+        int[] classes = TwoPillsClassifier.classifyPillOwnershipByMovingSimilarity(motData.xAppendedInTime);
 
 
         List<TrackerMotion> myMotion = new ArrayList<TrackerMotion>();
@@ -189,6 +190,21 @@ public class PartnerDataUtils {
             returnValues.x = returnSignals;
             returnValues.t0 = t0;
         }
+
+        double [][] xAppendedInTime = new double[NUM_SIGNALS][2*N];
+
+        for (int j = 0; j < NUM_SIGNALS; j++) {
+            for (int i = 0; i < N; i++) {
+                xAppendedInTime[j][i] = returnValues.x[j][i];
+                xAppendedInTime[j][i + N] = returnValues.x[j + NUM_SIGNALS][i];
+
+            }
+        }
+
+
+        returnValues.xAppendedInTime = xAppendedInTime;
+
+
 
 
 
