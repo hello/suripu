@@ -217,6 +217,7 @@ public class TimelineUtils {
         final LinkedList<Event> newEventList = new LinkedList<>();
         // State is harmful, shall avoid it like plague
         for(final Event event:events) {
+
             if (event.getType() != Event.Type.MOTION) {
                 newEventList.add(event);
                 continue;
@@ -242,8 +243,18 @@ public class TimelineUtils {
                                                                  final Optional<Event> inBedEventOptional,
                                                                  final Optional<Event> outOfBedEventOptional){
         final LinkedList<Event> newEventList = new LinkedList<>();
+        Boolean foundfirstNonMotionEvent = false;
+
         // State is harmful, shall avoid it like plague
         for(final Event event:events){
+
+            final Event.Type eventType = event.getType();
+            if (!foundfirstNonMotionEvent && (eventType == Event.Type.NONE || eventType == Event.Type.MOTION)) {
+                continue;
+            }
+
+            foundfirstNonMotionEvent = true;
+
             if(event.getType() != Event.Type.NONE){
                 newEventList.add(event);
                 continue;

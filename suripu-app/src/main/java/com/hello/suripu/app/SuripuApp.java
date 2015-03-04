@@ -329,7 +329,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 ringTimeHistoryDAODynamoDB,
                 feedbackDAO,
                 timelineDAODynamoDB,
-                sleepHmmDAODynamoDB);
+                sleepHmmDAODynamoDB,
+                accountDAO);
 
         environment.addResource(new TimelineResource(accountDAO, timelineProcessor));
 

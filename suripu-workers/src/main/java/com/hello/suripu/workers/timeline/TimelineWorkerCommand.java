@@ -146,7 +146,8 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
                 ringTimeHistoryDAODynamoDB,
                 feedbackDAO,
                 timelineDAODynamoDB,
-                sleepHmmDAODynamoDB);
+                sleepHmmDAODynamoDB,
+                accountDAO);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
