@@ -14,7 +14,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
-import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
+import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
@@ -73,7 +73,7 @@ public class TimelineProcessor {
     private final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
     private final FeedbackDAO feedbackDAO;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
-    private final SleepHmmDAODynamoDB sleepHmmDAODynamoDB;
+    private final SleepHmmDAO sleepHmmDAO;
     private final AccountDAO accountDAO;
 
     public TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
@@ -87,7 +87,7 @@ public class TimelineProcessor {
                             final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
                             final FeedbackDAO feedbackDAO,
                             final TimelineDAODynamoDB timelineDAODynamoDB,
-                            final SleepHmmDAODynamoDB sleepHmmDAODynamoDB,
+                            final SleepHmmDAO sleepHmmDAO,
                             final AccountDAO accountDAO) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
@@ -100,7 +100,7 @@ public class TimelineProcessor {
         this.ringTimeHistoryDAODynamoDB = ringTimeHistoryDAODynamoDB;
         this.feedbackDAO = feedbackDAO;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
-        this.sleepHmmDAODynamoDB = sleepHmmDAODynamoDB;
+        this.sleepHmmDAO = sleepHmmDAO;
         this.accountDAO = accountDAO;
     }
 
@@ -400,6 +400,7 @@ public class TimelineProcessor {
                                                 final Boolean hasHmmEnabled) {
 
 
+        final long  currentTimeMillis = DateTime.now().withZone(DateTimeZone.UTC).getMillis();
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withHourOfDay(20);
         final DateTime endDate = targetDate.plusHours(16);
@@ -511,13 +512,15 @@ public class TimelineProcessor {
         if (hasHmmEnabled) {
             LOGGER.info("Using HMM for account {}",accountId);
 
-            final Optional<SleepHmmWithInterpretation> hmmOptional = sleepHmmDAODynamoDB.getLatestModelForDate(accountId, targetDate.getMillis());
+            final Optional<SleepHmmWithInterpretation> hmmOptional = sleepHmmDAO.getLatestModelForDate(accountId, targetDate.getMillis());
 
             if (hmmOptional.isPresent()) {
-                final Optional<SleepHmmWithInterpretation.SleepHmmResult> optionalHmmPredictions = hmmOptional.get().getSleepEventsUsingHMM(allSensorSampleList, trackerMotions);
+                final Optional<SleepHmmWithInterpretation.SleepHmmResult> optionalHmmPredictions = hmmOptional.get().getSleepEventsUsingHMM(
+                        allSensorSampleList, trackerMotions,targetDate.getMillis(),endDate.getMillis(),currentTimeMillis);
 
                 if (optionalHmmPredictions.isPresent()) {
-                    final SleepEvents<Optional<Event>> hmmSleepEvents = SleepEvents.create(optionalHmmPredictions.get().inBed,
+                    final SleepEvents<Optional<Event>> hmmSleepEvents = SleepEvents.create(
+                            optionalHmmPredictions.get().inBed,
                             optionalHmmPredictions.get().fallAsleep,
                             optionalHmmPredictions.get().wakeUp,
                             optionalHmmPredictions.get().outOfBed);
@@ -547,11 +550,12 @@ public class TimelineProcessor {
 
         // insert IN-BED, SLEEP, WAKE, OUT-of-BED
         final List<Optional<Event>> eventList = sleepEventsFromAlgorithm.toList();
-        for (final Optional<Event> sleepEventOptional: eventList){
+        for(final Optional<Event> sleepEventOptional: eventList){
             if(sleepEventOptional.isPresent() && !feedbackEvents.containsKey(sleepEventOptional.get().getType())){
                 timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
             }
         }
+
 
         // ALARM
         if(hasAlarmInTimeline && trackerMotions.size() > 0) {
@@ -577,6 +581,7 @@ public class TimelineProcessor {
                 timelineEvents.put(event.getStartTimestamp(), event);
             }
         }
+
 
         final List<Event> eventsWithSleepEvents = TimelineRefactored.mergeEvents(timelineEvents);
         final List<Event> smoothedEvents = TimelineUtils.smoothEvents(eventsWithSleepEvents);
@@ -641,7 +646,6 @@ public class TimelineProcessor {
         }
         return Collections.EMPTY_LIST;
     }
-
     /**
      * Fetch partner motion events
      * @param fallingAsleepEvent
@@ -790,7 +794,6 @@ public class TimelineProcessor {
 
         if (sleepScore == 0) {
             // score may not have been computed yet, recompute
-
             // score based on amount of movement during sleep
             final Integer motionScore = sleepScoreDAO.getSleepScoreForNight(accountId, targetDate.withTimeAtStartOfDay(),
                     userOffsetMillis, this.dateBucketPeriod, sleepLabelDAO);
@@ -807,7 +810,6 @@ public class TimelineProcessor {
             sleepScore = SleepScoreUtils.aggregateSleepScore(motionScore, durationScore, environmentScore);
 
             LOGGER.trace("SCORES: motion {}, duration {}, final {}", motionScore, durationScore, sleepScore);
-
             final DateTime lastNight = new DateTime(DateTime.now(), DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
             if (targetDate.isBefore(lastNight)) {
                 // write data to Dynamo if targetDate is old
@@ -845,4 +847,5 @@ public class TimelineProcessor {
         final ImmutableList<TimelineFeedback> feedbackList = feedbackDAO.getForNight(accountId, nightOfUTC);
         return FeedbackUtils.convertFeedbackToDateTime(feedbackList, offsetMillis);
     }
+
 }

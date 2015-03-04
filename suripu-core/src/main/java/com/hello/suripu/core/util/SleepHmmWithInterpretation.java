@@ -1,6 +1,7 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.hmm.DiscreteAlphabetPdf;
 import com.hello.suripu.algorithm.hmm.GammaPdf;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
@@ -35,13 +36,14 @@ public class SleepHmmWithInterpretation {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepHmmWithInterpretation.class);
 
+    final static public int NUM_MINUTES_IN_WINDOW = 15;
+
     final static protected int NUM_DATA_DIMENSIONS = 3;
     final static protected int LIGHT_INDEX = 0;
     final static protected int MOT_COUNT_INDEX = 1;
     final static protected int WAVE_INDEX = 2;
 
     final static protected int ACCEPTABLE_GAP_IN_MINUTES_FOR_SLEEP_DISTURBANCE = 45;
-    final static protected int NUM_MINUTES_IN_WINDOW = 15;
     final static protected int ACCEPTABLE_GAP_IN_INDEX_COUNTS = ACCEPTABLE_GAP_IN_MINUTES_FOR_SLEEP_DISTURBANCE / NUM_MINUTES_IN_WINDOW;
 
     final static protected int SLEEP_DEPTH_NONE = 0;
@@ -71,18 +73,21 @@ public class SleepHmmWithInterpretation {
         public final Optional<Event> wakeUp;
         public final Optional<Event> outOfBed;
         public final List<Event> disturbances;
+        public final ImmutableList<Integer> path;
 
         public SleepHmmResult(Optional<Event> inBed,
                               Optional<Event> fallAsleep,
                               Optional<Event> wakeUp,
                               Optional<Event> outOfBed,
-                              List<Event> disturbances) {
+                              List<Event> disturbances,
+                              ImmutableList<Integer> path) {
 
             this.inBed = inBed;
             this.fallAsleep = fallAsleep;
             this.wakeUp = wakeUp;
             this.outOfBed = outOfBed;
             this.disturbances = disturbances;
+            this.path = path;
         }
     }
 
@@ -259,14 +264,18 @@ CREATE CREATE CREATE
 
 /* MAIN METHOD TO BE USED FOR DATA PROCESSING IS HERE */
     /* Use this method to get all the sleep / bed events from ALL the sensor data and ALL the pill data */
-    public Optional<SleepHmmResult> getSleepEventsUsingHMM(final AllSensorSampleList sensors,final List<TrackerMotion> pillData) {
+    public Optional<SleepHmmResult> getSleepEventsUsingHMM(final AllSensorSampleList sensors,
+                                                           final List<TrackerMotion> pillData,
+                                                           final long sleepPeriodStartTime,
+                                                           final long sleepPeriodEndTime,
+                                                           final long currentTimeInMillis) {
 
 
 
 
         //get sensor data as fixed time-step array of values
         //sensor data will get put into NUM_MINUTES_IN_WINDOW duration bins, somehow (either by adding, averaging, maxing, or whatever)
-        final Optional<BinnedData> binnedDataOptional = getBinnedSensorData(sensors, pillData, NUM_MINUTES_IN_WINDOW);
+        final Optional<BinnedData> binnedDataOptional = getBinnedSensorData(sensors, pillData, NUM_MINUTES_IN_WINDOW,sleepPeriodStartTime,sleepPeriodEndTime,currentTimeInMillis);
 
         if (!binnedDataOptional.isPresent()) {
             return Optional.absent();
@@ -279,7 +288,6 @@ CREATE CREATE CREATE
         final Integer [] allowableEndings = allowableEndingStates.toArray(new Integer[allowableEndingStates.size()]);
 
         final int[] path = hmmWithStates.getViterbiPath(binnedData.data,allowableEndings);
-
 
         LOGGER.debug("decoded path = {} ",getPathAsString(path));
 
@@ -302,7 +310,7 @@ CREATE CREATE CREATE
 
         final List<Event> disturbances = new ArrayList<Event>();
 
-        return Optional.of(new SleepHmmResult(inBed,fallAsleep,wakeUp,outOfBed,disturbances));
+        return Optional.of(new SleepHmmResult(inBed,fallAsleep,wakeUp,outOfBed,disturbances,getIntArrayAsImmutableList(path)));
 
 
     }
@@ -425,7 +433,8 @@ CREATE CREATE CREATE
         return pairList;
     }
 
-    protected Optional<BinnedData> getBinnedSensorData(AllSensorSampleList sensors, List<TrackerMotion> pillData, final int numMinutesInWindow) {
+    protected Optional<BinnedData> getBinnedSensorData(AllSensorSampleList sensors, List<TrackerMotion> pillData, final int numMinutesInWindow,
+                                                       final long startTimeMillis, final long endTimeMillis, final long currentTimeInMillis) {
         final List<Sample> light = sensors.get(Sensor.LIGHT);
         final List<Sample> wave = sensors.get(Sensor.WAVE_COUNT);
 
@@ -434,9 +443,14 @@ CREATE CREATE CREATE
         }
 
         //get start and end of window
-        final long t0 = light.get(0).dateTime;
+        final long t0 = startTimeMillis;
         final int timezoneOffset = light.get(0).offsetMillis;
-        final long tf = light.get(light.size() - 1).dateTime;
+        long tf = endTimeMillis;
+
+        //somehow, the light data is returned for
+        if (currentTimeInMillis < tf && currentTimeInMillis >= t0) {
+            tf = currentTimeInMillis;
+        }
 
         final int dataLength = (int) (tf - t0) / NUMBER_OF_MILLIS_IN_A_MINUTE / numMinutesInWindow;
 
@@ -557,19 +571,6 @@ CREATE CREATE CREATE
         }
     }
 
-    protected int [] IntegerSetToArray(final Set<Integer> mySet) {
-        int [] myArray = new int[mySet.size()];
-
-        Iterator<Integer> it = mySet.iterator();
-        int idx = 0;
-        while (it.hasNext()) {
-            myArray[idx] = it.next();
-            idx++;
-        }
-
-        return myArray;
-    }
-
     protected String getPathAsString(final int [] path) {
         String pathString = "";
         boolean first = true;
@@ -601,6 +602,17 @@ CREATE CREATE CREATE
         return vecString;
     }
 
+    protected ImmutableList<Integer> getIntArrayAsImmutableList(final int[] path) {
+        List<Integer> newlist = new ArrayList<Integer>();
+
+        for (int x : path) {
+            newlist.add(x);
+        }
+
+        return ImmutableList.copyOf(newlist);
+
+
+    }
 
 
 }
