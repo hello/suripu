@@ -97,15 +97,12 @@ public class TwoPillsClassifier {
             return Optional.absent();
         }
 
-        double sum = 0.0;
+        double cosAngle = 0.0;
         for (int i = 0; i < n; i++) {
-            sum += v1copy[i] * v2copy[i];
+            cosAngle += v1copy[i] * v2copy[i];
         }
 
-        sum /= v1mag.get();
-        sum /= v2mag.get();
-
-        return Optional.of(new DotProdResut(sum,v1mag.get(),v2mag.get()));
+        return Optional.of(new DotProdResut(cosAngle,v1mag.get(),v2mag.get()));
     }
 
 
@@ -194,7 +191,7 @@ public class TwoPillsClassifier {
     *  step 3) multiply data by the decorrelation transform matrix, and now you have magically decorrelated data
     *
     */
-    static private Optional<RealMatrix> getUncorrelatedDataPoints(final double [][] data) {
+    static public Optional<RealMatrix> getUncorrelatedDataPoints(final double [][] data) {
 
         final int nFeats = data.length;
         final double [][] dataCopy = clone2D(data);
@@ -228,6 +225,7 @@ public class TwoPillsClassifier {
             }
         }
 
+        /*
         //normalize the data by the std devs
         for (int i = 0; i < nFeats; i++ ) {
             final double [] row = dataCopy[i];
@@ -240,14 +238,14 @@ public class TwoPillsClassifier {
         final RealMatrix normalizedByStdDevAndNoMean = MatrixUtils.createRealMatrix(dataCopy);
 
         //turn covariance into correlation matrix
-        final RealMatrix correlationMatrix = normalizedByStdDevAndNoMean.multiply(normalizedByStdDevAndNoMean.transpose());
+       // final RealMatrix correlationMatrix = normalizedByStdDevAndNoMean.multiply(normalizedByStdDevAndNoMean.transpose());
+*/
 
-
-        final CholeskyDecomposition choleskyDecomposition = new CholeskyDecomposition(correlationMatrix);
+        final CholeskyDecomposition choleskyDecomposition = new CholeskyDecomposition(covariance);
 
         final LUDecomposition inverter = new LUDecomposition(choleskyDecomposition.getL());
 
-        final RealMatrix decorrelated = inverter.getSolver().solve(normalizedByStdDevAndNoMean);
+        final RealMatrix decorrelated = inverter.getSolver().solve(noMean);
 
 
         return Optional.of(decorrelated);
