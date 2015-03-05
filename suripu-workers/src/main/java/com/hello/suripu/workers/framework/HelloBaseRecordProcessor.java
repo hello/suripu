@@ -48,4 +48,8 @@ public abstract class HelloBaseRecordProcessor implements IRecordProcessor {
     protected Boolean hasHmmEnabled(final Long accountId) {
         return flipper.userFeatureActive(FeatureFlipper.HMM_ALGORITHM, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean hasPartnerFilterEnabled(final Long accountId) {
+        return flipper.userFeatureActive(FeatureFlipper.PARTNER_FILTER, accountId, Collections.EMPTY_LIST);
+    }
 }

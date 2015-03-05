@@ -1,5 +1,6 @@
 package com.hello.suripu.core.util;
 
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.signals.TwoPillsClassifier;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTime;
@@ -56,45 +57,52 @@ public class PartnerDataUtils {
 
 
     static private class MotionDataSignalWithT0 {
-        double [][] x;
+        double [][] x; // 6 x N
+        double [][] xAppendedInTime; // 3 x 2N
         long t0;
     }
 
-    static public  List<TrackerMotion> getMyMotion(final List<TrackerMotion> motData1,final List<TrackerMotion> motData2) {
-        MotionDataSignalWithT0 motData = getMotionFeatureVectorsByTheMinute(motData1,motData2,true);
+    static public class PartnerMotions {
+        final public ImmutableList<TrackerMotion> myMotions;
+        final public ImmutableList<TrackerMotion> yourMotions;
 
-        int[] classes = TwoPillsClassifier.classifyPillOwnership(motData.x, NUM_SIGNALS);
+        public PartnerMotions(final List<TrackerMotion> myMotions, final List<TrackerMotion> yourMotions) {
+            this.myMotions = ImmutableList.copyOf(myMotions);
+            this.yourMotions = ImmutableList.copyOf(yourMotions);
+        }
+
+    }
+    static public PartnerMotions getMyMotion(final List<TrackerMotion> motData1,final List<TrackerMotion> motData2) {
+        final MotionDataSignalWithT0 motData = getMotionFeatureVectorsByTheMinute(motData1,motData2,true);
+
+        final int[] classes = TwoPillsClassifier.classifyPillOwnershipByMovingSimilarity(motData.xAppendedInTime);
 
 
-        List<TrackerMotion> myMotion = new ArrayList<TrackerMotion>();
+        final List<TrackerMotion> myMotion = new ArrayList<TrackerMotion>();
+        final List<TrackerMotion> yourMotion = new ArrayList<TrackerMotion>();
 
-        Iterator<TrackerMotion> it = motData1.iterator();
+        final Iterator<TrackerMotion> it = motData1.iterator();
 
         while (it.hasNext()) {
-            TrackerMotion m = it.next();
+            final TrackerMotion m = it.next();
 
-            int idx = (int) (m.timestamp - motData.t0) / 1000 / 60;
+            final int idx = (int) (m.timestamp - motData.t0) / 1000 / 60;
 
             if (idx >= classes.length) {
                 break; //this should never happen
             }
 
-            if (classes[idx] > 0) {
+            //class 0 is uncertain, class 1 is mine -- I just say these are mine
+            if (classes[idx] >= 0) {
                 myMotion.add(m);
             }
             else {
-                DateTime dt = new DateTime(m.timestamp);
-                DateTime dt2 = dt.withZone(DateTimeZone.forOffsetMillis(m.offsetMillis));
-                String time = dt2.toLocalDateTime().toString();
-
-
-                int foo = 3;
-                foo++;
+                yourMotion.add(m);
             }
 
         }
 
-        return myMotion;
+        return new PartnerMotions(myMotion,yourMotion);
     }
 
 
@@ -112,11 +120,11 @@ public class PartnerDataUtils {
             return ret;
         }
 
-        TrackerMotion first1 = motData1.get(0);
-        TrackerMotion last1 = motData1.get(motData1.size()-1);
+        final TrackerMotion first1 = motData1.get(0);
+        final TrackerMotion last1 = motData1.get(motData1.size()-1);
 
-        TrackerMotion first2 = motData2.get(0);
-        TrackerMotion last2 = motData2.get(motData2.size()-1);
+        final TrackerMotion first2 = motData2.get(0);
+        final TrackerMotion last2 = motData2.get(motData2.size()-1);
 
         long t0 = first1.timestamp;
         long tf = last1.timestamp;
@@ -133,7 +141,7 @@ public class PartnerDataUtils {
         final int N =(int)( (tf - t0) / 1000 / 60 + 1);
 
         // TODO check to see that N is a sane value for this allocation
-        double [][] returnSignals = new double[2*NUM_SIGNALS][N];
+        final double [][] returnSignals = new double[2*NUM_SIGNALS][N];
 
         //zero out
         for (int isig = 0; isig < 2*NUM_SIGNALS; isig++) {
@@ -147,7 +155,7 @@ public class PartnerDataUtils {
             final TrackerMotion m1 = iMot1.next();
 
             //get minute index
-            int idx = (int) ((m1.timestamp - t0) / 60 / 1000);
+            final int idx = (int) ((m1.timestamp - t0) / 60 / 1000);
 
             for (int iExtractor = 0; iExtractor < NUM_SIGNALS; iExtractor++) {
                 returnSignals[iExtractor][idx] = extractors[iExtractor].get(m1);
@@ -162,7 +170,7 @@ public class PartnerDataUtils {
             final TrackerMotion m2 = iMot2.next();
 
             //get minute index
-            int idx = (int) ((m2.timestamp - t0) / 60 / 1000);
+            final int idx = (int) ((m2.timestamp - t0) / 60 / 1000);
 
             for (int iExtractor = 0; iExtractor < NUM_SIGNALS; iExtractor++) {
                 returnSignals[iExtractor + NUM_SIGNALS][idx] = extractors[iExtractor].get(m2);
@@ -173,7 +181,7 @@ public class PartnerDataUtils {
 
         //try and compensate for the fact that pill data might be off by one minute
         if (smearByOne) {
-            double [][] smeared = clone2D(returnSignals);
+            final double [][] smeared = clone2D(returnSignals);
 
             for (int i = 1; i < N-1; i++) {
                 for (int j = 0;j < 2*NUM_SIGNALS; j++) {
@@ -189,6 +197,21 @@ public class PartnerDataUtils {
             returnValues.x = returnSignals;
             returnValues.t0 = t0;
         }
+
+        final double [][] xAppendedInTime = new double[NUM_SIGNALS][2*N];
+
+        for (int j = 0; j < NUM_SIGNALS; j++) {
+            for (int i = 0; i < N; i++) {
+                xAppendedInTime[j][i] = returnValues.x[j][i];
+                xAppendedInTime[j][i + N] = returnValues.x[j + NUM_SIGNALS][i];
+
+            }
+        }
+
+
+        returnValues.xAppendedInTime = xAppendedInTime;
+
+
 
 
 

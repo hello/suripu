@@ -116,7 +116,8 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
                         hasSoundInTimeline(accountId),
                         hasFeedbackInTimeline(accountId),
                         hasHmmEnabled(accountId),
-                        true);
+                        true,
+                        hasPartnerFilterEnabled(accountId));
                 LOGGER.info("Timeline saved for account {} at local utc {}",
                         accountId,
                         groupedAccountIdTargetDateLocalUTCMap.get(accountId).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT));

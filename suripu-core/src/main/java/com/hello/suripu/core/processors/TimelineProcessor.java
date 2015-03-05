@@ -398,7 +398,8 @@ public class TimelineProcessor {
                                                 final Boolean hasSoundInTimeline,
                                                 final Boolean hasFeedbackInTimelineEnabled,
                                                 final Boolean hasHmmEnabled,
-                                                final Boolean forceUpdate) {
+                                                final Boolean forceUpdate,
+                                                final Boolean hasPartnerFilterEnabled) {
 
 
         final long  currentTimeMillis = DateTime.now().withZone(DateTimeZone.UTC).getMillis();
@@ -415,7 +416,7 @@ public class TimelineProcessor {
                 return cachedTimelines;
             }
 
-            LOGGER.debug("No cached timeline, reprocess timeline for account {}, date {}", accountId, date);
+        LOGGER.debug("No cached timeline, reprocess timeline for account {}, date {}", accountId, date);
         }else{
             LOGGER.debug("Force updating timeline for account {}, date {}", accountId, date);
         }
@@ -436,16 +437,17 @@ public class TimelineProcessor {
 
         List<TrackerMotion> trackerMotions = new ArrayList<>();
 
-        /* PARTNER FILTERING --THIS NEEDS TO BE FEATURE FLIPPED */
-        if (!partnerMotions.isEmpty() && false) {
+        if (!partnerMotions.isEmpty() && hasPartnerFilterEnabled) {
             try {
-                trackerMotions.addAll(PartnerDataUtils.getMyMotion(originalTrackerMotions, partnerMotions));
+                PartnerDataUtils.PartnerMotions motions = PartnerDataUtils.getMyMotion(originalTrackerMotions, partnerMotions);
+                trackerMotions.addAll(motions.myMotions);
             }
             catch (Exception e) {
                 LOGGER.info(e.getMessage());
                 trackerMotions.addAll(originalTrackerMotions);
             }
-        } else {
+        }
+        else {
             trackerMotions.addAll(originalTrackerMotions);
         }
 
