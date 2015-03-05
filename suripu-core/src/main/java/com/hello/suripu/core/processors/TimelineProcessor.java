@@ -398,7 +398,8 @@ public class TimelineProcessor {
                                                 final Boolean hasSoundInTimeline,
                                                 final Boolean hasFeedbackInTimelineEnabled,
                                                 final Boolean hasHmmEnabled,
-                                                final Boolean forceUpdate) {
+                                                final Boolean forceUpdate,
+                                                final Boolean hasPartnerFilterEnabled) {
 
 
         final long  currentTimeMillis = DateTime.now().withZone(DateTimeZone.UTC).getMillis();
@@ -436,8 +437,7 @@ public class TimelineProcessor {
 
         List<TrackerMotion> trackerMotions = new ArrayList<>();
 
-        /* PARTNER FILTERING --THIS NEEDS TO BE FEATURE FLIPPED */
-        if (!partnerMotions.isEmpty() && false) {
+        if (!partnerMotions.isEmpty() && hasPartnerFilterEnabled) {
             try {
                 PartnerDataUtils.PartnerMotions motions = PartnerDataUtils.getMyMotion(originalTrackerMotions, partnerMotions);
                 trackerMotions.addAll(motions.myMotions);
@@ -446,7 +446,8 @@ public class TimelineProcessor {
                 LOGGER.info(e.getMessage());
                 trackerMotions.addAll(originalTrackerMotions);
             }
-        } else {
+        }
+        else {
             trackerMotions.addAll(originalTrackerMotions);
         }
 

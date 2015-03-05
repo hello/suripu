@@ -54,7 +54,8 @@ public class TimelineResource extends BaseResource {
                 hasSoundInTimeline(accessToken.accountId),
                 hasFeedbackInTimeline(accessToken.accountId),
                 hasHmmEnabled(accessToken.accountId),
-                false);
+                false,
+                hasPartnerFilterEnabled(accessToken.accountId));
 
     }
 
@@ -76,7 +77,8 @@ public class TimelineResource extends BaseResource {
                 hasSoundInTimeline(accountId.get()),
                 hasFeedbackInTimeline(accountId.get()),
                 hasHmmEnabled(accountId.get()),
-                false);
+                false,
+                hasPartnerFilterEnabled(accountId.get()));
     }
 
     private Optional<Long> getAccountIdByEmail(final String email) {
