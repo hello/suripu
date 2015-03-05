@@ -93,8 +93,8 @@ public class HmmTest {
 
         sensorSampleList.add(Sensor.LIGHT,light);
 
-        Optional<SleepHmmWithInterpretation.SleepHmmResult> res = hmm.get().getSleepEventsUsingHMM(sensorSampleList,motionList,t0,tf,tc1);
-        Optional<SleepHmmWithInterpretation.SleepHmmResult> res2 = hmm.get().getSleepEventsUsingHMM(sensorSampleList,motionList,t0,tf,tc2);
+        Optional<SleepHmmWithInterpretation.SleepHmmResult> res = hmm.get().getSleepEventsUsingHMM(sensorSampleList,motionList,t0 + offset,tf + offset,tc1);
+        Optional<SleepHmmWithInterpretation.SleepHmmResult> res2 = hmm.get().getSleepEventsUsingHMM(sensorSampleList,motionList,t0 + offset,tf + offset,tc2);
 
         assertTrue(res.isPresent());
         assertTrue(res2.isPresent());
