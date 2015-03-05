@@ -22,6 +22,7 @@ import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.JsonError;
+import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.TimelineUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -89,6 +90,43 @@ public class DataScienceResource extends BaseResource {
         LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
 
         return trackerMotions;
+    }
+
+    @GET
+    @Path("/pill/partner/{email}/{query_date_local_utc}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<TrackerMotion> getMotionWithPartnerMotionFiltered(@Scope({OAuthScope.SENSORS_BASIC, OAuthScope.RESEARCH}) final AccessToken accessToken,
+                                         @PathParam("query_date_local_utc") final String date,
+                                         @PathParam("email") final String email) {
+        final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                .withZone(DateTimeZone.UTC).withHourOfDay(20);
+        final DateTime endDate = targetDate.plusHours(16);
+        LOGGER.debug("Target date: {}", targetDate);
+        LOGGER.debug("End date: {}", endDate);
+
+        final Optional<Long> accountId = getAccountIdByEmail(email);
+        if (!accountId.isPresent()) {
+            LOGGER.debug("ID not found for account {}", email);
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        final List<TrackerMotion> originalTrackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId.get(), targetDate, endDate);
+        final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accountId.get());
+
+        final List<TrackerMotion> myMotions = new ArrayList<>();
+
+        if (optionalPartnerAccountId.isPresent()) {
+            final Long partnerAccountId = optionalPartnerAccountId.get();
+            LOGGER.debug("partner account {}", partnerAccountId);
+            final List<TrackerMotion> partnerMotions = this.trackerMotionDAO.getBetweenLocalUTC(partnerAccountId, targetDate, endDate);
+            if(partnerMotions.isEmpty()){
+                myMotions.addAll(originalTrackerMotions);
+            }else{
+                myMotions.addAll(PartnerDataUtils.getMyMotion(originalTrackerMotions, partnerMotions).myMotions);
+            }
+        }
+
+        return myMotions;
     }
 
     @GET
