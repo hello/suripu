@@ -131,8 +131,8 @@ public class CurrentRoomState {
 
         if(referenceTime.minusMinutes(thresholdInMinutes).getMillis() > dataTimestampUTC.getMillis()) {
             LOGGER.warn("{} is too old, not returning anything", dataTimestampUTC);
-//            final CurrentRoomState roomState = dataTooOld(temperature, humidity, particulatesAQI, light, sound, dataTimestampUTC);
-//            return roomState;
+            final CurrentRoomState roomState = dataTooOld(temperature, humidity, particulatesAQI, light, sound, dataTimestampUTC);
+            return roomState;
         }
 
         // get states
