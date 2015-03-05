@@ -411,10 +411,10 @@ public class TimelineProcessor {
 
         if(!forceUpdate) {
         final ImmutableList<Timeline> cachedTimelines = this.timelineDAODynamoDB.getTimelinesForDate(accountId, targetDate.withTimeAtStartOfDay());
-        //if (!cachedTimelines.isEmpty()) {
-        //    LOGGER.debug("Timeline for account {}, date {} returned from cache.", accountId, date);
-        //    return cachedTimelines;
-        //}
+            if (!cachedTimelines.isEmpty()) {
+                LOGGER.debug("Timeline for account {}, date {} returned from cache.", accountId, date);
+                return cachedTimelines;
+            }
 
         LOGGER.debug("No cached timeline, reprocess timeline for account {}, date {}", accountId, date);
         }else{
