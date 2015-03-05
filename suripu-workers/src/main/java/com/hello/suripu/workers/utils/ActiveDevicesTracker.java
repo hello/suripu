@@ -31,6 +31,10 @@ public class ActiveDevicesTracker {
         trackDevices(ActiveDevicesTrackerConfiguration.SENSE_ACTIVE_SET_KEY, ImmutableMap.copyOf(activeSenses));
     }
 
+    public void trackFirmwares(final Map<String, Integer> seenFirmwares) {
+        trackDeviceFirmwares(ImmutableMap.copyOf(seenFirmwares));
+    }
+
     public void trackPill(final String pillId, final Long lastSeen) {
         final Map<String, Long> seenDevices = new HashMap<>(1);
         seenDevices.put(pillId, lastSeen);
@@ -63,5 +67,29 @@ public class ActiveDevicesTracker {
             jedisPool.returnResource(jedis);
         }
         LOGGER.debug("Tracked {} active devices", devicesSeen.size());
+    }
+
+    private void trackDeviceFirmwares(final Map<String, Integer> seenFirmwares) {
+        final Jedis jedis = jedisPool.getResource();
+        try {
+            final Pipeline pipe = jedis.pipelined();
+            pipe.multi();
+            for(Map.Entry<String, Integer> entry : seenFirmwares.entrySet()) {
+                pipe.sadd(entry.getValue().toString(), entry.getKey());
+            }
+            pipe.exec();
+        }catch (JedisDataException exception) {
+            LOGGER.error("Failed getting data out of redis: {}", exception.getMessage());
+            jedisPool.returnBrokenResource(jedis);
+            return;
+        } catch(Exception exception) {
+            LOGGER.error("Unknown error connection to redis: {}", exception.getMessage());
+            jedisPool.returnBrokenResource(jedis);
+            return;
+        }
+        finally {
+            jedisPool.returnResource(jedis);
+        }
+        LOGGER.debug("Tracked {} device firmware versions", seenFirmwares.size());
     }
 }

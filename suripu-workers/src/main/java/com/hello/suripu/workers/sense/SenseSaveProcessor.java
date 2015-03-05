@@ -20,6 +20,7 @@ import com.hello.suripu.workers.utils.ActiveDevicesTracker;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
 import com.yammer.metrics.core.Meter;
+import java.util.Set;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -72,6 +73,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
         final LinkedHashMap<String, LinkedList<DeviceData>> deviceDataGroupedByDeviceId = new LinkedHashMap<>();
 
         final Map<String, Long> activeSenses = new HashMap<>(records.size());
+        final Map<String, Integer> seenFirmwares = new HashMap<>(records.size());
 
         for(final Record record : records) {
             DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorker;
@@ -197,6 +199,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                     final DeviceData deviceData = builder.build();
                     dataForDevice.add(deviceData);
                 }
+                seenFirmwares.put(deviceName, firmwareVersion);
             }
             activeSenses.put(deviceName, batchPeriodicDataWorker.getReceivedAt());
 
@@ -239,6 +242,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
         }
 
         activeDevicesTracker.trackSenses(activeSenses);
+        activeDevicesTracker.trackFirmwares(seenFirmwares);
     }
 
     @Override
