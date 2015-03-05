@@ -588,22 +588,21 @@ public class ReceiveResource extends BaseResource {
         final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, alwaysOTA);
         
         if(canOTA) {
-            
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore
-                    .getFirmwareUpdate(deviceID, deviceGroups.get(0), currentFirmwareVersion); //TODO: Create a better way of knowing which group the device will belong to
-            
-            //TODO: Reconcile behavior of feature flipper as it relates to firmware releases & remove this code
+
             // groups take precedence over feature
             if (!deviceGroups.isEmpty()) {
                 LOGGER.debug("DeviceId {} belongs to groups: {}", deviceID, deviceGroups);
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceID, deviceGroups.get(0), currentFirmwareVersion);//TODO: Create a better way of knowing which group the device will belong to
+                LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+                return fileDownloadList;
             } else {
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceID, deviceGroups)) {
                     LOGGER.debug("Feature release is active!");
+                    final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceID, FeatureFlipper.OTA_RELEASE, currentFirmwareVersion);
+                    LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+                    return fileDownloadList;
                 }
             }
-            
-            LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
-            return fileDownloadList;
         }
         return Collections.emptyList();
     }
