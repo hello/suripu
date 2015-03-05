@@ -1,5 +1,6 @@
 package com.hello.suripu.core.util;
 
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.signals.TwoPillsClassifier;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTime;
@@ -62,12 +63,12 @@ public class PartnerDataUtils {
     }
 
     static public class PartnerMotions {
-        final public List<TrackerMotion> myMotions;
-        final public List<TrackerMotion> yourMotions;
+        final public ImmutableList<TrackerMotion> myMotions;
+        final public ImmutableList<TrackerMotion> yourMotions;
 
         public PartnerMotions(final List<TrackerMotion> myMotions, final List<TrackerMotion> yourMotions) {
-            this.myMotions = myMotions;
-            this.yourMotions = yourMotions;
+            this.myMotions = ImmutableList.copyOf(myMotions);
+            this.yourMotions = ImmutableList.copyOf(yourMotions);
         }
 
     }
