@@ -34,7 +34,7 @@ public class CachedTimelines {
     }
 
     public boolean shouldInvalidate(final String latestVersion, final DateTime targetDateUTC, final DateTime nowUTC, final int maxBackTrackDays){
-        if(nowUTC.minusDays(maxBackTrackDays).isAfter(targetDateUTC)){
+        if(nowUTC.minusDays(maxBackTrackDays).isBefore(targetDateUTC)){
             if(this.isEmpty()){
                 return true;   // Empty, timeline not yet computed, force re-generate.
             }

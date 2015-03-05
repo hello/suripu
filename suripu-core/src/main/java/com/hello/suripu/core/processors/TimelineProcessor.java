@@ -8,17 +8,19 @@ import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
+import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
-import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
+import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
+import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -39,6 +41,7 @@ import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
+import com.hello.suripu.core.util.SleepScoreUtils;
 import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineUtils;
 import org.joda.time.DateTime;
@@ -56,7 +59,7 @@ import java.util.Map;
 
 public class TimelineProcessor {
 
-    public static final String VERSION = "0.0.1";
+    public static final String VERSION = "0.0.2";
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineProcessor.class);
     private static final Integer MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES = 3 * 60;
     private final TrackerMotionDAO trackerMotionDAO;
@@ -70,7 +73,8 @@ public class TimelineProcessor {
     private final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
     private final FeedbackDAO feedbackDAO;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
-    private final SleepHmmDAODynamoDB sleepHmmDAODynamoDB;
+    private final SleepHmmDAO sleepHmmDAO;
+    private final AccountDAO accountDAO;
 
     public TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
                             final DeviceDAO deviceDAO,
@@ -83,7 +87,8 @@ public class TimelineProcessor {
                             final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
                             final FeedbackDAO feedbackDAO,
                             final TimelineDAODynamoDB timelineDAODynamoDB,
-                            final SleepHmmDAODynamoDB sleepHmmDAODynamoDB) {
+                            final SleepHmmDAO sleepHmmDAO,
+                            final AccountDAO accountDAO) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAO = deviceDataDAO;
@@ -95,7 +100,8 @@ public class TimelineProcessor {
         this.ringTimeHistoryDAODynamoDB = ringTimeHistoryDAODynamoDB;
         this.feedbackDAO = feedbackDAO;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
-        this.sleepHmmDAODynamoDB = sleepHmmDAODynamoDB;
+        this.sleepHmmDAO = sleepHmmDAO;
+        this.accountDAO = accountDAO;
     }
 
     public boolean shouldProcessTimelineByWorker(final long accountId,
@@ -391,15 +397,18 @@ public class TimelineProcessor {
                                                 final Boolean hasAlarmInTimeline,
                                                 final Boolean hasSoundInTimeline,
                                                 final Boolean hasFeedbackInTimelineEnabled,
-                                                final Boolean hasHmmEnabled) {
+                                                final Boolean hasHmmEnabled,
+                                                final Boolean forceUpdate) {
 
 
+        final long  currentTimeMillis = DateTime.now().withZone(DateTimeZone.UTC).getMillis();
         final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withHourOfDay(20);
         final DateTime endDate = targetDate.plusHours(16);
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
 
+        if(!forceUpdate) {
         final ImmutableList<Timeline> cachedTimelines = this.timelineDAODynamoDB.getTimelinesForDate(accountId, targetDate.withTimeAtStartOfDay());
         //if (!cachedTimelines.isEmpty()) {
         //    LOGGER.debug("Timeline for account {}, date {} returned from cache.", accountId, date);
@@ -407,6 +416,9 @@ public class TimelineProcessor {
         //}
 
         LOGGER.debug("No cached timeline, reprocess timeline for account {}, date {}", accountId, date);
+        }else{
+            LOGGER.debug("Force updating timeline for account {}, date {}", accountId, date);
+        }
 
         final List<TrackerMotion> originalTrackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
         LOGGER.debug("Length of trackerMotion: {}", originalTrackerMotions.size());
@@ -506,13 +518,15 @@ public class TimelineProcessor {
         if (hasHmmEnabled) {
             LOGGER.info("Using HMM for account {}",accountId);
 
-            final Optional<SleepHmmWithInterpretation> hmmOptional = sleepHmmDAODynamoDB.getLatestModelForDate(accountId, targetDate.getMillis());
+            final Optional<SleepHmmWithInterpretation> hmmOptional = sleepHmmDAO.getLatestModelForDate(accountId, targetDate.getMillis());
 
             if (hmmOptional.isPresent()) {
-                final Optional<SleepHmmWithInterpretation.SleepHmmResult> optionalHmmPredictions = hmmOptional.get().getSleepEventsUsingHMM(allSensorSampleList, trackerMotions);
+                final Optional<SleepHmmWithInterpretation.SleepHmmResult> optionalHmmPredictions = hmmOptional.get().getSleepEventsUsingHMM(
+                        allSensorSampleList, trackerMotions,targetDate.getMillis(),endDate.getMillis(),currentTimeMillis);
 
                 if (optionalHmmPredictions.isPresent()) {
-                    final SleepEvents<Optional<Event>> hmmSleepEvents = SleepEvents.create(optionalHmmPredictions.get().inBed,
+                    final SleepEvents<Optional<Event>> hmmSleepEvents = SleepEvents.create(
+                            optionalHmmPredictions.get().inBed,
                             optionalHmmPredictions.get().fallAsleep,
                             optionalHmmPredictions.get().wakeUp,
                             optionalHmmPredictions.get().outOfBed);
@@ -522,6 +536,25 @@ public class TimelineProcessor {
             }
         }
 
+        // PARTNER MOTION
+        final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.fallAsleep, sleepEventsFromAlgorithm.wakeUp, motionEvents, accountId);
+        for(PartnerMotionEvent partnerMotionEvent : partnerMotionEvents) {
+            timelineEvents.put(partnerMotionEvent.getStartTimestamp(), partnerMotionEvent);
+        }
+        final int numPartnerMotion = partnerMotionEvents.size();
+
+        // SOUND
+        int numSoundEvents = 0;
+        if (hasSoundInTimeline) {
+            final List<Event> soundEvents = getSoundEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE),
+                    motionEvents, lightOutTimeOptional, sleepEventsFromAlgorithm);
+            for (final Event event : soundEvents) {
+                timelineEvents.put(event.getStartTimestamp(), event);
+            }
+            numSoundEvents = soundEvents.size();
+        }
+
+        // insert IN-BED, SLEEP, WAKE, OUT-of-BED
         final List<Optional<Event>> eventList = sleepEventsFromAlgorithm.toList();
         for(final Optional<Event> sleepEventOptional: eventList){
             if(sleepEventOptional.isPresent() && !feedbackEvents.containsKey(sleepEventOptional.get().getType())){
@@ -529,12 +562,6 @@ public class TimelineProcessor {
             }
         }
 
-        // PARTNER MOTION
-        final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.fallAsleep, sleepEventsFromAlgorithm.wakeUp, motionEvents, accountId);
-        for(PartnerMotionEvent partnerMotionEvent : partnerMotionEvents) {
-            timelineEvents.put(partnerMotionEvent.getStartTimestamp(), partnerMotionEvent);
-            }
-        final int numPartnerMotion = partnerMotionEvents.size();
 
         // ALARM
         if(hasAlarmInTimeline && trackerMotions.size() > 0) {
@@ -561,16 +588,6 @@ public class TimelineProcessor {
             }
         }
 
-        // SOUND
-        int numSoundEvents = 0;
-        if (hasSoundInTimeline) {
-            final List<Event> soundEvents = getSoundEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE),
-                    motionEvents, lightOutTimeOptional, sleepEventsFromAlgorithm);
-            for (final Event event : soundEvents) {
-                timelineEvents.put(event.getStartTimestamp(), event);
-            }
-            numSoundEvents = soundEvents.size();
-        }
 
         final List<Event> eventsWithSleepEvents = TimelineRefactored.mergeEvents(timelineEvents);
         final List<Event> smoothedEvents = TimelineUtils.smoothEvents(eventsWithSleepEvents);
@@ -783,9 +800,22 @@ public class TimelineProcessor {
 
         if (sleepScore == 0) {
             // score may not have been computed yet, recompute
-            sleepScore = sleepScoreDAO.getSleepScoreForNight(accountId, targetDate.withTimeAtStartOfDay(),
+            // score based on amount of movement during sleep
+            final Integer motionScore = sleepScoreDAO.getSleepScoreForNight(accountId, targetDate.withTimeAtStartOfDay(),
                     userOffsetMillis, this.dateBucketPeriod, sleepLabelDAO);
 
+            // score due to duration, and user age
+            final Optional<Account> optionalAccount = accountDAO.getById(accountId);
+            final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
+            final Integer durationScore = SleepScoreUtils.getSleepDurationScore(userAge, sleepStats.sleepDurationInMinutes);
+
+            // TODO: score the external environment (lights, sound, temp and humidity)
+            final Integer environmentScore = 100;
+
+            // combine all the scores
+            sleepScore = SleepScoreUtils.aggregateSleepScore(motionScore, durationScore, environmentScore);
+
+            LOGGER.trace("SCORES: motion {}, duration {}, final {}", motionScore, durationScore, sleepScore);
             final DateTime lastNight = new DateTime(DateTime.now(), DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
             if (targetDate.isBefore(lastNight)) {
                 // write data to Dynamo if targetDate is old

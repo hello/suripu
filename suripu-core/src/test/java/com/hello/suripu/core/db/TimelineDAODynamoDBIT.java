@@ -226,8 +226,7 @@ public class TimelineDAODynamoDBIT {
         final boolean invalidateResult = this.timelineDAODynamoDB.invalidateCache(accountId, startOfDay1, startOfDay1);
         assertThat(invalidateResult, is(true));
         actual = this.timelineDAODynamoDB.getTimelinesForDates(accountId, queryDates);
-        assertThat(actual.size(), is(1));
-        assertThat(actual.get(startOfDay1).isEmpty(), is(true));
+        assertThat(actual.size(), is(0));  // Ahh I made this wrong....
 
     }
 
