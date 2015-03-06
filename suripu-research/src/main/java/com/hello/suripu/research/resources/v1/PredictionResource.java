@@ -1,7 +1,10 @@
 package com.hello.suripu.research.resources.v1;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
+import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
+import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -127,6 +130,95 @@ public class PredictionResource extends BaseResource {
         return events;
     }
 
+    private SleepEvents<Optional<Event>> fromAlgorithm(final DateTime targetDate, final List<TrackerMotion> trackerMotions, final Optional<DateTime> lightOutTimeOptional, final Optional<DateTime> wakeUpWaveTimeOptional) {
+        Optional<Segment> sleepSegmentOptional;
+        Optional<Segment> inBedSegmentOptional = Optional.absent();
+        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.create(Optional.<Event>absent(),
+                Optional.<Event>absent(),
+                Optional.<Event>absent(),
+                Optional.<Event>absent());
+
+        // A day starts with 8pm local time and ends with 4pm local time next day
+        try {
+            sleepEventsFromAlgorithm = TimelineUtils.getSleepEvents(targetDate,
+                    trackerMotions,
+                    lightOutTimeOptional,
+                    wakeUpWaveTimeOptional,
+                    MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                    MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                    MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
+                    false);
+
+
+
+            if(sleepEventsFromAlgorithm.fallAsleep.isPresent() && sleepEventsFromAlgorithm.wakeUp.isPresent()){
+                sleepSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.fallAsleep.get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.wakeUp.get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.wakeUp.get().getTimezoneOffset()));
+
+                LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
+                        new DateTime(sleepSegmentOptional.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegmentOptional.get().getOffsetMillis())),
+                        new DateTime(sleepSegmentOptional.get().getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegmentOptional.get().getOffsetMillis())));
+            }
+
+            if(sleepEventsFromAlgorithm.goToBed.isPresent() && sleepEventsFromAlgorithm.outOfBed.isPresent()){
+                inBedSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.goToBed.get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.outOfBed.get().getStartTimestamp(),
+                        sleepEventsFromAlgorithm.outOfBed.get().getTimezoneOffset()));
+                LOGGER.info("In Bed Time From Awake Detection Algorithm: {} - {}",
+                        new DateTime(inBedSegmentOptional.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(inBedSegmentOptional.get().getOffsetMillis())),
+                        new DateTime(inBedSegmentOptional.get().getEndTimestamp(), DateTimeZone.forOffsetMillis(inBedSegmentOptional.get().getOffsetMillis())));
+            }
+
+
+        }catch (Exception ex){ //TODO : catch a more specific exception
+            LOGGER.error("Generate sleep period from Awake Detection Algorithm failed: {}", ex.getMessage());
+        }
+
+        return  sleepEventsFromAlgorithm;
+    }
+
+    private List<Event> getSleepScoreEvents(final DateTime targetDate, final DateTime endDate,final long  currentTimeMillis,final long accountId,
+                                            final AllSensorSampleList allSensorSampleList, final List<TrackerMotion> myMotion) {
+        // compute lights-out and sound-disturbance events
+        Optional<DateTime> lightOutTimeOptional = Optional.absent();
+        Optional<DateTime> wakeUpWaveTimeOptional = Optional.absent();
+        final List<Event> lightEvents = Lists.newArrayList();
+
+        if (!allSensorSampleList.isEmpty()) {
+
+            // Light
+            lightEvents.addAll(TimelineUtils.getLightEvents(allSensorSampleList.get(Sensor.LIGHT)));
+            if (lightEvents.size() > 0) {
+                lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
+            }
+
+            // TODO: refactor
+
+            if(!allSensorSampleList.get(Sensor.WAVE_COUNT).isEmpty() && myMotion.size() > 0){
+                wakeUpWaveTimeOptional = TimelineUtils.getFirstAwakeWaveTime(myMotion.get(0).timestamp,
+                        myMotion.get(myMotion.size() - 1).timestamp,
+                        allSensorSampleList.get(Sensor.WAVE_COUNT));
+            }
+        }
+        /*  This can get overided by the HMM if the feature is enabled */
+        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate, myMotion, lightOutTimeOptional, wakeUpWaveTimeOptional);
+
+
+        List<Optional<Event>> items = sleepEventsFromAlgorithm.toList();
+
+        List<Event> returnedEvents = new ArrayList<Event>();
+
+        for (Optional<Event> e : items) {
+            if (e.isPresent()) {
+                returnedEvents.add(e.get());
+            }
+        }
+
+        return returnedEvents;
+
+    }
+
     /* Takes protobuf data directly and decodes  */
     private class LocalSleepHmmDAO implements SleepHmmDAO {
         final Optional<SleepHmmWithInterpretation> hmm;
@@ -179,7 +271,10 @@ public class PredictionResource extends BaseResource {
 
             @DefaultValue(ALGORITHM_HIDDEN_MARKOV) @QueryParam("algorithm") final String algorithm,
 
-            @DefaultValue("") @QueryParam("hmm_protobuf") final String protobuf
+            @DefaultValue("") @QueryParam("hmm_protobuf") final String protobuf,
+
+            @DefaultValue("true") @QueryParam("partner_filter") final Boolean usePartnerFilter
+
 
     ) {
 
@@ -216,7 +311,7 @@ public class PredictionResource extends BaseResource {
 
         List<TrackerMotion> motions = new ArrayList<>();
 
-        if (!partnerMotions.isEmpty() ) {
+        if (!partnerMotions.isEmpty() && usePartnerFilter ) {
             try {
                 PartnerDataUtils.PartnerMotions separatedMotions = PartnerDataUtils.getMyMotion(myMotions, partnerMotions);
                 motions.addAll(separatedMotions.myMotions);
@@ -246,6 +341,7 @@ public class PredictionResource extends BaseResource {
 
         switch (algorithm) {
             case ALGORITHM_SLEEP_SCORED:
+                events = getSleepScoreEvents(targetDate,endDate,currentTimeMillis,accountId,allSensorSampleList,myMotions);
                 break;
 
             case ALGORITHM_HIDDEN_MARKOV:
