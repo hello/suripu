@@ -18,6 +18,7 @@ import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
+import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
@@ -34,6 +35,7 @@ import com.hello.suripu.core.util.DropwizardServiceUtil;
 import com.hello.suripu.research.configuration.SuripuResearchConfiguration;
 import com.hello.suripu.research.modules.RolloutResearchModule;
 import com.hello.suripu.research.resources.v1.DataScienceResource;
+import com.hello.suripu.research.resources.v1.PredictionResource;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -77,6 +79,7 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         final DBI sensorsDB = factory.build(environment, configuration.getSensorsDB(), "postgresql");
         final DBI commonDB = factory.build(environment, configuration.getCommonDB(), "postgresql");
 
+
         sensorsDB.registerArgumentFactory(new JodaArgumentFactory());
         sensorsDB.registerContainerFactory(new OptionalContainerFactory());
         sensorsDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
@@ -106,6 +109,7 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
 
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
         final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider, clientConfiguration);
+        final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
 
         final ImmutableMap<QueueName, String> streams = ImmutableMap.copyOf(configuration.getKinesisConfiguration().getStreams());
         final KinesisLoggerFactory kinesisLoggerFactory = new KinesisLoggerFactory(kinesisClient, streams);
@@ -115,6 +119,11 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         final AmazonDynamoDB featureDynamoDB = featureStoreDynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
         final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
         final FeatureStore featureStore = new FeatureStore(featureDynamoDB, "features", featureNamespace);
+
+        //sleep HMM protobufs in teh cloud
+        final AmazonDynamoDB sleepHmmDynamoDbClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepHmmDBConfiguration().getEndpoint());
+        final String sleepHmmTableName = configuration.getSleepHmmDBConfiguration().getTableName();
+        final SleepHmmDAODynamoDB sleepHmmDAODynamoDB = new SleepHmmDAODynamoDB(sleepHmmDynamoDbClient,sleepHmmTableName);
 
 
         final RolloutResearchModule module = new RolloutResearchModule(featureStore, 30);
@@ -131,6 +140,8 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
                 .getResourceFilterFactories().add(CacheFilterFactory.class);
         environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO,
                 deviceDataDAO, deviceDAO, sleepLabelDAO));
+
+        environment.addResource(new PredictionResource(accountDAO,trackerMotionDAO,deviceDataDAO,deviceDAO,sleepLabelDAO,sleepHmmDAODynamoDB));
 
 
     }
