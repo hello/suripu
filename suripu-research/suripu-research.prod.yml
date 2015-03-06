@@ -109,3 +109,9 @@ kinesis_logger:
   enabled : true
   buffer_size: 100
   origin: suripu-research
+
+sleephmm_db:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: prod_sleephmm
+
