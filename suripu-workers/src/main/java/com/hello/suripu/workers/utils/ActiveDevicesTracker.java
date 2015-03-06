@@ -32,10 +32,6 @@ public class ActiveDevicesTracker {
         trackDevices(ActiveDevicesTrackerConfiguration.SENSE_ACTIVE_SET_KEY, ImmutableMap.copyOf(activeSenses));
     }
 
-    public void trackFirmwares(final Map<String, Integer> seenFirmwares) {
-        trackDeviceFirmwares(ImmutableMap.copyOf(seenFirmwares));
-    }
-
     public void trackPill(final String pillId, final Long lastSeen) {
         final Map<String, Long> seenDevices = new HashMap<>(1);
         seenDevices.put(pillId, lastSeen);
@@ -70,7 +66,7 @@ public class ActiveDevicesTracker {
         LOGGER.debug("Tracked {} active devices", devicesSeen.size());
     }
 
-    private void trackDeviceFirmwares(final Map<String, Integer> seenFirmwares) {
+    public  void trackFirmwares(final Map<String, Integer> seenFirmwares) {
         final Jedis jedis = jedisPool.getResource();
         try {
             final Pipeline pipe = jedis.pipelined();

@@ -51,7 +51,7 @@ public class FirmwareResource {
         Set<String> allFWDevices = new HashSet<>();
 
         try {
-            allFWDevices = jedis.zrange(fwVersion, 0L, 100L);
+            allFWDevices = jedis.zrevrange(fwVersion, 0, -1);
         } catch (Exception e) {
             LOGGER.error("Failed retrieving firmware device count.", e.getMessage());
         } finally {
