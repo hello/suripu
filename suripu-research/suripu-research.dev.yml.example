@@ -79,3 +79,8 @@ kinesis_logger:
   enabled : false
   buffer_size: 100
   origin: suripu-research
+
+sleephmm_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: sleephmm

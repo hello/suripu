@@ -34,6 +34,7 @@ import com.hello.suripu.core.util.CustomJSONExceptionMapper;
 import com.hello.suripu.core.util.DropwizardServiceUtil;
 import com.hello.suripu.research.configuration.SuripuResearchConfiguration;
 import com.hello.suripu.research.modules.RolloutResearchModule;
+import com.hello.suripu.research.resources.v1.AccountInfoResource;
 import com.hello.suripu.research.resources.v1.DataScienceResource;
 import com.hello.suripu.research.resources.v1.PredictionResource;
 import com.sun.jersey.api.core.ResourceConfig;
@@ -142,7 +143,7 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
                 deviceDataDAO, deviceDAO, sleepLabelDAO));
 
         environment.addResource(new PredictionResource(accountDAO,trackerMotionDAO,deviceDataDAO,deviceDAO,sleepLabelDAO,sleepHmmDAODynamoDB));
-
+        environment.addResource(new AccountInfoResource(accountDAO, deviceDAO));
 
     }
 }
