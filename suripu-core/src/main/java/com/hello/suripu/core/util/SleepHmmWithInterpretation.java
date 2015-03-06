@@ -446,9 +446,11 @@ CREATE CREATE CREATE
         }
 
         //get start and end of window
-        final long t0 = startTimeMillis;
         final int timezoneOffset = light.get(0).offsetMillis;
-        long tf = endTimeMillis;
+
+        //convert all to UTC
+        final long t0 = startTimeMillis - timezoneOffset;
+        long tf = endTimeMillis - timezoneOffset;
 
         //somehow, the light data is returned for
         if (currentTimeInMillis < tf && currentTimeInMillis >= t0) {

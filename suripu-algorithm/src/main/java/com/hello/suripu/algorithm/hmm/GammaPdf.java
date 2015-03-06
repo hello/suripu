@@ -8,7 +8,7 @@ import org.apache.commons.math3.distribution.GammaDistribution;
 public class GammaPdf implements HmmPdfInterface {
     private  final int measNum;
     private final GammaDistribution gammaDistribution;
-
+    private final static double MIN_INPUT_VALUE = 1e-1;
 
     public GammaPdf(final double mean, final double stdDev, final int measNum) {
         this.measNum = measNum;
@@ -35,7 +35,13 @@ public class GammaPdf implements HmmPdfInterface {
 
         for (int i = 0; i < col.length; i++) {
             //god I hope this is its likelihood function
-            result[i] = gammaDistribution.density(col[i]);
+            double inputValue = col[i];
+            if (inputValue < MIN_INPUT_VALUE) {
+                inputValue = MIN_INPUT_VALUE;
+            }
+
+            result[i] = gammaDistribution.density(inputValue);
+
         }
 
         return result;

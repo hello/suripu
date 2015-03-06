@@ -17,6 +17,7 @@ import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.hamcrest.core.Is;
 import org.joda.time.DateTime;
@@ -160,10 +161,10 @@ public class TimelineUtilsTest {
         final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
 
         // motion events outside of first meaningful event is removed
-        assertThat(greyEvents.size(), is(events.size() - 1));
-        assertThat(greyEvents.get(0).getType(), is(Event.Type.IN_BED));
-        assertThat(greyEvents.get(1).getType(), is(Event.Type.SLEEPING));
-        assertThat(greyEvents.get(filteredEvents.size() - 2).getType(), is(Event.Type.NONE));
+        assertThat(greyEvents.size(), is(events.size()));
+        assertThat(greyEvents.get(0).getType(), is(Event.Type.NONE));
+        assertThat(greyEvents.get(2).getType(), is(Event.Type.SLEEPING));
+        assertThat(greyEvents.get(filteredEvents.size() - 1).getType(), is(Event.Type.NONE));
 
     }
 
@@ -184,11 +185,11 @@ public class TimelineUtilsTest {
         final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
         final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
 
-        assertThat(greyEvents.size(), is(events.size() - 1));
-        assertThat(greyEvents.get(0).getType(), is(Event.Type.IN_BED));
-        assertThat(greyEvents.get(1).getType(), is(Event.Type.SLEEPING));
-        assertThat(greyEvents.get(filteredEvents.size() - 3).getType(), is(Event.Type.MOTION));
-        assertThat(greyEvents.get(filteredEvents.size() - 2).getType(), is(Event.Type.SLEEPING));
+        assertThat(greyEvents.size(), is(events.size()));
+        assertThat(greyEvents.get(0).getType(), is(Event.Type.NONE));
+        assertThat(greyEvents.get(2).getType(), is(Event.Type.SLEEPING));
+        assertThat(greyEvents.get(filteredEvents.size() - 2).getType(), is(Event.Type.MOTION));
+        assertThat(greyEvents.get(filteredEvents.size() - 1).getType(), is(Event.Type.SLEEPING));
 
     }
 
@@ -209,11 +210,11 @@ public class TimelineUtilsTest {
         final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
         final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
 
-        assertThat(greyEvents.size(), is(events.size() - 1));
-        assertThat(greyEvents.get(0).getType(), is(Event.Type.IN_BED));
-        assertThat(greyEvents.get(1).getType(), is(Event.Type.SLEEPING));
-        assertThat(greyEvents.get(filteredEvents.size() - 3).getType(), is(Event.Type.NONE));
+        assertThat(greyEvents.size(), is(events.size()));
+        assertThat(greyEvents.get(0).getType(), is(Event.Type.MOTION));
+        assertThat(greyEvents.get(2).getType(), is(Event.Type.SLEEPING));
         assertThat(greyEvents.get(filteredEvents.size() - 2).getType(), is(Event.Type.NONE));
+        assertThat(greyEvents.get(filteredEvents.size() - 1).getType(), is(Event.Type.NONE));
 
     }
 
@@ -234,10 +235,10 @@ public class TimelineUtilsTest {
         final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
         final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
 
-        for(int i = 0; i < events.size() - 1; i++){
+        for(int i = 0; i < events.size(); i++){
             assertThat(greyEvents.get(i).getType() == Event.Type.NONE, is(false));
         }
-        assertThat(greyEvents.get(1).getType(), is(Event.Type.SLEEPING));
+        assertThat(greyEvents.get(2).getType(), is(Event.Type.SLEEPING));
 
     }
 
@@ -1057,5 +1058,122 @@ public class TimelineUtilsTest {
         final List<RingTime> ringTimes = Lists.newArrayList(ringTime);
         final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now.plusHours(1), 0, now.minusMinutes(1));
         assertThat(events.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testGetFirstSignificantEventInEmptyTimeline(){
+        final Optional<Event> firstSignificantEvent = TimelineUtils.getFirstSignificantEvent(new ArrayList<Event>());
+        assertThat(firstSignificantEvent.isPresent(), is(false));
+    }
+
+    @Test
+    public void testGetFirstSignificantEventInTimelineHasNoSignificantEvent(){
+        final List<Event> events = new ArrayList<>();
+        events.add(Event.createFromType(Event.Type.MOTION, 0, DateTimeConstants.MILLIS_PER_MINUTE, 0,
+                Optional.<String>absent(),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.of(1)));
+
+        events.add(Event.createFromType(Event.Type.NONE, DateTimeConstants.MILLIS_PER_MINUTE, 2 * DateTimeConstants.MILLIS_PER_MINUTE, 0,
+                Optional.<String>absent(),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.of(100)));
+
+        final Optional<Event> firstSignificantEvent = TimelineUtils.getFirstSignificantEvent(events);
+        assertThat(firstSignificantEvent.isPresent(), is(false));
+    }
+
+    @Test
+    public void testGetFirstSignificantEventInTimeline(){
+        final List<Event> events = new ArrayList<>();
+        events.add(Event.createFromType(Event.Type.MOTION, 0, DateTimeConstants.MILLIS_PER_MINUTE, 0,
+                Optional.<String>absent(),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.of(1)));
+
+        events.add(Event.createFromType(Event.Type.NONE, DateTimeConstants.MILLIS_PER_MINUTE, 2 * DateTimeConstants.MILLIS_PER_MINUTE, 0,
+                Optional.<String>absent(),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.of(100)));
+
+        events.add(Event.createFromType(Event.Type.LIGHTS_OUT, 2 * DateTimeConstants.MILLIS_PER_MINUTE, 3 * DateTimeConstants.MILLIS_PER_MINUTE, 0,
+                Optional.<String>absent(),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.of(0)));
+
+        final Optional<Event> firstSignificantEvent = TimelineUtils.getFirstSignificantEvent(events);
+        assertThat(firstSignificantEvent.isPresent(), is(true));
+        assertThat(firstSignificantEvent.get().getType(), is(Event.Type.LIGHTS_OUT));
+    }
+
+    @Test
+    public void testRemoveEventBeforeSignificantNoSignificantEvent(){
+        final List<Event> events = new ArrayList<>();
+        events.add(Event.createFromType(Event.Type.MOTION, 0, DateTimeConstants.MILLIS_PER_MINUTE, 0,
+                Optional.<String>absent(),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.of(1)));
+
+        events.add(Event.createFromType(Event.Type.NONE, DateTimeConstants.MILLIS_PER_MINUTE, 2 * DateTimeConstants.MILLIS_PER_MINUTE, 0,
+                Optional.<String>absent(),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.of(100)));
+
+
+        final List<Event> filteredEvents = TimelineUtils.removeEventBeforeSignificant(events);
+        assertThat(filteredEvents, is(events));
+    }
+
+    @Test
+    public void testRemoveEventBeforeSignificantSignificantEventTooLate(){
+        final List<Event> events = new ArrayList<>();
+        events.add(Event.createFromType(Event.Type.MOTION, 0, DateTimeConstants.MILLIS_PER_MINUTE, 0,
+                Optional.<String>absent(),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.of(1)));
+
+        events.add(Event.createFromType(Event.Type.NONE, DateTimeConstants.MILLIS_PER_MINUTE, 2 * DateTimeConstants.MILLIS_PER_MINUTE, 0,
+                Optional.<String>absent(),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.of(100)));
+
+        events.add(Event.createFromType(Event.Type.LIGHTS_OUT, 7 * DateTimeConstants.MILLIS_PER_MINUTE, 8 * DateTimeConstants.MILLIS_PER_MINUTE, 0,
+                Optional.<String>absent(),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.of(0)));
+
+
+        final List<Event> filteredEvents = TimelineUtils.removeEventBeforeSignificant(events);
+        assertThat(filteredEvents, is(events));
+    }
+
+    @Test
+    public void testRemoveEventBeforeSignificant(){
+        final List<Event> events = new ArrayList<>();
+        events.add(Event.createFromType(Event.Type.MOTION, 0, DateTimeConstants.MILLIS_PER_MINUTE, 0,
+                Optional.<String>absent(),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.of(1)));
+
+        events.add(Event.createFromType(Event.Type.NONE, DateTimeConstants.MILLIS_PER_MINUTE, 2 * DateTimeConstants.MILLIS_PER_MINUTE, 0,
+                Optional.<String>absent(),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.of(100)));
+
+        events.add(Event.createFromType(Event.Type.LIGHTS_OUT, 3 * DateTimeConstants.MILLIS_PER_MINUTE, 4 * DateTimeConstants.MILLIS_PER_MINUTE, 0,
+                Optional.<String>absent(),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.of(0)));
+
+        events.add(Event.createFromType(Event.Type.WAKE_UP, 8 * DateTimeConstants.MILLIS_PER_MINUTE, 9 * DateTimeConstants.MILLIS_PER_MINUTE, 0,
+                Optional.<String>absent(),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.of(0)));
+
+
+        final List<Event> filteredEvents = TimelineUtils.removeEventBeforeSignificant(events);
+        assertThat(filteredEvents.size(), is(2));
+        assertThat(filteredEvents.get(0).getType(), is(Event.Type.LIGHTS_OUT));
+        assertThat(filteredEvents.get(1).getType(), is(Event.Type.WAKE_UP));
     }
 }
