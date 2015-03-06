@@ -416,7 +416,7 @@ public class TimelineProcessor {
                 return cachedTimelines;
             }
 
-        LOGGER.debug("No cached timeline, reprocess timeline for account {}, date {}", accountId, date);
+            LOGGER.debug("No cached timeline, reprocess timeline for account {}, date {}", accountId, date);
         }else{
             LOGGER.debug("Force updating timeline for account {}, date {}", accountId, date);
         }
@@ -600,8 +600,9 @@ public class TimelineProcessor {
         final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
                 sleepEventsFromAlgorithm.goToBed,
                 sleepEventsFromAlgorithm.outOfBed);
+        final List<Event> nonSignificantFilteredEvents = TimelineUtils.removeEventBeforeSignificant(greyEvents);
 
-        final List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(greyEvents);
+        final List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(nonSignificantFilteredEvents);
 
         final int lightSleepThreshold = 70; // TODO: Generate dynamically instead of hard threshold
         final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments, lightSleepThreshold);

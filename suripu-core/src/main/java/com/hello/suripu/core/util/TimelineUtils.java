@@ -239,22 +239,59 @@ public class TimelineUtils {
         return newEventList;
     }
 
+    public static Optional<Event> getFirstSignificantEvent(final List<Event> events){
+        for(final Event event:events){
+            if(event.getType() != Event.Type.NONE && event.getType() != Event.Type.MOTION){
+                return Optional.of(event);
+            }
+        }
+
+        return Optional.absent();
+    }
+
+    public static boolean shouldRemoveEventsBeforeSignificantEvent(final Optional<Event> significantEvent,
+                                                                   final List<Event> events){
+        if(!significantEvent.isPresent()){
+            return false;
+        }
+
+        final Event firstEvent = events.get(0);
+        final Event lastEvent = events.get(events.size() - 1);
+        final Long eventSpanMillis = lastEvent.getEndTimestamp() - firstEvent.getStartTimestamp();
+
+        if(significantEvent.get().getStartTimestamp() - firstEvent.getStartTimestamp() > eventSpanMillis / 3){
+            return false;
+        }
+
+        return true;
+    }
+
+    public static List<Event> removeEventBeforeSignificant(final List<Event> events){
+        final Optional<Event> significantEvent = getFirstSignificantEvent(events);
+        final boolean shouldRemoveEvents = shouldRemoveEventsBeforeSignificantEvent(significantEvent, events);
+        if(!shouldRemoveEvents){
+            return events;
+        }
+
+        final List<Event> filteredEvents = new ArrayList<>();
+        for(final Event event:events){
+            if(event.getStartTimestamp() < significantEvent.get().getStartTimestamp()){
+                continue;
+            }
+
+            filteredEvents.add(event);
+        }
+
+        return filteredEvents;
+    }
+
     public static List<Event> greyNullEventsOutsideBedPeriod(final List<Event> events,
                                                                  final Optional<Event> inBedEventOptional,
                                                                  final Optional<Event> outOfBedEventOptional){
         final LinkedList<Event> newEventList = new LinkedList<>();
-        Boolean foundfirstNonMotionEvent = false;
 
         // State is harmful, shall avoid it like plague
         for(final Event event:events){
-
-            final Event.Type eventType = event.getType();
-            if (!foundfirstNonMotionEvent && (eventType == Event.Type.NONE || eventType == Event.Type.MOTION)) {
-                continue;
-            }
-
-            foundfirstNonMotionEvent = true;
-
             if(event.getType() != Event.Type.NONE){
                 newEventList.add(event);
                 continue;
