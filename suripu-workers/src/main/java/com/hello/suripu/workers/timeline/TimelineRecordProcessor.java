@@ -11,7 +11,6 @@ import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
-import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
@@ -110,13 +109,15 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
             }
 
             try {
-                final List<Timeline> timelines = this.timelineProcessor.retrieveTimelines(accountId,
+                this.timelineProcessor.retrieveTimelinesFast(accountId,
                         groupedAccountIdTargetDateLocalUTCMap.get(accountId).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT),
                         missingDataDefaultValue(accountId),
-                        hasAlarmInTimeline(accountId));
-                this.timelineDAODynamoDB.saveTimelinesForDate(accountId,
-                        groupedAccountIdTargetDateLocalUTCMap.get(accountId),
-                        timelines);
+                        hasAlarmInTimeline(accountId),
+                        hasSoundInTimeline(accountId),
+                        hasFeedbackInTimeline(accountId),
+                        hasHmmEnabled(accountId),
+                        true,
+                        hasPartnerFilterEnabled(accountId));
                 LOGGER.info("Timeline saved for account {} at local utc {}",
                         accountId,
                         groupedAccountIdTargetDateLocalUTCMap.get(accountId).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT));
