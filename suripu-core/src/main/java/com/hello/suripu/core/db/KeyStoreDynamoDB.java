@@ -126,7 +126,6 @@ public class KeyStoreDynamoDB implements KeyStore {
 
         final GetItemResult getItemResult = dynamoDBClient.getItem(getItemRequest);
 
-        LOGGER.info("getItemResult = {}", getItemResult.toString());
         if(getItemResult.getItem() == null || !getItemResult.getItem().containsKey(AES_KEY_ATTRIBUTE_NAME)) {
             LOGGER.warn("Did not find anything for device_id = {}", deviceId);
 
@@ -178,7 +177,6 @@ public class KeyStoreDynamoDB implements KeyStore {
 
         final GetItemResult getItemResult = dynamoDBClient.getItem(getItemRequest);
 
-        LOGGER.info("getItemResult = {}", getItemResult.toString());
         if(getItemResult.getItem() == null || !getItemResult.getItem().containsKey(AES_KEY_ATTRIBUTE_NAME)) {
             LOGGER.warn("Did not find anything for device_id = {}", deviceId);
             return Optional.absent();

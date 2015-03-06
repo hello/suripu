@@ -1,4 +1,4 @@
-metrics_enabled: true
+metrics_enabled: false
 debug: false
 graphite:
   host: carbon.hostedgraphite.com

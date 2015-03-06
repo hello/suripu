@@ -3,8 +3,10 @@ package com.hello.suripu.core.db;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.model.AttributeAction;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.AttributeValueUpdate;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
@@ -15,13 +17,14 @@ import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
-import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
-import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ReturnConsumedCapacity;
+import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
+import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -146,19 +149,29 @@ public class TimelineDAODynamoDB {
                     new AttributeValue().withN(String.valueOf(targetDateLocalUTC.withTimeAtStartOfDay().getMillis()))
             ));
 
-            HashMap<String, AttributeValue> items = new HashMap<>();
-            items.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
-            items.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(targetDateLocalUTC.withTimeAtStartOfDay().getMillis())));
-            items.put(EXPIRED_AT_MILLIS, new AttributeValue().withN(String.valueOf(expiredAtUTC.getMillis())));
+            final HashMap<String, AttributeValueUpdate> items = new HashMap<>();
 
-            final PutItemRequest putItemRequest = new PutItemRequest()
+            items.put(EXPIRED_AT_MILLIS, new AttributeValueUpdate()
+                    .withAction(AttributeAction.PUT)
+                    .withValue(new AttributeValue().withN(String.valueOf(expiredAtUTC.getMillis()))));
+
+            final HashMap<String, AttributeValue> keys = new HashMap<>();
+            keys.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
+            keys.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(targetDateLocalUTC.withTimeAtStartOfDay().getMillis())));
+
+
+            final UpdateItemRequest updateItemRequest = new UpdateItemRequest()
                     .withTableName(tableName)
-                    .withItem(items)
-                    .withExpected(putConditions);
+                    .withKey(keys)
+                    .withAttributeUpdates(items)
+                    .withExpected(putConditions)
+                    .withReturnValues(ReturnValue.ALL_NEW);
 
-            final PutItemResult result = this.dynamoDBClient.putItem(putItemRequest);
+            final UpdateItemResult result = this.dynamoDBClient.updateItem(updateItemRequest);
+            if(result.getAttributes().size() > 0) {
 
-            return true;
+                return true;
+            }
         }  catch (AmazonServiceException ase) {
             LOGGER.error("Failed to invalidate cache after for account {} and date {}, error {}",
                     accountId,
