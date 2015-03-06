@@ -2,6 +2,7 @@ package com.hello.suripu.workers.utils;
 
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.configuration.ActiveDevicesTrackerConfiguration;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -75,7 +76,8 @@ public class ActiveDevicesTracker {
             final Pipeline pipe = jedis.pipelined();
             pipe.multi();
             for(Map.Entry<String, Integer> entry : seenFirmwares.entrySet()) {
-                pipe.sadd(entry.getValue().toString(), entry.getKey());
+                pipe.sadd(ActiveDevicesTrackerConfiguration.FIRMWARES_SEEN_SET_KEY, entry.getValue().toString());
+                pipe.zadd(entry.getValue().toString(), DateTime.now().getMillis(), entry.getKey());
             }
             pipe.exec();
         }catch (JedisDataException exception) {

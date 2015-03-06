@@ -380,8 +380,7 @@ public class DeviceResources {
           // devices which have been inactive for at least 3 days since Dec 4, 2014
             tuples.addAll(jedis.zrangeByScoreWithScores("devices", startTimeStamp, inactiveSince - inactiveThreshold, offset, count));
             totalPages = (int)Math.ceil(jedis.zcount("devices", startTimeStamp, inactiveSince - inactiveThreshold) / (double) maxDevicesPerPage);
-            devicesOnFirmware = jedis.scard("0.3.6.6");
-            
+
         } catch (Exception e) {
             LOGGER.error("Failed retrieving list of devices", e.getMessage());
         } finally {
@@ -396,34 +395,6 @@ public class DeviceResources {
             inactiveDevices.add(deviceInactive);
         }
         return new DeviceInactivePaginator(currentPage, totalPages, inactiveDevices);
-    }
-
-    @GET
-    @Timed
-    @Path("/firmware")
-    @Produces(MediaType.APPLICATION_JSON)
-    public FirmwareInfo getFirmwareCount(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                                      @QueryParam("firmware_version") final Long firmwareVersion) {
-        if(firmwareVersion == null) {
-            LOGGER.error("Missing firmwareVersion parameter");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        }
-        
-        final Jedis jedis = jedisPool.getResource();
-        final String fwVersion = firmwareVersion.toString();
-        Set<String> allFWDevices = new HashSet<>();
-                
-        try {
-            final Long devicesOnFirmware = jedis.scard(fwVersion);
-            allFWDevices = jedis.smembers(fwVersion);
-            
-        } catch (Exception e) {
-            LOGGER.error("Failed retrieving firmware device count.", e.getMessage());
-        } finally {
-            jedisPool.returnResource(jedis);
-        }
-
-        return new FirmwareInfo(fwVersion, allFWDevices);
     }
 
     @Timed

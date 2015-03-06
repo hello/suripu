@@ -199,6 +199,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                     final DeviceData deviceData = builder.build();
                     dataForDevice.add(deviceData);
                 }
+                //TODO: Eventually break out metrics to their own worker
                 seenFirmwares.put(deviceName, firmwareVersion);
             }
             activeSenses.put(deviceName, batchPeriodicDataWorker.getReceivedAt());
