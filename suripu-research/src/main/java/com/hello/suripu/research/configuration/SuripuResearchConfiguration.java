@@ -32,6 +32,15 @@ public class SuripuResearchConfiguration extends Configuration {
         return commonDB;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty("research_db")
+    private DatabaseConfiguration researchDB = new DatabaseConfiguration();
+
+    public DatabaseConfiguration getResearchDB() {
+        return researchDB;
+    }
+
 
     @Valid
     @JsonProperty("debug")

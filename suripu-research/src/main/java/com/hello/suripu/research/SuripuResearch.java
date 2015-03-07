@@ -78,6 +78,7 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         final DBIFactory factory = new DBIFactory();
         final DBI sensorsDB = factory.build(environment, configuration.getSensorsDB(), "postgresql");
         final DBI commonDB = factory.build(environment, configuration.getCommonDB(), "postgresql");
+        final DBI researchDB = factory.build(environment, configuration.getResearchDB(), "postgresql");
 
 
         sensorsDB.registerArgumentFactory(new JodaArgumentFactory());
@@ -91,6 +92,12 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         commonDB.registerContainerFactory(new ImmutableListContainerFactory());
         commonDB.registerContainerFactory(new ImmutableSetContainerFactory());
 
+        researchDB.registerArgumentFactory(new JodaArgumentFactory());
+        researchDB.registerContainerFactory(new OptionalContainerFactory());
+        researchDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
+        researchDB.registerContainerFactory(new ImmutableListContainerFactory());
+        researchDB.registerContainerFactory(new ImmutableSetContainerFactory());
+
         final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
@@ -98,6 +105,9 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         final DeviceDAO deviceDAO = commonDB.onDemand(DeviceDAO.class);
         final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
         final AccessTokenDAO accessTokenDAO = commonDB.onDemand(AccessTokenDAO.class);
+
+        // TODO: create research DB DAOs here
+
 
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
         final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
