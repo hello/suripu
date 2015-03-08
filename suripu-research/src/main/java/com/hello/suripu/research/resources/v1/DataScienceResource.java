@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -240,10 +241,11 @@ public class DataScienceResource extends BaseResource {
     @Path("/device_sensors_motion")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public List<JoinedSensorsMinuteData> getJoinedSensorDataByEmail(@Scope({OAuthScope.SENSORS_BASIC, OAuthScope.RESEARCH}) final AccessToken accessToken,
+    public List<JoinedSensorsMinuteData> getJoinedSensorDataByEmail(@Scope({OAuthScope.RESEARCH}) final AccessToken accessToken,
                                                                 @QueryParam("email") String email,
                                                                 @QueryParam("account_id") Long accountId,
-                                                                @QueryParam("from_ts") Long fromTimestamp) {
+                                                                @QueryParam("from_ts") Long fromTimestamp,
+                                                                @DefaultValue("3") @QueryParam("num_days") Integer numDays) {
 
         if ( (email == null && accountId == null) || fromTimestamp == null) {
             throw new WebApplicationException(Response.status(400).entity(new JsonError(400,
@@ -262,13 +264,11 @@ public class DataScienceResource extends BaseResource {
         }
 
         final Account account = optionalAccount.get();
-        LOGGER.debug("Getting joined sensor minute data for account {} from_ts {}", account.id.get(), fromTimestamp);
 
-        return getJoinedSensorData(account.id.get(), fromTimestamp);
+        return getJoinedSensorData(account.id.get(), fromTimestamp,numDays);
     }
 
-    private List<JoinedSensorsMinuteData> getJoinedSensorData(final Long accountId, final Long ts) {
-        LOGGER.debug("Getting joined sensor minute data for account id {} after {}", accountId, ts);
+    private List<JoinedSensorsMinuteData> getJoinedSensorData(final Long accountId, final Long ts, final int numDays) {
 
         final Optional<DeviceAccountPair> deviceAccountPairOptional = deviceDAO.getMostRecentSensePairByAccountId(accountId);
         if (!deviceAccountPairOptional.isPresent()) {
@@ -277,7 +277,10 @@ public class DataScienceResource extends BaseResource {
         }
 
         final DateTime startTs = new DateTime(ts, DateTimeZone.UTC);
-        final DateTime endTs = startTs.plusDays(3); // return 3 days of data max.
+        final DateTime endTs = startTs.plusDays(numDays); // return 3 days of data max.
+
+
+        LOGGER.debug("Getting joined sensor minute data for account id {} between {} and {}", accountId, startTs,endTs);
 
         final ImmutableList<TrackerMotion> motionData = trackerMotionDAO.getBetween(
                 accountId,
@@ -302,6 +305,8 @@ public class DataScienceResource extends BaseResource {
         );
 
         final List<Sample> lightSamples = sensorSamples.get(Sensor.LIGHT);
+        final List<Sample> waveCount = sensorSamples.get(Sensor.WAVE_COUNT);
+
         final int numSamples = lightSamples.size();
 
         final List<JoinedSensorsMinuteData> joinedSensorsMinuteData = new ArrayList<>();
@@ -316,6 +321,7 @@ public class DataScienceResource extends BaseResource {
                     motionSamples.containsKey(timestamp) ? motionSamples.get(timestamp).kickOffCounts : null,
                     motionSamples.containsKey(timestamp) ? motionSamples.get(timestamp).motionRange : null,
                     motionSamples.containsKey(timestamp) ? motionSamples.get(timestamp).onDurationInSeconds : null,
+                    (int)waveCount.get(i).value,
                     lightSamples.get(i).offsetMillis));
         }
 
