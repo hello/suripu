@@ -17,6 +17,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
 
 @Path("/v1/account")
 public class AccountResource {
@@ -31,8 +32,8 @@ public class AccountResource {
     @GET
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
-    public Account getAccountByEmail(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
-                                     @QueryParam("email") final String email) {
+    public Account retrieveAccountByEmail(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
+                                          @QueryParam("email") final String email) {
         LOGGER.debug("Looking up {}", email);
 
         final Optional<Account> accountOptional = accountDAO.getByEmail(email);
@@ -45,5 +46,16 @@ public class AccountResource {
         else {
             return accountOptional.get();
         }
+    }
+
+    @GET
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/partial")
+    public List<Account> retrieveAccountsByEmailPartial(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
+                                               @QueryParam("email") final String emailPartial) {
+        LOGGER.debug("Looking up account whose emails contain {}", emailPartial);
+        return accountDAO.getByEmailPartial(emailPartial);
+
     }
 }
