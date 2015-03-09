@@ -1,12 +1,14 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.PasswordUpdate;
 import com.hello.suripu.core.models.Registration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -83,5 +85,15 @@ public class InMemoryAccountDAOImpl implements AccountDAO{
     @Override
     public void delete(String email) {
 
+    }
+
+    @Override
+    public List<Account> getAccountsByNameHint(String name) {
+        return Lists.newArrayList();
+    }
+
+    @Override
+    public List<Account> getAccountsByEmailHint(String email) {
+        return Lists.newArrayList();
     }
 }
