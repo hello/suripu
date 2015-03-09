@@ -1,6 +1,7 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.PasswordUpdate;
 import com.hello.suripu.core.models.Registration;
@@ -84,4 +85,11 @@ public class InMemoryAccountDAOImpl implements AccountDAO{
     public void delete(String email) {
 
     }
+
+    @Override
+    public List<Account> getByNamePartial(String namePartial) {return Lists.newArrayList();}
+
+    @Override
+    public List<Account> getByEmailPartial(String emailPartial) {return Lists.newArrayList();}
+
 }

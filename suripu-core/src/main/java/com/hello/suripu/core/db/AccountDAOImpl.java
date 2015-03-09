@@ -176,4 +176,14 @@ public abstract class AccountDAOImpl implements AccountDAO {
 
     @SqlUpdate("DELETE FROM accounts where email = :email;")
     public abstract void delete(@Bind("email") String email);
+
+    @SqlQuery("SELECT * FROM accounts WHERE name ILIKE '%'||:name_partial||'%' ORDER BY id DESC LIMIT 50;")
+    public abstract List<Account> getByNamePartial(
+            @Bind("name_partial") final String namePartial
+    );
+
+    @SqlQuery("SELECT * FROM accounts WHERE email ILIKE '%'||:email_partial||'%' ORDER BY id DESC LIMIT 50;")
+    public abstract List<Account> getByEmailPartial(
+            @Bind("email_partial") final String emailPartial
+    );
 }

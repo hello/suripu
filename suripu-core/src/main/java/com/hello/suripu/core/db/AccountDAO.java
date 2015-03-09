@@ -19,4 +19,6 @@ public interface AccountDAO {
     Boolean updatePasswordFromResetEmail(final Long accountId, final String encryptedPassword, final String state);
     Optional<Account> updateEmail(final Account account);
     void delete(final String email);
+    List<Account> getByNamePartial(String namePartial);
+    List<Account> getByEmailPartial(String emailPartial);
 }
