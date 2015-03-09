@@ -1,10 +1,47 @@
-metrics_enabled: false
-debug : true
-graphite:
-  host: carbon.hostedgraphite.com
-  api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
-  reporting_interval_in_seconds: 30
-  include_metrics:
-    - org.skife
-    - xx-responses
-    - com.hello
+debug: true
+
+sensors_db:
+  driverClass: org.postgresql.Driver
+  user: [your local psql username]
+  password:
+  url: jdbc:postgresql://localhost:5432/[your local psql db name]
+  properties:
+    charSet: UTF-8
+
+common_db:
+  driverClass: org.postgresql.Driver
+  user: [your local psql username]
+  password:
+  url: jdbc:postgresql://localhost:5432/[your local psql db name]
+  properties:
+    charSet: UTF-8
+
+http:
+  port: 3333
+  adminPort: 3336
+
+logging:
+  level: INFO
+  loggers:
+    com.hello.suripu: DEBUG
+
+kinesis:
+  endpoint : https://kinesis.us-east-1.amazonaws.com
+  streams :
+    audio_features : audio_features
+    activity_stream : activity_stream
+    registrations: registrations
+    encode_audio : encode_audio
+    batch_pill_data : batch_pill_data
+    sense_sensors_data : sense_sensors_data
+
+features_db:
+    endpoint : http://localhost:7777
+    region: us-east-1
+    table_name: features
+
+kinesis_logger:
+  stream_name: logs
+  enabled : false
+  buffer_size: 100
+  origin: suripu-admin
