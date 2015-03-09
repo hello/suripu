@@ -1,14 +1,13 @@
 package com.hello.suripu.service.resources;
 
-import com.flaptor.indextank.apiclient.IndexDoesNotExistException;
-import com.flaptor.indextank.apiclient.IndexTankClient;
 import com.google.common.base.Optional;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.logging.LogProtos;
+import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.db.KeyStore;
+import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.service.SignedMessage;
 import com.yammer.metrics.annotation.Timed;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,20 +18,20 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 @Path("/logs")
 public class LogsResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReceiveResource.class);
-    private final IndexTankClient.Index index;
+    private static final Logger LOGGER = LoggerFactory.getLogger(LogsResource.class);
     private final KeyStore senseKeyStore;
+    private final DataLogger dataLogger;
+    private final Boolean isProd;
 
-    public LogsResource(final String privateSearchUrl, final String indexName, final KeyStore senseKeyStore) {
-        final IndexTankClient client = new IndexTankClient(privateSearchUrl);
-        index = client.getIndex(indexName);
+    public LogsResource(final Boolean isProd, final KeyStore senseKeyStore, final DataLogger dataLogger) {
+        this.isProd = isProd;
         this.senseKeyStore = senseKeyStore;
+        this.dataLogger = dataLogger;
+
     }
 
     @Timed
@@ -65,7 +64,6 @@ public class LogsResource {
             );
         }
 
-        // TODO: Fetch key from Datastore
         final Optional<byte[]> keyBytes = senseKeyStore.get(log.getDeviceId());
         if(!keyBytes.isPresent()) {
             LOGGER.warn("No AES key found for device = {}", log.getDeviceId());
@@ -82,29 +80,15 @@ public class LogsResource {
             );
         }
 
-        final Map<String, String> fields = new HashMap<>();
-        final Map<String, String> categories = new HashMap<>();
+        final LoggingProtos.LogMessage logMessage = LoggingProtos.LogMessage.newBuilder()
+                .setMessage(log.getText())
+                .setOrigin("sense")
+                .setTs(log.getUnixTime())
+                .setDeviceId(log.getDeviceId())
+                .setProduction(isProd)
+                .build();
 
-        final String documentId = String.format("%s-%d", log.getDeviceId(), DateTime.now().getMillis());
-
-        fields.put("device_id", log.getDeviceId());
-        fields.put("text", log.getText());
-        fields.put("ts", String.valueOf(log.getUnixTime()));
-
-        final Long hello_ts = DateTime.now().getMillis();
-
-
-        final Map<Integer, Float> variables = new HashMap<Integer, Float>();
-        variables.put(0, new Float(hello_ts/1000));
-
-        categories.put("device_id", log.getDeviceId());
-
-        try {
-            index.addDocument(documentId, fields, variables, categories);
-        } catch (IndexDoesNotExistException e) {
-            LOGGER.error(e.getMessage());
-        } catch (IOException e) {
-            LOGGER.error(e.getMessage());
-        }
+        final LoggingProtos.BatchLogMessage batch = LoggingProtos.BatchLogMessage.newBuilder().addMessages(logMessage).build();
+        dataLogger.put(log.getDeviceId(), batch.toByteArray());
     }
 }

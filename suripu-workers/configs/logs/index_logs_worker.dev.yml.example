@@ -8,9 +8,14 @@ graphite:
     - com.hello
 
 max_records: 50
-searchify:
+
+application_logs:
   private_url : http://:G3KvEnaw2bDdQc@d7q83.api.searchify.com/
   index_name : application-logs
+
+sense_logs:
+  private_url : http://:G3KvEnaw2bDdQc@d7q83.api.searchify.com/
+  index_name : sense-logs
 
 
 kinesis:

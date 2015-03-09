@@ -234,10 +234,13 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 mergedUserInfoDynamoDB,
                 groupFlipper,
                 configuration.getDebug()));
+
+
+        final DataLogger senseLogs = kinesisLoggerFactory.get(QueueName.LOGS);
         final LogsResource logsResource = new LogsResource(
-                configuration.getIndexLogConfiguration().getPrivateUrl(),
-                configuration.getIndexLogConfiguration().getIndexName(),
-                senseKeyStore
+                !configuration.getDebug(),
+                senseKeyStore,
+                senseLogs
         );
 
         environment.addResource(new CheckResource(senseKeyStore));
