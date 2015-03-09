@@ -11,7 +11,7 @@ public class FirmwareInfo {
     public final Set<String> deviceIds;
 
 
-    public FirmwareInfo(String version, Set<String> deviceIds) {
+    public FirmwareInfo(final String version, final Set<String> deviceIds) {
         this.version = version;
         this.deviceIds = deviceIds;
     }
