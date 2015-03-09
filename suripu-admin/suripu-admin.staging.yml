@@ -4,7 +4,7 @@ sensors_db:
   driverClass: org.postgresql.Driver
   user: sensors
   password: hello-sensors
-  url: jdbc:postgresql://sensors-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors1
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     charSet: UTF-8
 
@@ -12,7 +12,7 @@ common_db:
   driverClass: org.postgresql.Driver
   user: common
   password: hello-common
-  url: jdbc:postgresql://common.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     charSet: UTF-8
 
