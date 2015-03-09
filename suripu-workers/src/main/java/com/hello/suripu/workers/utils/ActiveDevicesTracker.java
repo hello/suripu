@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisDataException;
 
 import java.util.HashMap;
@@ -43,8 +44,11 @@ public class ActiveDevicesTracker {
     }
 
     private void trackDevices(final String redisKey, final Map<String, Long> devicesSeen) {
-        final Jedis jedis = jedisPool.getResource();
+        Jedis jedis = null;
+
         try {
+            jedis = jedisPool.getResource();
+
             final Pipeline pipe = jedis.pipelined();
             pipe.multi();
             for(Map.Entry<String, Long> entry : devicesSeen.entrySet()) {
@@ -54,21 +58,27 @@ public class ActiveDevicesTracker {
         }catch (JedisDataException exception) {
             LOGGER.error("Failed getting data out of redis: {}", exception.getMessage());
             jedisPool.returnBrokenResource(jedis);
+            jedis = null;
             return;
         } catch(Exception exception) {
             LOGGER.error("Unknown error connection to redis: {}", exception.getMessage());
             jedisPool.returnBrokenResource(jedis);
+            jedis = null;
             return;
         }
         finally {
-            jedisPool.returnResource(jedis);
+            if (jedis != null) {
+                jedisPool.returnResource(jedis);
+            }
         }
         LOGGER.debug("Tracked {} active devices", devicesSeen.size());
     }
 
-    public  void trackFirmwares(final Map<String, Integer> seenFirmwares) {
-        final Jedis jedis = jedisPool.getResource();
+    public void trackFirmwares(final Map<String, Integer> seenFirmwares) {
+        Jedis jedis = null;
+
         try {
+            jedis = jedisPool.getResource();
             final Pipeline pipe = jedis.pipelined();
             pipe.multi();
             for(Map.Entry<String, Integer> entry : seenFirmwares.entrySet()) {
@@ -79,14 +89,18 @@ public class ActiveDevicesTracker {
         }catch (JedisDataException exception) {
             LOGGER.error("Failed getting data out of redis: {}", exception.getMessage());
             jedisPool.returnBrokenResource(jedis);
+            jedis = null;
             return;
         } catch(Exception exception) {
             LOGGER.error("Unknown error connection to redis: {}", exception.getMessage());
             jedisPool.returnBrokenResource(jedis);
+            jedis = null;
             return;
         }
         finally {
-            jedisPool.returnResource(jedis);
+            if (jedis != null) {
+                jedisPool.returnResource(jedis);
+            }
         }
         LOGGER.debug("Tracked {} device firmware versions", seenFirmwares.size());
     }
