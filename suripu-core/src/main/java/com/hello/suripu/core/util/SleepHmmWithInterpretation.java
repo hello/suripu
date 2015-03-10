@@ -97,6 +97,20 @@ public class SleepHmmWithInterpretation {
         public final ImmutableList<SleepEvents<Optional<Event>>> sleepEvents;
         public final ImmutableList<Integer> path;
 
+        public ImmutableList<Event> toList() {
+            List<Event> list = new ArrayList<>();
+
+            for (final SleepEvents<Optional<Event>> e : sleepEvents) {
+                for (Optional<Event> e2 : e.toList()) {
+                    if (e2.isPresent()) {
+                        list.add(e2.get());
+                    }
+                }
+            }
+
+            return ImmutableList.copyOf(list);
+        }
+
         public SleepHmmResult(SleepStats stats,
                               ImmutableList<Integer> path,
                               ImmutableList<SleepEvents<Optional<Event>>> sleepEvents) {

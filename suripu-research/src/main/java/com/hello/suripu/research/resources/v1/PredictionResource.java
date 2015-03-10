@@ -121,7 +121,7 @@ public class PredictionResource extends BaseResource {
 
         SleepHmmWithInterpretation.SleepHmmResult res = optionalHmmPredictions.get();
 
-        return res.events;
+        return res.toList();
 
 
 
