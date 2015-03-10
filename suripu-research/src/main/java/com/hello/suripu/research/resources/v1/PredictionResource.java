@@ -1,6 +1,7 @@
 package com.hello.suripu.research.resources.v1;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
@@ -97,37 +98,33 @@ public class PredictionResource extends BaseResource {
 
 
     /*  Get sleep/wake events from the hidden markov model  */
-    private List<Event> getHmmEvents(final DateTime targetDate, final DateTime endDate,final long  currentTimeMillis,final long accountId,
+    private ImmutableList<Event> getHmmEvents(final DateTime targetDate, final DateTime endDate,final long  currentTimeMillis,final long accountId,
                                      final AllSensorSampleList allSensorSampleList, final List<TrackerMotion> myMotion,final SleepHmmDAO hmmDAO) {
 
-        List<Event> events = new ArrayList<Event>();
 
         LOGGER.info("Using HMM for account {}",accountId);
 
         final Optional<SleepHmmWithInterpretation> hmmOptional = hmmDAO.getLatestModelForDate(accountId, targetDate.getMillis());
 
-        if (hmmOptional.isPresent()) {
-            final Optional<SleepHmmWithInterpretation.SleepHmmResult> optionalHmmPredictions = hmmOptional.get().getSleepEventsUsingHMM(
-                    allSensorSampleList, myMotion,targetDate.getMillis(),endDate.getMillis(),currentTimeMillis);
+        if (!hmmOptional.isPresent()) {
+            return ImmutableList.copyOf(Collections.EMPTY_LIST);
 
-            if (optionalHmmPredictions.isPresent()) {
-                final SleepEvents<Optional<Event>> hmmSleepEvents = SleepEvents.create(
-                        optionalHmmPredictions.get().inBed,
-                        optionalHmmPredictions.get().fallAsleep,
-                        optionalHmmPredictions.get().wakeUp,
-                        optionalHmmPredictions.get().outOfBed);
-
-                List<Optional<Event>> optionalEventList = hmmSleepEvents.toList();
-
-                for (Optional<Event> e : optionalEventList) {
-                    if (e.isPresent()) {
-                        events.add(e.get());
-                    }
-                }
-            }
         }
 
-        return events;
+        final Optional<SleepHmmWithInterpretation.SleepHmmResult> optionalHmmPredictions = hmmOptional.get().getSleepEventsUsingHMM(
+                    allSensorSampleList, myMotion,targetDate.getMillis(),endDate.getMillis(),currentTimeMillis);
+
+        if (!optionalHmmPredictions.isPresent()) {
+            return ImmutableList.copyOf(Collections.EMPTY_LIST);
+        }
+
+
+        SleepHmmWithInterpretation.SleepHmmResult res = optionalHmmPredictions.get();
+
+        return res.events;
+
+
+
     }
 
     private SleepEvents<Optional<Event>> fromAlgorithm(final DateTime targetDate, final List<TrackerMotion> trackerMotions, final Optional<DateTime> lightOutTimeOptional, final Optional<DateTime> wakeUpWaveTimeOptional) {
