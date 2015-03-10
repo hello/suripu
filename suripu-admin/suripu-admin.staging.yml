@@ -1,20 +1,21 @@
-debug: true
+debug: false
 
 sensors_db:
   driverClass: org.postgresql.Driver
-  user: [your local psql username]
-  password:
-  url: jdbc:postgresql://localhost:5432/[your local psql db name]
+  user: sensors
+  password: hello-sensors
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     charSet: UTF-8
 
 common_db:
   driverClass: org.postgresql.Driver
-  user: [your local psql username]
-  password:
-  url: jdbc:postgresql://localhost:5432/[your local psql db name]
+  user: common
+  password: hello-common
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     charSet: UTF-8
+
 
 http:
   port: 3333
@@ -36,7 +37,7 @@ kinesis:
     sense_sensors_data : sense_sensors_data
 
 features_db:
-    endpoint : http://localhost:7777
+    endpoint : http://dynamodb.us-east-1.amazonaws.com
     region: us-east-1
     table_name: features
 

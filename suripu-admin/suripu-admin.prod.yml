@@ -1,10 +1,48 @@
-metrics_enabled: true
-debug : false
-graphite:
-  host: carbon.hostedgraphite.com
-  api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
-  reporting_interval_in_seconds: 30
-  include_metrics:
-    - org.skife
-    - xx-responses
-    - com.hello
+debug: false
+
+sensors_db:
+  driverClass: org.postgresql.Driver
+  user: sensors
+  password: hello-sensors
+  url: jdbc:postgresql://sensors-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors1
+  properties:
+    charSet: UTF-8
+
+common_db:
+  driverClass: org.postgresql.Driver
+  user: common
+  password: hello-common
+  url: jdbc:postgresql://common.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
+  properties:
+    charSet: UTF-8
+
+
+http:
+  port: 3333
+  adminPort: 3336
+
+logging:
+  level: INFO
+  loggers:
+    com.hello.suripu: DEBUG
+
+kinesis:
+  endpoint : https://kinesis.us-east-1.amazonaws.com
+  streams :
+    audio_features : audio_features
+    activity_stream : activity_stream
+    registrations: registrations
+    encode_audio : encode_audio
+    batch_pill_data : batch_pill_data
+    sense_sensors_data : sense_sensors_data
+
+features_db:
+    endpoint : http://dynamodb.us-east-1.amazonaws.com
+    region: us-east-1
+    table_name: features
+
+kinesis_logger:
+  stream_name: logs
+  enabled : false
+  buffer_size: 100
+  origin: suripu-admin

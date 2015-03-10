@@ -163,7 +163,7 @@ public class DataScienceResource extends BaseResource {
                     slotDurationMins,
                     missingDataDefaultValue(accountId.get()));
             final List<Sample> lightData = sensorData.get(Sensor.LIGHT);
-            final List<Event> lightEvents = TimelineUtils.getLightEvents(lightData);
+            final List<Event> lightEvents = TimelineUtils.getLightEventsWithMultipleLightOut(lightData);
             return lightEvents;
         }
 

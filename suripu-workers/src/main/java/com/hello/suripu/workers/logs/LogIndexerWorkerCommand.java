@@ -58,8 +58,9 @@ public class LogIndexerWorkerCommand extends ConfiguredCommand<LogIndexerWorkerC
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
         final IRecordProcessorFactory factory = new LogIndexerProcessorFactory(
-                configuration.searchifyConfiguration().privateUrl(),
-                configuration.searchifyConfiguration().indexName()
+                configuration.applicationLogs().privateUrl(),
+                configuration.applicationLogs().indexName(),
+                configuration.senseLogs().indexName()
         );
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();

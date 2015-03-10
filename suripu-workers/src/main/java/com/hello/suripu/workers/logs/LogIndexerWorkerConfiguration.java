@@ -12,9 +12,15 @@ public class LogIndexerWorkerConfiguration extends WorkerConfiguration {
         return maxRecords;
     }
 
-    @JsonProperty("searchify")
-    private SearchifyConfiguration searchifyConfiguration;
-    public SearchifyConfiguration searchifyConfiguration() {
-        return searchifyConfiguration;
+    @JsonProperty("application_logs")
+    private SearchifyConfiguration applicationLogs;
+    public SearchifyConfiguration applicationLogs() {
+        return applicationLogs;
+    }
+
+    @JsonProperty("sense_logs")
+    private SearchifyConfiguration senseLogs;
+    public SearchifyConfiguration senseLogs() {
+        return senseLogs;
     }
 }

@@ -4,7 +4,7 @@ import ch.qos.logback.classic.Level;
 import com.flaptor.indextank.apiclient.IndexTankClient;
 import com.google.common.collect.Lists;
 import com.hello.suripu.api.logging.LoggingProtos;
-import com.hello.suripu.workers.pill.LogChunker;
+import com.hello.suripu.workers.logs.ApplicationLogIndexer;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
@@ -14,7 +14,7 @@ import java.util.Map;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class LogChunkerTest {
+public class ApplicationLogIndexerTest {
 
     @Test
     public void testConvertProtobufToDocument() {
@@ -26,7 +26,7 @@ public class LogChunkerTest {
                 .setProduction(false)
                 .setTs(ts).build();
 
-        final IndexTankClient.Document doc = LogChunker.merge(Lists.newArrayList(message), "version");
+        final IndexTankClient.Document doc = ApplicationLogIndexer.merge(Lists.newArrayList(message), "version");
         final Map<String, Object> docMap = doc.toDocumentMap();
         final Map<String, String> fields = (Map<String, String>) docMap.get("fields");
         final Map<String, String> categories = (Map<String, String>) docMap.get("categories");
@@ -61,7 +61,7 @@ public class LogChunkerTest {
 
         batch.addMessages(message).addMessages(message2).addMessages(message3);
 
-        final List<IndexTankClient.Document> docs = LogChunker.chunkBatchLogMessage(batch.build());
+        final List<IndexTankClient.Document> docs = ApplicationLogIndexer.chunkBatchLogMessage(batch.build());
         assertThat(docs.size(), is(batch.getMessagesCount()));
     }
 }

@@ -7,17 +7,20 @@ import com.flaptor.indextank.apiclient.IndexTankClient;
 public class LogIndexerProcessorFactory implements IRecordProcessorFactory {
 
     private final String privateUrl;
-    private final String indexName;
+    private final String applicationIndexName;
+    private final String senseIndexName;
 
-    public LogIndexerProcessorFactory(final String privateUrl, final String indexName) {
+    public LogIndexerProcessorFactory(final String privateUrl, final String applicationIndexName, final String senseIndexName) {
         this.privateUrl = privateUrl;
-        this.indexName = indexName;
+        this.applicationIndexName = applicationIndexName;
+        this.senseIndexName = senseIndexName;
     }
 
     @Override
     public IRecordProcessor createProcessor() {
         final IndexTankClient client = new IndexTankClient(privateUrl);
-        final IndexTankClient.Index index = client.getIndex(indexName);
-        return new LogIndexerProcessor(index);
+        final IndexTankClient.Index applicationIndex = client.getIndex(applicationIndexName);
+        final IndexTankClient.Index senseIndex = client.getIndex(applicationIndexName);
+        return LogIndexerProcessor.create(applicationIndex, senseIndex);
     }
 }
