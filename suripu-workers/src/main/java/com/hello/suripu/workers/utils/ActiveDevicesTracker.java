@@ -2,11 +2,13 @@ package com.hello.suripu.workers.utils;
 
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.configuration.ActiveDevicesTrackerConfiguration;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisDataException;
 
 import java.util.HashMap;
@@ -42,8 +44,11 @@ public class ActiveDevicesTracker {
     }
 
     private void trackDevices(final String redisKey, final Map<String, Long> devicesSeen) {
-        final Jedis jedis = jedisPool.getResource();
+        Jedis jedis = null;
+
         try {
+            jedis = jedisPool.getResource();
+
             final Pipeline pipe = jedis.pipelined();
             pipe.multi();
             for(Map.Entry<String, Long> entry : devicesSeen.entrySet()) {
@@ -60,8 +65,43 @@ public class ActiveDevicesTracker {
             return;
         }
         finally {
-            jedisPool.returnResource(jedis);
+            try{
+                jedisPool.returnResource(jedis);
+            }catch (JedisConnectionException e) {
+                LOGGER.error("Jedis Connection Exception while returning resource to pool. Redis server down?");
+            }
         }
         LOGGER.debug("Tracked {} active devices", devicesSeen.size());
+    }
+
+    public void trackFirmwares(final Map<String, Integer> seenFirmwares) {
+        Jedis jedis = null;
+
+        try {
+            jedis = jedisPool.getResource();
+            final Pipeline pipe = jedis.pipelined();
+            pipe.multi();
+            for(Map.Entry<String, Integer> entry : seenFirmwares.entrySet()) {
+                pipe.sadd(ActiveDevicesTrackerConfiguration.FIRMWARES_SEEN_SET_KEY, entry.getValue().toString());
+                pipe.zadd(entry.getValue().toString(), DateTime.now().getMillis(), entry.getKey());
+            }
+            pipe.exec();
+        }catch (JedisDataException exception) {
+            LOGGER.error("Failed getting data out of redis: {}", exception.getMessage());
+            jedisPool.returnBrokenResource(jedis);
+            return;
+        } catch(Exception exception) {
+            LOGGER.error("Unknown error connection to redis: {}", exception.getMessage());
+            jedisPool.returnBrokenResource(jedis);
+            return;
+        }
+        finally {
+            try{
+                jedisPool.returnResource(jedis);
+            }catch (JedisConnectionException e) {
+                LOGGER.error("Jedis Connection Exception while returning resource to pool. Redis server down?");
+            }
+        }
+        LOGGER.debug("Tracked {} device firmware versions", seenFirmwares.size());
     }
 }
