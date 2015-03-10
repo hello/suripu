@@ -1,4 +1,4 @@
-metrics_enabled : true
+metrics_enabled : false
 debug : false
 graphite:
   host: carbon.hostedgraphite.com
@@ -104,7 +104,7 @@ kinesis:
     encode_audio: encode_audio
     batch_pill_data : batch_pill_data
     sense_sensors_data : sense_sensors_data
-
+    logs: logs
 
 audio_bucket_name : hello-data
 

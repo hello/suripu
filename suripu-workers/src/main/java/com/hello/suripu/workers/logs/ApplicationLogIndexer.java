@@ -1,18 +1,28 @@
-package com.hello.suripu.workers.pill;
+package com.hello.suripu.workers.logs;
 
 import com.flaptor.indextank.apiclient.IndexTankClient;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.api.logging.LoggingProtos;
 import org.apache.log4j.Level;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LogChunker {
+public class ApplicationLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage> {
 
+    private final static Logger LOGGER = LoggerFactory.getLogger(ApplicationLogIndexer.class);
+    final private IndexTankClient.Index index;
+    final private List<IndexTankClient.Document> documents;
+
+    public ApplicationLogIndexer(final IndexTankClient.Index index) {
+        this.index = index;
+        documents = Lists.newArrayList();
+    }
 
     /**
      * Creates on Search Document from multiple log messages
@@ -54,7 +64,7 @@ public class LogChunker {
      * @param batchLogMessage
      * @return
      */
-    public static List<IndexTankClient.Document> chunkBatchLogMessage(LoggingProtos.BatchLogMessage batchLogMessage) {
+    public static List<IndexTankClient.Document> chunkBatchLogMessage(final LoggingProtos.BatchLogMessage batchLogMessage) {
         final List<IndexTankClient.Document> documents = new ArrayList<>();
         if(batchLogMessage.getMessagesList().isEmpty()) {
             return documents;
@@ -77,5 +87,29 @@ public class LogChunker {
             documents.add(merge(ImmutableList.copyOf(buffer), version));
         }
         return documents;
+    }
+
+    public void collect(final LoggingProtos.BatchLogMessage batchLogMessage) {
+        documents.addAll(chunkBatchLogMessage(batchLogMessage));
+    }
+
+    @Override
+    public Integer index() {
+//        try {
+            if (!documents.isEmpty()) {
+//                index.addDocuments(ImmutableList.copyOf(documents));
+                final Integer count = documents.size();
+                LOGGER.info("Indexed {} documents", count);
+                documents.clear();
+                return count;
+            }
+//        } catch (IndexDoesNotExistException e) {
+//            LOGGER.error("Index does not exist: {}", e.getMessage());
+//            System.exit(1);
+//        } catch (IOException e) {
+//            LOGGER.error("Failed connecting to searchify: {}", e.getMessage());
+//        }
+
+        return 0;
     }
 }

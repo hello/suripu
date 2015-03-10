@@ -74,7 +74,7 @@ public class FirmwareUpdateStore {
                                              final AmazonS3 s3Signer,
                                              final Integer s3CacheExpireMinutes) {
         final Cache<String, Pair<Integer, List<OutputProtos.SyncResponse.FileDownload>>> s3Cache = CacheBuilder.newBuilder()
-                .expireAfterAccess(s3CacheExpireMinutes, TimeUnit.MINUTES)
+                .expireAfterWrite(s3CacheExpireMinutes, TimeUnit.MINUTES)
                 .build();
         return new FirmwareUpdateStore(firmwareUpdateDAOImpl, s3, bucketName, s3Signer, s3Cache);
     }
