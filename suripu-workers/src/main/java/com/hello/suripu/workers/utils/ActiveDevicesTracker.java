@@ -58,17 +58,17 @@ public class ActiveDevicesTracker {
         }catch (JedisDataException exception) {
             LOGGER.error("Failed getting data out of redis: {}", exception.getMessage());
             jedisPool.returnBrokenResource(jedis);
-            jedis = null;
             return;
         } catch(Exception exception) {
             LOGGER.error("Unknown error connection to redis: {}", exception.getMessage());
             jedisPool.returnBrokenResource(jedis);
-            jedis = null;
             return;
         }
         finally {
-            if (jedis != null) {
+            try{
                 jedisPool.returnResource(jedis);
+            }catch (JedisConnectionException e) {
+                LOGGER.error("Jedis Connection Exception while returning resource to pool. Redis server down?");
             }
         }
         LOGGER.debug("Tracked {} active devices", devicesSeen.size());
@@ -89,17 +89,17 @@ public class ActiveDevicesTracker {
         }catch (JedisDataException exception) {
             LOGGER.error("Failed getting data out of redis: {}", exception.getMessage());
             jedisPool.returnBrokenResource(jedis);
-            jedis = null;
             return;
         } catch(Exception exception) {
             LOGGER.error("Unknown error connection to redis: {}", exception.getMessage());
             jedisPool.returnBrokenResource(jedis);
-            jedis = null;
             return;
         }
         finally {
-            if (jedis != null) {
+            try{
                 jedisPool.returnResource(jedis);
+            }catch (JedisConnectionException e) {
+                LOGGER.error("Jedis Connection Exception while returning resource to pool. Redis server down?");
             }
         }
         LOGGER.debug("Tracked {} device firmware versions", seenFirmwares.size());
