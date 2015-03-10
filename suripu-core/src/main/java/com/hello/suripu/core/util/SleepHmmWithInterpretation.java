@@ -485,16 +485,25 @@ CREATE CREATE CREATE
                 matched.add(SleepEvents.<Optional<Event>>create(Optional.of(inBed), Optional.of(sleep), Optional.of(wake), Optional.of(outOfBed), disturbances));
 
 
-                v1 = i1.next();
-                v2 = i2.next();
+                if (i1.hasNext()) {
+                    v1 = i1.next();
+                }
+
+                if (i2.hasNext()) {
+                    v2 = i2.next();
+                }
             }
             else {
 
                 if (v1.bounds.i1 < v2.bounds.i1) {
-                    v1 = i1.next();
+                    if (i1.hasNext()) {
+                        v1 = i1.next();
+                    }
                 }
                 else {
-                    v2 = i2.next();
+                    if (i2.hasNext()) {
+                        v2 = i2.next();
+                    }
                 }
 
             }
