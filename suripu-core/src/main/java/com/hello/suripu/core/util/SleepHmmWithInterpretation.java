@@ -429,7 +429,7 @@ CREATE CREATE CREATE
 
         List<SleepEvents<Optional<Event>>> matched = new ArrayList<SleepEvents<Optional<Event>>>();
         Iterator<SegmentPairWithGaps> i1 = sleeps.iterator();
-        Iterator<SegmentPairWithGaps> i2 = sleeps.iterator();
+        Iterator<SegmentPairWithGaps> i2 = beds.iterator();
 
         final ImmutableList<Integer> immutablePath = getIntArrayAsImmutableList(path);
 
