@@ -98,8 +98,8 @@ public class HmmTest {
 
         assertTrue(res.isPresent());
         assertTrue(res2.isPresent());
-
-        assertTrue(res.get().fallAsleep.isPresent());
+        
+        assertTrue(res.get().sleepEvents.get(0).fallAsleep.isPresent());
 
         final int expectedLength1 =  6*60 / SleepHmmWithInterpretation.NUM_MINUTES_IN_WINDOW;
         final int expectedLength2 =  7*60 / SleepHmmWithInterpretation.NUM_MINUTES_IN_WINDOW;
