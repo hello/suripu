@@ -101,7 +101,10 @@ public class LogsResource {
                 .setProduction(isProd)
                 .build();
 
-        final LoggingProtos.BatchLogMessage batch = LoggingProtos.BatchLogMessage.newBuilder().addMessages(logMessage).build();
+        final LoggingProtos.BatchLogMessage batch = LoggingProtos.BatchLogMessage.newBuilder()
+                .addMessages(logMessage)
+                .setLogType(LoggingProtos.BatchLogMessage.LogType.SENSE_LOG)
+                .build();
         dataLogger.put(log.getDeviceId(), batch.toByteArray());
     }
 }
