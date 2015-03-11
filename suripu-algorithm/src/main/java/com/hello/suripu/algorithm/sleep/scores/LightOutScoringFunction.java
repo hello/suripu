@@ -4,6 +4,9 @@ import com.google.common.collect.Ordering;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
+import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,6 +20,7 @@ import java.util.Map;
 public class LightOutScoringFunction implements SleepDataScoringFunction<AmplitudeData> {
     private final List<DateTime> lightOutTime;
     private final double modalityWeight;
+    private static Logger LOGGER = LoggerFactory.getLogger(LightOutScoringFunction.class);
     public static final long LOOK_BACK_TIME_MS = 30 * DateTimeConstants.MILLIS_PER_MINUTE;
     public LightOutScoringFunction(final List<DateTime> lightOutTime, final double modalityWeight){
         this.lightOutTime = lightOutTime;
@@ -34,13 +38,13 @@ public class LightOutScoringFunction implements SleepDataScoringFunction<Amplitu
             endTimestamps[i] = lightOutTime.get(i).getMillis() + LOOK_BACK_TIME_MS;
         }
 
-        final ArrayList<Double> lightScores = new ArrayList<>();
-        for(final AmplitudeData datum:data){
-            double sleepProbability = 1d;
 
+        for(final AmplitudeData datum:data){
+            final ArrayList<Double> lightScores = new ArrayList<>();
             for(int i = 0; i < this.lightOutTime.size(); i++) {
                 final long startTimestamp = startTimestamps[i];
                 final long endTimestamp = endTimestamps[i];
+                double sleepProbability = 1d;
 
                 if (datum.timestamp >= startTimestamp && datum.timestamp < lightOutTime.get(i).getMillis()) {
                     sleepProbability = 1d + this.modalityWeight;
@@ -64,6 +68,7 @@ public class LightOutScoringFunction implements SleepDataScoringFunction<Amplitu
             // since all scores are multiplied together and light out is just for go to bed detection
             // the other scores have to be 1.
             final double maxScore = Ordering.natural().max(lightScores);
+            LOGGER.info("light {}, score {}", new DateTime(datum.timestamp, DateTimeZone.forOffsetMillis(datum.offsetMillis)), maxScore);
             lightOutPDF.put(datum, new EventScores(1d, 1d, maxScore, 1d));
         }
         return lightOutPDF;
