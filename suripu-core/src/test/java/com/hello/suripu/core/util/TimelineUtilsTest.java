@@ -414,7 +414,6 @@ public class TimelineUtilsTest {
         assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 18, 11, 44, DateTimeZone.UTC)));
     }
 
-
     @Test
     public void testGetFullSleepEventsLightIsOnlyStrongIndicator(){
         final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/ksg_motion_2015_01_26_raw.csv");
@@ -448,12 +447,6 @@ public class TimelineUtilsTest {
         final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2).get();
         final OutOfBedEvent outOfBedSegment = (OutOfBedEvent) sleepEvents.get(3).get();
 
-
-        // Out put from python script suripu_sum.py:
-        /*
-        in bed at 2014-12-03 01:22:00, prob: 1.11502650032, amp: 2967
-        wake up at 2014-12-03 09:38:00, prob: 0.0631222110581, amp: 522
-        */
 
         final DateTime goToBedTime = new DateTime(goToBedSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBedSegment.getTimezoneOffset()));
         final DateTime sleepTime = new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getTimezoneOffset()));

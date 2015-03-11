@@ -57,6 +57,10 @@ public class LightOutScoringFunction implements SleepDataScoringFunction<Amplitu
                 lightScores.add(sleepProbability);
             }
 
+            if(lightScores.size() == 0){
+                lightScores.add(1d);
+            }
+
             // since all scores are multiplied together and light out is just for go to bed detection
             // the other scores have to be 1.
             final double maxScore = Ordering.natural().max(lightScores);
