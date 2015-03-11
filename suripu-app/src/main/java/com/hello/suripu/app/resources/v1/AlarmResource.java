@@ -131,7 +131,7 @@ public class AlarmResource {
 
         final List<DeviceAccountPair> deviceAccountMap = this.deviceDAO.getSensesForAccountId(token.accountId);
         if(deviceAccountMap.size() == 0){
-            LOGGER.error("User tries to set alarm without connected to a Morpheus.", token.accountId);
+            LOGGER.error("Account {} tries to set alarm without connected to a Morpheus.", token.accountId);
             throw new WebApplicationException(Response.Status.FORBIDDEN);
         }
 
@@ -157,7 +157,7 @@ public class AlarmResource {
                         alarmInfoOptional.get().lastUpdatedAt,
                         alarms,
                         alarmInfoOptional.get().timeZone.get())){
-                    LOGGER.warn("Cannot update alarm, race condition");
+                    LOGGER.warn("Cannot update alarm, race condition for account: {}", token.accountId);
                     throw new WebApplicationException(Response.status(Response.Status.CONFLICT).entity(
                             new JsonError(Response.Status.CONFLICT.getStatusCode(),
                                     "Cannot update alarm, please refresh and try again.")).build());
@@ -166,7 +166,7 @@ public class AlarmResource {
             }
 
             if(status.equals(Alarm.Utils.AlarmStatus.SMART_ALARM_ALREADY_SET)){
-                LOGGER.error("Invalid alarm for account {}, device {}, alarm set skipped", deviceAccountPair.accountId, deviceAccountPair.externalDeviceId);
+                LOGGER.error("Invalid alarm for account {}, device {}, alarm set skipped. Smart alarm already set.", deviceAccountPair.accountId, deviceAccountPair.externalDeviceId);
                 throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(
                         new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), "Currently, you can only set one Smart Alarm per day. You already have a Smart Alarm scheduled for this day.")).build());
             }
