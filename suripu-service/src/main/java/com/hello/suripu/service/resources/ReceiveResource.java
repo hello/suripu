@@ -125,7 +125,7 @@ public class ReceiveResource extends BaseResource {
         try {
             data = DataInputProtos.batched_periodic_data.parseFrom(signedMessage.body);
         } catch (IOException exception) {
-            final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
+            final String errorMessage = String.format("Failed parsing protobuf for deviceId = %s : %s", debugSenseId, exception.getMessage());
             LOGGER.error(errorMessage);
 
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)

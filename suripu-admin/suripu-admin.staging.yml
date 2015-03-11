@@ -1,4 +1,4 @@
-debug: false
+debug: true
 
 sensors_db:
   driverClass: org.postgresql.Driver
