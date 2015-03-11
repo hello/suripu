@@ -37,6 +37,7 @@ import com.hello.suripu.app.resources.v1.SleepLabelResource;
 import com.hello.suripu.app.resources.v1.TeamsResource;
 import com.hello.suripu.app.resources.v1.TimeZoneResource;
 import com.hello.suripu.app.resources.v1.TimelineResource;
+import com.hello.suripu.app.resources.v1.FirmwareResource;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
@@ -313,7 +314,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
         environment.addResource(new DeviceResources(deviceDAO, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, jedisPool, senseKeyStore, pillKeyStore));
         final KeyStoreUtils keyStoreUtils = KeyStoreUtils.build(amazonS3, "hello-secure","hello-pvt.pem");
-        environment.addResource(new ProvisionResource(senseKeyStore, pillKeyStore, keyStoreUtils, pillProvisionDAO));
+        environment.addResource(new ProvisionResource(senseKeyStore, pillKeyStore, keyStoreUtils, pillProvisionDAO, amazonS3));
 
         environment.addResource(new ScoresResource(trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), configuration.getSleepScoreVersion()));
 
@@ -381,5 +382,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final PasswordResetDB passwordResetDB = PasswordResetDB.create(passwordResetDynamoDBClient, configuration.getPasswordResetDBConfiguration().getTableName());
 
         environment.addResource(PasswordResetResource.create(accountDAO, passwordResetDB, configuration.emailConfiguration()));
+
+        environment.addResource(new FirmwareResource(deviceDAO, jedisPool));
     }
 }

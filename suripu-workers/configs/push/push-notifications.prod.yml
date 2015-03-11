@@ -43,7 +43,7 @@ kinesis:
   streams :
     sense_sensors_data : sense_sensors_data
 
-app_name: PushNotificationsConsumer
+app_name: PushNotificationsConsumerProd
 
 max_records: 100
 

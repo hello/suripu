@@ -6,15 +6,18 @@ import com.hello.suripu.api.logging.LogProtos;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.logging.DataLogger;
+import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.service.SignedMessage;
 import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -26,6 +29,9 @@ public class LogsResource {
     private final KeyStore senseKeyStore;
     private final DataLogger dataLogger;
     private final Boolean isProd;
+
+    @Context
+    HttpServletRequest request;
 
     public LogsResource(final Boolean isProd, final KeyStore senseKeyStore, final DataLogger dataLogger) {
         this.isProd = isProd;
@@ -42,10 +48,17 @@ public class LogsResource {
         final SignedMessage signedMessage = SignedMessage.parse(body);
         LogProtos.sense_log log;
 
+        String debugSenseId = this.request.getHeader(HelloHttpHeader.SENSE_ID);
+        if(debugSenseId == null){
+            debugSenseId = "";
+        }
+
+        LOGGER.info("DebugSenseId device_id = {}", debugSenseId);
+
         try {
             log = LogProtos.sense_log.parseFrom(signedMessage.body);
         } catch (IOException exception) {
-            final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
+            final String errorMessage = String.format("Failed parsing protobuf for deviceId = %s: %s", debugSenseId, exception.getMessage());
             LOGGER.error(errorMessage);
 
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
@@ -57,7 +70,7 @@ public class LogsResource {
         // get MAC address of morpheus
 
         if(!log.hasDeviceId()){
-            LOGGER.error("Cannot get morpheus id");
+            LOGGER.error("Cannot get morpheus id (debugSenseId = {})", debugSenseId);
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
                     .entity("bad request")
                     .type(MediaType.TEXT_PLAIN_TYPE).build()
@@ -66,7 +79,7 @@ public class LogsResource {
 
         final Optional<byte[]> keyBytes = senseKeyStore.get(log.getDeviceId());
         if(!keyBytes.isPresent()) {
-            LOGGER.warn("No AES key found for device = {}", log.getDeviceId());
+            LOGGER.warn("No AES key found for device = {} (debugSenseId = {})", log.getDeviceId(), debugSenseId);
             return;
         }
 
@@ -88,7 +101,10 @@ public class LogsResource {
                 .setProduction(isProd)
                 .build();
 
-        final LoggingProtos.BatchLogMessage batch = LoggingProtos.BatchLogMessage.newBuilder().addMessages(logMessage).build();
+        final LoggingProtos.BatchLogMessage batch = LoggingProtos.BatchLogMessage.newBuilder()
+                .addMessages(logMessage)
+                .setLogType(LoggingProtos.BatchLogMessage.LogType.SENSE_LOG)
+                .build();
         dataLogger.put(log.getDeviceId(), batch.toByteArray());
     }
 }
