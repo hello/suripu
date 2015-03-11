@@ -4,7 +4,6 @@ import com.google.common.collect.Ordering;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +67,7 @@ public class LightOutScoringFunction implements SleepDataScoringFunction<Amplitu
             // since all scores are multiplied together and light out is just for go to bed detection
             // the other scores have to be 1.
             final double maxScore = Ordering.natural().max(lightScores);
-            LOGGER.info("light {}, score {}", new DateTime(datum.timestamp, DateTimeZone.forOffsetMillis(datum.offsetMillis)), maxScore);
+            //LOGGER.info("light {}, score {}", new DateTime(datum.timestamp, DateTimeZone.forOffsetMillis(datum.offsetMillis)), maxScore);
             lightOutPDF.put(datum, new EventScores(1d, 1d, maxScore, 1d));
         }
         return lightOutPDF;

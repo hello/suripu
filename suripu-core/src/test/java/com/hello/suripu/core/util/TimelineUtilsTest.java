@@ -214,7 +214,7 @@ public class TimelineUtilsTest {
         events.add(new NullEvent(now.plusMinutes(2).getMillis(), now.plusMinutes(3).getMillis(),0,100));
         events.add(new OutOfBedEvent(now.plusMinutes(3).getMillis(), now.plusMinutes(4).getMillis(),0));
         events.add(new MotionEvent(now.plusMinutes(4).getMillis(), now.plusMinutes(5).getMillis(),0,10));
-        events.add(new NullEvent(now.plusMinutes(5).getMillis(), now.plusMinutes(6).getMillis(),0,1));
+        events.add(new NullEvent(now.plusMinutes(5).getMillis(), now.plusMinutes(6).getMillis(), 0, 1));
 
         final Optional<Event> inBedOptional = Optional.absent();
         final Optional<Event> outBedOptional = Optional.of(events.get(3));
@@ -512,7 +512,7 @@ public class TimelineUtilsTest {
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 3, 9, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 lightOutTimes,
-                Optional.of(new DateTime()),
+                Optional.of(new DateTime(1425985260000L, DateTimeZone.UTC)),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
@@ -536,7 +536,7 @@ public class TimelineUtilsTest {
 
         assertThat(goToBedLocalUTC, is(new DateTime(2015, 3, 10, 1, 59, DateTimeZone.UTC)));
         assertThat(sleepLocalUTC, is(new DateTime(2015, 3, 10, 2, 10, DateTimeZone.UTC)));
-        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 3, 10, 7, 29, DateTimeZone.UTC)));
+        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 3, 10, 7, 18, DateTimeZone.UTC)));
         assertThat(outOfBedLocalUTC, is(new DateTime(2015, 3, 10, 7, 40, DateTimeZone.UTC)));
     }
 
