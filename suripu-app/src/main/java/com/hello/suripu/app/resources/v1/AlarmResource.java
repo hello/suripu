@@ -181,7 +181,7 @@ public class AlarmResource {
             LOGGER.error("Account {} tries to set {} alarm, too many alarm", token.accountId, alarms.size());
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
                     new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-                            String.format("You can only set %d alarms.", AlarmDAODynamoDB.MAX_ALARM_COUNT))).build());
+                            String.format("You can set no more than %d alarms.", AlarmDAODynamoDB.MAX_ALARM_COUNT))).build());
         }
 
         return alarms;
