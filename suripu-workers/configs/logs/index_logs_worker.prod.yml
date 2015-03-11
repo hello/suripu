@@ -22,7 +22,7 @@ kinesis:
   streams :
     logs : logs
 
-app_name: LogIndexer
+app_name: LogIndexerProd
 
 features_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
