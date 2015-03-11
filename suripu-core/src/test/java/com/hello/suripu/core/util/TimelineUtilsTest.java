@@ -371,9 +371,11 @@ public class TimelineUtilsTest {
             ex.printStackTrace();
         }
 
+        final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
+        lightOutTimes.add(new DateTime(1421575200000L, DateTimeZone.UTC));
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 17, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
-                Optional.of(new DateTime(1421575200000L, DateTimeZone.UTC)),
+                lightOutTimes,
                 Optional.<DateTime>absent(),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
@@ -431,9 +433,11 @@ public class TimelineUtilsTest {
             ex.printStackTrace();
         }
 
+        final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
+        lightOutTimes.add(new DateTime(1422346440000L, DateTimeZone.UTC));
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 26, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
-                Optional.of(new DateTime(1422346440000L, DateTimeZone.UTC)),
+                lightOutTimes,
                 Optional.<DateTime>absent(),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
@@ -482,9 +486,11 @@ public class TimelineUtilsTest {
             //}
         }
 
+        final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
+        lightOutTimes.add(new DateTime(1422181740000L, DateTimeZone.UTC));
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 24, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
-                Optional.of(new DateTime(1422181740000L, DateTimeZone.UTC)),
+                lightOutTimes,
                 Optional.<DateTime>absent(),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
@@ -539,9 +545,11 @@ public class TimelineUtilsTest {
             ex.printStackTrace();
         }
 
+        final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
+        lightOutTimes.add(new DateTime(1421913780000L, DateTimeZone.UTC));
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 21, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
-                Optional.of(new DateTime(1421913780000L, DateTimeZone.UTC)),
+                lightOutTimes,
                 Optional.of(new DateTime(1421940660000L, DateTimeZone.UTC)),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
@@ -600,9 +608,11 @@ public class TimelineUtilsTest {
             ex.printStackTrace();
         }
 
+        final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
+        lightOutTimes.add(new DateTime(1420445760000L, DateTimeZone.UTC));
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 04, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
-                Optional.of(new DateTime(1420445760000L, DateTimeZone.UTC)),
+                lightOutTimes,
                 Optional.of(new DateTime(1420473540000L, DateTimeZone.UTC)),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
@@ -657,9 +667,11 @@ public class TimelineUtilsTest {
             //}
         }
 
+        final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
+        lightOutTimes.add(new DateTime(1422866580000L, DateTimeZone.UTC));
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 2, 1, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
-                Optional.of(new DateTime(1422866580000L, DateTimeZone.UTC)),
+                lightOutTimes,
                 Optional.of(new DateTime(1422891060000L, DateTimeZone.UTC)),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
@@ -714,9 +726,11 @@ public class TimelineUtilsTest {
             ex.printStackTrace();
         }
 
+        final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
+        lightOutTimes.add(new DateTime(1422775560000L, DateTimeZone.UTC));
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 31, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
-                Optional.of(new DateTime(1422775560000L, DateTimeZone.UTC)),
+                lightOutTimes,
                 Optional.<DateTime>absent(),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
@@ -764,9 +778,11 @@ public class TimelineUtilsTest {
             ex.printStackTrace();
         }
 
+        final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
+        lightOutTimes.add(new DateTime(1424497800000L, DateTimeZone.UTC));
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 2, 21, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
-                Optional.of(new DateTime(1424497800000L, DateTimeZone.UTC)),
+                lightOutTimes,
                 Optional.<DateTime>absent(),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
@@ -817,9 +833,11 @@ public class TimelineUtilsTest {
             ex.printStackTrace();
         }
 
+        final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
+        lightOutTimes.add(new DateTime(1421823120000L, DateTimeZone.UTC));
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 20, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
-                Optional.of(new DateTime(1421823120000L, DateTimeZone.UTC)),
+                lightOutTimes,
                 Optional.of(new DateTime(1421849760000L, DateTimeZone.UTC)),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
@@ -868,9 +886,11 @@ public class TimelineUtilsTest {
             ex.printStackTrace();
         }
 
+        final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
+        lightOutTimes.add(new DateTime(1423962900000L, DateTimeZone.UTC));
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 31, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
-                Optional.of(new DateTime(1423962900000L, DateTimeZone.UTC)),
+                lightOutTimes,
                 Optional.<DateTime>absent(),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,

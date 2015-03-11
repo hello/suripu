@@ -39,6 +39,7 @@ import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
+import com.hello.suripu.core.util.MultiLightOutUtils;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import com.hello.suripu.core.util.SleepScoreUtils;
@@ -220,12 +221,21 @@ public class TimelineProcessor {
                 Optional.<Event>absent(),
                 Optional.<Event>absent(),
                 Optional.<Event>absent());
+        final List<Event> rawLightEvents = TimelineUtils.getLightEventsWithMultipleLightOut(allSensorSampleList.get(Sensor.LIGHT));
+        final List<Event> smoothedLightEvents = MultiLightOutUtils.smoothLight(rawLightEvents, MultiLightOutUtils.DEFAULT_SMOOTH_GAP_MIN);
+        final List<Event> lightOuts = MultiLightOutUtils.getValidLightOuts(smoothedLightEvents,
+                trackerMotions,
+                MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
+        final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
+        for(final Event event:lightOuts){
+            lightOutTimes.add(new DateTime(event.getEndTimestamp(), DateTimeZone.forOffsetMillis(event.getTimezoneOffset())));
+        }
 
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
             sleepEventsFromAlgorithm = TimelineUtils.getSleepEvents(targetDate,
                     trackerMotions,
-                    lightOutTimeOptional,
+                    lightOutTimes,
                     wakeUpWaveTimeOptional,
                     MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                     MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
@@ -514,7 +524,10 @@ public class TimelineProcessor {
 
 
         /*  This can get overided by the HMM if the feature is enabled */
-        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate, trackerMotions, lightOutTimeOptional, wakeUpWaveTimeOptional);
+        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate,
+                trackerMotions,
+                allSensorSampleList.get(Sensor.LIGHT),
+                wakeUpWaveTimeOptional);
 
         if (hasHmmEnabled) {
             LOGGER.info("Using HMM for account {}",accountId);
@@ -732,11 +745,14 @@ public class TimelineProcessor {
      * Pang magic
      * @param targetDate
      * @param trackerMotions
-     * @param lightOutTimeOptional
+     * @param rawLight
      * @param wakeUpWaveTimeOptional
      * @return
      */
-    private SleepEvents<Optional<Event>> fromAlgorithm(final DateTime targetDate, final List<TrackerMotion> trackerMotions, final Optional<DateTime> lightOutTimeOptional, final Optional<DateTime> wakeUpWaveTimeOptional) {
+    private SleepEvents<Optional<Event>> fromAlgorithm(final DateTime targetDate,
+                                                       final List<TrackerMotion> trackerMotions,
+                                                       final List<Sample> rawLight,
+                                                       final Optional<DateTime> wakeUpWaveTimeOptional) {
         Optional<Segment> sleepSegmentOptional;
         Optional<Segment> inBedSegmentOptional = Optional.absent();
         SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.create(Optional.<Event>absent(),
@@ -744,11 +760,20 @@ public class TimelineProcessor {
                 Optional.<Event>absent(),
                 Optional.<Event>absent());
 
+        final List<Event> rawLightEvents = TimelineUtils.getLightEventsWithMultipleLightOut(rawLight);
+        final List<Event> smoothedLightEvents = MultiLightOutUtils.smoothLight(rawLightEvents, MultiLightOutUtils.DEFAULT_SMOOTH_GAP_MIN);
+        final List<Event> lightOuts = MultiLightOutUtils.getValidLightOuts(smoothedLightEvents, trackerMotions, MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
+
+        final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
+        for(final Event lightEvent:lightOuts){
+            lightOutTimes.add(new DateTime(lightEvent.getEndTimestamp(), DateTimeZone.forOffsetMillis(lightEvent.getTimezoneOffset())));
+        }
+
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
             sleepEventsFromAlgorithm = TimelineUtils.getSleepEvents(targetDate,
                     trackerMotions,
-                    lightOutTimeOptional,
+                    lightOutTimes,
                     wakeUpWaveTimeOptional,
                     MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                     MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,

@@ -1,9 +1,9 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
-import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SleepSegment;
+import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTimeConstants;
 
 import java.util.ArrayList;
@@ -71,14 +71,14 @@ public class MultiLightOutUtils {
         return smoothed;
     }
 
-    public static List<Event> getValidLightOuts(final List<Event> lightEvents, final List<AmplitudeData> rawMotion, final int deltaWindowMin){
+    public static List<Event> getValidLightOuts(final List<Event> lightEvents, final List<TrackerMotion> rawMotion, final int deltaWindowMin){
         final ArrayList<Event> multiLightOuts = new ArrayList<>();
 
         for(final Event lightEvent:lightEvents) {
             final long windowStartTimestamp = lightEvent.getEndTimestamp() - deltaWindowMin * DateTimeConstants.MILLIS_PER_MINUTE;
             final long windowEndTimestamp = lightEvent.getEndTimestamp() + deltaWindowMin * DateTimeConstants.MILLIS_PER_MINUTE;
             int motionCount = 0;
-            for(final AmplitudeData motion:rawMotion) {
+            for(final TrackerMotion motion:rawMotion) {
                 final long timestamp = motion.timestamp;
                 if(timestamp < windowStartTimestamp || timestamp > windowEndTimestamp){
                     continue;

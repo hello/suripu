@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
-import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.TrackerMotion;
 import com.yammer.dropwizard.json.GuavaExtrasModule;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,13 +63,13 @@ public class MultiLightOutUtilsTest {
     @Test
     public void testValidLightWithMultiSegments(){
         final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/ksg_motion_2015_03_06_raw.csv");
-        final List<AmplitudeData> trackerMotions = new ArrayList<>();
+        final List<TrackerMotion> trackerMotions = new ArrayList<>();
         try {
             final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
             final String[] lines = csvString.split("\\n");
             for(int i = 1; i < lines.length; i++){
                 final String[] columns = lines[i].split(",");
-                final AmplitudeData trackerMotion = new AmplitudeData(Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]));
+                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
                 //if(trackerMotion.value > 0){
                 trackerMotions.add(trackerMotion);
                 //}
@@ -134,13 +134,13 @@ public class MultiLightOutUtilsTest {
     @Test
     public void testValidLightWithTwoSegments(){
         final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/ryan_motion_2015_03_09_raw.csv");
-        final List<AmplitudeData> trackerMotions = new ArrayList<>();
+        final List<TrackerMotion> trackerMotions = new ArrayList<>();
         try {
             final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
             final String[] lines = csvString.split("\\n");
             for(int i = 1; i < lines.length; i++){
                 final String[] columns = lines[i].split(",");
-                final AmplitudeData trackerMotion = new AmplitudeData(Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]));
+                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
                 //if(trackerMotion.value > 0){
                 trackerMotions.add(trackerMotion);
                 //}
