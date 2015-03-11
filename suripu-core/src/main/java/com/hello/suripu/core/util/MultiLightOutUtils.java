@@ -47,9 +47,9 @@ public class MultiLightOutUtils {
             smoothed.add(Event.createFromType(lastEvent.getType(), lastStartTimestamp,
                     lastEndTimestamp,
                     lightEvent.getTimezoneOffset(),
-                    Optional.<String>absent(),
-                    Optional.<SleepSegment.SoundInfo>absent(),
-                    Optional.<Integer>absent()
+                    Optional.fromNullable(lastEvent.getDescription()),
+                    Optional.fromNullable(lastEvent.getSoundInfo()),
+                    Optional.fromNullable(lastEvent.getSleepDepth())
             ));
 
             lastStartTimestamp = lightEvent.getStartTimestamp();

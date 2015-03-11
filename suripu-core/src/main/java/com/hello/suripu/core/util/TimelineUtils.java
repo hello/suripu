@@ -991,7 +991,7 @@ public class TimelineUtils {
     }
 
 
-    public static List<Event> getLightEventsWithMultipleLightOut(List<Sample> lightData) {
+    public static List<Event> getLightEventsWithMultipleLightOut(final List<Sample> lightData) {
 
         if (lightData.size() == 0) {
             return Collections.EMPTY_LIST;
