@@ -226,10 +226,7 @@ public class TimelineProcessor {
         final List<Event> lightOuts = MultiLightOutUtils.getValidLightOuts(smoothedLightEvents,
                 trackerMotions,
                 MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
-        final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
-        for(final Event event:lightOuts){
-            lightOutTimes.add(new DateTime(event.getEndTimestamp(), DateTimeZone.forOffsetMillis(event.getTimezoneOffset())));
-        }
+        final List<DateTime> lightOutTimes = MultiLightOutUtils.getLightOutTimes(lightOuts);
 
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
@@ -764,10 +761,7 @@ public class TimelineProcessor {
         final List<Event> smoothedLightEvents = MultiLightOutUtils.smoothLight(rawLightEvents, MultiLightOutUtils.DEFAULT_SMOOTH_GAP_MIN);
         final List<Event> lightOuts = MultiLightOutUtils.getValidLightOuts(smoothedLightEvents, trackerMotions, MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
 
-        final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
-        for(final Event lightEvent:lightOuts){
-            lightOutTimes.add(new DateTime(lightEvent.getEndTimestamp(), DateTimeZone.forOffsetMillis(lightEvent.getTimezoneOffset())));
-        }
+        final List<DateTime> lightOutTimes = MultiLightOutUtils.getLightOutTimes(lightOuts);
 
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {

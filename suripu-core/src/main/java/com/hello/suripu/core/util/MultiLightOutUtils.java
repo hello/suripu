@@ -4,7 +4,9 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
+import org.joda.time.DateTimeZone;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +17,8 @@ import java.util.List;
 public class MultiLightOutUtils {
     public final static int DEFAULT_SMOOTH_GAP_MIN = 20;
     public final static int DEFAULT_LIGHT_DELTA_WINDOW_MIN = 15;
+
+    private final static int LIGHT_MOTION_CORRELATION_COUNT_THRESHOLD = 3;
 
     private static long getEndTimestampFromLightEvent(final Event lightEvent){
         switch (lightEvent.getType()){
@@ -87,11 +91,20 @@ public class MultiLightOutUtils {
                 motionCount++;
 
             }
-            if(motionCount > 5) {
+            if(motionCount > LIGHT_MOTION_CORRELATION_COUNT_THRESHOLD) {
                 multiLightOuts.add(lightEvent);
             }
         }
 
         return multiLightOuts;
+    }
+
+    public static List<DateTime> getLightOutTimes(final List<Event> validLightOuts){
+        final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
+        for(final Event lightOut:validLightOuts){
+            lightOutTimes.add(new DateTime(lightOut.getEndTimestamp(), DateTimeZone.forOffsetMillis(lightOut.getTimezoneOffset())));
+        }
+
+        return lightOutTimes;
     }
 }
