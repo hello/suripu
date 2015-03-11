@@ -314,7 +314,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
         environment.addResource(new DeviceResources(deviceDAO, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, jedisPool, senseKeyStore, pillKeyStore));
         final KeyStoreUtils keyStoreUtils = KeyStoreUtils.build(amazonS3, "hello-secure","hello-pvt.pem");
-        environment.addResource(new ProvisionResource(senseKeyStore, pillKeyStore, keyStoreUtils, pillProvisionDAO));
+        environment.addResource(new ProvisionResource(senseKeyStore, pillKeyStore, keyStoreUtils, pillProvisionDAO, amazonS3));
 
         environment.addResource(new ScoresResource(trackerMotionDAO, sleepLabelDAO, sleepScoreDAO, aggregateSleepScoreDAODynamoDB, configuration.getScoreThreshold(), configuration.getSleepScoreVersion()));
 
