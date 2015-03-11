@@ -512,7 +512,7 @@ public class TimelineUtilsTest {
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 3, 9, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 lightOutTimes,
-                Optional.<DateTime>absent(),
+                Optional.of(new DateTime()),
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
@@ -534,10 +534,10 @@ public class TimelineUtilsTest {
         final DateTime wakeUpLocalUTC = new DateTime(wakeUpTime.getYear(), wakeUpTime.getMonthOfYear(), wakeUpTime.getDayOfMonth(), wakeUpTime.getHourOfDay(), wakeUpTime.getMinuteOfHour(), DateTimeZone.UTC);
         final DateTime outOfBedLocalUTC = new DateTime(outOfBedTime.getYear(), outOfBedTime.getMonthOfYear(), outOfBedTime.getDayOfMonth(), outOfBedTime.getHourOfDay(), outOfBedTime.getMinuteOfHour(), DateTimeZone.UTC);
 
-        assertThat(goToBedLocalUTC, is(new DateTime(2015, 1, 27, 0, 18, DateTimeZone.UTC)));
-        assertThat(sleepLocalUTC, is(new DateTime(2015, 1, 27, 0, 29, DateTimeZone.UTC)));
-        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 1, 27, 8, 44, DateTimeZone.UTC)));
-        assertThat(outOfBedLocalUTC, is(new DateTime(2015, 1, 27, 8, 45, DateTimeZone.UTC)));
+        assertThat(goToBedLocalUTC, is(new DateTime(2015, 3, 10, 1, 59, DateTimeZone.UTC)));
+        assertThat(sleepLocalUTC, is(new DateTime(2015, 3, 10, 2, 10, DateTimeZone.UTC)));
+        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 3, 10, 7, 29, DateTimeZone.UTC)));
+        assertThat(outOfBedLocalUTC, is(new DateTime(2015, 3, 10, 7, 40, DateTimeZone.UTC)));
     }
 
 
