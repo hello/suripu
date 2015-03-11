@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.core.exceptions.TooManyAlarmsException;
 import com.hello.suripu.core.models.Alarm;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -50,7 +51,7 @@ public class AlarmDAODynamoDB {
     public static final String UPDATED_AT_ATTRIBUTE_NAME = "updated_at";
 
     private static int MAX_CALL_COUNT = 3;
-    public static final int MAX_ALARM_COUNT = 7;
+    public static final int MAX_ALARM_COUNT = 30;
 
 
     public AlarmDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
@@ -63,7 +64,7 @@ public class AlarmDAODynamoDB {
     public void setAlarms(long accountId, final List<Alarm> alarms){
         if(alarms.size() > MAX_ALARM_COUNT){
             LOGGER.error("Account {} tries to set {} alarms to db, data too large.", accountId, alarms.size());
-            throw new RuntimeException("Data too large.");
+            throw new TooManyAlarmsException("Data too large.");
         }
 
         if(alarms.size() == 0){
