@@ -18,7 +18,7 @@ public class MultiLightOutUtils {
     public final static int DEFAULT_SMOOTH_GAP_MIN = 20;
     public final static int DEFAULT_LIGHT_DELTA_WINDOW_MIN = 15;
 
-    private final static int LIGHT_MOTION_CORRELATION_COUNT_THRESHOLD = 3;
+    private final static int LIGHT_MOTION_CORRELATION_COUNT_THRESHOLD = 1;
 
     private static long getEndTimestampFromLightEvent(final Event lightEvent){
         switch (lightEvent.getType()){
