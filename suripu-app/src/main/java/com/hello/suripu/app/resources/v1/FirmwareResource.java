@@ -9,7 +9,9 @@ import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import javax.ws.rs.QueryParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,5 +117,32 @@ public class FirmwareResource {
         }
 
         return firmwareCounts;
+    }
+
+    @GET
+    @Timed
+    @Path("/history")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<Long, String> getFirmwareHistory(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                 @QueryParam("device_id") final String deviceID) {
+
+        final Jedis jedis = jedisPool.getResource();
+        final Map<Long, String> fwHistory = new TreeMap<>();
+
+        try {
+            final Set<String> seenFirmwares = jedis.smembers("firmwares_seen");
+            for (String fw_version:seenFirmwares) {
+                final Double score = jedis.zscore(fw_version, deviceID);
+                if(score != null) {
+                    fwHistory.put(score.longValue(), fw_version);
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed retrieving fw history for device.", e.getMessage());
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
+
+        return fwHistory;
     }
 }
