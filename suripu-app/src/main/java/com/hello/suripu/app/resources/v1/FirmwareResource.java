@@ -7,7 +7,7 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import javax.ws.rs.QueryParam;
@@ -42,7 +42,7 @@ public class FirmwareResource {
     @Timed
     @Path("/devices")
     @Produces(MediaType.APPLICATION_JSON)
-    public LinkedList<FirmwareInfo> getFirmwareDeviceList(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+    public List<FirmwareInfo> getFirmwareDeviceList(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                               @QueryParam("firmware_version") final Long firmwareVersion) {
         if(firmwareVersion == null) {
             LOGGER.error("Missing firmwareVersion parameter");
@@ -51,11 +51,11 @@ public class FirmwareResource {
 
         final Jedis jedis = jedisPool.getResource();
         final String fwVersion = firmwareVersion.toString();
-        LinkedList<FirmwareInfo> deviceInfo = new LinkedList<>();
+        List<FirmwareInfo> deviceInfo = new ArrayList<>();
         try {
 
             final Set<Tuple> allFWDevices = jedis.zrevrangeWithScores(fwVersion, 0, -1);
-            for(Tuple device: allFWDevices){
+            for(final Tuple device: allFWDevices){
                 deviceInfo.add(new FirmwareInfo(fwVersion, device.getElement(), (long)device.getScore()));
             }
         } catch (Exception e) {
@@ -101,7 +101,7 @@ public class FirmwareResource {
     public List<FirmwareCountInfo> getAllSeenFirmwares(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken) {
 
         final Jedis jedis = jedisPool.getResource();
-        List<FirmwareCountInfo> firmwareCounts = new LinkedList<>();
+        List<FirmwareCountInfo> firmwareCounts = new ArrayList<>();
         try {
             final Set<String> seenFirmwares = jedis.smembers("firmwares_seen");
             for (String fw_version:seenFirmwares) {
