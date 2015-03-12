@@ -1,5 +1,6 @@
 package com.hello.suripu.workers.logs;
 
+import com.flaptor.indextank.apiclient.IndexDoesNotExistException;
 import com.flaptor.indextank.apiclient.IndexTankClient;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -8,6 +9,7 @@ import org.apache.log4j.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -95,20 +97,20 @@ public class ApplicationLogIndexer implements LogIndexer<LoggingProtos.BatchLogM
 
     @Override
     public Integer index() {
-//        try {
+        try {
             if (!documents.isEmpty()) {
-//                index.addDocuments(ImmutableList.copyOf(documents));
+                index.addDocuments(ImmutableList.copyOf(documents));
                 final Integer count = documents.size();
                 LOGGER.info("Indexed {} documents", count);
                 documents.clear();
                 return count;
             }
-//        } catch (IndexDoesNotExistException e) {
-//            LOGGER.error("Index does not exist: {}", e.getMessage());
-//            System.exit(1);
-//        } catch (IOException e) {
-//            LOGGER.error("Failed connecting to searchify: {}", e.getMessage());
-//        }
+        } catch (IndexDoesNotExistException e) {
+            LOGGER.error("Index does not exist: {}", e.getMessage());
+            System.exit(1);
+        } catch (IOException e) {
+            LOGGER.error("Failed connecting to searchify: {}", e.getMessage());
+        }
 
         return 0;
     }

@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Account;
@@ -15,6 +16,7 @@ import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -56,17 +58,20 @@ public class DataScienceResource extends BaseResource {
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
     private final SleepLabelDAO sleepLabelDAO;
+    private final FeedbackDAO feedbackDAO;
 
     public DataScienceResource(final AccountDAO accountDAO,
                                final TrackerMotionDAO trackerMotionDAO,
                                final DeviceDataDAO deviceDataDAO,
                                final DeviceDAO deviceDAO,
-                               final SleepLabelDAO sleepLabelDAO) {
+                               final SleepLabelDAO sleepLabelDAO,
+                               final FeedbackDAO feedbackDAO) {
         this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.sleepLabelDAO = sleepLabelDAO;
+        this.feedbackDAO = feedbackDAO;
     }
 
     @GET
@@ -218,6 +223,22 @@ public class DataScienceResource extends BaseResource {
             return Optional.absent();
         }
         return account.id;
+    }
+
+    @GET
+    @Path("/feedback/{email}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<TimelineFeedback> getFeedbackFromUser(@Scope(OAuthScope.RESEARCH) final AccessToken accessToken,
+                                     @PathParam("email") final String email) {
+        final Optional<Long> accountId = getAccountIdByEmail(email);
+        if (!accountId.isPresent()) {
+            LOGGER.debug("ID not found for account {}", email);
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        final List<TimelineFeedback> feedback = this.feedbackDAO.getForAccount(accountId.get());
+        return feedback;
     }
 
 

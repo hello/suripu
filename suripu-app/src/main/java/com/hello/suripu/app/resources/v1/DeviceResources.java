@@ -20,6 +20,7 @@ import com.hello.suripu.core.models.DeviceInactivePage;
 import com.hello.suripu.core.models.DeviceInactivePaginator;
 import com.hello.suripu.core.models.DeviceKeyStoreRecord;
 import com.hello.suripu.core.models.DeviceStatus;
+import com.hello.suripu.core.models.FirmwareInfo;
 import com.hello.suripu.core.models.PairingInfo;
 import com.hello.suripu.core.models.PillRegistration;
 import com.hello.suripu.core.models.SenseRegistration;
@@ -29,6 +30,7 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.util.JsonError;
 import com.yammer.metrics.annotation.Timed;
+
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionIsolationLevel;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -368,6 +370,7 @@ public class DeviceResources {
         final Jedis jedis = jedisPool.getResource();
         final Set<Tuple> tuples = new TreeSet<>();
         Integer totalPages = 0;
+        Long devicesOnFirmware = 0L;
 
         LOGGER.debug("{} {} {} {}", inactiveSince - inactiveThreshold, inactiveSince, offset, count);
         try {
@@ -421,6 +424,7 @@ public class DeviceResources {
         final DeviceInactivePage inactiveSensesPage = redisPaginator.generatePage();
         return inactiveSensesPage;
     }
+
 
     @GET
     @Timed
