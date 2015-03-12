@@ -59,7 +59,7 @@ public class FirmwareResource {
                 deviceInfo.add(new FirmwareInfo(fwVersion, device.getElement(), (long)device.getScore()));
             }
         } catch (Exception e) {
-            LOGGER.error("Failed retrieving firmware device count.", e.getMessage());
+            LOGGER.error("Failed retrieving firmware device list.", e.getMessage());
         } finally {
             jedisPool.returnResource(jedis);
         }
