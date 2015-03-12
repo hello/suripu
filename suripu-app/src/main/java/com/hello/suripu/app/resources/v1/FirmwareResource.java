@@ -51,7 +51,7 @@ public class FirmwareResource {
 
         final Jedis jedis = jedisPool.getResource();
         final String fwVersion = firmwareVersion.toString();
-        List<FirmwareInfo> deviceInfo = new ArrayList<>();
+        final List<FirmwareInfo> deviceInfo = new ArrayList<>();
         try {
 
             final Set<Tuple> allFWDevices = jedis.zrevrangeWithScores(fwVersion, 0, -1);
@@ -101,7 +101,7 @@ public class FirmwareResource {
     public List<FirmwareCountInfo> getAllSeenFirmwares(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken) {
 
         final Jedis jedis = jedisPool.getResource();
-        List<FirmwareCountInfo> firmwareCounts = new ArrayList<>();
+        final List<FirmwareCountInfo> firmwareCounts = new ArrayList<>();
         try {
             final Set<String> seenFirmwares = jedis.smembers("firmwares_seen");
             for (String fw_version:seenFirmwares) {
