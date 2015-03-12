@@ -9,7 +9,6 @@ import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import javax.ws.rs.QueryParam;
@@ -123,11 +122,11 @@ public class FirmwareResource {
     @Timed
     @Path("/history")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<Long, String> getFirmwareHistory(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+    public TreeMap<Long, String> getFirmwareHistory(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                                  @QueryParam("device_id") final String deviceID) {
 
         final Jedis jedis = jedisPool.getResource();
-        final Map<Long, String> fwHistory = new TreeMap<>();
+        final TreeMap<Long, String> fwHistory = new TreeMap<>();
 
         try {
             final Set<String> seenFirmwares = jedis.smembers("firmwares_seen");
