@@ -75,6 +75,7 @@ public class LogIndexerProcessor implements IRecordProcessor {
 
     @Override
     public void shutdown(IRecordProcessorCheckpointer iRecordProcessorCheckpointer, ShutdownReason shutdownReason) {
-        LOGGER.info("Shutting down because: {}", shutdownReason);
+        LOGGER.warn("Shutting down because: {}", shutdownReason);
+        System.exit(1);
     }
 }
