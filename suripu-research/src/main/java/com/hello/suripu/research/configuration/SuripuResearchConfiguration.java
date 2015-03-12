@@ -32,6 +32,15 @@ public class SuripuResearchConfiguration extends Configuration {
         return commonDB;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty("research_db")
+    private DatabaseConfiguration researchDB = new DatabaseConfiguration();
+
+    public DatabaseConfiguration getResearchDB() {
+        return researchDB;
+    }
+
 
     @Valid
     @JsonProperty("debug")
@@ -65,5 +74,13 @@ public class SuripuResearchConfiguration extends Configuration {
 
     public KinesisLoggerConfiguration getKinesisLoggerConfiguration() {
         return kinesisLoggerConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("sleephmm_db")
+    private DynamoDBConfiguration sleepHmmDBConfiguration;
+    public DynamoDBConfiguration getSleepHmmDBConfiguration(){
+        return this.sleepHmmDBConfiguration;
     }
 }

@@ -514,7 +514,11 @@ public class TimelineProcessor {
 
 
         /*  This can get overided by the HMM if the feature is enabled */
-        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate, trackerMotions, lightOutTimeOptional, wakeUpWaveTimeOptional);
+        SleepEvents<Optional<Event>> algResults = fromAlgorithm(targetDate, trackerMotions, lightOutTimeOptional, wakeUpWaveTimeOptional);
+        List<SleepEvents<Optional<Event>>> sleepEventsFromAlgorithm = new ArrayList<>();
+
+        sleepEventsFromAlgorithm.add(algResults);
+
 
         if (hasHmmEnabled) {
             LOGGER.info("Using HMM for account {}",accountId);
@@ -526,37 +530,56 @@ public class TimelineProcessor {
                         allSensorSampleList, trackerMotions,targetDate.getMillis(),endDate.getMillis(),currentTimeMillis);
 
                 if (optionalHmmPredictions.isPresent()) {
-                    final SleepEvents<Optional<Event>> hmmSleepEvents = SleepEvents.create(
-                            optionalHmmPredictions.get().inBed,
-                            optionalHmmPredictions.get().fallAsleep,
-                            optionalHmmPredictions.get().wakeUp,
-                            optionalHmmPredictions.get().outOfBed);
+                    sleepEventsFromAlgorithm.clear();
+                    sleepEventsFromAlgorithm.addAll(optionalHmmPredictions.get().sleepEvents);
 
-                    sleepEventsFromAlgorithm = hmmSleepEvents;
                 }
             }
         }
 
         // PARTNER MOTION
-        final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.fallAsleep, sleepEventsFromAlgorithm.wakeUp, motionEvents, accountId);
+        final List<PartnerMotionEvent> partnerMotionEvents = new ArrayList<>();
+
+        for (SleepEvents<Optional<Event>> sleepEvents : sleepEventsFromAlgorithm) {
+            partnerMotionEvents.addAll(getPartnerMotionEvents(sleepEvents.fallAsleep, sleepEvents.wakeUp, motionEvents, accountId));
+        }
+
+        final int numPartnerMotion = partnerMotionEvents.size();
+
+
+        // SOUND
+        final List<Event> soundEvents = new ArrayList<>();
+
+        if (hasSoundInTimeline) {
+
+            for (SleepEvents<Optional<Event>> sleepEvents : sleepEventsFromAlgorithm) {
+
+                soundEvents.addAll(getSoundEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE),
+                        motionEvents, lightOutTimeOptional, sleepEvents));
+            }
+
+        }
+
+        final int numSoundEvents = soundEvents.size();
+
+
+        //insert PARTNER MOTION
         for(PartnerMotionEvent partnerMotionEvent : partnerMotionEvents) {
             timelineEvents.put(partnerMotionEvent.getStartTimestamp(), partnerMotionEvent);
         }
-        final int numPartnerMotion = partnerMotionEvents.size();
 
-        // SOUND
-        int numSoundEvents = 0;
-        if (hasSoundInTimeline) {
-            final List<Event> soundEvents = getSoundEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE),
-                    motionEvents, lightOutTimeOptional, sleepEventsFromAlgorithm);
-            for (final Event event : soundEvents) {
-                timelineEvents.put(event.getStartTimestamp(), event);
-            }
-            numSoundEvents = soundEvents.size();
+        //insert SOUND
+        for (final Event event : soundEvents) {
+            timelineEvents.put(event.getStartTimestamp(), event);
         }
 
-        // insert IN-BED, SLEEP, WAKE, OUT-of-BED
-        final List<Optional<Event>> eventList = sleepEventsFromAlgorithm.toList();
+        // insert IN-BED, SLEEP, WAKE, OUT-of-BED, and disturbances
+        final List<Optional<Event>> eventList = new ArrayList<>();
+        for (SleepEvents<Optional<Event>> sleepEvents : sleepEventsFromAlgorithm) {
+            eventList.addAll(sleepEvents.toList());
+        }
+
+
         for(final Optional<Event> sleepEventOptional: eventList){
             if(sleepEventOptional.isPresent() && !feedbackEvents.containsKey(sleepEventOptional.get().getType())){
                 timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
@@ -593,13 +616,21 @@ public class TimelineProcessor {
         final List<Event> eventsWithSleepEvents = TimelineRefactored.mergeEvents(timelineEvents);
         final List<Event> smoothedEvents = TimelineUtils.smoothEvents(eventsWithSleepEvents);
 
-        final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents,
-                sleepEventsFromAlgorithm.goToBed,
-                sleepEventsFromAlgorithm.outOfBed);
+        final List<Event> cleanedUpEvents = new ArrayList<>();
+        final List<Event> greyEvents = new ArrayList<>();
+        for (SleepEvents<Optional<Event>> sleepEvents : sleepEventsFromAlgorithm) {
 
-        final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
-                sleepEventsFromAlgorithm.goToBed,
-                sleepEventsFromAlgorithm.outOfBed);
+            cleanedUpEvents.addAll(TimelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents,
+                    sleepEvents.goToBed,
+                    sleepEvents.outOfBed));
+
+            greyEvents.addAll(TimelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
+                    sleepEvents.goToBed,
+                    sleepEvents.outOfBed));
+
+
+        }
+
         final List<Event> nonSignificantFilteredEvents = TimelineUtils.removeEventBeforeSignificant(greyEvents);
 
         final List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(nonSignificantFilteredEvents);

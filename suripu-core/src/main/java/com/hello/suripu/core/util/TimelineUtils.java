@@ -990,6 +990,51 @@ public class TimelineUtils {
         return events;
     }
 
+
+    public static List<Event> getLightEventsWithMultipleLightOut(List<Sample> lightData) {
+
+        if (lightData.size() == 0) {
+            return Collections.EMPTY_LIST;
+        }
+
+        LOGGER.debug("Light samples size: {}", lightData.size());
+
+        final LinkedList<AmplitudeData> lightAmplitudeData = new LinkedList<>();
+        for (final Sample sample : lightData) {
+            lightAmplitudeData.add(new AmplitudeData(sample.dateTime, (double) sample.value, sample.offsetMillis));
+        }
+
+        // TODO: could make this configurable.
+        final double darknessThreshold = 1.1; // DVT unit ALS is very sensitive
+        final int approxSunsetHour = 17;
+        final int approxSunriseHour = 6;
+        final int smoothingDegree = 5; // think of it as minutes
+
+        final LightEventsDetector detector = new LightEventsDetector(approxSunriseHour, approxSunsetHour, darknessThreshold, smoothingDegree);
+
+        final LinkedList<LightSegment> lightSegments = detector.process(lightAmplitudeData);
+
+        // convert segments to Events
+        final List<Event> events = new ArrayList<>();
+        for (final LightSegment segment : lightSegments) {
+            final LightSegment.Type segmentType = segment.segmentType;
+
+            final long startTimestamp = segment.startTimestamp + smoothingDegree * MINUTE_IN_MILLIS;
+            final long endTimestamp = segment.endTimestamp - smoothingDegree * MINUTE_IN_MILLIS;
+            final int offsetMillis = segment.offsetMillis;
+
+            if (segmentType == LightSegment.Type.LIGHTS_OUT) {
+                events.add(new LightsOutEvent(endTimestamp, endTimestamp + MINUTE_IN_MILLIS, offsetMillis));
+            } else if (segmentType == LightSegment.Type.LIGHT_SPIKE) {
+                events.add(new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, "Light"));
+            } else if(segmentType == LightSegment.Type.NONE){
+                events.add(new LightEvent(startTimestamp, endTimestamp, offsetMillis, "Light"));
+            }
+            // TODO: daylight spike event -- unsure what the value might be at this moment
+        }
+        return events;
+    }
+
     public static Optional<DateTime> getLightsOutTime(final List<Event> lightEvents) {
         for (final Event event : lightEvents) {
             if (event.getType() == Event.Type.LIGHTS_OUT) {
