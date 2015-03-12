@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.exceptions.TooManyAlarmsException;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmSound;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -176,6 +177,11 @@ public class AlarmResource {
             LOGGER.error("Aws failed when user {} tries to get alarms.", token.accountId);
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
                     new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Please try again.")).build());
+        }catch (TooManyAlarmsException tooManyAlarmException){
+            LOGGER.error("Account {} tries to set {} alarm, too many alarm", token.accountId, alarms.size());
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
+                    new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                            String.format("You can not set more than %d alarms.", AlarmDAODynamoDB.MAX_ALARM_COUNT))).build());
         }
 
         return alarms;

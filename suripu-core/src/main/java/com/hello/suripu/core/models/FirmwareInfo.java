@@ -1,18 +1,17 @@
 package com.hello.suripu.core.models;
 
-import java.util.List;
-import java.util.Set;
-
 /**
  * Created by jnorgan on 3/5/15.
  */
 public class FirmwareInfo {
     public final String version;
-    public final Set<String> deviceIds;
+    public final String device_id;
+    public final Long timestamp;
 
 
-    public FirmwareInfo(final String version, final Set<String> deviceIds) {
+    public FirmwareInfo(final String version, final String device_id, final Long timestamp) {
         this.version = version;
-        this.deviceIds = deviceIds;
+        this.device_id = device_id;
+        this.timestamp = timestamp;
     }
 }
