@@ -226,27 +226,26 @@ public class MergedUserInfoDynamoDB {
 
     public Optional<Color> setNextPillColor(final String senseId, final long accountId, final String pillId){
         final List<UserInfo> userInfoList = this.getInfo(senseId);
-        final HashMap<String, Integer> pillColorMap = new HashMap<>();
+        final List<Color> availableColor = PillColorUtil.getPillColors();
+
         for(final UserInfo userInfo:userInfoList){
             if(!userInfo.pillColor.isPresent()){
                 continue;
             }
 
             final OutputProtos.SyncResponse.PillSettings colorSetting = userInfo.pillColor.get();
-            if(!pillColorMap.containsKey(colorSetting.getPillId())){
-                pillColorMap.put(colorSetting.getPillId(), colorSetting.getPillColor());
-            }
+            final Color usedColor = PillColorUtil.pillColor(colorSetting.getPillColor());
+            availableColor.remove(usedColor);
         }
-        // There is a dependency on the max user we can register with sense
-        Color pillColor;
-        if(pillColorMap.containsKey(pillId) == false) {
-            pillColor = PillColorUtil.getPillColorByAccountRegistrationOrder(pillColorMap.size());
-        }else{
-            pillColor = new Color(pillColorMap.get(pillId));
+
+        if(availableColor.isEmpty()){
+            LOGGER.error("Too much pills registered, failed to assign color for pill {}, sense {}", pillId, senseId);
+            return Optional.absent();
         }
 
         try {
             // WARNING: potential race condition here.
+            final Color pillColor = availableColor.get(0);
             this.setPillColor(senseId, accountId, pillId, pillColor);
             return Optional.of(pillColor);
         }catch (AmazonServiceException ase){

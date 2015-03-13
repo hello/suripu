@@ -23,7 +23,9 @@ public class Device {
         BLACK,
         WHITE,
         BLUE,
-        RED
+        RED,
+        AQUA,
+        YELLOW
     }
 
     @JsonProperty("color")
@@ -55,10 +57,6 @@ public class Device {
         this.firmwareVersion = firmwareVersion;
         this.lastUpdated = lastUpdated;
         this.color = color;
-    }
-
-    public Device(final Type type, final String deviceId, final State state, final String firmwareVersion, final DateTime lastUpdated) {
-        this(type, deviceId, state, firmwareVersion, lastUpdated, getDefaultColor(type));
     }
 
     private static Color getDefaultColor(final Type type) {
