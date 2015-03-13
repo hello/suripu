@@ -11,7 +11,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
-import com.hello.suripu.core.models.DeviceInfo;
+import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -93,20 +93,20 @@ public class DeviceResources {
 
     // Helpers
     private List<Sense> getSensesByAccountId(final Long accountId) {
-        final ImmutableList<DeviceInfo> senseInfoList = deviceDAO.getSensesForAccountIdAdmin(accountId);
+        final ImmutableList<DeviceAccountPair> senseAccountPairs = deviceDAO.getSensesForAccountId(accountId);
         final List<Sense> senses = new ArrayList<>();
 
-        for (final DeviceInfo senseInfo: senseInfoList) {
-            final Optional<DeviceStatus> senseStatusOptional = this.deviceDataDAO.senseStatus(senseInfo.id);
+        for (final DeviceAccountPair senseAccountPair: senseAccountPairs) {
+            final Optional<DeviceStatus> senseStatusOptional = this.deviceDataDAO.senseStatus(senseAccountPair.internalDeviceId);
             if(!senseStatusOptional.isPresent()) {
                 final DeviceStatus senseStatus = senseStatusOptional.get();
-                senses.add(new Sense(senseInfo.deviceId, Sense.State.NORMAL, senseStatus.firmwareVersion, senseStatus.lastSeen, senseInfo.created));
+                senses.add(new Sense(senseAccountPair.externalDeviceId, Sense.State.NORMAL, senseStatus.firmwareVersion, senseStatus.lastSeen, senseAccountPair.created));
             } else {
-                if (senseInfo.created.plusHours(SENSE_STATUS_WAITING_HOURS).isAfterNow()) {
-                    senses.add(new Sense(senseInfo.deviceId, Sense.State.WAITING, "-", senseInfo.created, senseInfo.created));
+                if (senseAccountPair.created.plusHours(SENSE_STATUS_WAITING_HOURS).isAfterNow()) {
+                    senses.add(new Sense(senseAccountPair.externalDeviceId, Sense.State.WAITING, "-", senseAccountPair.created, senseAccountPair.created));
                 }
                 else {
-                    senses.add(new Sense(senseInfo.deviceId, Sense.State.UNKNOWN, "-", senseInfo.created, senseInfo.created));
+                    senses.add(new Sense(senseAccountPair.externalDeviceId, Sense.State.UNKNOWN, "-", senseAccountPair.created, senseAccountPair.created));
                 }
             }
         }
@@ -114,20 +114,20 @@ public class DeviceResources {
     }
 
     private List<Pill> getPillsByAccountId(final Long accountId) {
-        final ImmutableList<DeviceInfo> pillInfoList = deviceDAO.getPillsForAccountIdAdmin(accountId);
+        final ImmutableList<DeviceAccountPair> pillAccountPairs = deviceDAO.getPillsForAccountId(accountId);
         final List<Pill> pills = new ArrayList<>();
 
-        for (final DeviceInfo pillInfo: pillInfoList) {
-            final Optional<DeviceStatus> pillStatusOptional = this.trackerMotionDAO.pillStatus(pillInfo.id);
+        for (final DeviceAccountPair pillAccountPair: pillAccountPairs) {
+            final Optional<DeviceStatus> pillStatusOptional = this.trackerMotionDAO.pillStatus(pillAccountPair.internalDeviceId);
             if(pillStatusOptional.isPresent()) {
                 final DeviceStatus pillStatus = pillStatusOptional.get();
-                pills.add(new Pill(pillInfo.deviceId, Pill.State.NORMAL, pillStatus.batteryLevel, pillStatus.uptime, pillStatus.lastSeen, pillInfo.created));
+                pills.add(new Pill(pillAccountPair.externalDeviceId, Pill.State.NORMAL, pillStatus.batteryLevel, pillStatus.uptime, pillStatus.lastSeen, pillAccountPair.created));
             } else {
-                if (pillInfo.created.plusHours(PILL_STATUS_WAITING_HOURS).isAfterNow()) {
-                    pills.add(new Pill(pillInfo.deviceId, Pill.State.WAITING, -1, -1, pillInfo.created, pillInfo.created));
+                if (pillAccountPair.created.plusHours(PILL_STATUS_WAITING_HOURS).isAfterNow()) {
+                    pills.add(new Pill(pillAccountPair.externalDeviceId, Pill.State.WAITING, -1, -1, pillAccountPair.created, pillAccountPair.created));
                 }
                 else {
-                    pills.add(new Pill(pillInfo.deviceId, Pill.State.UNKNOWN, -1, -1, pillInfo.created, pillInfo.created));
+                    pills.add(new Pill(pillAccountPair.externalDeviceId, Pill.State.UNKNOWN, -1, -1, pillAccountPair.created, pillAccountPair.created));
                 }
             }
         }
