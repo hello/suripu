@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 public class Util {
     private static final Logger LOGGER = LoggerFactory.getLogger(Util.class);
 
-    public static Optional<Long> getAccountIdByEmail(final AccountDAO accountDAO, String email) {
+    public static Optional<Long> getAccountIdByEmail(final AccountDAO accountDAO, final String email) {
         final Optional<Account> accountOptional = accountDAO.getByEmail(email);
 
         if (!accountOptional.isPresent()) {

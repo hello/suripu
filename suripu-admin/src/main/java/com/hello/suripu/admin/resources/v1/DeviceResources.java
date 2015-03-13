@@ -66,7 +66,7 @@ public class DeviceResources {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/sense")
     public List<Sense> getSensesByEmail(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                        @QueryParam("email") String email) {
+                                        @QueryParam("email") final String email) {
         LOGGER.debug("Querying all senses for email = {}", email);
         final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, email);
         if (!accountIdOptional.isPresent()) {
@@ -81,7 +81,7 @@ public class DeviceResources {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/pill")
     public List<Pill> getPillsByEmail(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                       @QueryParam("email") String email) {
+                                       @QueryParam("email") final String email) {
         LOGGER.debug("Querying all pills for email = {}", email);
         final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, email);
         if (!accountIdOptional.isPresent()) {
