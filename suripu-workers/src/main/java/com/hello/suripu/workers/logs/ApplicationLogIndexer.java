@@ -110,6 +110,8 @@ public class ApplicationLogIndexer implements LogIndexer<LoggingProtos.BatchLogM
             System.exit(1);
         } catch (IOException e) {
             LOGGER.error("Failed connecting to searchify: {}", e.getMessage());
+        } catch(IndexOutOfBoundsException e) {
+            LOGGER.error("Searchify client error: {}", e.getMessage());
         }
 
         return 0;

@@ -1086,6 +1086,16 @@ public final class LoggingProtos {
      * <code>optional .BatchLogMessage.LogType log_type = 3;</code>
      */
     com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.LogType getLogType();
+
+    // optional int64 received_at = 4;
+    /**
+     * <code>optional int64 received_at = 4;</code>
+     */
+    boolean hasReceivedAt();
+    /**
+     * <code>optional int64 received_at = 4;</code>
+     */
+    long getReceivedAt();
   }
   /**
    * Protobuf type {@code BatchLogMessage}
@@ -1160,6 +1170,11 @@ public final class LoggingProtos {
                 bitField0_ |= 0x00000002;
                 logType_ = value;
               }
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000004;
+              receivedAt_ = input.readInt64();
               break;
             }
           }
@@ -1382,10 +1397,27 @@ public final class LoggingProtos {
       return logType_;
     }
 
+    // optional int64 received_at = 4;
+    public static final int RECEIVED_AT_FIELD_NUMBER = 4;
+    private long receivedAt_;
+    /**
+     * <code>optional int64 received_at = 4;</code>
+     */
+    public boolean hasReceivedAt() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional int64 received_at = 4;</code>
+     */
+    public long getReceivedAt() {
+      return receivedAt_;
+    }
+
     private void initFields() {
       messages_ = java.util.Collections.emptyList();
       appVersion_ = "";
       logType_ = com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.LogType.APPLICATION_LOG;
+      receivedAt_ = 0L;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1408,6 +1440,9 @@ public final class LoggingProtos {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeEnum(3, logType_.getNumber());
       }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeInt64(4, receivedAt_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -1428,6 +1463,10 @@ public final class LoggingProtos {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(3, logType_.getNumber());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(4, receivedAt_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1556,6 +1595,8 @@ public final class LoggingProtos {
         bitField0_ = (bitField0_ & ~0x00000002);
         logType_ = com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.LogType.APPLICATION_LOG;
         bitField0_ = (bitField0_ & ~0x00000004);
+        receivedAt_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -1601,6 +1642,10 @@ public final class LoggingProtos {
           to_bitField0_ |= 0x00000002;
         }
         result.logType_ = logType_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.receivedAt_ = receivedAt_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1650,6 +1695,9 @@ public final class LoggingProtos {
         }
         if (other.hasLogType()) {
           setLogType(other.getLogType());
+        }
+        if (other.hasReceivedAt()) {
+          setReceivedAt(other.getReceivedAt());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -2024,6 +2072,39 @@ public final class LoggingProtos {
       public Builder clearLogType() {
         bitField0_ = (bitField0_ & ~0x00000004);
         logType_ = com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.LogType.APPLICATION_LOG;
+        onChanged();
+        return this;
+      }
+
+      // optional int64 received_at = 4;
+      private long receivedAt_ ;
+      /**
+       * <code>optional int64 received_at = 4;</code>
+       */
+      public boolean hasReceivedAt() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional int64 received_at = 4;</code>
+       */
+      public long getReceivedAt() {
+        return receivedAt_;
+      }
+      /**
+       * <code>optional int64 received_at = 4;</code>
+       */
+      public Builder setReceivedAt(long value) {
+        bitField0_ |= 0x00000008;
+        receivedAt_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 received_at = 4;</code>
+       */
+      public Builder clearReceivedAt() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        receivedAt_ = 0L;
         onChanged();
         return this;
       }
@@ -7081,27 +7162,27 @@ public final class LoggingProtos {
       "\n\024suripu_logging.proto\"v\n\nLogMessage\022\016\n\006" +
       "origin\030\001 \001(\t\022\017\n\007message\030\002 \001(\t\022\n\n\002ts\030\003 \001(" +
       "\003\022\031\n\nproduction\030\004 \001(\010:\005false\022\r\n\005level\030\005 " +
-      "\001(\005\022\021\n\tdevice_id\030\006 \001(\t\"\240\001\n\017BatchLogMessa" +
+      "\001(\005\022\021\n\tdevice_id\030\006 \001(\t\"\265\001\n\017BatchLogMessa" +
       "ge\022\035\n\010messages\030\001 \003(\0132\013.LogMessage\022\023\n\013app" +
       "_version\030\002 \001(\t\022*\n\010log_type\030\003 \001(\0162\030.Batch" +
-      "LogMessage.LogType\"-\n\007LogType\022\023\n\017APPLICA" +
-      "TION_LOG\020\000\022\r\n\tSENSE_LOG\020\001\"\250\002\n\013HttpReques" +
-      "t\022\014\n\004path\030\001 \001(\t\022\024\n\014access_token\030\002 \001(\t\022\022\n" +
-      "\naccount_id\030\003 \001(\003\022\026\n\016application_id\030\004 \001(",
-      "\003\022\025\n\rtimestamp_utc\030\005 \001(\003\022\027\n\017required_sco" +
-      "pes\030\006 \003(\t\022\027\n\017provided_scopes\030\007 \003(\t\022\037\n\027ac" +
-      "cess_token_created_at\030\010 \001(\003\022\022\n\nuser_agen" +
-      "t\030\t \001(\t\022$\n\007headers\030\n \003(\0132\023.HttpRequest.H" +
-      "eader\032%\n\006Header\022\014\n\004name\030\001 \001(\t\022\r\n\005value\030\002" +
-      " \001(\t\"\\\n\014Registration\022\021\n\tdevice_id\030\001 \001(\t\022" +
-      "\021\n\ttimestamp\030\002 \001(\003\022\022\n\naccount_id\030\003 \001(\003\022\022" +
-      "\n\nip_address\030\004 \001(\t\"e\n\017DecryptionError\022\021\n" +
-      "\tdevice_id\030\001 \001(\t\022\016\n\006keyHex\030\002 \001(\t\022\n\n\002ts\030\003" +
-      " \001(\003\022\024\n\014request_body\030\004 \001(\014\022\r\n\005other\030\005 \001(",
-      "\t\"W\n\020ProvisionRequest\022\014\n\004body\030\001 \001(\014\022\025\n\rs" +
-      "erial_number\030\002 \001(\t\022\n\n\002ts\030\003 \001(\003\022\022\n\nip_add" +
-      "ress\030\004 \001(\tB-\n\034com.hello.suripu.api.loggi" +
-      "ngB\rLoggingProtos"
+      "LogMessage.LogType\022\023\n\013received_at\030\004 \001(\003\"" +
+      "-\n\007LogType\022\023\n\017APPLICATION_LOG\020\000\022\r\n\tSENSE" +
+      "_LOG\020\001\"\250\002\n\013HttpRequest\022\014\n\004path\030\001 \001(\t\022\024\n\014" +
+      "access_token\030\002 \001(\t\022\022\n\naccount_id\030\003 \001(\003\022\026",
+      "\n\016application_id\030\004 \001(\003\022\025\n\rtimestamp_utc\030" +
+      "\005 \001(\003\022\027\n\017required_scopes\030\006 \003(\t\022\027\n\017provid" +
+      "ed_scopes\030\007 \003(\t\022\037\n\027access_token_created_" +
+      "at\030\010 \001(\003\022\022\n\nuser_agent\030\t \001(\t\022$\n\007headers\030" +
+      "\n \003(\0132\023.HttpRequest.Header\032%\n\006Header\022\014\n\004" +
+      "name\030\001 \001(\t\022\r\n\005value\030\002 \001(\t\"\\\n\014Registratio" +
+      "n\022\021\n\tdevice_id\030\001 \001(\t\022\021\n\ttimestamp\030\002 \001(\003\022" +
+      "\022\n\naccount_id\030\003 \001(\003\022\022\n\nip_address\030\004 \001(\t\"" +
+      "e\n\017DecryptionError\022\021\n\tdevice_id\030\001 \001(\t\022\016\n" +
+      "\006keyHex\030\002 \001(\t\022\n\n\002ts\030\003 \001(\003\022\024\n\014request_bod",
+      "y\030\004 \001(\014\022\r\n\005other\030\005 \001(\t\"W\n\020ProvisionReque" +
+      "st\022\014\n\004body\030\001 \001(\014\022\025\n\rserial_number\030\002 \001(\t\022" +
+      "\n\n\002ts\030\003 \001(\003\022\022\n\nip_address\030\004 \001(\tB-\n\034com.h" +
+      "ello.suripu.api.loggingB\rLoggingProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -7119,7 +7200,7 @@ public final class LoggingProtos {
           internal_static_BatchLogMessage_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_BatchLogMessage_descriptor,
-              new java.lang.String[] { "Messages", "AppVersion", "LogType", });
+              new java.lang.String[] { "Messages", "AppVersion", "LogType", "ReceivedAt", });
           internal_static_HttpRequest_descriptor =
             getDescriptor().getMessageTypes().get(2);
           internal_static_HttpRequest_fieldAccessorTable = new
