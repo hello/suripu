@@ -172,4 +172,63 @@ public class MultiLightOutUtilsTest {
             assertThat(true, is(false));
         }
     }
+
+
+    @Test
+    public void testValidLightWithTwoSegmentsBeforeMidLight(){
+        final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/turf_motion_2015_03_11_raw.csv");
+        final List<TrackerMotion> trackerMotions = new ArrayList<>();
+        try {
+            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
+            final String[] lines = csvString.split("\\n");
+            for(int i = 1; i < lines.length; i++){
+                final String[] columns = lines[i].split(",");
+                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
+                //if(trackerMotion.value > 0){
+                trackerMotions.add(trackerMotion);
+                //}
+            }
+        }catch (IOException ex){
+            ex.printStackTrace();
+            assertThat(true, is(false));
+        }
+
+        final URL fixtureJSONFile = Resources.getResource("fixtures/algorithm/turf_light_event_2015_03_11.orig.json");
+        final URL fixtureJSONFileSmoothed = Resources.getResource("fixtures/algorithm/turf_light_event_2015_03_11.smooth.json");
+        final URL fixtureJSONFileValid = Resources.getResource("fixtures/algorithm/turf_light_event_2015_03_11.valid.json");
+        try {
+            final String jsonString = Resources.toString(fixtureJSONFile, Charsets.UTF_8);
+            final List<Event> lightEvents = this.mapper.readValue(jsonString, new TypeReference<List<Event>>() {});
+
+            final String smoothJSONString = Resources.toString(fixtureJSONFileSmoothed, Charsets.UTF_8);
+            final List<Event> lightEventsSmoothed = this.mapper.readValue(smoothJSONString, new TypeReference<List<Event>>() {});
+
+            final String validJSONString = Resources.toString(fixtureJSONFileValid, Charsets.UTF_8);
+            final List<Event> lightEventsValid = this.mapper.readValue(validJSONString, new TypeReference<List<Event>>() {});
+
+            final List<Event> smoothLight = MultiLightOutUtils.smoothLight(lightEvents, MultiLightOutUtils.DEFAULT_SMOOTH_GAP_MIN);
+
+            assertThat(smoothLight.size(), is(lightEventsSmoothed.size()));
+            for(int i = 0; i < smoothLight.size(); i++){
+                assertThat(lightEventsSmoothed.get(i).getType(), is(smoothLight.get(i).getType()));
+                assertThat(lightEventsSmoothed.get(i).getStartTimestamp(), is(smoothLight.get(i).getStartTimestamp()));
+                assertThat(lightEventsSmoothed.get(i).getEndTimestamp(), is(smoothLight.get(i).getEndTimestamp()));
+                assertThat(lightEventsSmoothed.get(i).getDescription(), is(smoothLight.get(i).getDescription()));
+            }
+
+            final List<Event> actual = MultiLightOutUtils.getValidLightOuts(smoothLight, trackerMotions,MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
+
+            assertThat(actual.size(), is(lightEventsValid.size()));
+
+            for(int i = 0; i < actual.size(); i++){
+                assertThat(lightEventsValid.get(i).getType(), is(actual.get(i).getType()));
+                assertThat(lightEventsValid.get(i).getStartTimestamp(), is(actual.get(i).getStartTimestamp()));
+                assertThat(lightEventsValid.get(i).getEndTimestamp(), is(actual.get(i).getEndTimestamp()));
+                assertThat(lightEventsValid.get(i).getDescription(), is(actual.get(i).getDescription()));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            assertThat(true, is(false));
+        }
+    }
 }

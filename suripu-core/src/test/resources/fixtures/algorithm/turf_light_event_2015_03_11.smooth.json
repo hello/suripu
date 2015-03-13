@@ -1,0 +1,29 @@
+[
+  {
+    "description": "Light",
+    "startTimestamp": 1426124580000,
+    "sleepDepth": 0,
+    "soundInfo": null,
+    "type": "LIGHT",
+    "endTimestamp": 1426126980000,
+    "timezoneOffset": -18000000
+  },
+  {
+    "description": "The lights went out in your room.",
+    "startTimestamp": 1426133520000,
+    "sleepDepth": 0,
+    "soundInfo": null,
+    "type": "LIGHTS_OUT",
+    "endTimestamp": 1426133520000,
+    "timezoneOffset": -18000000
+  },
+  {
+    "description": "Light",
+    "startTimestamp": 1426159980000,
+    "sleepDepth": 0,
+    "soundInfo": null,
+    "type": "LIGHT",
+    "endTimestamp": 1426159620000,
+    "timezoneOffset": -18000000
+  }
+]
