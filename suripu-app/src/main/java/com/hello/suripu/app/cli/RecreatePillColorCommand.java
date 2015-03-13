@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.util.PillColorUtil;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.db.ManagedDataSource;
@@ -21,7 +22,7 @@ import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -89,18 +90,19 @@ public class RecreatePillColorCommand extends ConfiguredCommand<SuripuAppConfigu
 
             LOGGER.info("Sense {} has {} accounts that has pill linked", senseId, pillsLinkedToSense.size());
             final HashMap<String, Color> pillIdToColorMap = new HashMap<>();
-//            for(final DeviceAccountPair pill:pillsLinkedToSense){
-//                Color pillColor;
-//
-//                if(!pillIdToColorMap.containsKey(pill.externalDeviceId)) {
-//                    pillColor = PillColorUtil.getPillColorByAccountRegistrationOrder(pillIdToColorMap.size());
-//                    pillIdToColorMap.put(pill.externalDeviceId, new Color(pillColor.getRGB()));
-//                }else{
-//                    pillColor = pillIdToColorMap.get(pill.externalDeviceId);
-//                }
-//                LOGGER.info("Pill {} linked with sense {} set to color {}", pill.externalDeviceId, senseId, pillColor.getRGB());
-//                mergedUserInfoDynamoDB.setPillColor(senseId, pill.accountId, pill.externalDeviceId, pillColor);
-//            }
+            final List<Color> colorList = PillColorUtil.getPillColors();
+            for(final DeviceAccountPair pill:pillsLinkedToSense){
+                Color pillColor;
+
+                if(!pillIdToColorMap.containsKey(pill.externalDeviceId)) {
+                    pillColor = colorList.get(pillIdToColorMap.size() % colorList.size());
+                    pillIdToColorMap.put(pill.externalDeviceId, new Color(pillColor.getRGB()));
+                }else{
+                    pillColor = pillIdToColorMap.get(pill.externalDeviceId);
+                }
+                LOGGER.info("Pill {} linked with sense {} set to color {}", pill.externalDeviceId, senseId, pillColor.getRGB());
+                mergedUserInfoDynamoDB.setPillColor(senseId, pill.accountId, pill.externalDeviceId, pillColor);
+            }
         }
 
         LOGGER.info("Reprocess done!");
