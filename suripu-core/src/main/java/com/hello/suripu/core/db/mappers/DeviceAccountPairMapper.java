@@ -2,6 +2,7 @@ package com.hello.suripu.core.db.mappers;
 
 import com.hello.suripu.core.models.DeviceAccountPair;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
@@ -16,7 +17,7 @@ public class DeviceAccountPairMapper implements ResultSetMapper<DeviceAccountPai
                 r.getLong("account_id"),
                 r.getLong("id"),
                 r.getString("device_id"),
-                new DateTime(r.getTimestamp("created_at"))
+                new DateTime(r.getTimestamp("created_at"), DateTimeZone.UTC)
         );
     }
 }
