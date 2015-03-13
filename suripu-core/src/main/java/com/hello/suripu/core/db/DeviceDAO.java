@@ -4,9 +4,11 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.mappers.AccountMapper;
 import com.hello.suripu.core.db.mappers.DeviceAccountPairMapper;
+import com.hello.suripu.core.db.mappers.DeviceInfoMapper;
 import com.hello.suripu.core.db.mappers.DeviceStatusMapper;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.DeviceInfo;
 import com.hello.suripu.core.models.DeviceStatus;
 import org.skife.jdbi.v2.TransactionIsolationLevel;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -31,6 +33,9 @@ public interface DeviceDAO extends Transactional<DeviceDAO> {
     @SqlQuery("SELECT * FROM account_device_map WHERE account_id = :account_id AND active = TRUE ORDER BY id DESC;")
     ImmutableList<DeviceAccountPair> getSensesForAccountId(@Bind("account_id") Long accountId);
 
+    @RegisterMapper(DeviceInfoMapper.class)
+    @SqlQuery("SELECT * FROM account_device_map WHERE account_id = :account_id AND active = TRUE ORDER BY id DESC;")
+    ImmutableList<DeviceInfo> getSensesForAccountIdAdmin(@Bind("account_id") Long accountId);
 
     @GetGeneratedKeys
     @SqlUpdate("INSERT INTO account_device_map (account_id, device_name, device_id, active) VALUES(:account_id, :device_id, :device_id, true)")
@@ -71,6 +76,10 @@ public interface DeviceDAO extends Transactional<DeviceDAO> {
     @RegisterMapper(DeviceAccountPairMapper.class)
     @SqlQuery("SELECT * FROM account_tracker_map WHERE account_id = :account_id AND active = true;")
     ImmutableList<DeviceAccountPair> getPillsForAccountId(@Bind("account_id") Long accountId);
+
+    @RegisterMapper(DeviceInfoMapper.class)
+    @SqlQuery("SELECT * FROM account_tracker_map WHERE account_id = :account_id AND active = true;")
+    ImmutableList<DeviceInfo> getPillsForAccountIdAdmin(@Bind("account_id") Long accountId);
 
     @RegisterMapper(DeviceAccountPairMapper.class)
     @SqlQuery("SELECT * FROM account_tracker_map WHERE device_id = :pill_id AND active = TRUE;")
