@@ -327,6 +327,7 @@ public class DeviceResources {
         final List<UserInfo> userInfoList= Lists.newArrayList();
         if(!senses.isEmpty()) {
             userInfoList.addAll(mergedUserInfoDynamoDB.getInfo(senses.get(0).externalDeviceId));
+        }else{
             return Collections.EMPTY_LIST;
         }
 
