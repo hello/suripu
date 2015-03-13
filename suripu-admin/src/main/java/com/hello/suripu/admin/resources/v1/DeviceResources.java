@@ -102,7 +102,7 @@ public class DeviceResources {
                 final DeviceStatus senseStatus = senseStatusOptional.get();
                 senses.add(new Sense(senseInfo.deviceId, Sense.State.NORMAL, senseStatus.firmwareVersion, senseStatus.lastSeen, senseInfo.created));
             } else {
-                if (senseInfo.created.plusHours(SENSE_STATUS_WAITING_HOURS).isBeforeNow()) {
+                if (senseInfo.created.plusHours(SENSE_STATUS_WAITING_HOURS).isAfterNow()) {
                     senses.add(new Sense(senseInfo.deviceId, Sense.State.WAITING, "-", senseInfo.created, senseInfo.created));
                 }
                 else {
@@ -123,7 +123,7 @@ public class DeviceResources {
                 final DeviceStatus pillStatus = pillStatusOptional.get();
                 pills.add(new Pill(pillInfo.deviceId, Pill.State.NORMAL, pillStatus.batteryLevel, pillStatus.uptime, pillStatus.lastSeen, pillInfo.created));
             } else {
-                if (pillInfo.created.plusHours(PILL_STATUS_WAITING_HOURS).isBeforeNow()) {
+                if (pillInfo.created.plusHours(PILL_STATUS_WAITING_HOURS).isAfterNow()) {
                     pills.add(new Pill(pillInfo.deviceId, Pill.State.WAITING, -1, -1, pillInfo.created, pillInfo.created));
                 }
                 else {
