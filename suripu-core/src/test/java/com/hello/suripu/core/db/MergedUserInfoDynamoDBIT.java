@@ -9,6 +9,7 @@ import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmSound;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.UserInfo;
+import com.hello.suripu.core.util.PillColorUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -161,6 +162,29 @@ public class MergedUserInfoDynamoDBIT {
         assertThat(userInfoNoPillColor.isPresent(), is(true));
         assertThat(userInfoNoPillColor.get().pillColor.isPresent(), is(false));
         assertThat(userInfoNoPillColor.get().timeZone.get(), is(DateTimeZone.getDefault()));
+    }
+
+
+    @Test
+    public void testPillColorUpdateAfterReLink(){
+        final String senseId = "Pang's Sense";
+        final String pillId = "Pang's Pill";
+        this.mergedUserInfoDynamoDB.setTimeZone(senseId, 1L, DateTimeZone.getDefault());
+        final Optional<Color> firstColor = this.mergedUserInfoDynamoDB.setNextPillColor(senseId, 1L, pillId);
+        assertThat(firstColor.isPresent(), is(true));
+        assertThat(firstColor.get(), is(PillColorUtil.BLUE));
+
+        final String pillId2 = "Pang's Pill 2";
+        this.mergedUserInfoDynamoDB.setTimeZone(senseId, 2L, DateTimeZone.getDefault());
+        final Optional<Color> secondColor = this.mergedUserInfoDynamoDB.setNextPillColor(senseId, 2L, pillId2);
+        assertThat(secondColor.isPresent(), is(true));
+        assertThat(secondColor.get(), is(PillColorUtil.RED));
+
+        this.mergedUserInfoDynamoDB.unlinkAccountToDevice(1L, senseId);
+        this.mergedUserInfoDynamoDB.setTimeZone(senseId, 1L, DateTimeZone.getDefault());
+        final Optional<Color> reRegisterColor = this.mergedUserInfoDynamoDB.setNextPillColor(senseId, 1L, pillId);
+        assertThat(reRegisterColor.isPresent(), is(true));
+        assertThat(reRegisterColor.get(), is(PillColorUtil.BLUE));
     }
 
 
