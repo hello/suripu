@@ -9,8 +9,10 @@ import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,10 +122,15 @@ public class FirmwareResource {
 
     @GET
     @Timed
-    @Path("/history")
+    @Path("/{device_id}/history")
     @Produces(MediaType.APPLICATION_JSON)
-    public TreeMap<Long, String> getFirmwareHistory(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                                 @QueryParam("device_id") final String deviceID) {
+    public Map<Long, String> getFirmwareHistory(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                 @PathParam("device_id") final String deviceId) {
+
+        if(deviceId == null) {
+            LOGGER.error("Missing device_id parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
 
         final Jedis jedis = jedisPool.getResource();
         final TreeMap<Long, String> fwHistory = new TreeMap<>();
@@ -131,7 +138,7 @@ public class FirmwareResource {
         try {
             final Set<String> seenFirmwares = jedis.smembers("firmwares_seen");
             for (String fw_version:seenFirmwares) {
-                final Double score = jedis.zscore(fw_version, deviceID);
+                final Double score = jedis.zscore(fw_version, deviceId);
                 if(score != null) {
                     fwHistory.put(score.longValue(), fw_version);
                 }
