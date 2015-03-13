@@ -46,9 +46,20 @@ public class FirmwareResource {
     @Path("/devices")
     @Produces(MediaType.APPLICATION_JSON)
     public List<FirmwareInfo> getFirmwareDeviceList(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                              @QueryParam("firmware_version") final Long firmwareVersion) {
+                                              @QueryParam("firmware_version") final Long firmwareVersion,
+                                              @QueryParam("range_start") final Long rangeStart,
+                                              @QueryParam("range_end") final Long rangeEnd) {
         if(firmwareVersion == null) {
             LOGGER.error("Missing firmwareVersion parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        if(rangeStart == null) {
+            LOGGER.error("Missing range_start parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+        if(rangeEnd == null) {
+            LOGGER.error("Missing range_end parameter");
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
@@ -56,8 +67,8 @@ public class FirmwareResource {
         final String fwVersion = firmwareVersion.toString();
         final List<FirmwareInfo> deviceInfo = new ArrayList<>();
         try {
-
-            final Set<Tuple> allFWDevices = jedis.zrevrangeWithScores(fwVersion, 0, -1);
+            //Get all elements in the index range provided
+            final Set<Tuple> allFWDevices = jedis.zrevrangeWithScores(fwVersion, rangeStart, rangeEnd);
             for(final Tuple device: allFWDevices){
                 deviceInfo.add(new FirmwareInfo(fwVersion, device.getElement(), (long)device.getScore()));
             }
