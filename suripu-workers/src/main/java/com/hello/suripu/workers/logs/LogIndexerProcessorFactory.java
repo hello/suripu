@@ -6,21 +6,19 @@ import com.flaptor.indextank.apiclient.IndexTankClient;
 
 public class LogIndexerProcessorFactory implements IRecordProcessorFactory {
 
-    private final String privateUrl;
-    private final String applicationIndexName;
-    private final String senseIndexName;
+    private final LogIndexerWorkerConfiguration logIndexerWorkerConfiguration;
 
-    public LogIndexerProcessorFactory(final String privateUrl, final String applicationIndexName, final String senseIndexName) {
-        this.privateUrl = privateUrl;
-        this.applicationIndexName = applicationIndexName;
-        this.senseIndexName = senseIndexName;
+    public LogIndexerProcessorFactory(final LogIndexerWorkerConfiguration logIndexerWorkerConfiguration) {
+        this.logIndexerWorkerConfiguration = logIndexerWorkerConfiguration;
     }
 
     @Override
     public IRecordProcessor createProcessor() {
-        final IndexTankClient client = new IndexTankClient(privateUrl);
-        final IndexTankClient.Index applicationIndex = client.getIndex(applicationIndexName);
-        final IndexTankClient.Index senseIndex = client.getIndex(senseIndexName);
-        return LogIndexerProcessor.create(applicationIndex, senseIndex);
+
+        final IndexTankClient client = new IndexTankClient(logIndexerWorkerConfiguration.applicationLogs().privateUrl());
+        final IndexTankClient.Index applicationIndex = client.getIndex(logIndexerWorkerConfiguration.applicationLogs().indexName());
+        final IndexTankClient.Index senseIndex = client.getIndex(logIndexerWorkerConfiguration.senseLogs().indexName());
+        final IndexTankClient.Index workersIndex = client.getIndex(logIndexerWorkerConfiguration.workersLogs().indexName());
+        return LogIndexerProcessor.create(applicationIndex, senseIndex, workersIndex);
     }
 }

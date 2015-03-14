@@ -11,6 +11,8 @@ public interface KeyStore {
      * @return byte[]
      */
     Optional<byte[]> get(String deviceId);
+    Optional<byte[]> getStrict(String deviceId);
+
     Optional<DeviceKeyStoreRecord> getKeyStoreRecord(String deviceId);
 
 

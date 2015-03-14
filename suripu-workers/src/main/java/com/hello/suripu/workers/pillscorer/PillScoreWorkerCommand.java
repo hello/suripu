@@ -21,9 +21,9 @@ import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
+import com.hello.suripu.workers.framework.WorkerEnvironmentCommand;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
-import com.yammer.dropwizard.cli.ConfiguredCommand;
-import com.yammer.dropwizard.config.Bootstrap;
+import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.db.ManagedDataSource;
 import com.yammer.dropwizard.db.ManagedDataSourceFactory;
 import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
@@ -42,7 +42,7 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public final class PillScoreWorkerCommand extends ConfiguredCommand<PillScoreWorkerConfiguration> {
+public final class PillScoreWorkerCommand extends WorkerEnvironmentCommand<PillScoreWorkerConfiguration> {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(PillScoreWorkerCommand.class);
 
@@ -51,10 +51,7 @@ public final class PillScoreWorkerCommand extends ConfiguredCommand<PillScoreWor
     }
 
     @Override
-    public final void run(Bootstrap<PillScoreWorkerConfiguration> bootstrap,
-                          Namespace namespace,
-                          PillScoreWorkerConfiguration configuration) throws Exception {
-
+    protected void run(Environment environment, Namespace namespace, PillScoreWorkerConfiguration configuration) throws Exception {
         final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
         final ManagedDataSource dataSource = managedDataSourceFactory.build(configuration.getCommonDB());
 
@@ -138,6 +135,5 @@ public final class PillScoreWorkerCommand extends ConfiguredCommand<PillScoreWor
         );
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
-
     }
 }

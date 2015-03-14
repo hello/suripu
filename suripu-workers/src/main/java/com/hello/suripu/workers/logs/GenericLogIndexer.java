@@ -15,13 +15,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ApplicationLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage> {
+public class GenericLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage> {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(ApplicationLogIndexer.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(GenericLogIndexer.class);
     final private IndexTankClient.Index index;
     final private List<IndexTankClient.Document> documents;
 
-    public ApplicationLogIndexer(final IndexTankClient.Index index) {
+    public GenericLogIndexer(final IndexTankClient.Index index) {
         this.index = index;
         documents = Lists.newArrayList();
     }
@@ -49,7 +49,7 @@ public class ApplicationLogIndexer implements LogIndexer<LoggingProtos.BatchLogM
 
         documentAttributes.put("text", sb.toString());
         documentAttributes.put("ts", String.valueOf(messages.get(0).getTs()));
-
+        documentAttributes.put("all", "1");
 
         categories.put("version", version);
         categories.put("origin", messages.get(0).getOrigin());
@@ -110,6 +110,8 @@ public class ApplicationLogIndexer implements LogIndexer<LoggingProtos.BatchLogM
             System.exit(1);
         } catch (IOException e) {
             LOGGER.error("Failed connecting to searchify: {}", e.getMessage());
+        } catch(IndexOutOfBoundsException e) {
+            LOGGER.error("Searchify client error: {}", e.getMessage());
         }
 
         return 0;

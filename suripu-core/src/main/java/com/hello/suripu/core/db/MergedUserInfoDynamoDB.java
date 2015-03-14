@@ -60,6 +60,7 @@ public class MergedUserInfoDynamoDB {
     private final static Logger LOGGER = LoggerFactory.getLogger(MergedUserInfoDynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public static final String MORPHEUS_ID_ATTRIBUTE_NAME = "device_id";
     public static final String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
@@ -123,7 +124,6 @@ public class MergedUserInfoDynamoDB {
     }
 
     private Map<String, AttributeValueUpdate> generateRingTimeUpdateItem(final RingTime ringTime){
-        final ObjectMapper mapper = new ObjectMapper();
         final Map<String, AttributeValueUpdate> items = new HashMap<>();
         items.put(EXPECTED_RING_TIME_ATTRIBUTE_NAME, new AttributeValueUpdate()
                 .withAction(AttributeAction.PUT)
@@ -136,7 +136,7 @@ public class MergedUserInfoDynamoDB {
                 .withValue(new AttributeValue().withBOOL(ringTime.fromSmartAlarm)));
 
         try {
-            final String soundJSON = mapper.writeValueAsString(ringTime.soundIds);
+            final String soundJSON = this.objectMapper.writeValueAsString(ringTime.soundIds);
             items.put(SOUND_IDS_ATTRIBUTE_NAME, new AttributeValueUpdate()
                     .withAction(AttributeAction.PUT)
                     .withValue(new AttributeValue().withS(soundJSON)));
@@ -148,25 +148,35 @@ public class MergedUserInfoDynamoDB {
         return items;
     }
 
-    private Map<String, AttributeValueUpdate> generateAlarmUpdateItem(final List<Alarm> alarmList, final DateTimeZone userTimeZone){
-        final ObjectMapper mapper = new ObjectMapper();
+    protected static boolean shouldUpdateRingTime(final List<Alarm> oldAlarms, final List<Alarm> newAlarms,
+                                                  final DateTimeZone userTimeZone,
+                                                  final DateTime now){
+        final RingTime updateRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(newAlarms,
+                Alarm.Utils.alignToMinuteGranularity(now).getMillis(), userTimeZone);
+        final RingTime oldRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(oldAlarms,
+                Alarm.Utils.alignToMinuteGranularity(now).getMillis(), userTimeZone);
+        return oldRingTime.expectedRingTimeUTC != updateRingTime.expectedRingTimeUTC;
+    }
+
+    protected Map<String, AttributeValueUpdate> appendRingTimeUpdateItem(final List<Alarm> newAlarms, final DateTimeZone userTimeZone, final DateTime now){
+        final RingTime updateRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(newAlarms,
+                Alarm.Utils.alignToMinuteGranularity(now).getMillis(), userTimeZone);
+        return generateRingTimeUpdateItem(updateRingTime);
+    }
+
+    private Map<String, AttributeValueUpdate> generateAlarmUpdateItem(final List<Alarm> newAlarmList,
+                                                                      final List<Alarm> oldAlarmList,
+                                                                      final DateTimeZone userTimeZone){
         final Map<String, AttributeValueUpdate> items = new HashMap<>();
+        final DateTime now = DateTime.now().withZone(userTimeZone);
+        if(shouldUpdateRingTime(oldAlarmList, newAlarmList, userTimeZone, now)) {
+            final Map<String, AttributeValueUpdate> ringTimeUpdateItems = appendRingTimeUpdateItem(newAlarmList, userTimeZone, now);
+            items.putAll(ringTimeUpdateItems);
+        }
+
         final String alarmListJSON;
         try {
-            alarmListJSON = mapper.writeValueAsString(alarmList);
-            final RingTime updateRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList,
-                    Alarm.Utils.alignToMinuteGranularity(DateTime.now().withZone(userTimeZone)).getMillis(),
-                    userTimeZone);
-            items.put(MergedUserInfoDynamoDB.ACTUAL_RING_TIME_ATTRIBUTE_NAME, new AttributeValueUpdate()
-                .withAction(AttributeAction.PUT)
-                .withValue(new AttributeValue().withN(String.valueOf(updateRingTime.actualRingTimeUTC))));
-            items.put(MergedUserInfoDynamoDB.EXPECTED_RING_TIME_ATTRIBUTE_NAME, new AttributeValueUpdate()
-                    .withAction(AttributeAction.PUT)
-                    .withValue(new AttributeValue().withN(String.valueOf(updateRingTime.expectedRingTimeUTC))));
-            items.put(MergedUserInfoDynamoDB.IS_SMART_ALARM_ATTRIBUTE_NAME, new AttributeValueUpdate()
-                    .withAction(AttributeAction.PUT)
-                    .withValue(new AttributeValue().withBOOL(updateRingTime.fromSmartAlarm)));
-
+            alarmListJSON = this.objectMapper.writeValueAsString(newAlarmList);
         } catch (JsonProcessingException e) {
             LOGGER.error("Deserialize alarmList error: {}", e.getMessage());
             return Collections.EMPTY_MAP;
@@ -226,27 +236,26 @@ public class MergedUserInfoDynamoDB {
 
     public Optional<Color> setNextPillColor(final String senseId, final long accountId, final String pillId){
         final List<UserInfo> userInfoList = this.getInfo(senseId);
-        final HashMap<String, Integer> pillColorMap = new HashMap<>();
+        final List<Color> availableColor = PillColorUtil.getPillColors();
+
         for(final UserInfo userInfo:userInfoList){
             if(!userInfo.pillColor.isPresent()){
                 continue;
             }
 
             final OutputProtos.SyncResponse.PillSettings colorSetting = userInfo.pillColor.get();
-            if(!pillColorMap.containsKey(colorSetting.getPillId())){
-                pillColorMap.put(colorSetting.getPillId(), colorSetting.getPillColor());
-            }
+            final Color usedColor = PillColorUtil.pillColor(colorSetting.getPillColor());
+            availableColor.remove(usedColor);
         }
-        // There is a dependency on the max user we can register with sense
-        Color pillColor;
-        if(pillColorMap.containsKey(pillId) == false) {
-            pillColor = PillColorUtil.getPillColorByAccountRegistrationOrder(pillColorMap.size());
-        }else{
-            pillColor = new Color(pillColorMap.get(pillId));
+
+        if(availableColor.isEmpty()){
+            LOGGER.error("Too much pills registered, failed to assign color for pill {}, sense {}", pillId, senseId);
+            return Optional.absent();
         }
 
         try {
             // WARNING: potential race condition here.
+            final Color pillColor = availableColor.get(0);
             this.setPillColor(senseId, accountId, pillId, pillColor);
             return Optional.of(pillColor);
         }catch (AmazonServiceException ase){
@@ -273,8 +282,12 @@ public class MergedUserInfoDynamoDB {
         return true;
     }
 
-    public boolean setAlarms(final String deviceId, final long accountId, final long lastUpdatedAt, final List<Alarm> alarms, final DateTimeZone userTimeZone){
-        final Map<String, AttributeValueUpdate> items = generateAlarmUpdateItem(alarms, userTimeZone);
+    public boolean setAlarms(final String deviceId, final long accountId,
+                             final long lastUpdatedAt,
+                             final List<Alarm> oldAlarms,
+                             final List<Alarm> newAlarms,
+                             final DateTimeZone userTimeZone){
+        final Map<String, AttributeValueUpdate> items = generateAlarmUpdateItem(newAlarms, oldAlarms, userTimeZone);
 
         if(items.isEmpty()){
             return false;
@@ -290,14 +303,17 @@ public class MergedUserInfoDynamoDB {
         try {
             final UpdateItemResult result = this.dynamoDBClient.updateItem(request);
         }catch (ConditionalCheckFailedException conditionalCheckFailedException){
-            LOGGER.warn("Cannot update alarm, last updated at {}", lastUpdatedAt);
+            LOGGER.warn("Cannot update alarm for device {}, account {}, last updated at {}",
+                    deviceId,
+                    accountId,
+                    lastUpdatedAt);
             return false;
         }
         return true;
     }
 
-    public boolean setAlarms(final String deviceId, final long accountId, final List<Alarm> alarms, final DateTimeZone userTimeZone){
-        final Map<String, AttributeValueUpdate> items = generateAlarmUpdateItem(alarms, userTimeZone);
+    public boolean createUserInfoWithEmptyAlarmList(final String deviceId, final long accountId, final DateTimeZone userTimeZone){
+        final Map<String, AttributeValueUpdate> items = generateAlarmUpdateItem(Collections.EMPTY_LIST, Collections.EMPTY_LIST, userTimeZone);
 
         if(items.isEmpty()){
             return false;
@@ -394,10 +410,10 @@ public class MergedUserInfoDynamoDB {
         final List<UserInfo> userInfos = new ArrayList<UserInfo>();
 
         for (final Map<String, AttributeValue> item:items) {
-            final HashSet<String> accountDeviceIdAttributes = new HashSet<String>();
-            Collections.addAll(accountDeviceIdAttributes,
-                    MORPHEUS_ID_ATTRIBUTE_NAME, ACCOUNT_ID_ATTRIBUTE_NAME);
-            if(!item.keySet().containsAll(accountDeviceIdAttributes)){
+            final HashSet<String> requiredAttributes = new HashSet<String>();
+            Collections.addAll(requiredAttributes,
+                    MORPHEUS_ID_ATTRIBUTE_NAME, ACCOUNT_ID_ATTRIBUTE_NAME, TIMEZONE_ID_ATTRIBUTE_NAME, UPDATED_AT_ATTRIBUTE_NAME);
+            if(!item.keySet().containsAll(requiredAttributes)){
                 LOGGER.warn("Corrupted row retrieved for device {}", deviceId);
                 continue;
             }
@@ -414,7 +430,7 @@ public class MergedUserInfoDynamoDB {
     }
 
 
-    public static Optional<UserInfo> attributeValuesToUserInfo(final Map<String, AttributeValue> item){
+    private Optional<UserInfo> attributeValuesToUserInfo(final Map<String, AttributeValue> item){
 
         try {
             final long accountId = Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN());
@@ -435,7 +451,7 @@ public class MergedUserInfoDynamoDB {
         return Optional.absent();
     }
 
-    public static List<Alarm> getAlarmListFromAttributes(final String deviceId, final long accountId, final Map<String, AttributeValue> item){
+    private List<Alarm> getAlarmListFromAttributes(final String deviceId, final long accountId, final Map<String, AttributeValue> item){
         final HashSet<String> alarmAttributes = new HashSet<String>();
         Collections.addAll(alarmAttributes, ALARM_TEMPLATES_ATTRIBUTE_NAME);
 
@@ -444,9 +460,8 @@ public class MergedUserInfoDynamoDB {
         }
 
         final String alarmListJSON = item.get(ALARM_TEMPLATES_ATTRIBUTE_NAME).getS();
-        final ObjectMapper mapper = new ObjectMapper();
         try {
-            final List<Alarm> alarmList = mapper.readValue(alarmListJSON, new TypeReference<List<Alarm>>(){});
+            final List<Alarm> alarmList = this.objectMapper.readValue(alarmListJSON, new TypeReference<List<Alarm>>(){});
             return alarmList;
         } catch (IOException e) {
             LOGGER.error("Deserialize JSON for alarm list failed, device {}, account id {}.", deviceId, accountId);
@@ -456,7 +471,7 @@ public class MergedUserInfoDynamoDB {
     }
 
 
-    public static Optional<RingTime> getRingTimeFromAttributes(final String deviceId, final long accountId, final Map<String, AttributeValue> item){
+    private Optional<RingTime> getRingTimeFromAttributes(final String deviceId, final long accountId, final Map<String, AttributeValue> item){
         final HashSet<String> ringTimeAttributes = new HashSet<String>();
         Collections.addAll(ringTimeAttributes, ACTUAL_RING_TIME_ATTRIBUTE_NAME, EXPECTED_RING_TIME_ATTRIBUTE_NAME, SOUND_IDS_ATTRIBUTE_NAME);
 
@@ -468,9 +483,8 @@ public class MergedUserInfoDynamoDB {
         final long actual = Long.valueOf(item.get(ACTUAL_RING_TIME_ATTRIBUTE_NAME).getN());
 
         final String soundArrayJSON = item.get(SOUND_IDS_ATTRIBUTE_NAME).getS();
-        final ObjectMapper mapper = new ObjectMapper();
         try {
-            final long[] soundIds = mapper.readValue(soundArrayJSON, long[].class);
+            final long[] soundIds = this.objectMapper.readValue(soundArrayJSON, long[].class);
             boolean isSmart = false;
             if(item.containsKey(IS_SMART_ALARM_ATTRIBUTE_NAME)){
                isSmart = item.get(IS_SMART_ALARM_ATTRIBUTE_NAME).getBOOL();

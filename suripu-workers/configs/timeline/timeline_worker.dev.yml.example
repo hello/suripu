@@ -151,3 +151,20 @@ max_no_motion_period_minutes: 90
 hour_of_day_trigger: 5
 end_process_time: 11
 max_cache_refresh_days: 20
+
+
+# store sleep scores and other stats
+# v0.2: score uses movement and duration
+sleep_stats_db:
+    endpoint : http://localhost:7777
+    region: us-east-1
+    table_name: sleep_stats
+sleep_stats_version: v_0_2
+
+kinesis_logger:
+  stream_name: logs
+  enabled : false
+  buffer_size: 100
+  origin: suripu-workers
+  min_log_level : INFO
+

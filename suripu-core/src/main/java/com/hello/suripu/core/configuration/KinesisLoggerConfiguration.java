@@ -8,7 +8,7 @@ import javax.validation.constraints.Min;
 public class KinesisLoggerConfiguration {
 
     @JsonProperty("stream_name")
-    private String streamName;
+    private String streamName = "logs";
 
     public String getStreamName() {
         return streamName;
@@ -31,7 +31,7 @@ public class KinesisLoggerConfiguration {
     }
 
     @JsonProperty("origin")
-    private String origin;
+    private String origin = "default";
 
     public String origin() {
         return origin;
@@ -40,4 +40,11 @@ public class KinesisLoggerConfiguration {
     @JsonProperty("production")
     private Boolean isProduction = false;
     public Boolean isProduction() {return isProduction;}
+
+    @JsonProperty("min_log_level")
+    private String logLevel = "DEBUG";
+    public String getLogLevel() {
+        return logLevel;
+    }
+
 }

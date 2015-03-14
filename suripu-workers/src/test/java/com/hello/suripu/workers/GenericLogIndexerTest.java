@@ -4,7 +4,7 @@ import ch.qos.logback.classic.Level;
 import com.flaptor.indextank.apiclient.IndexTankClient;
 import com.google.common.collect.Lists;
 import com.hello.suripu.api.logging.LoggingProtos;
-import com.hello.suripu.workers.logs.ApplicationLogIndexer;
+import com.hello.suripu.workers.logs.GenericLogIndexer;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
@@ -14,7 +14,7 @@ import java.util.Map;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class ApplicationLogIndexerTest {
+public class GenericLogIndexerTest {
 
     @Test
     public void testConvertProtobufToDocument() {
@@ -26,7 +26,7 @@ public class ApplicationLogIndexerTest {
                 .setProduction(false)
                 .setTs(ts).build();
 
-        final IndexTankClient.Document doc = ApplicationLogIndexer.merge(Lists.newArrayList(message), "version");
+        final IndexTankClient.Document doc = GenericLogIndexer.merge(Lists.newArrayList(message), "version");
         final Map<String, Object> docMap = doc.toDocumentMap();
         final Map<String, String> fields = (Map<String, String>) docMap.get("fields");
         final Map<String, String> categories = (Map<String, String>) docMap.get("categories");
@@ -34,6 +34,7 @@ public class ApplicationLogIndexerTest {
 //        assertThat(fields.get("text"), is("one two three"));
         assertThat(fields.get("ts"), is(ts.toString()));
         assertThat(categories.get("level"), is(Level.DEBUG.toString()));
+        assertThat(fields.get("all"), is("1"));
     }
 
     @Test
@@ -61,7 +62,7 @@ public class ApplicationLogIndexerTest {
 
         batch.addMessages(message).addMessages(message2).addMessages(message3);
 
-        final List<IndexTankClient.Document> docs = ApplicationLogIndexer.chunkBatchLogMessage(batch.build());
+        final List<IndexTankClient.Document> docs = GenericLogIndexer.chunkBatchLogMessage(batch.build());
         assertThat(docs.size(), is(batch.getMessagesCount()));
     }
 }

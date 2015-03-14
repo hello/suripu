@@ -1,15 +1,19 @@
 package com.hello.suripu.core.db;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.model.AttributeAction;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.AttributeValueUpdate;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
+import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
@@ -20,6 +24,9 @@ import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
+import com.amazonaws.services.dynamodbv2.model.ReturnValue;
+import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
+import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.AggregateScore;
@@ -71,6 +78,43 @@ public class AggregateSleepScoreDAODynamoDB {
 
     }
 
+    @Timed public Boolean updateInsertSingleScore(final Long accountId, final Integer score, final String date) {
+        LOGGER.debug("Write single score: {}, {}, {}", accountId, date, score);
+
+
+        try {
+            final HashMap<String, AttributeValueUpdate> item = this.createUpdateItem(score);
+
+            final Map<String, AttributeValue> key = new HashMap<>();
+            key.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
+            key.put(DATE_ATTRIBUTE_NAME, new AttributeValue().withS(date));
+
+            final Map<String, ExpectedAttributeValue> putConditions = new HashMap<>();
+            putConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, new ExpectedAttributeValue(
+                    new AttributeValue().withN(String.valueOf(accountId))));
+            putConditions.put(DATE_ATTRIBUTE_NAME, new ExpectedAttributeValue(
+                    new AttributeValue().withS(date)));
+
+
+            final UpdateItemRequest updateItemRequest = new UpdateItemRequest()
+                    .withTableName(this.tableName)
+                    .withKey(key)
+                    .withAttributeUpdates(item)
+                    .withExpected(putConditions)
+                    .withReturnValues(ReturnValue.ALL_NEW);
+
+            final UpdateItemResult result = this.dynamoDBClient.updateItem(updateItemRequest);
+            if (result.getAttributes().size() > 0) {
+                return true;
+            }
+        } catch (AmazonServiceException ase) {
+            LOGGER.error("Failed to update sleep score for account {}, date {}, score {}",
+                    accountId, date, score);
+        }
+        return false;
+
+    }
+
     @Timed
     public void writeBatchScores(final List<AggregateScore> scores) {
 
@@ -100,9 +144,7 @@ public class AggregateSleepScoreDAODynamoDB {
     }
 
     @Timed
-    public AggregateScore
-
-    getSingleScore(final Long accountId, final String date) {
+    public AggregateScore getSingleScore(final Long accountId, final String date) {
 
         final Map<String, AttributeValue> key = new HashMap<>();
         key.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
@@ -219,6 +261,21 @@ public class AggregateSleepScoreDAODynamoDB {
         item.put(SCORE_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(score.score)));
         item.put(TYPE_ATTRIBUTE_NAME, new AttributeValue().withS(score.scoreType));
         item.put(VERSION_ATTRIBUTE_NAME, new AttributeValue().withS(score.version));
+
+        return item;
+    }
+
+    private HashMap<String, AttributeValueUpdate> createUpdateItem(final Integer score) {
+        final HashMap<String, AttributeValueUpdate> item = new HashMap<>();
+
+        item.put(SCORE_ATTRIBUTE_NAME, new AttributeValueUpdate().withAction(AttributeAction.PUT)
+                .withValue(new AttributeValue().withN(String.valueOf(score))));
+
+        item.put(TYPE_ATTRIBUTE_NAME, new AttributeValueUpdate().withAction(AttributeAction.PUT)
+                .withValue(new AttributeValue().withS(this.DEFAULT_SCORE_TYPE)));
+
+        item.put(VERSION_ATTRIBUTE_NAME, new AttributeValueUpdate().withAction(AttributeAction.PUT)
+                .withValue(new AttributeValue().withS(this.version)));
 
         return item;
     }

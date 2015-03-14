@@ -1799,6 +1799,34 @@ public final class SleepHmmProtos {
      * <code>optional .DiscreteAlphabetModel disturbances = 13;</code>
      */
     com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder getDisturbancesOrBuilder();
+
+    // optional .GammaModel log_sound_count = 14;
+    /**
+     * <code>optional .GammaModel log_sound_count = 14;</code>
+     */
+    boolean hasLogSoundCount();
+    /**
+     * <code>optional .GammaModel log_sound_count = 14;</code>
+     */
+    com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel getLogSoundCount();
+    /**
+     * <code>optional .GammaModel log_sound_count = 14;</code>
+     */
+    com.hello.suripu.api.datascience.SleepHmmProtos.GammaModelOrBuilder getLogSoundCountOrBuilder();
+
+    // optional .DiscreteAlphabetModel natural_light_filter = 15;
+    /**
+     * <code>optional .DiscreteAlphabetModel natural_light_filter = 15;</code>
+     */
+    boolean hasNaturalLightFilter();
+    /**
+     * <code>optional .DiscreteAlphabetModel natural_light_filter = 15;</code>
+     */
+    com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel getNaturalLightFilter();
+    /**
+     * <code>optional .DiscreteAlphabetModel natural_light_filter = 15;</code>
+     */
+    com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder getNaturalLightFilterOrBuilder();
   }
   /**
    * Protobuf type {@code StateModel}
@@ -1925,6 +1953,32 @@ public final class SleepHmmProtos {
                 disturbances_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000020;
+              break;
+            }
+            case 114: {
+              com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000040) == 0x00000040)) {
+                subBuilder = logSoundCount_.toBuilder();
+              }
+              logSoundCount_ = input.readMessage(com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(logSoundCount_);
+                logSoundCount_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000040;
+              break;
+            }
+            case 122: {
+              com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000080) == 0x00000080)) {
+                subBuilder = naturalLightFilter_.toBuilder();
+              }
+              naturalLightFilter_ = input.readMessage(com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(naturalLightFilter_);
+                naturalLightFilter_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000080;
               break;
             }
           }
@@ -2081,6 +2135,50 @@ public final class SleepHmmProtos {
       return disturbances_;
     }
 
+    // optional .GammaModel log_sound_count = 14;
+    public static final int LOG_SOUND_COUNT_FIELD_NUMBER = 14;
+    private com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel logSoundCount_;
+    /**
+     * <code>optional .GammaModel log_sound_count = 14;</code>
+     */
+    public boolean hasLogSoundCount() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional .GammaModel log_sound_count = 14;</code>
+     */
+    public com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel getLogSoundCount() {
+      return logSoundCount_;
+    }
+    /**
+     * <code>optional .GammaModel log_sound_count = 14;</code>
+     */
+    public com.hello.suripu.api.datascience.SleepHmmProtos.GammaModelOrBuilder getLogSoundCountOrBuilder() {
+      return logSoundCount_;
+    }
+
+    // optional .DiscreteAlphabetModel natural_light_filter = 15;
+    public static final int NATURAL_LIGHT_FILTER_FIELD_NUMBER = 15;
+    private com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel naturalLightFilter_;
+    /**
+     * <code>optional .DiscreteAlphabetModel natural_light_filter = 15;</code>
+     */
+    public boolean hasNaturalLightFilter() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    /**
+     * <code>optional .DiscreteAlphabetModel natural_light_filter = 15;</code>
+     */
+    public com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel getNaturalLightFilter() {
+      return naturalLightFilter_;
+    }
+    /**
+     * <code>optional .DiscreteAlphabetModel natural_light_filter = 15;</code>
+     */
+    public com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder getNaturalLightFilterOrBuilder() {
+      return naturalLightFilter_;
+    }
+
     private void initFields() {
       sleepMode_ = com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode.SLEEP;
       bedMode_ = com.hello.suripu.api.datascience.SleepHmmProtos.BedMode.ON_BED;
@@ -2088,6 +2186,8 @@ public final class SleepHmmProtos {
       light_ = com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.getDefaultInstance();
       motionCount_ = com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.getDefaultInstance();
       disturbances_ = com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.getDefaultInstance();
+      logSoundCount_ = com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.getDefaultInstance();
+      naturalLightFilter_ = com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -2102,6 +2202,12 @@ public final class SleepHmmProtos {
       }
       if (hasMotionCount()) {
         if (!getMotionCount().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasLogSoundCount()) {
+        if (!getLogSoundCount().isInitialized()) {
           memoizedIsInitialized = 0;
           return false;
         }
@@ -2130,6 +2236,12 @@ public final class SleepHmmProtos {
       }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeMessage(13, disturbances_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeMessage(14, logSoundCount_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeMessage(15, naturalLightFilter_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -2163,6 +2275,14 @@ public final class SleepHmmProtos {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(13, disturbances_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(14, logSoundCount_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(15, naturalLightFilter_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -2279,6 +2399,8 @@ public final class SleepHmmProtos {
           getLightFieldBuilder();
           getMotionCountFieldBuilder();
           getDisturbancesFieldBuilder();
+          getLogSoundCountFieldBuilder();
+          getNaturalLightFilterFieldBuilder();
         }
       }
       private static Builder create() {
@@ -2311,6 +2433,18 @@ public final class SleepHmmProtos {
           disturbancesBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000020);
+        if (logSoundCountBuilder_ == null) {
+          logSoundCount_ = com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.getDefaultInstance();
+        } else {
+          logSoundCountBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000040);
+        if (naturalLightFilterBuilder_ == null) {
+          naturalLightFilter_ = com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.getDefaultInstance();
+        } else {
+          naturalLightFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
 
@@ -2375,6 +2509,22 @@ public final class SleepHmmProtos {
         } else {
           result.disturbances_ = disturbancesBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        if (logSoundCountBuilder_ == null) {
+          result.logSoundCount_ = logSoundCount_;
+        } else {
+          result.logSoundCount_ = logSoundCountBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        if (naturalLightFilterBuilder_ == null) {
+          result.naturalLightFilter_ = naturalLightFilter_;
+        } else {
+          result.naturalLightFilter_ = naturalLightFilterBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2409,6 +2559,12 @@ public final class SleepHmmProtos {
         if (other.hasDisturbances()) {
           mergeDisturbances(other.getDisturbances());
         }
+        if (other.hasLogSoundCount()) {
+          mergeLogSoundCount(other.getLogSoundCount());
+        }
+        if (other.hasNaturalLightFilter()) {
+          mergeNaturalLightFilter(other.getNaturalLightFilter());
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -2422,6 +2578,12 @@ public final class SleepHmmProtos {
         }
         if (hasMotionCount()) {
           if (!getMotionCount().isInitialized()) {
+            
+            return false;
+          }
+        }
+        if (hasLogSoundCount()) {
+          if (!getLogSoundCount().isInitialized()) {
             
             return false;
           }
@@ -2907,6 +3069,240 @@ public final class SleepHmmProtos {
         return disturbancesBuilder_;
       }
 
+      // optional .GammaModel log_sound_count = 14;
+      private com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel logSoundCount_ = com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel, com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.GammaModelOrBuilder> logSoundCountBuilder_;
+      /**
+       * <code>optional .GammaModel log_sound_count = 14;</code>
+       */
+      public boolean hasLogSoundCount() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional .GammaModel log_sound_count = 14;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel getLogSoundCount() {
+        if (logSoundCountBuilder_ == null) {
+          return logSoundCount_;
+        } else {
+          return logSoundCountBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .GammaModel log_sound_count = 14;</code>
+       */
+      public Builder setLogSoundCount(com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel value) {
+        if (logSoundCountBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          logSoundCount_ = value;
+          onChanged();
+        } else {
+          logSoundCountBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000040;
+        return this;
+      }
+      /**
+       * <code>optional .GammaModel log_sound_count = 14;</code>
+       */
+      public Builder setLogSoundCount(
+          com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.Builder builderForValue) {
+        if (logSoundCountBuilder_ == null) {
+          logSoundCount_ = builderForValue.build();
+          onChanged();
+        } else {
+          logSoundCountBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000040;
+        return this;
+      }
+      /**
+       * <code>optional .GammaModel log_sound_count = 14;</code>
+       */
+      public Builder mergeLogSoundCount(com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel value) {
+        if (logSoundCountBuilder_ == null) {
+          if (((bitField0_ & 0x00000040) == 0x00000040) &&
+              logSoundCount_ != com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.getDefaultInstance()) {
+            logSoundCount_ =
+              com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.newBuilder(logSoundCount_).mergeFrom(value).buildPartial();
+          } else {
+            logSoundCount_ = value;
+          }
+          onChanged();
+        } else {
+          logSoundCountBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000040;
+        return this;
+      }
+      /**
+       * <code>optional .GammaModel log_sound_count = 14;</code>
+       */
+      public Builder clearLogSoundCount() {
+        if (logSoundCountBuilder_ == null) {
+          logSoundCount_ = com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.getDefaultInstance();
+          onChanged();
+        } else {
+          logSoundCountBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000040);
+        return this;
+      }
+      /**
+       * <code>optional .GammaModel log_sound_count = 14;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.Builder getLogSoundCountBuilder() {
+        bitField0_ |= 0x00000040;
+        onChanged();
+        return getLogSoundCountFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .GammaModel log_sound_count = 14;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmProtos.GammaModelOrBuilder getLogSoundCountOrBuilder() {
+        if (logSoundCountBuilder_ != null) {
+          return logSoundCountBuilder_.getMessageOrBuilder();
+        } else {
+          return logSoundCount_;
+        }
+      }
+      /**
+       * <code>optional .GammaModel log_sound_count = 14;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel, com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.GammaModelOrBuilder> 
+          getLogSoundCountFieldBuilder() {
+        if (logSoundCountBuilder_ == null) {
+          logSoundCountBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel, com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.GammaModelOrBuilder>(
+                  logSoundCount_,
+                  getParentForChildren(),
+                  isClean());
+          logSoundCount_ = null;
+        }
+        return logSoundCountBuilder_;
+      }
+
+      // optional .DiscreteAlphabetModel natural_light_filter = 15;
+      private com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel naturalLightFilter_ = com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder> naturalLightFilterBuilder_;
+      /**
+       * <code>optional .DiscreteAlphabetModel natural_light_filter = 15;</code>
+       */
+      public boolean hasNaturalLightFilter() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional .DiscreteAlphabetModel natural_light_filter = 15;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel getNaturalLightFilter() {
+        if (naturalLightFilterBuilder_ == null) {
+          return naturalLightFilter_;
+        } else {
+          return naturalLightFilterBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .DiscreteAlphabetModel natural_light_filter = 15;</code>
+       */
+      public Builder setNaturalLightFilter(com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel value) {
+        if (naturalLightFilterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          naturalLightFilter_ = value;
+          onChanged();
+        } else {
+          naturalLightFilterBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000080;
+        return this;
+      }
+      /**
+       * <code>optional .DiscreteAlphabetModel natural_light_filter = 15;</code>
+       */
+      public Builder setNaturalLightFilter(
+          com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.Builder builderForValue) {
+        if (naturalLightFilterBuilder_ == null) {
+          naturalLightFilter_ = builderForValue.build();
+          onChanged();
+        } else {
+          naturalLightFilterBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000080;
+        return this;
+      }
+      /**
+       * <code>optional .DiscreteAlphabetModel natural_light_filter = 15;</code>
+       */
+      public Builder mergeNaturalLightFilter(com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel value) {
+        if (naturalLightFilterBuilder_ == null) {
+          if (((bitField0_ & 0x00000080) == 0x00000080) &&
+              naturalLightFilter_ != com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.getDefaultInstance()) {
+            naturalLightFilter_ =
+              com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.newBuilder(naturalLightFilter_).mergeFrom(value).buildPartial();
+          } else {
+            naturalLightFilter_ = value;
+          }
+          onChanged();
+        } else {
+          naturalLightFilterBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000080;
+        return this;
+      }
+      /**
+       * <code>optional .DiscreteAlphabetModel natural_light_filter = 15;</code>
+       */
+      public Builder clearNaturalLightFilter() {
+        if (naturalLightFilterBuilder_ == null) {
+          naturalLightFilter_ = com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.getDefaultInstance();
+          onChanged();
+        } else {
+          naturalLightFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000080);
+        return this;
+      }
+      /**
+       * <code>optional .DiscreteAlphabetModel natural_light_filter = 15;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.Builder getNaturalLightFilterBuilder() {
+        bitField0_ |= 0x00000080;
+        onChanged();
+        return getNaturalLightFilterFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .DiscreteAlphabetModel natural_light_filter = 15;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder getNaturalLightFilterOrBuilder() {
+        if (naturalLightFilterBuilder_ != null) {
+          return naturalLightFilterBuilder_.getMessageOrBuilder();
+        } else {
+          return naturalLightFilter_;
+        }
+      }
+      /**
+       * <code>optional .DiscreteAlphabetModel natural_light_filter = 15;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder> 
+          getNaturalLightFilterFieldBuilder() {
+        if (naturalLightFilterBuilder_ == null) {
+          naturalLightFilterBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder>(
+                  naturalLightFilter_,
+                  getParentForChildren(),
+                  isClean());
+          naturalLightFilter_ = null;
+        }
+        return naturalLightFilterBuilder_;
+      }
+
       // @@protoc_insertion_point(builder_scope:StateModel)
     }
 
@@ -3013,6 +3409,115 @@ public final class SleepHmmProtos {
      * <code>repeated double initial_state_probabilities = 6;</code>
      */
     double getInitialStateProbabilities(int index);
+
+    // optional double audio_disturbance_threshold_db = 7;
+    /**
+     * <code>optional double audio_disturbance_threshold_db = 7;</code>
+     */
+    boolean hasAudioDisturbanceThresholdDb();
+    /**
+     * <code>optional double audio_disturbance_threshold_db = 7;</code>
+     */
+    double getAudioDisturbanceThresholdDb();
+
+    // optional double pill_magnitude_disturbance_threshold_lsb = 8;
+    /**
+     * <code>optional double pill_magnitude_disturbance_threshold_lsb = 8;</code>
+     */
+    boolean hasPillMagnitudeDisturbanceThresholdLsb();
+    /**
+     * <code>optional double pill_magnitude_disturbance_threshold_lsb = 8;</code>
+     */
+    double getPillMagnitudeDisturbanceThresholdLsb();
+
+    // optional double natural_light_filter_start_hour = 9;
+    /**
+     * <code>optional double natural_light_filter_start_hour = 9;</code>
+     *
+     * <pre>
+     *in 24 hours format, so 16.0 is 4pm
+     * </pre>
+     */
+    boolean hasNaturalLightFilterStartHour();
+    /**
+     * <code>optional double natural_light_filter_start_hour = 9;</code>
+     *
+     * <pre>
+     *in 24 hours format, so 16.0 is 4pm
+     * </pre>
+     */
+    double getNaturalLightFilterStartHour();
+
+    // optional double natural_light_filter_stop_hour = 10;
+    /**
+     * <code>optional double natural_light_filter_stop_hour = 10;</code>
+     *
+     * <pre>
+     *in 24 hours format, so 4.0 is 4am
+     * </pre>
+     */
+    boolean hasNaturalLightFilterStopHour();
+    /**
+     * <code>optional double natural_light_filter_stop_hour = 10;</code>
+     *
+     * <pre>
+     *in 24 hours format, so 4.0 is 4am
+     * </pre>
+     */
+    double getNaturalLightFilterStopHour();
+
+    // optional int32 num_model_params = 11;
+    /**
+     * <code>optional int32 num_model_params = 11;</code>
+     *
+     * <pre>
+     *for computing BIC/AIC
+     * </pre>
+     */
+    boolean hasNumModelParams();
+    /**
+     * <code>optional int32 num_model_params = 11;</code>
+     *
+     * <pre>
+     *for computing BIC/AIC
+     * </pre>
+     */
+    int getNumModelParams();
+
+    // optional string model_name = 12;
+    /**
+     * <code>optional string model_name = 12;</code>
+     */
+    boolean hasModelName();
+    /**
+     * <code>optional string model_name = 12;</code>
+     */
+    java.lang.String getModelName();
+    /**
+     * <code>optional string model_name = 12;</code>
+     */
+    com.google.protobuf.ByteString
+        getModelNameBytes();
+
+    // optional int32 num_minutes_in_meas_period = 13;
+    /**
+     * <code>optional int32 num_minutes_in_meas_period = 13;</code>
+     */
+    boolean hasNumMinutesInMeasPeriod();
+    /**
+     * <code>optional int32 num_minutes_in_meas_period = 13;</code>
+     */
+    int getNumMinutesInMeasPeriod();
+
+    // optional bool enable_interval_search = 14;
+    /**
+     * <code>optional bool enable_interval_search = 14;</code>
+     */
+    boolean hasEnableIntervalSearch();
+    /**
+     * <code>optional bool enable_interval_search = 14;</code>
+     */
+    boolean getEnableIntervalSearch();
   }
   /**
    * Protobuf type {@code SleepHmm}
@@ -3128,6 +3633,46 @@ public final class SleepHmmProtos {
                 initialStateProbabilities_.add(input.readDouble());
               }
               input.popLimit(limit);
+              break;
+            }
+            case 57: {
+              bitField0_ |= 0x00000008;
+              audioDisturbanceThresholdDb_ = input.readDouble();
+              break;
+            }
+            case 65: {
+              bitField0_ |= 0x00000010;
+              pillMagnitudeDisturbanceThresholdLsb_ = input.readDouble();
+              break;
+            }
+            case 73: {
+              bitField0_ |= 0x00000020;
+              naturalLightFilterStartHour_ = input.readDouble();
+              break;
+            }
+            case 81: {
+              bitField0_ |= 0x00000040;
+              naturalLightFilterStopHour_ = input.readDouble();
+              break;
+            }
+            case 88: {
+              bitField0_ |= 0x00000080;
+              numModelParams_ = input.readInt32();
+              break;
+            }
+            case 98: {
+              bitField0_ |= 0x00000100;
+              modelName_ = input.readBytes();
+              break;
+            }
+            case 104: {
+              bitField0_ |= 0x00000200;
+              numMinutesInMeasPeriod_ = input.readInt32();
+              break;
+            }
+            case 112: {
+              bitField0_ |= 0x00000400;
+              enableIntervalSearch_ = input.readBool();
               break;
             }
           }
@@ -3363,6 +3908,185 @@ public final class SleepHmmProtos {
       return initialStateProbabilities_.get(index);
     }
 
+    // optional double audio_disturbance_threshold_db = 7;
+    public static final int AUDIO_DISTURBANCE_THRESHOLD_DB_FIELD_NUMBER = 7;
+    private double audioDisturbanceThresholdDb_;
+    /**
+     * <code>optional double audio_disturbance_threshold_db = 7;</code>
+     */
+    public boolean hasAudioDisturbanceThresholdDb() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional double audio_disturbance_threshold_db = 7;</code>
+     */
+    public double getAudioDisturbanceThresholdDb() {
+      return audioDisturbanceThresholdDb_;
+    }
+
+    // optional double pill_magnitude_disturbance_threshold_lsb = 8;
+    public static final int PILL_MAGNITUDE_DISTURBANCE_THRESHOLD_LSB_FIELD_NUMBER = 8;
+    private double pillMagnitudeDisturbanceThresholdLsb_;
+    /**
+     * <code>optional double pill_magnitude_disturbance_threshold_lsb = 8;</code>
+     */
+    public boolean hasPillMagnitudeDisturbanceThresholdLsb() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional double pill_magnitude_disturbance_threshold_lsb = 8;</code>
+     */
+    public double getPillMagnitudeDisturbanceThresholdLsb() {
+      return pillMagnitudeDisturbanceThresholdLsb_;
+    }
+
+    // optional double natural_light_filter_start_hour = 9;
+    public static final int NATURAL_LIGHT_FILTER_START_HOUR_FIELD_NUMBER = 9;
+    private double naturalLightFilterStartHour_;
+    /**
+     * <code>optional double natural_light_filter_start_hour = 9;</code>
+     *
+     * <pre>
+     *in 24 hours format, so 16.0 is 4pm
+     * </pre>
+     */
+    public boolean hasNaturalLightFilterStartHour() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional double natural_light_filter_start_hour = 9;</code>
+     *
+     * <pre>
+     *in 24 hours format, so 16.0 is 4pm
+     * </pre>
+     */
+    public double getNaturalLightFilterStartHour() {
+      return naturalLightFilterStartHour_;
+    }
+
+    // optional double natural_light_filter_stop_hour = 10;
+    public static final int NATURAL_LIGHT_FILTER_STOP_HOUR_FIELD_NUMBER = 10;
+    private double naturalLightFilterStopHour_;
+    /**
+     * <code>optional double natural_light_filter_stop_hour = 10;</code>
+     *
+     * <pre>
+     *in 24 hours format, so 4.0 is 4am
+     * </pre>
+     */
+    public boolean hasNaturalLightFilterStopHour() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional double natural_light_filter_stop_hour = 10;</code>
+     *
+     * <pre>
+     *in 24 hours format, so 4.0 is 4am
+     * </pre>
+     */
+    public double getNaturalLightFilterStopHour() {
+      return naturalLightFilterStopHour_;
+    }
+
+    // optional int32 num_model_params = 11;
+    public static final int NUM_MODEL_PARAMS_FIELD_NUMBER = 11;
+    private int numModelParams_;
+    /**
+     * <code>optional int32 num_model_params = 11;</code>
+     *
+     * <pre>
+     *for computing BIC/AIC
+     * </pre>
+     */
+    public boolean hasNumModelParams() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    /**
+     * <code>optional int32 num_model_params = 11;</code>
+     *
+     * <pre>
+     *for computing BIC/AIC
+     * </pre>
+     */
+    public int getNumModelParams() {
+      return numModelParams_;
+    }
+
+    // optional string model_name = 12;
+    public static final int MODEL_NAME_FIELD_NUMBER = 12;
+    private java.lang.Object modelName_;
+    /**
+     * <code>optional string model_name = 12;</code>
+     */
+    public boolean hasModelName() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional string model_name = 12;</code>
+     */
+    public java.lang.String getModelName() {
+      java.lang.Object ref = modelName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          modelName_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string model_name = 12;</code>
+     */
+    public com.google.protobuf.ByteString
+        getModelNameBytes() {
+      java.lang.Object ref = modelName_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        modelName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional int32 num_minutes_in_meas_period = 13;
+    public static final int NUM_MINUTES_IN_MEAS_PERIOD_FIELD_NUMBER = 13;
+    private int numMinutesInMeasPeriod_;
+    /**
+     * <code>optional int32 num_minutes_in_meas_period = 13;</code>
+     */
+    public boolean hasNumMinutesInMeasPeriod() {
+      return ((bitField0_ & 0x00000200) == 0x00000200);
+    }
+    /**
+     * <code>optional int32 num_minutes_in_meas_period = 13;</code>
+     */
+    public int getNumMinutesInMeasPeriod() {
+      return numMinutesInMeasPeriod_;
+    }
+
+    // optional bool enable_interval_search = 14;
+    public static final int ENABLE_INTERVAL_SEARCH_FIELD_NUMBER = 14;
+    private boolean enableIntervalSearch_;
+    /**
+     * <code>optional bool enable_interval_search = 14;</code>
+     */
+    public boolean hasEnableIntervalSearch() {
+      return ((bitField0_ & 0x00000400) == 0x00000400);
+    }
+    /**
+     * <code>optional bool enable_interval_search = 14;</code>
+     */
+    public boolean getEnableIntervalSearch() {
+      return enableIntervalSearch_;
+    }
+
     private void initFields() {
       userId_ = "";
       source_ = "";
@@ -3370,6 +4094,14 @@ public final class SleepHmmProtos {
       numStates_ = 0;
       stateTransitionMatrix_ = java.util.Collections.emptyList();
       initialStateProbabilities_ = java.util.Collections.emptyList();
+      audioDisturbanceThresholdDb_ = 0D;
+      pillMagnitudeDisturbanceThresholdLsb_ = 0D;
+      naturalLightFilterStartHour_ = 0D;
+      naturalLightFilterStopHour_ = 0D;
+      numModelParams_ = 0;
+      modelName_ = "";
+      numMinutesInMeasPeriod_ = 0;
+      enableIntervalSearch_ = false;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -3407,6 +4139,30 @@ public final class SleepHmmProtos {
       for (int i = 0; i < initialStateProbabilities_.size(); i++) {
         output.writeDouble(6, initialStateProbabilities_.get(i));
       }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeDouble(7, audioDisturbanceThresholdDb_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeDouble(8, pillMagnitudeDisturbanceThresholdLsb_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeDouble(9, naturalLightFilterStartHour_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeDouble(10, naturalLightFilterStopHour_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeInt32(11, numModelParams_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeBytes(12, getModelNameBytes());
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        output.writeInt32(13, numMinutesInMeasPeriod_);
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        output.writeBool(14, enableIntervalSearch_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -3443,6 +4199,38 @@ public final class SleepHmmProtos {
         dataSize = 8 * getInitialStateProbabilitiesList().size();
         size += dataSize;
         size += 1 * getInitialStateProbabilitiesList().size();
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(7, audioDisturbanceThresholdDb_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(8, pillMagnitudeDisturbanceThresholdLsb_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(9, naturalLightFilterStartHour_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(10, naturalLightFilterStopHour_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(11, numModelParams_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(12, getModelNameBytes());
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(13, numMinutesInMeasPeriod_);
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(14, enableIntervalSearch_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -3577,6 +4365,22 @@ public final class SleepHmmProtos {
         bitField0_ = (bitField0_ & ~0x00000010);
         initialStateProbabilities_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000020);
+        audioDisturbanceThresholdDb_ = 0D;
+        bitField0_ = (bitField0_ & ~0x00000040);
+        pillMagnitudeDisturbanceThresholdLsb_ = 0D;
+        bitField0_ = (bitField0_ & ~0x00000080);
+        naturalLightFilterStartHour_ = 0D;
+        bitField0_ = (bitField0_ & ~0x00000100);
+        naturalLightFilterStopHour_ = 0D;
+        bitField0_ = (bitField0_ & ~0x00000200);
+        numModelParams_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000400);
+        modelName_ = "";
+        bitField0_ = (bitField0_ & ~0x00000800);
+        numMinutesInMeasPeriod_ = 0;
+        bitField0_ = (bitField0_ & ~0x00001000);
+        enableIntervalSearch_ = false;
+        bitField0_ = (bitField0_ & ~0x00002000);
         return this;
       }
 
@@ -3636,6 +4440,38 @@ public final class SleepHmmProtos {
           bitField0_ = (bitField0_ & ~0x00000020);
         }
         result.initialStateProbabilities_ = initialStateProbabilities_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.audioDisturbanceThresholdDb_ = audioDisturbanceThresholdDb_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.pillMagnitudeDisturbanceThresholdLsb_ = pillMagnitudeDisturbanceThresholdLsb_;
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.naturalLightFilterStartHour_ = naturalLightFilterStartHour_;
+        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.naturalLightFilterStopHour_ = naturalLightFilterStopHour_;
+        if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.numModelParams_ = numModelParams_;
+        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        result.modelName_ = modelName_;
+        if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+          to_bitField0_ |= 0x00000200;
+        }
+        result.numMinutesInMeasPeriod_ = numMinutesInMeasPeriod_;
+        if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
+          to_bitField0_ |= 0x00000400;
+        }
+        result.enableIntervalSearch_ = enableIntervalSearch_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -3710,6 +4546,32 @@ public final class SleepHmmProtos {
             initialStateProbabilities_.addAll(other.initialStateProbabilities_);
           }
           onChanged();
+        }
+        if (other.hasAudioDisturbanceThresholdDb()) {
+          setAudioDisturbanceThresholdDb(other.getAudioDisturbanceThresholdDb());
+        }
+        if (other.hasPillMagnitudeDisturbanceThresholdLsb()) {
+          setPillMagnitudeDisturbanceThresholdLsb(other.getPillMagnitudeDisturbanceThresholdLsb());
+        }
+        if (other.hasNaturalLightFilterStartHour()) {
+          setNaturalLightFilterStartHour(other.getNaturalLightFilterStartHour());
+        }
+        if (other.hasNaturalLightFilterStopHour()) {
+          setNaturalLightFilterStopHour(other.getNaturalLightFilterStopHour());
+        }
+        if (other.hasNumModelParams()) {
+          setNumModelParams(other.getNumModelParams());
+        }
+        if (other.hasModelName()) {
+          bitField0_ |= 0x00000800;
+          modelName_ = other.modelName_;
+          onChanged();
+        }
+        if (other.hasNumMinutesInMeasPeriod()) {
+          setNumMinutesInMeasPeriod(other.getNumMinutesInMeasPeriod());
+        }
+        if (other.hasEnableIntervalSearch()) {
+          setEnableIntervalSearch(other.getEnableIntervalSearch());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -4297,6 +5159,359 @@ public final class SleepHmmProtos {
         return this;
       }
 
+      // optional double audio_disturbance_threshold_db = 7;
+      private double audioDisturbanceThresholdDb_ ;
+      /**
+       * <code>optional double audio_disturbance_threshold_db = 7;</code>
+       */
+      public boolean hasAudioDisturbanceThresholdDb() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional double audio_disturbance_threshold_db = 7;</code>
+       */
+      public double getAudioDisturbanceThresholdDb() {
+        return audioDisturbanceThresholdDb_;
+      }
+      /**
+       * <code>optional double audio_disturbance_threshold_db = 7;</code>
+       */
+      public Builder setAudioDisturbanceThresholdDb(double value) {
+        bitField0_ |= 0x00000040;
+        audioDisturbanceThresholdDb_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double audio_disturbance_threshold_db = 7;</code>
+       */
+      public Builder clearAudioDisturbanceThresholdDb() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        audioDisturbanceThresholdDb_ = 0D;
+        onChanged();
+        return this;
+      }
+
+      // optional double pill_magnitude_disturbance_threshold_lsb = 8;
+      private double pillMagnitudeDisturbanceThresholdLsb_ ;
+      /**
+       * <code>optional double pill_magnitude_disturbance_threshold_lsb = 8;</code>
+       */
+      public boolean hasPillMagnitudeDisturbanceThresholdLsb() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional double pill_magnitude_disturbance_threshold_lsb = 8;</code>
+       */
+      public double getPillMagnitudeDisturbanceThresholdLsb() {
+        return pillMagnitudeDisturbanceThresholdLsb_;
+      }
+      /**
+       * <code>optional double pill_magnitude_disturbance_threshold_lsb = 8;</code>
+       */
+      public Builder setPillMagnitudeDisturbanceThresholdLsb(double value) {
+        bitField0_ |= 0x00000080;
+        pillMagnitudeDisturbanceThresholdLsb_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double pill_magnitude_disturbance_threshold_lsb = 8;</code>
+       */
+      public Builder clearPillMagnitudeDisturbanceThresholdLsb() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        pillMagnitudeDisturbanceThresholdLsb_ = 0D;
+        onChanged();
+        return this;
+      }
+
+      // optional double natural_light_filter_start_hour = 9;
+      private double naturalLightFilterStartHour_ ;
+      /**
+       * <code>optional double natural_light_filter_start_hour = 9;</code>
+       *
+       * <pre>
+       *in 24 hours format, so 16.0 is 4pm
+       * </pre>
+       */
+      public boolean hasNaturalLightFilterStartHour() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional double natural_light_filter_start_hour = 9;</code>
+       *
+       * <pre>
+       *in 24 hours format, so 16.0 is 4pm
+       * </pre>
+       */
+      public double getNaturalLightFilterStartHour() {
+        return naturalLightFilterStartHour_;
+      }
+      /**
+       * <code>optional double natural_light_filter_start_hour = 9;</code>
+       *
+       * <pre>
+       *in 24 hours format, so 16.0 is 4pm
+       * </pre>
+       */
+      public Builder setNaturalLightFilterStartHour(double value) {
+        bitField0_ |= 0x00000100;
+        naturalLightFilterStartHour_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double natural_light_filter_start_hour = 9;</code>
+       *
+       * <pre>
+       *in 24 hours format, so 16.0 is 4pm
+       * </pre>
+       */
+      public Builder clearNaturalLightFilterStartHour() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        naturalLightFilterStartHour_ = 0D;
+        onChanged();
+        return this;
+      }
+
+      // optional double natural_light_filter_stop_hour = 10;
+      private double naturalLightFilterStopHour_ ;
+      /**
+       * <code>optional double natural_light_filter_stop_hour = 10;</code>
+       *
+       * <pre>
+       *in 24 hours format, so 4.0 is 4am
+       * </pre>
+       */
+      public boolean hasNaturalLightFilterStopHour() {
+        return ((bitField0_ & 0x00000200) == 0x00000200);
+      }
+      /**
+       * <code>optional double natural_light_filter_stop_hour = 10;</code>
+       *
+       * <pre>
+       *in 24 hours format, so 4.0 is 4am
+       * </pre>
+       */
+      public double getNaturalLightFilterStopHour() {
+        return naturalLightFilterStopHour_;
+      }
+      /**
+       * <code>optional double natural_light_filter_stop_hour = 10;</code>
+       *
+       * <pre>
+       *in 24 hours format, so 4.0 is 4am
+       * </pre>
+       */
+      public Builder setNaturalLightFilterStopHour(double value) {
+        bitField0_ |= 0x00000200;
+        naturalLightFilterStopHour_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double natural_light_filter_stop_hour = 10;</code>
+       *
+       * <pre>
+       *in 24 hours format, so 4.0 is 4am
+       * </pre>
+       */
+      public Builder clearNaturalLightFilterStopHour() {
+        bitField0_ = (bitField0_ & ~0x00000200);
+        naturalLightFilterStopHour_ = 0D;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 num_model_params = 11;
+      private int numModelParams_ ;
+      /**
+       * <code>optional int32 num_model_params = 11;</code>
+       *
+       * <pre>
+       *for computing BIC/AIC
+       * </pre>
+       */
+      public boolean hasNumModelParams() {
+        return ((bitField0_ & 0x00000400) == 0x00000400);
+      }
+      /**
+       * <code>optional int32 num_model_params = 11;</code>
+       *
+       * <pre>
+       *for computing BIC/AIC
+       * </pre>
+       */
+      public int getNumModelParams() {
+        return numModelParams_;
+      }
+      /**
+       * <code>optional int32 num_model_params = 11;</code>
+       *
+       * <pre>
+       *for computing BIC/AIC
+       * </pre>
+       */
+      public Builder setNumModelParams(int value) {
+        bitField0_ |= 0x00000400;
+        numModelParams_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 num_model_params = 11;</code>
+       *
+       * <pre>
+       *for computing BIC/AIC
+       * </pre>
+       */
+      public Builder clearNumModelParams() {
+        bitField0_ = (bitField0_ & ~0x00000400);
+        numModelParams_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional string model_name = 12;
+      private java.lang.Object modelName_ = "";
+      /**
+       * <code>optional string model_name = 12;</code>
+       */
+      public boolean hasModelName() {
+        return ((bitField0_ & 0x00000800) == 0x00000800);
+      }
+      /**
+       * <code>optional string model_name = 12;</code>
+       */
+      public java.lang.String getModelName() {
+        java.lang.Object ref = modelName_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          modelName_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string model_name = 12;</code>
+       */
+      public com.google.protobuf.ByteString
+          getModelNameBytes() {
+        java.lang.Object ref = modelName_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          modelName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string model_name = 12;</code>
+       */
+      public Builder setModelName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000800;
+        modelName_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string model_name = 12;</code>
+       */
+      public Builder clearModelName() {
+        bitField0_ = (bitField0_ & ~0x00000800);
+        modelName_ = getDefaultInstance().getModelName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string model_name = 12;</code>
+       */
+      public Builder setModelNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000800;
+        modelName_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 num_minutes_in_meas_period = 13;
+      private int numMinutesInMeasPeriod_ ;
+      /**
+       * <code>optional int32 num_minutes_in_meas_period = 13;</code>
+       */
+      public boolean hasNumMinutesInMeasPeriod() {
+        return ((bitField0_ & 0x00001000) == 0x00001000);
+      }
+      /**
+       * <code>optional int32 num_minutes_in_meas_period = 13;</code>
+       */
+      public int getNumMinutesInMeasPeriod() {
+        return numMinutesInMeasPeriod_;
+      }
+      /**
+       * <code>optional int32 num_minutes_in_meas_period = 13;</code>
+       */
+      public Builder setNumMinutesInMeasPeriod(int value) {
+        bitField0_ |= 0x00001000;
+        numMinutesInMeasPeriod_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 num_minutes_in_meas_period = 13;</code>
+       */
+      public Builder clearNumMinutesInMeasPeriod() {
+        bitField0_ = (bitField0_ & ~0x00001000);
+        numMinutesInMeasPeriod_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional bool enable_interval_search = 14;
+      private boolean enableIntervalSearch_ ;
+      /**
+       * <code>optional bool enable_interval_search = 14;</code>
+       */
+      public boolean hasEnableIntervalSearch() {
+        return ((bitField0_ & 0x00002000) == 0x00002000);
+      }
+      /**
+       * <code>optional bool enable_interval_search = 14;</code>
+       */
+      public boolean getEnableIntervalSearch() {
+        return enableIntervalSearch_;
+      }
+      /**
+       * <code>optional bool enable_interval_search = 14;</code>
+       */
+      public Builder setEnableIntervalSearch(boolean value) {
+        bitField0_ |= 0x00002000;
+        enableIntervalSearch_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool enable_interval_search = 14;</code>
+       */
+      public Builder clearEnableIntervalSearch() {
+        bitField0_ = (bitField0_ & ~0x00002000);
+        enableIntervalSearch_ = false;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:SleepHmm)
     }
 
@@ -4306,6 +5521,692 @@ public final class SleepHmmProtos {
     }
 
     // @@protoc_insertion_point(class_scope:SleepHmm)
+  }
+
+  public interface SleepHmmModelSetOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // repeated .SleepHmm models = 1;
+    /**
+     * <code>repeated .SleepHmm models = 1;</code>
+     */
+    java.util.List<com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm> 
+        getModelsList();
+    /**
+     * <code>repeated .SleepHmm models = 1;</code>
+     */
+    com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm getModels(int index);
+    /**
+     * <code>repeated .SleepHmm models = 1;</code>
+     */
+    int getModelsCount();
+    /**
+     * <code>repeated .SleepHmm models = 1;</code>
+     */
+    java.util.List<? extends com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmOrBuilder> 
+        getModelsOrBuilderList();
+    /**
+     * <code>repeated .SleepHmm models = 1;</code>
+     */
+    com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmOrBuilder getModelsOrBuilder(
+        int index);
+  }
+  /**
+   * Protobuf type {@code SleepHmmModelSet}
+   */
+  public static final class SleepHmmModelSet extends
+      com.google.protobuf.GeneratedMessage
+      implements SleepHmmModelSetOrBuilder {
+    // Use SleepHmmModelSet.newBuilder() to construct.
+    private SleepHmmModelSet(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private SleepHmmModelSet(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final SleepHmmModelSet defaultInstance;
+    public static SleepHmmModelSet getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public SleepHmmModelSet getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private SleepHmmModelSet(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                models_ = new java.util.ArrayList<com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              models_.add(input.readMessage(com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm.PARSER, extensionRegistry));
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          models_ = java.util.Collections.unmodifiableList(models_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.suripu.api.datascience.SleepHmmProtos.internal_static_SleepHmmModelSet_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.suripu.api.datascience.SleepHmmProtos.internal_static_SleepHmmModelSet_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet.class, com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<SleepHmmModelSet> PARSER =
+        new com.google.protobuf.AbstractParser<SleepHmmModelSet>() {
+      public SleepHmmModelSet parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new SleepHmmModelSet(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<SleepHmmModelSet> getParserForType() {
+      return PARSER;
+    }
+
+    // repeated .SleepHmm models = 1;
+    public static final int MODELS_FIELD_NUMBER = 1;
+    private java.util.List<com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm> models_;
+    /**
+     * <code>repeated .SleepHmm models = 1;</code>
+     */
+    public java.util.List<com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm> getModelsList() {
+      return models_;
+    }
+    /**
+     * <code>repeated .SleepHmm models = 1;</code>
+     */
+    public java.util.List<? extends com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmOrBuilder> 
+        getModelsOrBuilderList() {
+      return models_;
+    }
+    /**
+     * <code>repeated .SleepHmm models = 1;</code>
+     */
+    public int getModelsCount() {
+      return models_.size();
+    }
+    /**
+     * <code>repeated .SleepHmm models = 1;</code>
+     */
+    public com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm getModels(int index) {
+      return models_.get(index);
+    }
+    /**
+     * <code>repeated .SleepHmm models = 1;</code>
+     */
+    public com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmOrBuilder getModelsOrBuilder(
+        int index) {
+      return models_.get(index);
+    }
+
+    private void initFields() {
+      models_ = java.util.Collections.emptyList();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      for (int i = 0; i < getModelsCount(); i++) {
+        if (!getModels(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      for (int i = 0; i < models_.size(); i++) {
+        output.writeMessage(1, models_.get(i));
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (int i = 0; i < models_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, models_.get(i));
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code SleepHmmModelSet}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSetOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.datascience.SleepHmmProtos.internal_static_SleepHmmModelSet_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.datascience.SleepHmmProtos.internal_static_SleepHmmModelSet_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet.class, com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet.Builder.class);
+      }
+
+      // Construct using com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getModelsFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        if (modelsBuilder_ == null) {
+          models_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          modelsBuilder_.clear();
+        }
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.suripu.api.datascience.SleepHmmProtos.internal_static_SleepHmmModelSet_descriptor;
+      }
+
+      public com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet getDefaultInstanceForType() {
+        return com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet.getDefaultInstance();
+      }
+
+      public com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet build() {
+        com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet buildPartial() {
+        com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet result = new com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet(this);
+        int from_bitField0_ = bitField0_;
+        if (modelsBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+            models_ = java.util.Collections.unmodifiableList(models_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.models_ = models_;
+        } else {
+          result.models_ = modelsBuilder_.build();
+        }
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet) {
+          return mergeFrom((com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet other) {
+        if (other == com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet.getDefaultInstance()) return this;
+        if (modelsBuilder_ == null) {
+          if (!other.models_.isEmpty()) {
+            if (models_.isEmpty()) {
+              models_ = other.models_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureModelsIsMutable();
+              models_.addAll(other.models_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.models_.isEmpty()) {
+            if (modelsBuilder_.isEmpty()) {
+              modelsBuilder_.dispose();
+              modelsBuilder_ = null;
+              models_ = other.models_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              modelsBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getModelsFieldBuilder() : null;
+            } else {
+              modelsBuilder_.addAllMessages(other.models_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        for (int i = 0; i < getModelsCount(); i++) {
+          if (!getModels(i).isInitialized()) {
+            
+            return false;
+          }
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSet) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // repeated .SleepHmm models = 1;
+      private java.util.List<com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm> models_ =
+        java.util.Collections.emptyList();
+      private void ensureModelsIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          models_ = new java.util.ArrayList<com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm>(models_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm, com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmOrBuilder> modelsBuilder_;
+
+      /**
+       * <code>repeated .SleepHmm models = 1;</code>
+       */
+      public java.util.List<com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm> getModelsList() {
+        if (modelsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(models_);
+        } else {
+          return modelsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .SleepHmm models = 1;</code>
+       */
+      public int getModelsCount() {
+        if (modelsBuilder_ == null) {
+          return models_.size();
+        } else {
+          return modelsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .SleepHmm models = 1;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm getModels(int index) {
+        if (modelsBuilder_ == null) {
+          return models_.get(index);
+        } else {
+          return modelsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .SleepHmm models = 1;</code>
+       */
+      public Builder setModels(
+          int index, com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm value) {
+        if (modelsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureModelsIsMutable();
+          models_.set(index, value);
+          onChanged();
+        } else {
+          modelsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SleepHmm models = 1;</code>
+       */
+      public Builder setModels(
+          int index, com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm.Builder builderForValue) {
+        if (modelsBuilder_ == null) {
+          ensureModelsIsMutable();
+          models_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          modelsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SleepHmm models = 1;</code>
+       */
+      public Builder addModels(com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm value) {
+        if (modelsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureModelsIsMutable();
+          models_.add(value);
+          onChanged();
+        } else {
+          modelsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SleepHmm models = 1;</code>
+       */
+      public Builder addModels(
+          int index, com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm value) {
+        if (modelsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureModelsIsMutable();
+          models_.add(index, value);
+          onChanged();
+        } else {
+          modelsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SleepHmm models = 1;</code>
+       */
+      public Builder addModels(
+          com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm.Builder builderForValue) {
+        if (modelsBuilder_ == null) {
+          ensureModelsIsMutable();
+          models_.add(builderForValue.build());
+          onChanged();
+        } else {
+          modelsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SleepHmm models = 1;</code>
+       */
+      public Builder addModels(
+          int index, com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm.Builder builderForValue) {
+        if (modelsBuilder_ == null) {
+          ensureModelsIsMutable();
+          models_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          modelsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SleepHmm models = 1;</code>
+       */
+      public Builder addAllModels(
+          java.lang.Iterable<? extends com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm> values) {
+        if (modelsBuilder_ == null) {
+          ensureModelsIsMutable();
+          super.addAll(values, models_);
+          onChanged();
+        } else {
+          modelsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SleepHmm models = 1;</code>
+       */
+      public Builder clearModels() {
+        if (modelsBuilder_ == null) {
+          models_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          modelsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SleepHmm models = 1;</code>
+       */
+      public Builder removeModels(int index) {
+        if (modelsBuilder_ == null) {
+          ensureModelsIsMutable();
+          models_.remove(index);
+          onChanged();
+        } else {
+          modelsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .SleepHmm models = 1;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm.Builder getModelsBuilder(
+          int index) {
+        return getModelsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .SleepHmm models = 1;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmOrBuilder getModelsOrBuilder(
+          int index) {
+        if (modelsBuilder_ == null) {
+          return models_.get(index);  } else {
+          return modelsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .SleepHmm models = 1;</code>
+       */
+      public java.util.List<? extends com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmOrBuilder> 
+           getModelsOrBuilderList() {
+        if (modelsBuilder_ != null) {
+          return modelsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(models_);
+        }
+      }
+      /**
+       * <code>repeated .SleepHmm models = 1;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm.Builder addModelsBuilder() {
+        return getModelsFieldBuilder().addBuilder(
+            com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .SleepHmm models = 1;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm.Builder addModelsBuilder(
+          int index) {
+        return getModelsFieldBuilder().addBuilder(
+            index, com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .SleepHmm models = 1;</code>
+       */
+      public java.util.List<com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm.Builder> 
+           getModelsBuilderList() {
+        return getModelsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm, com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmOrBuilder> 
+          getModelsFieldBuilder() {
+        if (modelsBuilder_ == null) {
+          modelsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm, com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmOrBuilder>(
+                  models_,
+                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  getParentForChildren(),
+                  isClean());
+          models_ = null;
+        }
+        return modelsBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:SleepHmmModelSet)
+    }
+
+    static {
+      defaultInstance = new SleepHmmModelSet(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:SleepHmmModelSet)
   }
 
   private static com.google.protobuf.Descriptors.Descriptor
@@ -4333,6 +6234,11 @@ public final class SleepHmmProtos {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_SleepHmm_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_SleepHmmModelSet_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_SleepHmmModelSet_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -4345,21 +6251,32 @@ public final class SleepHmmProtos {
       "\n\017sleep_hmm.proto\"\034\n\014PoissonModel\022\014\n\004mea" +
       "n\030\001 \002(\001\".\n\025DiscreteAlphabetModel\022\025\n\rprob" +
       "abilities\030\001 \003(\001\"*\n\nGammaModel\022\014\n\004mean\030\001 " +
-      "\002(\001\022\016\n\006stddev\030\002 \002(\001\"\331\001\n\nStateModel\022\036\n\nsl" +
+      "\002(\001\022\016\n\006stddev\030\002 \002(\001\"\265\002\n\nStateModel\022\036\n\nsl" +
       "eep_mode\030\004 \001(\0162\n.SleepMode\022\032\n\010bed_mode\030\005" +
       " \001(\0162\010.BedMode\022 \n\013sleep_depth\030\006 \001(\0162\013.Sl" +
       "eepDepth\022\032\n\005light\030\013 \001(\0132\013.GammaModel\022#\n\014" +
       "motion_count\030\014 \001(\0132\r.PoissonModel\022,\n\014dis" +
-      "turbances\030\r \001(\0132\026.DiscreteAlphabetModel\"" +
-      "\242\001\n\010SleepHmm\022\017\n\007user_id\030\001 \001(\t\022\016\n\006source\030",
-      "\002 \001(\t\022\033\n\006states\030\003 \003(\0132\013.StateModel\022\022\n\nnu" +
-      "m_states\030\004 \001(\005\022\037\n\027state_transition_matri" +
-      "x\030\005 \003(\001\022#\n\033initial_state_probabilities\030\006" +
-      " \003(\001* \n\tSleepMode\022\t\n\005SLEEP\020\000\022\010\n\004WAKE\020\001*\"" +
-      "\n\007BedMode\022\n\n\006ON_BED\020\000\022\013\n\007OFF_BED\020\001*G\n\nSl" +
-      "eepDepth\022\022\n\016NOT_APPLICABLE\020\000\022\t\n\005LIGHT\020\001\022" +
-      "\013\n\007REGULAR\020\002\022\r\n\tDISTURBED\020\003B2\n com.hello" +
-      ".suripu.api.datascienceB\016SleepHmmProtos"
+      "turbances\030\r \001(\0132\026.DiscreteAlphabetModel\022" +
+      "$\n\017log_sound_count\030\016 \001(\0132\013.GammaModel\0224\n",
+      "\024natural_light_filter\030\017 \001(\0132\026.DiscreteAl" +
+      "phabetModel\"\277\003\n\010SleepHmm\022\017\n\007user_id\030\001 \001(" +
+      "\t\022\016\n\006source\030\002 \001(\t\022\033\n\006states\030\003 \003(\0132\013.Stat" +
+      "eModel\022\022\n\nnum_states\030\004 \001(\005\022\037\n\027state_tran" +
+      "sition_matrix\030\005 \003(\001\022#\n\033initial_state_pro" +
+      "babilities\030\006 \003(\001\022&\n\036audio_disturbance_th" +
+      "reshold_db\030\007 \001(\001\0220\n(pill_magnitude_distu" +
+      "rbance_threshold_lsb\030\010 \001(\001\022\'\n\037natural_li" +
+      "ght_filter_start_hour\030\t \001(\001\022&\n\036natural_l" +
+      "ight_filter_stop_hour\030\n \001(\001\022\030\n\020num_model",
+      "_params\030\013 \001(\005\022\022\n\nmodel_name\030\014 \001(\t\022\"\n\032num" +
+      "_minutes_in_meas_period\030\r \001(\005\022\036\n\026enable_" +
+      "interval_search\030\016 \001(\010\"-\n\020SleepHmmModelSe" +
+      "t\022\031\n\006models\030\001 \003(\0132\t.SleepHmm* \n\tSleepMod" +
+      "e\022\t\n\005SLEEP\020\000\022\010\n\004WAKE\020\001*\"\n\007BedMode\022\n\n\006ON_" +
+      "BED\020\000\022\013\n\007OFF_BED\020\001*G\n\nSleepDepth\022\022\n\016NOT_" +
+      "APPLICABLE\020\000\022\t\n\005LIGHT\020\001\022\013\n\007REGULAR\020\002\022\r\n\t" +
+      "DISTURBED\020\003B2\n com.hello.suripu.api.data" +
+      "scienceB\016SleepHmmProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -4389,13 +6306,19 @@ public final class SleepHmmProtos {
           internal_static_StateModel_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_StateModel_descriptor,
-              new java.lang.String[] { "SleepMode", "BedMode", "SleepDepth", "Light", "MotionCount", "Disturbances", });
+              new java.lang.String[] { "SleepMode", "BedMode", "SleepDepth", "Light", "MotionCount", "Disturbances", "LogSoundCount", "NaturalLightFilter", });
           internal_static_SleepHmm_descriptor =
             getDescriptor().getMessageTypes().get(4);
           internal_static_SleepHmm_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_SleepHmm_descriptor,
-              new java.lang.String[] { "UserId", "Source", "States", "NumStates", "StateTransitionMatrix", "InitialStateProbabilities", });
+              new java.lang.String[] { "UserId", "Source", "States", "NumStates", "StateTransitionMatrix", "InitialStateProbabilities", "AudioDisturbanceThresholdDb", "PillMagnitudeDisturbanceThresholdLsb", "NaturalLightFilterStartHour", "NaturalLightFilterStopHour", "NumModelParams", "ModelName", "NumMinutesInMeasPeriod", "EnableIntervalSearch", });
+          internal_static_SleepHmmModelSet_descriptor =
+            getDescriptor().getMessageTypes().get(5);
+          internal_static_SleepHmmModelSet_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_SleepHmmModelSet_descriptor,
+              new java.lang.String[] { "Models", });
           return null;
         }
       };

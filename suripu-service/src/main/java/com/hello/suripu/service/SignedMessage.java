@@ -129,28 +129,14 @@ public class SignedMessage {
             LOGGER.trace("Sig: {}", sig);
             return Optional.absent();
 
-        } catch (NoSuchAlgorithmException exception) {
-            LOGGER.error(exception.getMessage());
-            sb.append(exception.getMessage());
-            sb.append("\n");
-        } catch (InvalidKeyException exception) {
-            LOGGER.error(exception.getMessage());
-            sb.append(exception.getMessage());
-            sb.append("\n");
-        } catch (NoSuchPaddingException exception) {
+        } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | IllegalBlockSizeException | NoSuchPaddingException | InvalidKeyException exception) {
             LOGGER.error(exception.getMessage());
             sb.append(exception.getMessage());
             sb.append("\n");
         } catch (BadPaddingException exception) {
             LOGGER.error(exception.getMessage());
-        } catch (IllegalBlockSizeException exception) {
+        } catch (Exception exception) {
             LOGGER.error(exception.getMessage());
-            sb.append(exception.getMessage());
-            sb.append("\n");
-        } catch (InvalidAlgorithmParameterException exception) {
-            LOGGER.error(exception.getMessage());
-            sb.append(exception.getMessage());
-            sb.append("\n");
         }
 
         LOGGER.error("Signatures don't match");

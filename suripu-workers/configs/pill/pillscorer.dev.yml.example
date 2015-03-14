@@ -93,3 +93,11 @@ features_db:
 redis:
   host: localhost
   port: 6379
+
+
+kinesis_logger:
+  stream_name: logs
+  enabled : true
+  buffer_size: 10
+  origin: suripu-workers
+  min_log_level : INFO

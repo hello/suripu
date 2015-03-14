@@ -9,6 +9,8 @@ import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.service.SignedMessage;
 import com.yammer.metrics.annotation.Timed;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,10 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 
 @Path("/logs")
@@ -60,21 +59,14 @@ public class LogsResource {
         } catch (IOException exception) {
             final String errorMessage = String.format("Failed parsing protobuf for deviceId = %s: %s", debugSenseId, exception.getMessage());
             LOGGER.error(errorMessage);
-
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity("bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            return;
         }
 
         // get MAC address of morpheus
 
         if(!log.hasDeviceId()){
             LOGGER.error("Cannot get morpheus id (debugSenseId = {})", debugSenseId);
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity("bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            return;
         }
 
         final Optional<byte[]> keyBytes = senseKeyStore.get(log.getDeviceId());
@@ -87,10 +79,7 @@ public class LogsResource {
 
         if(error.isPresent()) {
             LOGGER.error(error.get().message);
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-                    .entity("bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            return;
         }
 
         final LoggingProtos.LogMessage logMessage = LoggingProtos.LogMessage.newBuilder()
@@ -104,7 +93,12 @@ public class LogsResource {
         final LoggingProtos.BatchLogMessage batch = LoggingProtos.BatchLogMessage.newBuilder()
                 .addMessages(logMessage)
                 .setLogType(LoggingProtos.BatchLogMessage.LogType.SENSE_LOG)
+                .setReceivedAt(DateTime.now(DateTimeZone.UTC).getMillis())
                 .build();
-        dataLogger.put(log.getDeviceId(), batch.toByteArray());
+        try {
+            dataLogger.put(log.getDeviceId(), batch.toByteArray());
+        } catch (Exception e) {
+            LOGGER.error("Failed saving logs to kinesis stream: {}", e.getMessage());
+        }
     }
 }

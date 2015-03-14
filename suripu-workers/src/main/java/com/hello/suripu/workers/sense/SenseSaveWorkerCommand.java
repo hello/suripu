@@ -18,9 +18,9 @@ import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
+import com.hello.suripu.workers.framework.WorkerEnvironmentCommand;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
-import com.yammer.dropwizard.cli.ConfiguredCommand;
-import com.yammer.dropwizard.config.Bootstrap;
+import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.db.ManagedDataSource;
 import com.yammer.dropwizard.db.ManagedDataSourceFactory;
 import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
@@ -39,7 +39,7 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public final class SenseSaveWorkerCommand extends ConfiguredCommand<SenseSaveWorkerConfiguration> {
+public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<SenseSaveWorkerConfiguration> {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseSaveWorkerCommand.class);
 
@@ -48,9 +48,7 @@ public final class SenseSaveWorkerCommand extends ConfiguredCommand<SenseSaveWor
     }
 
     @Override
-    public final void run(Bootstrap<SenseSaveWorkerConfiguration> bootstrap,
-                          Namespace namespace,
-                          SenseSaveWorkerConfiguration configuration) throws Exception {
+    protected void run(Environment environment, Namespace namespace, SenseSaveWorkerConfiguration configuration) throws Exception {
 
         final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
         final ManagedDataSource commonDataSource = managedDataSourceFactory.build(configuration.getCommonDB());

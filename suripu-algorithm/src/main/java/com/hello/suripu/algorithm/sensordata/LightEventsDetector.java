@@ -71,7 +71,8 @@ public class LightEventsDetector {
                     // Lights off
                     final LightSegment.Type segmentType = getLightSegmentType(startTimestamp, endTimestamp, offsetMillis, buffer);
                     final LightSegment segment = new LightSegment(startTimestamp, endTimestamp, offsetMillis, segmentType);
-
+                    LOGGER.info("start {}, end {}", startTimestamp, endTimestamp);
+                    
                     if (segmentType == LightSegment.Type.LIGHTS_OUT && lightSegments.size() > 0) {
                         // if previous label is LIGHTS_OUT, unset it
                         final LightSegment lastSegment = lightSegments.removeLast();

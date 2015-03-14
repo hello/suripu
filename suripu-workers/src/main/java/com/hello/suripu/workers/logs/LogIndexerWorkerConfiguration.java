@@ -23,4 +23,10 @@ public class LogIndexerWorkerConfiguration extends WorkerConfiguration {
     public SearchifyConfiguration senseLogs() {
         return senseLogs;
     }
+
+    @JsonProperty("workers_logs")
+    private SearchifyConfiguration workersLogs;
+    public SearchifyConfiguration workersLogs() {
+        return workersLogs;
+    }
 }

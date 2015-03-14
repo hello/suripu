@@ -9,6 +9,7 @@ import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.KeyStore;
+import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.flipper.GroupFlipper;
@@ -25,6 +26,7 @@ import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.service.SignedMessage;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
+import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
@@ -36,11 +38,10 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.awt.*;
+import java.awt.Color;
 import java.io.IOException;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -205,7 +206,7 @@ public class RegisterResource extends BaseResource {
                 .setVersion(PROTOBUF_VERSION);
 
         final SignedMessage signedMessage = SignedMessage.parse(encryptedRequest);
-        MorpheusCommand morpheusCommand;
+        MorpheusCommand morpheusCommand = MorpheusCommand.getDefaultInstance();
         try {
             morpheusCommand = MorpheusCommand.parseFrom(signedMessage.body);
 
@@ -213,7 +214,7 @@ public class RegisterResource extends BaseResource {
             final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
             LOGGER.error(errorMessage);
             // We can't return a proper error because we can't decode the protobuf
-            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+            throwPlainTextError(Response.Status.BAD_REQUEST, "");
         }
 
         final String deviceId = morpheusCommand.getDeviceId();
@@ -260,17 +261,14 @@ public class RegisterResource extends BaseResource {
         final Optional<byte[]> keyBytesOptional = keyStore.get(senseId);
         if(!keyBytesOptional.isPresent()) {
             LOGGER.error("Missing AES key for device = {}", senseId);
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            throwPlainTextError(Response.Status.UNAUTHORIZED, "");
         }
 
         final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytesOptional.get());
 
         if(error.isPresent()) {
             LOGGER.error("Fail to validate signature {}", error.get().message);
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-                    .entity((debug) ? error.get().message : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            throwPlainTextError(Response.Status.UNAUTHORIZED, "");
         }
 
         if(!checkCommandType(morpheusCommand, action)){
@@ -354,20 +352,21 @@ public class RegisterResource extends BaseResource {
         return builder;
     }
 
-    private Response signAndSend(final String senseId, final MorpheusCommand.Builder morpheusCommandBuilder, final KeyStore keyStore) {
+    private byte[] signAndSend(final String senseId, final MorpheusCommand.Builder morpheusCommandBuilder, final KeyStore keyStore) {
         final Optional<byte[]> keyBytesOptional = keyStore.get(senseId);
         if(!keyBytesOptional.isPresent()) {
             LOGGER.error("Missing AES key for deviceId = {}", senseId);
-            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+            return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "");
         }
+        LOGGER.trace("Key used to sign device {} : {}", senseId, Hex.encodeHexString(keyBytesOptional.get()));
 
         final Optional<byte[]> signedResponse = SignedMessage.sign(morpheusCommandBuilder.build().toByteArray(), keyBytesOptional.get());
         if(!signedResponse.isPresent()) {
             LOGGER.error("Failed signing message for deviceId = {}", senseId);
-            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+            return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "");
         }
 
-        return Response.ok().entity(signedResponse.get()).build();
+        return signedResponse.get();
     }
 
     @POST
@@ -375,15 +374,18 @@ public class RegisterResource extends BaseResource {
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Deprecated
-    public Response registerMorpheus(final byte[] body) {
+    public byte[] registerMorpheus(final byte[] body) {
         final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
         if(senseIdFromHeader != null){
             LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
         }
         final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_MORPHEUS);
-        if(senseIdFromHeader != null){
-            return signAndSend(senseIdFromHeader, builder, senseKeyStore);
+
+        if(senseIdFromHeader != null && senseIdFromHeader.equals(KeyStoreDynamoDB.DEFAULT_FACTORY_DEVICE_ID)){
+            senseKeyStore.put(builder.getDeviceId(), Hex.encodeHexString(KeyStoreDynamoDB.DEFAULT_AES_KEY));
+            LOGGER.error("Key for device {} has been automatically generated", builder.getDeviceId());
         }
+
         return signAndSend(builder.getDeviceId(), builder, senseKeyStore);
     }
 
@@ -392,7 +394,7 @@ public class RegisterResource extends BaseResource {
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Timed
-    public Response registerSense(final byte[] body) {
+    public byte[] registerSense(final byte[] body) {
         final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
         if(senseIdFromHeader != null){
             LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
@@ -409,10 +411,10 @@ public class RegisterResource extends BaseResource {
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Timed
-    public Response registerPill(final byte[] body) {
+    public byte[] registerPill(final byte[] body) {
         final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_PILL);
         final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
-        if(senseIdFromHeader != null){
+        if(senseIdFromHeader != null && !senseIdFromHeader.equals(KeyStoreDynamoDB.DEFAULT_FACTORY_DEVICE_ID)){
             LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
             return signAndSend(senseIdFromHeader, builder, senseKeyStore);
         }
@@ -423,13 +425,14 @@ public class RegisterResource extends BaseResource {
                 DateTime.now());
 
         if(!accessTokenOptional.isPresent()) {
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            LOGGER.error("Did not find accessToken {}", builder.getAccountId());
+            return plainTextError(Response.Status.BAD_REQUEST, "");
         }
 
         final Long accountId = accessTokenOptional.get().accountId;
         final List<DeviceAccountPair> deviceAccountPairs = this.deviceDAO.getSensesForAccountId(accountId);
         if(deviceAccountPairs.size() == 0) {
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            return plainTextError(Response.Status.BAD_REQUEST, "");
         }
 
         final String senseId = deviceAccountPairs.get(0).externalDeviceId;
