@@ -118,7 +118,8 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
                         hasHmmEnabled(accountId),
                         true,
                         hasPartnerFilterEnabled(accountId));
-                LOGGER.info("Timeline saved for account {} at local utc {}",
+                LOGGER.info("{} Timeline saved for account {} at local utc {}",
+                        DateTime.now(),
                         accountId,
                         groupedAccountIdTargetDateLocalUTCMap.get(accountId).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT));
 
