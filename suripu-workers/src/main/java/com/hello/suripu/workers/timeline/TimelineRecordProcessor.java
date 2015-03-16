@@ -110,13 +110,12 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
 
             try {
                 this.timelineProcessor.retrieveTimelinesFast(accountId,
-                        groupedAccountIdTargetDateLocalUTCMap.get(accountId).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT),
+                        groupedAccountIdTargetDateLocalUTCMap.get(accountId).withTimeAtStartOfDay(),
                         missingDataDefaultValue(accountId),
                         hasAlarmInTimeline(accountId),
                         hasSoundInTimeline(accountId),
                         hasFeedbackInTimeline(accountId),
                         hasHmmEnabled(accountId),
-                        true,
                         hasPartnerFilterEnabled(accountId));
                 LOGGER.info("{} Timeline saved for account {} at local utc {}",
                         DateTime.now(),

@@ -333,7 +333,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 sleepHmmDAODynamoDB,
                 accountDAO);
 
-        environment.addResource(new TimelineResource(accountDAO, timelineProcessor));
+        environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB, timelineProcessor));
 
         environment.addResource(new TimeZoneResource(timeZoneHistoryDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO));
         environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO, amazonS3));

@@ -1,6 +1,5 @@
 package com.hello.suripu.core.processors;
 
-import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -47,7 +46,6 @@ import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +70,7 @@ public class TimelineProcessor {
     private final int dateBucketPeriod;
     private final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
     private final FeedbackDAO feedbackDAO;
-    private final TimelineDAODynamoDB timelineDAODynamoDB;
+    //private final TimelineDAODynamoDB timelineDAODynamoDB;
     private final SleepHmmDAO sleepHmmDAO;
     private final AccountDAO accountDAO;
 
@@ -99,7 +97,6 @@ public class TimelineProcessor {
         this.dateBucketPeriod = dateBucketPeriod;
         this.ringTimeHistoryDAODynamoDB = ringTimeHistoryDAODynamoDB;
         this.feedbackDAO = feedbackDAO;
-        this.timelineDAODynamoDB = timelineDAODynamoDB;
         this.sleepHmmDAO = sleepHmmDAO;
         this.accountDAO = accountDAO;
     }
@@ -137,33 +134,19 @@ public class TimelineProcessor {
     }
 
 
-    public List<Timeline> retrieveTimelinesFast(final Long accountId, final String date, final Integer missingDataDefaultValue,
+    public List<Timeline> retrieveTimelinesFast(final Long accountId, final DateTime date, final Integer missingDataDefaultValue,
                                                 final Boolean hasAlarmInTimeline,
                                                 final Boolean hasSoundInTimeline,
                                                 final Boolean hasFeedbackInTimelineEnabled,
                                                 final Boolean hasHmmEnabled,
-                                                final Boolean forceUpdate,
                                                 final Boolean hasPartnerFilterEnabled) {
 
 
         final long  currentTimeMillis = DateTime.now().withZone(DateTimeZone.UTC).getMillis();
-        final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
-                .withZone(DateTimeZone.UTC).withHourOfDay(20);
+        final DateTime targetDate = date.withHourOfDay(20);
         final DateTime endDate = targetDate.plusHours(16);
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
-
-        if(!forceUpdate) {
-            final ImmutableList<Timeline> cachedTimelines = this.timelineDAODynamoDB.getTimelinesForDate(accountId, targetDate.withTimeAtStartOfDay());
-            if (!cachedTimelines.isEmpty()) {
-                LOGGER.debug("Timeline for account {}, date {} returned from cache.", accountId, date);
-                return cachedTimelines;
-            }
-
-            LOGGER.debug("No cached timeline, reprocess timeline for account {}, date {}", accountId, date);
-        }else{
-            LOGGER.debug("Force updating timeline for account {}, date {}", accountId, date);
-        }
 
         final List<TrackerMotion> originalTrackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
         LOGGER.debug("Length of trackerMotion: {}", originalTrackerMotions.size());
@@ -177,8 +160,7 @@ public class TimelineProcessor {
 
         // get partner tracker motion, if available
         final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
-
-        List<TrackerMotion> trackerMotions = new ArrayList<>();
+        final List<TrackerMotion> trackerMotions = new ArrayList<>();
 
         if (!partnerMotions.isEmpty() && hasPartnerFilterEnabled) {
             try {
@@ -220,8 +202,6 @@ public class TimelineProcessor {
             if (lightEvents.size() > 0) {
                 lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
             }
-
-            // TODO: refactor
 
             if(!allSensorSampleList.get(Sensor.WAVE_COUNT).isEmpty() && trackerMotions.size() > 0){
                 wakeUpWaveTimeOptional = TimelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
@@ -368,25 +348,13 @@ public class TimelineProcessor {
 
         final List<Insight> insights = TimelineUtils.generatePreSleepInsights(allSensorSampleList, sleepStats.sleepTime, accountId);
         final List<SleepSegment>  reversedSegments = Lists.reverse(reversed);
-        final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, date, reversedSegments, insights, sleepStats);
+        final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, date.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), reversedSegments, insights, sleepStats);
 
         final List<Timeline> timelines = Lists.newArrayList(timeline);
-        cacheTimeline(accountId, targetDate, timelines);
         return timelines;
     }
 
-    private boolean cacheTimeline(final long accountId, final DateTime targetDateLocalUTC, final List<Timeline> timelines){
-        try{
-            this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC.withTimeAtStartOfDay(), timelines);
-            return true;
-        }catch (AmazonServiceException awsExp){
-            LOGGER.error("AWS error, Save timeline for account {} date {} failed, {}", accountId, targetDateLocalUTC, awsExp.getErrorMessage());
-        }catch (Exception ex){
-            LOGGER.error("General error, saving timeline for account {}, date {}, failed, {}", accountId, targetDateLocalUTC, ex.getMessage());
-        }
 
-        return false;
-    }
 
 
     private List<TrackerMotion> getPartnerTrackerMotion(final Long accountId, final DateTime startTime, final DateTime endTime) {
