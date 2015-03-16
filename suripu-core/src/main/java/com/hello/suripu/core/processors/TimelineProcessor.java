@@ -420,7 +420,7 @@ public class TimelineProcessor {
             final ImmutableList<Timeline> cachedTimelines = this.timelineDAODynamoDB.getTimelinesForDate(accountId, targetDate.withTimeAtStartOfDay());
             if (!cachedTimelines.isEmpty()) {
                 LOGGER.debug("Timeline for account {}, date {} returned from cache.", accountId, date);
-                return cachedTimelines;
+                //return cachedTimelines;
             }
 
             LOGGER.debug("No cached timeline, reprocess timeline for account {}, date {}", accountId, date);
@@ -805,7 +805,7 @@ public class TimelineProcessor {
 
 
     /**
-     * Sleep score
+     * Sleep score - always compute and update dynamo
      * @param userOffsetMillis
      * @param targetDate
      * @param accountId
@@ -813,47 +813,44 @@ public class TimelineProcessor {
      * @return
      */
     private Integer computeAndMaybeSaveScore(final Integer userOffsetMillis, final DateTime targetDate, final Long accountId, final SleepStats sleepStats) {
-        // get scores - check dynamoDB first
-        final String targetDateString = DateTimeUtil.dateToYmdString(targetDate);
 
-        final AggregateScore targetDateScore = this.aggregateSleepScoreDAODynamoDB.getSingleScore(accountId, targetDateString);
-        Integer sleepScore = targetDateScore.score;
+        // Movement score
+        final Integer motionScore = sleepScoreDAO.getSleepScoreForNight(accountId,
+                targetDate.withTimeAtStartOfDay(),
+                userOffsetMillis,
+                this.dateBucketPeriod, sleepLabelDAO);
 
-        if (sleepScore == 0) {
-            // score may not have been computed yet, recompute
-            // score based on amount of movement during sleep
-            final Integer motionScore = sleepScoreDAO.getSleepScoreForNight(accountId, targetDate.withTimeAtStartOfDay(),
-                    userOffsetMillis, this.dateBucketPeriod, sleepLabelDAO);
+        // Sleep duration score
+        final Optional<Account> optionalAccount = accountDAO.getById(accountId);
+        final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
+        final Integer durationScore = SleepScoreUtils.getSleepDurationScore(userAge, sleepStats.sleepDurationInMinutes);
 
-            // score due to duration, and user age
-            final Optional<Account> optionalAccount = accountDAO.getById(accountId);
-            final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
-            final Integer durationScore = SleepScoreUtils.getSleepDurationScore(userAge, sleepStats.sleepDurationInMinutes);
+        // TODO: Environment score
+        final Integer environmentScore = 100;
 
-            // TODO: score the external environment (lights, sound, temp and humidity)
-            final Integer environmentScore = 100;
+        // Aggregate all scores
+        final Integer sleepScore = SleepScoreUtils.aggregateSleepScore(motionScore, durationScore, environmentScore);
 
-            // combine all the scores
-            sleepScore = SleepScoreUtils.aggregateSleepScore(motionScore, durationScore, environmentScore);
+        LOGGER.trace("SCORES: motion {}, duration {}, final {}", motionScore, durationScore, sleepScore);
 
-            LOGGER.trace("SCORES: motion {}, duration {}, final {}", motionScore, durationScore, sleepScore);
-            final DateTime lastNight = new DateTime(DateTime.now(), DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
-            if (targetDate.isBefore(lastNight)) {
-                // write data to Dynamo if targetDate is old
-                this.aggregateSleepScoreDAODynamoDB.writeSingleScore(
-                        new AggregateScore(accountId,
-                                sleepScore,
-                                DateTimeUtil.dateToYmdString(targetDate.withTimeAtStartOfDay()),
-                                targetDateScore.scoreType, targetDateScore.version));
+        // always update sleep-score in DynamoDB
+        final Boolean updatedScore = this.aggregateSleepScoreDAODynamoDB.updateInsertSingleScore(
+                accountId,
+                sleepScore,
+                DateTimeUtil.dateToYmdString(targetDate.withTimeAtStartOfDay()));
 
-                // add sleep-score and duration to day-of-week, over time tracking table
-                if (sleepScore > 0) {
-                    this.trendsInsightsDAO.updateDayOfWeekData(accountId, sleepScore, targetDate.withTimeAtStartOfDay(), userOffsetMillis, TrendGraph.DataType.SLEEP_SCORE);
-                }
+        LOGGER.debug("Updated Score {}: account {}, score{}", updatedScore, accountId, sleepScore);
 
-                if (sleepStats.sleepDurationInMinutes > 0) {
-                    this.trendsInsightsDAO.updateSleepStats(accountId, userOffsetMillis, targetDate.withTimeAtStartOfDay(), sleepStats);
-                }
+        final DateTime lastNight = new DateTime(DateTime.now(), DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
+        if (targetDate.isBefore(lastNight)) {
+            // add sleep-score and duration to day-of-week, over time tracking table
+            // TODO: Need to redo these guys
+            if (sleepScore > 0) {
+                this.trendsInsightsDAO.updateDayOfWeekData(accountId, sleepScore, targetDate.withTimeAtStartOfDay(), userOffsetMillis, TrendGraph.DataType.SLEEP_SCORE);
+            }
+
+            if (sleepStats.sleepDurationInMinutes > 0) {
+                this.trendsInsightsDAO.updateSleepStats(accountId, userOffsetMillis, targetDate.withTimeAtStartOfDay(), sleepStats);
             }
         }
 
