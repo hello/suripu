@@ -39,6 +39,7 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             fields.put("device_id", log.getDeviceId());
             fields.put("text", log.getMessage());
             fields.put("ts", String.valueOf(log.getTs()));
+            fields.put("all", "1");
 
             final Long hello_ts = millis;
 

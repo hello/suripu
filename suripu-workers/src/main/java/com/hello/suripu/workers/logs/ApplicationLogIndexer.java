@@ -49,7 +49,7 @@ public class ApplicationLogIndexer implements LogIndexer<LoggingProtos.BatchLogM
 
         documentAttributes.put("text", sb.toString());
         documentAttributes.put("ts", String.valueOf(messages.get(0).getTs()));
-
+        documentAttributes.put("all", "1");
 
         categories.put("version", version);
         categories.put("origin", messages.get(0).getOrigin());
