@@ -31,6 +31,7 @@ public interface DeviceDAO extends Transactional<DeviceDAO> {
     @SqlQuery("SELECT * FROM account_device_map WHERE account_id = :account_id AND active = TRUE ORDER BY id DESC;")
     ImmutableList<DeviceAccountPair> getSensesForAccountId(@Bind("account_id") Long accountId);
 
+
     @GetGeneratedKeys
     @SqlUpdate("INSERT INTO account_device_map (account_id, device_name, device_id, active) VALUES(:account_id, :device_id, :device_id, true)")
     Long registerSense(@Bind("account_id") final Long accountId, @Bind("device_id") final String deviceId);

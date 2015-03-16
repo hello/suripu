@@ -1,6 +1,6 @@
 package com.hello.suripu.admin.modules;
 
-import com.hello.suripu.admin.resources.v1.AccountResources;
+import com.hello.suripu.admin.resources.v1.AccountResource;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.flipper.DynamoDBAdapter;
 import com.librato.rollout.RolloutAdapter;
@@ -12,7 +12,7 @@ import javax.inject.Singleton;
 
 
 @Module(injects = {
-        AccountResources.class
+        AccountResource.class
 })
 public class RolloutAdminModule {
     private final FeatureStore featureStore;

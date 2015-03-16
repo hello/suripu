@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hello.suripu.core.configuration.DynamoDBConfiguration;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
-import com.hello.suripu.core.configuration.RedisConfiguration;
 import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
@@ -65,32 +64,4 @@ public class SuripuAdminConfiguration extends Configuration {
     public KinesisLoggerConfiguration getKinesisLoggerConfiguration() {
         return kinesisLoggerConfiguration;
     }
-
-    @Valid
-    @NotNull
-    @JsonProperty("alarm_info_db")
-    private DynamoDBConfiguration userInfoDynamoDBConfiguration;
-    public DynamoDBConfiguration getUserInfoDynamoDBConfiguration(){
-        return this.userInfoDynamoDBConfiguration;
-    }
-
-    @Valid
-    @NotNull
-    @JsonProperty("redis")
-    private RedisConfiguration redisConfiguration;
-    public RedisConfiguration getRedisConfiguration() {
-        return redisConfiguration;
-    }
-
-    @Valid
-    @NotNull
-    @JsonProperty("sense_key_store_dynamo_db")
-    private DynamoDBConfiguration senseKeyStoreDynamoConfiguration;
-    public DynamoDBConfiguration getSenseKeyStoreDynamoDBConfiguration() { return senseKeyStoreDynamoConfiguration; }
-
-    @Valid
-    @NotNull
-    @JsonProperty("pill_key_store_dynamo_db")
-    private DynamoDBConfiguration pillKeyStoreDynamoDBConfiguration;
-    public DynamoDBConfiguration getPillKeyStoreDynamoDBConfiguration() { return pillKeyStoreDynamoDBConfiguration; }
 }
