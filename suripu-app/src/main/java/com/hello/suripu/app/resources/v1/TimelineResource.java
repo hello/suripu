@@ -93,7 +93,6 @@ public class TimelineResource extends BaseResource {
         }
 
         LOGGER.info("No cached timeline, reprocess timeline for account {}, date {}", accountId, targetDate);
-        // TODO: Pass a config/map object to avoid changing the signature of this method for the next FeatureFlipper
         final List<Timeline> timelines = timelineProcessor.retrieveTimelinesFast(accountId, targetDate, missingDataDefaultValue(accountId), getFlipperParams(accountId));
         cacheTimeline(accountId, targetDate, timelines);
         return timelines;
@@ -125,6 +124,23 @@ public class TimelineResource extends BaseResource {
         }
 
         return getTimelinesFromCacheOrReprocess(accessToken.accountId, date);
+    }
+
+    @Timed
+    @Path("/admin/invalidate/{email}/{date}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @GET
+    public Boolean invalidateTimelineCache(
+            @Scope(OAuthScope.ADMINISTRATION_WRITE)final AccessToken accessToken,
+            @PathParam("email") String email,
+            @PathParam("date") String date) {
+        final Optional<Long> accountId = getAccountIdByEmail(email);
+        if (!accountId.isPresent()) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(date);
+        return this.timelineDAODynamoDB.invalidateCache(accountId.get(), targetDate, DateTime.now());
     }
 
     private Optional<Long> getAccountIdByEmail(final String email) {

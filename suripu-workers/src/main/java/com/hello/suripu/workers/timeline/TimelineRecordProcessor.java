@@ -15,7 +15,6 @@ import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,17 +70,14 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
         final Map<String, Set<DateTime>> pillIdTargetDatesMapByData = BatchProcessUtils.groupRequestingPillIdsByDataType(batchedPillData,
                 BatchProcessUtils.DataTypeFilter.PILL_DATA);
 
-        final Map<Long, DateTime> groupedAccountIdAndRegenerateTimelineTargetDateLocalUTCMap = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(pillIdTargetDatesMapByHeartbeat,
-                DateTime.now().withZone(DateTimeZone.UTC),
+        final Map<Long, Set<DateTime>> groupedAccountIdAndRegenerateTimelineTargetDateLocalUTCMap = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(pillIdTargetDatesMapByHeartbeat,
                 this.configuration.getEarliestProcessTime(),
                 this.configuration.getLastProcessTime(),
+                DateTime.now(),
                 this.deviceDAO,
                 this.mergedUserInfoDynamoDB);
 
-        final Map<Long, DateTime> groupedAccountIdAndExpiredTargetDateLocalUTCMap = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(pillIdTargetDatesMapByData,
-                DateTime.now().withZone(DateTimeZone.UTC),
-                this.configuration.getEarliestProcessTime(),
-                this.configuration.getLastProcessTime(),
+        final Map<Long, Set<DateTime>> groupedAccountIdAndExpiredTargetDateLocalUTCMap = BatchProcessUtils.groupAccountAndExpireDateLocalUTC(pillIdTargetDatesMapByData,
                 this.deviceDAO,
                 this.mergedUserInfoDynamoDB);
 
@@ -100,48 +96,52 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
         }
     }
 
-    private void batchProcess(final Map<Long, DateTime> groupedAccountIdTargetDateLocalUTCMap){
+    private void batchProcess(final Map<Long, Set<DateTime>> groupedAccountIdTargetDateLocalUTCMap){
         for(final Long accountId:groupedAccountIdTargetDateLocalUTCMap.keySet()) {
-            if(this.timelineProcessor.shouldProcessTimelineByWorker(accountId,
-                    this.configuration.getMaxNoMoitonPeriodInMinutes(),
-                    DateTime.now())){
-                continue;
-            }
+            for(final DateTime targetDateLocalUTC:groupedAccountIdTargetDateLocalUTCMap.get(accountId)) {
+                if (this.timelineProcessor.shouldProcessTimelineByWorker(accountId,
+                        this.configuration.getMaxNoMoitonPeriodInMinutes(),
+                        DateTime.now())) {
+                    continue;
+                }
 
-            try {
-                this.timelineProcessor.retrieveTimelinesFast(accountId,
-                        groupedAccountIdTargetDateLocalUTCMap.get(accountId).withTimeAtStartOfDay(),
-                        missingDataDefaultValue(accountId),
-                        getFlipperParam(accountId));
-                LOGGER.info("{} Timeline saved for account {} at local utc {}",
-                        DateTime.now(),
-                        accountId,
-                        groupedAccountIdTargetDateLocalUTCMap.get(accountId).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT));
+                try {
+                    this.timelineProcessor.retrieveTimelinesFast(accountId,
+                            targetDateLocalUTC,
+                            missingDataDefaultValue(accountId),
+                            getFlipperParam(accountId));
+                    LOGGER.info("{} Timeline saved for account {} at local utc {}",
+                            DateTime.now(),
+                            accountId,
+                            DateTimeUtil.dateToYmdString(targetDateLocalUTC));
 
-                // TODO: Push notification here?
-            }catch (AmazonServiceException awsException){
-                LOGGER.error("Failed to generate timeline: {}", awsException.getErrorMessage());
-            }catch (Exception ex){
-                LOGGER.error("Failed to generate timeline. General error {}", ex.getMessage());
+                    // TODO: Push notification here?
+                } catch (AmazonServiceException awsException) {
+                    LOGGER.error("Failed to generate timeline: {}", awsException.getErrorMessage());
+                } catch (Exception ex) {
+                    LOGGER.error("Failed to generate timeline. General error {}", ex.getMessage());
+                }
             }
         }
 
     }
 
-    private void expires(final Map<Long, DateTime> groupedAccountIdTargetDateLocalUTCMap, final DateTime expiresAtUTC){
+    private void expires(final Map<Long, Set<DateTime>> groupedAccountIdTargetDateLocalUTCMap, final DateTime expiresAtUTC){
         for(final Long accountId:groupedAccountIdTargetDateLocalUTCMap.keySet()) {
-            try {
-                final boolean expired = this.timelineDAODynamoDB.invalidateCache(accountId,
-                        groupedAccountIdTargetDateLocalUTCMap.get(accountId),
-                        expiresAtUTC);
-                LOGGER.info("Timeline expired {} for account {} at local utc {}",
-                        expired,
-                        accountId,
-                        groupedAccountIdTargetDateLocalUTCMap.get(accountId).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT));
-            }catch (AmazonServiceException awsException){
-                LOGGER.error("Failed to expire timeline: {}", awsException.getErrorMessage());
-            }catch (Exception ex){
-                LOGGER.error("Failed to expire timeline. General error {}", ex.getMessage());
+            for(final DateTime targetDate:groupedAccountIdTargetDateLocalUTCMap.get(accountId)) {
+                try {
+                    final boolean expired = this.timelineDAODynamoDB.invalidateCache(accountId,
+                            targetDate,
+                            expiresAtUTC);
+                    LOGGER.info("Timeline expired {} for account {} at local utc {}",
+                            expired,
+                            accountId,
+                            DateTimeUtil.dateToYmdString(targetDate));
+                } catch (AmazonServiceException awsException) {
+                    LOGGER.error("Failed to expire timeline: {}", awsException.getErrorMessage());
+                } catch (Exception ex) {
+                    LOGGER.error("Failed to expire timeline. General error {}", ex.getMessage());
+                }
             }
         }
     }
