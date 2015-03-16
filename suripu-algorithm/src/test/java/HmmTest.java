@@ -191,15 +191,17 @@ public class HmmTest {
 
         MultipleHiddenMarkovModels mhmms = new MultipleHiddenMarkovModels();
 
-        mhmms.addModel(hmm);
-        mhmms.addModel(hmm2);
+        mhmms.addModel("hmm1",hmm);
+        mhmms.addModel("hmm2",hmm2);
 
-        Optional<HmmDecodedResult> oresult =  mhmms.getBestPathOfModels(this.mydata, possibleEndStates);
+        Optional<MultipleHiddenMarkovModels.BestModel> oresult =  mhmms.getBestPathOfModels(this.mydata, possibleEndStates);
 
         TestCase.assertTrue(oresult.isPresent());
 
-        HmmDecodedResult result = oresult.get();
+        HmmDecodedResult result = oresult.get().result;
 
+
+        TestCase.assertTrue(oresult.get().model.equals("hmm1"));
 
         for (int t = 0; t < result.bestPath.size(); t++) {
             if (result.bestPath.get(t) != this.path[t]) {
