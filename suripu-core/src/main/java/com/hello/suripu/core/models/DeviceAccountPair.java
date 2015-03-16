@@ -1,6 +1,5 @@
 package com.hello.suripu.core.models;
 
-import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 
 public class DeviceAccountPair {
@@ -15,9 +14,5 @@ public class DeviceAccountPair {
         this.internalDeviceId = internalDeviceId;
         this.externalDeviceId = externalDeviceId;
         this.created = created;
-    }
-
-    public DeviceAccountPair(final Long accountId, final Long internalDeviceId, final String externalDeviceId) {
-        this(accountId, internalDeviceId, externalDeviceId, DateTimeUtil.MORPHEUS_DAY_ONE);
     }
 }
