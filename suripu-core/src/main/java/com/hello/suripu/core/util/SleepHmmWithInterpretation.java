@@ -157,6 +157,15 @@ CREATE CREATE CREATE
             id = hmmModelData.getUserId();
         }
 
+        int numFreeParams = 0;
+
+        if (hmmModelData.hasNumModelParams()) {
+            numFreeParams = hmmModelData.getNumModelParams();
+        }
+
+
+
+
         //get the data in the form of lists
         final List<SleepHmmProtos.StateModel> states = hmmModelData.getStatesList();
 
@@ -257,7 +266,7 @@ CREATE CREATE CREATE
 
 
         //return the HMM
-        final HiddenMarkovModel hmm = new HiddenMarkovModel(numStates, stateTransitionMatrix, initialStateProbabilities, obsModel);
+        final HiddenMarkovModel hmm = new HiddenMarkovModel(numStates, stateTransitionMatrix, initialStateProbabilities, obsModel,numFreeParams);
 
         LOGGER.debug("deserialized sleep HMM source={}, id={}, numStates={}",source,id,numStates);
 
@@ -289,7 +298,14 @@ CREATE CREATE CREATE
 
         final Integer [] allowableEndings = allowableEndingStates.toArray(new Integer[allowableEndingStates.size()]);
 
-        final int[] path = hmmWithStates.getViterbiPath(binnedData.data,allowableEndings);
+
+        final HiddenMarkovModel.HmmDecodedResult result = hmmWithStates.decode(binnedData.data,allowableEndings);
+
+        final int[] path = new int[result.bestPath.size()];
+
+        for (int i = 0; i <  result.bestPath.size(); i++) {
+            path[i] = result.bestPath.get(i);
+        }
 
         LOGGER.debug("decoded path = {} ",getPathAsString(path));
 
