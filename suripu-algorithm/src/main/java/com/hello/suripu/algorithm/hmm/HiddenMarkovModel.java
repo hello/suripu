@@ -22,26 +22,6 @@ public class HiddenMarkovModel {
     double [] initialState;
     HmmPdfInterface [] obsModels;
 
-
-    public static HiddenMarkovModel createPoissonOnlyModel(double [][] A, double [] initialStateProbs, double [][] poissonMeans) {
-        final int numStates = A.length;
-        final int numObsModelsPerState = poissonMeans[0].length;
-
-        HmmPdfInterface [] models = new HmmPdfInterface[numStates];
-
-        for (int j = 0; j < numStates; j++) {
-            PdfComposite c = new PdfComposite();
-            for (int i = 0; i < numObsModelsPerState; i++) {
-                c.addPdf(new PoissonPdf(poissonMeans[j][i],i));
-            }
-
-            models[j] = c;
-
-        }
-
-        return new HiddenMarkovModel(numStates,A,initialStateProbs,models);
-    }
-
     //not currently used... but maybe soon
     private class AlphaResult {
         public double [][] alpha;
@@ -49,12 +29,12 @@ public class HiddenMarkovModel {
     }
 
     //ctor
-    private HiddenMarkovModel(int numStates, double [][] A,double [] initialStateProbs, HmmPdfInterface [] obsModels) {
+    public HiddenMarkovModel(final int numStates, final double [][] A,final double [] initialStateProbs, final HmmPdfInterface [] obsModels, final int numFreeParams) {
         this.numStates = numStates;
         this.A = A;
         this.initialState = initialStateProbs;
         this.obsModels = obsModels;
-        this.numFreeParams = 1; //whatever, not important here since this is only used for test now
+        this.numFreeParams = numFreeParams; //whatever, not important here since this is only used for test now
     }
 
     public HiddenMarkovModel(final int numStates,final List<Double> stm,final List<Double> initialProbs,final HmmPdfInterface [] obsModels,final int numFreeParams) {
@@ -116,19 +96,7 @@ public class HiddenMarkovModel {
     }
 
 
-    static public class HmmDecodedResult {
-        public final ImmutableList<Integer> bestPath;
-        public final double bic; //Bayesian information criterion
-        public final double aic; //Akaike information criterion
-        public final double pathCost; //
 
-        public HmmDecodedResult(final ImmutableList<Integer> bestPath, double bic, double aic, double pathCost) {
-            this.bestPath = bestPath;
-            this.bic = bic;
-            this.aic = aic;
-            this.pathCost = pathCost;
-        }
-    }
 
     private double getBIC(double pathCost,int numObs) {
         return 2.0*pathCost + this.numFreeParams*Math.log((double)numObs);
@@ -138,7 +106,7 @@ public class HiddenMarkovModel {
         return 2.0*pathCost + 2.0*this.numFreeParams;
     }
 
-    public HmmDecodedResult decode(final double [][] observations, final Integer [] possibleEndStates) {
+    public HmmDecodedResult decode(final double[][] observations, final Integer[] possibleEndStates) {
         /*
 
         returns optimal path given observations and state transition matrix "A"

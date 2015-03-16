@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.hmm.DiscreteAlphabetPdf;
 import com.hello.suripu.algorithm.hmm.GammaPdf;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
+import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
 import com.hello.suripu.algorithm.hmm.PdfComposite;
 import com.hello.suripu.algorithm.hmm.PoissonPdf;
@@ -332,7 +333,7 @@ CREATE CREATE CREATE
         final Integer [] allowableEndings = allowableEndingStates.toArray(new Integer[allowableEndingStates.size()]);
 
 
-        final HiddenMarkovModel.HmmDecodedResult result = hmmWithStates.decode(binnedData.data,allowableEndings);
+        final HmmDecodedResult result = hmmWithStates.decode(binnedData.data,allowableEndings);
 
         final int[] path = new int[result.bestPath.size()];
   
