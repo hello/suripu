@@ -466,10 +466,34 @@ CREATE CREATE CREATE
         return ImmutableList.copyOf(pairList);
     }
 
-    protected  List<Sample> getTimeOfDayAsMeasurement(final double foo) {
-        return null;
+    protected  List<Sample> getTimeOfDayAsMeasurement(final List<Sample> light, final double startNaturalLightForbiddedenHour, final double stopNaturalLightForbiddenHour) {
+        List<Sample> minuteData = new ArrayList<>();
+
+        for (final Sample s : light) {
+            //local UTC
+            final DateTime t = new DateTime(s.dateTime + s.offsetMillis, DateTimeZone.UTC);
+            final float hour = ((float)t.hourOfDay().get()) + t.minuteOfHour().get() / 60.0f;
+
+            float value = 0.0f;
+            if (hour > startNaturalLightForbiddedenHour || hour < stopNaturalLightForbiddenHour) {
+                value = 1.0f;
+            }
+
+            minuteData.add(new Sample(s.dateTime,value,s.offsetMillis));
+        }
+
+
+        return minuteData;
     }
 
+
+    /*
+    *  CONVERT PILL DATA AND SENSOR DATA INTO 2-D ARRAY OF N MINUTE BINS
+    *  where N is specified by the model
+    *
+    *
+    *
+    * */
     protected Optional<BinnedData> getBinnedSensorData(AllSensorSampleList sensors, List<TrackerMotion> pillData, final NamedSleepHmmModel model,
                                                        final long startTimeMillis, final long endTimeMillis, final long currentTimeInMillis) {
         final List<Sample> light = sensors.get(Sensor.LIGHT);
@@ -480,6 +504,9 @@ CREATE CREATE CREATE
         if (light == Collections.EMPTY_LIST || light.isEmpty()) {
             return Optional.absent();
         }
+
+        /* ideally, this is from sundown to sunrise.... but we just say it's a time you're unlikely to be sleeping in natural daylight  */
+        final List<Sample> naturalLightForbidden = getTimeOfDayAsMeasurement(light,model.naturalLightFilterStartHour,model.naturalLightFilterStopHour);
 
         //get start and end of window
         final int timezoneOffset = light.get(0).offsetMillis;
@@ -494,6 +521,11 @@ CREATE CREATE CREATE
         }
 
         final int numMinutesInWindow = model.numMinutesInMeasPeriod;
+
+        //safeguard
+        if (numMinutesInWindow <= 0) {
+            return Optional.absent();
+        }
 
         final int dataLength = (int) (tf - t0) / NUMBER_OF_MILLIS_IN_A_MINUTE / numMinutesInWindow;
 
@@ -516,8 +548,12 @@ CREATE CREATE CREATE
 
             final double value2 = Math.log(value * LIGHT_PREMULTIPLIER + 1.0) / Math.log(2);
 
-            maxInBin(data, sample.dateTime, value2, HmmDataConstants.LIGHT_INDEX, t0, numMinutesInWindow);
+            addToBin(data, sample.dateTime, value2, HmmDataConstants.LIGHT_INDEX, t0, numMinutesInWindow);
+        }
 
+        //computing average light in bin, so divide by bin size
+        for (int i = 0; i < data[HmmDataConstants.LIGHT_INDEX].length; i++) {
+            data[HmmDataConstants.LIGHT_INDEX][i] /= numMinutesInWindow;
         }
 
 
@@ -555,7 +591,7 @@ CREATE CREATE CREATE
             }
         }
 
-        //SOUND
+        //SOUND MAGNITUDE ---> DISTURBANCE
         final Iterator<Sample> it4 = sound.iterator();
         while (it4.hasNext()) {
             final Sample sample = it4.next();
@@ -565,6 +601,30 @@ CREATE CREATE CREATE
                 maxInBin(data, sample.dateTime, 1.0, HmmDataConstants.DISTURBANCE_INDEX, t0, numMinutesInWindow);
             }
         }
+
+        //SOUND COUNTS
+        final Iterator<Sample> it5 = soundCounts.iterator();
+        while (it5.hasNext()) {
+            final Sample sample = it5.next();
+            final double value = Math.log(sample.value + 1.0f) / Math.log(2);
+
+            if (value >= 0.0) {
+                maxInBin(data,sample.dateTime,value,HmmDataConstants.LOG_SOUND_COUNT_INDEX,t0,numMinutesInWindow);
+            }
+
+        }
+
+        //FORBIDDEN NATURAL LIGHT
+        final Iterator<Sample> it6 = naturalLightForbidden.iterator();
+        while (it6.hasNext()) {
+            final Sample sample = it6.next();
+
+            if (sample.value >= 0.0) {
+                maxInBin(data,sample.dateTime,1.0,HmmDataConstants.NATURAL_LIGHT_FILTER_INDEX,t0,numMinutesInWindow);
+            }
+        }
+
+
 
         final BinnedData res = new BinnedData();
         res.data = data;
