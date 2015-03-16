@@ -536,11 +536,15 @@ public class TimelineProcessor {
                         allSensorSampleList, trackerMotions,targetDate.getMillis(),endDate.getMillis(),currentTimeMillis);
 
                 if (optionalHmmPredictions.isPresent()) {
+
+                    SleepHmmWithInterpretation.SleepHmmResult res = optionalHmmPredictions.get();
+                    SleepEvents<Optional<Event>> sleepEvents = res.sleepEvents.get(0);
+
                     final SleepEvents<Optional<Event>> hmmSleepEvents = SleepEvents.create(
-                            optionalHmmPredictions.get().inBed,
-                            optionalHmmPredictions.get().fallAsleep,
-                            optionalHmmPredictions.get().wakeUp,
-                            optionalHmmPredictions.get().outOfBed);
+                            sleepEvents.goToBed,
+                            sleepEvents.fallAsleep,
+                            sleepEvents.wakeUp,
+                            sleepEvents.outOfBed);
 
                     sleepEventsFromAlgorithm = hmmSleepEvents;
                 }
