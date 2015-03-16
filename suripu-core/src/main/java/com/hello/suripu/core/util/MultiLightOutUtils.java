@@ -21,6 +21,7 @@ public class MultiLightOutUtils {
     private final static int LIGHT_MOTION_CORRELATION_COUNT_THRESHOLD = 3;
     private final static int LATEST_LIGHT_EVENT_HOUROFDAY = 5;
     private final static int EARLIEST_LIGHT_EVENT_HOUROFDAY = 20;
+    private final static int HOUROFDAY_CONSIDERED_AS_MIDNIGHT = 1;
 
     private static long getEndTimestampFromLightEvent(final Event lightEvent){
         switch (lightEvent.getType()){
@@ -83,6 +84,24 @@ public class MultiLightOutUtils {
         return lightOutDateTime.getHourOfDay();
     }
 
+    protected static List<Event> keepTheLastLightOutBeforeMidNight(final List<Event> validLightOuts){
+        final List<Event> lightOuts = new ArrayList<>();
+        for(int i = validLightOuts.size() - 1; i >= 0; i--){
+            final Event lightOut = validLightOuts.get(i);
+            final int hourOfLightOut = getHourOfLightOut(lightOut);
+            if(hourOfLightOut >= HOUROFDAY_CONSIDERED_AS_MIDNIGHT && hourOfLightOut < LATEST_LIGHT_EVENT_HOUROFDAY){
+                lightOuts.add(0, lightOut);
+            }
+
+            if(hourOfLightOut < HOUROFDAY_CONSIDERED_AS_MIDNIGHT || hourOfLightOut >= EARLIEST_LIGHT_EVENT_HOUROFDAY){
+                lightOuts.add(0, lightOut);
+                return lightOuts;
+            }
+        }
+
+        return lightOuts;
+    }
+
     public static List<Event> getValidLightOuts(final List<Event> lightEvents, final List<TrackerMotion> rawMotion, final int deltaWindowMin){
         final ArrayList<Event> multiLightOuts = new ArrayList<>();
 
@@ -120,9 +139,10 @@ public class MultiLightOutUtils {
         // I know it could be trained, but let's don't overkill the problem before we found it necessary.
         final Event lastLightOut = multiLightOuts.get(multiLightOuts.size() - 1);
         final int hourOfLastLightOut = getHourOfLightOut(lastLightOut);
-        if(hourOfLastLightOut >= 1 && hourOfLastLightOut < LATEST_LIGHT_EVENT_HOUROFDAY){
-            // Keep all lights out, might have an edge case, user can light out too early.
-            return multiLightOuts;
+        if(hourOfLastLightOut >= HOUROFDAY_CONSIDERED_AS_MIDNIGHT && hourOfLastLightOut < LATEST_LIGHT_EVENT_HOUROFDAY){
+            // Keep all late night lights out, and preserve the last light out before 1 o'clock.
+            final List<Event> multiLightOutsWithOnlyOneBeforeMidNightPreserved = keepTheLastLightOutBeforeMidNight(multiLightOuts);
+            return multiLightOutsWithOnlyOneBeforeMidNightPreserved;
         }
 
         // Only one light out, and it's before 00:00, keep it.
