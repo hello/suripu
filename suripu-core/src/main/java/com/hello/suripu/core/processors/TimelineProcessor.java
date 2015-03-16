@@ -435,7 +435,6 @@ public class TimelineProcessor {
             LOGGER.debug("No data for account_id = {} and day = {}", accountId, targetDate);
             final Timeline timeline = Timeline.createEmpty();
             final List<Timeline> timelines = Lists.newArrayList(timeline);
-            cacheTimeline(accountId, targetDate.withTimeAtStartOfDay(), timelines);
             return timelines;
         }
 
