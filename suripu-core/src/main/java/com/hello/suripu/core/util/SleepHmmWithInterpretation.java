@@ -194,7 +194,7 @@ CREATE CREATE CREATE
         int timezoneOffset = 0;
 
         /* go through each model, evaluate, find the best  */
-        for (NamedSleepHmmModel model : models) {
+        for (final NamedSleepHmmModel model : models) {
             final Optional<BinnedData> binnedDataOptional = getBinnedSensorData(sensors, pillData, model,sleepPeriodStartTime,sleepPeriodEndTime,currentTimeInMillis);
 
 
