@@ -92,7 +92,7 @@ public class KeyStoreUtils {
         return toReturn;
     }
 
-    public static Optional<PrivateKey> getPrivateKeyFromS3(AmazonS3 s3, String bucket, String path) {
+    public static Optional<PrivateKey> getPrivateKeyFromS3(final AmazonS3 s3, final String bucket, final String path) {
         try {
             final S3Object s3Object = s3.getObject(bucket, path);
             final BouncyCastleProvider provider = new BouncyCastleProvider();
@@ -108,7 +108,7 @@ public class KeyStoreUtils {
         return Optional.absent();
     }
 
-    public Optional<SenseProvision> decrypt(byte[] encryptedData) throws Exception {
+    public Optional<SenseProvision> decrypt(final byte[] encryptedData) throws Exception {
 
         final String stuff = new String(encryptedData, "UTF-8");
         byte[] rawData = Hex.decodeHex(stuff.toCharArray());
@@ -118,26 +118,40 @@ public class KeyStoreUtils {
     }
 
 
-    public static Optional<PillBlobProvision> decryptPill(byte[] encryptedData, final String serialNumber) throws Exception {
+    public static Optional<PillBlobProvision> decryptPill(final byte[] encryptedData, final String serialNumber) throws Exception {
         return parsePill(encryptedData, serialNumber);
     }
 
 
-    private static Optional<PillBlobProvision> parsePill(byte[] data, final String serialNumber) {
+    private static Optional<PillBlobProvision> parsePill(final byte[] data, final String serialNumber) {
         // TODO: move this outside code. s3?
         final byte[] factoryKey = new byte[]{0x0b, 0x53, 0x55, (byte)0xfb, (byte)0xe8, 0x69, 0x7d, 0x74, (byte)0xf4, (byte)0xe0, 0x45, 0x3c, 0x4a, (byte)0xe7, 0x40, (byte)0xc4};
+
+        // For offsets please refer to:
+        // https://github.com/hello/kodobannin/blob/master/common/device_info.h
+        // https://github.com/hello/masamune/blob/master/README.md
+
+        // Offsets structure
+        // typedef struct{
+        //      uint32_t device_id[2];
+        //      uint32_t device_address[2];
+        //      uint8_t device_aes[16];
+        //      uint8_t ficr[256];
+        //      uint8_t sha[SHA1_DIGEST_LENGTH];
+        // }__attribute__((packed)) device_encrypted_info_t;
 
         final byte[] nonce = new byte[16];
         final byte[] prefix = Arrays.copyOfRange(data, 8, 16);
         for(int i = 0; i < 8; i ++) {
             nonce[i] = prefix[i];
         }
+
         final byte[] dataStart = Arrays.copyOfRange(data, 16, 308 + 16);
 
         final byte[] buffer = new byte[512];
         int counter = 0;
         for(int i = 0; i < dataStart.length; i+=16) {
-            byte[] result = counterModeDecryptBasic(factoryKey, nonce, Arrays.copyOfRange(dataStart, i, i + 16), counter);
+            final byte[] result = counterModeDecryptBasic(factoryKey, nonce, Arrays.copyOfRange(dataStart, i, i + 16), counter);
             System.arraycopy(result, 0, buffer, i, 16);
             counter++;
         }
@@ -160,7 +174,7 @@ public class KeyStoreUtils {
         final byte[] sha1Stored = Arrays.copyOfRange(buffer,288,308);
         final String sha1StoredHex = DigestUtils.sha1Hex(sha1Stored);
 
-        byte[] sha1Computed = DigestUtils.sha1(Arrays.copyOfRange(buffer, 0, 288));
+        final byte[] sha1Computed = DigestUtils.sha1(Arrays.copyOfRange(buffer, 0, 288));
         final String sha1ComputedHex = DigestUtils.sha1Hex(sha1Computed);
 
         for(int i =0; i < sha1Stored.length; i++) {
@@ -172,7 +186,7 @@ public class KeyStoreUtils {
     }
 
 
-    private static Optional<SenseProvision> parse(byte[] data) {
+    private static Optional<SenseProvision> parse(final byte[] data) {
 
         final byte[] pad = Arrays.copyOfRange(data, 0, 80);
         final byte[] key = Arrays.copyOfRange(data, 81, 97); // key length is 16
@@ -182,7 +196,7 @@ public class KeyStoreUtils {
         final String deviceIdString = Hex.encodeHexString(deviceId).toUpperCase();
         final String aesKeyHex = Hex.encodeHexString(key).toUpperCase();
 
-        byte[] checksum = DigestUtils.sha1(Arrays.copyOfRange(data, 81, data.length - 21));
+        final byte[] checksum = DigestUtils.sha1(Arrays.copyOfRange(data, 81, data.length - 21));
         final String sha1Hex = DigestUtils.sha1Hex(checksum);
 
         for(int i =0; i < sha1.length; i++) {
@@ -204,11 +218,11 @@ public class KeyStoreUtils {
      * @return
      * @throws IllegalArgumentException
      */
-    public static byte[] counterModeDecryptBasic(final byte[] key, final byte[] nonce, final byte[] encrypted, int counter)  // make it explicit that decryption can fail.
+    public static byte[] counterModeDecryptBasic(final byte[] key, final byte[] nonce, final byte[] encrypted, final int counter)  // make it explicit that decryption can fail.
             throws IllegalArgumentException {
         final SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
 
-        ByteBuffer buf = ByteBuffer.wrap(nonce);
+        final ByteBuffer buf = ByteBuffer.wrap(nonce);
         buf.order(ByteOrder.LITTLE_ENDIAN);
         buf.position(8);  // Counter is the last 8 bytes
         buf.putLong(counter);
