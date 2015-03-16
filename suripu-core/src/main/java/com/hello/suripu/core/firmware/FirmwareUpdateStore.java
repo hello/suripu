@@ -19,6 +19,7 @@ import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.api.output.OutputProtos.SyncResponse;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -276,7 +277,7 @@ public class FirmwareUpdateStore {
                     return getFirmwareFilesForGroup(group);
                 }
             });
-            
+
             } catch (ExecutionException e) {
                 LOGGER.error("Exception while retrieving S3 file list.");
             }
@@ -286,7 +287,22 @@ public class FirmwareUpdateStore {
         if (firmwareVersion == -1) {
             LOGGER.error("Failed to retrieve S3 file list.");
             return Collections.EMPTY_LIST;
+        }else{
+
+            //Check for expired URL in Cache result and force cache cleanup, if necessary.
+            final Map<String, String> urlMap = Splitter.on('&').trimResults().withKeyValueSeparator("=").split(fw_files.getValue().get(0).getUrl().split("\\?")[1]);
+            final Long expiration = Long.parseLong(urlMap.get("Expires"));
+            final Long nowSecs = new Date().getTime() / 1000L;
+
+            if(nowSecs > expiration){
+                //Force Cache Cleanup
+                LOGGER.debug("Expired URL in S3 Cache (" + expiration.toString() + "<" + nowSecs.toString() + "). Forcing Cleanup.");
+                s3FWCache.cleanUp();
+                return Collections.EMPTY_LIST;
+            }
         }
+
+
 
         LOGGER.warn("Versions to update: {}, current version = {} for deviceId = {}", firmwareVersion, currentFirmwareVersion, deviceId);
         if (firmwareVersion.equals(currentFirmwareVersion)) {
