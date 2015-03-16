@@ -3,6 +3,7 @@ package com.hello.suripu.core.util;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.S3Object;
 import com.google.common.base.Optional;
+import com.hello.suripu.core.provision.PillBlobProvision;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -14,9 +15,13 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -113,6 +118,79 @@ public class KeyStoreUtils {
     }
 
 
+    public static Optional<PillBlobProvision> decryptPill(byte[] encryptedData, final String serialNumber) throws Exception {
+        return parsePill(encryptedData, serialNumber);
+    }
+
+
+    private static Optional<PillBlobProvision> parsePill(byte[] data, final String serialNumber) {
+
+        final byte[] factoryKey = new byte[]{0x0b, 0x53, 0x55, (byte)0xfb, (byte)0xe8, 0x69, 0x7d, 0x74, (byte)0xf4, (byte)0xe0, 0x45, 0x3c, 0x4a, (byte)0xe7, 0x40, (byte)0xc4};
+
+        byte[] nonce = new byte[16];
+        byte[] prefix = Arrays.copyOfRange(data, 8, 16);
+        for(int i = 0; i < 8; i ++) {
+            nonce[i] = prefix[i];
+        }
+        byte[] dataStart = Arrays.copyOfRange(data, 16, 308 + 16);
+
+        byte[] buffer = new byte[512];
+        int counter = 0;
+        for(int i = 0; i < dataStart.length; i+=16) {
+        byte[] result = counterModeDecryptBasic(factoryKey, nonce, Arrays.copyOfRange(dataStart, i, i + 16), counter);
+        System.arraycopy(result, 0, buffer, i, 16);
+        counter++;
+    }
+
+    final byte[] pillId = Arrays.copyOfRange(buffer, 0, 8); // key length is 16
+    final String pillIdString = Hex.encodeHexString(pillId);
+
+    final byte[] ble = Arrays.copyOfRange(buffer, 8, 16);
+    final String bleString = Hex.encodeHexString(ble);
+
+    final byte[] aesKey = Arrays.copyOfRange(buffer, 16, 32);
+    final String aesKeyString = Hex.encodeHexString(aesKey);
+    //
+    final byte[] ficr = Arrays.copyOfRange(buffer, 32, 288);
+    final String ficrString = Hex.encodeHexString(ficr);
+
+//        // Object {device_id: "21406BA108DD016F", public_key: "017e6ead3f54be65002765408f09d150", remark: ""}
+
+//        /*
+//
+//        ID: 21406BA108DD016F
+//
+//BLE: 20e9abf930fddb8a
+//
+//AES: 0C1FE4F88D00FF68473042EB7E10FF5F
+//
+//FICR: aa55aa55aa55aa55ffffffffffffffff0004000000010000ffffffffffffffffffffffff0202ffffffffffffffffffff00ffffff020000000020000000200000ffffffffffffffff0fd6638900f3cb9ef8ffffffffffffff000000002e00ffff21406ba108dd016fffffffffffffffff43424e3833330b2114ffffffffffffff017e6ead3f54be65002765408f09d15048f21e1af9de7566a6efec1ce607c30affffffff20e9abf930fddb8af6ffffff005000784e00005403800c60246472003e420382ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0056007d5000005c04880e68246472003e425382
+//
+//HDWR KEY: 017e6ead3f54be65002765408f09d150
+//
+//SHA1: bbaf102db605e7d5f352a4673ebb1a26a99a2e4b
+//
+//         */
+//
+
+        final byte[] hdwrKey = Arrays.copyOfRange(buffer, 32+128, 32+128+16);
+        final String hdwrKeyString = Hex.encodeHexString(hdwrKey);
+//
+        final byte[] sha1Stored = Arrays.copyOfRange(buffer,288,308);
+        final String sha1StoredHex = DigestUtils.sha1Hex(sha1Stored);
+
+        byte[] sha1Computed = DigestUtils.sha1(Arrays.copyOfRange(buffer, 0, 288));
+        final String sha1ComputedHex = DigestUtils.sha1Hex(sha1Computed);
+//
+        for(int i =0; i < sha1Stored.length; i++) {
+            if(sha1Stored[i] != sha1Computed[i]) {
+                return Optional.absent();
+            }
+        }
+        return Optional.of(new PillBlobProvision(pillIdString, hdwrKeyString, serialNumber, Hex.encodeHexString(data)));
+    }
+
+
     private static Optional<SenseProvision> parse(byte[] data) {
 
         final byte[] pad = Arrays.copyOfRange(data, 0, 80);
@@ -133,5 +211,37 @@ public class KeyStoreUtils {
         }
         final SenseProvision sense = SenseProvision.create(deviceIdString, aesKeyHex, sha1Hex);
         return Optional.of(sense);
+    }
+
+
+    /**
+     * Decrypts AES CTR mode 16 bytes by 16
+     * @param key
+     * @param nonce
+     * @param encrypted
+     * @param counter
+     * @return
+     * @throws IllegalArgumentException
+     */
+    public static byte[] counterModeDecryptBasic(final byte[] key, final byte[] nonce, final byte[] encrypted, int counter)  // make it explicit that decryption can fail.
+            throws IllegalArgumentException {
+        final SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
+
+        ByteBuffer buf = ByteBuffer.wrap(nonce);
+        buf.order(ByteOrder.LITTLE_ENDIAN);
+        buf.position(8);  // Counter is the last 8 bytes
+        buf.putLong(counter);
+
+        final IvParameterSpec ivParameterSpec = new IvParameterSpec(buf.array());
+
+        final Cipher cipher;
+        try {
+            cipher = Cipher.getInstance("AES/CTR/NoPadding");
+            cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
+            final byte[] decValue = cipher.doFinal(encrypted);
+            return decValue;
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 }
