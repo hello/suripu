@@ -48,6 +48,7 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             variables.put(0, new Float(hello_ts / 1000));
 
             categories.put("device_id", log.getDeviceId());
+            categories.put("origin", log.getOrigin());
 
             documents.add(new IndexTankClient.Document(documentId, fields, variables, categories));
 
