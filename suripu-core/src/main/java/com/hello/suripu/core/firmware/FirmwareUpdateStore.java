@@ -144,7 +144,7 @@ public class FirmwareUpdateStore {
 
         final ListObjectsRequest listObjectsRequest = new ListObjectsRequest();
         listObjectsRequest.withBucketName(bucketName);
-        listObjectsRequest.withPrefix("sense/" + group);
+        listObjectsRequest.withPrefix("sense/" + group + "/");
 
         final ObjectListing objectListing = s3.listObjects(listObjectsRequest);
         final List<String> files = new ArrayList<>();
