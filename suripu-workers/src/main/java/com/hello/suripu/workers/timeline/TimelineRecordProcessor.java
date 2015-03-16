@@ -112,11 +112,7 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
                 this.timelineProcessor.retrieveTimelinesFast(accountId,
                         groupedAccountIdTargetDateLocalUTCMap.get(accountId).withTimeAtStartOfDay(),
                         missingDataDefaultValue(accountId),
-                        hasAlarmInTimeline(accountId),
-                        hasSoundInTimeline(accountId),
-                        hasFeedbackInTimeline(accountId),
-                        hasHmmEnabled(accountId),
-                        hasPartnerFilterEnabled(accountId));
+                        getFlipperParam(accountId));
                 LOGGER.info("{} Timeline saved for account {} at local utc {}",
                         DateTime.now(),
                         accountId,

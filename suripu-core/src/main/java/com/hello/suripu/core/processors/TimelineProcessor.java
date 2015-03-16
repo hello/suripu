@@ -19,6 +19,8 @@ import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
+import com.hello.suripu.core.flipper.FeatureFlipper;
+import com.hello.suripu.core.flipper.FlipperParams;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -135,11 +137,7 @@ public class TimelineProcessor {
 
 
     public List<Timeline> retrieveTimelinesFast(final Long accountId, final DateTime date, final Integer missingDataDefaultValue,
-                                                final Boolean hasAlarmInTimeline,
-                                                final Boolean hasSoundInTimeline,
-                                                final Boolean hasFeedbackInTimelineEnabled,
-                                                final Boolean hasHmmEnabled,
-                                                final Boolean hasPartnerFilterEnabled) {
+                                                final FlipperParams flipperParams) {
 
 
         final long  currentTimeMillis = DateTime.now().withZone(DateTimeZone.UTC).getMillis();
@@ -162,7 +160,7 @@ public class TimelineProcessor {
         final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
 
-        if (!partnerMotions.isEmpty() && hasPartnerFilterEnabled) {
+        if (!partnerMotions.isEmpty() && flipperParams.hasFeature(FeatureFlipper.PARTNER_FILTER)) {
             try {
                 PartnerDataUtils.PartnerMotions motions = PartnerDataUtils.getMyMotion(originalTrackerMotions, partnerMotions);
                 trackerMotions.addAll(motions.myMotions);
@@ -227,7 +225,7 @@ public class TimelineProcessor {
         }
 
         final Integer offsetMillis = trackerMotions.get(0).offsetMillis;
-        final Map<Event.Type, Event> feedbackEvents = fromFeedback(accountId, targetDate, offsetMillis, hasFeedbackInTimelineEnabled);
+        final Map<Event.Type, Event> feedbackEvents = fromFeedback(accountId, targetDate, offsetMillis, flipperParams.hasFeature(FeatureFlipper.FEEDBACK_IN_TIMELINE));
         for(final Event event : feedbackEvents.values()) {
             LOGGER.info("Overriding {} with {} for account {}", event.getType().name(), event, accountId);
             timelineEvents.put(event.getStartTimestamp(), event);
@@ -240,7 +238,7 @@ public class TimelineProcessor {
                 allSensorSampleList.get(Sensor.LIGHT),
                 wakeUpWaveTimeOptional);
 
-        if (hasHmmEnabled) {
+        if (flipperParams.hasFeature(FeatureFlipper.HMM_ALGORITHM)) {
             LOGGER.info("Using HMM for account {}",accountId);
 
             final Optional<SleepHmmWithInterpretation> hmmOptional = sleepHmmDAO.getLatestModelForDate(accountId, targetDate.getMillis());
@@ -270,7 +268,7 @@ public class TimelineProcessor {
 
         // SOUND
         int numSoundEvents = 0;
-        if (hasSoundInTimeline) {
+        if (flipperParams.hasFeature(FeatureFlipper.SOUND_EVENTS_IN_TIMELINE)) {
             final List<Event> soundEvents = getSoundEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE),
                     motionEvents, lightOutTimeOptional, sleepEventsFromAlgorithm);
             for (final Event event : soundEvents) {
@@ -289,7 +287,7 @@ public class TimelineProcessor {
 
 
         // ALARM
-        if(hasAlarmInTimeline && trackerMotions.size() > 0) {
+        if(flipperParams.hasFeature(FeatureFlipper.ALARM_IN_TIMELINE) && trackerMotions.size() > 0) {
             final DateTimeZone userTimeZone = DateTimeZone.forOffsetMillis(trackerMotions.get(0).offsetMillis);
             final DateTime alarmQueryStartTime = new DateTime(targetDate.getYear(),
                     targetDate.getMonthOfYear(),

@@ -94,12 +94,7 @@ public class TimelineResource extends BaseResource {
 
         LOGGER.info("No cached timeline, reprocess timeline for account {}, date {}", accountId, targetDate);
         // TODO: Pass a config/map object to avoid changing the signature of this method for the next FeatureFlipper
-        final List<Timeline> timelines = timelineProcessor.retrieveTimelinesFast(accountId, targetDate, missingDataDefaultValue(accountId),
-                hasAlarmInTimeline(accountId),
-                hasSoundInTimeline(accountId),
-                hasFeedbackInTimeline(accountId),
-                hasHmmEnabled(accountId),
-                hasPartnerFilterEnabled(accountId));
+        final List<Timeline> timelines = timelineProcessor.retrieveTimelinesFast(accountId, targetDate, missingDataDefaultValue(accountId), getFlipperParams(accountId));
         cacheTimeline(accountId, targetDate, timelines);
         return timelines;
     }
