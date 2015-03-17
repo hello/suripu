@@ -265,7 +265,7 @@ public class FirmwareUpdateStore {
      * @param group
      * @return
      */
-    public List<SyncResponse.FileDownload> getFirmwareUpdate(final String deviceId, final String group, final int currentFirmwareVersion) {
+    public List<SyncResponse.FileDownload> getFirmwareUpdate(final String group, final int currentFirmwareVersion) {
 
         Pair<Integer, List<SyncResponse.FileDownload>> fw_files = new Pair(-1, Collections.EMPTY_LIST);
         
@@ -282,52 +282,16 @@ public class FirmwareUpdateStore {
                 LOGGER.error("Exception while retrieving S3 file list.");
             }
 
-        final Integer firmwareVersion = fw_files.getKey();
-        
-        if (firmwareVersion == -1) {
-            LOGGER.error("Failed to retrieve S3 file list.");
-            return Collections.EMPTY_LIST;
-        }else{
+        if (FirmwareUpdateStore.isValidFirmwareUpdate(fw_files, currentFirmwareVersion)) {
 
-            //Check for expired URL in Cache result and force cache cleanup, if necessary.
-            final Map<String, String> urlMap = Splitter.on('&').trimResults().withKeyValueSeparator("=").split(fw_files.getValue().get(0).getUrl().split("\\?")[1]);
-            final Long expiration = Long.parseLong(urlMap.get("Expires"));
-            final Long nowSecs = new Date().getTime() / 1000L;
-
-            if(nowSecs > expiration){
-                //Force Cache Cleanup
-                LOGGER.debug("Expired URL in S3 Cache (" + expiration.toString() + "<" + nowSecs.toString() + "). Forcing Cleanup.");
-                s3FWCache.cleanUp();
-                return Collections.EMPTY_LIST;
+            if (!FirmwareUpdateStore.isExpiredPresignedUrl(fw_files.getValue().get(0).getUrl(), new Date())) {
+                return fw_files.getValue();
             }
+            //Cache returned a valid update with an expired URL
+            LOGGER.debug("Expired URL in S3 Cache. Forcing Cleanup.");
+            s3FWCache.cleanUp();
         }
-
-
-
-        LOGGER.warn("Versions to update: {}, current version = {} for deviceId = {}", firmwareVersion, currentFirmwareVersion, deviceId);
-        if (firmwareVersion.equals(currentFirmwareVersion)) {
-            LOGGER.warn("Versions match: {}, current version = {}", firmwareVersion, currentFirmwareVersion);
-            return Collections.EMPTY_LIST;
-        }
-        
-        /**
-        // Cache Stats
-        CacheStats stats = s3FWCache.stats();
-        LOGGER.debug("Hit Rate: {}", stats.hitRate());
-        LOGGER.debug("Miss Rate: {}", stats.missRate());
-        LOGGER.debug("loadException Rate: {}", stats.loadExceptionRate());
-        LOGGER.debug("Load Penalty: {}", stats.averageLoadPenalty());
-        
-        CacheStats delta = s3FWCache.stats()
-                .minus(stats);
-        LOGGER.debug("Hit Count: {}", delta.hitCount());
-        LOGGER.debug("Miss Count: {}", delta.missCount());
-        LOGGER.debug("Load Success Count: {}", delta.loadSuccessCount());
-        LOGGER.debug("Load Exception Count: {}", delta.loadExceptionCount());
-        LOGGER.debug("Total Load Time: {}", delta.totalLoadTime());
-        **/
-        
-        return fw_files.getValue();
+        return Collections.EMPTY_LIST;
     }
 
     private byte[] computeSha1ForS3File(final String bucketName, final String fileName) {
@@ -346,6 +310,36 @@ public class FirmwareUpdateStore {
             } catch (IOException e) {
                 LOGGER.error("Failed closing S3 stream");
             }
+        }
+    }
+
+    public static boolean isValidFirmwareUpdate(final Pair<Integer, List<SyncResponse.FileDownload>> fw_files, final int currentFirmwareVersion) {
+
+        final Integer firmwareVersion = fw_files.getKey();
+
+        if (firmwareVersion == -1) {
+            LOGGER.error("Failed to retrieve S3 file list.");
+            return false;
+        }
+
+        if (firmwareVersion.equals(currentFirmwareVersion)) {
+            LOGGER.warn("Versions match: {}, current version = {}", firmwareVersion, currentFirmwareVersion);
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean isExpiredPresignedUrl(final String presignedUrl, final Date now) {
+        final Map<String, String> urlMap = Splitter.on('&').trimResults().withKeyValueSeparator("=").split(presignedUrl.split("\\?")[1]);
+
+        try {
+            final Long expiration = Long.parseLong(urlMap.get("Expires"));
+            final Long nowSecs = now.getTime() / 1000L;
+            return (nowSecs > expiration);
+        } catch (Exception e) {
+            LOGGER.error("Invalid Pre-signed URL.");
+            return true;
         }
     }
 }
