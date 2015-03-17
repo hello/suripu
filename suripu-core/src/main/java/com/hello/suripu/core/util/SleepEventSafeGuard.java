@@ -157,6 +157,9 @@ public class SleepEventSafeGuard {
                         sleep.get().getEndTimestamp() - DateTimeConstants.MILLIS_PER_MINUTE,
                         sleep.get().getTimezoneOffset()));
             }else{
+                LOGGER.warn("go to bed later than sleep too much, go to bed {}, sleep {}, remove go to bed.",
+                        new DateTime(goToBed.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBed.get().getTimezoneOffset())),
+                        new DateTime(sleep.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(sleep.get().getTimezoneOffset())));
                 goToBed = Optional.absent(); // TODO: add it back
             }
 

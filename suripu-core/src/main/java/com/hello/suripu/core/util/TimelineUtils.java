@@ -990,6 +990,51 @@ public class TimelineUtils {
         return events;
     }
 
+
+    public static List<Event> getLightEventsWithMultipleLightOut(final List<Sample> lightData) {
+
+        if (lightData.size() == 0) {
+            return Collections.EMPTY_LIST;
+        }
+
+        LOGGER.debug("Light samples size: {}", lightData.size());
+
+        final LinkedList<AmplitudeData> lightAmplitudeData = new LinkedList<>();
+        for (final Sample sample : lightData) {
+            lightAmplitudeData.add(new AmplitudeData(sample.dateTime, (double) sample.value, sample.offsetMillis));
+        }
+
+        // TODO: could make this configurable.
+        final double darknessThreshold = 1.1; // DVT unit ALS is very sensitive
+        final int approxSunsetHour = 17;
+        final int approxSunriseHour = 6;
+        final int smoothingDegree = 5; // think of it as minutes
+
+        final LightEventsDetector detector = new LightEventsDetector(approxSunriseHour, approxSunsetHour, darknessThreshold, smoothingDegree);
+
+        final LinkedList<LightSegment> lightSegments = detector.process(lightAmplitudeData);
+
+        // convert segments to Events
+        final List<Event> events = new ArrayList<>();
+        for (final LightSegment segment : lightSegments) {
+            final LightSegment.Type segmentType = segment.segmentType;
+
+            final long startTimestamp = segment.startTimestamp + smoothingDegree * MINUTE_IN_MILLIS;
+            final long endTimestamp = segment.endTimestamp - smoothingDegree * MINUTE_IN_MILLIS;
+            final int offsetMillis = segment.offsetMillis;
+
+            if (segmentType == LightSegment.Type.LIGHTS_OUT) {
+                events.add(new LightsOutEvent(endTimestamp, endTimestamp + MINUTE_IN_MILLIS, offsetMillis));
+            } else if (segmentType == LightSegment.Type.LIGHT_SPIKE) {
+                events.add(new LightEvent(startTimestamp, startTimestamp + MINUTE_IN_MILLIS, offsetMillis, "Light"));
+            } else if(segmentType == LightSegment.Type.NONE){
+                events.add(new LightEvent(startTimestamp, endTimestamp, offsetMillis, "Light"));
+            }
+            // TODO: daylight spike event -- unsure what the value might be at this moment
+        }
+        return events;
+    }
+
     public static Optional<DateTime> getLightsOutTime(final List<Event> lightEvents) {
         for (final Event event : lightEvents) {
             if (event.getType() == Event.Type.LIGHTS_OUT) {
@@ -1079,7 +1124,7 @@ public class TimelineUtils {
 
     public static SleepEvents<Optional<Event>> getSleepEvents(final DateTime targetDateLocalUTC,
                                          final List<TrackerMotion> trackerMotions,
-                                         final Optional<DateTime> lightOutTimeOptional,
+                                         final List<DateTime> lightOutTimes,
                                          final Optional<DateTime> firstWaveTimeOptional,
                                          final int smoothWindowSizeInMinutes,
                                          final int sleepFeatureAggregateWindowInMinutes,
@@ -1101,7 +1146,7 @@ public class TimelineUtils {
         sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE), new MotionDensityScoringFunction(MotionDensityScoringFunction.ScoreType.WAKE_UP));
         sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.ZERO_TO_MAX_MOTION_COUNT_DURATION), new ZeroToMaxMotionCountDurationScoreFunction());
 
-        if(lightOutTimeOptional.isPresent()) {
+        if(!lightOutTimes.isEmpty()) {
             final LinkedList<AmplitudeData> lightFeature = new LinkedList<>();
             for (final AmplitudeData amplitudeData : aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE)) {
                 // Pad the light data
@@ -1109,10 +1154,12 @@ public class TimelineUtils {
 
             }
             if(dataWithGapFilled.size() > 0) {
-                LOGGER.info("Light out time {}", lightOutTimeOptional.get()
-                        .withZone(DateTimeZone.forOffsetMillis(dataWithGapFilled.get(0).offsetMillis)));
+                for(final DateTime lightOutTime:lightOutTimes) {
+                    LOGGER.info("Light out time {}", lightOutTime
+                            .withZone(DateTimeZone.forOffsetMillis(dataWithGapFilled.get(0).offsetMillis)));
+                }
             }
-            sleepDetectionAlgorithm.addFeature(lightFeature, new LightOutScoringFunction(lightOutTimeOptional.get(), 3d));
+            sleepDetectionAlgorithm.addFeature(lightFeature, new LightOutScoringFunction(lightOutTimes, 3d));
 
             final LinkedList<AmplitudeData> lightAndCumulatedMotionFeature = new LinkedList<>();
             for (final AmplitudeData amplitudeData : aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_MOTION_PERIOD)) {
@@ -1122,7 +1169,7 @@ public class TimelineUtils {
                         amplitudeData.offsetMillis));
 
             }
-            sleepDetectionAlgorithm.addFeature(lightAndCumulatedMotionFeature, new LightOutCumulatedMotionMixScoringFunction(lightOutTimeOptional.get()));
+            sleepDetectionAlgorithm.addFeature(lightAndCumulatedMotionFeature, new LightOutCumulatedMotionMixScoringFunction(lightOutTimes));
         }
 
         if(firstWaveTimeOptional.isPresent()) {

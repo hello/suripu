@@ -2,6 +2,7 @@ package com.hello.suripu.core.models;
 
 import com.amazonaws.services.cloudfront.model.InvalidArgumentException;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.Events.AlarmEvent;
@@ -76,10 +77,16 @@ public abstract class Event {
         }
     }
 
-
+    @JsonProperty("type")
     private Type type;
+
+    @JsonProperty("startTimestamp")
     private long startTimestamp;
+
+    @JsonProperty("endTimestamp")
     private long endTimestamp;
+
+    @JsonProperty("timezoneOffset")
     private int timezoneOffset;
 
     public Event(final Type type, final long startTimestamp, final long endTimestamp, final int timezoneOffset){
@@ -187,8 +194,29 @@ public abstract class Event {
         }
     }
 
+    @JsonCreator
+    public static Event createFromType(@JsonProperty("type") final Type type,
+                                       @JsonProperty("startTimestamp") final long startTimestamp,
+                                       @JsonProperty("endTimestamp") final long endTimestamp,
+                                       @JsonProperty("timezoneOffset") final int offsetMillis,
+                                       @JsonProperty("description") final String messageOptional,
+                                       @JsonProperty("soundInfo") final SleepSegment.SoundInfo soundInfoOptional,
+                                       @JsonProperty("sleepDepth") final Integer sleepDepth){
+        return createFromType(type,
+                startTimestamp,
+                endTimestamp,
+                offsetMillis,
+                Optional.fromNullable(messageOptional),
+                Optional.fromNullable(soundInfoOptional),
+                Optional.fromNullable(sleepDepth));
+
+    }
+
+
     public static Event createFromType(final Type type,
-                                       final long startTimestamp, final long endTimestamp, final int offsetMillis,
+                                       final long startTimestamp,
+                                       final long endTimestamp,
+                                       final int offsetMillis,
                                        final Optional<String> messageOptional,
                                        final Optional<SleepSegment.SoundInfo> soundInfoOptional,
                                        final Optional<Integer> sleepDepth){
@@ -266,8 +294,13 @@ public abstract class Event {
         }
     }
 
+    @JsonProperty("description")
     public abstract String getDescription();
+
+    @JsonProperty("soundInfo")
     public abstract SleepSegment.SoundInfo getSoundInfo();
+
+    @JsonProperty("sleepDepth")
     public abstract int getSleepDepth();
 
 
