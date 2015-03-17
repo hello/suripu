@@ -48,14 +48,24 @@ public class TimelineResource extends BaseResource {
             @Scope(OAuthScope.SLEEP_TIMELINE)final AccessToken accessToken,
             @PathParam("date") String date) {
 
-        // TODO: Pass a config/map object to avoid changing the signature of this method for the next FeatureFlipper
-        return timelineProcessor.retrieveTimelinesFast(accessToken.accountId, date, missingDataDefaultValue(accessToken.accountId),
-                hasAlarmInTimeline(accessToken.accountId),
-                hasSoundInTimeline(accessToken.accountId),
-                hasFeedbackInTimeline(accessToken.accountId),
-                hasHmmEnabled(accessToken.accountId),
-                false,
-                hasPartnerFilterEnabled(accessToken.accountId));
+        if (hasHmmEnabled(accessToken.accountId)) {
+            return timelineProcessor.retrieveHmmTimeline(
+                    accessToken.accountId,
+                    date,
+                    missingDataDefaultValue(accessToken.accountId),
+                    hasAlarmInTimeline(accessToken.accountId),
+                    hasSoundInTimeline(accessToken.accountId),
+                    hasFeedbackInTimeline(accessToken.accountId));
+        }
+        else {
+            // TODO: Pass a config/map object to avoid changing the signature of this method for the next FeatureFlipper
+            return timelineProcessor.retrieveTimelinesFast(accessToken.accountId, date, missingDataDefaultValue(accessToken.accountId),
+                    hasAlarmInTimeline(accessToken.accountId),
+                    hasSoundInTimeline(accessToken.accountId),
+                    hasFeedbackInTimeline(accessToken.accountId),
+                    false,
+                    hasPartnerFilterEnabled(accessToken.accountId));
+        }
 
     }
 
@@ -72,13 +82,26 @@ public class TimelineResource extends BaseResource {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
         // TODO: Pass a config/map object to avoid changing the signature of this method for the next FeatureFlipper
-        return timelineProcessor.retrieveTimelinesFast(accountId.get(), date, missingDataDefaultValue(accessToken.accountId),
-                hasAlarmInTimeline(accountId.get()),
-                hasSoundInTimeline(accountId.get()),
-                hasFeedbackInTimeline(accountId.get()),
-                hasHmmEnabled(accountId.get()),
-                false,
-                hasPartnerFilterEnabled(accountId.get()));
+        if (hasHmmEnabled(accountId.get())) {
+
+            return timelineProcessor.retrieveHmmTimeline(
+                    accountId.get(),
+                    date,
+                    missingDataDefaultValue(accessToken.accountId),
+                    hasAlarmInTimeline(accountId.get()),
+                    hasSoundInTimeline(accountId.get()),
+                    hasFeedbackInTimeline(accountId.get()));
+
+        }
+        else {
+
+            return timelineProcessor.retrieveTimelinesFast(accountId.get(), date, missingDataDefaultValue(accessToken.accountId),
+                    hasAlarmInTimeline(accountId.get()),
+                    hasSoundInTimeline(accountId.get()),
+                    hasFeedbackInTimeline(accountId.get()),
+                    false,
+                    hasPartnerFilterEnabled(accountId.get()));
+        }
     }
 
     private Optional<Long> getAccountIdByEmail(final String email) {
