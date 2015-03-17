@@ -2,7 +2,6 @@ import com.google.common.base.Optional;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
-import com.hello.suripu.algorithm.hmm.MultipleHiddenMarkovModels;
 import com.hello.suripu.algorithm.hmm.PdfComposite;
 import com.hello.suripu.algorithm.hmm.PoissonPdf;
 import junit.framework.TestCase;
