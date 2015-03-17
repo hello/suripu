@@ -32,7 +32,7 @@ public class BatchProcessUtilsTest {
 
     private ImmutableList<DeviceAccountPair> getDevice(final long accountId, final long internalDeviceId, final String externalDeviceId){
         final List<DeviceAccountPair> deviceAccountPairs = new ArrayList<>();
-        deviceAccountPairs.add(new DeviceAccountPair(accountId, internalDeviceId, externalDeviceId));
+        deviceAccountPairs.add(new DeviceAccountPair(accountId, internalDeviceId, externalDeviceId, DateTime.now()));
         return ImmutableList.copyOf(deviceAccountPairs);
     }
 

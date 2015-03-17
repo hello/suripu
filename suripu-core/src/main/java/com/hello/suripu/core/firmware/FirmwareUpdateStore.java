@@ -19,6 +19,7 @@ import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.api.output.OutputProtos.SyncResponse;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -158,7 +159,7 @@ public class FirmwareUpdateStore {
             if(summary.getKey().contains("build_info.txt")) {
                 final S3Object s3Object = s3.getObject(bucketName, summary.getKey());
                 final S3ObjectInputStream s3ObjectInputStream = s3Object.getObjectContent();
-                String text ;
+                String text;
                 try {
                     text = CharStreams.toString(new InputStreamReader(s3ObjectInputStream, Charsets.UTF_8));
                 } catch (IOException e) {
@@ -255,16 +256,15 @@ public class FirmwareUpdateStore {
         };
 
         final List<SyncResponse.FileDownload> sortedFiles = byResetApplicationProcessor.sortedCopy(fileDownloadList);
-        final Pair<Integer, List<SyncResponse.FileDownload>> firmwareFileList = new Pair<>(firmwareVersion, sortedFiles);
-        
-        return firmwareFileList;
+
+        return new Pair<>(firmwareVersion, sortedFiles);
     }
     /**
      * Attempts retrieval of file list for group from S3 cache and compares fw version number to see if update is needed
      * @param group
      * @return
      */
-    public List<SyncResponse.FileDownload> getFirmwareUpdate(final String deviceId, final String group, final int currentFirmwareVersion) {
+    public List<SyncResponse.FileDownload> getFirmwareUpdate(final String group, final Integer currentFirmwareVersion) {
 
         Pair<Integer, List<SyncResponse.FileDownload>> fw_files = new Pair(-1, Collections.EMPTY_LIST);
         
@@ -276,42 +276,21 @@ public class FirmwareUpdateStore {
                     return getFirmwareFilesForGroup(group);
                 }
             });
-            
+
             } catch (ExecutionException e) {
                 LOGGER.error("Exception while retrieving S3 file list.");
             }
 
-        final Integer firmwareVersion = fw_files.getKey();
-        
-        if (firmwareVersion == -1) {
-            LOGGER.error("Failed to retrieve S3 file list.");
-            return Collections.EMPTY_LIST;
-        }
+        if (isValidFirmwareUpdate(fw_files, currentFirmwareVersion)) {
 
-        LOGGER.warn("Versions to update: {}, current version = {} for deviceId = {}", firmwareVersion, currentFirmwareVersion, deviceId);
-        if (firmwareVersion.equals(currentFirmwareVersion)) {
-            LOGGER.warn("Versions match: {}, current version = {}", firmwareVersion, currentFirmwareVersion);
-            return Collections.EMPTY_LIST;
+            if (!isExpiredPresignedUrl(fw_files.getValue().get(0).getUrl(), new Date())) {
+                return fw_files.getValue();
+            }
+            //Cache returned a valid update with an expired URL
+            LOGGER.debug("Expired URL in S3 Cache. Forcing Cleanup.");
+            s3FWCache.cleanUp();
         }
-        
-        /**
-        // Cache Stats
-        CacheStats stats = s3FWCache.stats();
-        LOGGER.debug("Hit Rate: {}", stats.hitRate());
-        LOGGER.debug("Miss Rate: {}", stats.missRate());
-        LOGGER.debug("loadException Rate: {}", stats.loadExceptionRate());
-        LOGGER.debug("Load Penalty: {}", stats.averageLoadPenalty());
-        
-        CacheStats delta = s3FWCache.stats()
-                .minus(stats);
-        LOGGER.debug("Hit Count: {}", delta.hitCount());
-        LOGGER.debug("Miss Count: {}", delta.missCount());
-        LOGGER.debug("Load Success Count: {}", delta.loadSuccessCount());
-        LOGGER.debug("Load Exception Count: {}", delta.loadExceptionCount());
-        LOGGER.debug("Total Load Time: {}", delta.totalLoadTime());
-        **/
-        
-        return fw_files.getValue();
+        return Collections.EMPTY_LIST;
     }
 
     private byte[] computeSha1ForS3File(final String bucketName, final String fileName) {
@@ -330,6 +309,41 @@ public class FirmwareUpdateStore {
             } catch (IOException e) {
                 LOGGER.error("Failed closing S3 stream");
             }
+        }
+    }
+
+    public static boolean isValidFirmwareUpdate(final Pair<Integer, List<SyncResponse.FileDownload>> fw_files, final Integer currentFirmwareVersion) {
+
+        final Integer firmwareVersion = fw_files.getKey();
+
+        if (firmwareVersion == -1) {
+            LOGGER.error("Failed to retrieve S3 file list.");
+            return false;
+        }
+
+        if (firmwareVersion.equals(currentFirmwareVersion)) {
+            LOGGER.info("Versions match: {}, current version = {}", firmwareVersion, currentFirmwareVersion);
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean isExpiredPresignedUrl(final String presignedUrl, final Date now) {
+        final Map<String, String> urlMap = Splitter.on('&').trimResults().withKeyValueSeparator("=").split(presignedUrl.split("\\?")[1]);
+
+        if (now == null) {
+            LOGGER.error("Invalid date parameter in pre-signed URL check.");
+            return true;
+        }
+
+        try {
+            final Long expiration = Long.parseLong(urlMap.get("Expires"));
+            final Long nowSecs = now.getTime() / 1000L;
+            return (nowSecs > expiration);
+        } catch (NumberFormatException e) {
+            LOGGER.error("Invalid pre-signed URL.");
+            return true;
         }
     }
 }

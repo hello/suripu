@@ -39,6 +39,7 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             fields.put("device_id", log.getDeviceId());
             fields.put("text", log.getMessage());
             fields.put("ts", String.valueOf(log.getTs()));
+            fields.put("all", "1");
 
             final Long hello_ts = millis;
 
@@ -47,6 +48,7 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             variables.put(0, new Float(hello_ts / 1000));
 
             categories.put("device_id", log.getDeviceId());
+            categories.put("origin", log.getOrigin());
 
             documents.add(new IndexTankClient.Document(documentId, fields, variables, categories));
 
