@@ -13,7 +13,6 @@ import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
-import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
@@ -117,19 +116,20 @@ public class SleepStatsDAODynamoDB {
             key.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
             key.put(DATE_ATTRIBUTE_NAME, new AttributeValue().withS(dateString));
 
-            final Map<String, ExpectedAttributeValue> putConditions = new HashMap<>();
-            putConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, new ExpectedAttributeValue(
-                    new AttributeValue().withN(String.valueOf(accountId))));
-            putConditions.put(DATE_ATTRIBUTE_NAME, new ExpectedAttributeValue(
-                    new AttributeValue().withS(dateString)));
+//            final Map<String, ExpectedAttributeValue> putConditions = new HashMap<>();
+//            putConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, new ExpectedAttributeValue(
+//                    new AttributeValue().withN(String.valueOf(accountId))));
+//            putConditions.put(DATE_ATTRIBUTE_NAME, new ExpectedAttributeValue(
+//                    new AttributeValue().withS(dateString)));
 
 
             final UpdateItemRequest updateItemRequest = new UpdateItemRequest()
                     .withTableName(this.tableName)
                     .withKey(key)
                     .withAttributeUpdates(item)
-                    .withExpected(putConditions)
                     .withReturnValues(ReturnValue.ALL_NEW);
+
+//                    .withExpected(putConditions)
 
             final UpdateItemResult result = this.dynamoDBClient.updateItem(updateItemRequest);
             if (result.getAttributes().size() > 0) {

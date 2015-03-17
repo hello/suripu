@@ -26,6 +26,7 @@ import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
+import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
@@ -129,6 +130,14 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
                 configuration.getSleepScoreVersion()
         );
 
+        final AmazonDynamoDB dynamoDBStatsClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepStatsDBConfiguration().getEndpoint());
+        final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = new SleepStatsDAODynamoDB(
+                dynamoDBStatsClient,
+                configuration.getSleepStatsDBConfiguration().getTableName(),
+                configuration.getSleepStatsVersion()
+        );
+
+
         final AmazonDynamoDB dynamoDBTimelineClient = dynamoDBClientFactory.getForEndpoint(configuration.getTimelineDBConfiguration().getEndpoint());
         final TimelineDAODynamoDB timelineDAODynamoDB = new TimelineDAODynamoDB(
                 dynamoDBTimelineClient,
@@ -147,7 +156,8 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
                 feedbackDAO,
                 timelineDAODynamoDB,
                 sleepHmmDAODynamoDB,
-                accountDAO);
+                accountDAO,
+                sleepStatsDAODynamoDB);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 

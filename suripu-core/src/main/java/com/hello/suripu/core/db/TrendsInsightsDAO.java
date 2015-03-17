@@ -1,6 +1,5 @@
 package com.hello.suripu.core.db;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.mappers.DowSampleMapper;
 import com.hello.suripu.core.db.mappers.InfoInsightCardsMapper;
@@ -18,7 +17,6 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,12 +39,6 @@ public abstract class TrendsInsightsDAO {
             "FROM sleep_score_dow WHERE account_id = :account_id AND score_count > 0 ORDER BY day_of_week")
     public abstract ImmutableList<DowSample> getSleepScoreDow (@Bind("account_id") Long accountId);
 
-//    @SqlUpdate("INSERT INTO sleep_score_dow (account_id, day_of_week, local_utc_updated) VALUES " +
-//            "(:account_id, 1, :updated), (:account_id, 2, :updated), (:account_id, 3, :updated), " +
-//            "(:account_id, 4, :updated), (:account_id, 5, :updated), (:account_id, 6, :updated), " +
-//            "(:account_id, 7, :updated)")
-//    public abstract long insertAccountScoreRows(@Bind("account_id") Long accountId,
-//                                                @Bind("datetime") DateTime updated);
 
     @SqlUpdate("INSERT INTO sleep_score_dow " +
             "(account_id, day_of_week, score_sum, score_count, local_utc_updated) VALUES " +
@@ -73,14 +65,6 @@ public abstract class TrendsInsightsDAO {
             "FROM sleep_duration_dow WHERE account_id = :account_id AND duration_count > 0 ORDER BY day_of_week")
     public abstract ImmutableList<DowSample> getSleepDurationDow (@Bind("account_id") Long accountId);
 
-
-//    @SqlUpdate("INSERT INTO sleep_duration_dow (account_id, day_of_week, local_utc_updated) VALUES " +
-//            "(:account_id, 1, :updated), (:account_id, 2, :updated), (:account_id, 3, :updated), " +
-//            "(:account_id, 4, :updated), (:account_id, 5, :updated), (:account_id, 6, :updated), " +
-//            "(:account_id, 7, :updated)")
-//    public abstract long insertAccountDurationRows(@Bind("account_id") Long accountId,
-//                                                   @Bind("datetime") DateTime updated);
-
     @SqlUpdate("INSERT INTO sleep_duration_dow " +
             "(account_id, day_of_week, duration_sum, duration_count, local_utc_updated) VALUES " +
             "(:account_id, :day_of_week, :duration, :count, :updated)")
@@ -100,17 +84,6 @@ public abstract class TrendsInsightsDAO {
                                                         @Bind("updated") DateTime updated);
 
     // Sleep Duration Over Time
-
-    @RegisterMapper(SleepStatsSampleMapper.class)
-    @SqlQuery("SELECT * FROM sleep_stats_time WHERE account_id = :account_id ORDER BY local_utc_date")
-    public abstract ImmutableList<SleepStatsSample> getAccountSleepStatsAll(@Bind("account_id") Long accountId);
-
-    @RegisterMapper(SleepStatsSampleMapper.class)
-    @SingleValueResult(SleepStatsSample.class)
-    @SqlQuery("SELECT * FROM sleep_stats_time WHERE account_id = :account_id AND local_utc_date = :date")
-    public abstract Optional<SleepStatsSample> getAccountSleepStatsDate(@Bind("account_id") Long accountId,
-                                                                                   @Bind("date") DateTime date);
-
     @RegisterMapper(SleepStatsSampleMapper.class)
     @SqlQuery("SELECT * FROM sleep_stats_time WHERE account_id = :account_id AND " +
             "local_utc_date >= :start_date AND local_utc_date < :end_date ORDER BY local_utc_date")

@@ -17,6 +17,7 @@ import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
+import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
@@ -76,6 +77,7 @@ public class TimelineProcessor {
     private final TimelineDAODynamoDB timelineDAODynamoDB;
     private final SleepHmmDAO sleepHmmDAO;
     private final AccountDAO accountDAO;
+    private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
 
     public TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
                             final DeviceDAO deviceDAO,
@@ -89,7 +91,8 @@ public class TimelineProcessor {
                             final FeedbackDAO feedbackDAO,
                             final TimelineDAODynamoDB timelineDAODynamoDB,
                             final SleepHmmDAO sleepHmmDAO,
-                            final AccountDAO accountDAO) {
+                            final AccountDAO accountDAO,
+                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAO = deviceDataDAO;
@@ -103,6 +106,7 @@ public class TimelineProcessor {
         this.timelineDAODynamoDB = timelineDAODynamoDB;
         this.sleepHmmDAO = sleepHmmDAO;
         this.accountDAO = accountDAO;
+        this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
     }
 
     public boolean shouldProcessTimelineByWorker(final long accountId,
@@ -833,13 +837,18 @@ public class TimelineProcessor {
 
         LOGGER.trace("SCORES: motion {}, duration {}, final {}", motionScore, durationScore, sleepScore);
 
-        // always update sleep-score in DynamoDB
-        final Boolean updatedScore = this.aggregateSleepScoreDAODynamoDB.updateInsertSingleScore(
-                accountId,
-                sleepScore,
-                DateTimeUtil.dateToYmdString(targetDate.withTimeAtStartOfDay()));
+        // always update sleep-score in DynamoDB (TODO: rm)
+//        final Boolean updatedScore = this.aggregateSleepScoreDAODynamoDB.updateInsertSingleScore(
+//                accountId,
+//                sleepScore,
+//                DateTimeUtil.dateToYmdString(targetDate.withTimeAtStartOfDay()));
+//
+//        LOGGER.trace("Updated Score {}: account {}, score{}", updatedScore, accountId, sleepScore);
 
-        LOGGER.debug("Updated Score {}: account {}, score{}", updatedScore, accountId, sleepScore);
+        // always update stats and scores
+        final Boolean updatedStats = this.sleepStatsDAODynamoDB.updateStat(accountId, targetDate.withTimeAtStartOfDay(), sleepScore, sleepStats, userOffsetMillis);
+        LOGGER.debug("Updated Stats-score: status {}, account {}, score {}, stats {}", updatedStats, accountId, sleepScore, sleepStats);
+
 
         final DateTime lastNight = new DateTime(DateTime.now(), DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
         if (targetDate.isBefore(lastNight)) {
