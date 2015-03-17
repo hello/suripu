@@ -50,5 +50,6 @@ public class FirmwareUpdateStoreTest {
         assertThat(FirmwareUpdateStore.isExpiredPresignedUrl(badUrl, now), is(true));
         now.setTime(futureSecs * 1001);
         assertThat(FirmwareUpdateStore.isExpiredPresignedUrl(validUrl, now), is(true));
+        assertThat(FirmwareUpdateStore.isExpiredPresignedUrl(validUrl, null), is(true));
     }
 }

@@ -322,7 +322,7 @@ public class FirmwareUpdateStore {
         }
 
         if (firmwareVersion.equals(currentFirmwareVersion)) {
-            LOGGER.warn("Versions match: {}, current version = {}", firmwareVersion, currentFirmwareVersion);
+            LOGGER.info("Versions match: {}, current version = {}", firmwareVersion, currentFirmwareVersion);
             return false;
         }
 
@@ -332,11 +332,16 @@ public class FirmwareUpdateStore {
     public static boolean isExpiredPresignedUrl(final String presignedUrl, final Date now) {
         final Map<String, String> urlMap = Splitter.on('&').trimResults().withKeyValueSeparator("=").split(presignedUrl.split("\\?")[1]);
 
+        if (now == null) {
+            LOGGER.error("Invalid date parameter in pre-signed URL check.");
+            return true;
+        }
+
         try {
             final Long expiration = Long.parseLong(urlMap.get("Expires"));
             final Long nowSecs = now.getTime() / 1000L;
             return (nowSecs > expiration);
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             LOGGER.error("Invalid pre-signed URL.");
             return true;
         }
