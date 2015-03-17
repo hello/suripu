@@ -11,6 +11,7 @@ import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
+import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
@@ -106,10 +107,15 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
                 }
 
                 try {
-                    this.timelineProcessor.retrieveTimelinesFast(accountId,
+                    final List<Timeline> timelines = this.timelineProcessor.retrieveTimelinesFast(accountId,
                             targetDateLocalUTC,
                             missingDataDefaultValue(accountId),
                             getFlipperParam(accountId));
+                    if(timelines.isEmpty()){
+                        continue;
+                    }
+
+                    this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC, timelines);
                     LOGGER.info("{} Timeline saved for account {} at local utc {}",
                             DateTime.now(),
                             accountId,
