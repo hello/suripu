@@ -41,7 +41,7 @@ public class HelloWorker extends Service<WorkerConfiguration> {
         bootstrap.addCommand(new InsightsGeneratorWorkerCommand("insights_generator", "generate insights for users"));
         bootstrap.addCommand(new TimelineWorkerCommand("timeline", "generate timeline for users"));
         bootstrap.addCommand(new PushNotificationsWorkerCommand("push", "send push notifications"));
-        bootstrap.addCommand(new ExampleWorker(this));
+        bootstrap.addCommand(new ExampleWorker("example", "example stuff"));
     }
 
     @Override

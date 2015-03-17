@@ -1,6 +1,5 @@
 package com.hello.suripu.workers.framework;
 
-import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
@@ -9,11 +8,9 @@ import net.sourceforge.argparse4j.inf.Namespace;
 
 public abstract class WorkerEnvironmentCommand<T extends WorkerConfiguration> extends ConfiguredCommand<T>{
 
-    private final Service<T> worker;
 
-    protected WorkerEnvironmentCommand(final Service<T> worker, final String name, final String description) {
+    protected WorkerEnvironmentCommand(final String name, final String description) {
         super(name, description);
-        this.worker = worker;
     }
 
     @Override

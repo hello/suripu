@@ -9,8 +9,6 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionIn
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibConfiguration;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
-import com.yammer.dropwizard.Service;
-import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.slf4j.Logger;
@@ -19,24 +17,14 @@ import org.slf4j.LoggerFactory;
 import java.net.InetAddress;
 import java.util.List;
 
-public class ExampleWorker extends WorkerEnvironmentCommand<WorkerConfiguration>  {
+public class ExampleWorker extends WorkerEnvironmentCommand<ExampleWorkerConfiguration>  {
 
-
-    private final Class<WorkerConfiguration> configurationClass;
-
-    public ExampleWorker(Service<WorkerConfiguration> service) {
-        super(service, "example", "Runs the Dropwizard service as an HTTP server");
-        this.configurationClass = service.getConfigurationClass();
+    public ExampleWorker(String command, String description) {
+        super(command, description);
     }
 
     @Override
-    protected void run(Bootstrap bootstrap, Namespace namespace, WorkerConfiguration configuration) throws Exception {
-        super.run(bootstrap, namespace,configuration);
-
-    }
-
-    @Override
-    protected void run(Environment environment, Namespace namespace, WorkerConfiguration configuration) throws Exception {
+    protected void run(Environment environment, Namespace namespace, ExampleWorkerConfiguration configuration) throws Exception {
         final Logger logger = LoggerFactory.getLogger(ExampleWorker.class);
         String queueName = "batch_pill_data";
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
@@ -55,6 +43,7 @@ public class ExampleWorker extends WorkerEnvironmentCommand<WorkerConfiguration>
         final com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker worker = new com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker(factory, kinesisConfig);
         worker.run();
     }
+
 
 
     private class ExampleProcessorFactory implements IRecordProcessorFactory {
