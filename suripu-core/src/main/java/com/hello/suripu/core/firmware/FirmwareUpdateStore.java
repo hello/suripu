@@ -159,7 +159,7 @@ public class FirmwareUpdateStore {
             if(summary.getKey().contains("build_info.txt")) {
                 final S3Object s3Object = s3.getObject(bucketName, summary.getKey());
                 final S3ObjectInputStream s3ObjectInputStream = s3Object.getObjectContent();
-                String text ;
+                String text;
                 try {
                     text = CharStreams.toString(new InputStreamReader(s3ObjectInputStream, Charsets.UTF_8));
                 } catch (IOException e) {
@@ -256,16 +256,15 @@ public class FirmwareUpdateStore {
         };
 
         final List<SyncResponse.FileDownload> sortedFiles = byResetApplicationProcessor.sortedCopy(fileDownloadList);
-        final Pair<Integer, List<SyncResponse.FileDownload>> firmwareFileList = new Pair<>(firmwareVersion, sortedFiles);
-        
-        return firmwareFileList;
+
+        return new Pair<>(firmwareVersion, sortedFiles);
     }
     /**
      * Attempts retrieval of file list for group from S3 cache and compares fw version number to see if update is needed
      * @param group
      * @return
      */
-    public List<SyncResponse.FileDownload> getFirmwareUpdate(final String group, final int currentFirmwareVersion) {
+    public List<SyncResponse.FileDownload> getFirmwareUpdate(final String group, final Integer currentFirmwareVersion) {
 
         Pair<Integer, List<SyncResponse.FileDownload>> fw_files = new Pair(-1, Collections.EMPTY_LIST);
         
@@ -282,9 +281,9 @@ public class FirmwareUpdateStore {
                 LOGGER.error("Exception while retrieving S3 file list.");
             }
 
-        if (FirmwareUpdateStore.isValidFirmwareUpdate(fw_files, currentFirmwareVersion)) {
+        if (isValidFirmwareUpdate(fw_files, currentFirmwareVersion)) {
 
-            if (!FirmwareUpdateStore.isExpiredPresignedUrl(fw_files.getValue().get(0).getUrl(), new Date())) {
+            if (!isExpiredPresignedUrl(fw_files.getValue().get(0).getUrl(), new Date())) {
                 return fw_files.getValue();
             }
             //Cache returned a valid update with an expired URL
@@ -313,7 +312,7 @@ public class FirmwareUpdateStore {
         }
     }
 
-    public static boolean isValidFirmwareUpdate(final Pair<Integer, List<SyncResponse.FileDownload>> fw_files, final int currentFirmwareVersion) {
+    public static boolean isValidFirmwareUpdate(final Pair<Integer, List<SyncResponse.FileDownload>> fw_files, final Integer currentFirmwareVersion) {
 
         final Integer firmwareVersion = fw_files.getKey();
 
@@ -338,7 +337,7 @@ public class FirmwareUpdateStore {
             final Long nowSecs = now.getTime() / 1000L;
             return (nowSecs > expiration);
         } catch (Exception e) {
-            LOGGER.error("Invalid Pre-signed URL.");
+            LOGGER.error("Invalid pre-signed URL.");
             return true;
         }
     }

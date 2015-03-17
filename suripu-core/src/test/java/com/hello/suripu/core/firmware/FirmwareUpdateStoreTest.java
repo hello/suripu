@@ -21,28 +21,15 @@ public class FirmwareUpdateStoreTest {
     @Test
     public void testIsValidFirmwareUpdate(){
 
-        final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = new ArrayList<>();
-        final OutputProtos.SyncResponse.FileDownload.Builder fileDownloadBuilder = OutputProtos.SyncResponse.FileDownload.newBuilder();
-        final boolean copyToSerialFlash = true;
-        final boolean resetApplicationProcessor = true;
-        final String serialFlashFilename = "mcuimgx.bin";
-        final String serialFlashPath = "/sys/";
-        final String sdCardFilename = "mcuimgx.bin";
-        final String sdCardPath = "/";
-
-        fileDownloadBuilder.setCopyToSerialFlash(copyToSerialFlash);
-        fileDownloadBuilder.setResetApplicationProcessor(resetApplicationProcessor);
-        fileDownloadBuilder.setSerialFlashFilename(serialFlashFilename);
-        fileDownloadBuilder.setSerialFlashPath(serialFlashPath);
-        fileDownloadBuilder.setSdCardFilename(sdCardFilename);
-        fileDownloadBuilder.setSdCardPath(sdCardPath);
-
-
-        fileDownloadList.add(fileDownloadBuilder.build());
-        final Pair<Integer, List<OutputProtos.SyncResponse.FileDownload>> firmwareFileList = new Pair<>(12345678, fileDownloadList);
-        final Pair<Integer, List<OutputProtos.SyncResponse.FileDownload>> emptyFileList = new Pair(-1, Collections.EMPTY_LIST);
         final Integer sameFirmwareVersion = 12345678;
         final Integer diffFirmwareVersion = 123456789;
+        final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = new ArrayList<>();
+        fileDownloadList.add(OutputProtos.SyncResponse.FileDownload.newBuilder().build());
+
+        final Pair<Integer, List<OutputProtos.SyncResponse.FileDownload>> firmwareFileList = new Pair<>(sameFirmwareVersion, fileDownloadList);
+        final Pair<Integer, List<OutputProtos.SyncResponse.FileDownload>> emptyFileList = new Pair(-1, Collections.EMPTY_LIST);
+
+
 
         assertThat(FirmwareUpdateStore.isValidFirmwareUpdate(firmwareFileList, sameFirmwareVersion), is(false));
         assertThat(FirmwareUpdateStore.isValidFirmwareUpdate(firmwareFileList, diffFirmwareVersion), is(true));
