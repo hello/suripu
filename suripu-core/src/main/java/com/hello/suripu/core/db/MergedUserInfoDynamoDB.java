@@ -275,7 +275,7 @@ public class MergedUserInfoDynamoDB {
     public boolean setAlarms(final String deviceId, final long accountId, final long lastUpdatedAt, final List<Alarm> alarms, final DateTimeZone userTimeZone){
         final Map<String, AttributeValueUpdate> items = generateAlarmUpdateItem(alarms, userTimeZone);
 
-        if(items.isEmpty() || items.containsKey(EXPECTED_RING_TIME_ATTRIBUTE_NAME) == false){
+        if(items.isEmpty() || !items.containsKey(EXPECTED_RING_TIME_ATTRIBUTE_NAME)){
             return false;
         }
 
