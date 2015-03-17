@@ -180,37 +180,4 @@ public class HmmTest {
 
     }
 
-    @Test
-    public void testMultipleModelDecode() {
-        HiddenMarkovModel hmm = createPoissonOnlyModel(A, pi, model);
-
-        //model 2 was modified to be much less likely
-        HiddenMarkovModel hmm2 = createPoissonOnlyModel(A, pi, model2);
-
-        final Integer [] possibleEndStates = {0};
-
-        MultipleHiddenMarkovModels mhmms = new MultipleHiddenMarkovModels();
-
-        mhmms.addModel("hmm1",hmm);
-        mhmms.addModel("hmm2",hmm2);
-
-        Optional<MultipleHiddenMarkovModels.BestModel> oresult =  mhmms.getBestPathOfModels(this.mydata, possibleEndStates);
-
-        TestCase.assertTrue(oresult.isPresent());
-
-        HmmDecodedResult result = oresult.get().result;
-
-
-        TestCase.assertTrue(oresult.get().model.equals("hmm1"));
-
-        for (int t = 0; t < result.bestPath.size(); t++) {
-            if (result.bestPath.get(t) != this.path[t]) {
-                int foo = 3;
-                foo++;
-            }
-
-            TestCase.assertTrue(result.bestPath.get(t) == this.path[t]);
-        }
-
-    }
 }

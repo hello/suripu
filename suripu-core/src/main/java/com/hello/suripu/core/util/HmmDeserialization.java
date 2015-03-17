@@ -8,7 +8,6 @@ import com.hello.suripu.algorithm.hmm.DiscreteAlphabetPdf;
 import com.hello.suripu.algorithm.hmm.GammaPdf;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
 import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
-import com.hello.suripu.algorithm.hmm.MultipleHiddenMarkovModels;
 import com.hello.suripu.algorithm.hmm.PdfComposite;
 import com.hello.suripu.algorithm.hmm.PoissonPdf;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
@@ -28,7 +27,6 @@ public class HmmDeserialization {
     static public ImmutableList<NamedSleepHmmModel> createModelsFromProtobuf(final SleepHmmProtos.SleepHmmModelSet allModels,final Logger logger) {
 
         List<NamedSleepHmmModel> models = new ArrayList<>();
-        final MultipleHiddenMarkovModels multipleHiddenMarkovModels = new MultipleHiddenMarkovModels();
 
         for (final SleepHmmProtos.SleepHmm hmmModelData : allModels.getModelsList()) {
 
