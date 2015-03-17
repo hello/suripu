@@ -107,10 +107,7 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
                 }
 
                 try {
-                    final List<Timeline> timelines = this.timelineProcessor.retrieveTimelinesFast(accountId,
-                            targetDateLocalUTC,
-                            missingDataDefaultValue(accountId),
-                            getFlipperParam(accountId));
+                    final List<Timeline> timelines = this.timelineProcessor.retrieveTimelinesFast(accountId, targetDateLocalUTC);
                     if(timelines.isEmpty()){
                         continue;
                     }

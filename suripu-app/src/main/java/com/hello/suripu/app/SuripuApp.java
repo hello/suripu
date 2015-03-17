@@ -329,7 +329,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 configuration.getScoreThreshold(),
                 ringTimeHistoryDAODynamoDB,
                 feedbackDAO,
-                timelineDAODynamoDB,
                 sleepHmmDAODynamoDB,
                 accountDAO);
 

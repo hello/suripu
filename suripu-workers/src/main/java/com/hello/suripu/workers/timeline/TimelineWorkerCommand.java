@@ -145,7 +145,6 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
                 configuration.getScoreThreshold(),
                 ringTimeHistoryDAODynamoDB,
                 feedbackDAO,
-                timelineDAODynamoDB,
                 sleepHmmDAODynamoDB,
                 accountDAO);
 

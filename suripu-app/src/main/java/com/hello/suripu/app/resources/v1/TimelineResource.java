@@ -93,7 +93,7 @@ public class TimelineResource extends BaseResource {
         }
 
         LOGGER.info("No cached timeline, reprocess timeline for account {}, date {}", accountId, targetDate);
-        final List<Timeline> timelines = timelineProcessor.retrieveTimelinesFast(accountId, targetDate, missingDataDefaultValue(accountId), getFlipperParams(accountId));
+        final List<Timeline> timelines = timelineProcessor.retrieveTimelinesFast(accountId, targetDate);
         cacheTimeline(accountId, targetDate, timelines);
         return timelines;
     }

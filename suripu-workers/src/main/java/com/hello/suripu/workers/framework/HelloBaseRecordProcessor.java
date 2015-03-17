@@ -3,7 +3,6 @@ package com.hello.suripu.workers.framework;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.flipper.FeatureFlipper;
-import com.hello.suripu.core.flipper.FlipperParams;
 import com.librato.rollout.RolloutClient;
 
 import javax.inject.Inject;
@@ -28,10 +27,6 @@ public abstract class HelloBaseRecordProcessor implements IRecordProcessor {
 
     protected Boolean userHasPushNotificationsEnabled(final Long accountId) {
         return flipper.userFeatureActive(FeatureFlipper.PUSH_NOTIFICATIONS_ENABLED, accountId, Collections.EMPTY_LIST);
-    }
-
-    protected FlipperParams getFlipperParam(final Long accountId){
-        return FlipperParams.create(accountId, this.flipper);
     }
 
 }

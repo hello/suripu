@@ -2,6 +2,7 @@ package com.hello.suripu.workers.framework;
 
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.flipper.DynamoDBAdapter;
+import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.workers.alarm.AlarmRecordProcessor;
 import com.hello.suripu.workers.insights.InsightsGenerator;
 import com.hello.suripu.workers.notifications.PushNotificationsProcessor;
@@ -27,8 +28,9 @@ import javax.inject.Singleton;
         PillScoreProcessor.class,
         SenseSaveProcessor.class,
         InsightsGenerator.class,
+        PushNotificationsProcessor.class,
         TimelineRecordProcessor.class,
-        PushNotificationsProcessor.class
+        TimelineProcessor.class,
 })
 public class WorkerRolloutModule {
     private final FeatureStore featureStore;
