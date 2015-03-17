@@ -60,3 +60,19 @@ GRANT ALL PRIVILEGES ON SEQUENCE sleep_stats_time_id_seq TO ingress_user;
 ALTER TABLE sleep_stats_time ADD COLUMN sleep_time_utc TIMESTAMP;
 ALTER TABLE sleep_stats_time ADD COLUMN wake_time_utc TIMESTAMP;
 ALTER TABLE sleep_stats_time ADD COLUMN fall_asleep_time INTEGER default 0;
+
+
+-- store aggregated dow metrics 03/13/2015
+
+CREATE TABLE stats_dow (
+  id BIGSERIAL PRIMARY KEY,
+  account_id BIGINT,
+  sleep_scores_dow JSON,
+  sleep_duration_dow JSON,
+  created TIMESTAMP default current_timestamp
+);
+
+CREATE INDEX stats_dow_account_id ON stats_dow(account_id);
+
+GRANT ALL PRIVILEGES ON stats_dow TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE stats_dow_id_seq TO ingress_user;

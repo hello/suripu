@@ -209,6 +209,14 @@ sleephmm_db:
   region: us-east-1
   table_name: sleephmm
 
+# store sleep scores and other stats
+# v0.2: score uses movement and duration
+sleep_stats_db:
+    endpoint : http://localhost:7777
+    region: us-east-1
+    table_name: prod_sleep_stats
+sleep_stats_version: v_0_2
+
 
 max_cache_refresh_days: 20
 
