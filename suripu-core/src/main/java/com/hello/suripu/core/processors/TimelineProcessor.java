@@ -487,7 +487,7 @@ public class TimelineProcessor {
         SleepHmmWithInterpretation.SleepHmmResult res = optionalHmmPredictions.get();
 
         // insert IN-BED, SLEEP, WAKE, OUT-of-BED
-        for (final Event e : res.toList()) {
+        for (final Event e : res.sleepEvents) {
             timelineEvents.put(e.getStartTimestamp(), e);
         }
 
@@ -516,7 +516,7 @@ public class TimelineProcessor {
 
 
         final List<Insight> insights = TimelineUtils.generatePreSleepInsights(allSensorSampleList, stats.sleepTime, accountId);
-        final List<SleepSegment>  reversedSegments = Lists.reverse(TimelineUtils.eventsToSegments(res.toList()));
+        final List<SleepSegment>  reversedSegments = Lists.reverse(TimelineUtils.eventsToSegments(res.sleepEvents));
 
         final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, date, reversedSegments, insights, stats);
 

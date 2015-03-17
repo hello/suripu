@@ -4,10 +4,12 @@ import com.google.common.base.Optional;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
+import junit.framework.TestCase;
 import org.junit.Test;
 import sun.misc.BASE64Decoder;
 
@@ -23,6 +25,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class HmmTest {
 
+    private static final int NUM_MINUTES_IN_WINDOW = 15;
     private static long t0 = 1425420828000L;
     private static long tf = t0 + 3600 * 8 * 1000;
     private static long tc1 = t0 + 3600 * 6 * 1000;
@@ -96,16 +99,27 @@ public class HmmTest {
         Optional<SleepHmmWithInterpretation.SleepHmmResult> res = hmm.get().getSleepEventsUsingHMM(sensorSampleList,motionList,t0 + offset,tf + offset,tc1);
         Optional<SleepHmmWithInterpretation.SleepHmmResult> res2 = hmm.get().getSleepEventsUsingHMM(sensorSampleList,motionList,t0 + offset,tf + offset,tc2);
 
-        assertTrue(res.isPresent());
-        assertTrue(res2.isPresent());
+        TestCase.assertTrue(res.isPresent());
+        TestCase.assertTrue(res2.isPresent());
 
-        assertTrue(res.get().sleepEvents.get(0).fallAsleep.isPresent());
+        SleepHmmWithInterpretation.SleepHmmResult r = res.get();
 
-        final int expectedLength1 =  6*60 / SleepHmmWithInterpretation.NUM_MINUTES_IN_WINDOW;
-        final int expectedLength2 =  7*60 / SleepHmmWithInterpretation.NUM_MINUTES_IN_WINDOW;
+        TestCase.assertTrue(r.sleepEvents.size() == 4);
+        boolean foundOne = false;
+        for (Event e : r.sleepEvents) {
 
-        assertTrue(res.get().path.size() ==  expectedLength1);
-        assertTrue(res2.get().path.size() ==  expectedLength2);
+            if (e.getType() == Event.Type.SLEEP) {
+                foundOne = treu;
+            }
+        }
+
+        TestCase.assertTrue(foundOne);
+
+        final int expectedLength1 =  6*60 / NUM_MINUTES_IN_WINDOW;
+        final int expectedLength2 =  7*60 / NUM_MINUTES_IN_WINDOW;
+
+        TestCase.assertTrue(res.get().path.size() == expectedLength1);
+        TestCase.assertTrue(res2.get().path.size() == expectedLength2);
 
 
 

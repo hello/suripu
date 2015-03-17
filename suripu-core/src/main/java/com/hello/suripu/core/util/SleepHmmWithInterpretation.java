@@ -2,6 +2,7 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.hmm.DiscreteAlphabetPdf;
 import com.hello.suripu.algorithm.hmm.GammaPdf;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
@@ -23,10 +24,12 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Named;
 import javax.swing.text.html.Option;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -41,18 +44,14 @@ public class SleepHmmWithInterpretation {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepHmmWithInterpretation.class);
 
-    final static public int NUM_MINUTES_IN_WINDOW = 15;
 
 
 
-    final static protected int ACCEPTABLE_GAP_IN_MINUTES_FOR_SLEEP_DISTURBANCE = 30;
-    final static protected int ACCEPTABLE_GAP_IN_INDEX_COUNTS = ACCEPTABLE_GAP_IN_MINUTES_FOR_SLEEP_DISTURBANCE / NUM_MINUTES_IN_WINDOW;
-    final static protected int MIN_DURATION_OF_SLEEP_SEGMENT_IN_MINUTES = 30;
-    final static protected int MIN_DURATION_OF_SLEEP_SEGMENT_IN_INDEX_COUNTS = MIN_DURATION_OF_SLEEP_SEGMENT_IN_MINUTES / NUM_MINUTES_IN_WINDOW;
+    final static protected int MIN_DURATION_OF_SLEEP_SEGMENT_IN_MINUTES = 45;
+    final static protected int MAX_ALLOWABLE_SLEEP_GAP_IN_MINUTES = 15;
 
-    final static protected int MIN_DURATION_OF_ONBED_SEGMENT_IN_MINUTES = MIN_DURATION_OF_SLEEP_SEGMENT_IN_MINUTES + 2*NUM_MINUTES_IN_WINDOW;
-    final static protected int MIN_DURATION_OF_ONBED_SEGMENT_IN_INDEX_COUNTS = MIN_DURATION_OF_ONBED_SEGMENT_IN_MINUTES / NUM_MINUTES_IN_WINDOW;
-
+    final static protected int MIN_DURATION_OF_ONBED_SEGMENT_IN_MINUTES = 45;
+    final static protected int MAX_ALLOWABLE_ONBED_GAP_IN_MINUTES = 45;
 
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
 
@@ -81,26 +80,14 @@ public class SleepHmmWithInterpretation {
     public static class SleepHmmResult {
 
         public final SleepStats stats;
-        public final ImmutableList<SleepEvents<Optional<Event>>> sleepEvents;
+        public final ImmutableList<Event> sleepEvents;
         public final ImmutableList<Integer> path;
 
-        public ImmutableList<Event> toList() {
-            List<Event> list = new ArrayList<>();
 
-            for (final SleepEvents<Optional<Event>> e : sleepEvents) {
-                for (Optional<Event> e2 : e.toList()) {
-                    if (e2.isPresent()) {
-                        list.add(e2.get());
-                    }
-                }
-            }
-
-            return ImmutableList.copyOf(list);
-        }
 
         public SleepHmmResult(SleepStats stats,
                               ImmutableList<Integer> path,
-                              ImmutableList<SleepEvents<Optional<Event>>> sleepEvents) {
+                              ImmutableList<Event> sleepEvents) {
 
             this.stats = stats;
             this.path = path;
@@ -218,7 +205,7 @@ CREATE CREATE CREATE
             final HmmDecodedResult result = model.hmm.decode(binnedData.data, allowableEndings);
 
             LOGGER.debug("path={}", getPathAsString(result.bestPath));
-
+            LOGGER.debug("model \"{}\" BIC={}",model.modelName,result.bic);
             //keep track of lowest score (lowest == best)
             if (result.bic < lowestModelScore) {
                 lowestModelScore = result.bic;
@@ -243,22 +230,24 @@ CREATE CREATE CREATE
          *  */
 
 
-        final ImmutableList<SegmentPairWithGaps> sleep = filterPairsByDuration(
-                mindTheGapsAndJoinPairs(getSetBoundaries(bestResult.bestPath, bestModel.sleepStates),
-                        ACCEPTABLE_GAP_IN_INDEX_COUNTS), MIN_DURATION_OF_SLEEP_SEGMENT_IN_INDEX_COUNTS);
 
-        final ImmutableList<SegmentPairWithGaps> onBed = filterPairsByDuration(
-                mindTheGapsAndJoinPairs(getSetBoundaries(bestResult.bestPath, bestModel.onBedStates),
-                        ACCEPTABLE_GAP_IN_INDEX_COUNTS),MIN_DURATION_OF_ONBED_SEGMENT_IN_INDEX_COUNTS);
+        final ImmutableList<SegmentPairWithGaps> sleep = filterSegmentPairsByDuration(
+                mindTheGapsAndJoinPairs(getSetBoundaries(bestResult.bestPath, bestModel.sleepStates),MAX_ALLOWABLE_SLEEP_GAP_IN_MINUTES / bestModel.numMinutesInMeasPeriod),
+                MIN_DURATION_OF_SLEEP_SEGMENT_IN_MINUTES / bestModel.numMinutesInMeasPeriod);
+
+        final ImmutableList<SegmentPairWithGaps> onBed = filterSegmentPairsByDuration(
+                mindTheGapsAndJoinPairs(getSetBoundaries(bestResult.bestPath, bestModel.onBedStates),MAX_ALLOWABLE_ONBED_GAP_IN_MINUTES/ bestModel.numMinutesInMeasPeriod),
+                MIN_DURATION_OF_ONBED_SEGMENT_IN_MINUTES / bestModel.numMinutesInMeasPeriod);
 
 
-        return  processEventsIntoResult(sleep,onBed,t0,timezoneOffset,bestResult.bestPath);
+
+        return  processEventsIntoResult(bestModel,sleep,onBed,t0,timezoneOffset,bestResult.bestPath);
 
 
     }
 
-    protected  Event getEventFromIndex(Event.Type eventType, final int index, final long t0, final int timezoneOffset,final String description) {
-        Long eventTime =  getTimeFromBin(index,NUM_MINUTES_IN_WINDOW,t0);
+    protected  Event getEventFromIndex(Event.Type eventType, final int index, final long t0, final int timezoneOffset,final String description,final int numMinutesInWindow) {
+        Long eventTime =  getTimeFromBin(index,numMinutesInWindow,t0);
 
         //  final long startTimestamp, final long endTimestamp, final int offsetMillis,
         //  final Optional<String> messageOptional,
@@ -325,12 +314,9 @@ CREATE CREATE CREATE
         return  ImmutableList.copyOf(candidates);
     }
 
-    Optional<SleepHmmResult> processEventsIntoResult(final ImmutableList<SegmentPairWithGaps> sleeps, final ImmutableList<SegmentPairWithGaps> beds, final long t0, final int timezoneOffset, final ImmutableList<Integer> path) {
+    Optional<SleepHmmResult> processEventsIntoResult(final NamedSleepHmmModel model, final ImmutableList<SegmentPairWithGaps> sleeps, final ImmutableList<SegmentPairWithGaps> beds, final long t0, final int timezoneOffset, final ImmutableList<Integer> path) {
 
-        List<SleepEvents<Optional<Event>>> matched = new ArrayList<SleepEvents<Optional<Event>>>();
-        Iterator<SegmentPairWithGaps> i1 = sleeps.iterator();
-        Iterator<SegmentPairWithGaps> i2 = beds.iterator();
-
+        List<Event> events = new ArrayList<>();
         int minutesSpentInBed = 0;
         int minutesSpentSleeping = 0;
         int numTimesWokenUpDuringSleep = 0;
@@ -341,86 +327,86 @@ CREATE CREATE CREATE
             return Optional.absent();
         }
 
-        SegmentPairWithGaps v1 = i1.next();
-        SegmentPairWithGaps v2 = i2.next();
 
-        do {
+        for (final SegmentPairWithGaps seg : sleeps) {
+            events.add(getEventFromIndex(Event.Type.SLEEP, seg.bounds.i1, t0, timezoneOffset, English.FALL_ASLEEP_MESSAGE,model.numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.WAKE_UP, seg.bounds.i2, t0, timezoneOffset, English.WAKE_UP_MESSAGE,model.numMinutesInMeasPeriod));
 
+            minutesSpentSleeping += (seg.bounds.i2 - seg.bounds.i1) * model.numMinutesInMeasPeriod;
 
-            if (v1.isInsideOf(v2)) {
-                final int totalDurationSleeping = (v1.bounds.i2 - v1.bounds.i1 + 1) * NUM_MINUTES_IN_WINDOW;
-                final int totalDurationInBed = (v2.bounds.i2 - v2.bounds.i1 + 1) * NUM_MINUTES_IN_WINDOW;
-                final Event sleep = getEventFromIndex(Event.Type.SLEEP, v1.bounds.i1, t0, timezoneOffset, English.FALL_ASLEEP_MESSAGE);
-                final Event wake = getEventFromIndex(Event.Type.WAKE_UP, v1.bounds.i2, t0, timezoneOffset, English.WAKE_UP_MESSAGE);
-                final Event inBed = getEventFromIndex(Event.Type.IN_BED, v2.bounds.i1, t0, timezoneOffset, English.IN_BED_MESSAGE);
-                final Event outOfBed = getEventFromIndex(Event.Type.OUT_OF_BED, v2.bounds.i2, t0, timezoneOffset, English.OUT_OF_BED_MESSAGE);
+            numTimesWokenUpDuringSleep += 1;
+            numSeparateSleepSegments += 1;
 
-                final List<Optional<Event>> disturbances = new ArrayList<>();
+            for (final SegmentPair gap : seg.gaps) {
+                if (gap.i1 - 1 > seg.bounds.i1 && gap.i2 + 1 < seg.bounds.i2) {
+                    events.add(getEventFromIndex(Event.Type.WAKE_UP, gap.i1, t0, timezoneOffset, English.WAKE_UP_MESSAGE,model.numMinutesInMeasPeriod));
+                    events.add(getEventFromIndex(Event.Type.SLEEP, gap.i2, t0, timezoneOffset, English.FALL_ASLEEP_MESSAGE,model.numMinutesInMeasPeriod));
 
-                minutesSpentSleeping += totalDurationSleeping;
-                minutesSpentInBed += totalDurationInBed;
-                numSeparateSleepSegments++;
+                    minutesSpentSleeping -= (gap.i2 - gap.i1) * model.numMinutesInMeasPeriod;
 
-                for (SegmentPair p : v1.gaps) {
-                    if (p.i1.equals(p.i2)) {
-                        final Event d = getEventFromIndex(Event.Type.SLEEP, p.i1, t0, timezoneOffset, English.WAKESLEEP_DISTURBANCE_MESSAGE);
-                        disturbances.add(Optional.of(d));
-
-    }
-                    else {
-                        final Event wake2 = getEventFromIndex(Event.Type.WAKE_UP, p.i1, t0, timezoneOffset, English.WAKE_UP_DISTURBANCE_MESSAGE);
-                        final Event sleep2 = getEventFromIndex(Event.Type.SLEEP, p.i2, t0, timezoneOffset, English.FALL_ASLEEP_DISTURBANCE_MESSAGE);
-
-                        disturbances.add(Optional.of(wake2));
-                        disturbances.add(Optional.of(sleep2));
-                    }
-
-                    minutesSpentSleeping -= (p.i2 - p.i1 + 1) * NUM_MINUTES_IN_WINDOW;
                     numTimesWokenUpDuringSleep += 1;
                 }
-
-                matched.add(SleepEvents.<Optional<Event>>create(Optional.of(inBed), Optional.of(sleep), Optional.of(wake), Optional.of(outOfBed), disturbances));
-
-
-                if (i1.hasNext()) {
-                    v1 = i1.next();
-                }
-
-                if (i2.hasNext()) {
-                    v2 = i2.next();
-                }
             }
-            else {
-
-                if (v1.bounds.i1 < v2.bounds.i1) {
-                    if (i1.hasNext()) {
-                        v1 = i1.next();
-                    }
-                }
-                else {
-                    if (i2.hasNext()) {
-                        v2 = i2.next();
-                    }
-                }
-
-            }
-
         }
-        while (i1.hasNext() && i2.hasNext());
+
+        for (final SegmentPairWithGaps seg : beds) {
+            events.add(getEventFromIndex(Event.Type.IN_BED, seg.bounds.i1, t0, timezoneOffset, English.IN_BED_MESSAGE,model.numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.OUT_OF_BED, seg.bounds.i2, t0, timezoneOffset, English.OUT_OF_BED_MESSAGE,model.numMinutesInMeasPeriod));
+
+            //ignore gaps
+
+            minutesSpentInBed += (seg.bounds.i2 - seg.bounds.i1) * model.numMinutesInMeasPeriod;
+        }
 
 
+        //sort list of events into chronological order
+        Comparator<Event> chronologicalComparator = new Comparator<Event>() {
+            @Override
+            public int compare(final Event o1, final Event o2) {
+                final long t1 = o1.getStartTimestamp();
+                final long t2 = o2.getStartTimestamp();
+                int ret = 0;
+                if (t1 < t2) {
+                    ret = 1;
+                }
 
-        return Optional.of(new SleepHmmResult(new SleepStats(minutesSpentInBed,minutesSpentSleeping,numTimesWokenUpDuringSleep,numSeparateSleepSegments),path,ImmutableList.copyOf(matched)));
+                if (t2 < t1) {
+                    ret = -1;
+                }
+
+                return ret;
+            }
+        };
+
+        Collections.sort(events,chronologicalComparator);
+
+        return Optional.of(new SleepHmmResult(new SleepStats(minutesSpentInBed,minutesSpentSleeping,numTimesWokenUpDuringSleep - 1,numSeparateSleepSegments),path,ImmutableList.copyOf(events)));
 
 
     }
 
-    protected ImmutableList<SegmentPairWithGaps> filterPairsByDuration(final ImmutableList<SegmentPairWithGaps> pairs,final  int durationThreshold) {
+    protected ImmutableList<SegmentPairWithGaps> filterSegmentPairsByDuration(final ImmutableList<SegmentPairWithGaps> pairs,final  int durationThreshold) {
 
         final List<SegmentPairWithGaps> filteredResults = new ArrayList<SegmentPairWithGaps>();
 
         for (final SegmentPairWithGaps pair : pairs) {
             final int pairDuration = pair.bounds.i2 - pair.bounds.i1;
+
+            if (pairDuration >= durationThreshold) {
+                filteredResults.add(pair);
+            }
+        }
+
+        return ImmutableList.copyOf(filteredResults);
+
+    }
+
+    protected ImmutableList<SegmentPair> filterPairsByDuration(final ImmutableList<SegmentPair> pairs,final  int durationThreshold) {
+
+        final List<SegmentPair> filteredResults = new ArrayList<SegmentPair>();
+
+        for (final SegmentPair pair : pairs) {
+            final int pairDuration = pair.i2 - pair.i1;
 
             if (pairDuration >= durationThreshold) {
                 filteredResults.add(pair);
