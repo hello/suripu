@@ -210,6 +210,14 @@ public class MergedUserInfoDynamoDBIT {
         assertThat(updated, is(false));
     }
 
+    private Alarm nonRepeatedFromRingTime(final DateTime ringTime, final boolean smart){
+        return new Alarm(ringTime.getYear(),
+                ringTime.getMonthOfYear(),
+                ringTime.getDayOfMonth(),
+                ringTime.getHourOfDay(),
+                ringTime.getMinuteOfHour(),
+                new HashSet<Integer>(), false, true, true, smart, new AlarmSound(0, "Pluse"), "id");
+    }
 
     @Test
     public void testUpdateAlarmShouldUpdateRingTime(){
@@ -228,18 +236,43 @@ public class MergedUserInfoDynamoDBIT {
         final ArrayList<Alarm> alarms = new ArrayList<>();
         final DateTime insertedAlarmRingTime = now.plusMinutes(10).withSecondOfMinute(0).withMillisOfSecond(0);
 
-        alarms.add(new Alarm(insertedAlarmRingTime.getYear(),
-                insertedAlarmRingTime.getMonthOfYear(),
-                insertedAlarmRingTime.getDayOfMonth(),
-                insertedAlarmRingTime.getHourOfDay(),
-                insertedAlarmRingTime.getMinuteOfHour(),
-                new HashSet<Integer>(), false, true, true, false, new AlarmSound(0, "Pluse"), "id"));
+        alarms.add(nonRepeatedFromRingTime(insertedAlarmRingTime, false));
         this.mergedUserInfoDynamoDB.setAlarms(senseId, accountId, alarms, DateTimeZone.getDefault());
 
         assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().actualRingTimeUTC,
                 is(insertedAlarmRingTime.getMillis()));
         assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().fromSmartAlarm,
                 is(false));
+    }
+
+
+    @Test
+    public void testUpdateTheSameAlarmShouldNotUpdateRingTime(){
+        final String senseId = "Sense";
+        final long accountId  = 1;
+
+        final DateTime now = DateTime.now().withSecondOfMinute(0).withMillisOfSecond(0);
+        final DateTime previousRing = now.plusHours(1);
+        this.mergedUserInfoDynamoDB.setRingTime(senseId, accountId, new RingTime(previousRing.minusMinutes(5).getMillis(),
+                previousRing.getMillis(), new long[0], true));
+        assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().actualRingTimeUTC,
+                is(previousRing.minusMinutes(5).getMillis()));
+        assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().fromSmartAlarm,
+                is(true));
+
+        final long lastUpdateAt = this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().lastUpdatedAt;
+
+        final ArrayList<Alarm> alarms = new ArrayList<>();
+        alarms.add(nonRepeatedFromRingTime(previousRing, true));
+        this.mergedUserInfoDynamoDB.setAlarms(senseId, accountId,lastUpdateAt, alarms, DateTimeZone.getDefault());
+
+        assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().actualRingTimeUTC,
+                is(previousRing.minusMinutes(5).getMillis()));
+        assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().expectedRingTimeUTC,
+                is(previousRing.getMillis()));
+
+        assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().fromSmartAlarm,
+                is(true));
     }
 
     @Test
