@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
@@ -45,10 +46,10 @@ public class BatchProcessUtilsTest {
 
         final long accountId = 1L;
         final List<DeviceAccountPair> deviceAccountPairsForPill = new ArrayList<>();
-        deviceAccountPairsForPill.add(new DeviceAccountPair(accountId, 2L, pillId1));
+        deviceAccountPairsForPill.add(new DeviceAccountPair(accountId, 2L, pillId1, DateTimeUtil.MORPHEUS_DAY_ONE));
 
         final List<DeviceAccountPair> deviceAccountPairsForSense = new ArrayList<>();
-        deviceAccountPairsForSense.add(new DeviceAccountPair(accountId, 3L, sensId));
+        deviceAccountPairsForSense.add(new DeviceAccountPair(accountId, 3L, sensId, DateTimeUtil.MORPHEUS_DAY_ONE));
 
         when(deviceDAO.getLinkedAccountFromPillId(pillId1)).thenReturn(ImmutableList.copyOf(deviceAccountPairsForPill));
         when(deviceDAO.getSensesForAccountId(accountId)).thenReturn(ImmutableList.copyOf(deviceAccountPairsForSense));
@@ -81,10 +82,10 @@ public class BatchProcessUtilsTest {
 
         final long accountId = 1L;
         final List<DeviceAccountPair> deviceAccountPairsForPill = new ArrayList<>();
-        deviceAccountPairsForPill.add(new DeviceAccountPair(accountId, 2L, pillId1));
+        deviceAccountPairsForPill.add(new DeviceAccountPair(accountId, 2L, pillId1, DateTimeUtil.MORPHEUS_DAY_ONE));
 
         final List<DeviceAccountPair> deviceAccountPairsForSense = new ArrayList<>();
-        deviceAccountPairsForSense.add(new DeviceAccountPair(accountId, 3L, sensId));
+        deviceAccountPairsForSense.add(new DeviceAccountPair(accountId, 3L, sensId, DateTimeUtil.MORPHEUS_DAY_ONE));
 
         when(deviceDAO.getLinkedAccountFromPillId(pillId1)).thenReturn(ImmutableList.copyOf(deviceAccountPairsForPill));
         when(deviceDAO.getSensesForAccountId(accountId)).thenReturn(ImmutableList.copyOf(deviceAccountPairsForSense));
@@ -119,10 +120,10 @@ public class BatchProcessUtilsTest {
 
         final long accountId = 1L;
         final List<DeviceAccountPair> deviceAccountPairsForPill = new ArrayList<>();
-        deviceAccountPairsForPill.add(new DeviceAccountPair(accountId, 2L, pillId1));
+        deviceAccountPairsForPill.add(new DeviceAccountPair(accountId, 2L, pillId1, DateTimeUtil.MORPHEUS_DAY_ONE));
 
         final List<DeviceAccountPair> deviceAccountPairsForSense = new ArrayList<>();
-        deviceAccountPairsForSense.add(new DeviceAccountPair(accountId, 3L, sensId));
+        deviceAccountPairsForSense.add(new DeviceAccountPair(accountId, 3L, sensId, DateTimeUtil.MORPHEUS_DAY_ONE));
 
         when(deviceDAO.getLinkedAccountFromPillId(pillId1)).thenReturn(ImmutableList.copyOf(deviceAccountPairsForPill));
         when(deviceDAO.getSensesForAccountId(accountId)).thenReturn(ImmutableList.copyOf(deviceAccountPairsForSense));

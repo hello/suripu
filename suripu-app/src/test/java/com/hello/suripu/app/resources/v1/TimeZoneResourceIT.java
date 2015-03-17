@@ -15,6 +15,7 @@ import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
+import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -88,7 +89,7 @@ public class TimeZoneResourceIT {
 
 
             final DeviceDAO deviceDAO = mock(DeviceDAO.class);
-            this.deviceAccountPairs.add(new DeviceAccountPair(1L, 1L, "test morpheus"));
+            this.deviceAccountPairs.add(new DeviceAccountPair(1L, 1L, "test morpheus", DateTimeUtil.MORPHEUS_DAY_ONE));
             when(deviceDAO.getSensesForAccountId(1L)).thenReturn(ImmutableList.copyOf(this.deviceAccountPairs));
 
             this.timeZoneResource = new TimeZoneResource(this.timeZoneHistoryDAODynamoDB,
