@@ -109,7 +109,7 @@ public class HmmTest {
         for (Event e : r.sleepEvents) {
 
             if (e.getType() == Event.Type.SLEEP) {
-                foundOne = treu;
+                foundOne = true;
             }
         }
 
