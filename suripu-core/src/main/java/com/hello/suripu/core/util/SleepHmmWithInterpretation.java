@@ -195,6 +195,7 @@ CREATE CREATE CREATE
 
         /* go through each model, evaluate, find the best  */
         for (final NamedSleepHmmModel model : models) {
+            LOGGER.debug("Trying out model \"{}\"",model.modelName);
             final Optional<BinnedData> binnedDataOptional = getBinnedSensorData(sensors, pillData, model,sleepPeriodStartTime,sleepPeriodEndTime,currentTimeInMillis);
 
 
@@ -216,6 +217,8 @@ CREATE CREATE CREATE
             //decode via viterbi
             final HmmDecodedResult result = model.hmm.decode(binnedData.data, allowableEndings);
 
+            LOGGER.debug("path={}", getPathAsString(result.bestPath));
+
             //keep track of lowest score (lowest == best)
             if (result.bic < lowestModelScore) {
                 lowestModelScore = result.bic;
@@ -230,7 +233,7 @@ CREATE CREATE CREATE
             return Optional.absent();
         }
 
-
+        LOGGER.debug("picked model \"{}\" ",bestModel.modelName);
         /*  First pass is mind the gaps
          *  so if there's a disturbance that is less than  ACCEPTABLE_GAP_IN_INDEX_COUNTS it's absorbed into the segment
          *  Then, we filter by segment length.
@@ -479,6 +482,7 @@ CREATE CREATE CREATE
                 value = 1.0f;
             }
 
+
             minuteData.add(new Sample(s.dateTime,value,s.offsetMillis));
         }
 
@@ -608,7 +612,7 @@ CREATE CREATE CREATE
             final Sample sample = it5.next();
             final double value = Math.log(sample.value + 1.0f) / Math.log(2);
 
-            if (value >= 0.0) {
+            if (value > 0.0) {
                 maxInBin(data,sample.dateTime,value,HmmDataConstants.LOG_SOUND_COUNT_INDEX,t0,numMinutesInWindow);
             }
 
@@ -619,7 +623,7 @@ CREATE CREATE CREATE
         while (it6.hasNext()) {
             final Sample sample = it6.next();
 
-            if (sample.value >= 0.0) {
+            if (sample.value > 0.0) {
                 maxInBin(data,sample.dateTime,1.0,HmmDataConstants.NATURAL_LIGHT_FILTER_INDEX,t0,numMinutesInWindow);
             }
         }
@@ -680,7 +684,7 @@ CREATE CREATE CREATE
         }
     }
 
-    protected String getPathAsString(final int [] path) {
+    protected String getPathAsString(final ImmutableList<Integer> path) {
         String pathString = "";
         boolean first = true;
         for (int alpha : path) {
