@@ -327,10 +327,25 @@ CREATE CREATE CREATE
             return Optional.absent();
         }
 
+        for (int iSegment = 0; iSegment < sleeps.size(); iSegment++) {
+            final SegmentPairWithGaps seg = sleeps.get(iSegment);
 
-        for (final SegmentPairWithGaps seg : sleeps) {
-            events.add(getEventFromIndex(Event.Type.SLEEP, seg.bounds.i1, t0, timezoneOffset, English.FALL_ASLEEP_MESSAGE,model.numMinutesInMeasPeriod));
-            events.add(getEventFromIndex(Event.Type.WAKE_UP, seg.bounds.i2, t0, timezoneOffset, English.WAKE_UP_MESSAGE,model.numMinutesInMeasPeriod));
+            //if not the first sleep, it's a  going to sleep after a disturbance
+            String sleepMessage = English.FALL_ASLEEP_DISTURBANCE_MESSAGE;
+            if (iSegment == 0) {
+                sleepMessage = English.FALL_ASLEEP_MESSAGE;
+            }
+
+            //if not the last wakeup, it's a disturbance-based wakeup
+            String wakeupMessage = English.WAKE_UP_DISTURBANCE_MESSAGE;
+            if (iSegment == sleeps.size() - 1) {
+                wakeupMessage = English.WAKE_UP_MESSAGE;
+            }
+
+
+
+            events.add(getEventFromIndex(Event.Type.SLEEP, seg.bounds.i1, t0, timezoneOffset, sleepMessage,model.numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.WAKE_UP, seg.bounds.i2, t0, timezoneOffset, wakeupMessage,model.numMinutesInMeasPeriod));
 
             minutesSpentSleeping += (seg.bounds.i2 - seg.bounds.i1) * model.numMinutesInMeasPeriod;
 
@@ -339,8 +354,8 @@ CREATE CREATE CREATE
 
             for (final SegmentPair gap : seg.gaps) {
                 if (gap.i1 - 1 > seg.bounds.i1 && gap.i2 + 1 < seg.bounds.i2) {
-                    events.add(getEventFromIndex(Event.Type.WAKE_UP, gap.i1, t0, timezoneOffset, English.WAKE_UP_MESSAGE,model.numMinutesInMeasPeriod));
-                    events.add(getEventFromIndex(Event.Type.SLEEP, gap.i2, t0, timezoneOffset, English.FALL_ASLEEP_MESSAGE,model.numMinutesInMeasPeriod));
+                    events.add(getEventFromIndex(Event.Type.WAKE_UP, gap.i1, t0, timezoneOffset, English.WAKE_UP_DISTURBANCE_MESSAGE,model.numMinutesInMeasPeriod));
+                    events.add(getEventFromIndex(Event.Type.SLEEP, gap.i2, t0, timezoneOffset, English.FALL_ASLEEP_DISTURBANCE_MESSAGE,model.numMinutesInMeasPeriod));
 
                     minutesSpentSleeping -= (gap.i2 - gap.i1) * model.numMinutesInMeasPeriod;
 
