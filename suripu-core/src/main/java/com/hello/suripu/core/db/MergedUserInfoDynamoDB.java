@@ -275,7 +275,7 @@ public class MergedUserInfoDynamoDB {
     public boolean setAlarms(final String deviceId, final long accountId, final long lastUpdatedAt, final List<Alarm> alarms, final DateTimeZone userTimeZone){
         final Map<String, AttributeValueUpdate> items = generateAlarmUpdateItem(alarms, userTimeZone);
 
-        if(items.isEmpty()){
+        if(items.isEmpty() || items.containsKey(EXPECTED_RING_TIME_ATTRIBUTE_NAME) == false){
             return false;
         }
 
@@ -284,12 +284,19 @@ public class MergedUserInfoDynamoDB {
         expected.put(UPDATED_AT_ATTRIBUTE_NAME, new ExpectedAttributeValue()
                 .withComparisonOperator(ComparisonOperator.EQ)
                 .withValue(new AttributeValue().withN(String.valueOf(lastUpdatedAt))));
+        expected.put(EXPECTED_RING_TIME_ATTRIBUTE_NAME, new ExpectedAttributeValue()
+                .withComparisonOperator(ComparisonOperator.NE)
+                .withValue(items.get(EXPECTED_RING_TIME_ATTRIBUTE_NAME).getValue())
+        );
 
         request.withExpected(expected);
         try {
             final UpdateItemResult result = this.dynamoDBClient.updateItem(request);
         }catch (ConditionalCheckFailedException conditionalCheckFailedException){
-            LOGGER.warn("Cannot update alarm, last updated at {}", lastUpdatedAt);
+            LOGGER.warn("Cannot update alarm for device {}, account {}, last updated at {}",
+                    deviceId,
+                    accountId,
+                    lastUpdatedAt);
             return false;
         }
         return true;
