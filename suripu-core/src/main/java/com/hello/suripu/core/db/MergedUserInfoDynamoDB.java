@@ -411,10 +411,10 @@ public class MergedUserInfoDynamoDB {
         final List<UserInfo> userInfos = new ArrayList<UserInfo>();
 
         for (final Map<String, AttributeValue> item:items) {
-            final HashSet<String> accountDeviceIdAttributes = new HashSet<String>();
-            Collections.addAll(accountDeviceIdAttributes,
-                    MORPHEUS_ID_ATTRIBUTE_NAME, ACCOUNT_ID_ATTRIBUTE_NAME);
-            if(!item.keySet().containsAll(accountDeviceIdAttributes)){
+            final HashSet<String> requiredAttributes = new HashSet<String>();
+            Collections.addAll(requiredAttributes,
+                    MORPHEUS_ID_ATTRIBUTE_NAME, ACCOUNT_ID_ATTRIBUTE_NAME, TIMEZONE_ID_ATTRIBUTE_NAME, UPDATED_AT_ATTRIBUTE_NAME);
+            if(!item.keySet().containsAll(requiredAttributes)){
                 LOGGER.warn("Corrupted row retrieved for device {}", deviceId);
                 continue;
             }
