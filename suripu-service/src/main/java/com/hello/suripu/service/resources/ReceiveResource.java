@@ -470,7 +470,7 @@ public class ReceiveResource extends BaseResource {
     public static int computePassRingTimeUploadInterval(final RingTime nextRingTime, final DateTime now, final int adjustedUploadCycle){
         final int ringTimeOffsetFromNowMillis = (int)(nextRingTime.actualRingTimeUTC - now.getMillis());
         if(isNextUploadCrossRingBound(nextRingTime, now)){
-            final int uploadCycleThatPassRingTime = ringTimeOffsetFromNowMillis / DateTimeConstants.MILLIS_PER_MINUTE + 1;
+            final int uploadCycleThatPassRingTime = ringTimeOffsetFromNowMillis / DateTimeConstants.MILLIS_PER_MINUTE + 2;
             return uploadCycleThatPassRingTime;
         }
 
@@ -592,13 +592,13 @@ public class ReceiveResource extends BaseResource {
             // groups take precedence over feature
             if (!deviceGroups.isEmpty()) {
                 LOGGER.debug("DeviceId {} belongs to groups: {}", deviceID, deviceGroups);
-                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceID, deviceGroups.get(0), currentFirmwareVersion);//TODO: Create a better way of knowing which group the device will belong to
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceGroups.get(0), currentFirmwareVersion);//TODO: Create a better way of knowing which group the device will belong to
                 LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
                 return fileDownloadList;
             } else {
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceID, deviceGroups)) {
                     LOGGER.debug("Feature release is active!");
-                    final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceID, FeatureFlipper.OTA_RELEASE, currentFirmwareVersion);
+                    final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(FeatureFlipper.OTA_RELEASE, currentFirmwareVersion);
                     LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
                     return fileDownloadList;
                 }

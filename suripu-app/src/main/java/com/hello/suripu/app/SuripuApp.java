@@ -329,11 +329,10 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 configuration.getScoreThreshold(),
                 ringTimeHistoryDAODynamoDB,
                 feedbackDAO,
-                timelineDAODynamoDB,
                 sleepHmmDAODynamoDB,
                 accountDAO);
 
-        environment.addResource(new TimelineResource(accountDAO, timelineProcessor));
+        environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB, timelineProcessor));
 
         environment.addResource(new TimeZoneResource(timeZoneHistoryDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO));
         environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO, amazonS3));

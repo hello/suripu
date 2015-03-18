@@ -7,12 +7,15 @@ import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.hello.suripu.core.models.CachedTimelines;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -107,6 +110,22 @@ public class TimelineDAODynamoDBIT {
         }catch (ResourceNotFoundException ex){
             LOGGER.warn("Can not delete non existing table");
         }
+    }
+
+
+    @Test
+    public void testGetNoneExistingDate(){
+        final DateTime startOfDay = DateTime.now().withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
+        final ImmutableList<Timeline> actual = this.timelineDAODynamoDB.getTimelinesForDate(1L, startOfDay);
+        assertThat(actual.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testGetTimelinesForDatesImplNoneExistingDates(){
+        final DateTime startOfDay = DateTime.now().withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
+        final List<Long> requestDates = Lists.newArrayList(startOfDay.getMillis());
+        final Map<Long, CachedTimelines> actual = this.timelineDAODynamoDB.getTimelinesForDatesImpl(1L, requestDates);
+        assertThat(actual.isEmpty(), is(true));
     }
 
     @Test
