@@ -991,7 +991,7 @@ public class TimelineUtils {
     }
 
 
-    public static List<Event> getLightEventsWithMultipleLightOut(List<Sample> lightData) {
+    public static List<Event> getLightEventsWithMultipleLightOut(final List<Sample> lightData) {
 
         if (lightData.size() == 0) {
             return Collections.EMPTY_LIST;
@@ -1124,7 +1124,7 @@ public class TimelineUtils {
 
     public static SleepEvents<Optional<Event>> getSleepEvents(final DateTime targetDateLocalUTC,
                                          final List<TrackerMotion> trackerMotions,
-                                         final Optional<DateTime> lightOutTimeOptional,
+                                         final List<DateTime> lightOutTimes,
                                          final Optional<DateTime> firstWaveTimeOptional,
                                          final int smoothWindowSizeInMinutes,
                                          final int sleepFeatureAggregateWindowInMinutes,
@@ -1146,7 +1146,7 @@ public class TimelineUtils {
         sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE), new MotionDensityScoringFunction(MotionDensityScoringFunction.ScoreType.WAKE_UP));
         sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.ZERO_TO_MAX_MOTION_COUNT_DURATION), new ZeroToMaxMotionCountDurationScoreFunction());
 
-        if(lightOutTimeOptional.isPresent()) {
+        if(!lightOutTimes.isEmpty()) {
             final LinkedList<AmplitudeData> lightFeature = new LinkedList<>();
             for (final AmplitudeData amplitudeData : aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE)) {
                 // Pad the light data
@@ -1154,10 +1154,12 @@ public class TimelineUtils {
 
             }
             if(dataWithGapFilled.size() > 0) {
-                LOGGER.info("Light out time {}", lightOutTimeOptional.get()
-                        .withZone(DateTimeZone.forOffsetMillis(dataWithGapFilled.get(0).offsetMillis)));
+                for(final DateTime lightOutTime:lightOutTimes) {
+                    LOGGER.info("Light out time {}", lightOutTime
+                            .withZone(DateTimeZone.forOffsetMillis(dataWithGapFilled.get(0).offsetMillis)));
+                }
             }
-            sleepDetectionAlgorithm.addFeature(lightFeature, new LightOutScoringFunction(lightOutTimeOptional.get(), 3d));
+            sleepDetectionAlgorithm.addFeature(lightFeature, new LightOutScoringFunction(lightOutTimes, 3d));
 
             final LinkedList<AmplitudeData> lightAndCumulatedMotionFeature = new LinkedList<>();
             for (final AmplitudeData amplitudeData : aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_MOTION_PERIOD)) {
@@ -1167,7 +1169,7 @@ public class TimelineUtils {
                         amplitudeData.offsetMillis));
 
             }
-            sleepDetectionAlgorithm.addFeature(lightAndCumulatedMotionFeature, new LightOutCumulatedMotionMixScoringFunction(lightOutTimeOptional.get()));
+            sleepDetectionAlgorithm.addFeature(lightAndCumulatedMotionFeature, new LightOutCumulatedMotionMixScoringFunction(lightOutTimes));
         }
 
         if(firstWaveTimeOptional.isPresent()) {

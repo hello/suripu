@@ -20,7 +20,7 @@ public class LogIndexerProcessorFactory implements IRecordProcessorFactory {
     public IRecordProcessor createProcessor() {
         final IndexTankClient client = new IndexTankClient(privateUrl);
         final IndexTankClient.Index applicationIndex = client.getIndex(applicationIndexName);
-        final IndexTankClient.Index senseIndex = client.getIndex(applicationIndexName);
+        final IndexTankClient.Index senseIndex = client.getIndex(senseIndexName);
         return LogIndexerProcessor.create(applicationIndex, senseIndex);
     }
 }

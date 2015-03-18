@@ -3,6 +3,7 @@ package com.hello.suripu.app.resources.v1;
 import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.app.models.RedisPaginator;
 import com.hello.suripu.core.configuration.ActiveDevicesTrackerConfiguration;
 import com.hello.suripu.core.db.AccountDAO;
@@ -20,7 +21,6 @@ import com.hello.suripu.core.models.DeviceInactivePage;
 import com.hello.suripu.core.models.DeviceInactivePaginator;
 import com.hello.suripu.core.models.DeviceKeyStoreRecord;
 import com.hello.suripu.core.models.DeviceStatus;
-import com.hello.suripu.core.models.FirmwareInfo;
 import com.hello.suripu.core.models.PairingInfo;
 import com.hello.suripu.core.models.PillRegistration;
 import com.hello.suripu.core.models.SenseRegistration;
@@ -29,8 +29,8 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.util.JsonError;
+import com.hello.suripu.core.util.PillColorUtil;
 import com.yammer.metrics.annotation.Timed;
-
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionIsolationLevel;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -54,6 +54,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -303,36 +304,66 @@ public class DeviceResources {
         return account.id;
     }
 
+    public static Device.Color getPillColor(final List<UserInfo> userInfoList, final Long accountId)  {
+        // mutable state. argh
+        Device.Color pillColor = Device.Color.BLUE;
+
+        for(final UserInfo userInfo : userInfoList) {
+            if(!accountId.equals(userInfo.accountId) || !userInfo.pillColor.isPresent()) {
+                continue;
+            }
+            pillColor = PillColorUtil.displayDeviceColor(userInfo.pillColor.get().getPillColor());
+        }
+
+        return pillColor;
+    }
+
     private List<Device> getDevicesByAccountId(final Long accountId) {
         // TODO: make asynchronous calls to grab Pills + Senses if the following is too slow
         final ImmutableList<DeviceAccountPair> senses = deviceDAO.getSensesForAccountId(accountId);
         final ImmutableList<DeviceAccountPair> pills = deviceDAO.getPillsForAccountId(accountId);
-        final List<Device> devices = new ArrayList<Device>();
+        final List<Device> devices = Lists.newArrayList();
+
+        final List<UserInfo> userInfoList= Lists.newArrayList();
+        if(!senses.isEmpty()) {
+            userInfoList.addAll(mergedUserInfoDynamoDB.getInfo(senses.get(0).externalDeviceId));
+        }else{
+            return Collections.EMPTY_LIST;
+        }
+
+
+        final Device.Color pillColor = getPillColor(userInfoList, accountId);
 
         // TODO: device state will always be normal for now until more information is provided by the device
+
         for (final DeviceAccountPair sense : senses) {
             final Optional<DeviceStatus> senseStatusOptional = this.deviceDataDAO.senseStatus(sense.internalDeviceId);
             if(senseStatusOptional.isPresent()) {
-                devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.NORMAL, senseStatusOptional.get().firmwareVersion, senseStatusOptional.get().lastSeen));
+                devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.NORMAL, senseStatusOptional.get().firmwareVersion, senseStatusOptional.get().lastSeen, Device.Color.BLACK)); // TODO: grab Sense color from Serial Number
             } else {
-                devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.UNKNOWN, "-", null));
+                devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.UNKNOWN, "-", null, Device.Color.BLACK));
             }
         }
+
 
         for (final DeviceAccountPair pill : pills) {
             final Optional<DeviceStatus> pillStatusOptional = this.trackerMotionDAO.pillStatus(pill.internalDeviceId);
             if(!pillStatusOptional.isPresent()) {
                 LOGGER.debug("No pill status found for pill_id = {} ({}) for account: {}", pill.externalDeviceId, pill.internalDeviceId, pill.accountId);
-                devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, Device.State.UNKNOWN, null, null));
+                devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, Device.State.UNKNOWN, null, null, pillColor));
             } else {
                 final DeviceStatus deviceStatus = pillStatusOptional.get();
-                devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, Device.State.NORMAL, deviceStatus.firmwareVersion, deviceStatus.lastSeen));
+                devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, Device.State.NORMAL, deviceStatus.firmwareVersion, deviceStatus.lastSeen, pillColor));
             }
         }
 
         return devices;
     }
 
+    // Just for testing
+    public List<Device> getDevices(final Long accountId) {
+        return getDevicesByAccountId(accountId);
+    }
 
     @GET
     @Timed

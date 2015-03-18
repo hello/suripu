@@ -109,15 +109,26 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
             }
 
             try {
-                this.timelineProcessor.retrieveTimelinesFast(accountId,
-                        groupedAccountIdTargetDateLocalUTCMap.get(accountId).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT),
-                        missingDataDefaultValue(accountId),
-                        hasAlarmInTimeline(accountId),
-                        hasSoundInTimeline(accountId),
-                        hasFeedbackInTimeline(accountId),
-                        hasHmmEnabled(accountId),
-                        true,
-                        hasPartnerFilterEnabled(accountId));
+                if (hasHmmEnabled(accountId)) {
+                    this.timelineProcessor.retrieveHmmTimeline(accountId,
+                            groupedAccountIdTargetDateLocalUTCMap.get(accountId).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT),
+                            missingDataDefaultValue(accountId),
+                            hasAlarmInTimeline(accountId),
+                            hasSoundInTimeline(accountId),
+                            hasFeedbackInTimeline(accountId));
+                }
+                else {
+                    this.timelineProcessor.retrieveTimelinesFast(accountId,
+                            groupedAccountIdTargetDateLocalUTCMap.get(accountId).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT),
+                            missingDataDefaultValue(accountId),
+                            hasAlarmInTimeline(accountId),
+                            hasSoundInTimeline(accountId),
+                            hasFeedbackInTimeline(accountId),
+                            true,
+                            hasPartnerFilterEnabled(accountId));
+                }
+
+
                 LOGGER.info("Timeline saved for account {} at local utc {}",
                         accountId,
                         groupedAccountIdTargetDateLocalUTCMap.get(accountId).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT));

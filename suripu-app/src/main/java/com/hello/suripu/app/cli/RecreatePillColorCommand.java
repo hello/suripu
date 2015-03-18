@@ -90,11 +90,12 @@ public class RecreatePillColorCommand extends ConfiguredCommand<SuripuAppConfigu
 
             LOGGER.info("Sense {} has {} accounts that has pill linked", senseId, pillsLinkedToSense.size());
             final HashMap<String, Color> pillIdToColorMap = new HashMap<>();
+            final List<Color> colorList = PillColorUtil.getPillColors();
             for(final DeviceAccountPair pill:pillsLinkedToSense){
                 Color pillColor;
 
                 if(!pillIdToColorMap.containsKey(pill.externalDeviceId)) {
-                    pillColor = PillColorUtil.getPillColorByAccountRegistrationOrder(pillIdToColorMap.size());
+                    pillColor = colorList.get(pillIdToColorMap.size() % colorList.size());
                     pillIdToColorMap.put(pill.externalDeviceId, new Color(pillColor.getRGB()));
                 }else{
                     pillColor = pillIdToColorMap.get(pill.externalDeviceId);

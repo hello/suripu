@@ -9,6 +9,8 @@ import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.service.SignedMessage;
 import com.yammer.metrics.annotation.Timed;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,6 +106,7 @@ public class LogsResource {
         final LoggingProtos.BatchLogMessage batch = LoggingProtos.BatchLogMessage.newBuilder()
                 .addMessages(logMessage)
                 .setLogType(LoggingProtos.BatchLogMessage.LogType.SENSE_LOG)
+                .setReceivedAt(DateTime.now(DateTimeZone.UTC).getMillis())
                 .build();
         dataLogger.put(log.getDeviceId(), batch.toByteArray());
     }

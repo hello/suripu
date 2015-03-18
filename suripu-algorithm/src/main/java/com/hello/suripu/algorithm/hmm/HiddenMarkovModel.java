@@ -1,8 +1,10 @@
 package com.hello.suripu.algorithm.hmm;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -15,29 +17,10 @@ import java.util.List;
 public class HiddenMarkovModel {
     static private final double MIN_NORMALIZING = 1e-6;
     final int numStates;
+    final int numFreeParams;
     double [][] A;
     double [] initialState;
     HmmPdfInterface [] obsModels;
-
-
-    public static HiddenMarkovModel createPoissonOnlyModel(double [][] A, double [] initialStateProbs, double [][] poissonMeans) {
-        final int numStates = A.length;
-        final int numObsModelsPerState = poissonMeans[0].length;
-
-        HmmPdfInterface [] models = new HmmPdfInterface[numStates];
-
-        for (int j = 0; j < numStates; j++) {
-            PdfComposite c = new PdfComposite();
-            for (int i = 0; i < numObsModelsPerState; i++) {
-                c.addPdf(new PoissonPdf(poissonMeans[j][i],i));
-            }
-
-            models[j] = c;
-
-        }
-
-        return new HiddenMarkovModel(numStates,A,initialStateProbs,models);
-    }
 
     //not currently used... but maybe soon
     private class AlphaResult {
@@ -46,16 +29,18 @@ public class HiddenMarkovModel {
     }
 
     //ctor
-    private HiddenMarkovModel(int numStates, double [][] A,double [] initialStateProbs, HmmPdfInterface [] obsModels) {
+    public HiddenMarkovModel(final int numStates, final double [][] A,final double [] initialStateProbs, final HmmPdfInterface [] obsModels, final int numFreeParams) {
         this.numStates = numStates;
         this.A = A;
         this.initialState = initialStateProbs;
         this.obsModels = obsModels;
+        this.numFreeParams = numFreeParams; //whatever, not important here since this is only used for test now
     }
 
-    public HiddenMarkovModel(final int numStates,List<Double> stm,List<Double> initialProbs,HmmPdfInterface [] obsModels) {
+    public HiddenMarkovModel(final int numStates,final List<Double> stm,final List<Double> initialProbs,final HmmPdfInterface [] obsModels,final int numFreeParams) {
 
         this.numStates = numStates;
+        this.numFreeParams = numFreeParams; //used for BIC / AIC calculation
 
         //turn state transition matrix into something we like
         this.A = new double[numStates][numStates];
@@ -110,7 +95,18 @@ public class HiddenMarkovModel {
         return cost;
     }
 
-    public int [] getViterbiPath(final double [][] observations, final Integer [] possibleEndStates) {
+
+
+
+    private double getBIC(double pathCost,int numObs) {
+        return 2.0*pathCost + this.numFreeParams*Math.log((double)numObs);
+    }
+
+    private double getAIC(double pathCost) {
+        return 2.0*pathCost + 2.0*this.numFreeParams;
+    }
+
+    public HmmDecodedResult decode(final double[][] observations, final Integer[] possibleEndStates) {
         /*
 
         returns optimal path given observations and state transition matrix "A"
@@ -171,8 +167,7 @@ public class HiddenMarkovModel {
         }
 
         final int [] path = new int[numObs];
-        //#let's just say you wind up in state zero at the end?
-        //otherwise, we have to test each possible ending, bleh.
+
 
         //go through each path, and find the least cost one.
         //we do this because we are really not sure about which end-state is the best
@@ -198,14 +193,26 @@ public class HiddenMarkovModel {
             }
         }
 
+        //recompute minimum path again
         path[numObs - 1] = possibleEndStates[minIdx];
         //#backtrack to get optimal path
         for (int t = numObs - 2; t >= 0; t--) {
             path[t] = viterbiIndices[path[t + 1]][t];
         }
 
+        //convert from primitive to collection
+        final ArrayList<Integer> bestPath = new ArrayList<>();
 
-        return path;
+        for (int i = 0; i < numObs; i++) {
+            bestPath.add(path[i]);
+        }
+
+
+        final double bic = this.getBIC(minCost,numObs);
+        final double aic = this.getAIC(minCost);
+
+
+        return new HmmDecodedResult(ImmutableList.copyOf(bestPath),bic,aic,minCost);
 
     }
 
