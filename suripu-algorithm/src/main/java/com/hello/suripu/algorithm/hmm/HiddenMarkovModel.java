@@ -1,8 +1,6 @@
 package com.hello.suripu.algorithm.hmm;
 
 import com.google.common.collect.ImmutableList;
-import org.apache.commons.math3.linear.MatrixUtils;
-import org.apache.commons.math3.linear.RealMatrix;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,14 +60,14 @@ public class HiddenMarkovModel {
     }
 
 
-    double [][] mapB(final double [][] observations) {
-        double [][] bmap = new double[this.numStates][];
+    double [][] getLogBMap(final double[][] observations) {
+        double [][] logBMap = new double[this.numStates][];
 
         for (int iState = 0; iState < this.numStates; iState++) {
-            bmap[iState] = this.obsModels[iState].getLikelihood(observations);
+            logBMap[iState] = this.obsModels[iState].getLogLikelihood(observations);
         }
 
-        return bmap;
+        return logBMap;
     }
 
     static int findMinIndexOfDoubleArray(double [] array) {
@@ -126,7 +124,7 @@ public class HiddenMarkovModel {
         // similar to the forward-backward algorithm, we need to make sure that we're using fresh data for the given observations.
 
         final int numObs = observations[0].length;
-        final double [][] bmap = this.mapB(observations);
+        final double [][] logBMap = this.getLogBMap(observations);
 
         final double [][] phi = new double[this.numStates][numObs];
         final int [][] viterbiIndices = new int[this.numStates][numObs];
@@ -137,7 +135,7 @@ public class HiddenMarkovModel {
 
         // init
         for (int i = 0; i < this.numStates; i++) {
-            phi[i][0] = -Math.log(this.initialState[i]+1e-15) - Math.log(bmap[i][0] + 1e-15);
+            phi[i][0] = -Math.log(this.initialState[i]+ HmmPdfInterface.MIN_LIKELIHOOD) - logBMap[i][0];
         }
 
 
@@ -147,9 +145,9 @@ public class HiddenMarkovModel {
         for (int t = 1; t < numObs; t++) {
             for (int j = 0; j < this.numStates; j++) {
                 //#"j" mean THIS (the jth) hidden state
-                final double obscost = -Math.log(bmap[j][t] + 1e-15);
+                final double obscost = -logBMap[j][t];
                 for (int i = 0; i < this.numStates; i++) {
-                   cost[i] = -Math.log(this.A[i][j] + 1e-15) + obscost;
+                   cost[i] = -Math.log(this.A[i][j] + HmmPdfInterface.MIN_LIKELIHOOD) + obscost;
                 }
 
                 for (int i = 0; i < this.numStates; i++) {

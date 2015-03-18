@@ -17,14 +17,20 @@ public class PoissonPdf implements  HmmPdfInterface {
     }
 
     @Override
-    public double [] getLikelihood(final double [][] measurements) {
+    public double [] getLogLikelihood(final double [][] measurements) {
         double [] result = new double[measurements[0].length];
         //row major or column major? assume it's like C
         final double [] col =  measurements[_measnum];
 
         for (int i = 0; i < col.length; i++) {
             //god I hope this is its likelihood function
-            result[i] = _poisson.probability((int)col[i]);
+            double pmfEval = _poisson.probability((int)col[i]);
+
+            if (pmfEval < MIN_LIKELIHOOD) {
+                pmfEval = MIN_LIKELIHOOD;
+            }
+
+            result[i] = Math.log(pmfEval);
         }
 
         return result;
