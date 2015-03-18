@@ -23,6 +23,7 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DateTimeUtil;
+import com.hello.suripu.core.util.MultiLightOutUtils;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import com.hello.suripu.core.util.TimelineUtils;
@@ -121,13 +122,24 @@ public class PredictionResource extends BaseResource {
 
         SleepHmmWithInterpretation.SleepHmmResult res = optionalHmmPredictions.get();
 
-        return res.toList();
+        return res.sleepEvents;
 
 
 
     }
 
-    private SleepEvents<Optional<Event>> fromAlgorithm(final DateTime targetDate, final List<TrackerMotion> trackerMotions, final Optional<DateTime> lightOutTimeOptional, final Optional<DateTime> wakeUpWaveTimeOptional) {
+    /**
+     * Pang magic
+     * @param targetDate
+     * @param trackerMotions
+     * @param rawLight
+     * @param wakeUpWaveTimeOptional
+     * @return
+     */
+    private SleepEvents<Optional<Event>> fromAlgorithm(final DateTime targetDate,
+                                                       final List<TrackerMotion> trackerMotions,
+                                                       final List<Sample> rawLight,
+                                                       final Optional<DateTime> wakeUpWaveTimeOptional) {
         Optional<Segment> sleepSegmentOptional;
         Optional<Segment> inBedSegmentOptional = Optional.absent();
         SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.create(Optional.<Event>absent(),
@@ -135,11 +147,16 @@ public class PredictionResource extends BaseResource {
                 Optional.<Event>absent(),
                 Optional.<Event>absent());
 
+        final List<Event> rawLightEvents = TimelineUtils.getLightEventsWithMultipleLightOut(rawLight);
+        final List<Event> smoothedLightEvents = MultiLightOutUtils.smoothLight(rawLightEvents, MultiLightOutUtils.DEFAULT_SMOOTH_GAP_MIN);
+        final List<Event> lightOuts = MultiLightOutUtils.getValidLightOuts(smoothedLightEvents, trackerMotions, MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
+
+        final List<DateTime> lightOutTimes = MultiLightOutUtils.getLightOutTimes(lightOuts);
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
             sleepEventsFromAlgorithm = TimelineUtils.getSleepEvents(targetDate,
                     trackerMotions,
-                    lightOutTimeOptional,
+                    lightOutTimes,
                     wakeUpWaveTimeOptional,
                     MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                     MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
@@ -180,15 +197,9 @@ public class PredictionResource extends BaseResource {
         // compute lights-out and sound-disturbance events
         Optional<DateTime> lightOutTimeOptional = Optional.absent();
         Optional<DateTime> wakeUpWaveTimeOptional = Optional.absent();
-        final List<Event> lightEvents = Lists.newArrayList();
+
 
         if (!allSensorSampleList.isEmpty()) {
-
-            // Light
-            lightEvents.addAll(TimelineUtils.getLightEvents(allSensorSampleList.get(Sensor.LIGHT)));
-            if (lightEvents.size() > 0) {
-                lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
-            }
 
             // TODO: refactor
 
@@ -199,7 +210,7 @@ public class PredictionResource extends BaseResource {
             }
         }
         /*  This can get overided by the HMM if the feature is enabled */
-        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate, myMotion, lightOutTimeOptional, wakeUpWaveTimeOptional);
+        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate, myMotion,  allSensorSampleList.get(Sensor.LIGHT), wakeUpWaveTimeOptional);
 
 
         List<Optional<Event>> items = sleepEventsFromAlgorithm.toList();
@@ -230,7 +241,7 @@ public class PredictionResource extends BaseResource {
                 try {
                     final byte[] decodedBytes = decoder.decodeBuffer(base64data);
 
-                    final SleepHmmProtos.SleepHmm proto = SleepHmmProtos.SleepHmm.parseFrom(decodedBytes);
+                    final SleepHmmProtos.SleepHmmModelSet proto = SleepHmmProtos.SleepHmmModelSet.parseFrom(decodedBytes);
 
                     sleepHmm = SleepHmmWithInterpretation.createModelFromProtobuf(proto);
 

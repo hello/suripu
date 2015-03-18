@@ -146,5 +146,5 @@ kinesis_logger:
 sleephmm_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: prod_sleephmm
+  table_name: sleephmm
 
