@@ -29,4 +29,8 @@ public class BaseResource {
         return (active) ? -1 : 0;
     }
 
+    protected Boolean hasHmmEnabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.HMM_ALGORITHM, accountId, Collections.EMPTY_LIST);
+    }
+
 }
