@@ -112,28 +112,39 @@ public class TimelineDAODynamoDB {
         return ImmutableList.copyOf(Collections.EMPTY_LIST);
     }
 
-    @Timed
-    public ImmutableMap<DateTime, ImmutableList<Timeline>> getTimelinesForDates(long accountId, final Collection<DateTime> dates){
-        final Map<Long, DateTime> dateToStringMapping = new HashMap<>();
-        for(final DateTime date:dates){
-            dateToStringMapping.put(date.getMillis(), date);
-        }
-
-        final Collection<Long> datesInMillis = dateToStringMapping.keySet();
-        final ImmutableMap<Long, CachedTimelines> cachedData = this.getTimelinesForDatesImpl(accountId, datesInMillis);
-
+    public static Map<DateTime, ImmutableList<Timeline>> filterExpiredCache(final ImmutableMap<Long, CachedTimelines> dataFromCache,
+                                                                            final Map<Long, DateTime> requestDatesLocalUTCMillis,
+                                                                            final DateTime now,
+                                                                            final int maxInvalidateSpanInDay){
         final Map<DateTime, ImmutableList<Timeline>> finalResultMap = new HashMap<>();
-        final DateTime now = DateTime.now();
-        for(final Long dateInMillis:cachedData.keySet()){
-            if(dateToStringMapping.containsKey(dateInMillis)){
-                if(cachedData.get(dateInMillis).shouldInvalidate(TimelineProcessor.VERSION, new DateTime(dateInMillis, DateTimeZone.UTC), now, this.maxBackTrackDays)){
+        for(final Long timelineDateLocalUTCMillis:dataFromCache.keySet()){
+            if(requestDatesLocalUTCMillis.containsKey(timelineDateLocalUTCMillis)){
+                final DateTime requestDateLocalUTC = requestDatesLocalUTCMillis.get(timelineDateLocalUTCMillis);
+                if(dataFromCache.get(timelineDateLocalUTCMillis).shouldInvalidate(TimelineProcessor.VERSION, new DateTime(timelineDateLocalUTCMillis, DateTimeZone.UTC), now, maxInvalidateSpanInDay)){
                     continue;  // Do not return out-dated timeline from dynamoDB.
                 }
 
-                finalResultMap.put(dateToStringMapping.get(dateInMillis), ImmutableList.copyOf(cachedData.get(dateInMillis).timeline));
+                finalResultMap.put(requestDateLocalUTC, ImmutableList.copyOf(dataFromCache.get(timelineDateLocalUTCMillis).timeline));
             }
         }
 
+        return ImmutableMap.copyOf(finalResultMap);
+    }
+
+    @Timed
+    public ImmutableMap<DateTime, ImmutableList<Timeline>> getTimelinesForDates(long accountId, final Collection<DateTime> dates){
+        final Map<Long, DateTime> requestDatesLocalUTCMillisToDateTimeMap = new HashMap<>();
+        for(final DateTime date:dates){
+            requestDatesLocalUTCMillisToDateTimeMap.put(date.getMillis(), date);
+        }
+
+        final Collection<Long> requestDatesLocalUTCMillis = requestDatesLocalUTCMillisToDateTimeMap.keySet();
+        final ImmutableMap<Long, CachedTimelines> cachedData = this.getTimelinesForDatesImpl(accountId, requestDatesLocalUTCMillis);
+
+        final Map<DateTime, ImmutableList<Timeline>> finalResultMap = filterExpiredCache(cachedData,  // Tim you are right, wrong level of abstract makes program read like shit.
+                requestDatesLocalUTCMillisToDateTimeMap,
+                DateTime.now(),
+                this.maxBackTrackDays);
         return ImmutableMap.copyOf(finalResultMap);
     }
 
@@ -191,7 +202,7 @@ public class TimelineDAODynamoDB {
     /*
     * Get events for maybe not consecutive days, internal use only
      */
-    private ImmutableMap<Long, CachedTimelines> getTimelinesForDatesImpl(final Long accountId, final Collection<Long> datesInMillis){
+    protected ImmutableMap<Long, CachedTimelines> getTimelinesForDatesImpl(final Long accountId, final Collection<Long> datesInMillis){
         if(datesInMillis.size() > MAX_REQUEST_DAYS){
             LOGGER.warn("Request too large for events, num of days requested: {}, accountId: {}, table: {}", datesInMillis.size(), accountId, this.tableName);
             throw new RuntimeException("Request too many days event.");
@@ -308,13 +319,6 @@ public class TimelineDAODynamoDB {
             LOGGER.warn("Request too large for events, num of days requested: {}, accountId: {}, tableName: {}", datesInMillis.size(), accountId, this.tableName);
             throw new RuntimeException("Request too many days event.");
 
-        }
-
-        // Fill the non-exist days with empty lists
-        for(final Long dateInMillis:datesInMillis){
-            if(!finalResult.containsKey(dateInMillis)){
-                finalResult.put(dateInMillis, CachedTimelines.createEmpty());
-            }
         }
 
         return ImmutableMap.copyOf(finalResult);
