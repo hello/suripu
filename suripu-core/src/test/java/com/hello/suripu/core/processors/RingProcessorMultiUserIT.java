@@ -21,6 +21,7 @@ import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserInfo;
+import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -221,8 +222,8 @@ public class RingProcessorMultiUserIT {
 
 
         final List<DeviceAccountPair> deviceAccountPairs = new ArrayList<DeviceAccountPair>();
-        deviceAccountPairs.add(new DeviceAccountPair(1L, 1L, testDeviceId));
-        deviceAccountPairs.add(new DeviceAccountPair(2L, 1L, testDeviceId));
+        deviceAccountPairs.add(new DeviceAccountPair(1L, 1L, testDeviceId, DateTimeUtil.MORPHEUS_DAY_ONE));
+        deviceAccountPairs.add(new DeviceAccountPair(2L, 1L, testDeviceId, DateTimeUtil.MORPHEUS_DAY_ONE));
 
         when(this.deviceDAO.getAccountIdsForDeviceId(testDeviceId)).thenReturn(ImmutableList.copyOf(deviceAccountPairs));
 
@@ -449,8 +450,8 @@ public class RingProcessorMultiUserIT {
 
 
         final List<DeviceAccountPair> deviceAccountPairs = new ArrayList<DeviceAccountPair>();
-        deviceAccountPairs.add(new DeviceAccountPair(1L, 1L, testDeviceId));
-        deviceAccountPairs.add(new DeviceAccountPair(2L, 1L, testDeviceId));
+        deviceAccountPairs.add(new DeviceAccountPair(1L, 1L, testDeviceId, DateTimeUtil.MORPHEUS_DAY_ONE));
+        deviceAccountPairs.add(new DeviceAccountPair(2L, 1L, testDeviceId, DateTimeUtil.MORPHEUS_DAY_ONE));
 
         when(this.deviceDAO.getAccountIdsForDeviceId(testDeviceId)).thenReturn(ImmutableList.copyOf(deviceAccountPairs));
 

@@ -10,6 +10,7 @@ import com.hello.suripu.core.models.ProvisionRequest;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.provision.PillBlobProvision;
 import com.hello.suripu.core.provision.PillProvision;
 import com.hello.suripu.core.provision.PillProvisionDAO;
 import com.hello.suripu.core.util.KeyStoreUtils;
@@ -32,6 +33,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.util.List;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Path("/v1/provision")
 public class ProvisionResource {
@@ -136,6 +139,34 @@ public class ProvisionResource {
         return Response.serverError().entity("KO").type(MediaType.TEXT_PLAIN).build();
     }
 
+
+    @POST
+    @Path("/blob/pill/{serial_number}")
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response decryptPillBlob(@PathParam("serial_number") final String serialNumber, final byte[] body) throws Exception {
+        checkNotNull(serialNumber, "Serial Number can not be null");
+
+        try{
+            final Optional<PillBlobProvision> pillBlobProvisionOptional = keyStoreUtils.decryptPill(body, serialNumber);
+            if(!pillBlobProvisionOptional.isPresent()) {
+                return Response.status(Response.Status.BAD_REQUEST).entity("KO").type(MediaType.TEXT_PLAIN).build();
+            }
+
+            final PillBlobProvision pillBlobProvision = pillBlobProvisionOptional.get();
+            pillKeyStore.put(pillBlobProvision.pillId, pillBlobProvision.key, serialNumber);
+            final StringBuilder sb = new StringBuilder();
+            sb.append("OK\n");
+            sb.append(pillBlobProvision.pillId + "\n");
+            sb.append(pillBlobProvision.serialNumber + "\n");
+            return Response.ok().entity(sb.toString()).type(MediaType.TEXT_PLAIN).build();
+
+        } catch (Exception e) {
+            LOGGER.error("Exception while provisioning Sense: {}", e.getMessage());
+            LOGGER.error("Body was : {}", body);
+        }
+        return Response.serverError().entity("KO").type(MediaType.TEXT_PLAIN).build();
+    }
 
     @GET
     @Path("/check/p/{serial_number}")
