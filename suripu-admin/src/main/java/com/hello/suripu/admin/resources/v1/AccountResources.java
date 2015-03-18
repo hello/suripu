@@ -20,12 +20,12 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 
 @Path("/v1/account")
-public class AccountResource {
+public class AccountResources {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AccountResource.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AccountResources.class);
     private final AccountDAO accountDAO;
 
-    public AccountResource(final AccountDAO accountDAO) {
+    public AccountResources(final AccountDAO accountDAO) {
         this.accountDAO = accountDAO;
     }
 
@@ -53,9 +53,28 @@ public class AccountResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/partial")
     public List<Account> retrieveAccountsByEmailPartial(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
-                                               @QueryParam("email") final String emailPartial) {
-        LOGGER.debug("Looking up account whose emails contain {}", emailPartial);
-        return accountDAO.getByEmailPartial(emailPartial);
+                                                        @QueryParam("email") final String emailPartial,
+                                                        @QueryParam("name") final String namePartial) {
+        if (emailPartial != null) {
+            LOGGER.debug("Looking up accounts whose emails contain {}", emailPartial);
+            return accountDAO.getByEmailPartial(emailPartial);
+        }
 
+        if (namePartial != null) {
+            LOGGER.debug("Looking up accounts whose names contain {}", namePartial);
+            return accountDAO.getByNamePartial(namePartial);
+        }
+
+        throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                .entity("Missing email/name partials input").build());
+    }
+
+    @GET
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/recent")
+    public List<Account> retrieveRecentlyCreatedAccounts(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken){
+        final List<Account> accounts = accountDAO.getRecent();
+        return accounts;
     }
 }

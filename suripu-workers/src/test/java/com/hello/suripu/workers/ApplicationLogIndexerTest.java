@@ -34,6 +34,7 @@ public class ApplicationLogIndexerTest {
 //        assertThat(fields.get("text"), is("one two three"));
         assertThat(fields.get("ts"), is(ts.toString()));
         assertThat(categories.get("level"), is(Level.DEBUG.toString()));
+        assertThat(fields.get("all"), is("1"));
     }
 
     @Test
