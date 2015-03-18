@@ -541,7 +541,9 @@ CREATE CREATE CREATE
             Arrays.fill(data[i], 0.0);
         }
 
-        //start filling in the sensor data.  Pick the max of the 5 minute bins for light
+        //start filling in the sensor data.
+
+        /////////////////////////////////////////////
         //LOG OF LIGHT, CONTINUOUS
         final Iterator<Sample> it1 = light.iterator();
         while (it1.hasNext()) {
@@ -550,18 +552,19 @@ CREATE CREATE CREATE
             if (value < 0) {
                 value = 0.0;
             }
-
-            final double value2 = Math.log(value * LIGHT_PREMULTIPLIER + 1.0) / Math.log(2);
-
-            addToBin(data, sample.dateTime, value2, HmmDataConstants.LIGHT_INDEX, t0, numMinutesInWindow);
+            //add so we can average later
+            addToBin(data, sample.dateTime, value, HmmDataConstants.LIGHT_INDEX, t0, numMinutesInWindow);
         }
 
         //computing average light in bin, so divide by bin size
         for (int i = 0; i < data[HmmDataConstants.LIGHT_INDEX].length; i++) {
-            data[HmmDataConstants.LIGHT_INDEX][i] /= numMinutesInWindow;
+            data[HmmDataConstants.LIGHT_INDEX][i] /= numMinutesInWindow; //average
+
+            //transform via log2(4.0 * x + 1.0)
+            data[HmmDataConstants.LIGHT_INDEX][i] =  Math.log(data[HmmDataConstants.LIGHT_INDEX][i] * LIGHT_PREMULTIPLIER + 1.0) / Math.log(2);
         }
 
-
+        ///////////////////////////
         //PILL MOTION
         final Iterator<TrackerMotion> it2 = pillData.iterator();
         while (it2.hasNext()) {
@@ -577,13 +580,13 @@ CREATE CREATE CREATE
             //if there's a disturbance, register it in the disturbance index
             if (value > model.pillMagnitudeDisturbanceThresholdLsb) {
                 maxInBin(data, m.timestamp, 1.0, HmmDataConstants.DISTURBANCE_INDEX, t0, numMinutesInWindow);
-
             }
 
             addToBin(data, m.timestamp, 1.0, HmmDataConstants.MOT_COUNT_INDEX, t0, numMinutesInWindow);
 
         }
 
+        ///////////////////////
         //WAVES
         final Iterator<Sample> it3 = wave.iterator();
         while (it3.hasNext()) {
@@ -596,6 +599,7 @@ CREATE CREATE CREATE
             }
         }
 
+        ///////////////////////////////////
         //SOUND MAGNITUDE ---> DISTURBANCE
         final Iterator<Sample> it4 = sound.iterator();
         while (it4.hasNext()) {
@@ -613,11 +617,16 @@ CREATE CREATE CREATE
             final Sample sample = it5.next();
             final double value = Math.log(sample.value + 1.0f) / Math.log(2);
 
-            if (value > 0.0) {
-                maxInBin(data,sample.dateTime,value,HmmDataConstants.LOG_SOUND_COUNT_INDEX,t0,numMinutesInWindow);
-            }
+            //accumulate
+            addToBin(data, sample.dateTime, value, HmmDataConstants.LOG_SOUND_COUNT_INDEX, t0, numMinutesInWindow);
 
         }
+
+        //transform via log2 (1.0 + x)
+        for (int i = 0; i < data[HmmDataConstants.LOG_SOUND_COUNT_INDEX].length; i++) {
+            data[HmmDataConstants.LOG_SOUND_COUNT_INDEX][i] =  Math.log(data[HmmDataConstants.LOG_SOUND_COUNT_INDEX][i] + 1.0) / Math.log(2);
+        }
+
 
         //FORBIDDEN NATURAL LIGHT
         final Iterator<Sample> it6 = naturalLightForbidden.iterator();
