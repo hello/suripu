@@ -17,18 +17,15 @@ import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
-import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.Account;
-import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.PartnerMotionEvent;
 import com.hello.suripu.core.models.Insight;
-import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
@@ -642,31 +639,9 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
 
         LOGGER.trace("SCORES: motion {}, duration {}, final {}", motionScore, durationScore, sleepScore);
 
-        // always update sleep-score in DynamoDB (TODO: rm)
-//        final Boolean updatedScore = this.aggregateSleepScoreDAODynamoDB.updateInsertSingleScore(
-//                accountId,
-//                sleepScore,
-//                DateTimeUtil.dateToYmdString(targetDate.withTimeAtStartOfDay()));
-//
-//        LOGGER.trace("Updated Score {}: account {}, score{}", updatedScore, accountId, sleepScore);
-
         // always update stats and scores
         final Boolean updatedStats = this.sleepStatsDAODynamoDB.updateStat(accountId, targetDate.withTimeAtStartOfDay(), sleepScore, sleepStats, userOffsetMillis);
         LOGGER.debug("Updated Stats-score: status {}, account {}, score {}, stats {}", updatedStats, accountId, sleepScore, sleepStats);
-
-
-        final DateTime lastNight = new DateTime(DateTime.now(), DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
-        if (targetDate.isBefore(lastNight)) {
-            // add sleep-score and duration to day-of-week, over time tracking table
-            // TODO: Need to redo these guys
-            if (sleepScore > 0) {
-                this.trendsInsightsDAO.updateDayOfWeekData(accountId, sleepScore, targetDate.withTimeAtStartOfDay(), userOffsetMillis, TrendGraph.DataType.SLEEP_SCORE);
-            }
-
-            if (sleepStats.sleepDurationInMinutes > 0) {
-                this.trendsInsightsDAO.updateSleepStats(accountId, userOffsetMillis, targetDate.withTimeAtStartOfDay(), sleepStats);
-            }
-        }
 
         return sleepScore;
     }
