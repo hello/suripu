@@ -29,29 +29,4 @@ public class BaseResource {
         return (active) ? -1 : 0;
     }
 
-    protected Boolean hasAlarmInTimeline(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.ALARM_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
-    }
-
-    protected Boolean hasSoundInTimeline(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.SOUND_EVENTS_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
-    }
-
-    protected Boolean hasFeedbackInTimeline(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.FEEDBACK_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
-    }
-
-
-    protected Boolean hasInOrOutOfBedEvents(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.IN_OUT_BED_EVENTS, accountId, Collections.EMPTY_LIST);
-    }
-
-    protected Boolean hasHmmEnabled(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.HMM_ALGORITHM, accountId, Collections.EMPTY_LIST);
-    }
-
-    protected Boolean hasPartnerFilterEnabled(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.PARTNER_FILTER, accountId, Collections.EMPTY_LIST);
-    }
-
 }
