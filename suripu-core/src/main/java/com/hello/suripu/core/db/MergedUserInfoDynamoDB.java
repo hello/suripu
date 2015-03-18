@@ -60,6 +60,7 @@ public class MergedUserInfoDynamoDB {
     private final static Logger LOGGER = LoggerFactory.getLogger(MergedUserInfoDynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public static final String MORPHEUS_ID_ATTRIBUTE_NAME = "device_id";
     public static final String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
@@ -123,7 +124,6 @@ public class MergedUserInfoDynamoDB {
     }
 
     private Map<String, AttributeValueUpdate> generateRingTimeUpdateItem(final RingTime ringTime){
-        final ObjectMapper mapper = new ObjectMapper();
         final Map<String, AttributeValueUpdate> items = new HashMap<>();
         items.put(EXPECTED_RING_TIME_ATTRIBUTE_NAME, new AttributeValueUpdate()
                 .withAction(AttributeAction.PUT)
@@ -136,7 +136,7 @@ public class MergedUserInfoDynamoDB {
                 .withValue(new AttributeValue().withBOOL(ringTime.fromSmartAlarm)));
 
         try {
-            final String soundJSON = mapper.writeValueAsString(ringTime.soundIds);
+            final String soundJSON = this.objectMapper.writeValueAsString(ringTime.soundIds);
             items.put(SOUND_IDS_ATTRIBUTE_NAME, new AttributeValueUpdate()
                     .withAction(AttributeAction.PUT)
                     .withValue(new AttributeValue().withS(soundJSON)));
@@ -167,7 +167,6 @@ public class MergedUserInfoDynamoDB {
     private Map<String, AttributeValueUpdate> generateAlarmUpdateItem(final List<Alarm> newAlarmList,
                                                                       final List<Alarm> oldAlarmList,
                                                                       final DateTimeZone userTimeZone){
-        final ObjectMapper mapper = new ObjectMapper();
         final Map<String, AttributeValueUpdate> items = new HashMap<>();
         final DateTime now = DateTime.now().withZone(userTimeZone);
         if(shouldUpdateRingTime(oldAlarmList, newAlarmList, userTimeZone, now)) {
@@ -177,7 +176,7 @@ public class MergedUserInfoDynamoDB {
 
         final String alarmListJSON;
         try {
-            alarmListJSON = mapper.writeValueAsString(newAlarmList);
+            alarmListJSON = this.objectMapper.writeValueAsString(newAlarmList);
         } catch (JsonProcessingException e) {
             LOGGER.error("Deserialize alarmList error: {}", e.getMessage());
             return Collections.EMPTY_MAP;
@@ -431,7 +430,7 @@ public class MergedUserInfoDynamoDB {
     }
 
 
-    public static Optional<UserInfo> attributeValuesToUserInfo(final Map<String, AttributeValue> item){
+    private Optional<UserInfo> attributeValuesToUserInfo(final Map<String, AttributeValue> item){
 
         try {
             final long accountId = Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN());
@@ -452,7 +451,7 @@ public class MergedUserInfoDynamoDB {
         return Optional.absent();
     }
 
-    public static List<Alarm> getAlarmListFromAttributes(final String deviceId, final long accountId, final Map<String, AttributeValue> item){
+    private List<Alarm> getAlarmListFromAttributes(final String deviceId, final long accountId, final Map<String, AttributeValue> item){
         final HashSet<String> alarmAttributes = new HashSet<String>();
         Collections.addAll(alarmAttributes, ALARM_TEMPLATES_ATTRIBUTE_NAME);
 
@@ -461,9 +460,8 @@ public class MergedUserInfoDynamoDB {
         }
 
         final String alarmListJSON = item.get(ALARM_TEMPLATES_ATTRIBUTE_NAME).getS();
-        final ObjectMapper mapper = new ObjectMapper();
         try {
-            final List<Alarm> alarmList = mapper.readValue(alarmListJSON, new TypeReference<List<Alarm>>(){});
+            final List<Alarm> alarmList = this.objectMapper.readValue(alarmListJSON, new TypeReference<List<Alarm>>(){});
             return alarmList;
         } catch (IOException e) {
             LOGGER.error("Deserialize JSON for alarm list failed, device {}, account id {}.", deviceId, accountId);
@@ -473,7 +471,7 @@ public class MergedUserInfoDynamoDB {
     }
 
 
-    public static Optional<RingTime> getRingTimeFromAttributes(final String deviceId, final long accountId, final Map<String, AttributeValue> item){
+    private Optional<RingTime> getRingTimeFromAttributes(final String deviceId, final long accountId, final Map<String, AttributeValue> item){
         final HashSet<String> ringTimeAttributes = new HashSet<String>();
         Collections.addAll(ringTimeAttributes, ACTUAL_RING_TIME_ATTRIBUTE_NAME, EXPECTED_RING_TIME_ATTRIBUTE_NAME, SOUND_IDS_ATTRIBUTE_NAME);
 
@@ -485,9 +483,8 @@ public class MergedUserInfoDynamoDB {
         final long actual = Long.valueOf(item.get(ACTUAL_RING_TIME_ATTRIBUTE_NAME).getN());
 
         final String soundArrayJSON = item.get(SOUND_IDS_ATTRIBUTE_NAME).getS();
-        final ObjectMapper mapper = new ObjectMapper();
         try {
-            final long[] soundIds = mapper.readValue(soundArrayJSON, long[].class);
+            final long[] soundIds = this.objectMapper.readValue(soundArrayJSON, long[].class);
             boolean isSmart = false;
             if(item.containsKey(IS_SMART_ALARM_ATTRIBUTE_NAME)){
                isSmart = item.get(IS_SMART_ALARM_ATTRIBUTE_NAME).getBOOL();
