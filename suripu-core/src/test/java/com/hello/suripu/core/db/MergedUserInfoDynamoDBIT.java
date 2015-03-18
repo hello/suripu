@@ -246,6 +246,8 @@ public class MergedUserInfoDynamoDBIT {
                 is(insertedAlarmRingTime.getMillis()));
         assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().fromSmartAlarm,
                 is(false));
+        assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().alarmList.size() > 0,
+                is(true));
     }
 
 
