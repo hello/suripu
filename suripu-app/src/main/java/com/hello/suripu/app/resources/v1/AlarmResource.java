@@ -77,9 +77,6 @@ public class AlarmResource {
 
             if(!alarmInfoOptional.isPresent()){
                 LOGGER.warn("Merge alarm info table doesn't have record for device {}, account {}.", deviceAccountMap.get(0).externalDeviceId, token.accountId);
-
-                // At account creation, the merged table doesn't have any alarm info, so let's create an empty one
-                LOGGER.warn("Saved empty alarm info for device {} and account {}.", deviceAccountMap.get(0).externalDeviceId, token.accountId);
 //                throw new WebApplicationException(Response.Status.BAD_REQUEST);
                 return Collections.emptyList();
             }
