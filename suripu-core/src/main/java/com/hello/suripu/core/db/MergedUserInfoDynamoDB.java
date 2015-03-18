@@ -148,24 +148,30 @@ public class MergedUserInfoDynamoDB {
         return items;
     }
 
-    private Map<String, AttributeValueUpdate> generateAlarmUpdateItem(final List<Alarm> alarmList, final DateTimeZone userTimeZone){
+    private Map<String, AttributeValueUpdate> generateAlarmUpdateItem(final List<Alarm> newAlarmList,
+                                                                      final List<Alarm> oldAlarmList,
+                                                                      final DateTimeZone userTimeZone){
         final ObjectMapper mapper = new ObjectMapper();
         final Map<String, AttributeValueUpdate> items = new HashMap<>();
         final String alarmListJSON;
         try {
-            alarmListJSON = mapper.writeValueAsString(alarmList);
-            final RingTime updateRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList,
-                    Alarm.Utils.alignToMinuteGranularity(DateTime.now().withZone(userTimeZone)).getMillis(),
-                    userTimeZone);
-            items.put(MergedUserInfoDynamoDB.ACTUAL_RING_TIME_ATTRIBUTE_NAME, new AttributeValueUpdate()
-                .withAction(AttributeAction.PUT)
-                .withValue(new AttributeValue().withN(String.valueOf(updateRingTime.actualRingTimeUTC))));
-            items.put(MergedUserInfoDynamoDB.EXPECTED_RING_TIME_ATTRIBUTE_NAME, new AttributeValueUpdate()
-                    .withAction(AttributeAction.PUT)
-                    .withValue(new AttributeValue().withN(String.valueOf(updateRingTime.expectedRingTimeUTC))));
-            items.put(MergedUserInfoDynamoDB.IS_SMART_ALARM_ATTRIBUTE_NAME, new AttributeValueUpdate()
-                    .withAction(AttributeAction.PUT)
-                    .withValue(new AttributeValue().withBOOL(updateRingTime.fromSmartAlarm)));
+            alarmListJSON = mapper.writeValueAsString(newAlarmList);
+            final DateTime now = DateTime.now().withZone(userTimeZone);
+            final RingTime updateRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(newAlarmList,
+                    Alarm.Utils.alignToMinuteGranularity(now).getMillis(), userTimeZone);
+            final RingTime oldRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(oldAlarmList,
+                    Alarm.Utils.alignToMinuteGranularity(now).getMillis(), userTimeZone);
+            if(oldRingTime.expectedRingTimeUTC != updateRingTime.expectedRingTimeUTC) {
+                items.put(MergedUserInfoDynamoDB.ACTUAL_RING_TIME_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                        .withAction(AttributeAction.PUT)
+                        .withValue(new AttributeValue().withN(String.valueOf(updateRingTime.actualRingTimeUTC))));
+                items.put(MergedUserInfoDynamoDB.EXPECTED_RING_TIME_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                        .withAction(AttributeAction.PUT)
+                        .withValue(new AttributeValue().withN(String.valueOf(updateRingTime.expectedRingTimeUTC))));
+                items.put(MergedUserInfoDynamoDB.IS_SMART_ALARM_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                        .withAction(AttributeAction.PUT)
+                        .withValue(new AttributeValue().withBOOL(updateRingTime.fromSmartAlarm)));
+            }
 
         } catch (JsonProcessingException e) {
             LOGGER.error("Deserialize alarmList error: {}", e.getMessage());
@@ -272,10 +278,14 @@ public class MergedUserInfoDynamoDB {
         return true;
     }
 
-    public boolean setAlarms(final String deviceId, final long accountId, final long lastUpdatedAt, final List<Alarm> alarms, final DateTimeZone userTimeZone){
-        final Map<String, AttributeValueUpdate> items = generateAlarmUpdateItem(alarms, userTimeZone);
+    public boolean setAlarms(final String deviceId, final long accountId,
+                             final long lastUpdatedAt,
+                             final List<Alarm> oldAlarms,
+                             final List<Alarm> newAlarms,
+                             final DateTimeZone userTimeZone){
+        final Map<String, AttributeValueUpdate> items = generateAlarmUpdateItem(newAlarms, oldAlarms, userTimeZone);
 
-        if(items.isEmpty() || !items.containsKey(EXPECTED_RING_TIME_ATTRIBUTE_NAME)){
+        if(items.isEmpty()){
             return false;
         }
 
@@ -284,10 +294,6 @@ public class MergedUserInfoDynamoDB {
         expected.put(UPDATED_AT_ATTRIBUTE_NAME, new ExpectedAttributeValue()
                 .withComparisonOperator(ComparisonOperator.EQ)
                 .withValue(new AttributeValue().withN(String.valueOf(lastUpdatedAt))));
-        expected.put(EXPECTED_RING_TIME_ATTRIBUTE_NAME, new ExpectedAttributeValue()
-                .withComparisonOperator(ComparisonOperator.NE)
-                .withValue(items.get(EXPECTED_RING_TIME_ATTRIBUTE_NAME).getValue())
-        );
 
         request.withExpected(expected);
         try {
@@ -302,8 +308,8 @@ public class MergedUserInfoDynamoDB {
         return true;
     }
 
-    public boolean setAlarms(final String deviceId, final long accountId, final List<Alarm> alarms, final DateTimeZone userTimeZone){
-        final Map<String, AttributeValueUpdate> items = generateAlarmUpdateItem(alarms, userTimeZone);
+    public boolean createUserInfo(final String deviceId, final long accountId, final DateTimeZone userTimeZone){
+        final Map<String, AttributeValueUpdate> items = generateAlarmUpdateItem(Collections.EMPTY_LIST, Collections.EMPTY_LIST, userTimeZone);
 
         if(items.isEmpty()){
             return false;
