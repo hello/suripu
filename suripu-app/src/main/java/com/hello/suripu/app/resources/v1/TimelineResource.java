@@ -127,7 +127,7 @@ public class TimelineResource extends BaseResource {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
-        return getTimelinesFromCacheOrReprocess(accessToken.accountId, date);
+        return getTimelinesFromCacheOrReprocess(accountId.get(), date);
     }
 
     @Timed
