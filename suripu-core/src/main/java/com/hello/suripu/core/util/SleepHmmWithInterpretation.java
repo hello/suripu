@@ -394,9 +394,13 @@ CREATE CREATE CREATE
     protected ImmutableList<SegmentPair> getIndiciesInMinutesWithIntervalSearch(final ImmutableList<SegmentPair> segs, double [] pillArray, final int numMinutesInMeasPeriod,final boolean isInOutOfBed) {
 
         List<SegmentPair> newSegments = new ArrayList<>();
-
+        int lastIndex = -1;
         for (final SegmentPair seg : segs) {
-            newSegments.add(performIntervalSearch(pillArray, seg, numMinutesInMeasPeriod, numMinutesInMeasPeriod, isInOutOfBed));
+            final SegmentPair newseg = performIntervalSearch(pillArray, seg, numMinutesInMeasPeriod, numMinutesInMeasPeriod, isInOutOfBed, lastIndex);
+
+            newSegments.add(newseg);
+
+            lastIndex = newseg.i2;
         }
 
         return ImmutableList.copyOf(newSegments);
@@ -404,7 +408,7 @@ CREATE CREATE CREATE
     }
 
     //find leading and trailing
-    protected SegmentPair performIntervalSearch(final double [] pillArray,final SegmentPair seg,final int numMinutesInMeasPeriod,final int searchRadiusMinutes,final boolean isInOutOfBed) {
+    protected SegmentPair performIntervalSearch(final double [] pillArray,final SegmentPair seg,final int numMinutesInMeasPeriod,final int searchRadiusMinutes,final boolean isInOutOfBed,int lastIndex) {
 
         int search1Start = seg.i1 * numMinutesInMeasPeriod - searchRadiusMinutes;
 
@@ -412,7 +416,13 @@ CREATE CREATE CREATE
             search1Start = 0;
         }
 
+        if (lastIndex >= search1Start) {
+            search1Start = lastIndex + 1;
+        }
+
         int search1End = search1Start + 2*searchRadiusMinutes;
+
+
 
 
         Optional<Integer> first1 = Optional.absent();
