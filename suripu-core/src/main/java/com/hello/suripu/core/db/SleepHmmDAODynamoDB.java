@@ -108,9 +108,7 @@ public class SleepHmmDAODynamoDB implements SleepHmmDAO {
 
             try {
 
-                SleepHmmProtos.SleepHmm hmmModelData = null;
-
-                hmmModelData = SleepHmmProtos.SleepHmm.parseFrom(sleepHmmBlob);
+                final SleepHmmProtos.SleepHmmModelSet hmmModelData = SleepHmmProtos.SleepHmmModelSet.parseFrom(sleepHmmBlob);
 
                 optionalModel = SleepHmmWithInterpretation.createModelFromProtobuf(hmmModelData);
 

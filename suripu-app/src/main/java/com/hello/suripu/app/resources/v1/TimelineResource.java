@@ -106,8 +106,12 @@ public class TimelineResource extends BaseResource {
             @Scope(OAuthScope.SLEEP_TIMELINE)final AccessToken accessToken,
             @PathParam("date") String date) {
 
-        return getTimelinesFromCacheOrReprocess(accessToken.accountId, date);
-
+        if (this.hasHmmEnabled(accessToken.accountId)) {
+            return this.timelineProcessor.retrieveHmmTimeline(accessToken.accountId,date);
+        }
+        else {
+            return getTimelinesFromCacheOrReprocess(accessToken.accountId, date);
+        }
     }
 
     @Timed
@@ -123,7 +127,7 @@ public class TimelineResource extends BaseResource {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
-        return getTimelinesFromCacheOrReprocess(accessToken.accountId, date);
+        return getTimelinesFromCacheOrReprocess(accountId.get(), date);
     }
 
     @Timed

@@ -7,6 +7,9 @@ public class English {
 
     public final static String FALL_ASLEEP_MESSAGE = "You fell asleep.";
     public final static String WAKE_UP_MESSAGE = "Good morning.";
+    public final static String WAKE_UP_DISTURBANCE_MESSAGE = "You woke up.";
+    public final static String FALL_ASLEEP_DISTURBANCE_MESSAGE = "You went back to bed.";
+    public final static String WAKESLEEP_DISTURBANCE_MESSAGE = "You briefly woke up.";
     public final static String SUNSET_MESSAGE = "";
     public final static String SUNRISE_MESSAGE = "Rise and shine.";
     public final static String IN_BED_MESSAGE = "You went to bed.";

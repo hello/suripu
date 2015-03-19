@@ -82,7 +82,7 @@ public class MergedUserInfoDynamoDBIT {
 
     @Test
     public void testCreateAndRetrieve(){
-        this.mergedUserInfoDynamoDB.setAlarms(this.deviceId, this.accountId, Collections.EMPTY_LIST, DateTimeZone.UTC);
+        this.mergedUserInfoDynamoDB.createUserInfoWithEmptyAlarmList(this.deviceId, this.accountId, DateTimeZone.UTC);
         final Optional<UserInfo> retrieved = this.mergedUserInfoDynamoDB.getInfo(this.deviceId, this.accountId);
         assertThat(retrieved.isPresent(), is(true));
         assertThat(retrieved.get().timeZone.isPresent(), is(false));
@@ -124,8 +124,8 @@ public class MergedUserInfoDynamoDBIT {
     @Test
     public void testUnlinkAccountAndDeviceId(){
         final String deviceId = "Pang's Morpheus";
-        this.mergedUserInfoDynamoDB.setAlarms(deviceId, 0L, Collections.EMPTY_LIST, DateTimeZone.UTC);
-        this.mergedUserInfoDynamoDB.setAlarms(deviceId, 1L, Collections.EMPTY_LIST, DateTimeZone.UTC);
+        this.mergedUserInfoDynamoDB.createUserInfoWithEmptyAlarmList(deviceId, 0L, DateTimeZone.UTC);
+        this.mergedUserInfoDynamoDB.createUserInfoWithEmptyAlarmList(deviceId, 1L, DateTimeZone.UTC);
         final Optional<UserInfo> deleted = this.mergedUserInfoDynamoDB.unlinkAccountToDevice(0L, deviceId);
         assertThat(deleted.isPresent(), is(true));
         assertThat(deleted.get().deviceId, is(deviceId));
@@ -206,7 +206,7 @@ public class MergedUserInfoDynamoDBIT {
                 .withAttributeUpdates(items)
                 .withReturnValues(ReturnValue.ALL_NEW);
         this.amazonDynamoDBClient.updateItem(updateItemRequest);
-        final boolean updated = this.mergedUserInfoDynamoDB.setAlarms(deviceId, accountId, DateTime.now().getMillis(), new ArrayList<Alarm>(), DateTimeZone.UTC);
+        final boolean updated = this.mergedUserInfoDynamoDB.setAlarms(deviceId, accountId, DateTime.now().getMillis(), Collections.EMPTY_LIST, Collections.EMPTY_LIST, DateTimeZone.UTC);
         assertThat(updated, is(false));
     }
 
@@ -228,21 +228,26 @@ public class MergedUserInfoDynamoDBIT {
         final DateTime previousRing = now.plusHours(1);
         this.mergedUserInfoDynamoDB.setRingTime(senseId, accountId, new RingTime(previousRing.minusMinutes(5).getMillis(),
                 previousRing.getMillis(), new long[0], true));
-        assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().actualRingTimeUTC,
+
+        final UserInfo userInfo = this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get();
+        assertThat(userInfo.ringTime.get().actualRingTimeUTC,
                 is(previousRing.minusMinutes(5).getMillis()));
-        assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().fromSmartAlarm,
+        assertThat(userInfo.ringTime.get().fromSmartAlarm,
                 is(true));
 
         final ArrayList<Alarm> alarms = new ArrayList<>();
         final DateTime insertedAlarmRingTime = now.plusMinutes(10).withSecondOfMinute(0).withMillisOfSecond(0);
 
         alarms.add(nonRepeatedFromRingTime(insertedAlarmRingTime, false));
-        this.mergedUserInfoDynamoDB.setAlarms(senseId, accountId, alarms, DateTimeZone.getDefault());
+        final boolean updated = this.mergedUserInfoDynamoDB.setAlarms(senseId, accountId, userInfo.lastUpdatedAt, Collections.EMPTY_LIST, alarms, DateTimeZone.getDefault());
 
+        assertThat(updated, is(true));
         assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().actualRingTimeUTC,
                 is(insertedAlarmRingTime.getMillis()));
         assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().fromSmartAlarm,
                 is(false));
+        assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().alarmList.size() > 0,
+                is(true));
     }
 
 
@@ -264,8 +269,9 @@ public class MergedUserInfoDynamoDBIT {
 
         final ArrayList<Alarm> alarms = new ArrayList<>();
         alarms.add(nonRepeatedFromRingTime(previousRing, true));
-        this.mergedUserInfoDynamoDB.setAlarms(senseId, accountId,lastUpdateAt, alarms, DateTimeZone.getDefault());
+        final boolean updated = this.mergedUserInfoDynamoDB.setAlarms(senseId, accountId,lastUpdateAt, alarms, alarms, DateTimeZone.getDefault());
 
+        assertThat(updated, is(true));
         assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().actualRingTimeUTC,
                 is(previousRing.minusMinutes(5).getMillis()));
         assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().expectedRingTimeUTC,

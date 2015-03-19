@@ -28,7 +28,7 @@ public class GammaPdf implements HmmPdfInterface {
         this.gammaDistribution = new GammaDistribution(k,theta);
     }
     @Override
-    public double[] getLikelihood(double[][] measurements) {
+    public double[] getLogLikelihood(double[][] measurements) {
         double [] result = new double[measurements[0].length];
         //row major or column major? assume it's like C
         final double [] col =  measurements[measNum];
@@ -40,7 +40,13 @@ public class GammaPdf implements HmmPdfInterface {
                 inputValue = MIN_INPUT_VALUE;
             }
 
-            result[i] = gammaDistribution.density(inputValue);
+            double pdfEval = gammaDistribution.density(inputValue);
+
+            if (pdfEval < MIN_LIKELIHOOD) {
+                pdfEval = MIN_LIKELIHOOD;
+            }
+
+            result[i] = Math.log(pdfEval);
 
         }
 
