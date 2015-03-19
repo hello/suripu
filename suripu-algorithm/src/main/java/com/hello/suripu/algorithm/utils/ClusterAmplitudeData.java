@@ -17,6 +17,10 @@ public class ClusterAmplitudeData extends AmplitudeData {
         return new ClusterAmplitudeData(data.timestamp, data.amplitude, data.offsetMillis, isInCluster);
     }
 
+    public ClusterAmplitudeData copy(){
+        return new ClusterAmplitudeData(this.timestamp, this.amplitude, this.offsetMillis, this.isInCluster());
+    }
+
     public boolean isInCluster(){
         return this.isInCluster;
     }

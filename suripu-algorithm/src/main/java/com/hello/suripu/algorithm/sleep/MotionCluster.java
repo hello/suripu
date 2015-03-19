@@ -54,4 +54,42 @@ public class MotionCluster {
 
         return result;
     }
+
+    private static void setAsMotionCluster(final List<ClusterAmplitudeData> clusters, final int start, final int end){
+        for(int i = start; i < end; i++){
+            clusters.get(i).setInCluster(true);
+        }
+    }
+
+    public static List<ClusterAmplitudeData> smoothCluster(final List<ClusterAmplitudeData> rawClusters){
+        int gapCount = 0;
+        int clusterLength = 0;
+        int lastGapStartIndex = 0;
+
+        int dynamicThreshold = 1;
+        final List<ClusterAmplitudeData> smoothed = new ArrayList<>();
+
+        for(int i = 0; i < rawClusters.size(); i++) {
+            final ClusterAmplitudeData clusterAmplitudeData = rawClusters.get(i);
+            if(!clusterAmplitudeData.isInCluster()) {
+                if(gapCount == 0) {
+                    lastGapStartIndex = i;
+                }
+                gapCount++;
+                if(clusterLength > 0) {
+                    dynamicThreshold = Math.max(clusterLength / 3, 1);
+                    clusterLength = 0;
+                }
+            }else {
+                if(gapCount <= dynamicThreshold && gapCount > 0) {
+                    setAsMotionCluster(smoothed, lastGapStartIndex, i);
+                }
+                gapCount = 0;
+                clusterLength++;
+            }
+
+            smoothed.add(clusterAmplitudeData.copy());
+        }
+        return smoothed;
+    }
 }

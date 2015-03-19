@@ -57,8 +57,20 @@ public class MotionClusterTest {
     @Test
     public void testGetClusters(){
         final List<AmplitudeData> input = loadFromResource("fixtures/km_motion_2015_03_15_gap_filled.csv");
-        final List<ClusterAmplitudeData> expected = loadClustersFromResource("fixtures/km_motion_2015_03_15_clustered.csv");
+        final List<ClusterAmplitudeData> expected = loadClustersFromResource("fixtures/km_motion_2015_03_15_clustered_raw.csv");
         final List<ClusterAmplitudeData> actual = MotionCluster.getClusters(input, MotionCluster.DEFAULT_STD_COUNT, 6);
+
+        assertThat(expected.size(), is(actual.size()));
+        for(int i = 0; i < actual.size(); i++){
+            assertThat(expected.get(i), is(actual.get(i)));
+        }
+    }
+
+    @Test
+    public void testSmoothClusters(){
+        final List<ClusterAmplitudeData> expected = loadClustersFromResource("fixtures/km_motion_2015_03_15_clustered_smoothed.csv");
+        final List<ClusterAmplitudeData> input = loadClustersFromResource("fixtures/km_motion_2015_03_15_clustered_raw.csv");
+        final List<ClusterAmplitudeData> actual = MotionCluster.smoothCluster(input);
 
         assertThat(expected.size(), is(actual.size()));
         for(int i = 0; i < actual.size(); i++){
