@@ -56,8 +56,8 @@ public class MotionClusterTest {
 
     @Test
     public void testGetClusters(){
-        final List<AmplitudeData> input = loadFromResource("fixtures/km_motion_2015_03_15_gap_filled.csv");
-        final List<ClusterAmplitudeData> expected = loadClustersFromResource("fixtures/km_motion_2015_03_15_clustered_raw.csv");
+        final List<AmplitudeData> input = loadFromResource("fixtures/km_feature_2015_03_15_gap_filled.csv");
+        final List<ClusterAmplitudeData> expected = loadClustersFromResource("fixtures/km_feature_2015_03_15_clustered_raw.csv");
         final List<ClusterAmplitudeData> actual = MotionCluster.getClusters(input, MotionCluster.DEFAULT_STD_COUNT, 6);
 
         assertThat(expected.size(), is(actual.size()));
@@ -68,13 +68,42 @@ public class MotionClusterTest {
 
     @Test
     public void testSmoothClusters(){
-        final List<ClusterAmplitudeData> expected = loadClustersFromResource("fixtures/km_motion_2015_03_15_clustered_smoothed.csv");
-        final List<ClusterAmplitudeData> input = loadClustersFromResource("fixtures/km_motion_2015_03_15_clustered_raw.csv");
+        final List<ClusterAmplitudeData> expected = loadClustersFromResource("fixtures/km_feature_2015_03_15_clustered_smoothed.csv");
+        final List<ClusterAmplitudeData> input = loadClustersFromResource("fixtures/km_feature_2015_03_15_clustered_raw.csv");
         final List<ClusterAmplitudeData> actual = MotionCluster.smoothCluster(input);
 
         assertThat(expected.size(), is(actual.size()));
         for(int i = 0; i < actual.size(); i++){
             assertThat(expected.get(i), is(actual.get(i)));
+        }
+    }
+
+    @Test
+    public void testGetMaxClusters(){
+        final List<ClusterAmplitudeData> expected = loadClustersFromResource("fixtures/km_feature_2015_03_15_clustered_max.csv");
+        final List<ClusterAmplitudeData> input = loadClustersFromResource("fixtures/km_feature_2015_03_15_clustered_smoothed.csv");
+        final List<ClusterAmplitudeData> actual = MotionCluster.getLargestCluster(input);
+
+        assertThat(expected.size(), is(actual.size()));
+        for(int i = 0; i < actual.size(); i++){
+            assertThat(expected.get(i), is(actual.get(i)));
+        }
+    }
+
+    @Test
+    public void testGetInputFeatureFromMotions(){
+        final List<AmplitudeData> expected = loadFromResource("fixtures/km_feature_2015_03_15_gap_filled.csv");
+        final List<AmplitudeData> input = loadFromResource("fixtures/km_motion_2015_03_15_gap_filled.csv");
+        final List<AmplitudeData> actual = MotionCluster.getInputFeatureFromMotions(input);
+
+        assertThat(actual.size(), is(expected.size()));
+        for(int i = 0; i < actual.size(); i++){
+            final AmplitudeData actualItem = actual.get(i);
+            final AmplitudeData expectedItem = expected.get(i);
+
+            assertThat(actualItem.timestamp, is(expectedItem.timestamp));
+            assertThat((float)actualItem.amplitude, is((float)expectedItem.amplitude));
+            assertThat(actualItem.offsetMillis, is(actualItem.offsetMillis));
         }
     }
 }
