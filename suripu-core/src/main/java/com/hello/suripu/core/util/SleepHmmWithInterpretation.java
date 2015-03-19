@@ -244,6 +244,9 @@ CREATE CREATE CREATE
                 MIN_DURATION_OF_ONBED_SEGMENT_IN_MINUTES / bestModel.numMinutesInMeasPeriod);
 
 
+        ImmutableList<SegmentPair> sleep2 = pairsWithGapsToPairs(sleep,false);
+        ImmutableList<SegmentPair> onBed2 = pairsWithGapsToPairs(onBed,true);
+
         if (bestModel.isUsingIntervalSearch) {
             //get whatever is earlier
             long endTime = currentTimeInMillis < sleepPeriodEndTime ? currentTimeInMillis : sleepPeriodEndTime;
@@ -253,16 +256,42 @@ CREATE CREATE CREATE
 
             double [] pillDataArray = getPillDataArray(pillData,t0,numMinutes);
 
-            sleep = getIndiciesInMinutesWithIntervalSearch(sleep,pillDataArray,numMinutesInMeasPeriod,false);
-            onBed = getIndiciesInMinutesWithIntervalSearch(onBed,pillDataArray,numMinutesInMeasPeriod,true);
+            sleep2 = getIndiciesInMinutesWithIntervalSearch(sleep2,pillDataArray,numMinutesInMeasPeriod,false);
+            onBed2 = getIndiciesInMinutesWithIntervalSearch(onBed2,pillDataArray,numMinutesInMeasPeriod,true);
             numMinutesInMeasPeriod = 1;
         }
 
 
-        return  processEventsIntoResult(numMinutesInMeasPeriod,sleep,onBed,t0,timezoneOffset,bestResult.bestPath);
+        return  processEventsIntoResult(numMinutesInMeasPeriod,sleep2,onBed2,t0,timezoneOffset,bestResult.bestPath);
 
 
     }
+
+    protected ImmutableList<SegmentPair> pairsWithGapsToPairs(final ImmutableList<SegmentPairWithGaps> segs,boolean ignoreGaps) {
+        List<SegmentPair> pairs = new ArrayList<>();
+
+        for (final SegmentPairWithGaps seg : segs) {
+            int i1 = seg.bounds.i1;
+
+
+            if (!ignoreGaps) {
+                for (final SegmentPair pair : seg.gaps) {
+                    final int i2 = pair.i1;
+                    pairs.add(new SegmentPair(i1,i2));
+
+                    i1 = pair.i2;
+                }
+            }
+
+
+            final int i2 = seg.bounds.i2;
+            pairs.add(new SegmentPair(i1,i2));
+        }
+
+
+        return ImmutableList.copyOf(pairs);
+    }
+
 
     protected  Event getEventFromIndex(Event.Type eventType, final int index, final long t0, final int timezoneOffset,final String description,final int numMinutesInWindow) {
         Long eventTime =  getTimeFromBin(index,numMinutesInWindow,t0);
@@ -362,31 +391,20 @@ CREATE CREATE CREATE
         }
     }
 
-    protected ImmutableList<SegmentPairWithGaps> getIndiciesInMinutesWithIntervalSearch(final ImmutableList<SegmentPairWithGaps> segs, double [] pillArray, final int numMinutesInMeasPeriod,final boolean isInOutOfBed) {
+    protected ImmutableList<SegmentPair> getIndiciesInMinutesWithIntervalSearch(final ImmutableList<SegmentPair> segs, double [] pillArray, final int numMinutesInMeasPeriod,final boolean isInOutOfBed) {
 
-        boolean isFirst = true;
-        List<SegmentPairWithGaps> newsegs = new ArrayList<>();
+        List<SegmentPair> newSegments = new ArrayList<>();
 
-        for (final SegmentPairWithGaps seg : segs) {
-
-            SegmentPair newBounds = performIntervalSearch(pillArray,seg.bounds,numMinutesInMeasPeriod,numMinutesInMeasPeriod,isInOutOfBed,false,isFirst);
-            isFirst = false;
-
-            final List<SegmentPair> newGaps = new ArrayList<>();
-
-            for (final SegmentPair gap : seg.gaps) {
-                newGaps.add(performIntervalSearch(pillArray,gap,numMinutesInMeasPeriod,numMinutesInMeasPeriod/2,isInOutOfBed,true,false));
-            }
-
-            newsegs.add(new SegmentPairWithGaps(newBounds,newGaps));
+        for (final SegmentPair seg : segs) {
+            newSegments.add(performIntervalSearch(pillArray, seg, numMinutesInMeasPeriod, numMinutesInMeasPeriod, isInOutOfBed));
         }
 
-        return ImmutableList.copyOf(newsegs);
+        return ImmutableList.copyOf(newSegments);
 
     }
 
     //find leading and trailing
-    protected SegmentPair performIntervalSearch(final double [] pillArray,final SegmentPair seg,final int numMinutesInMeasPeriod,final int searchRadiusMinutes,final boolean isInOutOfBed,final boolean isSleepGap,final  boolean isFirst) {
+    protected SegmentPair performIntervalSearch(final double [] pillArray,final SegmentPair seg,final int numMinutesInMeasPeriod,final int searchRadiusMinutes,final boolean isInOutOfBed) {
 
         int search1Start = seg.i1 * numMinutesInMeasPeriod - searchRadiusMinutes;
 
@@ -404,14 +422,8 @@ CREATE CREATE CREATE
             first1 = getFirstInInterval(pillArray, search1Start, search1End);
         }
         else {
-            if (isSleepGap) {
-                //sleep gap?  this is just waking up...so first event
-                first1 = getFirstInInterval(pillArray, search1Start, search1End);
-            }
-            else {
-                //not sleep gap, so we're going to sleep
-                first1 = getFirstQuietPeriodInInterval(pillArray,search1Start,search1End,5);
-            }
+            //not sleep gap, so we're going to sleep
+            first1 = getFirstQuietPeriodInInterval(pillArray,search1Start,search1End,5);
         }
 
         int search2Start = (seg.i2 + 1) * numMinutesInMeasPeriod - searchRadiusMinutes;
@@ -425,18 +437,9 @@ CREATE CREATE CREATE
             search2Start = search2End - 1;
         }
 
-        Optional<Integer> end2 = Optional.absent();
+        Optional<Integer> end2 = getLastInInterval(pillArray, search2Start, search2End);
 
-        if (isSleepGap && !isInOutOfBed) {
-            //sleep gap... going to back to sleep
-            end2 = getFirstQuietPeriodInInterval(pillArray,search2Start,search2End,4);
-        }
-        else {
-            //either waking up or getting out of bed... get the very last
-            end2  = getLastInInterval(pillArray, search2Start, search2End);
-        }
 
-        final int halfInterval = numMinutesInMeasPeriod/2;
         int i1 = seg.i1 * numMinutesInMeasPeriod ;
         int i2 = seg.i2 * numMinutesInMeasPeriod - 1 ;
 
@@ -457,11 +460,6 @@ CREATE CREATE CREATE
             i2 += 1;
             i1 -=1;
         }
-
-        if (!isFirst && !isInOutOfBed) {
-            i1 += 1;
-        }
-
 
 
         return new SegmentPair(i1,i2);
@@ -518,7 +516,7 @@ CREATE CREATE CREATE
         return  ImmutableList.copyOf(candidates);
     }
 
-    Optional<SleepHmmResult> processEventsIntoResult(final int numMinutesInMeasPeriod, final ImmutableList<SegmentPairWithGaps> sleeps, final ImmutableList<SegmentPairWithGaps> beds, final long t0, final int timezoneOffset, final ImmutableList<Integer> path) {
+    Optional<SleepHmmResult> processEventsIntoResult(final int numMinutesInMeasPeriod, final ImmutableList<SegmentPair> sleeps, final ImmutableList<SegmentPair> beds, final long t0, final int timezoneOffset, final ImmutableList<Integer> path) {
 
         List<Event> events = new ArrayList<>();
         int minutesSpentInBed = 0;
@@ -532,7 +530,7 @@ CREATE CREATE CREATE
         }
 
         for (int iSegment = 0; iSegment < sleeps.size(); iSegment++) {
-            final SegmentPairWithGaps seg = sleeps.get(iSegment);
+            final SegmentPair seg = sleeps.get(iSegment);
 
             //if not the first sleep, it's a  going to sleep after a disturbance
             String sleepMessage = English.FALL_ASLEEP_DISTURBANCE_MESSAGE;
@@ -548,33 +546,23 @@ CREATE CREATE CREATE
 
 
 
-            events.add(getEventFromIndex(Event.Type.SLEEP, seg.bounds.i1, t0, timezoneOffset, sleepMessage,numMinutesInMeasPeriod));
-            events.add(getEventFromIndex(Event.Type.WAKE_UP, seg.bounds.i2, t0, timezoneOffset, wakeupMessage,numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.SLEEP, seg.i1, t0, timezoneOffset, sleepMessage,numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.WAKE_UP, seg.i2, t0, timezoneOffset, wakeupMessage,numMinutesInMeasPeriod));
 
-            minutesSpentSleeping += (seg.bounds.i2 - seg.bounds.i1) * numMinutesInMeasPeriod;
+            minutesSpentSleeping += (seg.i2 - seg.i1) * numMinutesInMeasPeriod;
 
             numTimesWokenUpDuringSleep += 1;
             numSeparateSleepSegments += 1;
 
-            for (final SegmentPair gap : seg.gaps) {
-                if (gap.i1 - 1 > seg.bounds.i1 && gap.i2 + 1 < seg.bounds.i2) {
-                    events.add(getEventFromIndex(Event.Type.WAKE_UP, gap.i1, t0, timezoneOffset, English.WAKE_UP_DISTURBANCE_MESSAGE,numMinutesInMeasPeriod));
-                    events.add(getEventFromIndex(Event.Type.SLEEP, gap.i2, t0, timezoneOffset, English.FALL_ASLEEP_DISTURBANCE_MESSAGE,numMinutesInMeasPeriod));
-
-                    minutesSpentSleeping -= (gap.i2 - gap.i1) * numMinutesInMeasPeriod;
-
-                    numTimesWokenUpDuringSleep += 1;
-                }
-            }
         }
 
-        for (final SegmentPairWithGaps seg : beds) {
-            events.add(getEventFromIndex(Event.Type.IN_BED, seg.bounds.i1, t0, timezoneOffset, English.IN_BED_MESSAGE,numMinutesInMeasPeriod));
-            events.add(getEventFromIndex(Event.Type.OUT_OF_BED, seg.bounds.i2, t0, timezoneOffset, English.OUT_OF_BED_MESSAGE,numMinutesInMeasPeriod));
+        for (final SegmentPair seg : beds) {
+            events.add(getEventFromIndex(Event.Type.IN_BED, seg.i1, t0, timezoneOffset, English.IN_BED_MESSAGE,numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.OUT_OF_BED, seg.i2, t0, timezoneOffset, English.OUT_OF_BED_MESSAGE,numMinutesInMeasPeriod));
 
             //ignore gaps
 
-            minutesSpentInBed += (seg.bounds.i2 - seg.bounds.i1) * numMinutesInMeasPeriod;
+            minutesSpentInBed += (seg.i2 - seg.i1) * numMinutesInMeasPeriod;
         }
 
 
