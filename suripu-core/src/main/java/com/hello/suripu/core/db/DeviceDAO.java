@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.mappers.DeviceStatusMapper;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceStatus;
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.TransactionIsolationLevel;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
@@ -111,6 +112,11 @@ public interface DeviceDAO extends Transactional<DeviceDAO> {
     @SingleValueResult(DeviceStatus.class)
     @SqlQuery("SELECT id, pill_id, fw_version as firmware_version, battery_level, last_updated as last_seen, uptime FROM pill_status WHERE pill_id = :pill_id AND last_updated is not null ORDER BY id DESC LIMIT 1000;")
     ImmutableList<DeviceStatus> pillStatusWithBatteryLevel(@Bind("pill_id") final Long pillId);
+
+    @RegisterMapper(DeviceStatusMapper.class)
+    @SingleValueResult(DeviceStatus.class)
+    @SqlQuery("SELECT id, pill_id, fw_version as firmware_version, battery_level, last_updated as last_seen, uptime FROM pill_status WHERE pill_id = :pill_id AND last_updated is not null AND last_updated <= :end_ts ORDER BY id DESC LIMIT 168;")
+    ImmutableList<DeviceStatus> pillStatusBeforeTs(@Bind("pill_id") final Long pillId, @Bind("end_ts") final DateTime endTs);
 
     //    @SqlQuery("SELECT * FROM pill_status WHERE pill_id = :pill_id;")
 
