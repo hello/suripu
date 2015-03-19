@@ -265,11 +265,11 @@ public class InsightsResource {
                 // sleep score over time, up to 365 days
                 final List<AggregateScore> scores = new ArrayList<>();
                 for (final AggregateSleepStats stat : sleepStats) {
-                    scores.add(new AggregateScore(accountId, stat.sleepScore, DateTimeUtil.dateToYmdString(stat.dateTime), "sleep", stat.version));
+                    scores.add(new AggregateScore(accountId,
+                            stat.sleepScore,
+                            DateTimeUtil.dateToYmdString(stat.dateTime),
+                            "sleep", stat.version));
                 }
-//                final ImmutableList<AggregateScore> scores = scoreDAODynamoDB.getBatchScores(accountId,
-//                        DateTimeUtil.dateToYmdString(startDate),
-//                        DateTimeUtil.dateToYmdString(endDate), numDays);
 
                 if (scores.size() < MIN_DATAPOINTS) {
                     return Optional.absent();
@@ -286,7 +286,6 @@ public class InsightsResource {
                 for (final AggregateSleepStats stat : sleepStats) {
                     statsSamples.add(new SleepStatsSample(stat.sleepStats, stat.dateTime, stat.offsetMillis));
                 }
-                    //ImmutableList<SleepStatsSample> statsSamples = trendsInsightsDAO.getAccountSleepStatsBetweenDates(accountId, startDate, endDate);
 
                 if (statsSamples.size() < MIN_DATAPOINTS) {
                     return Optional.absent();

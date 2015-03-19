@@ -25,6 +25,7 @@ public class SleepScoreProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepScoreProcessor.class);
 
     @Timed
+    @Deprecated
     public static List<AggregateScore> getSleepScores(final Long accountId, final DateTime targetDate, final int days,
                                                       final TrackerMotionDAO trackerMotionDAO,
                                                       final SleepLabelDAO sleepLabelDAO,

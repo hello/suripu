@@ -1,15 +1,26 @@
 package com.hello.suripu.core.util;
 
+import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.processors.insights.SleepDuration;
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 /**
  * Created by kingshy on 2/25/15.
  */
 public class SleepScoreUtils {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SleepScoreUtils.class);
 
     public static Integer DURATION_MAX_SCORE = 80;
     public static Integer DURATION_MIN_SCORE = 10;
+    private static float MOTION_SCORE_MIN = 10.0f;
+    private static float MOTION_SCORE_RANGE = 80.0f; // max score is 90
+
     public static Float DURATION_SCORE_SCALE = (float) (DURATION_MAX_SCORE - DURATION_MIN_SCORE);
+    public static Integer TOO_LITTLE_SLEEP_ALLOWANCE = 1;
     public static Integer TOO_MUCH_SLEEP_ALLOWANCE = 4; // allow too much sleep recommendation to exceed by 4 hours
 
     /**
@@ -29,21 +40,83 @@ public class SleepScoreUtils {
             return DURATION_MAX_SCORE;
         }
 
-        if (sleepDurationHours < (float) (idealHours.absoluteMinHours - 1) || sleepDurationHours > (float) (idealHours.absoluteMaxHours + TOO_MUCH_SLEEP_ALLOWANCE)) {
+        if (sleepDurationHours < (float) (idealHours.absoluteMinHours - TOO_LITTLE_SLEEP_ALLOWANCE) ||
+                sleepDurationHours > (float) (idealHours.absoluteMaxHours + TOO_MUCH_SLEEP_ALLOWANCE)) {
             return DURATION_MIN_SCORE;
         }
 
         Float diffMinutes = 0.0f;
         Float scaleMinutes = 0.0f;
         if (sleepDurationHours < (float) idealHours.minHours) {
+            // under-sleep
             diffMinutes = (float) (idealHours.minHours * 60  - sleepDurationMinutes);
             scaleMinutes = (idealHours.minHours - idealHours.absoluteMinHours + 1) * 60.0f;
         } else {
+            // over-slept
             diffMinutes = (float) (sleepDurationMinutes - idealHours.maxHours * 60);
             scaleMinutes = (idealHours.absoluteMaxHours + TOO_MUCH_SLEEP_ALLOWANCE - idealHours.maxHours) * 60.0f;
         }
         final Integer score = DURATION_MAX_SCORE - Math.round((diffMinutes / scaleMinutes) * DURATION_SCORE_SCALE);
         return score;
+    }
+
+    /**
+     * Compute sleep score based on average number of agitation during sleep
+     * @param targetDate
+     * @param trackerMotions
+     * @param fallAsleepTimestamp
+     * @param wakeUpTimestamp
+     * @return
+     */
+    public static Integer getSleepMotionScore(final DateTime targetDate, final List<TrackerMotion> trackerMotions, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
+        float numAgitations = 0.0f;
+        Float avgMotionAmplitude = 0.0f;
+        Integer maxMotionAmplitude = 0;
+
+        final Integer offsetMillis = trackerMotions.get(0).offsetMillis;
+
+        Long sleepStartMillis = fallAsleepTimestamp;
+        if (sleepStartMillis == 0L) {
+            sleepStartMillis = targetDate.withHourOfDay(22).minusMillis(offsetMillis).getMillis();
+        }
+
+        Long sleepStopMillis = wakeUpTimestamp;
+        if (sleepStopMillis == 0L) {
+            sleepStopMillis = sleepStartMillis + 12 * 3600000L;
+        }
+
+        Long firstMotionTime = 0L;
+        Long lastMotionTime = 0L;
+
+        for (final TrackerMotion motion : trackerMotions) {
+            if (motion.timestamp > sleepStopMillis) {
+                break;
+            }
+
+            if (motion.timestamp > sleepStartMillis) {
+                if (firstMotionTime == 0L) {
+                    firstMotionTime = motion.timestamp;
+                }
+                lastMotionTime = motion.timestamp;
+                numAgitations += 1.0f;
+                avgMotionAmplitude += (float) motion.value;
+                if (motion.value > maxMotionAmplitude) {
+                    maxMotionAmplitude = motion.value;
+                }
+            }
+        }
+
+        float numAsleepMinutes = (float) ((double) (lastMotionTime - firstMotionTime) / 60000.0);
+        float totalScore =  (numAgitations / numAsleepMinutes) * 100.0f;
+        float score = 100.0f - totalScore;
+
+        // TODO: factor in motion amplitude
+        avgMotionAmplitude = avgMotionAmplitude / numAgitations;
+
+        LOGGER.trace("NEW SCORING - Mins asleep: {}, num_agitations: {}, total Score: {}, final score {}, avg Amplitude: {}, max: {}",
+                numAsleepMinutes, numAgitations, totalScore, score, avgMotionAmplitude, maxMotionAmplitude);
+
+        return Math.round((score / 100.0f) * MOTION_SCORE_RANGE + MOTION_SCORE_MIN);
     }
 
     /**

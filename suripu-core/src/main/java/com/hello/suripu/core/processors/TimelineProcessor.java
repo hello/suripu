@@ -234,7 +234,7 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
         final SleepStats stats = new SleepStats(0,0,res.stats.minutesSpentSleeping,0,0L,0L,0);
 
 
-        Integer sleepScore = computeAndMaybeSaveScore(trackerMotions.get(0).offsetMillis, targetDate, accountId, stats);
+        Integer sleepScore = computeAndMaybeSaveScore(trackerMotions, targetDate, accountId, stats);
 
         if(stats.sleepDurationInMinutes < MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES) {
             LOGGER.warn("Score for account id {} was set to zero because sleep duration is too short ({} min)", accountId, stats.sleepDurationInMinutes);
@@ -437,7 +437,7 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
 
-        Integer sleepScore = computeAndMaybeSaveScore(trackerMotions.get(0).offsetMillis, targetDate, accountId, sleepStats);
+        Integer sleepScore = computeAndMaybeSaveScore(trackerMotions, targetDate, accountId, sleepStats);
 
         if(sleepStats.sleepDurationInMinutes < MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES) {
             LOGGER.warn("Score for account id {} was set to zero because sleep duration is too short ({} min)", accountId, sleepStats.sleepDurationInMinutes);
@@ -612,19 +612,17 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
 
     /**
      * Sleep score - always compute and update dynamo
-     * @param userOffsetMillis
+     * @param trackerMotions
      * @param targetDate
      * @param accountId
      * @param sleepStats
      * @return
      */
-    private Integer computeAndMaybeSaveScore(final Integer userOffsetMillis, final DateTime targetDate, final Long accountId, final SleepStats sleepStats) {
+    private Integer computeAndMaybeSaveScore(final List<TrackerMotion> trackerMotions, final DateTime targetDate, final Long accountId, final SleepStats sleepStats) {
 
         // Movement score
-        final Integer motionScore = sleepScoreDAO.getSleepScoreForNight(accountId,
-                targetDate.withTimeAtStartOfDay(),
-                userOffsetMillis,
-                this.dateBucketPeriod, sleepLabelDAO);
+        final Integer motionScore = SleepScoreUtils.getSleepMotionScore(targetDate.withTimeAtStartOfDay(),
+                trackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
 
         // Sleep duration score
         final Optional<Account> optionalAccount = accountDAO.getById(accountId);
@@ -637,11 +635,13 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
         // Aggregate all scores
         final Integer sleepScore = SleepScoreUtils.aggregateSleepScore(motionScore, durationScore, environmentScore);
 
-        LOGGER.trace("SCORES: motion {}, duration {}, final {}", motionScore, durationScore, sleepScore);
+        // Always update stats and scores to Dynamo
+        final Integer userOffsetMillis = trackerMotions.get(0).offsetMillis;
+        final Boolean updatedStats = this.sleepStatsDAODynamoDB.updateStat(accountId,
+                targetDate.withTimeAtStartOfDay(), sleepScore, sleepStats, userOffsetMillis);
 
-        // always update stats and scores
-        final Boolean updatedStats = this.sleepStatsDAODynamoDB.updateStat(accountId, targetDate.withTimeAtStartOfDay(), sleepScore, sleepStats, userOffsetMillis);
-        LOGGER.debug("Updated Stats-score: status {}, account {}, score {}, stats {}", updatedStats, accountId, sleepScore, sleepStats);
+        LOGGER.debug("Updated Stats-score: status {}, account {}, motion {}, duration {}, score {}, stats {}",
+                updatedStats, accountId, motionScore, durationScore, sleepScore, sleepStats);
 
         return sleepScore;
     }
