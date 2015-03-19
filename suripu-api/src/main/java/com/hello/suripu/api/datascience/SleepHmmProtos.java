@@ -3508,6 +3508,16 @@ public final class SleepHmmProtos {
      * <code>optional int32 num_minutes_in_meas_period = 13;</code>
      */
     int getNumMinutesInMeasPeriod();
+
+    // optional bool enable_interval_search = 14;
+    /**
+     * <code>optional bool enable_interval_search = 14;</code>
+     */
+    boolean hasEnableIntervalSearch();
+    /**
+     * <code>optional bool enable_interval_search = 14;</code>
+     */
+    boolean getEnableIntervalSearch();
   }
   /**
    * Protobuf type {@code SleepHmm}
@@ -3658,6 +3668,11 @@ public final class SleepHmmProtos {
             case 104: {
               bitField0_ |= 0x00000200;
               numMinutesInMeasPeriod_ = input.readInt32();
+              break;
+            }
+            case 112: {
+              bitField0_ |= 0x00000400;
+              enableIntervalSearch_ = input.readBool();
               break;
             }
           }
@@ -4056,6 +4071,22 @@ public final class SleepHmmProtos {
       return numMinutesInMeasPeriod_;
     }
 
+    // optional bool enable_interval_search = 14;
+    public static final int ENABLE_INTERVAL_SEARCH_FIELD_NUMBER = 14;
+    private boolean enableIntervalSearch_;
+    /**
+     * <code>optional bool enable_interval_search = 14;</code>
+     */
+    public boolean hasEnableIntervalSearch() {
+      return ((bitField0_ & 0x00000400) == 0x00000400);
+    }
+    /**
+     * <code>optional bool enable_interval_search = 14;</code>
+     */
+    public boolean getEnableIntervalSearch() {
+      return enableIntervalSearch_;
+    }
+
     private void initFields() {
       userId_ = "";
       source_ = "";
@@ -4070,6 +4101,7 @@ public final class SleepHmmProtos {
       numModelParams_ = 0;
       modelName_ = "";
       numMinutesInMeasPeriod_ = 0;
+      enableIntervalSearch_ = false;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -4127,6 +4159,9 @@ public final class SleepHmmProtos {
       }
       if (((bitField0_ & 0x00000200) == 0x00000200)) {
         output.writeInt32(13, numMinutesInMeasPeriod_);
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        output.writeBool(14, enableIntervalSearch_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -4192,6 +4227,10 @@ public final class SleepHmmProtos {
       if (((bitField0_ & 0x00000200) == 0x00000200)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(13, numMinutesInMeasPeriod_);
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(14, enableIntervalSearch_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -4340,6 +4379,8 @@ public final class SleepHmmProtos {
         bitField0_ = (bitField0_ & ~0x00000800);
         numMinutesInMeasPeriod_ = 0;
         bitField0_ = (bitField0_ & ~0x00001000);
+        enableIntervalSearch_ = false;
+        bitField0_ = (bitField0_ & ~0x00002000);
         return this;
       }
 
@@ -4427,6 +4468,10 @@ public final class SleepHmmProtos {
           to_bitField0_ |= 0x00000200;
         }
         result.numMinutesInMeasPeriod_ = numMinutesInMeasPeriod_;
+        if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
+          to_bitField0_ |= 0x00000400;
+        }
+        result.enableIntervalSearch_ = enableIntervalSearch_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -4524,6 +4569,9 @@ public final class SleepHmmProtos {
         }
         if (other.hasNumMinutesInMeasPeriod()) {
           setNumMinutesInMeasPeriod(other.getNumMinutesInMeasPeriod());
+        }
+        if (other.hasEnableIntervalSearch()) {
+          setEnableIntervalSearch(other.getEnableIntervalSearch());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -5431,6 +5479,39 @@ public final class SleepHmmProtos {
         return this;
       }
 
+      // optional bool enable_interval_search = 14;
+      private boolean enableIntervalSearch_ ;
+      /**
+       * <code>optional bool enable_interval_search = 14;</code>
+       */
+      public boolean hasEnableIntervalSearch() {
+        return ((bitField0_ & 0x00002000) == 0x00002000);
+      }
+      /**
+       * <code>optional bool enable_interval_search = 14;</code>
+       */
+      public boolean getEnableIntervalSearch() {
+        return enableIntervalSearch_;
+      }
+      /**
+       * <code>optional bool enable_interval_search = 14;</code>
+       */
+      public Builder setEnableIntervalSearch(boolean value) {
+        bitField0_ |= 0x00002000;
+        enableIntervalSearch_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool enable_interval_search = 14;</code>
+       */
+      public Builder clearEnableIntervalSearch() {
+        bitField0_ = (bitField0_ & ~0x00002000);
+        enableIntervalSearch_ = false;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:SleepHmm)
     }
 
@@ -6178,7 +6259,7 @@ public final class SleepHmmProtos {
       "turbances\030\r \001(\0132\026.DiscreteAlphabetModel\022" +
       "$\n\017log_sound_count\030\016 \001(\0132\013.GammaModel\0224\n",
       "\024natural_light_filter\030\017 \001(\0132\026.DiscreteAl" +
-      "phabetModel\"\237\003\n\010SleepHmm\022\017\n\007user_id\030\001 \001(" +
+      "phabetModel\"\277\003\n\010SleepHmm\022\017\n\007user_id\030\001 \001(" +
       "\t\022\016\n\006source\030\002 \001(\t\022\033\n\006states\030\003 \003(\0132\013.Stat" +
       "eModel\022\022\n\nnum_states\030\004 \001(\005\022\037\n\027state_tran" +
       "sition_matrix\030\005 \003(\001\022#\n\033initial_state_pro" +
@@ -6188,13 +6269,14 @@ public final class SleepHmmProtos {
       "ght_filter_start_hour\030\t \001(\001\022&\n\036natural_l" +
       "ight_filter_stop_hour\030\n \001(\001\022\030\n\020num_model",
       "_params\030\013 \001(\005\022\022\n\nmodel_name\030\014 \001(\t\022\"\n\032num" +
-      "_minutes_in_meas_period\030\r \001(\005\"-\n\020SleepHm" +
-      "mModelSet\022\031\n\006models\030\001 \003(\0132\t.SleepHmm* \n\t" +
-      "SleepMode\022\t\n\005SLEEP\020\000\022\010\n\004WAKE\020\001*\"\n\007BedMod" +
-      "e\022\n\n\006ON_BED\020\000\022\013\n\007OFF_BED\020\001*G\n\nSleepDepth" +
-      "\022\022\n\016NOT_APPLICABLE\020\000\022\t\n\005LIGHT\020\001\022\013\n\007REGUL" +
-      "AR\020\002\022\r\n\tDISTURBED\020\003B2\n com.hello.suripu." +
-      "api.datascienceB\016SleepHmmProtos"
+      "_minutes_in_meas_period\030\r \001(\005\022\036\n\026enable_" +
+      "interval_search\030\016 \001(\010\"-\n\020SleepHmmModelSe" +
+      "t\022\031\n\006models\030\001 \003(\0132\t.SleepHmm* \n\tSleepMod" +
+      "e\022\t\n\005SLEEP\020\000\022\010\n\004WAKE\020\001*\"\n\007BedMode\022\n\n\006ON_" +
+      "BED\020\000\022\013\n\007OFF_BED\020\001*G\n\nSleepDepth\022\022\n\016NOT_" +
+      "APPLICABLE\020\000\022\t\n\005LIGHT\020\001\022\013\n\007REGULAR\020\002\022\r\n\t" +
+      "DISTURBED\020\003B2\n com.hello.suripu.api.data" +
+      "scienceB\016SleepHmmProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -6230,7 +6312,7 @@ public final class SleepHmmProtos {
           internal_static_SleepHmm_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_SleepHmm_descriptor,
-              new java.lang.String[] { "UserId", "Source", "States", "NumStates", "StateTransitionMatrix", "InitialStateProbabilities", "AudioDisturbanceThresholdDb", "PillMagnitudeDisturbanceThresholdLsb", "NaturalLightFilterStartHour", "NaturalLightFilterStopHour", "NumModelParams", "ModelName", "NumMinutesInMeasPeriod", });
+              new java.lang.String[] { "UserId", "Source", "States", "NumStates", "StateTransitionMatrix", "InitialStateProbabilities", "AudioDisturbanceThresholdDb", "PillMagnitudeDisturbanceThresholdLsb", "NaturalLightFilterStartHour", "NaturalLightFilterStopHour", "NumModelParams", "ModelName", "NumMinutesInMeasPeriod", "EnableIntervalSearch", });
           internal_static_SleepHmmModelSet_descriptor =
             getDescriptor().getMessageTypes().get(5);
           internal_static_SleepHmmModelSet_fieldAccessorTable = new
