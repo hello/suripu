@@ -11,11 +11,11 @@ max_records: 50
 
 application_logs:
   private_url : http://:G3KvEnaw2bDdQc@d7q83.api.searchify.com/
-  index_name : application-logs
+  index_name : application-logs-2015-03
 
 sense_logs:
   private_url : http://:G3KvEnaw2bDdQc@d7q83.api.searchify.com/
-  index_name : sense-logs
+  index_name : sense-logs-2015-03
 
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
