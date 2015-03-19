@@ -148,7 +148,7 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
                 @Override
                 public FilterReply decide(ILoggingEvent event) {
                     final Level level = event.getLevel();
-                    if(level.isGreaterOrEqual(Level.DEBUG)) {
+                    if(level.isGreaterOrEqual(Level.valueOf(kinesisLoggerConfiguration.getLogLevel()))) {
                         return FilterReply.ACCEPT;
                     }
                     return FilterReply.DENY;

@@ -40,4 +40,11 @@ public class KinesisLoggerConfiguration {
     @JsonProperty("production")
     private Boolean isProduction = false;
     public Boolean isProduction() {return isProduction;}
+
+    @JsonProperty("min_log_level")
+    private String logLevel = "DEBUG";
+    public String getLogLevel() {
+        return logLevel;
+    }
+
 }
