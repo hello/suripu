@@ -13,14 +13,19 @@ public class AggregateSleepStats implements Comparable<AggregateSleepStats>{
     public final Integer sleepScore;
     public final String version;
 
+    public final MotionScore motionScore;
     public final SleepStats sleepStats;
 
-    public AggregateSleepStats(final Long accountId, final DateTime dateTime, final Integer offsetMillis, final Integer sleepScore, final String version, final SleepStats sleepStats) {
+    public AggregateSleepStats(final Long accountId, final DateTime dateTime, final Integer offsetMillis,
+                               final Integer sleepScore, final String version,
+                               final MotionScore motionScore,
+                               final SleepStats sleepStats) {
         this.accountId = accountId;
         this.dateTime = dateTime;
         this.offsetMillis = offsetMillis;
         this.sleepScore = sleepScore;
         this.version = version;
+        this.motionScore = motionScore;
         this.sleepStats = sleepStats;
     }
 

@@ -1,5 +1,6 @@
 package com.hello.suripu.core.util;
 
+import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.processors.insights.SleepDuration;
 import org.joda.time.DateTime;
@@ -68,7 +69,7 @@ public class SleepScoreUtils {
      * @param wakeUpTimestamp
      * @return
      */
-    public static Integer getSleepMotionScore(final DateTime targetDate, final List<TrackerMotion> trackerMotions, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
+    public static MotionScore getSleepMotionScore(final DateTime targetDate, final List<TrackerMotion> trackerMotions, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
         float numAgitations = 0.0f;
         Float avgMotionAmplitude = 0.0f;
         Integer maxMotionAmplitude = 0;
@@ -113,10 +114,16 @@ public class SleepScoreUtils {
         // TODO: factor in motion amplitude
         avgMotionAmplitude = avgMotionAmplitude / numAgitations;
 
-        LOGGER.trace("NEW SCORING - Mins asleep: {}, num_agitations: {}, total Score: {}, final score {}, avg Amplitude: {}, max: {}",
-                numAsleepMinutes, numAgitations, totalScore, score, avgMotionAmplitude, maxMotionAmplitude);
+        final MotionScore motionScore = new MotionScore((int) numAgitations, (int) numAsleepMinutes,
+                avgMotionAmplitude, maxMotionAmplitude,
+                Math.round((score / 100.0f) * MOTION_SCORE_RANGE + MOTION_SCORE_MIN));
 
-        return Math.round((score / 100.0f) * MOTION_SCORE_RANGE + MOTION_SCORE_MIN);
+
+        LOGGER.trace("NEW SCORING - Mins asleep: {}, num_agitations: {}, total Score: {}, final score {}, avg Amplitude: {}, max: {}",
+                numAsleepMinutes, numAgitations, totalScore, motionScore.score, avgMotionAmplitude, maxMotionAmplitude);
+
+
+        return motionScore;
     }
 
     /**

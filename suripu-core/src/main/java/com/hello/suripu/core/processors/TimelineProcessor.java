@@ -26,6 +26,7 @@ import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.PartnerMotionEvent;
 import com.hello.suripu.core.models.Insight;
+import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
@@ -621,7 +622,7 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
     private Integer computeAndMaybeSaveScore(final List<TrackerMotion> trackerMotions, final DateTime targetDate, final Long accountId, final SleepStats sleepStats) {
 
         // Movement score
-        final Integer motionScore = SleepScoreUtils.getSleepMotionScore(targetDate.withTimeAtStartOfDay(),
+        final MotionScore motionScore = SleepScoreUtils.getSleepMotionScore(targetDate.withTimeAtStartOfDay(),
                 trackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
 
         // Sleep duration score
@@ -633,12 +634,12 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
         final Integer environmentScore = 100;
 
         // Aggregate all scores
-        final Integer sleepScore = SleepScoreUtils.aggregateSleepScore(motionScore, durationScore, environmentScore);
+        final Integer sleepScore = SleepScoreUtils.aggregateSleepScore(motionScore.score, durationScore, environmentScore);
 
         // Always update stats and scores to Dynamo
         final Integer userOffsetMillis = trackerMotions.get(0).offsetMillis;
         final Boolean updatedStats = this.sleepStatsDAODynamoDB.updateStat(accountId,
-                targetDate.withTimeAtStartOfDay(), sleepScore, sleepStats, userOffsetMillis);
+                targetDate.withTimeAtStartOfDay(), sleepScore, motionScore, sleepStats, userOffsetMillis);
 
         LOGGER.debug("Updated Stats-score: status {}, account {}, motion {}, duration {}, score {}, stats {}",
                 updatedStats, accountId, motionScore, durationScore, sleepScore, sleepStats);

@@ -3,6 +3,7 @@ package com.hello.suripu.core.util;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Insights.DowSample;
 import com.hello.suripu.core.models.Insights.TrendGraph;
+import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.SleepStats;
 import org.joda.time.DateTime;
 import org.junit.Test;
@@ -25,22 +26,23 @@ public class TrendGraphUtilsTest {
         final int offsetMillis = -25200000;
         final String version = "0.0.2";
 
+        final MotionScore motionScore = new MotionScore(0, 0, 1.0f, 0, 0);
         final List<AggregateSleepStats> stats = new ArrayList<>();
-        stats.add(new AggregateSleepStats(1L, now, offsetMillis, 80, version,
+        stats.add(new AggregateSleepStats(1L, now, offsetMillis, 80, version, motionScore,
                 new SleepStats(300, 200, 400, 10, 0L, 0L, 0)));
-        stats.add(new AggregateSleepStats(1L, now.minusDays(1), offsetMillis, 75, version,
+        stats.add(new AggregateSleepStats(1L, now.minusDays(1), offsetMillis, 75, version, motionScore,
                 new SleepStats(300, 200, 410, 10, 0L, 0L, 0)));
-        stats.add(new AggregateSleepStats(1L, now.minusDays(2), offsetMillis, 70, version,
+        stats.add(new AggregateSleepStats(1L, now.minusDays(2), offsetMillis, 70, version, motionScore,
                 new SleepStats(300, 200, 420, 10, 0L, 0L, 0)));
-        stats.add(new AggregateSleepStats(1L, now.minusDays(3), offsetMillis, 65, version,
+        stats.add(new AggregateSleepStats(1L, now.minusDays(3), offsetMillis, 65, version, motionScore,
                 new SleepStats(300, 200, 430, 10, 0L, 0L, 0)));
-        stats.add(new AggregateSleepStats(1L, now.minusDays(4), offsetMillis, 60, version,
+        stats.add(new AggregateSleepStats(1L, now.minusDays(4), offsetMillis, 60, version, motionScore,
                 new SleepStats(300, 200, 440, 10, 0L, 0L, 0)));
-        stats.add(new AggregateSleepStats(1L, now.minusDays(5), offsetMillis, 55, version,
+        stats.add(new AggregateSleepStats(1L, now.minusDays(5), offsetMillis, 55, version, motionScore,
                 new SleepStats(300, 200, 450, 10, 0L, 0L, 0)));
-        stats.add(new AggregateSleepStats(1L, now.minusDays(6), offsetMillis, 50, version,
+        stats.add(new AggregateSleepStats(1L, now.minusDays(6), offsetMillis, 50, version, motionScore,
                 new SleepStats(300, 200, 460, 10, 0L, 0L, 0)));
-        stats.add(new AggregateSleepStats(1L, now.minusDays(7), offsetMillis, 45, version,
+        stats.add(new AggregateSleepStats(1L, now.minusDays(7), offsetMillis, 45, version, motionScore,
                 new SleepStats(300, 200, 470, 10, 0L, 0L, 0)));
         return stats;
     }
