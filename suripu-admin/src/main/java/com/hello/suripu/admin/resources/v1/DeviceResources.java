@@ -16,6 +16,8 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,6 +90,44 @@ public class DeviceResources {
                     .entity("Account not found!").build());
         }
         return getPillsByAccountId(accountIdOptional.get());
+    }
+
+    @GET
+    @Timed
+    @Path("/pill_status")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<DeviceStatus> getPillStatus(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                            @QueryParam("email") final String email,
+                                            @QueryParam("pill_id_partial") final String pillIdPartial,
+                                            @QueryParam("end_ts") final Long endTs) {
+
+        final List<DeviceAccountPair> pills = new ArrayList<>();
+        if (email != null) {
+            LOGGER.debug("Querying all pills for email = {}", email);
+            final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, email);
+            if (!accountIdOptional.isPresent()) {
+                throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                        .entity("Account not found!").build());
+            }
+            pills.addAll(deviceDAO.getPillsForAccountId(accountIdOptional.get()));
+        }
+
+        else if (pillIdPartial != null) {
+            LOGGER.debug("Querying all pills whose IDs contain = {}", pillIdPartial);
+            pills.addAll(deviceDAO.getPillsByPillIdHint(pillIdPartial));
+        }
+
+        else {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Missing query params!").build());
+        }
+
+        final List<DeviceStatus> pillStatuses = new ArrayList<>();
+        for (final DeviceAccountPair pill : pills) {
+            pillStatuses.addAll(deviceDAO.pillStatusBeforeTs(pill.internalDeviceId, new DateTime(endTs, DateTimeZone.UTC)));
+        }
+
+        return pillStatuses;
     }
 
     // Helpers
