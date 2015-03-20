@@ -818,16 +818,20 @@ CREATE CREATE CREATE
         final Iterator<Sample> it5 = soundCounts.iterator();
         while (it5.hasNext()) {
             final Sample sample = it5.next();
-            final double value = Math.log(sample.value + 1.0f) / Math.log(2);
 
             //accumulate
-            addToBin(data, sample.dateTime, value, HmmDataConstants.LOG_SOUND_COUNT_INDEX, t0, numMinutesInWindow);
+            if (sample.value > 0.0) {
+                addToBin(data, sample.dateTime, sample.value, HmmDataConstants.LOG_SOUND_COUNT_INDEX, t0, numMinutesInWindow);
+            }
 
         }
 
         //transform via log2 (1.0 + x)
         for (int i = 0; i < data[HmmDataConstants.LOG_SOUND_COUNT_INDEX].length; i++) {
-            data[HmmDataConstants.LOG_SOUND_COUNT_INDEX][i] =  Math.log(data[HmmDataConstants.LOG_SOUND_COUNT_INDEX][i] + 1.0) / Math.log(2);
+            double value = data[HmmDataConstants.LOG_SOUND_COUNT_INDEX][i];
+            if (value >= 0.0) {
+                data[HmmDataConstants.LOG_SOUND_COUNT_INDEX][i] =  Math.log(value + 1.0) / Math.log(2);
+            }
         }
 
 
