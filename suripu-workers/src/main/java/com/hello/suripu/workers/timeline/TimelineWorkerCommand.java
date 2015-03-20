@@ -32,9 +32,9 @@ import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.processors.TimelineProcessor;
+import com.hello.suripu.workers.framework.WorkerEnvironmentCommand;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
-import com.yammer.dropwizard.cli.ConfiguredCommand;
-import com.yammer.dropwizard.config.Bootstrap;
+import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.db.ManagedDataSourceFactory;
 import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
 import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
@@ -50,7 +50,7 @@ import java.util.UUID;
 /**
  * Created by pangwu on 9/23/14.
  */
-public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfiguration> {
+public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWorkerConfiguration> {
     private final static Logger LOGGER = LoggerFactory.getLogger(TimelineWorkerCommand.class);
 
     public TimelineWorkerCommand(String name, String description) {
@@ -58,7 +58,7 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
     }
 
     @Override
-    public void run(final Bootstrap<TimelineWorkerConfiguration> bootstrap, final Namespace namespace, final TimelineWorkerConfiguration configuration) throws Exception {
+    protected void run(Environment environment, Namespace namespace, TimelineWorkerConfiguration configuration) throws Exception {
 
 
         final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
