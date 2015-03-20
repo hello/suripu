@@ -89,7 +89,7 @@ public class TimelineResource extends BaseResource {
         final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(targetDateString);
         final List<Timeline> timelinesFromCache = getCachedTimelines(accountId, targetDate);
         if(!timelinesFromCache.isEmpty()){
-//            return timelinesFromCache;
+            return timelinesFromCache;
         }
 
         LOGGER.info("No cached timeline, reprocess timeline for account {}, date {}", accountId, targetDate);
