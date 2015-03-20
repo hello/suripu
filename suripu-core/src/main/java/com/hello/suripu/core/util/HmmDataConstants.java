@@ -52,6 +52,7 @@ public class HmmDataConstants {
     final static double NATURAL_LIGHT_FILTER_START_HOUR = 16.0; //24 HOURS FORMAT
     final static double NATURAL_LIGHT_FILTER_STOP_HOUR = 4.0; //4am
     final static int NUM_MINUTES_IN_MEAS_PERIOD = 15;
+    final static boolean DEFAULT_IS_USING_INTERVAL_SEARCH = true;
 
 
 
