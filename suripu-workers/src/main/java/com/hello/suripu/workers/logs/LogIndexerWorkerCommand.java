@@ -49,11 +49,7 @@ public class LogIndexerWorkerCommand extends ConfiguredCommand<LogIndexerWorkerC
         final WorkerRolloutModule workerRolloutModule = WorkerRolloutModule.create(awsCredentialsProvider, configuration);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
-        final IRecordProcessorFactory factory = new LogIndexerProcessorFactory(
-                configuration.applicationLogs().privateUrl(),
-                configuration.applicationLogs().indexName(),
-                configuration.senseLogs().indexName()
-        );
+        final IRecordProcessorFactory factory = new LogIndexerProcessorFactory(configuration);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
     }
