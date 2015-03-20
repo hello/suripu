@@ -28,7 +28,7 @@ public class SleepHmmSensorDataBinning {
 
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
 
-    static protected class BinnedData {
+    static public class BinnedData {
         double[][] data;
         int numMinutesInWindow;
     }
