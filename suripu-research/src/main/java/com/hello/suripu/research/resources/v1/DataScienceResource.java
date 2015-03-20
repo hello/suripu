@@ -360,7 +360,7 @@ public class DataScienceResource extends BaseResource {
     @Path("/binneddata")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public BinnedSensorData getBinnedSensorDataByEmailOrAccountID(@Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
+    public BinnedSensorData getBinnedSensorDataByEmailOrAccountID(@Scope({OAuthScope.RESEARCH}) final AccessToken accessToken,
                                                                     @QueryParam("email") String email,
                                                                     @QueryParam("account_id") Long accountId,
                                                                     @QueryParam("from_ts") Long fromTimestamp,
