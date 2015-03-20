@@ -21,6 +21,7 @@ import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.config.Environment;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.MessageFormatter;
 
@@ -36,6 +37,7 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
         private final Integer bufferSize;
         private final String origin;
         private final Boolean isProduction;
+        private final String appVersion;
 
 
         public KinesisAppender(
@@ -46,9 +48,11 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
             this.topic = loggerConfiguration.getStreamName();
             this.bufferSize = loggerConfiguration.bufferSize();
             this.origin = loggerConfiguration.origin();
+            this.appVersion = appVersion;
             this.batch = LoggingProtos.BatchLogMessage.newBuilder();
-            this.batch.setAppVersion(appVersion);
             this.isProduction = loggerConfiguration.isProduction();
+
+
         }
 
         private MessageFormatter formatter;
@@ -105,6 +109,10 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
         }
 
         private void flush() {
+            batch.setReceivedAt(DateTime.now(DateTimeZone.UTC).getMillis());
+            batch.setLogType(origin.contains("workers")  ? LoggingProtos.BatchLogMessage.LogType.WORKERS_LOG : LoggingProtos.BatchLogMessage.LogType.APPLICATION_LOG);
+            batch.setAppVersion(appVersion);
+
             final LoggingProtos.BatchLogMessage tempBatch = batch.build();
             final PutRecordRequest request = new PutRecordRequest()
                     .withStreamName(topic)
@@ -148,7 +156,7 @@ public abstract class KinesisLoggerBundle<T extends Configuration> implements Co
                 @Override
                 public FilterReply decide(ILoggingEvent event) {
                     final Level level = event.getLevel();
-                    if(level.isGreaterOrEqual(Level.DEBUG)) {
+                    if(level.isGreaterOrEqual(Level.valueOf(kinesisLoggerConfiguration.getLogLevel()))) {
                         return FilterReply.ACCEPT;
                     }
                     return FilterReply.DENY;

@@ -157,6 +157,7 @@ kinesis_logger:
 
 aws_access_key_s3: AKIAJVQV7XJU23UWILSQ
 aws_access_secret_s3: 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
+
 ring_history_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
