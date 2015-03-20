@@ -2,15 +2,7 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.algorithm.core.Segment;
-import com.hello.suripu.algorithm.hmm.DiscreteAlphabetPdf;
-import com.hello.suripu.algorithm.hmm.GammaPdf;
-import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
-import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
-import com.hello.suripu.algorithm.hmm.PdfComposite;
-import com.hello.suripu.algorithm.hmm.PoissonPdf;
-import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
@@ -24,17 +16,13 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Named;
 import javax.sound.midi.Track;
-import javax.swing.text.html.Option;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -182,11 +170,14 @@ CREATE CREATE CREATE
         int timezoneOffset = 0;
 
 
+        final List<TrackerMotion> cleanedUpPillData = removeDuplicatesAndInvalidValues(pillData);
+
+        LOGGER.debug("removed {} duplicate or invalid pill data points",pillData.size() - cleanedUpPillData.size());
 
         /* go through each model, evaluate, find the best  */
         for (final NamedSleepHmmModel model : models) {
             LOGGER.debug("Trying out model \"{}\"",model.modelName);
-            final Optional<BinnedData> binnedDataOptional = getBinnedSensorData(sensors, pillData, model,sleepPeriodStartTime,sleepPeriodEndTime,currentTimeInMillis);
+            final Optional<BinnedData> binnedDataOptional = getBinnedSensorData(sensors, cleanedUpPillData, model,sleepPeriodStartTime,sleepPeriodEndTime,currentTimeInMillis);
 
 
             if (!binnedDataOptional.isPresent()) {
@@ -254,7 +245,7 @@ CREATE CREATE CREATE
 
             final int numMinutes = (int) ((endTime - t0) / NUMBER_OF_MILLIS_IN_A_MINUTE);
 
-            double [] pillDataArray = getPillDataArray(pillData,t0,numMinutes);
+            double [] pillDataArray = getPillDataArray(cleanedUpPillData,t0,numMinutes);
 
             sleep2 = getIndiciesInMinutesWithIntervalSearch(sleep2,pillDataArray,numMinutesInMeasPeriod,false);
             onBed2 = getIndiciesInMinutesWithIntervalSearch(onBed2,pillDataArray,numMinutesInMeasPeriod,true);
@@ -447,7 +438,14 @@ CREATE CREATE CREATE
             search2Start = search2End - 1;
         }
 
-        Optional<Integer> end2 = getLastInInterval(pillArray, search2Start, search2End);
+        Optional<Integer> end2 = Optional.absent();
+
+        if (isInOutOfBed) {
+            end2 = getLastInInterval(pillArray, search2Start, search2End);
+        }
+        else {
+            end2 = getFirstInInterval(pillArray, search2Start, search2End);
+        }
 
 
         int i1 = seg.i1 * numMinutesInMeasPeriod ;
@@ -925,6 +923,43 @@ CREATE CREATE CREATE
         }
 
         return vecString;
+    }
+
+    protected List<TrackerMotion> removeDuplicatesAndInvalidValues(final List<TrackerMotion> trackerMotions) {
+        Set<TrackerMotion> trackerMotionSet = new TreeSet<TrackerMotion>(new Comparator<TrackerMotion>() {
+            @Override
+            public int compare(final TrackerMotion m1, final TrackerMotion m2) {
+                final long t1 = m1.timestamp / NUMBER_OF_MILLIS_IN_A_MINUTE;
+                final long t2 = m2.timestamp / NUMBER_OF_MILLIS_IN_A_MINUTE;
+                final int f1 = m1.value;
+                final int f2 = m1.value;
+
+                if (t1 < t2) {
+                    return -1;
+                }
+
+                if (t1 > t2) {
+                    return 1;
+                }
+
+                return 0;
+
+            }
+        });
+
+
+        for (final TrackerMotion m : trackerMotions) {
+            if (m.value != -1) {
+                trackerMotionSet.add(m);
+            }
+        }
+
+
+        List<TrackerMotion> uniqueValues = new ArrayList<>();
+
+        uniqueValues.addAll(trackerMotionSet);
+
+        return uniqueValues;
     }
 
 }
