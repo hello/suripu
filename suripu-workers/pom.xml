@@ -9,6 +9,15 @@
 
     <artifactId>suripu-workers</artifactId>
 
+    <repositories>
+        <!-- required for Riemann client -->
+        <repository>
+            <id>clojars.org</id>
+            <url>http://clojars.org/repo</url>
+        </repository>
+    </repositories>
+
+
     <dependencies>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -81,6 +90,11 @@
             <groupId>com.indextank</groupId>
             <artifactId>indextank-java</artifactId>
             <version>1.0.6</version>
+        </dependency>
+        <dependency>
+            <groupId>com.aphyr</groupId>
+            <artifactId>riemann-java-client</artifactId>
+            <version>0.3.1</version>
         </dependency>
     </dependencies>
     <build>

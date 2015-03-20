@@ -1,6 +1,7 @@
 package com.hello.suripu.workers.framework;
 
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
+import com.aphyr.riemann.client.RiemannClient;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.librato.rollout.RolloutClient;
@@ -15,18 +16,14 @@ public abstract class HelloBaseRecordProcessor implements IRecordProcessor {
     @Inject
     protected RolloutClient flipper;
 
+    @Inject
+    protected RiemannClient riemannClient;
+
     public HelloBaseRecordProcessor(){
         ObjectGraphRoot.getInstance().inject(this);
-    }
-
-
-    protected Integer missingDataDefaultValue(final Long accountId) {
-        boolean active = flipper.userFeatureActive(FeatureFlipper.MISSING_DATA_DEFAULT_VALUE, accountId, Collections.EMPTY_LIST);
-        return (active) ? -1 : 0;
     }
 
     protected Boolean userHasPushNotificationsEnabled(final Long accountId) {
         return flipper.userFeatureActive(FeatureFlipper.PUSH_NOTIFICATIONS_ENABLED, accountId, Collections.EMPTY_LIST);
     }
-
 }

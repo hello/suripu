@@ -6,12 +6,11 @@ import com.hello.suripu.core.configuration.DynamoDBConfiguration;
 import com.hello.suripu.core.configuration.GraphiteConfiguration;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
+import com.hello.suripu.core.configuration.RiemannConfiguration;
 import com.yammer.dropwizard.config.Configuration;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.HashMap;
-import java.util.Map;
 
 public class WorkerConfiguration extends Configuration {
 
@@ -68,5 +67,12 @@ public class WorkerConfiguration extends Configuration {
     private DynamoDBConfiguration featuresDynamoDBConfiguration;
     public DynamoDBConfiguration getFeaturesDynamoDBConfiguration(){
         return this.featuresDynamoDBConfiguration;
+    }
+
+
+    @JsonProperty("riemann")
+    private RiemannConfiguration riemannConfiguration;
+    public RiemannConfiguration getRiemannConfiguration() {
+        return riemannConfiguration;
     }
 }
