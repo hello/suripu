@@ -106,4 +106,11 @@ public class MotionClusterTest {
             assertThat(actualItem.offsetMillis, is(actualItem.offsetMillis));
         }
     }
+
+    @Test
+    public void testIsBizarreModeFalse(){
+        final List<AmplitudeData> input = loadFromResource("fixtures/km_motion_2015_03_15_gap_filled.csv");
+        final MotionCluster cluster = MotionCluster.create(input);
+        assertThat(cluster.isBizarreOrPillowTooooHard(), is(false));
+    }
 }

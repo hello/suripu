@@ -5,6 +5,7 @@ import com.hello.suripu.algorithm.utils.ClusterAmplitudeData;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.algorithm.utils.NumericalUtils;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,10 @@ public class MotionCluster {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MotionCluster.class);
     public static final double DEFAULT_STD_COUNT = 5d;
+    public static final int DEFAULT_WINDOW_SIZE = 6;
+
+    private final List<AmplitudeData> rawMotion;
+    private List<ClusterAmplitudeData> clusters;
 
     public static List<ClusterAmplitudeData> getClusters(final List<AmplitudeData> amplitudeData, final double stdCount, final int windowSizeInDataCount){
         final List<AmplitudeData> window = new ArrayList<>();
@@ -131,16 +136,20 @@ public class MotionCluster {
         }
 
         if(maxEndIndex > maxStartIndex){
-            final List<ClusterAmplitudeData> maxCluster = clusters.subList(maxStartIndex, maxEndIndex + 1);
-            final List<ClusterAmplitudeData> maxClusterCopy = new ArrayList<>();
-            for (final ClusterAmplitudeData clusterAmplitudeData:maxCluster){
-                maxClusterCopy.add(clusterAmplitudeData.copy());
-            }
-
-            return maxClusterCopy;
+            return copyRange(clusters, maxStartIndex, maxEndIndex);
         }
 
         return Collections.EMPTY_LIST;
+    }
+
+    private static List<ClusterAmplitudeData> copyRange(final List<ClusterAmplitudeData> origin, final int start, final int end){
+        final List<ClusterAmplitudeData> maxCluster = origin.subList(start, end + 1);
+        final List<ClusterAmplitudeData> maxClusterCopy = new ArrayList<>();
+        for (final ClusterAmplitudeData clusterAmplitudeData:maxCluster){
+            maxClusterCopy.add(clusterAmplitudeData.copy());
+        }
+
+        return maxClusterCopy;
     }
 
     public static List<AmplitudeData> getInputFeatureFromMotions(final List<AmplitudeData> rawData){
@@ -157,5 +166,71 @@ public class MotionCluster {
         final List<AmplitudeData> awakeDetectionFeatures = aggregatedAwakeDetectionFeatures.get(MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE);
         return awakeDetectionFeatures;
 
+    }
+
+    private MotionCluster(final List<AmplitudeData> alignedMotionWithGapFilled){
+        this.rawMotion = alignedMotionWithGapFilled;
+
+        final List<AmplitudeData> inputFeature = MotionCluster.getInputFeatureFromMotions(this.rawMotion);
+        final List<ClusterAmplitudeData> rawClusters = MotionCluster.getClusters(inputFeature, MotionCluster.DEFAULT_STD_COUNT, DEFAULT_WINDOW_SIZE);
+        final List<ClusterAmplitudeData> smoothedClusters = MotionCluster.smoothCluster(rawClusters);
+        this.clusters = smoothedClusters;
+    }
+
+    public static MotionCluster create(final List<AmplitudeData> rawMotion){
+        final MotionCluster cluster = new MotionCluster(rawMotion);
+        return cluster;
+    }
+
+    public List<ClusterAmplitudeData> getSignificantCluster(final long targetTimestamp){
+        long clusterStartTimestamp = 0;
+        long clusterEndTimestamp = 0;
+        int clusterStartIndex = 0;
+        int clusterEndIndex = 0;
+
+        if(clusters.size() == 0){
+            return Collections.EMPTY_LIST;
+        }
+
+        for(final ClusterAmplitudeData clusterAmplitudeData:this.clusters){
+            if(clusterStartTimestamp == 0 && clusterAmplitudeData.isInCluster()){
+                clusterStartTimestamp = clusterAmplitudeData.timestamp;
+                clusterStartIndex = clusters.indexOf(clusterAmplitudeData);
+            }
+
+            if(clusterStartTimestamp > 0 && clusterAmplitudeData.isInCluster()){
+                clusterEndTimestamp = clusterAmplitudeData.timestamp;
+                clusterEndIndex = clusters.indexOf(clusterAmplitudeData);
+            }
+
+            if(clusterEndTimestamp > 0 && !clusterAmplitudeData.isInCluster()){
+                if(targetTimestamp >= clusterStartTimestamp && targetTimestamp <= clusterEndTimestamp + 2 * 10 * DateTimeConstants.MILLIS_PER_MINUTE){
+                    return copyRange(clusters, clusterStartIndex, clusterEndIndex);
+                }
+
+                clusterStartTimestamp = 0;
+                clusterEndTimestamp = 0;
+            }
+        }
+
+        return Collections.EMPTY_LIST;
+    }
+
+    public List<ClusterAmplitudeData> getClusters(){
+        return this.clusters;
+    }
+
+    public boolean isBizarreOrPillowTooooHard(){
+        final List<ClusterAmplitudeData> largestCluster = MotionCluster.getLargestCluster(this.clusters);
+        final long durationMillis = largestCluster.get(largestCluster.size() - 1).timestamp - largestCluster.get(0).timestamp;
+        if(durationMillis > 5 * DateTimeConstants.MILLIS_PER_HOUR){
+            return true;
+        }
+
+        return false;
+    }
+
+    public List<ClusterAmplitudeData> getLargestCluster(){
+        return MotionCluster.getLargestCluster(this.clusters);
     }
 }
