@@ -2,6 +2,7 @@ package com.hello.suripu.research.resources.v1;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -24,8 +25,12 @@ import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.JsonError;
+import com.hello.suripu.core.util.NamedSleepHmmModel;
 import com.hello.suripu.core.util.PartnerDataUtils;
+import com.hello.suripu.core.util.SleepHmmSensorDataBinning;
 import com.hello.suripu.core.util.TimelineUtils;
+import com.hello.suripu.research.models.BinnedSensorData;
+import com.sun.org.apache.bcel.internal.generic.IMUL;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -43,6 +48,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -347,6 +353,130 @@ public class DataScienceResource extends BaseResource {
         }
 
         return joinedSensorsMinuteData;
+    }
+
+
+    @GET
+    @Path("/binneddata")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public BinnedSensorData getBinnedSensorDataByEmailOrAccountID(@Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
+                                                                    @QueryParam("email") String email,
+                                                                    @QueryParam("account_id") Long accountId,
+                                                                    @QueryParam("from_ts") Long fromTimestamp,
+                                                                    @DefaultValue("3") @QueryParam("num_days") Integer numDays,
+                                                                    @QueryParam("pill_threshold_counts") Double pillThreshold,
+                                                                    @QueryParam("sound_threshold_db") Double soundThreshold,
+                                                                    @QueryParam("nat_light_start_hour") Double naturalLightStartHour,
+                                                                    @QueryParam("nat_light_stop_hour") Double naturalLightStopHour,
+                                                                    @QueryParam("meas_period") Integer numMinutesInMeasPeriod
+                                                                    ) {
+
+
+       /* String modelName,
+        ImmutableSet<Integer> sleepStates,
+        ImmutableSet<Integer> onBedStates,
+        ImmutableSet<Integer> allowableEndingStates,
+        ImmutableList<Integer> sleepDepthsByState,
+        double soundDisturbanceThresholdDB,
+        double pillMagnitudeDisturbanceThresholdLsb,
+        double naturalLightFilterStartHour,
+        double naturalLightFilterStopHour,
+        int numMinutesInMeasPeriod,
+        boolean isUsingIntervalSearch) */
+
+        NamedSleepHmmModel model = new NamedSleepHmmModel(null,"dummy", ImmutableSet.copyOf(Collections.EMPTY_SET),ImmutableSet.copyOf(Collections.EMPTY_SET),ImmutableSet.copyOf(Collections.EMPTY_SET),ImmutableList.copyOf(Collections.EMPTY_LIST),
+                soundThreshold,pillThreshold,naturalLightStartHour,naturalLightStopHour,numMinutesInMeasPeriod,false);
+
+        if ( (email == null && accountId == null) || fromTimestamp == null) {
+            throw new WebApplicationException(Response.status(400).entity(new JsonError(400,
+                    "Missing query parameters, use email or account_id, and from_ts")).build());
+        }
+
+        if (numDays == null || pillThreshold == null || soundThreshold == null || naturalLightStartHour == null || naturalLightStopHour == null || numMinutesInMeasPeriod == null) {
+            throw new WebApplicationException(Response.status(400).entity(new JsonError(400,
+                    "Missing query parameters")).build());
+        }
+
+        // GET ACCOUNT ID VIA EMAIL OR DIRECTLY
+        Optional<Account> optionalAccount;
+        if (email != null) {
+            optionalAccount = accountDAO.getByEmail(email);
+        } else {
+            optionalAccount = accountDAO.getById(accountId);
+        }
+
+        if (!optionalAccount.isPresent() || !optionalAccount.get().id.isPresent()) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        final Account account = optionalAccount.get();
+
+        final Optional<DeviceAccountPair> deviceAccountPairOptional = deviceDAO.getMostRecentSensePairByAccountId(accountId);
+        if (!deviceAccountPairOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity("This account does not have a sense recently").build());
+        }
+
+        final DateTime startTs = new DateTime(fromTimestamp, DateTimeZone.UTC);
+        final DateTime endTs = startTs.plusDays(numDays);
+
+
+        LOGGER.debug("Getting binned sensor minute data for account id {} between {} and {}", accountId, startTs,endTs);
+
+        final ImmutableList<TrackerMotion> motionData = trackerMotionDAO.getBetween(
+                accountId,
+                startTs,
+                endTs
+        );
+
+        if (motionData.isEmpty()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity("no data on this day").build());
+        }
+
+        List<TrackerMotion> filteredTrackerData = SleepHmmSensorDataBinning.removeDuplicatesAndInvalidValues(motionData.asList());
+
+        final int slotDurationInMinutes = 1;
+        final Integer missingDataDefaultValue = 0;
+        final AllSensorSampleList sensorSamples = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
+                startTs.getMillis(),
+                endTs.getMillis(),
+                accountId,
+                deviceAccountPairOptional.get().internalDeviceId,
+                slotDurationInMinutes,
+                missingDataDefaultValue
+        );
+
+        final int timezoneOffset = filteredTrackerData.get(0).offsetMillis;
+        Optional<SleepHmmSensorDataBinning.BinnedData> optionalBinnedData = SleepHmmSensorDataBinning.getBinnedSensorData(sensorSamples, filteredTrackerData, model, startTs.getMillis(), endTs.getMillis(), timezoneOffset);
+
+
+        if (!optionalBinnedData.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity("Failed to get binned data").build());
+        }
+
+        final SleepHmmSensorDataBinning.BinnedData result = optionalBinnedData.get();
+        List<List<Double>> matrix = new ArrayList<>();
+        for (int j = 0; j < result.data.length; j++) {
+            final double [] row = result.data[j];
+            final List<Double> rowList = new ArrayList<>();
+            for (int i = 0; i < result.data[0].length; i++) {
+                rowList.add(row[i]);
+            }
+
+            matrix.add(rowList);
+        }
+
+        List<Long> times = new ArrayList<>();
+        for (int i = 0; i < result.data[0].length; i++) {
+            times.add(startTs.getMillis() + i*numMinutesInMeasPeriod*60000L);
+        }
+
+        return new BinnedSensorData(accountId,matrix,times,timezoneOffset);
+
+
     }
     
 }
