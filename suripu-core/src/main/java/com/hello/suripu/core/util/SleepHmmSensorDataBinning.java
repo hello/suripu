@@ -28,9 +28,10 @@ public class SleepHmmSensorDataBinning {
 
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
 
-    static protected class BinnedData {
-        double[][] data;
-        int numMinutesInWindow;
+    static public class BinnedData {
+
+        public double[][] data;
+        public int numMinutesInWindow;
     }
 
     static protected List<Sample> getTimeOfDayAsMeasurement(final List<Sample> light, final double startNaturalLightForbiddedenHour, final double stopNaturalLightForbiddenHour) {
