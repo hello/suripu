@@ -179,3 +179,10 @@ max_no_motion_period_minutes: 90
 hour_of_day_trigger: 5
 end_process_time: 11
 max_cache_refresh_days: 20
+
+kinesis_logger:
+  stream_name: logs
+  enabled : false
+  buffer_size: 100
+  origin: suripu-workers
+  min_log_level : INFO
