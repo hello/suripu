@@ -226,6 +226,9 @@ CREATE CREATE CREATE
 
         int numMinutesInMeasPeriod = bestModel.numMinutesInMeasPeriod;
 
+        //extract set boundaries as pairs of indices (i1,i2)
+        //merge pairs that are close together, keeping track of the gaps
+        //then filter out the remaining pairs that are too small in duration (i2 - i1)
         ImmutableList<SegmentPairWithGaps> sleep = filterSegmentPairsByDuration(
                 mindTheGapsAndJoinPairs(getSetBoundaries(bestResult.bestPath, bestModel.sleepStates),MAX_ALLOWABLE_SLEEP_GAP_IN_MINUTES / bestModel.numMinutesInMeasPeriod),
                 MIN_DURATION_OF_SLEEP_SEGMENT_IN_MINUTES / bestModel.numMinutesInMeasPeriod);
@@ -234,9 +237,9 @@ CREATE CREATE CREATE
                 mindTheGapsAndJoinPairs(getSetBoundaries(bestResult.bestPath, bestModel.onBedStates),MAX_ALLOWABLE_ONBED_GAP_IN_MINUTES/ bestModel.numMinutesInMeasPeriod),
                 MIN_DURATION_OF_ONBED_SEGMENT_IN_MINUTES / bestModel.numMinutesInMeasPeriod);
 
-
-        ImmutableList<SegmentPair> sleep2 = pairsWithGapsToPairs(sleep,false);
-        ImmutableList<SegmentPair> onBed2 = pairsWithGapsToPairs(onBed,true);
+        //split into pure pairs (i.e. just a list of pairs)
+        ImmutableList<SegmentPair> sleepSplitOnGaps = pairsWithGapsToPairs(sleep,false);
+        ImmutableList<SegmentPair> onBedIgnoringGaps = pairsWithGapsToPairs(onBed,true);
 
         if (bestModel.isUsingIntervalSearch) {
             //get whatever is earlier
@@ -247,13 +250,13 @@ CREATE CREATE CREATE
 
             double [] pillDataArray = getPillDataArray(cleanedUpPillData,t0,numMinutes);
 
-            sleep2 = getIndiciesInMinutesWithIntervalSearch(sleep2,pillDataArray,numMinutesInMeasPeriod,false);
-            onBed2 = getIndiciesInMinutesWithIntervalSearch(onBed2,pillDataArray,numMinutesInMeasPeriod,true);
+            sleepSplitOnGaps = getIndiciesInMinutesWithIntervalSearch(sleepSplitOnGaps,pillDataArray,numMinutesInMeasPeriod,false);
+            onBedIgnoringGaps = getIndiciesInMinutesWithIntervalSearch(onBedIgnoringGaps,pillDataArray,numMinutesInMeasPeriod,true);
             numMinutesInMeasPeriod = 1;
         }
 
 
-        return  processEventsIntoResult(numMinutesInMeasPeriod,sleep2,onBed2,t0,timezoneOffset,bestResult.bestPath);
+        return  processEventsIntoResult(numMinutesInMeasPeriod,sleepSplitOnGaps,onBedIgnoringGaps,t0,timezoneOffset,bestResult.bestPath);
 
 
     }
