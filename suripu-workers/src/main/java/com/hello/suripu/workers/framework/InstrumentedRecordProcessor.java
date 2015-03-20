@@ -12,9 +12,6 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * Created by pangwu on 12/4/14.
- */
 public abstract class InstrumentedRecordProcessor extends HelloBaseRecordProcessor {
     @Inject
     protected RiemannClient riemannClient;
