@@ -16,7 +16,6 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sound.midi.Track;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -43,9 +42,6 @@ public class SleepHmmWithInterpretation {
     final static protected int MAX_ALLOWABLE_ONBED_GAP_IN_MINUTES = 45;
 
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
-
-    final static private double LIGHT_PREMULTIPLIER = 4.0;
-
 
     final ImmutableList<NamedSleepHmmModel> models;
 
@@ -86,12 +82,7 @@ public class SleepHmmWithInterpretation {
 
     //////////////////////////////////////////
     //result classes -- internal use
-    protected class BinnedData {
-        double[][] data;
-        long t0;
-        int numMinutesInWindow;
-        int timezoneOffset;
-    }
+
 
     protected class SegmentPair {
         public SegmentPair(final Integer i1, final Integer i2) {
@@ -157,38 +148,43 @@ CREATE CREATE CREATE
     /* Use this method to get all the sleep / bed events from ALL the sensor data and ALL the pill data */
     public Optional<SleepHmmResult> getSleepEventsUsingHMM(final AllSensorSampleList sensors,
                                                            final List<TrackerMotion> pillData,
-                                                           final long sleepPeriodStartTime,
-                                                           final long sleepPeriodEndTime,
-                                                           final long currentTimeInMillis) {
+                                                           final long sleepPeriodStartTimeLocal,
+                                                           final long sleepPeriodEndTimeLocal,
+                                                           final long currentTimeInMillisUTC) {
 
 
+
+        if (pillData.isEmpty()) {
+            return Optional.absent();
+        }
 
         double lowestModelScore = Float.MAX_VALUE;
         HmmDecodedResult bestResult = null;
         NamedSleepHmmModel bestModel = null;
-        long t0 = 0;
-        int timezoneOffset = 0;
+        final int timezoneOffset = pillData.get(0).offsetMillis;;
 
 
-        final List<TrackerMotion> cleanedUpPillData = removeDuplicatesAndInvalidValues(pillData);
+        final long startTimeMillisInUTC = sleepPeriodStartTimeLocal - timezoneOffset; //convert to UTC
+        final long endOfThePeriodUTC = sleepPeriodEndTimeLocal - timezoneOffset; //convert to UTC
+        final long endTimeMillisUTC = currentTimeInMillisUTC < endOfThePeriodUTC ? currentTimeInMillisUTC : endOfThePeriodUTC; //find earlier of end of period or current time
+
+
+        final List<TrackerMotion> cleanedUpPillData = SleepHmmSensorDataBinning.removeDuplicatesAndInvalidValues(pillData);
+
 
         LOGGER.debug("removed {} duplicate or invalid pill data points",pillData.size() - cleanedUpPillData.size());
 
         /* go through each model, evaluate, find the best  */
         for (final NamedSleepHmmModel model : models) {
             LOGGER.debug("Trying out model \"{}\"",model.modelName);
-            final Optional<BinnedData> binnedDataOptional = getBinnedSensorData(sensors, cleanedUpPillData, model,sleepPeriodStartTime,sleepPeriodEndTime,currentTimeInMillis);
+            final Optional<SleepHmmSensorDataBinning.BinnedData> binnedDataOptional = SleepHmmSensorDataBinning.getBinnedSensorData(sensors, cleanedUpPillData, model, startTimeMillisInUTC, endTimeMillisUTC, timezoneOffset);
 
 
             if (!binnedDataOptional.isPresent()) {
                 return Optional.absent();
             }
 
-            final BinnedData binnedData = binnedDataOptional.get();
-
-            //they're all the same... just take the last one
-            t0 = binnedData.t0;
-            timezoneOffset = binnedData.timezoneOffset;
+            final SleepHmmSensorDataBinning.BinnedData binnedData = binnedDataOptional.get();
 
 
             //only allow ending up in an off-bed state or wake state
@@ -198,7 +194,7 @@ CREATE CREATE CREATE
             //decode via viterbi
             final HmmDecodedResult result = model.hmm.decode(binnedData.data, allowableEndings);
 
-            LOGGER.debug("path={}", getPathAsString(result.bestPath));
+            LOGGER.debug("path={}", SleepHmmSensorDataBinning.getPathAsString(result.bestPath));
             LOGGER.debug("model \"{}\" BIC={}",model.modelName,result.bic);
             //keep track of lowest score (lowest == best)
             if (result.bic < lowestModelScore) {
@@ -206,8 +202,6 @@ CREATE CREATE CREATE
                 bestResult = result;
                 bestModel = model;
             }
-
-
         }
 
         if (bestModel == null || bestResult == null) {
@@ -243,12 +237,11 @@ CREATE CREATE CREATE
 
         if (bestModel.isUsingIntervalSearch) {
             //get whatever is earlier
-            long endTime = currentTimeInMillis < sleepPeriodEndTime ? currentTimeInMillis : sleepPeriodEndTime;
-            endTime -= timezoneOffset; //convert to UTC
 
-            final int numMinutes = (int) ((endTime - t0) / NUMBER_OF_MILLIS_IN_A_MINUTE);
 
-            double [] pillDataArray = getPillDataArray(cleanedUpPillData,t0,numMinutes);
+            final int numMinutes = (int) ((endTimeMillisUTC - startTimeMillisInUTC) / NUMBER_OF_MILLIS_IN_A_MINUTE);
+
+            double [] pillDataArray = getPillDataArray(cleanedUpPillData,startTimeMillisInUTC,numMinutes);
 
             sleepSplitOnGaps = getIndiciesInMinutesWithIntervalSearch(sleepSplitOnGaps,pillDataArray,numMinutesInMeasPeriod,false);
             onBedIgnoringGaps = getIndiciesInMinutesWithIntervalSearch(onBedIgnoringGaps,pillDataArray,numMinutesInMeasPeriod,true);
@@ -256,7 +249,7 @@ CREATE CREATE CREATE
         }
 
 
-        return  processEventsIntoResult(numMinutesInMeasPeriod,sleepSplitOnGaps,onBedIgnoringGaps,t0,timezoneOffset,bestResult.bestPath);
+        return  processEventsIntoResult(numMinutesInMeasPeriod,sleepSplitOnGaps,onBedIgnoringGaps,startTimeMillisInUTC,timezoneOffset,bestResult.bestPath);
 
 
     }
@@ -288,7 +281,7 @@ CREATE CREATE CREATE
 
 
     protected  Event getEventFromIndex(Event.Type eventType, final int index, final long t0, final int timezoneOffset,final String description,final int numMinutesInWindow) {
-        Long eventTime =  getTimeFromBin(index,numMinutesInWindow,t0);
+        Long eventTime =  SleepHmmSensorDataBinning.getTimeFromBin(index, numMinutesInWindow, t0);
 
         //  final long startTimestamp, final long endTimestamp, final int offsetMillis,
         //  final Optional<String> messageOptional,
@@ -636,7 +629,7 @@ CREATE CREATE CREATE
     }
 
     //Returns the boundary indices (i.e. a segment) that is in the int array
-    //if there is only a termination in the set, then we have the segment t0 - t2
+    //if there is only a termination in the set, then we have the segment t0UTC - t2
     //if there is only a beginning in the set, then we have the segment t1 - tfinal
     protected ImmutableList<SegmentPair> getSetBoundaries(final ImmutableList<Integer> path, final Set<Integer> inSet) {
         boolean foundBeginning = false;
@@ -673,301 +666,7 @@ CREATE CREATE CREATE
         return ImmutableList.copyOf(pairList);
     }
 
-    protected  List<Sample> getTimeOfDayAsMeasurement(final List<Sample> light, final double startNaturalLightForbiddedenHour, final double stopNaturalLightForbiddenHour) {
-        List<Sample> minuteData = new ArrayList<>();
 
-        for (final Sample s : light) {
-            //local UTC
-            final DateTime t = new DateTime(s.dateTime + s.offsetMillis, DateTimeZone.UTC);
-            final float hour = ((float)t.hourOfDay().get()) + t.minuteOfHour().get() / 60.0f;
-
-            float value = 0.0f;
-            if (hour > startNaturalLightForbiddedenHour || hour < stopNaturalLightForbiddenHour) {
-                value = 1.0f;
-            }
-
-
-            minuteData.add(new Sample(s.dateTime,value,s.offsetMillis));
-        }
-
-
-        return minuteData;
-    }
-
-
-    /*
-    *  CONVERT PILL DATA AND SENSOR DATA INTO 2-D ARRAY OF N MINUTE BINS
-    *  where N is specified by the model
-    *
-    *
-    *
-    * */
-    protected Optional<BinnedData> getBinnedSensorData(AllSensorSampleList sensors, List<TrackerMotion> pillData, final NamedSleepHmmModel model,
-                                                       final long startTimeMillis, final long endTimeMillis, final long currentTimeInMillis) {
-        final List<Sample> light = sensors.get(Sensor.LIGHT);
-        final List<Sample> wave = sensors.get(Sensor.WAVE_COUNT);
-        final List<Sample> sound = sensors.get(Sensor.SOUND_PEAK_DISTURBANCE);
-        final List<Sample> soundCounts = sensors.get(Sensor.SOUND_NUM_DISTURBANCES);
-
-        if (light == Collections.EMPTY_LIST || light.isEmpty()) {
-            return Optional.absent();
-        }
-
-        /* ideally, this is from sundown to sunrise.... but we just say it's a time you're unlikely to be sleeping in natural daylight  */
-        final List<Sample> naturalLightForbidden = getTimeOfDayAsMeasurement(light,model.naturalLightFilterStartHour,model.naturalLightFilterStopHour);
-
-        //get start and end of window
-        final int timezoneOffset = light.get(0).offsetMillis;
-
-        //convert all to UTC
-        final long t0 = startTimeMillis - timezoneOffset;
-        long tf = endTimeMillis - timezoneOffset;
-
-        //somehow, the light data is returned for
-        if (currentTimeInMillis < tf && currentTimeInMillis >= t0) {
-            tf = currentTimeInMillis;
-        }
-
-        final int numMinutesInWindow = model.numMinutesInMeasPeriod;
-
-        //safeguard
-        if (numMinutesInWindow <= 0) {
-            return Optional.absent();
-        }
-
-        final int dataLength = (int) (tf - t0) / NUMBER_OF_MILLIS_IN_A_MINUTE / numMinutesInWindow;
-
-        final double[][] data = new double[HmmDataConstants.NUM_DATA_DIMENSIONS][dataLength];
-
-        //zero out data
-        for (int i = 0; i < HmmDataConstants.NUM_DATA_DIMENSIONS; i++) {
-            Arrays.fill(data[i], 0.0);
-        }
-
-        //start filling in the sensor data.
-
-        /////////////////////////////////////////////
-        //LOG OF LIGHT, CONTINUOUS
-        final Iterator<Sample> it1 = light.iterator();
-        while (it1.hasNext()) {
-            final Sample sample = it1.next();
-            double value = sample.value;
-            if (value < 0) {
-                value = 0.0;
-            }
-            //add so we can average later
-            addToBin(data, sample.dateTime, value, HmmDataConstants.LIGHT_INDEX, t0, numMinutesInWindow);
-        }
-
-        //computing average light in bin, so divide by bin size
-        for (int i = 0; i < data[HmmDataConstants.LIGHT_INDEX].length; i++) {
-            data[HmmDataConstants.LIGHT_INDEX][i] /= numMinutesInWindow; //average
-
-            //transform via log2(4.0 * x + 1.0)
-            data[HmmDataConstants.LIGHT_INDEX][i] =  Math.log(data[HmmDataConstants.LIGHT_INDEX][i] * LIGHT_PREMULTIPLIER + 1.0) / Math.log(2);
-        }
-
-        ///////////////////////////
-        //PILL MOTION
-        final Iterator<TrackerMotion> it2 = pillData.iterator();
-        while (it2.hasNext()) {
-            final TrackerMotion m = it2.next();
-
-            double value = m.value;
-
-            //heartbeat value
-            if (value == -1) {
-                continue;
-            }
-
-            //if there's a disturbance, register it in the disturbance index
-            if (value > model.pillMagnitudeDisturbanceThresholdLsb) {
-                maxInBin(data, m.timestamp, 1.0, HmmDataConstants.DISTURBANCE_INDEX, t0, numMinutesInWindow);
-            }
-
-            addToBin(data, m.timestamp, 1.0, HmmDataConstants.MOT_COUNT_INDEX, t0, numMinutesInWindow);
-
-        }
-
-        ///////////////////////
-        //WAVES
-        final Iterator<Sample> it3 = wave.iterator();
-        while (it3.hasNext()) {
-            final Sample sample = it3.next();
-            double value = sample.value;
-
-            //either wave happened or it didn't.. value can be 1.0 or 0.0
-            if (value > 0.0) {
-                maxInBin(data, sample.dateTime, 1.0, HmmDataConstants.DISTURBANCE_INDEX, t0, numMinutesInWindow);
-            }
-        }
-
-        ///////////////////////////////////
-        //SOUND MAGNITUDE ---> DISTURBANCE
-        final Iterator<Sample> it4 = sound.iterator();
-        while (it4.hasNext()) {
-            final Sample sample = it4.next();
-            double value = sample.value;
-
-            if (value > model.soundDisturbanceThresholdDB) {
-                maxInBin(data, sample.dateTime, 1.0, HmmDataConstants.DISTURBANCE_INDEX, t0, numMinutesInWindow);
-            }
-        }
-
-        //SOUND COUNTS
-        final Iterator<Sample> it5 = soundCounts.iterator();
-        while (it5.hasNext()) {
-            final Sample sample = it5.next();
-
-            //accumulate
-            if (sample.value > 0.0) {
-                addToBin(data, sample.dateTime, sample.value, HmmDataConstants.LOG_SOUND_COUNT_INDEX, t0, numMinutesInWindow);
-            }
-
-        }
-
-        //transform via log2 (1.0 + x)
-        for (int i = 0; i < data[HmmDataConstants.LOG_SOUND_COUNT_INDEX].length; i++) {
-            double value = data[HmmDataConstants.LOG_SOUND_COUNT_INDEX][i];
-            if (value >= 0.0) {
-                data[HmmDataConstants.LOG_SOUND_COUNT_INDEX][i] =  Math.log(value + 1.0) / Math.log(2);
-            }
-        }
-
-
-        //FORBIDDEN NATURAL LIGHT
-        final Iterator<Sample> it6 = naturalLightForbidden.iterator();
-        while (it6.hasNext()) {
-            final Sample sample = it6.next();
-
-            if (sample.value > 0.0) {
-                maxInBin(data,sample.dateTime,1.0,HmmDataConstants.NATURAL_LIGHT_FILTER_INDEX,t0,numMinutesInWindow);
-            }
-        }
-
-
-
-        final BinnedData res = new BinnedData();
-        res.data = data;
-        res.numMinutesInWindow = numMinutesInWindow;
-        res.t0 = t0;
-        res.timezoneOffset = timezoneOffset;
-
-        final DateTime dateTimeBegin = new DateTime(t0).withZone(DateTimeZone.forOffsetMillis(timezoneOffset));
-        final DateTime dateTimeEnd = new DateTime(t0 + numMinutesInWindow * NUMBER_OF_MILLIS_IN_A_MINUTE * dataLength).withZone(DateTimeZone.forOffsetMillis(timezoneOffset));
-
-        LOGGER.debug("t0={},tf={}",dateTimeBegin.toLocalTime().toString(),dateTimeEnd.toLocalTime().toString());
-        LOGGER.debug("light={}",getDoubleVectorAsString(data[HmmDataConstants.LIGHT_INDEX]));
-        LOGGER.debug("motion={}",getDoubleVectorAsString(data[HmmDataConstants.MOT_COUNT_INDEX]));
-        LOGGER.debug("waves={}", getDoubleVectorAsString(data[HmmDataConstants.DISTURBANCE_INDEX]));
-        LOGGER.debug("logsc={}", getDoubleVectorAsString(data[HmmDataConstants.LOG_SOUND_COUNT_INDEX]));
-        LOGGER.debug("natlight={}", getDoubleVectorAsString(data[HmmDataConstants.NATURAL_LIGHT_FILTER_INDEX]));
-
-
-        return Optional.of(res);
-    }
-
-
-    protected long getTimeFromBin(int bin, int binWidthMinutes, long t0) {
-        long t = bin * binWidthMinutes;
-        t *= NUMBER_OF_MILLIS_IN_A_MINUTE;
-        t += t0;
-
-        return t;
-    }
-
-
-    protected void maxInBin(double[][] data, long t, double value, final int idx, final long t0, final int numMinutesInWindow) {
-        final int tIdx = (int) (t - t0) / NUMBER_OF_MILLIS_IN_A_MINUTE / numMinutesInWindow;
-
-        if (tIdx >= 0 && tIdx < data[0].length) {
-            double v1 = data[idx][tIdx];
-            double v2 = value;
-
-            if (v1 < v2) {
-                v1 = v2;
-            }
-
-            data[idx][tIdx] = v1;
-        }
-
-    }
-
-    protected void addToBin(double[][] data, long t, double value, final int idx, final long t0, final int numMinutesInWindow) {
-        final int tIdx = (int) (t - t0) / NUMBER_OF_MILLIS_IN_A_MINUTE / numMinutesInWindow;
-
-        if (tIdx >= 0 && tIdx < data[0].length) {
-            data[idx][tIdx] += value;
-        }
-    }
-
-    protected String getPathAsString(final ImmutableList<Integer> path) {
-        String pathString = "";
-        boolean first = true;
-        for (int alpha : path) {
-
-            if (!first) {
-                pathString += ",";
-            }
-            pathString += String.format("%d",alpha);
-            first = false;
-        }
-
-        return pathString;
-    }
-
-
-    protected String getDoubleVectorAsString(final double [] vec) {
-        String vecString = "";
-        boolean first = true;
-        for (double f : vec) {
-
-            if (!first) {
-                vecString += ",";
-            }
-            vecString += String.format("%.1f",f);
-            first = false;
-        }
-
-        return vecString;
-    }
-
-    protected List<TrackerMotion> removeDuplicatesAndInvalidValues(final List<TrackerMotion> trackerMotions) {
-        Set<TrackerMotion> trackerMotionSet = new TreeSet<TrackerMotion>(new Comparator<TrackerMotion>() {
-            @Override
-            public int compare(final TrackerMotion m1, final TrackerMotion m2) {
-                final long t1 = m1.timestamp / NUMBER_OF_MILLIS_IN_A_MINUTE;
-                final long t2 = m2.timestamp / NUMBER_OF_MILLIS_IN_A_MINUTE;
-                final int f1 = m1.value;
-                final int f2 = m1.value;
-
-                if (t1 < t2) {
-                    return -1;
-                }
-
-                if (t1 > t2) {
-                    return 1;
-                }
-
-                return 0;
-
-            }
-        });
-
-
-        for (final TrackerMotion m : trackerMotions) {
-            if (m.value != -1) {
-                trackerMotionSet.add(m);
-            }
-        }
-
-
-        List<TrackerMotion> uniqueValues = new ArrayList<>();
-
-        uniqueValues.addAll(trackerMotionSet);
-
-        return uniqueValues;
-    }
 
 }
 
