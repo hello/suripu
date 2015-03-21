@@ -256,6 +256,7 @@ public class RegisterResource extends BaseResource {
                     return builder;
                 }
                 senseId = deviceAccountPairs.get(0).externalDeviceId;
+                builder.setAccountId(token); // Needed
                 break;
         }
 
@@ -417,7 +418,7 @@ public class RegisterResource extends BaseResource {
     public Response registerPill(final byte[] body) {
         final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_PILL);
         final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
-        if(senseIdFromHeader != null){
+        if(senseIdFromHeader != null && !senseIdFromHeader.equals(KeyStoreDynamoDB.DEFAULT_FACTORY_DEVICE_ID)){
             LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
             return signAndSend(senseIdFromHeader, builder, senseKeyStore);
         }
