@@ -38,10 +38,10 @@ public class KeyStoreDynamoDB implements KeyStore {
 
     private final static String DEVICE_ID_ATTRIBUTE_NAME = "device_id";
     private final static String AES_KEY_ATTRIBUTE_NAME = "aes_key";
-    private final static String DEFAULT_FACTORY_DEVICE_ID = "0000000000000000";
+    public final static String DEFAULT_FACTORY_DEVICE_ID = "0000000000000000";
     private final static String METADATA = "metadata";
 
-    private final byte[] DEFAULT_AES_KEY;
+    public final static byte[] DEFAULT_AES_KEY = "1234567891234567".getBytes(); // change this and you die
 
 
     final CacheLoader loader = new CacheLoader<String, Optional<byte[]>>() {
@@ -60,7 +60,6 @@ public class KeyStoreDynamoDB implements KeyStore {
         this.dynamoDBClient = dynamoDBClient;
         this.keyStoreTableName = keyStoreTableName;
         this.cache = CacheBuilder.newBuilder().expireAfterAccess(cacheExpireAfterInSeconds, TimeUnit.SECONDS).build(loader);
-        this.DEFAULT_AES_KEY = defaultAESKey;
     }
 
     @Override
