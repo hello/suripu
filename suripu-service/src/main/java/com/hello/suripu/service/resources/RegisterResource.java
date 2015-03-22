@@ -26,7 +26,6 @@ import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.service.SignedMessage;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
-import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
@@ -386,8 +385,8 @@ public class RegisterResource extends BaseResource {
         final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_MORPHEUS);
 
         if(senseIdFromHeader != null && senseIdFromHeader.equals(KeyStoreDynamoDB.DEFAULT_FACTORY_DEVICE_ID)){
-            senseKeyStore.put(builder.getDeviceId(), Hex.encodeHexString(KeyStoreDynamoDB.DEFAULT_AES_KEY));
-            LOGGER.error("Key for device {} has been automatically generated", builder.getDeviceId());
+            LOGGER.error("Device {} is not properly provisioned. Headers = 000...", builder.getDeviceId());
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
         return signAndSend(builder.getDeviceId(), builder, senseKeyStore);
