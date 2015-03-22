@@ -3,6 +3,7 @@ package com.hello.suripu.service.resources;
 import com.google.common.base.Optional;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.core.db.KeyStore;
+import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.service.SignedMessage;
 import org.apache.commons.codec.binary.Hex;
@@ -40,6 +41,11 @@ public class CheckResource {
         final String senseId = request.getHeader(HelloHttpHeader.SENSE_ID);
         if (senseId == null) {
             LOGGER.error("Request doesn't contain the required header {}", HelloHttpHeader.SENSE_ID);
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("incorrect headers").type(MediaType.TEXT_PLAIN_TYPE).build());
+        }
+
+        if (senseId.equals(KeyStoreDynamoDB.DEFAULT_FACTORY_DEVICE_ID)) {
+            LOGGER.warn("DeviceId = {}. Failing check key.", senseId);
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("incorrect headers").type(MediaType.TEXT_PLAIN_TYPE).build());
         }
 

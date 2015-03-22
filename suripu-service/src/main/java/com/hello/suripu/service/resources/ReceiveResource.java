@@ -144,6 +144,8 @@ public class ReceiveResource extends BaseResource {
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
+
+
         final Optional<byte[]> optionalKeyBytes = keyStore.get(data.getDeviceId());
         if(!optionalKeyBytes.isPresent()) {
             LOGGER.error("Failed to get key from key store for device_id = {}", data.getDeviceId());

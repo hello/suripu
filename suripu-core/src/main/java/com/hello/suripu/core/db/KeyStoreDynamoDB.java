@@ -114,7 +114,7 @@ public class KeyStoreDynamoDB implements KeyStore {
     private Optional<byte[]> getRemotely(final String deviceId) {
         if(DEFAULT_FACTORY_DEVICE_ID.equals(deviceId)) {
             LOGGER.warn("Device not properly provisioned, got {} as a deviceId", deviceId);
-            return Optional.absent();
+                return Optional.absent();
         }
 
         final HashMap<String, AttributeValue> key = new HashMap<String, AttributeValue>();
@@ -126,9 +126,8 @@ public class KeyStoreDynamoDB implements KeyStore {
         final GetItemResult getItemResult = dynamoDBClient.getItem(getItemRequest);
 
         if(getItemResult.getItem() == null || !getItemResult.getItem().containsKey(AES_KEY_ATTRIBUTE_NAME)) {
-            LOGGER.warn("Did not find anything for device_id = {}", deviceId);
-
-            return Optional.of(DEFAULT_AES_KEY);
+            LOGGER.warn("Did not find AES key for device_id = {}", deviceId);
+            return Optional.absent();
         }
 
         final String hexEncodedKey = getItemResult.getItem().get(AES_KEY_ATTRIBUTE_NAME).getS();
