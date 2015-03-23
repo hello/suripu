@@ -7,7 +7,7 @@ import org.joda.time.format.DateTimeFormat;
 /**
  * Created by pangwu on 3/23/15.
  */
-public class DateTimeUtils {
+public class DateTimeTestUtils {
     public static DateTime stringToLocalUTC(final String stringDate){
         final DateTime local =  DateTime.parse(stringDate, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss"));
         return new DateTime(local.getYear(), local.getMonthOfYear(), local.getDayOfMonth(),

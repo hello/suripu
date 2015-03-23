@@ -111,7 +111,7 @@ public class MotionCluster {
 
             // when the last item is not in cluster
             if(clusterEndTimestamp > 0 && !clusterAmplitudeData.isInCluster()){
-                if(targetTimestamp >= clusterStartTimestamp && targetTimestamp <= clusterEndTimestamp + 2 * 10 * DateTimeConstants.MILLIS_PER_MINUTE){
+                if(targetTimestamp >= clusterStartTimestamp && targetTimestamp <= clusterEndTimestamp){
                     return copyRange(clusters, clusterStartIndex, clusterEndIndex);
                 }
 
@@ -132,39 +132,19 @@ public class MotionCluster {
         return Collections.EMPTY_LIST;
     }
 
-    public List<ClusterAmplitudeData> getClusters(){
-        return this.clusters;
-    }
-
     public Segment getSleepTimeSpan(){
         return new Segment(this.sleepPeriod.getStartTimestamp(), this.sleepPeriod.getEndTimestamp(), this.sleepPeriod.getOffsetMillis());
     }
 
-    public static List<Segment> itemsToSegments(final List<ClusterAmplitudeData> items){
-        final List<Segment> segments = new ArrayList<>();
-        long startTimestamp = 0;
-        long endTimestamp = 0;
-        for(final ClusterAmplitudeData item:items){
-            if(item.isInCluster() && startTimestamp == 0){
-                startTimestamp = item.timestamp;
-            }
-
-            if(item.isInCluster() && startTimestamp > 0){
-                endTimestamp = item.timestamp;
-            }
-
-            if(!item.isInCluster() && startTimestamp > 0 && endTimestamp > 0){
-                segments.add(new Segment(startTimestamp, endTimestamp, item.offsetMillis));
+    public static List<AmplitudeData> trim(final List<AmplitudeData> alignedData, final long startTimestamp, final long endTimestamp){
+        final List<AmplitudeData> trimmed = new ArrayList<>();
+        for(final AmplitudeData datum:alignedData){
+            if(datum.timestamp >= startTimestamp && datum.timestamp <= endTimestamp){
+                trimmed.add(datum);
             }
         }
+        return trimmed;
 
-        // dangling case
-        final ClusterAmplitudeData lastItem = items.get(items.size() - 1);
-        if(lastItem.isInCluster() && startTimestamp > 0){
-            segments.add(new Segment(startTimestamp, lastItem.timestamp, lastItem.offsetMillis));
-        }
-
-        return segments;
     }
 
     public static Segment getSleepPeriod(final List<AmplitudeData> features, final double threshold){
@@ -176,10 +156,10 @@ public class MotionCluster {
 
             if(item.amplitude > threshold) {
                 final long peakTimestamp = item.timestamp;
-                LOGGER.debug("++++++++++++++++++++ peak {}, first {}", peakTimestamp, firstTimestamp);
+                //LOGGER.debug("++++++++++++++++++++ peak {}, first {}", peakTimestamp, firstTimestamp);
 
                 if(peakTimestamp - firstTimestamp > 2 * DateTimeConstants.MILLIS_PER_HOUR) {
-                    return new Segment(peakTimestamp, lastTimestamp, item.offsetMillis);
+                    return new Segment(peakTimestamp - 15 * DateTimeConstants.MILLIS_PER_MINUTE, lastTimestamp, item.offsetMillis);
                 }
             }
         }

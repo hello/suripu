@@ -1,8 +1,10 @@
 package com.hello.suripu.algorithm.sleep;
 
+import com.google.common.base.Optional;
 import com.hello.suripu.algorithm.CSVFixtureTest;
+import com.hello.suripu.algorithm.DateTimeTestUtils;
 import com.hello.suripu.algorithm.core.AmplitudeData;
-import com.hello.suripu.algorithm.sleep.Vote;
+import com.hello.suripu.algorithm.core.Segment;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
@@ -16,28 +18,21 @@ import static org.hamcrest.Matchers.is;
  * Created by pangwu on 3/19/15.
  */
 public class VoteTest extends CSVFixtureTest {
-
     @Test
-    public void testTrim(){
-        final List<AmplitudeData> original = new ArrayList<>();
-        final List<AmplitudeData> expected = new ArrayList<>();
-
-        final DateTime now = DateTime.now();
-        final DateTime trimTime = now.plusMinutes(11);
-        for(int i = 0; i < 60; i++){
-            original.add(new AmplitudeData(now.plusMinutes(i).getMillis(), i, 0));
-            if(!now.plusMinutes(i).isBefore(trimTime)){
-                expected.add(original.get(original.size() - 1));
-            }
-        }
-
-        final List<AmplitudeData> actual = Vote.trim(original, trimTime.getMillis(), original.get(original.size() - 1).timestamp);
-        assertThat(actual.size(), is(expected.size()));
-
-        for(int i = 0; i < actual.size(); i++){
-            assertThat(actual.get(i).timestamp, is(expected.get(i).timestamp));
-            assertThat(actual.get(i).offsetMillis, is(expected.get(i).offsetMillis));
-            assertThat(actual.get(i).amplitude, is(actual.get(i).amplitude));
-        }
+    public void testGetResultPetFiltered(){
+        final List<AmplitudeData> input = loadFromResource("fixtures/cl_motion_2015_03_12_gap_filled.csv");
+        final List<DateTime> lightOuts = new ArrayList<>();
+        lightOuts.add(new DateTime(1426213320000L));
+        lightOuts.add(new DateTime(1426231620000L));
+        final Vote vote = new Vote(input, lightOuts, Optional.<DateTime>absent());
+        final SleepEvents<Segment> sleepEvents = vote.getResult();
+        assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.goToBed.getStartTimestamp(), sleepEvents.goToBed.getOffsetMillis()),
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 03:19:00")));
+        assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.fallAsleep.getStartTimestamp(), sleepEvents.fallAsleep.getOffsetMillis()),
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 04:14:00")));
+        assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.wakeUp.getStartTimestamp(), sleepEvents.wakeUp.getOffsetMillis()),
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 11:12:00")));
+        assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.outOfBed.getStartTimestamp(), sleepEvents.outOfBed.getOffsetMillis()),
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 11:12:00")));
     }
 }
