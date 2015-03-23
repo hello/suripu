@@ -35,7 +35,7 @@ public class SleepHmmWithInterpretation {
 
 
 
-    final static protected int MIN_DURATION_OF_SLEEP_SEGMENT_IN_MINUTES = 45;
+    //final static protected int MIN_DURATION_OF_SLEEP_SEGMENT_IN_MINUTES = 45;
     final static protected int MAX_ALLOWABLE_SLEEP_GAP_IN_MINUTES = 15;
 
     final static protected int MIN_DURATION_OF_ONBED_SEGMENT_IN_MINUTES = 45;
@@ -223,9 +223,8 @@ CREATE CREATE CREATE
         //extract set boundaries as pairs of indices (i1,i2)
         //merge pairs that are close together, keeping track of the gaps
         //then filter out the remaining pairs that are too small in duration (i2 - i1)
-        ImmutableList<SegmentPairWithGaps> sleep = filterSegmentPairsByDuration(
-                mindTheGapsAndJoinPairs(getSetBoundaries(bestResult.bestPath, bestModel.sleepStates),MAX_ALLOWABLE_SLEEP_GAP_IN_MINUTES / bestModel.numMinutesInMeasPeriod),
-                MIN_DURATION_OF_SLEEP_SEGMENT_IN_MINUTES / bestModel.numMinutesInMeasPeriod);
+        ImmutableList<SegmentPairWithGaps> sleep = filterSleepSegmentPairsByHeuristic(
+                mindTheGapsAndJoinPairs(getSetBoundaries(bestResult.bestPath, bestModel.sleepStates),MAX_ALLOWABLE_SLEEP_GAP_IN_MINUTES / bestModel.numMinutesInMeasPeriod));
 
         ImmutableList<SegmentPairWithGaps> onBed = filterSegmentPairsByDuration(
                 mindTheGapsAndJoinPairs(getSetBoundaries(bestResult.bestPath, bestModel.onBedStates),MAX_ALLOWABLE_ONBED_GAP_IN_MINUTES/ bestModel.numMinutesInMeasPeriod),
@@ -593,6 +592,31 @@ CREATE CREATE CREATE
 
         return Optional.of(new SleepHmmResult(new SleepStats(minutesSpentInBed,minutesSpentSleeping,numTimesWokenUpDuringSleep - 1,numSeparateSleepSegments),path,ImmutableList.copyOf(events)));
 
+
+    }
+
+    protected ImmutableList<SegmentPairWithGaps> filterSleepSegmentPairsByHeuristic(final ImmutableList<SegmentPairWithGaps> pairs) {
+        //heuristic is -- filter out a duration 1 sleep segment, but only if it's before the "main" segment, which is defined as 1 hour of sleep or more.
+
+        final List<SegmentPairWithGaps> filteredResults = new ArrayList<SegmentPairWithGaps>();
+        boolean isFoundMainSleepSegment = false;
+
+        for (final SegmentPairWithGaps pair : pairs) {
+            final int pairDuration = pair.bounds.i2 - pair.bounds.i1 + 1;
+
+            if (pairDuration > 4) {
+                isFoundMainSleepSegment = true;
+            }
+
+
+            if (pairDuration <= 1 && !isFoundMainSleepSegment) {
+                continue;
+            }
+
+            filteredResults.add(pair);
+        }
+
+        return ImmutableList.copyOf(filteredResults);
 
     }
 
