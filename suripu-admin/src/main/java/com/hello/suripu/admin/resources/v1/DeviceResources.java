@@ -102,7 +102,11 @@ public class DeviceResources {
                                             @QueryParam("end_ts") final Long endTs) {
 
         final List<DeviceAccountPair> pills = new ArrayList<>();
-        if (email != null) {
+        if (email == null && pillIdPartial == null){
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Missing query params!").build());
+        }
+        else if (email != null) {
             LOGGER.debug("Querying all pills for email = {}", email);
             final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, email);
             if (!accountIdOptional.isPresent()) {
@@ -112,14 +116,9 @@ public class DeviceResources {
             pills.addAll(deviceDAO.getPillsForAccountId(accountIdOptional.get()));
         }
 
-        else if (pillIdPartial != null) {
+        else {
             LOGGER.debug("Querying all pills whose IDs contain = {}", pillIdPartial);
             pills.addAll(deviceDAO.getPillsByPillIdHint(pillIdPartial));
-        }
-
-        else {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Missing query params!").build());
         }
 
         final List<DeviceStatus> pillStatuses = new ArrayList<>();
