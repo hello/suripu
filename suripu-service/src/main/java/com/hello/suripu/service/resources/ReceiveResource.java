@@ -584,9 +584,20 @@ public class ReceiveResource extends BaseResource {
         final Set<String> alwaysOTAGroups = otaConfiguration.getAlwaysOTAGroups();
         final Integer deviceUptimeDelay = otaConfiguration.getDeviceUptimeDelay();
         final Boolean alwaysOTA = (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceID, deviceGroups));
-        
+
         final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, alwaysOTA);
-        
+
+        //Provides for an in-office override feature that allows OTA (ignores checks) provided the IP is our office IP.
+        if (featureFlipper.deviceFeatureActive(FeatureFlipper.OFFICE_ONLY_OVERRIDE, deviceID, deviceGroups)) {
+            final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
+            if (ipAddress.equals("199.87.82.114")) {
+                LOGGER.debug("Office OTA Override for DeviceId {}", deviceID, deviceGroups);
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceGroups.get(0), currentFirmwareVersion);
+                LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+                return fileDownloadList;
+            }
+        }
+
         if(canOTA) {
 
             // groups take precedence over feature
