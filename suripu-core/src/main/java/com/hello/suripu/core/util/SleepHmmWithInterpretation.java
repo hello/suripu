@@ -2,6 +2,7 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -84,7 +85,7 @@ public class SleepHmmWithInterpretation {
     //result classes -- internal use
 
 
-    protected class SegmentPair {
+    public class SegmentPair {
         public SegmentPair(final Integer i1, final Integer i2) {
             this.i1 = i1;
             this.i2 = i2;
@@ -94,7 +95,7 @@ public class SleepHmmWithInterpretation {
         public final Integer i2;
     }
 
-    protected class SegmentPairWithGaps {
+    public class SegmentPairWithGaps {
         public SegmentPairWithGaps(SegmentPair bounds, List<SegmentPair> gaps) {
             this.bounds = bounds;
             this.gaps = gaps;
@@ -133,7 +134,7 @@ CREATE CREATE CREATE
     static public Optional<SleepHmmWithInterpretation> createModelFromProtobuf(final SleepHmmProtos.SleepHmmModelSet serializedModels) {
 
         try {
-            final ImmutableList<NamedSleepHmmModel> models = HmmDeserialization.createModelsFromProtobuf(serializedModels,LOGGER);
+            final ImmutableList<NamedSleepHmmModel> models = HmmDeserialization.createModelsFromProtobuf(serializedModels);
 
             return Optional.of(new SleepHmmWithInterpretation(models));
 
@@ -142,6 +143,29 @@ CREATE CREATE CREATE
             return Optional.absent();
         }
 
+    }
+
+    public ImmutableList<SegmentPair> testDecodeWithData(final double [][] data) {
+        for (final NamedSleepHmmModel model : models) {
+
+            final Integer [] allowableEndings = model.allowableEndingStates.toArray(new Integer[model.allowableEndingStates.size()]);
+
+            if (!model.modelName.equals("default")) {
+                continue;
+            }
+
+            final HmmDecodedResult result = model.hmm.decode(data,allowableEndings);
+
+            ImmutableList<SegmentPairWithGaps> sleep = filterSleepSegmentPairsByHeuristic(
+                    mindTheGapsAndJoinPairs(getSetBoundaries(result.bestPath, model.sleepStates),MAX_ALLOWABLE_SLEEP_GAP_IN_MINUTES / model.numMinutesInMeasPeriod));
+
+            ImmutableList<SegmentPair> sleepSplitOnGaps = pairsWithGapsToPairs(sleep,false);
+
+            return sleepSplitOnGaps;
+
+        }
+
+        return ImmutableList.copyOf(Collections.EMPTY_LIST);
     }
 
 /* MAIN METHOD TO BE USED FOR DATA PROCESSING IS HERE */
