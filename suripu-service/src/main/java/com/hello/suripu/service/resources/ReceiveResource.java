@@ -127,11 +127,7 @@ public class ReceiveResource extends BaseResource {
         } catch (IOException exception) {
             final String errorMessage = String.format("Failed parsing protobuf for deviceId = %s : %s", debugSenseId, exception.getMessage());
             LOGGER.error(errorMessage);
-
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity((debug) ? errorMessage : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            return plainTextError(Response.Status.BAD_REQUEST, "bad request");
         }
         LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
 
@@ -141,7 +137,7 @@ public class ReceiveResource extends BaseResource {
 
         if(data.getDeviceId() == null || data.getDeviceId().isEmpty()){
             LOGGER.error("Empty device id");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            return plainTextError(Response.Status.BAD_REQUEST, "empty device id");
         }
 
 
@@ -149,27 +145,15 @@ public class ReceiveResource extends BaseResource {
         final Optional<byte[]> optionalKeyBytes = keyStore.get(data.getDeviceId());
         if(!optionalKeyBytes.isPresent()) {
             LOGGER.error("Failed to get key from key store for device_id = {}", data.getDeviceId());
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            return plainTextError(Response.Status.BAD_REQUEST, "");
         }
 
         final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(optionalKeyBytes.get());
 
         if(error.isPresent()) {
             LOGGER.error(error.get().message);
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-                    .entity((debug) ? error.get().message : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            return plainTextError(Response.Status.UNAUTHORIZED, "");
         }
-
-
-        if(featureFlipper.deviceFeatureActive(FeatureFlipper.FORCE_HTTP_500, data.getDeviceId(), Collections.EMPTY_LIST)) {
-            throw new WebApplicationException(Response.status(Response.Status.SERVICE_UNAVAILABLE)
-                    .entity("server unavailable")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
-        }
-
 
         final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? "" : request.getHeader("X-Forwarded-For");
 
@@ -180,8 +164,12 @@ public class ReceiveResource extends BaseResource {
                 .setUptimeInSecond(data.getUptimeInSecond())
                 .build();
 
-        final DataLogger batchSenseDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
-        batchSenseDataLogger.put(data.getDeviceId(), batchPeriodicDataWorkerMessage.toByteArray());
+        try {
+            final DataLogger batchSenseDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
+            batchSenseDataLogger.put(data.getDeviceId(), batchPeriodicDataWorkerMessage.toByteArray());
+        } catch (Exception e) {
+            LOGGER.error("Failed to insert into batch sensors kinesis stream: {}", e.getMessage());
+        }
 
         final String tempSenseId = data.hasDeviceId() ? data.getDeviceId() : debugSenseId;
         return generateSyncResponse(tempSenseId, data.getFirmwareVersion(), optionalKeyBytes.get(), data);
@@ -424,10 +412,7 @@ public class ReceiveResource extends BaseResource {
         final Optional<byte[]> signedResponse = SignedMessage.sign(syncResponse.toByteArray(), encryptionKey);
         if(!signedResponse.isPresent()) {
             LOGGER.error("Failed signing message");
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity((debug) ? "Failed signing message" : "server error")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "");
         }
 
         return signedResponse.get();
@@ -494,11 +479,7 @@ public class ReceiveResource extends BaseResource {
         } catch (IOException exception) {
             final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
             LOGGER.error(errorMessage);
-
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity((debug) ? errorMessage : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            return plainTextError(Response.Status.BAD_REQUEST, "");
         }
         LOGGER.debug("Received for pill protobuf message {}", TextFormat.shortDebugString(batchPilldata));
 
@@ -506,16 +487,13 @@ public class ReceiveResource extends BaseResource {
         final Optional<byte[]> optionalKeyBytes = keyStore.get(batchPilldata.getDeviceId());
         if(!optionalKeyBytes.isPresent()) {
             LOGGER.error("Failed to get key from key store for device_id = {}", batchPilldata.getDeviceId());
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            return plainTextError(Response.Status.BAD_REQUEST, "");
         }
         final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(optionalKeyBytes.get());
 
         if(error.isPresent()) {
-            LOGGER.error(error.get().message);
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-                    .entity((debug) ? error.get().message : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            LOGGER.error("Failed validating signature with key: {}", error.get().message);
+            return plainTextError(Response.Status.UNAUTHORIZED, "");
         }
 
         final SenseCommandProtos.batched_pill_data.Builder cleanBatch = SenseCommandProtos.batched_pill_data.newBuilder();
@@ -547,10 +525,7 @@ public class ReceiveResource extends BaseResource {
         final Optional<byte[]> signedResponse = SignedMessage.sign(responseCommand.toByteArray(), optionalKeyBytes.get());
         if(!signedResponse.isPresent()) {
             LOGGER.error("Failed signing message");
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity((debug) ? "Failed signing message" : "server error")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "");
         }
 
         return signedResponse.get();
