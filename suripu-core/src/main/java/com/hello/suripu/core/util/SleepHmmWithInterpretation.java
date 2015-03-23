@@ -625,15 +625,23 @@ CREATE CREATE CREATE
         final List<SegmentPairWithGaps> filteredResults = new ArrayList<SegmentPairWithGaps>();
         boolean isFoundMainSleepSegment = false;
 
-        for (final SegmentPairWithGaps pair : pairs) {
+        for (int i = 0; i < pairs.size(); i++) {
+            final SegmentPairWithGaps pair = pairs.get(i);
+            final boolean isLast = (i == pairs.size() - 1);
             final int pairDuration = pair.bounds.i2 - pair.bounds.i1 + 1;
 
             if (pairDuration > 4) {
                 isFoundMainSleepSegment = true;
             }
 
-
+            //haven't found main segment, and is orphan
             if (pairDuration <= 1 && !isFoundMainSleepSegment) {
+                continue;
+            }
+
+
+            //is last segment, and is orphan.  Get rid of it!
+            if (pairDuration <= 1 && isLast) {
                 continue;
             }
 
