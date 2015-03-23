@@ -18,10 +18,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by pangwu on 3/19/15.
@@ -35,22 +35,22 @@ public class Vote {
                 final List<DateTime> lightOutTimes,
                 final Optional<DateTime> firstWaveTimeOptional){
 
-        final List<AmplitudeData> insertedData = insertBefore(dataWithGapFilled, 60);
-        this.motionCluster = MotionCluster.create(insertedData);
-        if(this.motionCluster.isBizarreOrPillowTooooHard()){
-            final List<ClusterAmplitudeData> largestCluster = this.motionCluster.getLargestCluster();
-            insertedData.clear();
-            final List<AmplitudeData> trimData = trim(dataWithGapFilled, largestCluster.get(0).timestamp, largestCluster.get(largestCluster.size() - 1).timestamp);
-            insertedData.addAll(insertBefore(trimData, 60));
-        }
+        this.motionCluster = MotionCluster.create(dataWithGapFilled);
+        final Segment sleepPeriod  = this.motionCluster.getSleepTimeSpan();
 
-
-        final Map<MotionFeatures.FeatureType, List<AmplitudeData>> motionFeatures = MotionFeatures.generateTimestampAlignedFeatures(insertedData,
+        final Map<MotionFeatures.FeatureType, List<AmplitudeData>> motionFeatures = MotionFeatures.generateTimestampAlignedFeatures(dataWithGapFilled,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
                 false);
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures = MotionFeatures.aggregateData(motionFeatures, MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES);
         LOGGER.info("smoothed data size {}", aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE).size());
+
+        final Set<MotionFeatures.FeatureType> featureTypes = aggregatedFeatures.keySet();
+        for(MotionFeatures.FeatureType featureType:featureTypes){
+            final List<AmplitudeData> originalFeature = aggregatedFeatures.get(featureType);
+            final List<AmplitudeData> trimmed = trim(originalFeature, sleepPeriod.getStartTimestamp(), sleepPeriod.getEndTimestamp());
+            aggregatedFeatures.put(featureType, trimmed);
+        }
 
         final MotionScoreAlgorithm sleepDetectionAlgorithm = new MotionScoreAlgorithm();
         sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE), new AmplitudeDataScoringFunction());
@@ -101,6 +101,10 @@ public class Vote {
 
     public SleepEvents<Segment> getResult(){
         final SleepEvents<Segment> sleepEvents = motionScoreAlgorithm.getSleepEvents(false);
+        return aggregate(sleepEvents);
+    }
+
+    private SleepEvents<Segment> aggregate(final SleepEvents<Segment> sleepEvents){
         final long sleepTime = sleepEvents.fallAsleep.getStartTimestamp();
         final long wakeUpTime = sleepEvents.wakeUp.getStartTimestamp();
 
@@ -108,9 +112,15 @@ public class Vote {
         final List<ClusterAmplitudeData> wakeUpMotionCluster = this.motionCluster.getSignificantCluster(wakeUpTime);
 
         Segment inBed = sleepEvents.goToBed;
+        Segment sleep = sleepEvents.fallAsleep;
         if(!sleepMotionCluster.isEmpty()){
-            final ClusterAmplitudeData clusterAmplitudeData = sleepMotionCluster.get(0);
-            inBed = new Segment(clusterAmplitudeData.timestamp, clusterAmplitudeData.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterAmplitudeData.offsetMillis);
+            final ClusterAmplitudeData clusterStart = sleepMotionCluster.get(0);
+            final ClusterAmplitudeData clusterEnd = sleepMotionCluster.get(sleepMotionCluster.size() - 1);
+            inBed = new Segment(clusterStart.timestamp, clusterStart.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterStart.offsetMillis);
+
+            if(clusterEnd.timestamp - sleepEvents.fallAsleep.getStartTimestamp() < 20 * DateTimeConstants.MILLIS_PER_MINUTE){
+                sleep = new Segment(clusterEnd.timestamp, clusterEnd.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterEnd.offsetMillis);
+            }
         }
 
         Segment outBed = sleepEvents.outOfBed;
@@ -119,32 +129,17 @@ public class Vote {
             outBed = new Segment(clusterAmplitudeData.timestamp, clusterAmplitudeData.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterAmplitudeData.offsetMillis);
         }
 
-        return SleepEvents.create(inBed, sleepEvents.fallAsleep, sleepEvents.goToBed, outBed);
-    }
-
-    public static List<AmplitudeData> insertBefore(final List<AmplitudeData> alignedData, final int numInsert){
-        final List<AmplitudeData> inserted = new ArrayList<>();
-        if(alignedData.size() == 0){
-            return Collections.EMPTY_LIST;
-        }
-
-        final AmplitudeData firstData = alignedData.get(0);
-        for(int i = 0; i < numInsert; i++){
-            inserted.add(0, new AmplitudeData(firstData.timestamp - (i + 1) * DateTimeConstants.MILLIS_PER_MINUTE, 0d, firstData.offsetMillis));
-        }
-
-        inserted.addAll(alignedData);
-        return inserted;
+        return SleepEvents.create(inBed, sleep, sleepEvents.wakeUp, outBed);
     }
 
     public static List<AmplitudeData> trim(final List<AmplitudeData> alignedData, final long startTimestamp, final long endTimestamp){
-        final List<AmplitudeData> trimed = new ArrayList<>();
+        final List<AmplitudeData> trimmed = new ArrayList<>();
         for(final AmplitudeData datum:alignedData){
             if(datum.timestamp >= startTimestamp && datum.timestamp <= endTimestamp){
-                trimed.add(datum);
+                trimmed.add(datum);
             }
         }
-        return trimed;
+        return trimmed;
 
     }
 }
