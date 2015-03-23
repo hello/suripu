@@ -427,21 +427,7 @@ public class DeviceResources {
         return new DeviceInactivePaginator(currentPage, totalPages, inactiveDevices);
     }
 
-    @Timed
-    @GET
-    @Path("/{device_id}/accounts")
-    @Produces(MediaType.APPLICATION_JSON)
-    public ImmutableList<Account> getAccountsByDeviceIDs(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                                         @QueryParam("max_devices") final Long maxDevices,
-                                                         @PathParam("device_id") final String deviceId) {
-        final List<Account> accounts = new ArrayList<>();
-        LOGGER.debug("Searching accounts who have used device {}", deviceId);
-        accounts.addAll(deviceDAO.getAccountsByDevice(deviceId, maxDevices));
-        if (accounts.isEmpty()) {
-            accounts.addAll(deviceDAO.getAccountsByPill(deviceId, maxDevices));
-        }
-        return ImmutableList.copyOf(accounts);
-    }
+
 
     @GET
     @Timed
@@ -469,48 +455,6 @@ public class DeviceResources {
         final DeviceInactivePage inactivePillsPage = redisPaginator.generatePage();
         return inactivePillsPage;
     }
-
-
-    @GET
-    @Timed
-    @Path("/pill/{email}/status")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<DeviceStatus> getPillStatusByEmail(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                            @PathParam("email") final String email) {
-        LOGGER.debug("Fetching pill status for user = {}", email);
-        final Optional<Long> accountId = getAccountIdByEmail(email);
-        final List<DeviceStatus> pillStatuses = new ArrayList<>();
-        if (!accountId.isPresent()) {
-            LOGGER.debug("ID not found for account {}", email);
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
-        }
-        final ImmutableList<DeviceAccountPair> pills = deviceDAO.getPillsForAccountId(accountId.get());
-
-        for (final DeviceAccountPair pill : pills) {
-            pillStatuses.addAll(deviceDAO.pillStatusWithBatteryLevel(pill.internalDeviceId));
-        }
-        return pillStatuses;
-    }
-
-
-    @GET
-    @Timed
-    @Path("/pill/id/{pill_id}/status")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<DeviceStatus> getPillStatusByPillId(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                                   @PathParam("pill_id") final String pillId) {
-        LOGGER.debug("Fetching pill status for pill like {}", pillId);
-
-        final List<DeviceStatus> pillStatuses = new ArrayList<>();
-        final ImmutableList<DeviceAccountPair> pills = deviceDAO.getPillsByPillIdHint(pillId);
-
-        for (final DeviceAccountPair pill : pills) {
-            LOGGER.debug("{}", pill.internalDeviceId);
-            pillStatuses.addAll(deviceDAO.pillStatusWithBatteryLevel(pill.internalDeviceId));
-        }
-        return pillStatuses;
-    }
-
 
     @GET
     @Timed
