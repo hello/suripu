@@ -2,15 +2,7 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.algorithm.core.Segment;
-import com.hello.suripu.algorithm.hmm.DiscreteAlphabetPdf;
-import com.hello.suripu.algorithm.hmm.GammaPdf;
-import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
-import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
-import com.hello.suripu.algorithm.hmm.PdfComposite;
-import com.hello.suripu.algorithm.hmm.PoissonPdf;
-import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
@@ -24,16 +16,13 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Named;
-import javax.swing.text.html.Option;
+import javax.sound.midi.Track;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -180,10 +169,15 @@ CREATE CREATE CREATE
         long t0 = 0;
         int timezoneOffset = 0;
 
+
+        final List<TrackerMotion> cleanedUpPillData = removeDuplicatesAndInvalidValues(pillData);
+
+        LOGGER.debug("removed {} duplicate or invalid pill data points",pillData.size() - cleanedUpPillData.size());
+
         /* go through each model, evaluate, find the best  */
         for (final NamedSleepHmmModel model : models) {
             LOGGER.debug("Trying out model \"{}\"",model.modelName);
-            final Optional<BinnedData> binnedDataOptional = getBinnedSensorData(sensors, pillData, model,sleepPeriodStartTime,sleepPeriodEndTime,currentTimeInMillis);
+            final Optional<BinnedData> binnedDataOptional = getBinnedSensorData(sensors, cleanedUpPillData, model,sleepPeriodStartTime,sleepPeriodEndTime,currentTimeInMillis);
 
 
             if (!binnedDataOptional.isPresent()) {
@@ -220,6 +214,7 @@ CREATE CREATE CREATE
             return Optional.absent();
         }
 
+
         LOGGER.debug("picked model \"{}\" ",bestModel.modelName);
         /*  First pass is mind the gaps
          *  so if there's a disturbance that is less than  ACCEPTABLE_GAP_IN_INDEX_COUNTS it's absorbed into the segment
@@ -229,22 +224,68 @@ CREATE CREATE CREATE
          *
          *  */
 
+        int numMinutesInMeasPeriod = bestModel.numMinutesInMeasPeriod;
 
-
-        final ImmutableList<SegmentPairWithGaps> sleep = filterSegmentPairsByDuration(
+        //extract set boundaries as pairs of indices (i1,i2)
+        //merge pairs that are close together, keeping track of the gaps
+        //then filter out the remaining pairs that are too small in duration (i2 - i1)
+        ImmutableList<SegmentPairWithGaps> sleep = filterSegmentPairsByDuration(
                 mindTheGapsAndJoinPairs(getSetBoundaries(bestResult.bestPath, bestModel.sleepStates),MAX_ALLOWABLE_SLEEP_GAP_IN_MINUTES / bestModel.numMinutesInMeasPeriod),
                 MIN_DURATION_OF_SLEEP_SEGMENT_IN_MINUTES / bestModel.numMinutesInMeasPeriod);
 
-        final ImmutableList<SegmentPairWithGaps> onBed = filterSegmentPairsByDuration(
+        ImmutableList<SegmentPairWithGaps> onBed = filterSegmentPairsByDuration(
                 mindTheGapsAndJoinPairs(getSetBoundaries(bestResult.bestPath, bestModel.onBedStates),MAX_ALLOWABLE_ONBED_GAP_IN_MINUTES/ bestModel.numMinutesInMeasPeriod),
                 MIN_DURATION_OF_ONBED_SEGMENT_IN_MINUTES / bestModel.numMinutesInMeasPeriod);
 
+        //split into pure pairs (i.e. just a list of pairs)
+        ImmutableList<SegmentPair> sleepSplitOnGaps = pairsWithGapsToPairs(sleep,false);
+        ImmutableList<SegmentPair> onBedIgnoringGaps = pairsWithGapsToPairs(onBed,true);
+
+        if (bestModel.isUsingIntervalSearch) {
+            //get whatever is earlier
+            long endTime = currentTimeInMillis < sleepPeriodEndTime ? currentTimeInMillis : sleepPeriodEndTime;
+            endTime -= timezoneOffset; //convert to UTC
+
+            final int numMinutes = (int) ((endTime - t0) / NUMBER_OF_MILLIS_IN_A_MINUTE);
+
+            double [] pillDataArray = getPillDataArray(cleanedUpPillData,t0,numMinutes);
+
+            sleepSplitOnGaps = getIndiciesInMinutesWithIntervalSearch(sleepSplitOnGaps,pillDataArray,numMinutesInMeasPeriod,false);
+            onBedIgnoringGaps = getIndiciesInMinutesWithIntervalSearch(onBedIgnoringGaps,pillDataArray,numMinutesInMeasPeriod,true);
+            numMinutesInMeasPeriod = 1;
+        }
 
 
-        return  processEventsIntoResult(bestModel,sleep,onBed,t0,timezoneOffset,bestResult.bestPath);
+        return  processEventsIntoResult(numMinutesInMeasPeriod,sleepSplitOnGaps,onBedIgnoringGaps,t0,timezoneOffset,bestResult.bestPath);
 
 
     }
+
+    protected ImmutableList<SegmentPair> pairsWithGapsToPairs(final ImmutableList<SegmentPairWithGaps> segs,boolean ignoreGaps) {
+        List<SegmentPair> pairs = new ArrayList<>();
+
+        for (final SegmentPairWithGaps seg : segs) {
+            int i1 = seg.bounds.i1;
+
+
+            if (!ignoreGaps) {
+                for (final SegmentPair pair : seg.gaps) {
+                    final int i2 = pair.i1;
+                    pairs.add(new SegmentPair(i1,i2));
+
+                    i1 = pair.i2;
+                }
+            }
+
+
+            final int i2 = seg.bounds.i2;
+            pairs.add(new SegmentPair(i1,i2));
+        }
+
+
+        return ImmutableList.copyOf(pairs);
+    }
+
 
     protected  Event getEventFromIndex(Event.Type eventType, final int index, final long t0, final int timezoneOffset,final String description,final int numMinutesInWindow) {
         Long eventTime =  getTimeFromBin(index,numMinutesInWindow,t0);
@@ -264,6 +305,178 @@ CREATE CREATE CREATE
 
 
     }
+
+    double [] getPillDataArray(final List<TrackerMotion> pillData,final long t0,final int numMinutes) {
+        double [] ret = new double[numMinutes];
+
+        Arrays.fill(ret,0.0);
+
+        Iterator<TrackerMotion> it = pillData.iterator();
+
+        while(it.hasNext()) {
+            final TrackerMotion m = it.next();
+
+
+            final int idx = (int) ((m.timestamp - t0) / NUMBER_OF_MILLIS_IN_A_MINUTE);
+
+            if (idx > 0 && idx < numMinutes && m.value != -1) {
+                ret[idx] = m.value;
+            }
+        }
+
+
+        return  ret;
+    }
+
+    protected Optional<Integer> getFirstInInterval(final double [] pillArray,final int idx1, final int idx2) {
+        for (int i = idx1; i < idx2; i++) {
+            if (pillArray[i] != 0.0) {
+                return Optional.of(i);
+            }
+        }
+        return Optional.absent();
+    }
+
+    protected Optional<Integer> getFirstQuietPeriodInInterval(final double [] pillArray,final int idx1, final int idx2,final int quietcount) {
+        boolean isFirst = true;
+        int count = 0;
+        for (int i = idx1; i < idx2; i++) {
+            if (pillArray[i] != 0.0) {
+                count = 0;
+                isFirst = false;
+            }
+            else {
+                if (!isFirst) {
+                    count++;
+                }
+
+                if (count >= quietcount) {
+                    return Optional.of(i);
+                }
+            }
+        }
+        return Optional.absent();
+    }
+
+    protected Optional<Integer> getLastInInterval(final double [] pillArray,final int idx1, final int idx2) {
+        for (int i = idx2-1; i >- idx1; i--) {
+            if (pillArray[i] != 0.0) {
+                return Optional.of(i);
+            }
+        }
+        return Optional.absent();
+    }
+
+    protected Optional<Double> getMaximumInInterval(final  double [] pillArray,final int idx1, final int idx2) {
+        double max = Double.MIN_VALUE;
+        for (int i = idx1; i < idx2; i++) {
+            if (pillArray[i] != 0.0) {
+                if (pillArray[i] > max) {
+                    pillArray[i] = max;
+                }
+            }
+        }
+
+        if (max == Double.MIN_VALUE) {
+            return Optional.absent();
+        }
+        else {
+            return Optional.of(max);
+        }
+    }
+
+    protected ImmutableList<SegmentPair> getIndiciesInMinutesWithIntervalSearch(final ImmutableList<SegmentPair> segs, double [] pillArray, final int numMinutesInMeasPeriod,final boolean isInOutOfBed) {
+
+        List<SegmentPair> newSegments = new ArrayList<>();
+        int lastIndex = -1;
+        for (final SegmentPair seg : segs) {
+            final SegmentPair newseg = performIntervalSearch(pillArray, seg, numMinutesInMeasPeriod, numMinutesInMeasPeriod, isInOutOfBed, lastIndex);
+
+            newSegments.add(newseg);
+
+            lastIndex = newseg.i2;
+        }
+
+        return ImmutableList.copyOf(newSegments);
+
+    }
+
+    //find leading and trailing
+    protected SegmentPair performIntervalSearch(final double [] pillArray,final SegmentPair seg,final int numMinutesInMeasPeriod,final int searchRadiusMinutes,final boolean isInOutOfBed,int lastIndex) {
+
+        int search1Start = seg.i1 * numMinutesInMeasPeriod - searchRadiusMinutes;
+
+        if (search1Start < 0) {
+            search1Start = 0;
+        }
+
+        if (lastIndex >= search1Start) {
+            search1Start = lastIndex + 1;
+        }
+
+        int search1End = search1Start + 2*searchRadiusMinutes;
+
+
+
+
+        Optional<Integer> first1 = Optional.absent();
+
+        if (isInOutOfBed) {
+            //in/out of bed? get the very first event
+            first1 = getFirstInInterval(pillArray, search1Start, search1End);
+        }
+        else {
+            //not sleep gap, so we're going to sleep
+            first1 = getFirstQuietPeriodInInterval(pillArray,search1Start,search1End,5);
+        }
+
+        int search2Start = (seg.i2 + 1) * numMinutesInMeasPeriod - searchRadiusMinutes;
+        int search2End = search2Start + 2*searchRadiusMinutes;
+
+        if (search2End > pillArray.length) {
+            search2End = pillArray.length;
+        }
+
+        if (search2Start >= search2End) {
+            search2Start = search2End - 1;
+        }
+
+        Optional<Integer> end2 = Optional.absent();
+
+        if (isInOutOfBed) {
+            end2 = getLastInInterval(pillArray, search2Start, search2End);
+        }
+        else {
+            end2 = getFirstInInterval(pillArray, search2Start, search2End);
+        }
+
+
+        int i1 = seg.i1 * numMinutesInMeasPeriod ;
+        int i2 = seg.i2 * numMinutesInMeasPeriod - 1 ;
+
+        if (first1.isPresent()) {
+            i1 = first1.get();
+        }
+
+        if (end2.isPresent()) {
+            i2 = end2.get() - 1;
+        }
+
+        //make sure at least 5 minutes apart
+        if (i2 - i1 < 5) {
+            i2 = i1 + 5;
+        }
+
+        if (isInOutOfBed) {
+            i2 += 1;
+            i1 -=1;
+        }
+
+
+        return new SegmentPair(i1,i2);
+
+    }
+
 
 
     //tells me when my events were, smoothing over gaps
@@ -314,7 +527,7 @@ CREATE CREATE CREATE
         return  ImmutableList.copyOf(candidates);
     }
 
-    Optional<SleepHmmResult> processEventsIntoResult(final NamedSleepHmmModel model, final ImmutableList<SegmentPairWithGaps> sleeps, final ImmutableList<SegmentPairWithGaps> beds, final long t0, final int timezoneOffset, final ImmutableList<Integer> path) {
+    Optional<SleepHmmResult> processEventsIntoResult(final int numMinutesInMeasPeriod, final ImmutableList<SegmentPair> sleeps, final ImmutableList<SegmentPair> beds, final long t0, final int timezoneOffset, final ImmutableList<Integer> path) {
 
         List<Event> events = new ArrayList<>();
         int minutesSpentInBed = 0;
@@ -328,7 +541,7 @@ CREATE CREATE CREATE
         }
 
         for (int iSegment = 0; iSegment < sleeps.size(); iSegment++) {
-            final SegmentPairWithGaps seg = sleeps.get(iSegment);
+            final SegmentPair seg = sleeps.get(iSegment);
 
             //if not the first sleep, it's a  going to sleep after a disturbance
             String sleepMessage = English.FALL_ASLEEP_DISTURBANCE_MESSAGE;
@@ -344,33 +557,23 @@ CREATE CREATE CREATE
 
 
 
-            events.add(getEventFromIndex(Event.Type.SLEEP, seg.bounds.i1, t0, timezoneOffset, sleepMessage,model.numMinutesInMeasPeriod));
-            events.add(getEventFromIndex(Event.Type.WAKE_UP, seg.bounds.i2, t0, timezoneOffset, wakeupMessage,model.numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.SLEEP, seg.i1, t0, timezoneOffset, sleepMessage,numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.WAKE_UP, seg.i2, t0, timezoneOffset, wakeupMessage,numMinutesInMeasPeriod));
 
-            minutesSpentSleeping += (seg.bounds.i2 - seg.bounds.i1) * model.numMinutesInMeasPeriod;
+            minutesSpentSleeping += (seg.i2 - seg.i1) * numMinutesInMeasPeriod;
 
             numTimesWokenUpDuringSleep += 1;
             numSeparateSleepSegments += 1;
 
-            for (final SegmentPair gap : seg.gaps) {
-                if (gap.i1 - 1 > seg.bounds.i1 && gap.i2 + 1 < seg.bounds.i2) {
-                    events.add(getEventFromIndex(Event.Type.WAKE_UP, gap.i1, t0, timezoneOffset, English.WAKE_UP_DISTURBANCE_MESSAGE,model.numMinutesInMeasPeriod));
-                    events.add(getEventFromIndex(Event.Type.SLEEP, gap.i2, t0, timezoneOffset, English.FALL_ASLEEP_DISTURBANCE_MESSAGE,model.numMinutesInMeasPeriod));
-
-                    minutesSpentSleeping -= (gap.i2 - gap.i1) * model.numMinutesInMeasPeriod;
-
-                    numTimesWokenUpDuringSleep += 1;
-                }
-            }
         }
 
-        for (final SegmentPairWithGaps seg : beds) {
-            events.add(getEventFromIndex(Event.Type.IN_BED, seg.bounds.i1, t0, timezoneOffset, English.IN_BED_MESSAGE,model.numMinutesInMeasPeriod));
-            events.add(getEventFromIndex(Event.Type.OUT_OF_BED, seg.bounds.i2, t0, timezoneOffset, English.OUT_OF_BED_MESSAGE,model.numMinutesInMeasPeriod));
+        for (final SegmentPair seg : beds) {
+            events.add(getEventFromIndex(Event.Type.IN_BED, seg.i1, t0, timezoneOffset, English.IN_BED_MESSAGE,numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.OUT_OF_BED, seg.i2, t0, timezoneOffset, English.OUT_OF_BED_MESSAGE,numMinutesInMeasPeriod));
 
             //ignore gaps
 
-            minutesSpentInBed += (seg.bounds.i2 - seg.bounds.i1) * model.numMinutesInMeasPeriod;
+            minutesSpentInBed += (seg.i2 - seg.i1) * numMinutesInMeasPeriod;
         }
 
 
@@ -615,16 +818,20 @@ CREATE CREATE CREATE
         final Iterator<Sample> it5 = soundCounts.iterator();
         while (it5.hasNext()) {
             final Sample sample = it5.next();
-            final double value = Math.log(sample.value + 1.0f) / Math.log(2);
 
             //accumulate
-            addToBin(data, sample.dateTime, value, HmmDataConstants.LOG_SOUND_COUNT_INDEX, t0, numMinutesInWindow);
+            if (sample.value > 0.0) {
+                addToBin(data, sample.dateTime, sample.value, HmmDataConstants.LOG_SOUND_COUNT_INDEX, t0, numMinutesInWindow);
+            }
 
         }
 
         //transform via log2 (1.0 + x)
         for (int i = 0; i < data[HmmDataConstants.LOG_SOUND_COUNT_INDEX].length; i++) {
-            data[HmmDataConstants.LOG_SOUND_COUNT_INDEX][i] =  Math.log(data[HmmDataConstants.LOG_SOUND_COUNT_INDEX][i] + 1.0) / Math.log(2);
+            double value = data[HmmDataConstants.LOG_SOUND_COUNT_INDEX][i];
+            if (value >= 0.0) {
+                data[HmmDataConstants.LOG_SOUND_COUNT_INDEX][i] =  Math.log(value + 1.0) / Math.log(2);
+            }
         }
 
 
@@ -723,6 +930,43 @@ CREATE CREATE CREATE
         }
 
         return vecString;
+    }
+
+    protected List<TrackerMotion> removeDuplicatesAndInvalidValues(final List<TrackerMotion> trackerMotions) {
+        Set<TrackerMotion> trackerMotionSet = new TreeSet<TrackerMotion>(new Comparator<TrackerMotion>() {
+            @Override
+            public int compare(final TrackerMotion m1, final TrackerMotion m2) {
+                final long t1 = m1.timestamp / NUMBER_OF_MILLIS_IN_A_MINUTE;
+                final long t2 = m2.timestamp / NUMBER_OF_MILLIS_IN_A_MINUTE;
+                final int f1 = m1.value;
+                final int f2 = m1.value;
+
+                if (t1 < t2) {
+                    return -1;
+                }
+
+                if (t1 > t2) {
+                    return 1;
+                }
+
+                return 0;
+
+            }
+        });
+
+
+        for (final TrackerMotion m : trackerMotions) {
+            if (m.value != -1) {
+                trackerMotionSet.add(m);
+            }
+        }
+
+
+        List<TrackerMotion> uniqueValues = new ArrayList<>();
+
+        uniqueValues.addAll(trackerMotionSet);
+
+        return uniqueValues;
     }
 
 }

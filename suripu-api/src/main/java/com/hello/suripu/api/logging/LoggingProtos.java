@@ -1232,6 +1232,10 @@ public final class LoggingProtos {
        * <code>SENSE_LOG = 1;</code>
        */
       SENSE_LOG(1, 1),
+      /**
+       * <code>WORKERS_LOG = 2;</code>
+       */
+      WORKERS_LOG(2, 2),
       ;
 
       /**
@@ -1242,6 +1246,10 @@ public final class LoggingProtos {
        * <code>SENSE_LOG = 1;</code>
        */
       public static final int SENSE_LOG_VALUE = 1;
+      /**
+       * <code>WORKERS_LOG = 2;</code>
+       */
+      public static final int WORKERS_LOG_VALUE = 2;
 
 
       public final int getNumber() { return value; }
@@ -1250,6 +1258,7 @@ public final class LoggingProtos {
         switch (value) {
           case 0: return APPLICATION_LOG;
           case 1: return SENSE_LOG;
+          case 2: return WORKERS_LOG;
           default: return null;
         }
       }
@@ -7162,27 +7171,28 @@ public final class LoggingProtos {
       "\n\024suripu_logging.proto\"v\n\nLogMessage\022\016\n\006" +
       "origin\030\001 \001(\t\022\017\n\007message\030\002 \001(\t\022\n\n\002ts\030\003 \001(" +
       "\003\022\031\n\nproduction\030\004 \001(\010:\005false\022\r\n\005level\030\005 " +
-      "\001(\005\022\021\n\tdevice_id\030\006 \001(\t\"\265\001\n\017BatchLogMessa" +
+      "\001(\005\022\021\n\tdevice_id\030\006 \001(\t\"\306\001\n\017BatchLogMessa" +
       "ge\022\035\n\010messages\030\001 \003(\0132\013.LogMessage\022\023\n\013app" +
       "_version\030\002 \001(\t\022*\n\010log_type\030\003 \001(\0162\030.Batch" +
       "LogMessage.LogType\022\023\n\013received_at\030\004 \001(\003\"" +
-      "-\n\007LogType\022\023\n\017APPLICATION_LOG\020\000\022\r\n\tSENSE" +
-      "_LOG\020\001\"\250\002\n\013HttpRequest\022\014\n\004path\030\001 \001(\t\022\024\n\014" +
-      "access_token\030\002 \001(\t\022\022\n\naccount_id\030\003 \001(\003\022\026",
-      "\n\016application_id\030\004 \001(\003\022\025\n\rtimestamp_utc\030" +
-      "\005 \001(\003\022\027\n\017required_scopes\030\006 \003(\t\022\027\n\017provid" +
-      "ed_scopes\030\007 \003(\t\022\037\n\027access_token_created_" +
-      "at\030\010 \001(\003\022\022\n\nuser_agent\030\t \001(\t\022$\n\007headers\030" +
-      "\n \003(\0132\023.HttpRequest.Header\032%\n\006Header\022\014\n\004" +
-      "name\030\001 \001(\t\022\r\n\005value\030\002 \001(\t\"\\\n\014Registratio" +
-      "n\022\021\n\tdevice_id\030\001 \001(\t\022\021\n\ttimestamp\030\002 \001(\003\022" +
-      "\022\n\naccount_id\030\003 \001(\003\022\022\n\nip_address\030\004 \001(\t\"" +
-      "e\n\017DecryptionError\022\021\n\tdevice_id\030\001 \001(\t\022\016\n" +
-      "\006keyHex\030\002 \001(\t\022\n\n\002ts\030\003 \001(\003\022\024\n\014request_bod",
-      "y\030\004 \001(\014\022\r\n\005other\030\005 \001(\t\"W\n\020ProvisionReque" +
-      "st\022\014\n\004body\030\001 \001(\014\022\025\n\rserial_number\030\002 \001(\t\022" +
-      "\n\n\002ts\030\003 \001(\003\022\022\n\nip_address\030\004 \001(\tB-\n\034com.h" +
-      "ello.suripu.api.loggingB\rLoggingProtos"
+      ">\n\007LogType\022\023\n\017APPLICATION_LOG\020\000\022\r\n\tSENSE" +
+      "_LOG\020\001\022\017\n\013WORKERS_LOG\020\002\"\250\002\n\013HttpRequest\022" +
+      "\014\n\004path\030\001 \001(\t\022\024\n\014access_token\030\002 \001(\t\022\022\n\na",
+      "ccount_id\030\003 \001(\003\022\026\n\016application_id\030\004 \001(\003\022" +
+      "\025\n\rtimestamp_utc\030\005 \001(\003\022\027\n\017required_scope" +
+      "s\030\006 \003(\t\022\027\n\017provided_scopes\030\007 \003(\t\022\037\n\027acce" +
+      "ss_token_created_at\030\010 \001(\003\022\022\n\nuser_agent\030" +
+      "\t \001(\t\022$\n\007headers\030\n \003(\0132\023.HttpRequest.Hea" +
+      "der\032%\n\006Header\022\014\n\004name\030\001 \001(\t\022\r\n\005value\030\002 \001" +
+      "(\t\"\\\n\014Registration\022\021\n\tdevice_id\030\001 \001(\t\022\021\n" +
+      "\ttimestamp\030\002 \001(\003\022\022\n\naccount_id\030\003 \001(\003\022\022\n\n" +
+      "ip_address\030\004 \001(\t\"e\n\017DecryptionError\022\021\n\td" +
+      "evice_id\030\001 \001(\t\022\016\n\006keyHex\030\002 \001(\t\022\n\n\002ts\030\003 \001",
+      "(\003\022\024\n\014request_body\030\004 \001(\014\022\r\n\005other\030\005 \001(\t\"" +
+      "W\n\020ProvisionRequest\022\014\n\004body\030\001 \001(\014\022\025\n\rser" +
+      "ial_number\030\002 \001(\t\022\n\n\002ts\030\003 \001(\003\022\022\n\nip_addre" +
+      "ss\030\004 \001(\tB-\n\034com.hello.suripu.api.logging" +
+      "B\rLoggingProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

@@ -9,6 +9,7 @@ import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.KeyStore;
+import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.flipper.GroupFlipper;
@@ -40,7 +41,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.awt.*;
+import java.awt.Color;
 import java.io.IOException;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -254,6 +255,7 @@ public class RegisterResource extends BaseResource {
                     return builder;
                 }
                 senseId = deviceAccountPairs.get(0).externalDeviceId;
+                builder.setAccountId(token); // Needed
                 break;
         }
 
@@ -381,9 +383,12 @@ public class RegisterResource extends BaseResource {
             LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
         }
         final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_MORPHEUS);
-        if(senseIdFromHeader != null){
-            return signAndSend(senseIdFromHeader, builder, senseKeyStore);
+
+        if(senseIdFromHeader != null && senseIdFromHeader.equals(KeyStoreDynamoDB.DEFAULT_FACTORY_DEVICE_ID)){
+            LOGGER.error("Device {} is not properly provisioned. Headers = 000...", builder.getDeviceId());
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
+
         return signAndSend(builder.getDeviceId(), builder, senseKeyStore);
     }
 
@@ -412,7 +417,7 @@ public class RegisterResource extends BaseResource {
     public Response registerPill(final byte[] body) {
         final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_PILL);
         final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
-        if(senseIdFromHeader != null){
+        if(senseIdFromHeader != null && !senseIdFromHeader.equals(KeyStoreDynamoDB.DEFAULT_FACTORY_DEVICE_ID)){
             LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
             return signAndSend(senseIdFromHeader, builder, senseKeyStore);
         }

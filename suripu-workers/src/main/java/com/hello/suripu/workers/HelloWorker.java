@@ -1,7 +1,9 @@
 package com.hello.suripu.workers;
 
+import com.hello.suripu.core.bundles.KinesisLoggerBundle;
+import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.workers.alarm.AlarmWorkerCommand;
-import com.hello.suripu.workers.framework.Worker;
+import com.hello.suripu.workers.framework.WorkerConfiguration;
 import com.hello.suripu.workers.insights.InsightsGeneratorWorkerCommand;
 import com.hello.suripu.workers.logs.LogIndexerWorkerCommand;
 import com.hello.suripu.workers.notifications.PushNotificationsWorkerCommand;
@@ -9,11 +11,13 @@ import com.hello.suripu.workers.pill.PillWorkerCommand;
 import com.hello.suripu.workers.pillscorer.PillScoreWorkerCommand;
 import com.hello.suripu.workers.sense.SenseSaveWorkerCommand;
 import com.hello.suripu.workers.timeline.TimelineWorkerCommand;
+import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
+import com.yammer.dropwizard.config.Environment;
 
 import java.util.TimeZone;
 
-public class HelloWorker extends Worker<HelloWorkerConfiguration> {
+public class HelloWorker extends Service<WorkerConfiguration> {
 
     public static void main(String[] args) throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
@@ -21,7 +25,13 @@ public class HelloWorker extends Worker<HelloWorkerConfiguration> {
     }
 
     @Override
-    public void initialize(Bootstrap<HelloWorkerConfiguration> bootstrap) {
+    public void initialize(Bootstrap<WorkerConfiguration> bootstrap) {
+        bootstrap.addBundle(new KinesisLoggerBundle<WorkerConfiguration>() {
+            @Override
+            public KinesisLoggerConfiguration getConfiguration(WorkerConfiguration configuration) {
+                return configuration.getKinesisLoggerConfiguration();
+            }
+        });
         bootstrap.addCommand(new PillWorkerCommand("pill", "all things about pill"));
         bootstrap.addCommand(new PillScoreWorkerCommand("pillscorer", "scoring sleep pill data"));
         bootstrap.addCommand(new SenseSaveWorkerCommand("sense_save", "saving sense sensor data"));
@@ -32,4 +42,8 @@ public class HelloWorker extends Worker<HelloWorkerConfiguration> {
         bootstrap.addCommand(new PushNotificationsWorkerCommand("push", "send push notifications"));
     }
 
+    @Override
+    public void run(WorkerConfiguration configuration, Environment environment) throws Exception {
+        // Do nothing
+    }
 }
