@@ -9,6 +9,7 @@ import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.KeyStore;
+import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.firmware.FirmwareUpdateStore;
@@ -62,6 +63,7 @@ public class ReceiveResource extends BaseResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReceiveResource.class);
     private static final int CLOCK_SKEW_TOLERATED_IN_HOURS = 2;
+    private static final String LOCAL_OFFICE_IP_ADDRESS = "199.87.82.114";
 
     private final KeyStore keyStore;
     private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
@@ -140,7 +142,15 @@ public class ReceiveResource extends BaseResource {
 
 
 
-        final Optional<byte[]> optionalKeyBytes = keyStore.get(data.getDeviceId());
+        final Optional<byte[]> optionalKeyBytes;
+        final String deviceId = data.getDeviceId();
+
+        if(KeyStoreDynamoDB.DEFAULT_FACTORY_DEVICE_ID.equals(deviceId)) {
+            optionalKeyBytes = Optional.of(KeyStoreDynamoDB.DEFAULT_AES_KEY);
+         } else {
+            optionalKeyBytes = keyStore.get(deviceId);
+        }
+
         if(!optionalKeyBytes.isPresent()) {
             LOGGER.error("Failed to get key from key store for device_id = {}", data.getDeviceId());
             return plainTextError(Response.Status.BAD_REQUEST, "");
@@ -480,7 +490,7 @@ public class ReceiveResource extends BaseResource {
         //Provides for an in-office override feature that allows OTA (ignores checks) provided the IP is our office IP.
         if (featureFlipper.deviceFeatureActive(FeatureFlipper.OFFICE_ONLY_OVERRIDE, deviceID, deviceGroups)) {
             final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
-            if (ipAddress.equals("199.87.82.114")) {
+            if (ipAddress.equals(LOCAL_OFFICE_IP_ADDRESS)) {
                 LOGGER.debug("Office OTA Override for DeviceId {}", deviceID, deviceGroups);
                 final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceGroups.get(0), currentFirmwareVersion);
                 LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
