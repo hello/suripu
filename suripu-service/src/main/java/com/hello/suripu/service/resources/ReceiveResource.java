@@ -155,7 +155,7 @@ public class ReceiveResource extends BaseResource {
                     optionalKeyBytes = keyStore.get(deviceId);
                 }
             } else {
-                optionalKeyBytes = keyStore.get(deviceId);
+                optionalKeyBytes = Optional.of(KeyStoreDynamoDB.DEFAULT_AES_KEY);
             }
          } else {
             optionalKeyBytes = keyStore.get(deviceId);
