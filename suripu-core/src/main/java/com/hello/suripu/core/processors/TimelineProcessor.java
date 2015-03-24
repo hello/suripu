@@ -550,7 +550,7 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
      * @param wakeUpWaveTimeOptional
      * @return
      */
-    private SleepEvents<Optional<Event>> fromAlgorithm(final DateTime targetDate,
+    public static SleepEvents<Optional<Event>> fromAlgorithm(final DateTime targetDate,
                                                        final List<TrackerMotion> trackerMotions,
                                                        final List<Sample> rawLight,
                                                        final Optional<DateTime> wakeUpWaveTimeOptional) {
