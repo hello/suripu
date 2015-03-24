@@ -104,6 +104,10 @@ public class HmmDeserialization {
             numMinutesInMeasPeriod = hmmModelData.getNumMinutesInMeasPeriod();
         }
 
+        boolean isUsingIntervalSearch  = HmmDataConstants.DEFAULT_IS_USING_INTERVAL_SEARCH;
+        if (hmmModelData.hasEnableIntervalSearch()) {
+            isUsingIntervalSearch = hmmModelData.getEnableIntervalSearch();
+        }
 
          /*
          * interpretation parameters (which states mean what)
@@ -224,7 +228,7 @@ public class HmmDeserialization {
         final HiddenMarkovModel hmm =  new HiddenMarkovModel(numStates, stateTransitionMatrix, initialStateProbabilities, obsModel,numFreeParams);
 
         return Optional.of(new NamedSleepHmmModel(hmm,modelName, ImmutableSet.copyOf(sleepStates),ImmutableSet.copyOf(onBedStates),ImmutableSet.copyOf(allowableEndingStates), ImmutableList.copyOf(sleepDepthsByState),
-                audioDisturbanceThresoldDB,pillMagnitudeDisturbanceThreshold,naturalLightFilterStartHour,naturalLightFilterStopHour,numMinutesInMeasPeriod));
+                audioDisturbanceThresoldDB,pillMagnitudeDisturbanceThreshold,naturalLightFilterStartHour,naturalLightFilterStopHour,numMinutesInMeasPeriod,isUsingIntervalSearch));
 
 
 

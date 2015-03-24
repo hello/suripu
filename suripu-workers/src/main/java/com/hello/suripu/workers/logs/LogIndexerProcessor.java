@@ -20,15 +20,18 @@ public class LogIndexerProcessor implements IRecordProcessor {
 
     private final LogIndexer<LoggingProtos.BatchLogMessage> applicationIndexer;
     private final LogIndexer<LoggingProtos.BatchLogMessage> senseIndexer;
+    private final LogIndexer<LoggingProtos.BatchLogMessage> workersIndexer;
 
     private LogIndexerProcessor(final LogIndexer<LoggingProtos.BatchLogMessage> applicationIndexer,
-                                final LogIndexer<LoggingProtos.BatchLogMessage> senseIndexer) {
+                                final LogIndexer<LoggingProtos.BatchLogMessage> senseIndexer,
+                                final LogIndexer<LoggingProtos.BatchLogMessage> workersIndexer) {
         this.applicationIndexer = applicationIndexer;
         this.senseIndexer = senseIndexer;
+        this.workersIndexer = workersIndexer;
     }
 
-    public static LogIndexerProcessor create(final IndexTankClient.Index applicationIndex, final IndexTankClient.Index senseIndex) {
-        return new LogIndexerProcessor(new ApplicationLogIndexer(applicationIndex), new SenseLogIndexer(senseIndex));
+    public static LogIndexerProcessor create(final IndexTankClient.Index applicationIndex, final IndexTankClient.Index senseIndex, final IndexTankClient.Index workersIndex) {
+        return new LogIndexerProcessor(new GenericLogIndexer(applicationIndex), new SenseLogIndexer(senseIndex), new GenericLogIndexer(workersIndex));
     }
 
     @Override
@@ -49,6 +52,10 @@ public class LogIndexerProcessor implements IRecordProcessor {
                             break;
                         case SENSE_LOG:
                             senseIndexer.collect(batchLogMessage);
+                            break;
+                        case WORKERS_LOG:
+                            workersIndexer.collect(batchLogMessage);
+                            break;
                     }
                 } else { // old protobuf messages don't have a LogType
                     applicationIndexer.collect(batchLogMessage);
@@ -63,9 +70,10 @@ public class LogIndexerProcessor implements IRecordProcessor {
 
             final Integer applicationLogsCount = applicationIndexer.index();
             final Integer senseLogsCount = senseIndexer.index();
+            final Integer workersLogsCount = workersIndexer.index();
 
             iRecordProcessorCheckpointer.checkpoint();
-            LOGGER.info("Checkpointing {} records ({} app logs and {} sense logs)", records.size(), applicationLogsCount, senseLogsCount);
+            LOGGER.info("Checkpointing {} records ({} app logs, {} sense logs and {} workers logs)", records.size(), applicationLogsCount, senseLogsCount, workersLogsCount);
         } catch (ShutdownException e) {
             LOGGER.error("Shutdown: {}", e.getMessage());
         } catch (InvalidStateException e) {

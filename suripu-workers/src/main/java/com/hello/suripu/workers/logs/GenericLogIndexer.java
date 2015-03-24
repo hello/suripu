@@ -15,13 +15,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ApplicationLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage> {
+public class GenericLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage> {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(ApplicationLogIndexer.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(GenericLogIndexer.class);
     final private IndexTankClient.Index index;
     final private List<IndexTankClient.Document> documents;
 
-    public ApplicationLogIndexer(final IndexTankClient.Index index) {
+    public GenericLogIndexer(final IndexTankClient.Index index) {
         this.index = index;
         documents = Lists.newArrayList();
     }

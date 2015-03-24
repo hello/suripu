@@ -15,9 +15,6 @@ import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.hello.suripu.core.models.DeviceKeyStoreRecord;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -27,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 public class KeyStoreDynamoDB implements KeyStore {
 
@@ -38,19 +34,10 @@ public class KeyStoreDynamoDB implements KeyStore {
 
     private final static String DEVICE_ID_ATTRIBUTE_NAME = "device_id";
     private final static String AES_KEY_ATTRIBUTE_NAME = "aes_key";
-    private final static String DEFAULT_FACTORY_DEVICE_ID = "0000000000000000";
+    public final static String DEFAULT_FACTORY_DEVICE_ID = "0000000000000000";
     private final static String METADATA = "metadata";
 
-    private final byte[] DEFAULT_AES_KEY;
-
-
-    final CacheLoader loader = new CacheLoader<String, Optional<byte[]>>() {
-        public Optional<byte[]> load(String key) {
-            return getRemotely(key);
-        }
-    };
-
-    final LoadingCache<String, Optional<byte[]>> cache;
+    public final static byte[] DEFAULT_AES_KEY = "1234567891234567".getBytes(); // change this and you die
 
     public KeyStoreDynamoDB(
             final AmazonDynamoDB dynamoDBClient,
@@ -59,8 +46,6 @@ public class KeyStoreDynamoDB implements KeyStore {
             final Integer cacheExpireAfterInSeconds) {
         this.dynamoDBClient = dynamoDBClient;
         this.keyStoreTableName = keyStoreTableName;
-        this.cache = CacheBuilder.newBuilder().expireAfterAccess(cacheExpireAfterInSeconds, TimeUnit.SECONDS).build(loader);
-        this.DEFAULT_AES_KEY = defaultAESKey;
     }
 
     @Override
@@ -75,7 +60,12 @@ public class KeyStoreDynamoDB implements KeyStore {
 //        }
 //
 //        return Optional.absent();
-        return getRemotely(deviceId);
+        return getRemotely(deviceId, false);
+    }
+
+    @Override
+    public Optional<byte[]> getStrict(final String deviceId) {
+        return getRemotely(deviceId, true);
     }
 
     @Override
@@ -112,10 +102,10 @@ public class KeyStoreDynamoDB implements KeyStore {
         // TODO: Log consumed capacity
     }
 
-    private Optional<byte[]> getRemotely(final String deviceId) {
+    private Optional<byte[]> getRemotely(final String deviceId, final Boolean strict) {
         if(DEFAULT_FACTORY_DEVICE_ID.equals(deviceId)) {
             LOGGER.warn("Device not properly provisioned, got {} as a deviceId", deviceId);
-            return Optional.absent();
+                return Optional.absent();
         }
 
         final HashMap<String, AttributeValue> key = new HashMap<String, AttributeValue>();
@@ -127,8 +117,11 @@ public class KeyStoreDynamoDB implements KeyStore {
         final GetItemResult getItemResult = dynamoDBClient.getItem(getItemRequest);
 
         if(getItemResult.getItem() == null || !getItemResult.getItem().containsKey(AES_KEY_ATTRIBUTE_NAME)) {
-            LOGGER.warn("Did not find anything for device_id = {}", deviceId);
-
+            LOGGER.warn("Did not find AES key for device_id = {}.", deviceId);
+            if(strict) {
+                return Optional.absent();
+            }
+            LOGGER.warn("Not in strict mode, returning default AES key instead for device = {}.", deviceId);
             return Optional.of(DEFAULT_AES_KEY);
         }
 

@@ -20,10 +20,9 @@ import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.UserInfo;
-import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.core.processors.OTAProcessor;
+import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.core.resources.BaseResource;
-import com.hello.suripu.core.util.DeviceIdUtil;
 import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.core.util.RoomConditionUtil;
 import com.hello.suripu.service.SignedMessage;
@@ -44,7 +43,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -127,11 +125,7 @@ public class ReceiveResource extends BaseResource {
         } catch (IOException exception) {
             final String errorMessage = String.format("Failed parsing protobuf for deviceId = %s : %s", debugSenseId, exception.getMessage());
             LOGGER.error(errorMessage);
-
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity((debug) ? errorMessage : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            return plainTextError(Response.Status.BAD_REQUEST, "bad request");
         }
         LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
 
@@ -141,33 +135,23 @@ public class ReceiveResource extends BaseResource {
 
         if(data.getDeviceId() == null || data.getDeviceId().isEmpty()){
             LOGGER.error("Empty device id");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            return plainTextError(Response.Status.BAD_REQUEST, "empty device id");
         }
+
+
 
         final Optional<byte[]> optionalKeyBytes = keyStore.get(data.getDeviceId());
         if(!optionalKeyBytes.isPresent()) {
             LOGGER.error("Failed to get key from key store for device_id = {}", data.getDeviceId());
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            return plainTextError(Response.Status.BAD_REQUEST, "");
         }
 
         final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(optionalKeyBytes.get());
 
         if(error.isPresent()) {
             LOGGER.error(error.get().message);
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-                    .entity((debug) ? error.get().message : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            return plainTextError(Response.Status.UNAUTHORIZED, "");
         }
-
-
-        if(featureFlipper.deviceFeatureActive(FeatureFlipper.FORCE_HTTP_500, data.getDeviceId(), Collections.EMPTY_LIST)) {
-            throw new WebApplicationException(Response.status(Response.Status.SERVICE_UNAVAILABLE)
-                    .entity("server unavailable")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
-        }
-
 
         final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? "" : request.getHeader("X-Forwarded-For");
 
@@ -178,8 +162,12 @@ public class ReceiveResource extends BaseResource {
                 .setUptimeInSecond(data.getUptimeInSecond())
                 .build();
 
-        final DataLogger batchSenseDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
-        batchSenseDataLogger.put(data.getDeviceId(), batchPeriodicDataWorkerMessage.toByteArray());
+        try {
+            final DataLogger batchSenseDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
+            batchSenseDataLogger.put(data.getDeviceId(), batchPeriodicDataWorkerMessage.toByteArray());
+        } catch (Exception e) {
+            LOGGER.error("Failed to insert into batch sensors kinesis stream: {}", e.getMessage());
+        }
 
         final String tempSenseId = data.hasDeviceId() ? data.getDeviceId() : debugSenseId;
         return generateSyncResponse(tempSenseId, data.getFirmwareVersion(), optionalKeyBytes.get(), data);
@@ -200,90 +188,6 @@ public class ReceiveResource extends BaseResource {
         }
 
         return syncResponseBuilder;
-    }
-
-    @Deprecated
-    @POST
-    @Path("/morpheus/pb2")
-    @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Timed
-    public byte[] morpheusProtobufReceiveEncrypted(final byte[] body) {
-        final SignedMessage signedMessage = SignedMessage.parse(body);
-        DataInputProtos.periodic_data data = null;
-
-        try {
-            data = DataInputProtos.periodic_data.parseFrom(signedMessage.body);
-        } catch (IOException exception) {
-            final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
-            LOGGER.error(errorMessage);
-
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity((debug) ? errorMessage : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
-        }
-        LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
-
-
-        // get MAC address of morpheus
-        final Optional<String> deviceIdOptional = DeviceIdUtil.getMorpheusId(data);
-        if(!deviceIdOptional.isPresent()){
-            LOGGER.error("Cannot get morpheus id");
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity((debug) ? "Cannot get morpheus id" : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
-        }
-
-
-        final String deviceName = deviceIdOptional.get();
-        if(data.getDeviceId() == null || deviceName.isEmpty()){
-            LOGGER.error("Empty device id");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        }
-
-        LOGGER.debug("Received valid protobuf {}", deviceName.toString());
-        LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
-
-        final Optional<byte[]> optionalKeyBytes = keyStore.get(data.getDeviceId());
-        if(!optionalKeyBytes.isPresent()) {
-            LOGGER.error("Failed to get key from key store for device_id = {}", data.getDeviceId());
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        }
-
-        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(optionalKeyBytes.get());
-
-        if(error.isPresent()) {
-            LOGGER.error(error.get().message);
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-                    .entity((debug) ? error.get().message : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
-        }
-
-
-        final DataInputProtos.batched_periodic_data batch = DataInputProtos.batched_periodic_data.newBuilder()
-                .addData(data)
-                .setDeviceId(data.getDeviceId())
-                .setFirmwareVersion(data.getFirmwareVersion())
-                .build();
-
-
-        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? "" : request.getHeader("X-Forwarded-For");
-
-        final DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorkerMessage = DataInputProtos.BatchPeriodicDataWorker.newBuilder()
-                .setData(batch)
-                .setReceivedAt(DateTime.now().getMillis())
-                .setIpAddress(ipAddress)
-                .build();
-
-        // Saving sense data to kinesis
-        final DataLogger senseSensorsDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
-        senseSensorsDataLogger.put(deviceName, batchPeriodicDataWorkerMessage.toByteArray());
-        LOGGER.debug("Protobuf message to kenesis {}", TextFormat.shortDebugString(batchPeriodicDataWorkerMessage));
-
-        return generateSyncResponse(data.getDeviceId(), data.getFirmwareVersion(), optionalKeyBytes.get(), batch);
     }
 
     /**
@@ -324,7 +228,6 @@ public class ReceiveResource extends BaseResource {
                         roundedDateTime
                         );
                 // TODO: throw exception?
-                // throw new WebApplicationException(Response.Status.BAD_REQUEST);
                 continue;
             }
 
@@ -422,10 +325,7 @@ public class ReceiveResource extends BaseResource {
         final Optional<byte[]> signedResponse = SignedMessage.sign(syncResponse.toByteArray(), encryptionKey);
         if(!signedResponse.isPresent()) {
             LOGGER.error("Failed signing message");
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity((debug) ? "Failed signing message" : "server error")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "");
         }
 
         return signedResponse.get();
@@ -492,11 +392,7 @@ public class ReceiveResource extends BaseResource {
         } catch (IOException exception) {
             final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
             LOGGER.error(errorMessage);
-
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity((debug) ? errorMessage : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            return plainTextError(Response.Status.BAD_REQUEST, "");
         }
         LOGGER.debug("Received for pill protobuf message {}", TextFormat.shortDebugString(batchPilldata));
 
@@ -504,16 +400,13 @@ public class ReceiveResource extends BaseResource {
         final Optional<byte[]> optionalKeyBytes = keyStore.get(batchPilldata.getDeviceId());
         if(!optionalKeyBytes.isPresent()) {
             LOGGER.error("Failed to get key from key store for device_id = {}", batchPilldata.getDeviceId());
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            return plainTextError(Response.Status.BAD_REQUEST, "");
         }
         final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(optionalKeyBytes.get());
 
         if(error.isPresent()) {
-            LOGGER.error(error.get().message);
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-                    .entity((debug) ? error.get().message : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            LOGGER.error("Failed validating signature with key: {}", error.get().message);
+            return plainTextError(Response.Status.UNAUTHORIZED, "");
         }
 
         final SenseCommandProtos.batched_pill_data.Builder cleanBatch = SenseCommandProtos.batched_pill_data.newBuilder();
@@ -545,10 +438,7 @@ public class ReceiveResource extends BaseResource {
         final Optional<byte[]> signedResponse = SignedMessage.sign(responseCommand.toByteArray(), optionalKeyBytes.get());
         if(!signedResponse.isPresent()) {
             LOGGER.error("Failed signing message");
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity((debug) ? "Failed signing message" : "server error")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "");
         }
 
         return signedResponse.get();
@@ -584,9 +474,22 @@ public class ReceiveResource extends BaseResource {
         final Set<String> alwaysOTAGroups = otaConfiguration.getAlwaysOTAGroups();
         final Integer deviceUptimeDelay = otaConfiguration.getDeviceUptimeDelay();
         final Boolean alwaysOTA = (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceID, deviceGroups));
-        
+
         final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, alwaysOTA);
-        
+
+        //Provides for an in-office override feature that allows OTA (ignores checks) provided the IP is our office IP.
+        if (featureFlipper.deviceFeatureActive(FeatureFlipper.OFFICE_ONLY_OVERRIDE, deviceID, deviceGroups)) {
+            final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
+            if (ipAddress.equals("199.87.82.114")) {
+                LOGGER.debug("Office OTA Override for DeviceId {}", deviceID, deviceGroups);
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceGroups.get(0), currentFirmwareVersion);
+                LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+                return fileDownloadList;
+            } else {
+                return Collections.emptyList();
+            }
+        }
+
         if(canOTA) {
 
             // groups take precedence over feature
