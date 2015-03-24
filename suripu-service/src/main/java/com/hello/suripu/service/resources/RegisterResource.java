@@ -240,6 +240,7 @@ public class RegisterResource extends BaseResource {
 
         final Long accountId = accessTokenOptional.get().accountId;
         LOGGER.debug("accountId = {}", accountId);
+        builder.setAccountId(token); // this is only needed for devices with 000... in the header
 
         switch (action) {
             case PAIR_MORPHEUS:
@@ -413,6 +414,12 @@ public class RegisterResource extends BaseResource {
     @Timed
     public byte[] registerPill(final byte[] body) {
         final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_PILL);
+        final String token = builder.getAccountId();
+
+
+        // WARNING: never return the account id, it will overflow buffer for old versions
+        builder.clearAccountId();
+
         final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
         if(senseIdFromHeader != null && !senseIdFromHeader.equals(KeyStoreDynamoDB.DEFAULT_FACTORY_DEVICE_ID)){
             LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
@@ -421,11 +428,11 @@ public class RegisterResource extends BaseResource {
 
         // TODO: Remove this and get sense id from header after the firmware is fixed.
         final Optional<AccessToken> accessTokenOptional = this.tokenStore.getClientDetailsByToken(
-                new ClientCredentials(new OAuthScope[]{OAuthScope.AUTH}, builder.getAccountId()),
+                new ClientCredentials(new OAuthScope[]{OAuthScope.AUTH}, token),
                 DateTime.now());
 
         if(!accessTokenOptional.isPresent()) {
-            LOGGER.error("Did not find accessToken {}", builder.getAccountId());
+            LOGGER.error("Did not find accessToken {}", token);
             return plainTextError(Response.Status.BAD_REQUEST, "");
         }
 
