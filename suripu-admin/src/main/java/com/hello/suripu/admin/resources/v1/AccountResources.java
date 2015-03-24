@@ -36,7 +36,7 @@ public class AccountResources {
                                           @QueryParam("email") final String email) {
         LOGGER.debug("Looking up {}", email);
 
-        final Optional<Account> accountOptional = accountDAO.getByEmail(email);
+        final Optional<Account> accountOptional = accountDAO.getByEmail(email.toLowerCase());
 
         if (!accountOptional.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)

@@ -71,8 +71,8 @@ public class AccountResource {
         }
 
         // Overriding email address for kaytlin
-        final Registration securedRegistration = Registration.encryptPassword(registration);
-
+        final Registration securedRegistration = Registration.secureAndNormalize(registration);
+        LOGGER.info("Email after encryption and normalizing: {}", securedRegistration.email);
 
         LOGGER.debug("Lat: {}", securedRegistration.latitude);
         LOGGER.debug("Lon: {}", securedRegistration.longitude);
@@ -151,8 +151,9 @@ public class AccountResource {
     public Account updateEmail(
             @Scope({OAuthScope.USER_EXTENDED}) final AccessToken accessToken,
             @Valid final Account account) {
-
-        final Account accountWithId = Account.withId(account, accessToken.accountId);
+        LOGGER.info("New email input: {}", account.email);
+        final Account accountWithId = Account.normalizeWithId(account, accessToken.accountId);
+        LOGGER.info("New email after normalizing: {}", accountWithId.email);
         final Optional<Registration.RegistrationError> error = Registration.validateEmail(accountWithId.email);
         if(error.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(
@@ -173,8 +174,9 @@ public class AccountResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Account getAccountByEmail(@Scope(OAuthScope.ADMINISTRATION_READ) AccessToken accessToken,
                           @QueryParam("email") String email) {
-        LOGGER.debug("Search for email = {}", email);
-        final Optional<Account> accountOptional = accountDAO.getByEmail(email);
+        LOGGER.debug("Search input email = {}", email);
+        LOGGER.debug("Normalized search input email = {}", email.toLowerCase());
+        final Optional<Account> accountOptional = accountDAO.getByEmail(email.toLowerCase());
         if(accountOptional.isPresent()) {
             return accountOptional.get();
         }
