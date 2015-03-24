@@ -138,7 +138,7 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
                     LOGGER.info("Saved for Date {}, score {}, sleep-stats{}", targetDate, timeline.date, timeline.statistics);
                     numSaved++;
                 }
-                if (numSaved % 10 == 0) {
+                if (numSaved % 30 == 0) {
                     Thread.sleep(500);
                 }
             }
