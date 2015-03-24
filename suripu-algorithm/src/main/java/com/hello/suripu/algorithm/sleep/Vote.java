@@ -11,6 +11,7 @@ import com.hello.suripu.algorithm.sleep.scores.MotionDensityScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.WaveAccumulateMotionScoreFunction;
 import com.hello.suripu.algorithm.sleep.scores.ZeroToMaxMotionCountDurationScoreFunction;
 import com.hello.suripu.algorithm.utils.ClusterAmplitudeData;
+import com.hello.suripu.algorithm.utils.DataUtils;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -32,19 +33,22 @@ public class Vote {
     private final MotionCluster motionCluster;
     private final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures;
 
-    public Vote(final List<AmplitudeData> dataWithGapFilled,
+    public Vote(final List<AmplitudeData> raw,
                 final List<DateTime> lightOutTimes,
                 final Optional<DateTime> firstWaveTimeOptional){
 
+        final List<AmplitudeData> dataWithGapFilled = DataUtils.fillMissingValuesAndMakePositive(raw, DateTimeConstants.MILLIS_PER_MINUTE);
         this.motionCluster = MotionCluster.create(dataWithGapFilled);
         final Segment sleepPeriod  = this.motionCluster.getSleepTimeSpan();
+        LOGGER.debug("data start from {} to {}", new DateTime(sleepPeriod.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepPeriod.getOffsetMillis())),
+                new DateTime(sleepPeriod.getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepPeriod.getOffsetMillis())));
 
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> motionFeatures = MotionFeatures.generateTimestampAlignedFeatures(dataWithGapFilled,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
                 false);
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures = MotionFeatures.aggregateData(motionFeatures, MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES);
-        LOGGER.info("smoothed data size {}", aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE).size());
+        LOGGER.debug("smoothed data size {}", aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE).size());
         this.aggregatedFeatures = aggregatedFeatures;
 
         final Set<MotionFeatures.FeatureType> featureTypes = aggregatedFeatures.keySet();
@@ -128,7 +132,13 @@ public class Vote {
             final ClusterAmplitudeData clusterStart = wakeUpMotionCluster.get(0);
             final ClusterAmplitudeData clusterEnd = wakeUpMotionCluster.get(wakeUpMotionCluster.size() - 1);
             outBed = new Segment(clusterEnd.timestamp, clusterEnd.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterEnd.offsetMillis);
-            wakeUp = new Segment(clusterStart.timestamp, clusterStart.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterStart.offsetMillis);
+
+            for(final ClusterAmplitudeData clusterAmplitudeData:wakeUpMotionCluster) {
+                if(clusterAmplitudeData.amplitude > this.motionCluster.getMean() + this.motionCluster.getStd()) {
+                    wakeUp = new Segment(clusterAmplitudeData.timestamp, clusterAmplitudeData.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterAmplitudeData.offsetMillis);
+                    break;
+                }
+            }
         }
 
         return SleepEvents.create(inBed, sleep, wakeUp, outBed);
