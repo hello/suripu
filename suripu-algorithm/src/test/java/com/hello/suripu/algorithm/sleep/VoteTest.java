@@ -49,7 +49,7 @@ public class VoteTest extends CSVFixtureTest {
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.fallAsleep.getStartTimestamp(), sleepEvents.fallAsleep.getOffsetMillis()),
                 is(DateTimeTestUtils.stringToLocalUTC("2015-03-21 01:18:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.wakeUp.getStartTimestamp(), sleepEvents.wakeUp.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-21 08:49:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-21 09:00:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.outOfBed.getStartTimestamp(), sleepEvents.outOfBed.getOffsetMillis()),
                 is(DateTimeTestUtils.stringToLocalUTC("2015-03-21 10:06:00")));
     }
@@ -72,6 +72,6 @@ public class VoteTest extends CSVFixtureTest {
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.wakeUp.getStartTimestamp(), sleepEvents.wakeUp.getOffsetMillis()),
                 is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 07:59:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.outOfBed.getStartTimestamp(), sleepEvents.outOfBed.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-21 09:05:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 09:05:00")));
     }
 }

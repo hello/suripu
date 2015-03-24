@@ -74,6 +74,7 @@ public class MotionCluster {
         final List<AmplitudeData> inputFeature = MotionCluster.getInputFeatureFromMotions(this.motionNoMissingValues);
         final double threshold = NumericalUtils.mean(inputFeature);
         this.mean = threshold;
+        this.std = NumericalUtils.std(inputFeature, this.mean);
         this.sleepPeriod = MotionCluster.getSleepPeriod(inputFeature, threshold);
         final List<ClusterAmplitudeData> rawClusters = MotionCluster.getClusters(inputFeature, threshold);
         this.clusters = rawClusters;
