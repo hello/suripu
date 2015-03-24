@@ -21,9 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -64,7 +62,7 @@ public class AudioResource extends BaseResource {
 
 
         final SignedMessage signedMessage = SignedMessage.parse(body);
-        MatrixProtos.MatrixClientMessage message;
+        MatrixProtos.MatrixClientMessage message = MatrixProtos.MatrixClientMessage.getDefaultInstance();
 
         try {
             message = MatrixProtos.MatrixClientMessage.parseFrom(signedMessage.body);
@@ -72,10 +70,7 @@ public class AudioResource extends BaseResource {
             final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
             LOGGER.error(errorMessage);
 
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity((debug) ? errorMessage : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            throwPlainTextError(Response.Status.BAD_REQUEST, "");
         }
 
         final String deviceId = message.getDeviceId();
@@ -90,10 +85,7 @@ public class AudioResource extends BaseResource {
 
         if(error.isPresent()) {
             LOGGER.error(error.get().message);
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-                    .entity((debug) ? error.get().message : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            throwPlainTextError(Response.Status.UNAUTHORIZED, "");
         }
 
         dataLogger.put(deviceId, signedMessage.body);
@@ -106,17 +98,14 @@ public class AudioResource extends BaseResource {
     public void getAudio(@Context HttpServletRequest request, byte[] body) {
 
         final SignedMessage signedMessage = SignedMessage.parse(body);
-        FileTransfer.FileMessage message;
+        FileTransfer.FileMessage message = FileTransfer.FileMessage.getDefaultInstance();
         try {
             message = FileTransfer.FileMessage.parseFrom(signedMessage.body);
         } catch (IOException exception) {
             final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
             LOGGER.error(errorMessage);
 
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity((debug) ? errorMessage : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            throwPlainTextError(Response.Status.BAD_REQUEST, "");
         }
 
         if(!featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_ON_AUDIO, message.getDeviceId(), new ArrayList<String>())) {
@@ -126,19 +115,13 @@ public class AudioResource extends BaseResource {
 
         final Optional<byte[]> keyBytes = keyStore.get(message.getDeviceId());
         if(!keyBytes.isPresent()) {
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-                    .entity("could not find device id in key store")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            throwPlainTextError(Response.Status.UNAUTHORIZED, "");
         }
         final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytes.get());
 
         if(error.isPresent()) {
             LOGGER.error(error.get().message);
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-                    .entity((debug) ? error.get().message : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            throwPlainTextError(Response.Status.UNAUTHORIZED, "");
         }
 
         final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(message.toByteArray());

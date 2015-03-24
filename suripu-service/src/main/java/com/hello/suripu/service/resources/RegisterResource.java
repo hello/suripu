@@ -38,7 +38,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -207,7 +206,7 @@ public class RegisterResource extends BaseResource {
                 .setVersion(PROTOBUF_VERSION);
 
         final SignedMessage signedMessage = SignedMessage.parse(encryptedRequest);
-        MorpheusCommand morpheusCommand;
+        MorpheusCommand morpheusCommand = MorpheusCommand.getDefaultInstance();
         try {
             morpheusCommand = MorpheusCommand.parseFrom(signedMessage.body);
 
@@ -215,7 +214,7 @@ public class RegisterResource extends BaseResource {
             final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
             LOGGER.error(errorMessage);
             // We can't return a proper error because we can't decode the protobuf
-            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+            throwPlainTextError(Response.Status.BAD_REQUEST, "");
         }
 
         final String deviceId = morpheusCommand.getDeviceId();
@@ -263,17 +262,14 @@ public class RegisterResource extends BaseResource {
         final Optional<byte[]> keyBytesOptional = keyStore.get(senseId);
         if(!keyBytesOptional.isPresent()) {
             LOGGER.error("Missing AES key for device = {}", senseId);
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            throwPlainTextError(Response.Status.UNAUTHORIZED, "");
         }
 
         final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytesOptional.get());
 
         if(error.isPresent()) {
             LOGGER.error("Fail to validate signature {}", error.get().message);
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-                    .entity((debug) ? error.get().message : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            throwPlainTextError(Response.Status.UNAUTHORIZED, "");
         }
 
         if(!checkCommandType(morpheusCommand, action)){
