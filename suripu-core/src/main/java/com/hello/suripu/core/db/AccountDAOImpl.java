@@ -35,14 +35,14 @@ public abstract class AccountDAOImpl implements AccountDAO {
     @SingleValueResult(Account.class)
     public abstract Optional<Account> getById(@Bind("id") final Long id);
 
-    @SqlQuery("SELECT * FROM accounts WHERE email = lower(:email) LIMIT 1;")
+    @SqlQuery("SELECT * FROM accounts WHERE email = :email LIMIT 1;")
     @SingleValueResult(Account.class)
     public abstract Optional<Account> getByEmail(@Bind("email") final String email);
 
     @SqlQuery("SELECT * FROM accounts order by id desc LIMIT 100;")
     public abstract List<Account> getRecent();
 
-    @SqlUpdate("INSERT INTO accounts (name, email, password_hash, dob, height, weight, tz_offset, created, last_modified) VALUES(:name, lower(:email), :password, :dob, :height, :weight, :tz_offset, :created, :last_modified)")
+    @SqlUpdate("INSERT INTO accounts (name, email, password_hash, dob, height, weight, tz_offset, created, last_modified) VALUES(:name, :email, :password, :dob, :height, :weight, :tz_offset, :created, :last_modified)")
     @GetGeneratedKeys
     public abstract long insertAccount(@BindRegistration Registration registration, @Bind("last_modified") Long lastModified);
 
@@ -52,7 +52,7 @@ public abstract class AccountDAOImpl implements AccountDAO {
     @SqlUpdate("UPDATE accounts SET password_hash = :new_password_hash WHERE id = :account_id;")
     protected abstract int updatePasswordFromResetEmail(@Bind("new_password_hash") final String newPasswordHash, @Bind("account_id") final Long accountId);
 
-    @SqlUpdate("UPDATE accounts SET email = lower(:email), last_modified = :new_last_modified WHERE id = :account_id AND last_modified = :last_modified;")
+    @SqlUpdate("UPDATE accounts SET email = :email, last_modified = :new_last_modified WHERE id = :account_id AND last_modified = :last_modified;")
     protected abstract int updateEmail(@Bind("email") final String email, @Bind("account_id") final Long accountId, @Bind("last_modified") final Long lastModified, @Bind("new_last_modified") final Long newLastModified);
 
     public Account register(final Registration registration) {
@@ -174,7 +174,7 @@ public abstract class AccountDAOImpl implements AccountDAO {
         return updated > 0;
     }
 
-    @SqlUpdate("DELETE FROM accounts where email = lower(:email);")
+    @SqlUpdate("DELETE FROM accounts where email = :email;")
     public abstract void delete(@Bind("email") String email);
 
     @SqlQuery("SELECT * FROM accounts WHERE name ILIKE '%'||:name_partial||'%' ORDER BY id DESC LIMIT 50;")
