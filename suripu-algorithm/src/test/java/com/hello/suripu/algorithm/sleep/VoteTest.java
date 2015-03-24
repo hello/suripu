@@ -61,6 +61,10 @@ public class VoteTest extends CSVFixtureTest {
         lightOuts.add(new DateTime(1426218480000L, DateTimeZone.forOffsetMillis(input.get(0).offsetMillis)));
         final Vote vote = new Vote(input, lightOuts, Optional.<DateTime>absent());
         final SleepEvents<Segment> sleepEvents = vote.getResult();
+
+        assertThat((float)vote.getMotionClusterAlgorithm().getMean(), is((float)3.65789473684));
+        assertThat((float)vote.getMotionClusterAlgorithm().getStd(), is((float)1.88008958353));
+
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.goToBed.getStartTimestamp(), sleepEvents.goToBed.getOffsetMillis()),
                 is(DateTimeTestUtils.stringToLocalUTC("2015-03-12 20:59:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.fallAsleep.getStartTimestamp(), sleepEvents.fallAsleep.getOffsetMillis()),

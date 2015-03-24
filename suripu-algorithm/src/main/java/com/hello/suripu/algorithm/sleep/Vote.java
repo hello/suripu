@@ -133,18 +133,33 @@ public class Vote {
             final ClusterAmplitudeData clusterEnd = wakeUpMotionCluster.get(wakeUpMotionCluster.size() - 1);
             outBed = new Segment(clusterEnd.timestamp, clusterEnd.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterEnd.offsetMillis);
 
-            for(final ClusterAmplitudeData clusterAmplitudeData:wakeUpMotionCluster) {
-                if(clusterAmplitudeData.amplitude > this.motionCluster.getMean() + this.motionCluster.getStd()) {
-                    wakeUp = new Segment(clusterAmplitudeData.timestamp, clusterAmplitudeData.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterAmplitudeData.offsetMillis);
-                    break;
-                }
-            }
+            final long wakeUpTimestamp = pickWakeUp(wakeUpMotionCluster, wakeUp.getStartTimestamp());
+            wakeUp = new Segment(wakeUpTimestamp, wakeUpTimestamp + DateTimeConstants.MILLIS_PER_MINUTE, wakeUp.getOffsetMillis());
         }
 
         return SleepEvents.create(inBed, sleep, wakeUp, outBed);
     }
 
+    protected long pickWakeUp(final List<ClusterAmplitudeData> wakeUpMotionCluster, final long originalWakeUp){
+        for(final ClusterAmplitudeData clusterAmplitudeData:wakeUpMotionCluster) {
+            if(clusterAmplitudeData.amplitude > this.motionCluster.getMean() + this.motionCluster.getStd() &&
+                    clusterAmplitudeData.amplitude < originalWakeUp) {
+                return clusterAmplitudeData.timestamp;
+            }
+        }
+
+        return originalWakeUp;
+    }
+
     public Map<MotionFeatures.FeatureType, List<AmplitudeData>> getAggregatedFeatures(){
         return ImmutableMap.copyOf(this.aggregatedFeatures);
+    }
+
+    public MotionCluster getMotionClusterAlgorithm(){
+        return this.motionCluster;
+    }
+
+    public MotionScoreAlgorithm getMultiScoreAlgorithm(){
+        return this.motionScoreAlgorithm;
     }
 }
