@@ -55,5 +55,9 @@ public class BaseResource {
         );
     }
 
+    protected void throwPlainTextError(final Response.Status status, final String message) throws WebApplicationException {
+        plainTextError(status, message);
+    }
+
     // TODO: add similar method for JSON Error
 }

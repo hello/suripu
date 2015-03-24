@@ -20,10 +20,9 @@ import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.UserInfo;
-import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.core.processors.OTAProcessor;
+import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.core.resources.BaseResource;
-import com.hello.suripu.core.util.DeviceIdUtil;
 import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.core.util.RoomConditionUtil;
 import com.hello.suripu.service.SignedMessage;
@@ -44,7 +43,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -192,90 +190,6 @@ public class ReceiveResource extends BaseResource {
         return syncResponseBuilder;
     }
 
-    @Deprecated
-    @POST
-    @Path("/morpheus/pb2")
-    @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Timed
-    public byte[] morpheusProtobufReceiveEncrypted(final byte[] body) {
-        final SignedMessage signedMessage = SignedMessage.parse(body);
-        DataInputProtos.periodic_data data = null;
-
-        try {
-            data = DataInputProtos.periodic_data.parseFrom(signedMessage.body);
-        } catch (IOException exception) {
-            final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
-            LOGGER.error(errorMessage);
-
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity((debug) ? errorMessage : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
-        }
-        LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
-
-
-        // get MAC address of morpheus
-        final Optional<String> deviceIdOptional = DeviceIdUtil.getMorpheusId(data);
-        if(!deviceIdOptional.isPresent()){
-            LOGGER.error("Cannot get morpheus id");
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity((debug) ? "Cannot get morpheus id" : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
-        }
-
-
-        final String deviceName = deviceIdOptional.get();
-        if(data.getDeviceId() == null || deviceName.isEmpty()){
-            LOGGER.error("Empty device id");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        }
-
-        LOGGER.debug("Received valid protobuf {}", deviceName.toString());
-        LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
-
-        final Optional<byte[]> optionalKeyBytes = keyStore.get(data.getDeviceId());
-        if(!optionalKeyBytes.isPresent()) {
-            LOGGER.error("Failed to get key from key store for device_id = {}", data.getDeviceId());
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        }
-
-        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(optionalKeyBytes.get());
-
-        if(error.isPresent()) {
-            LOGGER.error(error.get().message);
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-                    .entity((debug) ? error.get().message : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
-        }
-
-
-        final DataInputProtos.batched_periodic_data batch = DataInputProtos.batched_periodic_data.newBuilder()
-                .addData(data)
-                .setDeviceId(data.getDeviceId())
-                .setFirmwareVersion(data.getFirmwareVersion())
-                .build();
-
-
-        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? "" : request.getHeader("X-Forwarded-For");
-
-        final DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorkerMessage = DataInputProtos.BatchPeriodicDataWorker.newBuilder()
-                .setData(batch)
-                .setReceivedAt(DateTime.now().getMillis())
-                .setIpAddress(ipAddress)
-                .build();
-
-        // Saving sense data to kinesis
-        final DataLogger senseSensorsDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
-        senseSensorsDataLogger.put(deviceName, batchPeriodicDataWorkerMessage.toByteArray());
-        LOGGER.debug("Protobuf message to kenesis {}", TextFormat.shortDebugString(batchPeriodicDataWorkerMessage));
-
-        return generateSyncResponse(data.getDeviceId(), data.getFirmwareVersion(), optionalKeyBytes.get(), batch);
-    }
-
     /**
      * Persists data and generates SyncResponse
      * @param deviceName
@@ -314,7 +228,6 @@ public class ReceiveResource extends BaseResource {
                         roundedDateTime
                         );
                 // TODO: throw exception?
-                // throw new WebApplicationException(Response.Status.BAD_REQUEST);
                 continue;
             }
 
