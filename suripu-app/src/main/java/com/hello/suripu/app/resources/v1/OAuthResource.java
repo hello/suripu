@@ -102,9 +102,9 @@ public class OAuthResource {
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
 
-        final Optional<Account> accountOptional = accountDAO.exists(username, password);
+        final Optional<Account> accountOptional = accountDAO.exists(username.toLowerCase(), password);
         if(!accountOptional.isPresent()) {
-            LOGGER.error("Account wasn't found", username, password);
+            LOGGER.error("Account wasn't found", username.toLowerCase(), password);
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
 
@@ -133,6 +133,7 @@ public class OAuthResource {
         }
 
         LOGGER.debug("{}", accessToken);
+        LOGGER.debug("email {}", accessToken.accountId);
         return accessToken;
     }
 
