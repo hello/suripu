@@ -258,7 +258,7 @@ CREATE CREATE CREATE
         ImmutableList<SegmentPair> sleepSplitOnGaps = pairsWithGapsToPairs(sleep,false);
         ImmutableList<SegmentPair> onBedIgnoringGaps = pairsWithGapsToPairs(onBed,true);
 
-        if (true) {
+        if (bestModel.isUsingIntervalSearch) {
             //get whatever is earlier
 
 
@@ -458,7 +458,7 @@ CREATE CREATE CREATE
                 i1Sleep = 0;
             }
 
-            final Optional<Integer> sleepIndex = getMinimumInInterval(pillFeats.filteredEnergy,i1Sleep,i2Sleep);
+            final Optional<Integer> sleepBound = getMaximumInInterval(pillFeats.filteredEnergy, i1Sleep, i2Sleep);
 
             int i1Wake = seg.i2*numMinutesInMeasPeriod;
             int i2Wake = seg.i2*numMinutesInMeasPeriod + 2*numMinutesInMeasPeriod;
@@ -472,7 +472,9 @@ CREATE CREATE CREATE
             int newI1 = seg.i1*numMinutesInMeasPeriod;
             int newI2 = seg.i2*numMinutesInMeasPeriod;
 
-            if (sleepIndex.isPresent()) {
+            if (sleepBound.isPresent()) {
+
+                final Optional<Integer> sleepIndex = getMinimumInInterval(pillFeats.differentialEnergy,sleepBound.get(),i2Sleep);
                 newI1 = sleepIndex.get();
             }
 
@@ -513,36 +515,29 @@ CREATE CREATE CREATE
                 i1InBed = 0;
             }
 
-            final Optional<Integer> inBedBound = getMaximumInInterval(pillFeats.filteredEnergy,i1InBed,i2InBed);
+            final Optional<Integer> inBed = getMaximumInInterval(pillFeats.filteredEnergy,i1InBed,i2InBed);
 
-            int i1OutOfBed = seg.i2*numMinutesInMeasPeriod;
-            int i2OutOfBed = seg.i2*numMinutesInMeasPeriod + 2*numMinutesInMeasPeriod;
+            int i1OutOfBed = seg.i2*numMinutesInMeasPeriod - numMinutesInMeasPeriod;
+            int i2OutOfBed = seg.i2*numMinutesInMeasPeriod + numMinutesInMeasPeriod;
 
             if (i2OutOfBed > pillFeats.filteredEnergy.length) {
                 i2OutOfBed = pillFeats.filteredEnergy.length;
             }
 
-            final Optional<Integer> outOfBedBound = getMaximumInInterval(pillFeats.filteredEnergy,i1OutOfBed,i2OutOfBed);
+            final Optional<Integer> outOfBed = getMaximumInInterval(pillFeats.filteredEnergy,i1OutOfBed,i2OutOfBed);
 
             int newI1 = seg.i1*numMinutesInMeasPeriod;
             int newI2 = seg.i2*numMinutesInMeasPeriod;
 
-            if (inBedBound.isPresent()) {
-                //max increase in energy before the maximum energy (leading indicator)
-                final Optional<Integer> inBed = getMaximumInInterval(pillFeats.differentialEnergy, i1InBed, inBedBound.get());
 
                 if (inBed.isPresent()) {
                     newI1 = inBed.get();
                 }
-            }
 
 
-            if (outOfBedBound.isPresent()) {
-                final Optional<Integer> outOfBed = getMinimumInInterval(pillFeats.differentialEnergy, outOfBedBound.get(), i2OutOfBed);
 
                 if (outOfBed.isPresent()) {
-                    newI2 = outOfBed.get();
-                }
+                newI2 = outOfBed.get() + 1;
             }
 
 

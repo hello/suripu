@@ -29,8 +29,13 @@ public class SleepHmmSensorDataBinning {
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
 
     static public class BinnedData {
-        double[][] data;
-        int numMinutesInWindow;
+        public final double[][] data;
+        public final int numMinutesInWindow;
+
+        public BinnedData(double[][] data, int numMinutesInWindow) {
+            this.data = data;
+            this.numMinutesInWindow = numMinutesInWindow;
+        }
     }
 
     static protected List<Sample> getTimeOfDayAsMeasurement(final List<Sample> light, final double startNaturalLightForbiddedenHour, final double stopNaturalLightForbiddenHour) {
@@ -195,9 +200,6 @@ public class SleepHmmSensorDataBinning {
 
 
 
-        final BinnedData res = new BinnedData();
-        res.data = data;
-        res.numMinutesInWindow = numMinutesInWindow;
 
         final DateTime dateTimeBegin = new DateTime(startTimeMillisInUTC).withZone(DateTimeZone.forOffsetMillis(timezoneOffset));
         final DateTime dateTimeEnd = new DateTime(startTimeMillisInUTC + numMinutesInWindow * NUMBER_OF_MILLIS_IN_A_MINUTE * dataLength).withZone(DateTimeZone.forOffsetMillis(timezoneOffset));
@@ -210,7 +212,7 @@ public class SleepHmmSensorDataBinning {
         LOGGER.debug("natlight={}", getDoubleVectorAsString(data[HmmDataConstants.NATURAL_LIGHT_FILTER_INDEX]));
 
 
-        return Optional.of(res);
+        return Optional.of(new BinnedData(data,numMinutesInWindow));
     }
 
 
