@@ -258,7 +258,7 @@ CREATE CREATE CREATE
         ImmutableList<SegmentPair> sleepSplitOnGaps = pairsWithGapsToPairs(sleep,false);
         ImmutableList<SegmentPair> onBedIgnoringGaps = pairsWithGapsToPairs(onBed,true);
 
-        if (bestModel.isUsingIntervalSearch) {
+        if (true) {
             //get whatever is earlier
 
 
@@ -266,8 +266,13 @@ CREATE CREATE CREATE
 
             double [] pillDataArray = getPillDataArray(cleanedUpPillData,startTimeMillisInUTC,numMinutes);
 
-            sleepSplitOnGaps = getIndiciesInMinutesWithIntervalSearch(sleepSplitOnGaps,pillDataArray,numMinutesInMeasPeriod,false);
-            onBedIgnoringGaps = getIndiciesInMinutesWithIntervalSearch(onBedIgnoringGaps,pillDataArray,numMinutesInMeasPeriod,true);
+            final PillFeats pillFeats = getSmoothedPillEnergy(pillDataArray,10);
+
+            //LOGGER.debug("pillenergy={}",SleepHmmSensorDataBinning.getDoubleVectorAsString(pillFeats.filteredEnergy));
+            //LOGGER.debug("diffenergy={}",SleepHmmSensorDataBinning.getDoubleVectorAsString(pillFeats.differentialEnergy));
+
+            sleepSplitOnGaps = getIndiciesInMinutesWithIntervalSearchForSleep(sleepSplitOnGaps, pillFeats, numMinutesInMeasPeriod);
+            onBedIgnoringGaps = getIndiciesInMinutesWithIntervalSearchForInAndOutOfBed(onBedIgnoringGaps,pillFeats,numMinutesInMeasPeriod);
             numMinutesInMeasPeriod = 1;
         }
 
@@ -344,52 +349,15 @@ CREATE CREATE CREATE
         return  ret;
     }
 
-    protected Optional<Integer> getFirstInInterval(final double [] pillArray,final int idx1, final int idx2) {
-        for (int i = idx1; i < idx2; i++) {
-            if (pillArray[i] != 0.0) {
-                return Optional.of(i);
-            }
-        }
-        return Optional.absent();
-    }
 
-    protected Optional<Integer> getFirstQuietPeriodInInterval(final double [] pillArray,final int idx1, final int idx2,final int quietcount) {
-        boolean isFirst = true;
-        int count = 0;
-        for (int i = idx1; i < idx2; i++) {
-            if (pillArray[i] != 0.0) {
-                count = 0;
-                isFirst = false;
-            }
-            else {
-                if (!isFirst) {
-                    count++;
-                }
 
-                if (count >= quietcount) {
-                    return Optional.of(i);
-                }
-            }
-        }
-        return Optional.absent();
-    }
-
-    protected Optional<Integer> getLastInInterval(final double [] pillArray,final int idx1, final int idx2) {
-        for (int i = idx2-1; i >- idx1; i--) {
-            if (pillArray[i] != 0.0) {
-                return Optional.of(i);
-            }
-        }
-        return Optional.absent();
-    }
-
-    protected Optional<Double> getMaximumInInterval(final  double [] pillArray,final int idx1, final int idx2) {
+    protected Optional<Integer> getMaximumInInterval(final  double [] x,final int idx1, final int idx2) {
         double max = Double.MIN_VALUE;
+        int imax = 0;
         for (int i = idx1; i < idx2; i++) {
-            if (pillArray[i] != 0.0) {
-                if (pillArray[i] > max) {
-                    pillArray[i] = max;
-                }
+            if (x[i] > max) {
+                max = x[i];
+                imax = i;
             }
         }
 
@@ -397,101 +365,198 @@ CREATE CREATE CREATE
             return Optional.absent();
         }
         else {
-            return Optional.of(max);
+            return Optional.of(imax);
         }
     }
 
-    protected ImmutableList<SegmentPair> getIndiciesInMinutesWithIntervalSearch(final ImmutableList<SegmentPair> segs, double [] pillArray, final int numMinutesInMeasPeriod,final boolean isInOutOfBed) {
+    protected Optional<Integer> getMinimumInInterval(final  double [] x,final int idx1, final int idx2) {
+        double min = Double.MAX_VALUE;
+        int imin = 0;
+        for (int i = idx1; i < idx2; i++) {
+            if (x[i] < min) {
+                min = x[i];
+                imin = i;
+            }
+        }
+
+        if (min == Double.MAX_VALUE) {
+            return Optional.absent();
+        }
+        else {
+            return Optional.of(imin);
+        }
+    }
+
+
+    protected  static class PillFeats {
+
+        final double [] filteredEnergy;
+        final double [] differentialEnergy;
+
+        public PillFeats(double[] filteredEnergy, double[] differentialEnergy) {
+            this.filteredEnergy = filteredEnergy;
+            this.differentialEnergy = differentialEnergy;
+        }
+    }
+
+    protected  PillFeats getSmoothedPillEnergy(final double [] pillArray,final int interval) {
+        double[] filteredEnergy = new double[pillArray.length];
+        double[] differentialEnergy = new double[pillArray.length];
+
+        final double MIN_ENERGY = 1000.0;
+
+        Arrays.fill(filteredEnergy, 0.0);
+        Arrays.fill(differentialEnergy, 0.0);
+
+        for (int j = 0; j < pillArray.length - interval; j++) {
+            double accumulator = 0.0;
+            for (int i = 0; i < interval; i++) {
+                accumulator += pillArray[j + i];
+            }
+
+            filteredEnergy[j + interval - 1] = accumulator + MIN_ENERGY;
+        }
+
+        for (int j = pillArray.length - interval - 1; j >= 0; j--) {
+            double accumulator = 0.0;
+            for (int i = 0; i < interval; i++) {
+                accumulator += pillArray[j + i];
+            }
+
+            filteredEnergy[j] += accumulator;
+        }
+
+        for (int j = 0; j < pillArray.length; j++) {
+            if (filteredEnergy[j] < 0.0) {
+                filteredEnergy[j] = 0.0;
+            }
+
+            filteredEnergy[j] = Math.log(filteredEnergy[j] + 1.0);
+        }
+
+
+        //compute differential of log energy
+        for (int j = 0; j < pillArray.length - interval; j++) {
+            differentialEnergy[j + interval / 2 + 1] = filteredEnergy[j + interval] - filteredEnergy[j];
+        }
+
+
+        return new PillFeats(filteredEnergy, differentialEnergy);
+    }
+
+    protected ImmutableList<SegmentPair> getIndiciesInMinutesWithIntervalSearchForSleep(final ImmutableList<SegmentPair> segs, final PillFeats pillFeats,
+                                                                                        final int numMinutesInMeasPeriod) {
 
         List<SegmentPair> newSegments = new ArrayList<>();
         int lastIndex = -1;
         for (final SegmentPair seg : segs) {
-            final SegmentPair newseg = performIntervalSearch(pillArray, seg, numMinutesInMeasPeriod, numMinutesInMeasPeriod, isInOutOfBed, lastIndex);
 
-            newSegments.add(newseg);
+            int i1Sleep = seg.i1*numMinutesInMeasPeriod - numMinutesInMeasPeriod;
+            int i2Sleep = seg.i1*numMinutesInMeasPeriod + numMinutesInMeasPeriod;
 
-            lastIndex = newseg.i2;
+            if (i1Sleep < 0) {
+                i1Sleep = 0;
+            }
+
+            final Optional<Integer> sleepIndex = getMinimumInInterval(pillFeats.filteredEnergy,i1Sleep,i2Sleep);
+
+            int i1Wake = seg.i2*numMinutesInMeasPeriod;
+            int i2Wake = seg.i2*numMinutesInMeasPeriod + 2*numMinutesInMeasPeriod;
+
+            if (i2Wake > pillFeats.filteredEnergy.length) {
+                i2Wake = pillFeats.filteredEnergy.length;
+            }
+
+            final Optional<Integer> wakeIndex = getMaximumInInterval(pillFeats.filteredEnergy,i1Wake,i2Wake);
+
+            int newI1 = seg.i1*numMinutesInMeasPeriod;
+            int newI2 = seg.i2*numMinutesInMeasPeriod;
+
+            if (sleepIndex.isPresent()) {
+                newI1 = sleepIndex.get();
+            }
+
+            if (newI1 < lastIndex) {
+                newI1 = lastIndex + 5;
+            }
+
+
+            if (wakeIndex.isPresent()) {
+                newI2 = wakeIndex.get();
+            }
+
+            if (newI2 < newI1) {
+                newI2 = newI1 + 5;
+            }
+
+
+            newSegments.add(new SegmentPair(newI1,newI2));
+
+            lastIndex = newI2;
         }
 
         return ImmutableList.copyOf(newSegments);
 
     }
 
-    //find leading and trailing
-    protected SegmentPair performIntervalSearch(final double [] pillArray,final SegmentPair seg,final int numMinutesInMeasPeriod,final int searchRadiusMinutes,final boolean isInOutOfBed,int lastIndex) {
+    protected ImmutableList<SegmentPair> getIndiciesInMinutesWithIntervalSearchForInAndOutOfBed(final ImmutableList<SegmentPair> segs, final PillFeats pillFeats,
+                                                                                        final int numMinutesInMeasPeriod) {
 
-        int search1Start = seg.i1 * numMinutesInMeasPeriod - searchRadiusMinutes;
+        List<SegmentPair> newSegments = new ArrayList<>();
 
-        if (search1Start < 0) {
-            search1Start = 0;
+        for (final SegmentPair seg : segs) {
+
+            int i1InBed = seg.i1*numMinutesInMeasPeriod - numMinutesInMeasPeriod;
+            int i2InBed = seg.i1*numMinutesInMeasPeriod + numMinutesInMeasPeriod;
+
+            if (i1InBed < 0) {
+                i1InBed = 0;
+            }
+
+            final Optional<Integer> inBedBound = getMaximumInInterval(pillFeats.filteredEnergy,i1InBed,i2InBed);
+
+            int i1OutOfBed = seg.i2*numMinutesInMeasPeriod;
+            int i2OutOfBed = seg.i2*numMinutesInMeasPeriod + 2*numMinutesInMeasPeriod;
+
+            if (i2OutOfBed > pillFeats.filteredEnergy.length) {
+                i2OutOfBed = pillFeats.filteredEnergy.length;
+            }
+
+            final Optional<Integer> outOfBedBound = getMaximumInInterval(pillFeats.filteredEnergy,i1OutOfBed,i2OutOfBed);
+
+            int newI1 = seg.i1*numMinutesInMeasPeriod;
+            int newI2 = seg.i2*numMinutesInMeasPeriod;
+
+            if (inBedBound.isPresent()) {
+                //max increase in energy before the maximum energy (leading indicator)
+                final Optional<Integer> inBed = getMaximumInInterval(pillFeats.differentialEnergy, i1InBed, inBedBound.get());
+
+                if (inBed.isPresent()) {
+                    newI1 = inBed.get();
+                }
+            }
+
+
+            if (outOfBedBound.isPresent()) {
+                final Optional<Integer> outOfBed = getMinimumInInterval(pillFeats.differentialEnergy, outOfBedBound.get(), i2OutOfBed);
+
+                if (outOfBed.isPresent()) {
+                    newI2 = outOfBed.get();
+                }
+            }
+
+
+
+            newSegments.add(new SegmentPair(newI1,newI2));
+
         }
 
-        if (lastIndex >= search1Start) {
-            search1Start = lastIndex + 1;
-        }
-
-        int search1End = search1Start + 2*searchRadiusMinutes;
-
-
-
-
-        Optional<Integer> first1 = Optional.absent();
-
-        if (isInOutOfBed) {
-            //in/out of bed? get the very first event
-            first1 = getFirstInInterval(pillArray, search1Start, search1End);
-        }
-        else {
-            //not sleep gap, so we're going to sleep
-            first1 = getFirstQuietPeriodInInterval(pillArray,search1Start,search1End,5);
-        }
-
-        int search2Start = (seg.i2 + 1) * numMinutesInMeasPeriod - searchRadiusMinutes;
-        int search2End = search2Start + 2*searchRadiusMinutes;
-
-        if (search2End > pillArray.length) {
-            search2End = pillArray.length;
-        }
-
-        if (search2Start >= search2End) {
-            search2Start = search2End - 1;
-        }
-
-        Optional<Integer> end2 = Optional.absent();
-
-        if (isInOutOfBed) {
-            end2 = getLastInInterval(pillArray, search2Start, search2End);
-        }
-        else {
-            end2 = getFirstInInterval(pillArray, search2Start, search2End);
-        }
-
-
-        int i1 = seg.i1 * numMinutesInMeasPeriod ;
-        int i2 = seg.i2 * numMinutesInMeasPeriod - 1 ;
-
-        if (first1.isPresent()) {
-            i1 = first1.get();
-        }
-
-        if (end2.isPresent()) {
-            i2 = end2.get() - 1;
-        }
-
-        //make sure at least 5 minutes apart
-        if (i2 - i1 < 5) {
-            i2 = i1 + 5;
-        }
-
-        if (isInOutOfBed) {
-            i2 += 1;
-            i1 -=1;
-        }
-
-
-        return new SegmentPair(i1,i2);
+        return ImmutableList.copyOf(newSegments);
 
     }
+
+
+
 
 
 

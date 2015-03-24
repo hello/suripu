@@ -263,8 +263,8 @@ public class SleepHmmSensorDataBinning {
     }
 
 
-    static protected String getDoubleVectorAsString(final double [] vec) {
-        String vecString = "";
+    static public String getDoubleVectorAsString(final double [] vec) {
+        String vecString = "[";
         boolean first = true;
         for (double f : vec) {
 
@@ -274,6 +274,8 @@ public class SleepHmmSensorDataBinning {
             vecString += String.format("%.1f",f);
             first = false;
         }
+
+        vecString += "]";
 
         return vecString;
     }
