@@ -85,7 +85,7 @@ public class AccountDAOTest {
     @Test
     public void testRegisterMixedcasedEmail() {
         final Registration registration = newRegistration("TeSt@tEsT.CoM", "test");
-        final Account registered = accountDAO.register(Registration.lowerCaseEmail(registration));
+        final Account registered = accountDAO.register(Registration.secureAndNormalize(registration));
         assertThat(registered.email, equalTo(registration.email.toLowerCase()));
     }
 
@@ -101,7 +101,7 @@ public class AccountDAOTest {
     @Test
     public void testRegisterAndGetMixedcaseEmail() {
         final Registration registration = newRegistration("test@TEST.com", "test");
-        final Account registered = accountDAO.register(Registration.lowerCaseEmail(registration));
+        final Account registered = accountDAO.register(Registration.secureAndNormalize(registration));
         assertThat(registered.email, equalTo(registration.email.toLowerCase()));
         final Optional<Account> optional = accountDAO.getByEmail(registration.email.toLowerCase());
         assertThat(optional.isPresent(), is(true));
@@ -110,7 +110,7 @@ public class AccountDAOTest {
     @Test
     public void testLogin() {
         final Registration registration = newRegistration("test@test.com", "test");
-        final Registration encryptedRegistration = Registration.encryptPassword(registration);
+        final Registration encryptedRegistration = Registration.secureAndNormalize(registration);
         final Account registered = accountDAO.register(encryptedRegistration);
         assertThat(registered.email, equalTo(registration.email));
         final Optional<Account> optional = accountDAO.exists(registration.email, registration.password);
@@ -120,7 +120,7 @@ public class AccountDAOTest {
     @Test
     public void testLoginMixedcaseEmail() {
         final Registration registration = newRegistration("TesT@TesT.com", "test");
-        final Registration encryptedRegistration = Registration.encryptPassword(Registration.lowerCaseEmail(registration));
+        final Registration encryptedRegistration = Registration.secureAndNormalize(registration);
         final Account registered = accountDAO.register(encryptedRegistration);
         assertThat(registered.email, equalTo(registration.email.toLowerCase()));
         final Optional<Account> optional = accountDAO.exists(registration.email.toLowerCase(), registration.password);
@@ -158,9 +158,10 @@ public class AccountDAOTest {
         final Account account = accountDAO.register(registration);
 
         final String newEmail = "New@test.com";
-        final Account updatedEmailAccount = Account.lowercaseEmail(new Account.Builder(account)
-                .withEmail(newEmail).build());
-        final Optional<Account> optional = accountDAO.updateEmail(updatedEmailAccount);
+        final Account updatedEmailAccount = new Account.Builder(account)
+                .withEmail(newEmail).build();
+        final Account normalizedUpdatedEmail = Account.normalizeWithId(updatedEmailAccount, updatedEmailAccount.id.get());
+        final Optional<Account> optional = accountDAO.updateEmail(normalizedUpdatedEmail);
         assertThat(optional.isPresent(), is(true));
         assertThat(optional.get().email, equalTo(newEmail.toLowerCase()));
     }
@@ -179,7 +180,7 @@ public class AccountDAOTest {
     @Test
     public void updatePassword() {
         final Registration registration = newRegistration("test@test.com", "test");
-        final Registration encryptedRegistration = Registration.encryptPassword(registration);
+        final Registration encryptedRegistration = Registration.secureAndNormalize(registration);
         final Account account = accountDAO.register(encryptedRegistration);
         final PasswordUpdate passwordUpdate = new PasswordUpdate(registration.password, "test2");
         final Boolean updated = accountDAO.updatePassword(account.id.get(), passwordUpdate);
@@ -189,7 +190,7 @@ public class AccountDAOTest {
     @Test
     public void updatePasswordWithIncorrectCurrentPassword() {
         final Registration registration = newRegistration("test@test.com", "test");
-        final Registration encryptedRegistration = Registration.encryptPassword(registration);
+        final Registration encryptedRegistration = Registration.secureAndNormalize(registration);
         final Account account = accountDAO.register(encryptedRegistration);
         final PasswordUpdate passwordUpdate = new PasswordUpdate("wrong", "test2");
         final Boolean updated = accountDAO.updatePassword(account.id.get(), passwordUpdate);

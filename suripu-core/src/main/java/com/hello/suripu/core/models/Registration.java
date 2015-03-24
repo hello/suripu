@@ -129,37 +129,17 @@ public class Registration {
     }
 
 
+
+
     /**
-     * Creates a new Registration instance with email lowercased
+     * Creates a new Registration instance with password hashed and email lowercased
      * @param registration
      * @return Registration
      */
-    public static Registration lowerCaseEmail(final Registration registration) {
+    public static Registration secureAndNormalize(final Registration registration) {
         return new Registration(
                 registration.name,
                 registration.email.toLowerCase(),
-                registration.password,
-                registration.age,
-                registration.gender,
-                registration.height,
-                registration.weight,
-                registration.DOB,
-                registration.tzOffsetMillis,
-                registration.created,
-                registration.latitude,
-                registration.longitude
-        );
-    }
-
-    /**
-     * Creates a new Registration instance with password hashed
-     * @param registration
-     * @return Registration
-     */
-    public static Registration encryptPassword(final Registration registration) {
-        return new Registration(
-                registration.name,
-                registration.email,
                 PasswordUtil.encrypt(registration.password),
                 registration.age,
                 registration.gender,
@@ -174,26 +154,6 @@ public class Registration {
     }
 
 
-    public static Registration overrideEmail(final Registration originalRegistration, final String newEmail) {
-        if(!originalRegistration.email.equals(newEmail)) {
-            return originalRegistration;
-        }
-
-        return new Registration(
-                originalRegistration.name,
-                String.format("%d-%s", DateTime.now().getMillisOfDay(), newEmail),
-                originalRegistration.password,
-                originalRegistration.age,
-                originalRegistration.gender,
-                originalRegistration.height,
-                originalRegistration.weight,
-                originalRegistration.DOB,
-                originalRegistration.tzOffsetMillis,
-                originalRegistration.created,
-                originalRegistration.latitude,
-                originalRegistration.longitude
-        );
-    }
 
     /**
      * Validates that registration matches validation constraints.
