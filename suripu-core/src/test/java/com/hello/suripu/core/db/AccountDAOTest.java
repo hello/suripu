@@ -83,11 +83,27 @@ public class AccountDAOTest {
     }
 
     @Test
+    public void testRegisterMixedcasedEmail() {
+        final Registration registration = newRegistration("TeSt@tEsT.CoM", "test");
+        final Account registered = accountDAO.register(Registration.lowerCaseEmail(registration));
+        assertThat(registered.email, equalTo(registration.email.toLowerCase()));
+    }
+
+    @Test
     public void testRegisterAndGet() {
         final Registration registration = newRegistration("test@test.com", "test");
         final Account registered = accountDAO.register(registration);
         assertThat(registered.email, equalTo(registration.email));
         final Optional<Account> optional = accountDAO.getByEmail(registration.email);
+        assertThat(optional.isPresent(), is(true));
+    }
+
+    @Test
+    public void testRegisterAndGetMixedcaseEmail() {
+        final Registration registration = newRegistration("test@TEST.com", "test");
+        final Account registered = accountDAO.register(Registration.lowerCaseEmail(registration));
+        assertThat(registered.email, equalTo(registration.email.toLowerCase()));
+        final Optional<Account> optional = accountDAO.getByEmail(registration.email.toLowerCase());
         assertThat(optional.isPresent(), is(true));
     }
 
@@ -98,6 +114,16 @@ public class AccountDAOTest {
         final Account registered = accountDAO.register(encryptedRegistration);
         assertThat(registered.email, equalTo(registration.email));
         final Optional<Account> optional = accountDAO.exists(registration.email, registration.password);
+        assertThat(optional.isPresent(), is(true));
+    }
+
+    @Test
+    public void testLoginMixedcaseEmail() {
+        final Registration registration = newRegistration("TesT@TesT.com", "test");
+        final Registration encryptedRegistration = Registration.encryptPassword(Registration.lowerCaseEmail(registration));
+        final Account registered = accountDAO.register(encryptedRegistration);
+        assertThat(registered.email, equalTo(registration.email.toLowerCase()));
+        final Optional<Account> optional = accountDAO.exists(registration.email.toLowerCase(), registration.password);
         assertThat(optional.isPresent(), is(true));
     }
 
@@ -124,6 +150,19 @@ public class AccountDAOTest {
                 .withEmail("new@test.com").build();
         final Optional<Account> optional = accountDAO.updateEmail(updatedEmailAccount);
         assertThat(optional.isPresent(), is(true));
+    }
+
+    @Test
+    public void updateExistingEmailWithMixedcaseInput() {
+        final Registration registration = newRegistration("test@test.com", "test");
+        final Account account = accountDAO.register(registration);
+
+        final String newEmail = "New@test.com";
+        final Account updatedEmailAccount = Account.lowercaseEmail(new Account.Builder(account)
+                .withEmail(newEmail).build());
+        final Optional<Account> optional = accountDAO.updateEmail(updatedEmailAccount);
+        assertThat(optional.isPresent(), is(true));
+        assertThat(optional.get().email, equalTo(newEmail.toLowerCase()));
     }
 
     @Test
