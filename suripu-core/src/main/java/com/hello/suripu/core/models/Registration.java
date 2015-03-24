@@ -128,15 +128,18 @@ public class Registration {
         this.longitude = longitude;
     }
 
+
+
+
     /**
-     * Creates a new Registration instance with password hashed
+     * Creates a new Registration instance with password hashed and email lowercased
      * @param registration
      * @return Registration
      */
-    public static Registration encryptPassword(final Registration registration) {
+    public static Registration secureAndNormalize(final Registration registration) {
         return new Registration(
                 registration.name,
-                registration.email,
+                registration.email.toLowerCase(),
                 PasswordUtil.encrypt(registration.password),
                 registration.age,
                 registration.gender,
@@ -150,26 +153,7 @@ public class Registration {
         );
     }
 
-    public static Registration overrideEmail(final Registration originalRegistration, final String newEmail) {
-        if(!originalRegistration.email.equals(newEmail)) {
-            return originalRegistration;
-        }
 
-        return new Registration(
-                originalRegistration.name,
-                String.format("%d-%s", DateTime.now().getMillisOfDay(), newEmail),
-                originalRegistration.password,
-                originalRegistration.age,
-                originalRegistration.gender,
-                originalRegistration.height,
-                originalRegistration.weight,
-                originalRegistration.DOB,
-                originalRegistration.tzOffsetMillis,
-                originalRegistration.created,
-                originalRegistration.latitude,
-                originalRegistration.longitude
-        );
-    }
 
     /**
      * Validates that registration matches validation constraints.
