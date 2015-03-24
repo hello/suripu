@@ -128,6 +128,29 @@ public class Registration {
         this.longitude = longitude;
     }
 
+
+    /**
+     * Creates a new Registration instance with email lowercased
+     * @param registration
+     * @return Registration
+     */
+    public static Registration lowerCaseEmail(final Registration registration) {
+        return new Registration(
+                registration.name,
+                registration.email.toLowerCase(),
+                registration.password,
+                registration.age,
+                registration.gender,
+                registration.height,
+                registration.weight,
+                registration.DOB,
+                registration.tzOffsetMillis,
+                registration.created,
+                registration.latitude,
+                registration.longitude
+        );
+    }
+
     /**
      * Creates a new Registration instance with password hashed
      * @param registration
@@ -149,6 +172,7 @@ public class Registration {
                 registration.longitude
         );
     }
+
 
     public static Registration overrideEmail(final Registration originalRegistration, final String newEmail) {
         if(!originalRegistration.email.equals(newEmail)) {
