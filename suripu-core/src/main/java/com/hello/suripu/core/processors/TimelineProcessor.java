@@ -8,17 +8,13 @@ import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.db.AccountDAO;
-import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAO;
-import com.hello.suripu.core.db.SleepLabelDAO;
-import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
-import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -63,11 +59,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDAO deviceDAO;
     private final DeviceDataDAO deviceDataDAO;
-    private final SleepScoreDAO sleepScoreDAO;
-    private final SleepLabelDAO sleepLabelDAO;
-    private final TrendsInsightsDAO trendsInsightsDAO;
-    private final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB;
-    private final int dateBucketPeriod;
     private final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
     private final FeedbackDAO feedbackDAO;
     private final SleepHmmDAO sleepHmmDAO;
@@ -77,11 +68,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     public TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
                             final DeviceDAO deviceDAO,
                             final DeviceDataDAO deviceDataDAO,
-                            final SleepLabelDAO sleepLabelDAO,
-                            final SleepScoreDAO sleepScoreDAO,
-                            final TrendsInsightsDAO trendsInsightsDAO,
-                            final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
-                            final int dateBucketPeriod,
                             final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
                             final FeedbackDAO feedbackDAO,
                             final SleepHmmDAO sleepHmmDAO,
@@ -90,11 +76,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAO = deviceDataDAO;
-        this.sleepLabelDAO = sleepLabelDAO;
-        this.sleepScoreDAO = sleepScoreDAO;
-        this.trendsInsightsDAO = trendsInsightsDAO;
-        this.aggregateSleepScoreDAODynamoDB = aggregateSleepScoreDAODynamoDB;
-        this.dateBucketPeriod = dateBucketPeriod;
         this.ringTimeHistoryDAODynamoDB = ringTimeHistoryDAODynamoDB;
         this.feedbackDAO = feedbackDAO;
         this.sleepHmmDAO = sleepHmmDAO;

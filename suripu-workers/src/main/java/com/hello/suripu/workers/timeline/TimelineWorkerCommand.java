@@ -16,7 +16,6 @@ import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
-import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
@@ -24,12 +23,9 @@ import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
-import com.hello.suripu.core.db.SleepLabelDAO;
-import com.hello.suripu.core.db.SleepScoreDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
-import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.processors.TimelineProcessor;
@@ -66,7 +62,6 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
 
         final DBI commonDB = new DBI(managedDataSourceFactory.build(configuration.getCommonDB()));
         final DBI sensorsDB = new DBI(managedDataSourceFactory.build(configuration.getSensorsDB()));
-        final DBI insightsDB = new DBI(managedDataSourceFactory.build(configuration.getInsightsDB()));
 
         sensorsDB.registerArgumentFactory(new JodaArgumentFactory());
         sensorsDB.registerContainerFactory(new OptionalContainerFactory());
@@ -81,23 +76,12 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
         commonDB.registerContainerFactory(new ImmutableListContainerFactory());
         commonDB.registerContainerFactory(new ImmutableSetContainerFactory());
 
-        insightsDB.registerArgumentFactory(new JodaArgumentFactory());
-        insightsDB.registerContainerFactory(new OptionalContainerFactory());
-        insightsDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
-        insightsDB.registerContainerFactory(new ImmutableListContainerFactory());
-        insightsDB.registerContainerFactory(new ImmutableSetContainerFactory());
-
         final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
         final DeviceDAO deviceDAO = commonDB.onDemand(DeviceDAO.class);
-
-        final SleepLabelDAO sleepLabelDAO = commonDB.onDemand(SleepLabelDAO.class);
-        final SleepScoreDAO sleepScoreDAO = commonDB.onDemand(SleepScoreDAO.class);
         final FeedbackDAO feedbackDAO = commonDB.onDemand(FeedbackDAO.class);
-        final TrendsInsightsDAO trendsInsightsDAO = insightsDB.onDemand(TrendsInsightsDAO.class);
 
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
-
 
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
         final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
@@ -123,13 +107,6 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
         final String sleepHmmTableName = configuration.getSleepHmmDBConfiguration().getTableName();
         final SleepHmmDAODynamoDB sleepHmmDAODynamoDB = new SleepHmmDAODynamoDB(sleepHmmDynamoDbClient,sleepHmmTableName);
 
-        final AmazonDynamoDB dynamoDBScoreClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepScoreDBConfiguration().getEndpoint());
-        final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB = new AggregateSleepScoreDAODynamoDB(
-                dynamoDBScoreClient,
-                configuration.getSleepScoreDBConfiguration().getTableName(),
-                configuration.getSleepScoreVersion()
-        );
-
         final AmazonDynamoDB dynamoDBStatsClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepStatsDBConfiguration().getEndpoint());
         final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = new SleepStatsDAODynamoDB(
                 dynamoDBStatsClient,
@@ -149,9 +126,6 @@ public class TimelineWorkerCommand extends ConfiguredCommand<TimelineWorkerConfi
 
         final TimelineProcessor timelineProcessor = new TimelineProcessor(trackerMotionDAO,
                 deviceDAO, deviceDataDAO,
-                sleepLabelDAO, sleepScoreDAO, trendsInsightsDAO,
-                aggregateSleepScoreDAODynamoDB,
-                configuration.getScoreThreshold(),
                 ringTimeHistoryDAODynamoDB,
                 feedbackDAO,
                 sleepHmmDAODynamoDB,
