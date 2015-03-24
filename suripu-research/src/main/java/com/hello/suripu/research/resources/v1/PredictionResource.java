@@ -2,9 +2,10 @@ package com.hello.suripu.research.resources.v1;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
-import com.hello.suripu.algorithm.utils.MotionFeatures;
+import com.hello.suripu.algorithm.sleep.Vote;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -14,7 +15,10 @@ import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
-import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.Events.FallingAsleepEvent;
+import com.hello.suripu.core.models.Events.InBedEvent;
+import com.hello.suripu.core.models.Events.OutOfBedEvent;
+import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -25,9 +29,12 @@ import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.MultiLightOutUtils;
 import com.hello.suripu.core.util.PartnerDataUtils;
+import com.hello.suripu.core.util.SleepEventSafeGuard;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import com.hello.suripu.core.util.TimelineUtils;
+import com.hello.suripu.core.util.TrackerMotionDataSource;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
@@ -55,6 +62,7 @@ import java.util.List;
 public class PredictionResource extends BaseResource {
 
     private static final String ALGORITHM_SLEEP_SCORED = "sleep_score";
+    private static final String ALGORITHM_VOTING = "voting";
     private static final String ALGORITHM_HIDDEN_MARKOV = "hmm";
 
     private static final Integer MISSING_DATA_DEFAULT_VALUE = 0;
@@ -126,70 +134,6 @@ public class PredictionResource extends BaseResource {
 
     }
 
-    /**
-     * Pang magic
-     * @param targetDate
-     * @param trackerMotions
-     * @param rawLight
-     * @param wakeUpWaveTimeOptional
-     * @return
-     */
-    private SleepEvents<Optional<Event>> fromAlgorithm(final DateTime targetDate,
-                                                       final List<TrackerMotion> trackerMotions,
-                                                       final List<Sample> rawLight,
-                                                       final Optional<DateTime> wakeUpWaveTimeOptional) {
-        Optional<Segment> sleepSegmentOptional;
-        Optional<Segment> inBedSegmentOptional = Optional.absent();
-        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.create(Optional.<Event>absent(),
-                Optional.<Event>absent(),
-                Optional.<Event>absent(),
-                Optional.<Event>absent());
-
-        final List<Event> rawLightEvents = TimelineUtils.getLightEventsWithMultipleLightOut(rawLight);
-        final List<Event> smoothedLightEvents = MultiLightOutUtils.smoothLight(rawLightEvents, MultiLightOutUtils.DEFAULT_SMOOTH_GAP_MIN);
-        final List<Event> lightOuts = MultiLightOutUtils.getValidLightOuts(smoothedLightEvents, trackerMotions, MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
-
-        final List<DateTime> lightOutTimes = MultiLightOutUtils.getLightOutTimes(lightOuts);
-        // A day starts with 8pm local time and ends with 4pm local time next day
-        try {
-            sleepEventsFromAlgorithm = TimelineUtils.getSleepEvents(targetDate,
-                    trackerMotions,
-                    lightOutTimes,
-                    wakeUpWaveTimeOptional,
-                    MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
-                    MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
-                    MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
-                    false);
-
-
-
-            if(sleepEventsFromAlgorithm.fallAsleep.isPresent() && sleepEventsFromAlgorithm.wakeUp.isPresent()){
-                sleepSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.fallAsleep.get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.wakeUp.get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.wakeUp.get().getTimezoneOffset()));
-
-                LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
-                        new DateTime(sleepSegmentOptional.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegmentOptional.get().getOffsetMillis())),
-                        new DateTime(sleepSegmentOptional.get().getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegmentOptional.get().getOffsetMillis())));
-            }
-
-            if(sleepEventsFromAlgorithm.goToBed.isPresent() && sleepEventsFromAlgorithm.outOfBed.isPresent()){
-                inBedSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.goToBed.get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.outOfBed.get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.outOfBed.get().getTimezoneOffset()));
-                LOGGER.info("In Bed Time From Awake Detection Algorithm: {} - {}",
-                        new DateTime(inBedSegmentOptional.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(inBedSegmentOptional.get().getOffsetMillis())),
-                        new DateTime(inBedSegmentOptional.get().getEndTimestamp(), DateTimeZone.forOffsetMillis(inBedSegmentOptional.get().getOffsetMillis())));
-            }
-
-
-        }catch (Exception ex){ //TODO : catch a more specific exception
-            LOGGER.error("Generate sleep period from Awake Detection Algorithm failed: {}", ex.getMessage());
-        }
-
-        return  sleepEventsFromAlgorithm;
-    }
-
     private List<Event> getSleepScoreEvents(final DateTime targetDate,
                                             final AllSensorSampleList allSensorSampleList,
                                             final List<TrackerMotion> myMotion) {
@@ -209,6 +153,72 @@ public class PredictionResource extends BaseResource {
                 wakeUpWaveTimeOptional);
 
         List<Optional<Event>> items = sleepEventsFromAlgorithm.toList();
+        List<Event> returnedEvents = new ArrayList<>();
+
+        for (Optional<Event> e : items) {
+            if (e.isPresent()) {
+                returnedEvents.add(e.get());
+            }
+        }
+
+        return returnedEvents;
+
+    }
+
+
+    private List<Event> getVotingEvents(final DateTime targetDateLocalUTC,
+                                        final AllSensorSampleList allSensorSampleList,
+                                        final List<TrackerMotion> trackerMotions) {
+        // compute lights-out and sound-disturbance events
+        Optional<DateTime> wakeUpWaveTimeOptional = Optional.absent();
+
+        if (!allSensorSampleList.isEmpty()) {
+            if(!allSensorSampleList.get(Sensor.WAVE_COUNT).isEmpty() && trackerMotions.size() > 0){
+                wakeUpWaveTimeOptional = TimelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
+                        trackerMotions.get(trackerMotions.size() - 1).timestamp,
+                        allSensorSampleList.get(Sensor.WAVE_COUNT));
+            }
+        }
+
+        final List<Event> rawLightEvents = TimelineUtils.getLightEventsWithMultipleLightOut(allSensorSampleList.get(Sensor.LIGHT));
+        final List<Event> smoothedLightEvents = MultiLightOutUtils.smoothLight(rawLightEvents, MultiLightOutUtils.DEFAULT_SMOOTH_GAP_MIN);
+        final List<Event> lightOuts = MultiLightOutUtils.getValidLightOuts(smoothedLightEvents, trackerMotions, MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
+
+        final List<DateTime> lightOutTimes = MultiLightOutUtils.getLightOutTimes(lightOuts);
+
+        final TrackerMotionDataSource dataSource = new TrackerMotionDataSource(TrackerMotion.Utils.removeDuplicates(trackerMotions));
+        final List<AmplitudeData> dataWithGapFilled = dataSource.getDataForDate(targetDateLocalUTC.withTimeAtStartOfDay());
+
+        final Vote vote = new Vote(dataWithGapFilled, lightOutTimes, wakeUpWaveTimeOptional);
+
+        final SleepEvents<Segment> sleepEvents = vote.getResult();
+        final Segment goToBedSegment = sleepEvents.goToBed;
+        final Segment fallAsleepSegment = sleepEvents.fallAsleep;
+        final Segment wakeUpSegment = sleepEvents.wakeUp;
+        final Segment outOfBedSegment = sleepEvents.outOfBed;
+
+        //final int smoothWindowSizeInMillis = smoothWindowSizeInMinutes * DateTimeConstants.MILLIS_PER_MINUTE;
+        final Event inBedEvent = new InBedEvent(goToBedSegment.getStartTimestamp(),
+                goToBedSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
+                goToBedSegment.getOffsetMillis());
+
+        final Event fallAsleepEvent = new FallingAsleepEvent(fallAsleepSegment.getStartTimestamp(),
+                fallAsleepSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
+                fallAsleepSegment.getOffsetMillis());
+
+        final Event wakeUpEvent = new WakeupEvent(wakeUpSegment.getStartTimestamp(),
+                wakeUpSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
+                wakeUpSegment.getOffsetMillis());
+
+        final Event outOfBedEvent = new OutOfBedEvent(outOfBedSegment.getStartTimestamp(),
+                outOfBedSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
+                outOfBedSegment.getOffsetMillis());
+
+        final SleepEvents<Event> events = SleepEvents.create(inBedEvent, fallAsleepEvent, wakeUpEvent, outOfBedEvent);
+
+        final SleepEvents<Optional<Event>> optionalSleepEvents = SleepEventSafeGuard.sleepEventsHeuristicFix(events, vote.getAggregatedFeatures());
+        final List<Optional<Event>> items = optionalSleepEvents.toList();
+
         List<Event> returnedEvents = new ArrayList<>();
 
         for (Optional<Event> e : items) {
@@ -341,6 +351,9 @@ public class PredictionResource extends BaseResource {
          /*  pull out algorithm type */
 
         switch (algorithm) {
+            case ALGORITHM_VOTING:
+                events = getVotingEvents(targetDate, allSensorSampleList, motions);
+                break;
             case ALGORITHM_SLEEP_SCORED:
                 events = getSleepScoreEvents(targetDate, allSensorSampleList, motions);
                 break;
