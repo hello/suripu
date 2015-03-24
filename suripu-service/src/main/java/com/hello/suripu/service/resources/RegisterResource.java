@@ -255,7 +255,6 @@ public class RegisterResource extends BaseResource {
                     return builder;
                 }
                 senseId = deviceAccountPairs.get(0).externalDeviceId;
-                builder.setAccountId(token); // Needed
                 break;
         }
 
@@ -359,6 +358,7 @@ public class RegisterResource extends BaseResource {
             LOGGER.error("Missing AES key for deviceId = {}", senseId);
             return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "");
         }
+        LOGGER.trace("Key used to sign device {} : {}", senseId, Hex.encodeHexString(keyBytesOptional.get()));
 
         final Optional<byte[]> signedResponse = SignedMessage.sign(morpheusCommandBuilder.build().toByteArray(), keyBytesOptional.get());
         if(!signedResponse.isPresent()) {
