@@ -721,6 +721,69 @@ public class TimelineUtilsTest {
     }
 
 
+
+    @Test
+    public void testGetFullSleepEventsQuinoDebug(){
+        final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/quino_motion_2015_03_12_raw.csv");
+        final List<TrackerMotion> trackerMotions = new ArrayList<>();
+        try {
+            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
+            final String[] lines = csvString.split("\\n");
+            for(int i = 1; i < lines.length; i++){
+                final String[] columns = lines[i].split(",");
+                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
+                //if(trackerMotion.value > 0){
+                trackerMotions.add(trackerMotion);
+                //}
+            }
+        }catch (IOException ex){
+            ex.printStackTrace();
+        }
+
+        final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
+        lightOutTimes.add(new DateTime(1426218480000L, DateTimeZone.UTC));
+        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 3, 12, 0, 0, DateTimeZone.UTC),
+                trackerMotions,
+                lightOutTimes,
+                Optional.<DateTime>absent(),
+                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
+                true).toList();
+
+        final FallingAsleepEvent sleepSegment = (FallingAsleepEvent) sleepEvents.get(1).get();
+        final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
+        final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2).get();
+        final OutOfBedEvent outOfBedSegment = (OutOfBedEvent) sleepEvents.get(3).get();
+
+
+        // Out put from python script suripu_sum.py:
+        /*
+        in bed at 2014-12-03 01:22:00, prob: 1.11502650032, amp: 2967
+        wake up at 2014-12-03 09:38:00, prob: 0.0631222110581, amp: 522
+        */
+
+        final DateTime goToBedTime = new DateTime(goToBedSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBedSegment.getTimezoneOffset()));
+        final DateTime sleepTime = new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getTimezoneOffset()));
+
+        final DateTime wakeUpTime = new DateTime(wakeUpSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUpSegment.getTimezoneOffset()));
+        final DateTime outOfBedTime = new DateTime(outOfBedSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBedSegment.getTimezoneOffset()));
+
+        final DateTime goToBedLocalUTC = new DateTime(goToBedTime.getYear(), goToBedTime.getMonthOfYear(), goToBedTime.getDayOfMonth(), goToBedTime.getHourOfDay(), goToBedTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime sleepLocalUTC = new DateTime(sleepTime.getYear(), sleepTime.getMonthOfYear(), sleepTime.getDayOfMonth(), sleepTime.getHourOfDay(), sleepTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime wakeUpLocalUTC = new DateTime(wakeUpTime.getYear(), wakeUpTime.getMonthOfYear(), wakeUpTime.getDayOfMonth(), wakeUpTime.getHourOfDay(), wakeUpTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime outOfBedLocalUTC = new DateTime(outOfBedTime.getYear(), outOfBedTime.getMonthOfYear(), outOfBedTime.getDayOfMonth(), outOfBedTime.getHourOfDay(), outOfBedTime.getMinuteOfHour(), DateTimeZone.UTC);
+
+        /*
+        Same thing, cannot deal with wake up at the middle of night. because we use light and time as a feature.
+         */
+        assertThat(goToBedLocalUTC, is(new DateTime(2015, 3, 12, 20, 59, DateTimeZone.UTC)));
+        assertThat(sleepLocalUTC, is(new DateTime(2015, 3, 12, 21, 43, DateTimeZone.UTC)));
+        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 3, 13, 7, 59, DateTimeZone.UTC)));
+        assertThat(outOfBedLocalUTC, is(new DateTime(2015, 3, 13, 9, 49, DateTimeZone.UTC)));  //heuristic
+    }
+
+
     @Test
     public void testGetFullSleepEventsWeekend() throws IOException {
         final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/pang_motion_2015_02_01_raw.csv");

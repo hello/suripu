@@ -31,7 +31,7 @@ public class MotionClusterTest extends CSVFixtureTest {
         final Segment sleepPeriod =  cluster.getSleepTimeSpan();
 
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepPeriod.getStartTimestamp(), timezoneOffset),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 03:04:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 03:08:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepPeriod.getEndTimestamp(), timezoneOffset),
                 is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 11:12:00")));
     }

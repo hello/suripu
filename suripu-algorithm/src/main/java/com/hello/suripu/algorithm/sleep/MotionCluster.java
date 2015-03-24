@@ -21,9 +21,10 @@ public class MotionCluster {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MotionCluster.class);
 
-    private final List<AmplitudeData> rawMotion;
+    private final List<AmplitudeData> motionNoMissingValues;
     private List<ClusterAmplitudeData> clusters;
-    private double threshold;
+    private double mean;
+    private double std;
     private Segment sleepPeriod;
 
     public static List<ClusterAmplitudeData> getClusters(final List<AmplitudeData> amplitudeData, final double threshold){
@@ -51,9 +52,9 @@ public class MotionCluster {
         return maxClusterCopy;
     }
 
-    public static List<AmplitudeData> getInputFeatureFromMotions(final List<AmplitudeData> rawData){
+    public static List<AmplitudeData> getInputFeatureFromMotions(final List<AmplitudeData> dataWithoutMissingValues){
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> allMotionFeatures =
-                MotionFeatures.generateTimestampAlignedFeatures(rawData,
+                MotionFeatures.generateTimestampAlignedFeatures(dataWithoutMissingValues,
                         MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                         MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
                         false);
@@ -68,22 +69,27 @@ public class MotionCluster {
     }
 
     private MotionCluster(final List<AmplitudeData> alignedMotionWithGapFilled){
-        this.rawMotion = alignedMotionWithGapFilled;
+        this.motionNoMissingValues = alignedMotionWithGapFilled;
 
-        final List<AmplitudeData> inputFeature = MotionCluster.getInputFeatureFromMotions(this.rawMotion);
+        final List<AmplitudeData> inputFeature = MotionCluster.getInputFeatureFromMotions(this.motionNoMissingValues);
         final double threshold = NumericalUtils.mean(inputFeature);
-        this.threshold = threshold;
+        this.mean = threshold;
+        this.std = NumericalUtils.std(inputFeature, this.mean);
         this.sleepPeriod = MotionCluster.getSleepPeriod(inputFeature, threshold);
         final List<ClusterAmplitudeData> rawClusters = MotionCluster.getClusters(inputFeature, threshold);
         this.clusters = rawClusters;
     }
 
-    public double getThreshold(){
-        return this.threshold;
+    public double getMean(){
+        return this.mean;
     }
 
-    public static MotionCluster create(final List<AmplitudeData> rawMotion){
-        final MotionCluster cluster = new MotionCluster(rawMotion);
+    public double getStd(){
+        return this.std;
+    }
+
+    public static MotionCluster create(final List<AmplitudeData> dataWithoutMissingValues){
+        final MotionCluster cluster = new MotionCluster(dataWithoutMissingValues);
         return cluster;
     }
 
@@ -148,8 +154,9 @@ public class MotionCluster {
     }
 
     public static Segment getSleepPeriod(final List<AmplitudeData> features, final double threshold){
-        final long firstTimestamp = features.get(0).timestamp;
+        long firstTimestamp = features.get(0).timestamp;
         final long lastTimestamp  = features.get(features.size() - 1).timestamp;
+        long startTimestamp = firstTimestamp;
 
         for(int i = 0; i < features.size(); i++) {
             final AmplitudeData item = features.get(i);
@@ -159,8 +166,16 @@ public class MotionCluster {
                 //LOGGER.debug("++++++++++++++++++++ peak {}, first {}", peakTimestamp, firstTimestamp);
 
                 if(peakTimestamp - firstTimestamp > 2 * DateTimeConstants.MILLIS_PER_HOUR) {
-                    return new Segment(peakTimestamp - 15 * DateTimeConstants.MILLIS_PER_MINUTE, lastTimestamp, item.offsetMillis);
+                    startTimestamp = peakTimestamp - 15 * DateTimeConstants.MILLIS_PER_MINUTE;
                 }
+                break;
+            }
+        }
+
+        for(final AmplitudeData amplitudeData:features){
+            if(amplitudeData.timestamp >= startTimestamp){
+                firstTimestamp = amplitudeData.timestamp;
+                break;
             }
         }
         return new Segment(firstTimestamp, lastTimestamp, features.get(features.size() - 1).offsetMillis);
