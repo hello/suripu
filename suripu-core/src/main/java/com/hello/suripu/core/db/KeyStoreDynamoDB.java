@@ -103,7 +103,7 @@ public class KeyStoreDynamoDB implements KeyStore {
     }
 
     private Optional<byte[]> getRemotely(final String deviceId, final Boolean strict) {
-        if(DEFAULT_FACTORY_DEVICE_ID.equals(deviceId)) {
+        if(DEFAULT_FACTORY_DEVICE_ID.equals(deviceId) && strict) {
             LOGGER.warn("Device not properly provisioned, got {} as a deviceId", deviceId);
                 return Optional.absent();
         }
