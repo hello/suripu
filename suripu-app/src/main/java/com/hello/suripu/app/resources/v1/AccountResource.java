@@ -71,7 +71,7 @@ public class AccountResource {
         }
 
         // Overriding email address for kaytlin
-        final Registration securedRegistration = Registration.encryptPassword(registration);
+        final Registration securedRegistration = Registration.encryptPassword(Registration.lowerCaseEmail(registration));
 
 
         LOGGER.debug("Lat: {}", securedRegistration.latitude);
@@ -152,7 +152,7 @@ public class AccountResource {
             @Scope({OAuthScope.USER_EXTENDED}) final AccessToken accessToken,
             @Valid final Account account) {
 
-        final Account accountWithId = Account.withId(account, accessToken.accountId);
+        final Account accountWithId = Account.withId(Account.lowercaseEmail(account), accessToken.accountId);
         final Optional<Registration.RegistrationError> error = Registration.validateEmail(accountWithId.email);
         if(error.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(
@@ -174,7 +174,7 @@ public class AccountResource {
     public Account getAccountByEmail(@Scope(OAuthScope.ADMINISTRATION_READ) AccessToken accessToken,
                           @QueryParam("email") String email) {
         LOGGER.debug("Search for email = {}", email);
-        final Optional<Account> accountOptional = accountDAO.getByEmail(email);
+        final Optional<Account> accountOptional = accountDAO.getByEmail(email.toLowerCase());
         if(accountOptional.isPresent()) {
             return accountOptional.get();
         }
