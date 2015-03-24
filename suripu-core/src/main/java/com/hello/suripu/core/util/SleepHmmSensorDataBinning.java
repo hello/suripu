@@ -29,9 +29,13 @@ public class SleepHmmSensorDataBinning {
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
 
     static public class BinnedData {
+        public final double[][] data;
+        public final int numMinutesInWindow;
 
-        public double[][] data;
-        public int numMinutesInWindow;
+        public BinnedData(double[][] data, int numMinutesInWindow) {
+            this.data = data;
+            this.numMinutesInWindow = numMinutesInWindow;
+        }
     }
 
     static protected List<Sample> getTimeOfDayAsMeasurement(final List<Sample> light, final double startNaturalLightForbiddedenHour, final double stopNaturalLightForbiddenHour) {
@@ -196,9 +200,6 @@ public class SleepHmmSensorDataBinning {
 
 
 
-        final BinnedData res = new BinnedData();
-        res.data = data;
-        res.numMinutesInWindow = numMinutesInWindow;
 
         final DateTime dateTimeBegin = new DateTime(startTimeMillisInUTC).withZone(DateTimeZone.forOffsetMillis(timezoneOffset));
         final DateTime dateTimeEnd = new DateTime(startTimeMillisInUTC + numMinutesInWindow * NUMBER_OF_MILLIS_IN_A_MINUTE * dataLength).withZone(DateTimeZone.forOffsetMillis(timezoneOffset));
@@ -211,7 +212,7 @@ public class SleepHmmSensorDataBinning {
         LOGGER.debug("natlight={}", getDoubleVectorAsString(data[HmmDataConstants.NATURAL_LIGHT_FILTER_INDEX]));
 
 
-        return Optional.of(res);
+        return Optional.of(new BinnedData(data,numMinutesInWindow));
     }
 
 
@@ -264,8 +265,8 @@ public class SleepHmmSensorDataBinning {
     }
 
 
-    static protected String getDoubleVectorAsString(final double [] vec) {
-        String vecString = "";
+    static public String getDoubleVectorAsString(final double [] vec) {
+        String vecString = "[";
         boolean first = true;
         for (double f : vec) {
 
@@ -275,6 +276,8 @@ public class SleepHmmSensorDataBinning {
             vecString += String.format("%.1f",f);
             first = false;
         }
+
+        vecString += "]";
 
         return vecString;
     }

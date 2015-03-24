@@ -9,6 +9,7 @@ import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.KeyStore;
+import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.firmware.FirmwareUpdateStore;
@@ -20,10 +21,9 @@ import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.UserInfo;
-import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.core.processors.OTAProcessor;
+import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.core.resources.BaseResource;
-import com.hello.suripu.core.util.DeviceIdUtil;
 import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.core.util.RoomConditionUtil;
 import com.hello.suripu.service.SignedMessage;
@@ -44,7 +44,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -64,6 +63,7 @@ public class ReceiveResource extends BaseResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReceiveResource.class);
     private static final int CLOCK_SKEW_TOLERATED_IN_HOURS = 2;
+    private static final String LOCAL_OFFICE_IP_ADDRESS = "199.87.82.114";
 
     private final KeyStore keyStore;
     private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
@@ -141,8 +141,12 @@ public class ReceiveResource extends BaseResource {
         }
 
 
+        final String deviceId = data.getDeviceId();
+        final List<String> groups = groupFlipper.getGroups(deviceId);
 
-        final Optional<byte[]> optionalKeyBytes = keyStore.get(data.getDeviceId());
+        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
+        final Optional<byte[]> optionalKeyBytes= getKey(deviceId, groups, ipAddress);
+
         if(!optionalKeyBytes.isPresent()) {
             LOGGER.error("Failed to get key from key store for device_id = {}", data.getDeviceId());
             return plainTextError(Response.Status.BAD_REQUEST, "");
@@ -155,7 +159,6 @@ public class ReceiveResource extends BaseResource {
             return plainTextError(Response.Status.UNAUTHORIZED, "");
         }
 
-        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? "" : request.getHeader("X-Forwarded-For");
 
         final DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorkerMessage = DataInputProtos.BatchPeriodicDataWorker.newBuilder()
                 .setData(data)
@@ -190,90 +193,6 @@ public class ReceiveResource extends BaseResource {
         }
 
         return syncResponseBuilder;
-    }
-
-    @Deprecated
-    @POST
-    @Path("/morpheus/pb2")
-    @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Timed
-    public byte[] morpheusProtobufReceiveEncrypted(final byte[] body) {
-        final SignedMessage signedMessage = SignedMessage.parse(body);
-        DataInputProtos.periodic_data data = null;
-
-        try {
-            data = DataInputProtos.periodic_data.parseFrom(signedMessage.body);
-        } catch (IOException exception) {
-            final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
-            LOGGER.error(errorMessage);
-
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity((debug) ? errorMessage : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
-        }
-        LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
-
-
-        // get MAC address of morpheus
-        final Optional<String> deviceIdOptional = DeviceIdUtil.getMorpheusId(data);
-        if(!deviceIdOptional.isPresent()){
-            LOGGER.error("Cannot get morpheus id");
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity((debug) ? "Cannot get morpheus id" : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
-        }
-
-
-        final String deviceName = deviceIdOptional.get();
-        if(data.getDeviceId() == null || deviceName.isEmpty()){
-            LOGGER.error("Empty device id");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        }
-
-        LOGGER.debug("Received valid protobuf {}", deviceName.toString());
-        LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
-
-        final Optional<byte[]> optionalKeyBytes = keyStore.get(data.getDeviceId());
-        if(!optionalKeyBytes.isPresent()) {
-            LOGGER.error("Failed to get key from key store for device_id = {}", data.getDeviceId());
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        }
-
-        final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(optionalKeyBytes.get());
-
-        if(error.isPresent()) {
-            LOGGER.error(error.get().message);
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-                    .entity((debug) ? error.get().message : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
-        }
-
-
-        final DataInputProtos.batched_periodic_data batch = DataInputProtos.batched_periodic_data.newBuilder()
-                .addData(data)
-                .setDeviceId(data.getDeviceId())
-                .setFirmwareVersion(data.getFirmwareVersion())
-                .build();
-
-
-        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? "" : request.getHeader("X-Forwarded-For");
-
-        final DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorkerMessage = DataInputProtos.BatchPeriodicDataWorker.newBuilder()
-                .setData(batch)
-                .setReceivedAt(DateTime.now().getMillis())
-                .setIpAddress(ipAddress)
-                .build();
-
-        // Saving sense data to kinesis
-        final DataLogger senseSensorsDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
-        senseSensorsDataLogger.put(deviceName, batchPeriodicDataWorkerMessage.toByteArray());
-        LOGGER.debug("Protobuf message to kenesis {}", TextFormat.shortDebugString(batchPeriodicDataWorkerMessage));
-
-        return generateSyncResponse(data.getDeviceId(), data.getFirmwareVersion(), optionalKeyBytes.get(), batch);
     }
 
     /**
@@ -314,7 +233,6 @@ public class ReceiveResource extends BaseResource {
                         roundedDateTime
                         );
                 // TODO: throw exception?
-                // throw new WebApplicationException(Response.Status.BAD_REQUEST);
                 continue;
             }
 
@@ -332,9 +250,9 @@ public class ReceiveResource extends BaseResource {
         }
 
         final Optional<DateTimeZone> userTimeZone = getUserTimeZone(userInfoList);
-        
+        final List<String> groups = groupFlipper.getGroups(deviceName);
+
         if(userTimeZone.isPresent()) {
-            final List<String> groups = groupFlipper.getGroups(deviceName);
             final RingTime nextRingTime = RingProcessor.getNextRingTimeForSense(deviceName, userInfoList, DateTime.now());
 
             // WARNING: now must generated after getNextRingTimeForSense, because that function can take a long time.
@@ -402,6 +320,10 @@ public class ReceiveResource extends BaseResource {
             setPillColors(userInfoList, responseBuilder);
         }else{
             LOGGER.error("NO TIMEZONE IS A BIG DEAL.");
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, DateTimeZone.UTC, batch);
+            if(!fileDownloadList.isEmpty()) {
+                responseBuilder.addAllFiles(fileDownloadList);
+            }
         }
 
 
@@ -562,18 +484,20 @@ public class ReceiveResource extends BaseResource {
         final Integer deviceUptimeDelay = otaConfiguration.getDeviceUptimeDelay();
         final Boolean alwaysOTA = (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceID, deviceGroups));
 
-        final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, alwaysOTA);
-
         //Provides for an in-office override feature that allows OTA (ignores checks) provided the IP is our office IP.
         if (featureFlipper.deviceFeatureActive(FeatureFlipper.OFFICE_ONLY_OVERRIDE, deviceID, deviceGroups)) {
             final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
-            if (ipAddress.equals("199.87.82.114")) {
+            if (ipAddress.equals(LOCAL_OFFICE_IP_ADDRESS)) {
                 LOGGER.debug("Office OTA Override for DeviceId {}", deviceID, deviceGroups);
                 final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceGroups.get(0), currentFirmwareVersion);
                 LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
                 return fileDownloadList;
+            } else {
+                return Collections.emptyList();
             }
         }
+
+        final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, alwaysOTA);
 
         if(canOTA) {
 
@@ -594,5 +518,18 @@ public class ReceiveResource extends BaseResource {
         }
         return Collections.emptyList();
     }
-    
+
+    public Optional<byte[]> getKey(String deviceId, List<String> groups, String ipAddress) {
+
+        if (KeyStoreDynamoDB.DEFAULT_FACTORY_DEVICE_ID.equals(deviceId) &&
+                featureFlipper.deviceFeatureActive(FeatureFlipper.OFFICE_ONLY_OVERRIDE, deviceId, groups)) {
+            if (ipAddress.equals(LOCAL_OFFICE_IP_ADDRESS)) {
+                return keyStore.get(deviceId);
+            } else {
+                return keyStore.getStrict(deviceId);
+            }
+        }
+        return keyStore.get(deviceId);
+
+    }
 }
