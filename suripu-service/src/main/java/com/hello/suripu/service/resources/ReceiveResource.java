@@ -144,9 +144,19 @@ public class ReceiveResource extends BaseResource {
 
         final Optional<byte[]> optionalKeyBytes;
         final String deviceId = data.getDeviceId();
+        final List<String> groups = groupFlipper.getGroups(deviceId);
 
         if(KeyStoreDynamoDB.DEFAULT_FACTORY_DEVICE_ID.equals(deviceId)) {
-            optionalKeyBytes = Optional.of(KeyStoreDynamoDB.DEFAULT_AES_KEY);
+            if (featureFlipper.deviceFeatureActive(FeatureFlipper.OFFICE_ONLY_OVERRIDE, deviceId, groups)) {
+                final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
+                if (ipAddress.equals(LOCAL_OFFICE_IP_ADDRESS)) {
+                    optionalKeyBytes = Optional.of(KeyStoreDynamoDB.DEFAULT_AES_KEY);
+                } else {
+                    optionalKeyBytes = keyStore.get(deviceId);
+                }
+            } else {
+                optionalKeyBytes = keyStore.get(deviceId);
+            }
          } else {
             optionalKeyBytes = keyStore.get(deviceId);
         }
