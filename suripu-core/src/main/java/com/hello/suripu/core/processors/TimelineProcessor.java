@@ -550,7 +550,7 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
      * @param wakeUpWaveTimeOptional
      * @return
      */
-    private SleepEvents<Optional<Event>> fromAlgorithm(final DateTime targetDate,
+    public static SleepEvents<Optional<Event>> fromAlgorithm(final DateTime targetDate,
                                                        final List<TrackerMotion> trackerMotions,
                                                        final List<Sample> rawLight,
                                                        final Optional<DateTime> wakeUpWaveTimeOptional) {
@@ -566,7 +566,6 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
         final List<Event> lightOuts = MultiLightOutUtils.getValidLightOuts(smoothedLightEvents, trackerMotions, MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
 
         final List<DateTime> lightOutTimes = MultiLightOutUtils.getLightOutTimes(lightOuts);
-
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
             sleepEventsFromAlgorithm = TimelineUtils.getSleepEvents(targetDate,

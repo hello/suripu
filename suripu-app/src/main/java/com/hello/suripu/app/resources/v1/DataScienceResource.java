@@ -440,6 +440,8 @@ public class DataScienceResource extends BaseResource {
         );
 
         final List<Sample> lightSamples = sensorSamples.get(Sensor.LIGHT);
+        final List<Sample> waveCounts = sensorSamples.get(Sensor.WAVE_COUNT);
+
         final int numSamples = lightSamples.size();
 
         final List<JoinedSensorsMinuteData> joinedSensorsMinuteData = new ArrayList<>();
@@ -454,6 +456,7 @@ public class DataScienceResource extends BaseResource {
                     motionSamples.containsKey(timestamp) ? motionSamples.get(timestamp).kickOffCounts : null,
                     motionSamples.containsKey(timestamp) ? motionSamples.get(timestamp).motionRange : null,
                     motionSamples.containsKey(timestamp) ? motionSamples.get(timestamp).onDurationInSeconds : null,
+                    (int)waveCounts.get(i).value,
                     lightSamples.get(i).offsetMillis));
         }
 

@@ -54,6 +54,6 @@ public class HmmDataConstants {
     final static int NUM_MINUTES_IN_MEAS_PERIOD = 15;
     final static boolean DEFAULT_IS_USING_INTERVAL_SEARCH = true;
 
-
+    final static double LIGHT_PREMULTIPLIER = 4.0;
 
 }
