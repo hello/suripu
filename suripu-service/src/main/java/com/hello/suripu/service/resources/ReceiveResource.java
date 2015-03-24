@@ -595,6 +595,8 @@ public class ReceiveResource extends BaseResource {
                 final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceGroups.get(0), currentFirmwareVersion);
                 LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
                 return fileDownloadList;
+            } else {
+                return Collections.emptyList();
             }
         }
 
