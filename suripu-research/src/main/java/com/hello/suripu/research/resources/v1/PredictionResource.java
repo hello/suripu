@@ -2,7 +2,6 @@ package com.hello.suripu.research.resources.v1;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
@@ -21,6 +20,7 @@ import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.MultiLightOutUtils;
@@ -41,9 +41,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -192,30 +190,26 @@ public class PredictionResource extends BaseResource {
         return  sleepEventsFromAlgorithm;
     }
 
-    private List<Event> getSleepScoreEvents(final DateTime targetDate, final DateTime endDate,final long  currentTimeMillis,final long accountId,
-                                            final AllSensorSampleList allSensorSampleList, final List<TrackerMotion> myMotion) {
+    private List<Event> getSleepScoreEvents(final DateTime targetDate,
+                                            final AllSensorSampleList allSensorSampleList,
+                                            final List<TrackerMotion> myMotion) {
         // compute lights-out and sound-disturbance events
-        Optional<DateTime> lightOutTimeOptional = Optional.absent();
         Optional<DateTime> wakeUpWaveTimeOptional = Optional.absent();
 
-
         if (!allSensorSampleList.isEmpty()) {
-
-            // TODO: refactor
-
             if(!allSensorSampleList.get(Sensor.WAVE_COUNT).isEmpty() && myMotion.size() > 0){
                 wakeUpWaveTimeOptional = TimelineUtils.getFirstAwakeWaveTime(myMotion.get(0).timestamp,
                         myMotion.get(myMotion.size() - 1).timestamp,
                         allSensorSampleList.get(Sensor.WAVE_COUNT));
             }
         }
-        /*  This can get overided by the HMM if the feature is enabled */
-        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate, myMotion,  allSensorSampleList.get(Sensor.LIGHT), wakeUpWaveTimeOptional);
 
+        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = TimelineProcessor.fromAlgorithm(targetDate, myMotion,
+                allSensorSampleList.get(Sensor.LIGHT),
+                wakeUpWaveTimeOptional);
 
         List<Optional<Event>> items = sleepEventsFromAlgorithm.toList();
-
-        List<Event> returnedEvents = new ArrayList<Event>();
+        List<Event> returnedEvents = new ArrayList<>();
 
         for (Optional<Event> e : items) {
             if (e.isPresent()) {
@@ -339,7 +333,6 @@ public class PredictionResource extends BaseResource {
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
 
         if (deviceId.isPresent()) {
-
             allSensorSampleList = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
                     targetDate.getMillis(), endDate.getMillis(),
                     accountId, deviceId.get(), SLOT_DURATION_MINUTES, MISSING_DATA_DEFAULT_VALUE);
@@ -349,7 +342,7 @@ public class PredictionResource extends BaseResource {
 
         switch (algorithm) {
             case ALGORITHM_SLEEP_SCORED:
-                events = getSleepScoreEvents(targetDate,endDate,currentTimeMillis,accountId,allSensorSampleList,myMotions);
+                events = getSleepScoreEvents(targetDate, allSensorSampleList, motions);
                 break;
 
             case ALGORITHM_HIDDEN_MARKOV:
