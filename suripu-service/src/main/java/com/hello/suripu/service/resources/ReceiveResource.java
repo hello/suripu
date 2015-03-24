@@ -127,11 +127,7 @@ public class ReceiveResource extends BaseResource {
         } catch (IOException exception) {
             final String errorMessage = String.format("Failed parsing protobuf for deviceId = %s : %s", debugSenseId, exception.getMessage());
             LOGGER.error(errorMessage);
-
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity((debug) ? errorMessage : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            return plainTextError(Response.Status.BAD_REQUEST, "bad request");
         }
         LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
 
@@ -141,33 +137,23 @@ public class ReceiveResource extends BaseResource {
 
         if(data.getDeviceId() == null || data.getDeviceId().isEmpty()){
             LOGGER.error("Empty device id");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            return plainTextError(Response.Status.BAD_REQUEST, "empty device id");
         }
+
+
 
         final Optional<byte[]> optionalKeyBytes = keyStore.get(data.getDeviceId());
         if(!optionalKeyBytes.isPresent()) {
             LOGGER.error("Failed to get key from key store for device_id = {}", data.getDeviceId());
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            return plainTextError(Response.Status.BAD_REQUEST, "");
         }
 
         final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(optionalKeyBytes.get());
 
         if(error.isPresent()) {
             LOGGER.error(error.get().message);
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-                    .entity((debug) ? error.get().message : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            return plainTextError(Response.Status.UNAUTHORIZED, "");
         }
-
-
-        if(featureFlipper.deviceFeatureActive(FeatureFlipper.FORCE_HTTP_500, data.getDeviceId(), Collections.EMPTY_LIST)) {
-            throw new WebApplicationException(Response.status(Response.Status.SERVICE_UNAVAILABLE)
-                    .entity("server unavailable")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
-        }
-
 
         final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? "" : request.getHeader("X-Forwarded-For");
 
@@ -178,8 +164,12 @@ public class ReceiveResource extends BaseResource {
                 .setUptimeInSecond(data.getUptimeInSecond())
                 .build();
 
-        final DataLogger batchSenseDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
-        batchSenseDataLogger.put(data.getDeviceId(), batchPeriodicDataWorkerMessage.toByteArray());
+        try {
+            final DataLogger batchSenseDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
+            batchSenseDataLogger.put(data.getDeviceId(), batchPeriodicDataWorkerMessage.toByteArray());
+        } catch (Exception e) {
+            LOGGER.error("Failed to insert into batch sensors kinesis stream: {}", e.getMessage());
+        }
 
         final String tempSenseId = data.hasDeviceId() ? data.getDeviceId() : debugSenseId;
         return generateSyncResponse(tempSenseId, data.getFirmwareVersion(), optionalKeyBytes.get(), data);
@@ -422,10 +412,7 @@ public class ReceiveResource extends BaseResource {
         final Optional<byte[]> signedResponse = SignedMessage.sign(syncResponse.toByteArray(), encryptionKey);
         if(!signedResponse.isPresent()) {
             LOGGER.error("Failed signing message");
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity((debug) ? "Failed signing message" : "server error")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "");
         }
 
         return signedResponse.get();
@@ -470,7 +457,7 @@ public class ReceiveResource extends BaseResource {
     public static int computePassRingTimeUploadInterval(final RingTime nextRingTime, final DateTime now, final int adjustedUploadCycle){
         final int ringTimeOffsetFromNowMillis = (int)(nextRingTime.actualRingTimeUTC - now.getMillis());
         if(isNextUploadCrossRingBound(nextRingTime, now)){
-            final int uploadCycleThatPassRingTime = ringTimeOffsetFromNowMillis / DateTimeConstants.MILLIS_PER_MINUTE + 1;
+            final int uploadCycleThatPassRingTime = ringTimeOffsetFromNowMillis / DateTimeConstants.MILLIS_PER_MINUTE + 2;
             return uploadCycleThatPassRingTime;
         }
 
@@ -492,11 +479,7 @@ public class ReceiveResource extends BaseResource {
         } catch (IOException exception) {
             final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
             LOGGER.error(errorMessage);
-
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity((debug) ? errorMessage : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            return plainTextError(Response.Status.BAD_REQUEST, "");
         }
         LOGGER.debug("Received for pill protobuf message {}", TextFormat.shortDebugString(batchPilldata));
 
@@ -504,16 +487,13 @@ public class ReceiveResource extends BaseResource {
         final Optional<byte[]> optionalKeyBytes = keyStore.get(batchPilldata.getDeviceId());
         if(!optionalKeyBytes.isPresent()) {
             LOGGER.error("Failed to get key from key store for device_id = {}", batchPilldata.getDeviceId());
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            return plainTextError(Response.Status.BAD_REQUEST, "");
         }
         final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(optionalKeyBytes.get());
 
         if(error.isPresent()) {
-            LOGGER.error(error.get().message);
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-                    .entity((debug) ? error.get().message : "bad request")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            LOGGER.error("Failed validating signature with key: {}", error.get().message);
+            return plainTextError(Response.Status.UNAUTHORIZED, "");
         }
 
         final SenseCommandProtos.batched_pill_data.Builder cleanBatch = SenseCommandProtos.batched_pill_data.newBuilder();
@@ -545,10 +525,7 @@ public class ReceiveResource extends BaseResource {
         final Optional<byte[]> signedResponse = SignedMessage.sign(responseCommand.toByteArray(), optionalKeyBytes.get());
         if(!signedResponse.isPresent()) {
             LOGGER.error("Failed signing message");
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity((debug) ? "Failed signing message" : "server error")
-                    .type(MediaType.TEXT_PLAIN_TYPE).build()
-            );
+            return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "");
         }
 
         return signedResponse.get();
@@ -584,21 +561,32 @@ public class ReceiveResource extends BaseResource {
         final Set<String> alwaysOTAGroups = otaConfiguration.getAlwaysOTAGroups();
         final Integer deviceUptimeDelay = otaConfiguration.getDeviceUptimeDelay();
         final Boolean alwaysOTA = (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceID, deviceGroups));
-        
+
         final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, alwaysOTA);
-        
+
+        //Provides for an in-office override feature that allows OTA (ignores checks) provided the IP is our office IP.
+        if (featureFlipper.deviceFeatureActive(FeatureFlipper.OFFICE_ONLY_OVERRIDE, deviceID, deviceGroups)) {
+            final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
+            if (ipAddress.equals("199.87.82.114")) {
+                LOGGER.debug("Office OTA Override for DeviceId {}", deviceID, deviceGroups);
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceGroups.get(0), currentFirmwareVersion);
+                LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+                return fileDownloadList;
+            }
+        }
+
         if(canOTA) {
 
             // groups take precedence over feature
             if (!deviceGroups.isEmpty()) {
                 LOGGER.debug("DeviceId {} belongs to groups: {}", deviceID, deviceGroups);
-                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceID, deviceGroups.get(0), currentFirmwareVersion);//TODO: Create a better way of knowing which group the device will belong to
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceGroups.get(0), currentFirmwareVersion);//TODO: Create a better way of knowing which group the device will belong to
                 LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
                 return fileDownloadList;
             } else {
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceID, deviceGroups)) {
                     LOGGER.debug("Feature release is active!");
-                    final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceID, FeatureFlipper.OTA_RELEASE, currentFirmwareVersion);
+                    final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(FeatureFlipper.OTA_RELEASE, currentFirmwareVersion);
                     LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
                     return fileDownloadList;
                 }
