@@ -240,7 +240,10 @@ public class RegisterResource extends BaseResource {
 
         final Long accountId = accessTokenOptional.get().accountId;
         LOGGER.debug("accountId = {}", accountId);
-        builder.setAccountId(token); // this is only needed for devices with 000... in the header
+
+        // this is only needed for devices with 000... in the header
+        // MUST BE CLEARED when the buffer is returned to Sense
+        builder.setAccountId(token);
 
         switch (action) {
             case PAIR_MORPHEUS:
