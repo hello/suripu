@@ -55,8 +55,8 @@ public abstract class DeviceDataDAO {
             "ROUND(MAX(ambient_dust_max)) AS ambient_dust_max," +
             "ROUND(MIN(offset_millis)) AS offset_millis," +
             "ROUND(MAX(firmware_version)) AS firmware_version," +
-            "ROUND(MAX(wave_count)) AS wave_count," +
-            "ROUND(MAX(hold_count)) AS hold_count," +
+            "ROUND(SUM(wave_count)) AS wave_count," +
+            "ROUND(SUM(hold_count)) AS hold_count," +
             "ROUND(MAX(audio_num_disturbances)) AS audio_num_disturbances," +
             "ROUND(MAX(audio_peak_disturbances_db)) AS audio_peak_disturbances_db," +
             "ROUND(MAX(audio_peak_background_db)) AS audio_peak_background_db," +
