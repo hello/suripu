@@ -26,6 +26,7 @@ import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.service.SignedMessage;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
+import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
@@ -356,20 +357,20 @@ public class RegisterResource extends BaseResource {
         return builder;
     }
 
-    private Response signAndSend(final String senseId, final MorpheusCommand.Builder morpheusCommandBuilder, final KeyStore keyStore) {
+    private byte[] signAndSend(final String senseId, final MorpheusCommand.Builder morpheusCommandBuilder, final KeyStore keyStore) {
         final Optional<byte[]> keyBytesOptional = keyStore.get(senseId);
         if(!keyBytesOptional.isPresent()) {
             LOGGER.error("Missing AES key for deviceId = {}", senseId);
-            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+            return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "");
         }
 
         final Optional<byte[]> signedResponse = SignedMessage.sign(morpheusCommandBuilder.build().toByteArray(), keyBytesOptional.get());
         if(!signedResponse.isPresent()) {
             LOGGER.error("Failed signing message for deviceId = {}", senseId);
-            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+            return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "");
         }
 
-        return Response.ok().entity(signedResponse.get()).build();
+        return signedResponse.get();
     }
 
     @POST
@@ -377,7 +378,7 @@ public class RegisterResource extends BaseResource {
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Deprecated
-    public Response registerMorpheus(final byte[] body) {
+    public byte[] registerMorpheus(final byte[] body) {
         final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
         if(senseIdFromHeader != null){
             LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
@@ -385,8 +386,8 @@ public class RegisterResource extends BaseResource {
         final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_MORPHEUS);
 
         if(senseIdFromHeader != null && senseIdFromHeader.equals(KeyStoreDynamoDB.DEFAULT_FACTORY_DEVICE_ID)){
-            LOGGER.error("Device {} is not properly provisioned. Headers = 000...", builder.getDeviceId());
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            senseKeyStore.put(builder.getDeviceId(), Hex.encodeHexString(KeyStoreDynamoDB.DEFAULT_AES_KEY));
+            LOGGER.error("Key for device {} has been automatically generated", builder.getDeviceId());
         }
 
         return signAndSend(builder.getDeviceId(), builder, senseKeyStore);
@@ -397,7 +398,7 @@ public class RegisterResource extends BaseResource {
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Timed
-    public Response registerSense(final byte[] body) {
+    public byte[] registerSense(final byte[] body) {
         final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
         if(senseIdFromHeader != null){
             LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
@@ -414,7 +415,7 @@ public class RegisterResource extends BaseResource {
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Timed
-    public Response registerPill(final byte[] body) {
+    public byte[] registerPill(final byte[] body) {
         final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_PILL);
         final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
         if(senseIdFromHeader != null && !senseIdFromHeader.equals(KeyStoreDynamoDB.DEFAULT_FACTORY_DEVICE_ID)){
@@ -428,13 +429,14 @@ public class RegisterResource extends BaseResource {
                 DateTime.now());
 
         if(!accessTokenOptional.isPresent()) {
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            LOGGER.error("Did not find accessToken {}", builder.getAccountId());
+            return plainTextError(Response.Status.BAD_REQUEST, "");
         }
 
         final Long accountId = accessTokenOptional.get().accountId;
         final List<DeviceAccountPair> deviceAccountPairs = this.deviceDAO.getSensesForAccountId(accountId);
         if(deviceAccountPairs.size() == 0) {
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            return plainTextError(Response.Status.BAD_REQUEST, "");
         }
 
         final String senseId = deviceAccountPairs.get(0).externalDeviceId;
