@@ -113,17 +113,17 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
 
         LOGGER.info("Getting all pills..");
         final List<DeviceAccountPair> activePills = deviceDAO.getAllPills(true);
+        LOGGER.info("Found {} active pills", activePills.size());
 
+        int numSaved = 0;
         for (final DeviceAccountPair pill : activePills) {
             final Long accountId = pill.accountId;
-            if (accountId != 1007) {
-                continue;
-            }
 
-            LOGGER.info("pill created {}", pill.created);
             final DateTime startTargetDate = pill.created.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
             final int numDays = DateTimeUtil.getDateDiffFromNowInDays(startTargetDate);
-            LOGGER.info("Processing account {}, no. of days {}, start date {}", accountId, numDays, startTargetDate);
+
+            LOGGER.info("-------- Processing account {}, pill created {}, no. of days {}, start date {}",
+                    accountId, pill.created, numDays, startTargetDate);
 
             int hasScore = 0;
             for (int i = 0; i < numDays; i++) {
@@ -132,13 +132,18 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
                 final Timeline timeline = timelines.get(0);
 
                 if (timeline.events.isEmpty()) {
-                    LOGGER.info("Date {}, timeline empty", targetDate);
+                    LOGGER.info("Nothing for Date {}", targetDate);
                 } else {
                     hasScore++;
-                    LOGGER.info("Date {}, score {}, sleep-stats{}", targetDate, timeline.date, timeline.statistics);
+                    LOGGER.info("Saved for Date {}, score {}, sleep-stats{}", targetDate, timeline.date, timeline.statistics);
+                    numSaved++;
+                }
+                if (numSaved % 10 == 0) {
+                    Thread.sleep(500);
                 }
             }
             LOGGER.info("Account {} has scores for {} days", accountId, hasScore);
+            LOGGER.info("Saved {} scores so far", numSaved);
         }
 
     }
