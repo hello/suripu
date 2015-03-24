@@ -1,6 +1,7 @@
 package com.hello.suripu.algorithm.sleep;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.scores.AmplitudeDataScoringFunction;
@@ -29,6 +30,7 @@ public class Vote {
     private final static Logger LOGGER = LoggerFactory.getLogger(Vote.class);
     private final MotionScoreAlgorithm motionScoreAlgorithm;
     private final MotionCluster motionCluster;
+    private final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures;
 
     public Vote(final List<AmplitudeData> dataWithGapFilled,
                 final List<DateTime> lightOutTimes,
@@ -43,6 +45,7 @@ public class Vote {
                 false);
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures = MotionFeatures.aggregateData(motionFeatures, MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES);
         LOGGER.info("smoothed data size {}", aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE).size());
+        this.aggregatedFeatures = aggregatedFeatures;
 
         final Set<MotionFeatures.FeatureType> featureTypes = aggregatedFeatures.keySet();
         for(MotionFeatures.FeatureType featureType:featureTypes){
@@ -129,5 +132,9 @@ public class Vote {
         }
 
         return SleepEvents.create(inBed, sleep, wakeUp, outBed);
+    }
+
+    public Map<MotionFeatures.FeatureType, List<AmplitudeData>> getAggregatedFeatures(){
+        return ImmutableMap.copyOf(this.aggregatedFeatures);
     }
 }
