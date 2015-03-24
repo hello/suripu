@@ -18,7 +18,7 @@ public class MultiLightOutUtils {
     public final static int DEFAULT_SMOOTH_GAP_MIN = 20;
     public final static int DEFAULT_LIGHT_DELTA_WINDOW_MIN = 15;
 
-    private final static int LIGHT_MOTION_CORRELATION_COUNT_THRESHOLD = 3;
+    private final static int LIGHT_MOTION_CORRELATION_COUNT_THRESHOLD = 2;
     private final static int LATEST_LIGHT_EVENT_HOUROFDAY = 5;
     private final static int EARLIEST_LIGHT_EVENT_HOUROFDAY = 20;
     private final static int HOUROFDAY_CONSIDERED_AS_MIDNIGHT = 1;

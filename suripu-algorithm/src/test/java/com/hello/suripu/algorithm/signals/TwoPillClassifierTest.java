@@ -1,3 +1,5 @@
+package com.hello.suripu.algorithm.signals;
+
 import com.google.common.base.Optional;
 import com.hello.suripu.algorithm.signals.TwoPillsClassifier;
 import org.apache.commons.math3.linear.RealMatrix;
