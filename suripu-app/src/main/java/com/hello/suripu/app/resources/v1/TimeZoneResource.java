@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -91,6 +92,37 @@ public class TimeZoneResource {
         return returnValue;
 
 
+    }
+
+    @GET
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    public TimeZoneHistory getTimeZone(@Scope({OAuthScope.TIMEZONE_READ}) final AccessToken token) {
+
+        Optional<TimeZoneHistory> timeZoneHistoryOptional = getTimeZoneHistory(token.accountId);
+        if (!timeZoneHistoryOptional.isPresent()) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        return timeZoneHistoryOptional.get();
+    }
+
+    private Optional<TimeZoneHistory> getTimeZoneHistory(final Long accountId) {
+        final Optional<DeviceAccountPair> senseAccountPairOptional = this.deviceDAO.getMostRecentSensePairByAccountId(accountId);
+        if (!senseAccountPairOptional.isPresent()) {
+            return Optional.absent();
+        }
+
+        final String senseExternalId = senseAccountPairOptional.get().externalDeviceId;
+        final Optional<DateTimeZone> dateTimeZoneOptional = this.mergedUserInfoDynamoDB.getTimezone(senseExternalId, accountId);
+        if (!dateTimeZoneOptional.isPresent()) {
+            return Optional.absent();
+        }
+
+        final DateTimeZone dateTimeZone = dateTimeZoneOptional.get();
+        return Optional.of(new TimeZoneHistory(accountId,
+                           dateTimeZone.getOffset(DateTime.now()),
+                           dateTimeZone.getID()));
     }
 
 }
