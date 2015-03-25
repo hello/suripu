@@ -3,9 +3,12 @@ package com.hello.suripu.algorithm.sleep;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.utils.ClusterAmplitudeData;
+import com.hello.suripu.algorithm.utils.DataUtils;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.algorithm.utils.NumericalUtils;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,14 +26,14 @@ public class MotionCluster {
 
     private final List<AmplitudeData> motionNoMissingValues;
     private List<ClusterAmplitudeData> clusters;
-    private double mean;
+    private double densityMean;
     private double std;
     private Segment sleepPeriod;
 
     public static List<ClusterAmplitudeData> getClusters(final List<AmplitudeData> amplitudeData, final double threshold){
         final List<ClusterAmplitudeData> result = new ArrayList<>();
         for(final AmplitudeData datum:amplitudeData) {
-            if(datum.amplitude > threshold){
+            if(datum.amplitude >= threshold){
                 result.add(ClusterAmplitudeData.create(datum, true));
             }else{
                 result.add(ClusterAmplitudeData.create(datum, false));
@@ -52,36 +55,56 @@ public class MotionCluster {
         return maxClusterCopy;
     }
 
-    public static List<AmplitudeData> getInputFeatureFromMotions(final List<AmplitudeData> dataWithoutMissingValues){
+    public static Map<MotionFeatures.FeatureType, List<AmplitudeData>> getInputFeatureFromMotions(final List<AmplitudeData> dataWithoutMissingValues){
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> allMotionFeatures =
                 MotionFeatures.generateTimestampAlignedFeatures(dataWithoutMissingValues,
                         MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                         MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
                         false);
-        if(!allMotionFeatures.containsKey(MotionFeatures.FeatureType.MOTION_COUNT_20MIN)){
-            return Collections.EMPTY_LIST;
-        }
 
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures = MotionFeatures.aggregateData(allMotionFeatures, MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES);
-        final List<AmplitudeData> awakeDetectionFeatures = aggregatedFeatures.get(MotionFeatures.FeatureType.MOTION_COUNT_20MIN);
-        return awakeDetectionFeatures;
+        return aggregatedFeatures;
 
     }
 
     private MotionCluster(final List<AmplitudeData> alignedMotionWithGapFilled){
         this.motionNoMissingValues = alignedMotionWithGapFilled;
+        printData(alignedMotionWithGapFilled);
 
-        final List<AmplitudeData> inputFeature = MotionCluster.getInputFeatureFromMotions(this.motionNoMissingValues);
-        final double threshold = NumericalUtils.mean(inputFeature);
-        this.mean = threshold;
-        this.std = NumericalUtils.std(inputFeature, this.mean);
-        this.sleepPeriod = MotionCluster.getSleepPeriod(inputFeature, threshold);
-        final List<ClusterAmplitudeData> rawClusters = MotionCluster.getClusters(inputFeature, threshold);
+        final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features = MotionCluster.getInputFeatureFromMotions(this.motionNoMissingValues);
+        final List<AmplitudeData> densityFeature = features.get(MotionFeatures.FeatureType.MOTION_COUNT_20MIN);
+        final double densityThreshold = NumericalUtils.mean(densityFeature);
+        this.densityMean = densityThreshold;
+        this.std = NumericalUtils.std(densityFeature, this.densityMean);
+
+
+        final List<AmplitudeData> amplitudeFeature = features.get(MotionFeatures.FeatureType.MAX_AMPLITUDE);
+        this.sleepPeriod = MotionCluster.getSleepPeriod(densityFeature, amplitudeFeature, densityThreshold);
+        final List<ClusterAmplitudeData> rawClusters = MotionCluster.getClusters(densityFeature, densityThreshold);
+        //printClusters(rawClusters);
+
         this.clusters = rawClusters;
     }
 
-    public double getMean(){
-        return this.mean;
+    private void printClusters(final List<ClusterAmplitudeData> clusters){
+        for (final ClusterAmplitudeData clusterAmplitudeData:clusters){
+            LOGGER.debug("{}, {}, {}",
+                    new DateTime(clusterAmplitudeData.timestamp, DateTimeZone.forOffsetMillis(clusterAmplitudeData.offsetMillis)),
+                    clusterAmplitudeData.isInCluster(),
+                    clusterAmplitudeData.amplitude);
+        }
+    }
+
+    private void printData(final List<AmplitudeData> clusters){
+        for (final AmplitudeData amplitudeData:clusters){
+            LOGGER.debug("{}, {}",
+                    new DateTime(amplitudeData.timestamp, DateTimeZone.forOffsetMillis(amplitudeData.offsetMillis)),
+                    amplitudeData.amplitude);
+        }
+    }
+
+    public double getDensityMean(){
+        return this.densityMean;
     }
 
     public double getStd(){
@@ -153,15 +176,16 @@ public class MotionCluster {
 
     }
 
-    public static Segment getSleepPeriod(final List<AmplitudeData> features, final double threshold){
-        long firstTimestamp = features.get(0).timestamp;
-        final long lastTimestamp  = features.get(features.size() - 1).timestamp;
+    public static Segment getSleepPeriod(final List<AmplitudeData> densityFeatures, final List<AmplitudeData> amplitudeFeatures, final double threshold){
+        long firstTimestamp = densityFeatures.get(0).timestamp;
+        final long lastTimestamp  = densityFeatures.get(densityFeatures.size() - 1).timestamp;
         long startTimestamp = firstTimestamp;
+        final double amplitudeMean = NumericalUtils.mean(DataUtils.getPositive(amplitudeFeatures));
 
-        for(int i = 0; i < features.size(); i++) {
-            final AmplitudeData item = features.get(i);
+        for(int i = 0; i < densityFeatures.size(); i++) {
+            final AmplitudeData item = densityFeatures.get(i);
 
-            if(item.amplitude > threshold) {
+            if(item.amplitude > threshold || item.amplitude > amplitudeMean) {
                 final long peakTimestamp = item.timestamp;
                 //LOGGER.debug("++++++++++++++++++++ peak {}, first {}", peakTimestamp, firstTimestamp);
 
@@ -172,13 +196,13 @@ public class MotionCluster {
             }
         }
 
-        for(final AmplitudeData amplitudeData:features){
+        for(final AmplitudeData amplitudeData:densityFeatures){
             if(amplitudeData.timestamp >= startTimestamp){
                 firstTimestamp = amplitudeData.timestamp;
                 break;
             }
         }
-        return new Segment(firstTimestamp, lastTimestamp, features.get(features.size() - 1).offsetMillis);
+        return new Segment(firstTimestamp, lastTimestamp, densityFeatures.get(densityFeatures.size() - 1).offsetMillis);
     }
 
 }

@@ -907,7 +907,7 @@ public class TimelineUtilsTest extends FixtureTest {
         final DateTime outOfBedLocalUTC = new DateTime(outOfBedTime.getYear(), outOfBedTime.getMonthOfYear(), outOfBedTime.getDayOfMonth(), outOfBedTime.getHourOfDay(), outOfBedTime.getMinuteOfHour(), DateTimeZone.UTC);
 
         assertThat(goToBedLocalUTC, is(new DateTime(2015, 3, 12, 20, 59, DateTimeZone.UTC)));
-        assertThat(sleepLocalUTC, is(new DateTime(2015, 3, 12, 21, 43, DateTimeZone.UTC)));
+        assertThat(sleepLocalUTC, is(new DateTime(2015, 3, 12, 21, 32, DateTimeZone.UTC)));
         assertThat(wakeUpLocalUTC, is(new DateTime(2015, 3, 13, 7, 59, DateTimeZone.UTC)));
         assertThat(outOfBedLocalUTC, is(new DateTime(2015, 3, 13, 9, 5, DateTimeZone.UTC)));
     }

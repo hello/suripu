@@ -1222,7 +1222,7 @@ public class TimelineUtils {
         final List<AmplitudeData> rawAmplitudeData = TrackerMotionUtils.trackerMotionToAmplitudeData(rawTrackerMotions);
         final Vote vote = new Vote(rawAmplitudeData, lightOutTimes, firstWaveTimeOptional);
 
-        final SleepEvents<Segment> segments = vote.getResult();
+        final SleepEvents<Segment> segments = vote.getResult(false);
         final Segment goToBedSegment = segments.goToBed;
         final Segment fallAsleepSegment = segments.fallAsleep;
         final Segment wakeUpSegment = segments.wakeUp;
