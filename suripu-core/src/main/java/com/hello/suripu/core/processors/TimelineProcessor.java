@@ -161,22 +161,17 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
         }
 
 
-
-
-    /* EVENTS FOR TIMELINE  */
+        /* EVENTS FOR TIMELINE  */
 
 
         //events for the timeline
         final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);
 
-
         // Light
         final List<Event> lightEvents = Lists.newArrayList();
         lightEvents.addAll(TimelineUtils.getLightEvents(allSensorSampleList.get(Sensor.LIGHT)));
 
-
         final Map<Long, Event> timelineEvents = TimelineRefactored.populateTimeline(motionEvents);
-
 
 
         /*  THE GODDAMNED HMM */
