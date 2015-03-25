@@ -122,6 +122,8 @@ public class Vote {
         if(!sleepMotionCluster.isEmpty()){
             final ClusterAmplitudeData clusterStart = sleepMotionCluster.get(0);
             final ClusterAmplitudeData clusterEnd = sleepMotionCluster.get(sleepMotionCluster.size() - 1);
+
+            //final long inBedTimestamp = pickInBed(sleepMotionCluster, inBed.getStartTimestamp());
             inBed = new Segment(clusterStart.timestamp, clusterStart.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterStart.offsetMillis);
             sleep = new Segment(clusterEnd.timestamp, clusterEnd.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterEnd.offsetMillis);
         }
@@ -153,6 +155,17 @@ public class Vote {
         }
 
         return originalWakeUp;
+    }
+
+    protected long pickInBed(final List<ClusterAmplitudeData> sleepMotionCluster, final long originalInBedMillis){
+        for(final ClusterAmplitudeData clusterAmplitudeData:sleepMotionCluster) {
+            if(clusterAmplitudeData.amplitude > this.motionCluster.getDensityMean() + this.motionCluster.getStd() &&
+                    clusterAmplitudeData.amplitude < originalInBedMillis) {
+                return clusterAmplitudeData.timestamp;
+            }
+        }
+
+        return originalInBedMillis;
     }
 
     public Map<MotionFeatures.FeatureType, List<AmplitudeData>> getAggregatedFeatures(){
