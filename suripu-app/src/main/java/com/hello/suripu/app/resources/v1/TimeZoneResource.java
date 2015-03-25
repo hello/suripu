@@ -99,7 +99,7 @@ public class TimeZoneResource {
     @Produces(MediaType.APPLICATION_JSON)
     public TimeZoneHistory getTimeZone(@Scope({OAuthScope.TIMEZONE_READ}) final AccessToken token) {
 
-        Optional<TimeZoneHistory> timeZoneHistoryOptional = getTimeZoneHistory(token.accountId);
+        final Optional<TimeZoneHistory> timeZoneHistoryOptional = getTimeZoneHistory(token.accountId);
         if (!timeZoneHistoryOptional.isPresent()) {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
