@@ -157,7 +157,7 @@ public class Vote {
         return originalWakeUp;
     }
 
-    protected long pickInBed(final List<ClusterAmplitudeData> sleepMotionCluster, final long originalInBedMillis){
+    protected long pickSleep(final List<ClusterAmplitudeData> sleepMotionCluster, final long originalInBedMillis){
         for(final ClusterAmplitudeData clusterAmplitudeData:sleepMotionCluster) {
             if(clusterAmplitudeData.amplitude > this.motionCluster.getDensityMean() + this.motionCluster.getStd() &&
                     clusterAmplitudeData.amplitude < originalInBedMillis) {

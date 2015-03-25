@@ -23,6 +23,7 @@ import java.util.Map;
 public class MotionCluster {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MotionCluster.class);
+    private static final boolean smoothCluster = false;
 
     private final List<AmplitudeData> motionNoMissingValues;
     private List<ClusterAmplitudeData> clusters;
@@ -69,7 +70,7 @@ public class MotionCluster {
 
     private MotionCluster(final List<AmplitudeData> alignedMotionWithGapFilled){
         this.motionNoMissingValues = alignedMotionWithGapFilled;
-        printData(alignedMotionWithGapFilled);
+        //printData(alignedMotionWithGapFilled);
 
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features = MotionCluster.getInputFeatureFromMotions(this.motionNoMissingValues);
         final List<AmplitudeData> densityFeature = features.get(MotionFeatures.FeatureType.MOTION_COUNT_20MIN);
@@ -81,9 +82,13 @@ public class MotionCluster {
         final List<AmplitudeData> amplitudeFeature = features.get(MotionFeatures.FeatureType.MAX_AMPLITUDE);
         this.sleepPeriod = MotionCluster.getSleepPeriod(densityFeature, amplitudeFeature, densityThreshold);
         final List<ClusterAmplitudeData> rawClusters = MotionCluster.getClusters(densityFeature, densityThreshold);
-        //printClusters(rawClusters);
-
-        this.clusters = rawClusters;
+        if(smoothCluster){
+            this.clusters = smooth(rawClusters);
+            printClusters(rawClusters);
+        }else {
+            printClusters(rawClusters);
+            this.clusters = rawClusters;
+        }
     }
 
     private void printClusters(final List<ClusterAmplitudeData> clusters){
@@ -203,6 +208,39 @@ public class MotionCluster {
             }
         }
         return new Segment(firstTimestamp, lastTimestamp, densityFeatures.get(densityFeatures.size() - 1).offsetMillis);
+    }
+
+    private static List<ClusterAmplitudeData> setInCluster(final List<ClusterAmplitudeData> clusters, final int start, final int end){
+        for(int i = 0; i < clusters.size(); i++){
+            if(i >= start && i < end){
+                clusters.get(i).setInCluster(true);
+            }
+        }
+
+        return clusters;
+    }
+
+    public static List<ClusterAmplitudeData> smooth(final List<ClusterAmplitudeData> clusters){
+        int gapCount = 0;
+        int gapStartIndex = 0;
+
+        for(int i = 0; i < clusters.size(); i++) {
+            final ClusterAmplitudeData datum = clusters.get(i);
+            if(!datum.isInCluster()) {
+                if(gapCount == 0) {
+                    gapStartIndex = i;
+                }
+                gapCount++;
+            }else {
+                if(gapCount <= 1 && gapCount > 0) {
+                    setInCluster(clusters, gapStartIndex, i);
+                }
+                gapCount = 0;
+            }
+
+        }
+
+        return clusters;
     }
 
 }
