@@ -223,7 +223,8 @@ public class ReceiveResource extends BaseResource {
         final OutputProtos.SyncResponse.Builder responseBuilder = OutputProtos.SyncResponse.newBuilder();
 
 
-        for(DataInputProtos.periodic_data data : batch.getDataList()) {
+        for(int i = 0; i < batch.getDataCount(); i ++) {
+            final DataInputProtos.periodic_data data = batch.getData(i);
             final Long timestampMillis = data.getUnixTime() * 1000L;
             final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
             if(roundedDateTime.isAfter(DateTime.now().plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || roundedDateTime.isBefore(DateTime.now().minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
@@ -236,17 +237,20 @@ public class ReceiveResource extends BaseResource {
                 continue;
             }
 
-            final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(), data.getLight(), data.getAudioPeakBackgroundEnergyDb(), data.getAudioPeakDisturbanceEnergyDb(),
-                    roundedDateTime.getMillis(),
-                    data.getFirmwareVersion(),
-                    DateTime.now(),
-                    2);
+            // only compute the sate for the most recent conditions
+            if(i == batch.getDataCount() -1) {
 
-            responseBuilder.setRoomConditions(
-                    OutputProtos.SyncResponse.RoomConditions.valueOf(
-                            RoomConditionUtil.getGeneralRoomCondition(currentRoomState).ordinal()));
+                final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(), data.getLight(), data.getAudioPeakBackgroundEnergyDb(), data.getAudioPeakDisturbanceEnergyDb(),
+                        roundedDateTime.getMillis(),
+                        data.getFirmwareVersion(),
+                        DateTime.now(),
+                        2);
 
+                responseBuilder.setRoomConditions(
+                        OutputProtos.SyncResponse.RoomConditions.valueOf(
+                                RoomConditionUtil.getGeneralRoomCondition(currentRoomState).ordinal()));
 
+            }
         }
 
         final Optional<DateTimeZone> userTimeZone = getUserTimeZone(userInfoList);
