@@ -39,13 +39,14 @@ public class CheckResource extends BaseResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public byte[] check(final byte[] body) {
         final String senseId = request.getHeader(HelloHttpHeader.SENSE_ID);
+        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
         if (senseId == null) {
-            LOGGER.error("CHECK_KEY FAILED. Request doesn't contain the required header {}", HelloHttpHeader.SENSE_ID);
+            LOGGER.error("CHECK_KEY FAILED. Request doesn't contain the required header {}. IP: {}", HelloHttpHeader.SENSE_ID, ipAddress);
             return plainTextError(Response.Status.BAD_REQUEST, "http 400");
         }
 
         if (senseId.equals(KeyStoreDynamoDB.DEFAULT_FACTORY_DEVICE_ID)) {
-            LOGGER.warn("CHECK_KEY FAILED. DeviceId = {}. Failing check key.", senseId);
+            LOGGER.warn("CHECK_KEY FAILED. DeviceId = {}. Failing check key. IP: {}", senseId, ipAddress);
             return plainTextError(Response.Status.BAD_REQUEST, "http 400");
         }
 
@@ -54,12 +55,12 @@ public class CheckResource extends BaseResource {
         try {
             keyBytes = senseKeyStore.getStrict(senseId);
         } catch (Exception e) {
-            LOGGER.error("CHECK_KEY FAILED. Failed to connect to senseKeyStore: {}", e.getMessage());
+            LOGGER.error("CHECK_KEY FAILED. Failed to connect to senseKeyStore: {}. IP: {}", e.getMessage(), ipAddress);
             return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "http 500");
         }
 
         if (!keyBytes.isPresent()) {
-            LOGGER.warn("CHECK_KEY FAILED. Could not find keys for senseId = {}", senseId);
+            LOGGER.warn("CHECK_KEY FAILED. Could not find keys for senseId = {}. IP: {}", senseId, ipAddress);
             // DO not leak that the device id exists or not. return forbidden
             return plainTextError(Response.Status.FORBIDDEN, "");
         }
@@ -69,23 +70,23 @@ public class CheckResource extends BaseResource {
         try {
             signedMessage = SignedMessage.parse(body);
         } catch (RuntimeException e) {
-            LOGGER.error("CHECK_KEY FAILED. Failed parsing request body for sense {}", senseId);
+            LOGGER.error("CHECK_KEY FAILED. Failed parsing request body for sense {}. IP: {}", senseId, ipAddress);
             return plainTextError(Response.Status.BAD_REQUEST, "");
         }
 
         final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytes.get());
         if (error.isPresent()) {
-            LOGGER.warn("CHECK_KEY FAILED. Could not verify signature for senseId = {} with key = {}", senseId, Hex.encodeHexString(keyBytes.get()));
+            LOGGER.warn("CHECK_KEY FAILED. Could not verify signature for senseId = {} with key = {}. IP: {}", senseId, Hex.encodeHexString(keyBytes.get()), ipAddress);
             return plainTextError(Response.Status.FORBIDDEN, "");
         }
 
         final Optional<byte[]> signedResponse = SignedMessage.sign(signedMessage.body, keyBytes.get());
         if (!signedResponse.isPresent()) {
-            LOGGER.warn("CHECK_KEY FAILED. Could not sign response for senseId = {} with key = {}", senseId, Hex.encodeHexString(keyBytes.get()));
+            LOGGER.warn("CHECK_KEY FAILED. Could not sign response for senseId = {} with key = {}. IP: {}", senseId, Hex.encodeHexString(keyBytes.get()), ipAddress);
             return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "");
         }
 
-        LOGGER.info("CHECK_KEY SUCCESS for senseId = {}", senseId);
+        LOGGER.info("CHECK_KEY SUCCESS for senseId = {}. IP: {}", senseId, ipAddress);
         return signedResponse.get();
     }
 }
