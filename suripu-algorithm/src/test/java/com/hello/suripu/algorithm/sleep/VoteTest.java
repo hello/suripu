@@ -74,4 +74,22 @@ public class VoteTest extends CSVFixtureTest {
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.outOfBed.getStartTimestamp(), sleepEvents.outOfBed.getOffsetMillis()),
                 is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 09:05:00")));
     }
+
+    @Test
+    public void testGetResultTimeZoneChanged(){
+        final List<AmplitudeData> input = loadFromResource("fixtures/km_motion_2015_03_01_raw.csv");
+        final List<DateTime> lightOuts = new ArrayList<>();
+        lightOuts.add(new DateTime(1425275520000L, DateTimeZone.forOffsetMillis(input.get(0).offsetMillis)));
+        final Vote vote = new Vote(input, lightOuts, Optional.of(new DateTime(1425311460000L, DateTimeZone.UTC)));
+        final SleepEvents<Segment> sleepEvents = vote.getResult();
+
+        assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.goToBed.getStartTimestamp(), sleepEvents.goToBed.getOffsetMillis()),
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-01 21:26:00")));
+        assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.fallAsleep.getStartTimestamp(), sleepEvents.fallAsleep.getOffsetMillis()),
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-01 23:27:00")));
+        assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.wakeUp.getStartTimestamp(), sleepEvents.wakeUp.getOffsetMillis()),
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-02 07:53:00")));
+        assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.outOfBed.getStartTimestamp(), sleepEvents.outOfBed.getOffsetMillis()),
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-02 08:04:00")));
+    }
 }
