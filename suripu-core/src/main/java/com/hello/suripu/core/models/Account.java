@@ -312,10 +312,10 @@ public class Account {
         return sb.toString();
     }
 
-    public static Account withId(final Account account, final Long accountId) {
+    public static Account normalizeWithId(final Account account, final Long accountId) {
         return new Account(
                 Optional.fromNullable(accountId),
-                account.email,
+                account.email.toLowerCase(),
                 account.password,
                 account.tzOffsetMillis,
                 account.name,
