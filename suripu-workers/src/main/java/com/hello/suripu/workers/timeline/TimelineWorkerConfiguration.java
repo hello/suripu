@@ -171,4 +171,22 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
     public Integer getMaxCacheRefreshDay(){
         return this.maxCacheRefreshDay;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("sleep_stats_db")
+    private DynamoDBConfiguration sleepStatsDBConfiguration;
+    public DynamoDBConfiguration getSleepStatsDBConfiguration(){
+        return this.sleepStatsDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("sleep_stats_version")
+    private String sleepStatsVersion;
+    public String getSleepStatsVersion() {
+        return this.sleepStatsVersion;
+    }
+
+
 }

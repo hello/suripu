@@ -76,7 +76,7 @@ public interface DeviceDAO extends Transactional<DeviceDAO> {
     ImmutableList<DeviceAccountPair> getLinkedAccountFromPillId(@Bind("pill_id") String deviceId);
 
     @RegisterMapper(DeviceAccountPairMapper.class)
-    @SqlQuery("SELECT * FROM account_tracker_map WHERE active = :is_active;")
+    @SqlQuery("SELECT * FROM account_tracker_map WHERE active = :is_active ORDER BY id;")
     ImmutableList<DeviceAccountPair> getAllPills(@Bind("is_active") Boolean isActive);
 
     @RegisterMapper(DeviceAccountPairMapper.class)

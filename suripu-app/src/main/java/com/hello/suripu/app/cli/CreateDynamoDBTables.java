@@ -17,6 +17,7 @@ import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
+import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
@@ -51,7 +52,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createPasswordResetTable(configuration, awsCredentialsProvider);
         createSleepHmmTable(configuration,awsCredentialsProvider);
         createRingTimeHistoryTable(configuration, awsCredentialsProvider);
-
+        createSleepStatsTable(configuration, awsCredentialsProvider);
     }
 
     private void createAccountPreferencesTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
@@ -286,4 +287,23 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
             System.out.println(description.getTableStatus());
         }
     }
+
+    private void createSleepStatsTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+        final DynamoDBConfiguration config = configuration.getSleepStatsDynamoConfiguration();
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final String version = configuration.getSleepStatsVersion();
+
+        client.setEndpoint(config.getEndpoint());
+        final String tableName = config.getTableName() + "_" + version;
+        try {
+            client.describeTable(tableName);
+            System.out.println(String.format("%s already exists.", tableName));
+        } catch (AmazonServiceException exception) {
+            final CreateTableResult result = SleepStatsDAODynamoDB.createTable(tableName, client);
+            final TableDescription description = result.getTableDescription();
+            System.out.println(description.getTableStatus());
+        }
+    }
+
+
 }
