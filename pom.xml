@@ -6,7 +6,6 @@
     <artifactId>suripu-parent</artifactId>
     <packaging>pom</packaging>
     <version>0.3.24-SNAPSHOT</version>
-
     <properties>
         <dropwizard.version>0.6.2</dropwizard.version>
         <protobuf.version>2.5.0</protobuf.version>
