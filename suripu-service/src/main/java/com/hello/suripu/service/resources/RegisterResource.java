@@ -384,7 +384,7 @@ public class RegisterResource extends BaseResource {
             LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
         }
         final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_MORPHEUS);
-
+        builder.clearAccountId();
         if(senseIdFromHeader != null && senseIdFromHeader.equals(KeyStoreDynamoDB.DEFAULT_FACTORY_DEVICE_ID)){
             senseKeyStore.put(builder.getDeviceId(), Hex.encodeHexString(KeyStoreDynamoDB.DEFAULT_AES_KEY));
             LOGGER.error("Key for device {} has been automatically generated", builder.getDeviceId());

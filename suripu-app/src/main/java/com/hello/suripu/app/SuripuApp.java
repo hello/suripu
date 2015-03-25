@@ -25,6 +25,7 @@ import com.hello.suripu.app.resources.v1.DataScienceResource;
 import com.hello.suripu.app.resources.v1.DeviceResources;
 import com.hello.suripu.app.resources.v1.FeaturesResource;
 import com.hello.suripu.app.resources.v1.FeedbackResource;
+import com.hello.suripu.app.resources.v1.FirmwareResource;
 import com.hello.suripu.app.resources.v1.InsightsResource;
 import com.hello.suripu.app.resources.v1.MobilePushRegistrationResource;
 import com.hello.suripu.app.resources.v1.OAuthResource;
@@ -37,7 +38,6 @@ import com.hello.suripu.app.resources.v1.SleepLabelResource;
 import com.hello.suripu.app.resources.v1.TeamsResource;
 import com.hello.suripu.app.resources.v1.TimeZoneResource;
 import com.hello.suripu.app.resources.v1.TimelineResource;
-import com.hello.suripu.app.resources.v1.FirmwareResource;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
@@ -126,6 +126,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         bootstrap.addBundle(new DBIExceptionsBundle());
         bootstrap.addCommand(new CreateDynamoDBTables());
         bootstrap.addCommand(new RecreatePillColorCommand());
+//        bootstrap.addCommand(new RecreateTZCommand());
         bootstrap.addBundle(new KinesisLoggerBundle<SuripuAppConfiguration>() {
             @Override
             public KinesisLoggerConfiguration getConfiguration(final SuripuAppConfiguration configuration) {
