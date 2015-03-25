@@ -10,6 +10,38 @@ import java.util.List;
  * Created by pangwu on 3/23/15.
  */
 public class DataUtils {
+
+    public static List<AmplitudeData> dedupe(final List<AmplitudeData> amplitudeData){
+        final List<AmplitudeData> result = new ArrayList<>();
+        AmplitudeData lastData = null;
+        for(final AmplitudeData datum:amplitudeData){
+            if(lastData == null){
+                lastData = datum;
+                result.add(datum);
+                continue;
+            }
+
+            if(datum.timestamp == lastData.timestamp){
+                continue;
+            }
+            result.add(datum);
+            lastData = datum;
+
+        }
+        return result;
+    }
+
+    public static List<AmplitudeData> getPositive(final List<AmplitudeData> amplitudeData){
+        final List<AmplitudeData> result = new ArrayList<>();
+        for(final AmplitudeData datum:amplitudeData){
+            if(datum.amplitude <= 0){
+                continue;
+            }
+            result.add(datum);
+        }
+        return result;
+    }
+
     public static List<AmplitudeData> fillMissingValuesAndMakePositive(final List<AmplitudeData> rawData, final int intervalMillis){
 
         final List<AmplitudeData> result = new ArrayList<>();

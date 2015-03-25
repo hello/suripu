@@ -29,7 +29,9 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
         for(final TrackerMotion motion: motionsFromDBShortedByTimestamp) {
             raw.add(new AmplitudeData(motion.timestamp, motion.value, motion.offsetMillis));
         }
-        this.dataAfterAutoInsert.addAll(com.hello.suripu.algorithm.utils.DataUtils.fillMissingValuesAndMakePositive(raw, DateTimeConstants.MILLIS_PER_MINUTE));
+
+        final List<AmplitudeData> noDuplicates = com.hello.suripu.algorithm.utils.DataUtils.dedupe(raw);
+        this.dataAfterAutoInsert.addAll(com.hello.suripu.algorithm.utils.DataUtils.fillMissingValuesAndMakePositive(noDuplicates, DateTimeConstants.MILLIS_PER_MINUTE));
 
     }
 
