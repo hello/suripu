@@ -52,7 +52,7 @@ public class CheckResource extends BaseResource {
 
             Optional<byte[]> keyBytes;
             try {
-                keyBytes = senseKeyStore.get(senseId);
+                keyBytes = senseKeyStore.getStrict(senseId);
             } catch (Exception e) {
                 LOGGER.error("Failed to connect to senseKeyStore: {}", e.getMessage());
                 return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "http 500");

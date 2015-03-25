@@ -353,7 +353,9 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
         }
 
 
-        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = fromVotingAlgorithm(trackerMotions,
+        /*  This can get overided by the HMM if the feature is enabled */
+        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = fromAlgorithm(targetDate,
+                trackerMotions,
                 allSensorSampleList.get(Sensor.LIGHT),
                 wakeUpWaveTimeOptional);
 
@@ -548,7 +550,7 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
      * @param wakeUpWaveTimeOptional
      * @return
      */
-    private SleepEvents<Optional<Event>> fromAlgorithm(final DateTime targetDate,
+    public static SleepEvents<Optional<Event>> fromAlgorithm(final DateTime targetDate,
                                                        final List<TrackerMotion> trackerMotions,
                                                        final List<Sample> rawLight,
                                                        final Optional<DateTime> wakeUpWaveTimeOptional) {
@@ -564,7 +566,6 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
         final List<Event> lightOuts = MultiLightOutUtils.getValidLightOuts(smoothedLightEvents, trackerMotions, MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
 
         final List<DateTime> lightOutTimes = MultiLightOutUtils.getLightOutTimes(lightOuts);
-
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
             sleepEventsFromAlgorithm = TimelineUtils.getSleepEvents(targetDate,
@@ -575,64 +576,6 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
                     MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                     MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
                     false);
-
-
-
-            if(sleepEventsFromAlgorithm.fallAsleep.isPresent() && sleepEventsFromAlgorithm.wakeUp.isPresent()){
-                sleepSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.fallAsleep.get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.wakeUp.get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.wakeUp.get().getTimezoneOffset()));
-
-                LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
-                        new DateTime(sleepSegmentOptional.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegmentOptional.get().getOffsetMillis())),
-                        new DateTime(sleepSegmentOptional.get().getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegmentOptional.get().getOffsetMillis())));
-            }
-
-            if(sleepEventsFromAlgorithm.goToBed.isPresent() && sleepEventsFromAlgorithm.outOfBed.isPresent()){
-                inBedSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.goToBed.get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.outOfBed.get().getStartTimestamp(),
-                        sleepEventsFromAlgorithm.outOfBed.get().getTimezoneOffset()));
-                LOGGER.info("In Bed Time From Awake Detection Algorithm: {} - {}",
-                        new DateTime(inBedSegmentOptional.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(inBedSegmentOptional.get().getOffsetMillis())),
-                        new DateTime(inBedSegmentOptional.get().getEndTimestamp(), DateTimeZone.forOffsetMillis(inBedSegmentOptional.get().getOffsetMillis())));
-            }
-
-
-        }catch (Exception ex){ //TODO : catch a more specific exception
-            LOGGER.error("Generate sleep period from Awake Detection Algorithm failed: {}", ex.getMessage());
-        }
-
-        return  sleepEventsFromAlgorithm;
-    }
-
-    /**
-     * Pang magic version 2
-     * @param trackerMotions
-     * @param rawLight
-     * @param wakeUpWaveTimeOptional
-     * @return
-     */
-    private SleepEvents<Optional<Event>> fromVotingAlgorithm(final List<TrackerMotion> trackerMotions,
-                                                       final List<Sample> rawLight,
-                                                       final Optional<DateTime> wakeUpWaveTimeOptional) {
-        Optional<Segment> sleepSegmentOptional;
-        Optional<Segment> inBedSegmentOptional = Optional.absent();
-        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.create(Optional.<Event>absent(),
-                Optional.<Event>absent(),
-                Optional.<Event>absent(),
-                Optional.<Event>absent());
-
-        final List<Event> rawLightEvents = TimelineUtils.getLightEventsWithMultipleLightOut(rawLight);
-        final List<Event> smoothedLightEvents = MultiLightOutUtils.smoothLight(rawLightEvents, MultiLightOutUtils.DEFAULT_SMOOTH_GAP_MIN);
-        final List<Event> lightOuts = MultiLightOutUtils.getValidLightOuts(smoothedLightEvents, trackerMotions, MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
-
-        final List<DateTime> lightOutTimes = MultiLightOutUtils.getLightOutTimes(lightOuts);
-
-        // A day starts with 8pm local time and ends with 4pm local time next day
-        try {
-            sleepEventsFromAlgorithm = TimelineUtils.getSleepEventsFromVoting(trackerMotions,
-                    lightOutTimes,
-                    wakeUpWaveTimeOptional);
 
 
 
