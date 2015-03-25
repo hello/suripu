@@ -117,7 +117,7 @@ public class MotionCluster {
 
             // when the last item is not in cluster
             if(clusterEndTimestamp > 0 && !clusterAmplitudeData.isInCluster()){
-                if(targetTimestamp >= clusterStartTimestamp && targetTimestamp <= clusterEndTimestamp){
+                if(targetTimestamp >= clusterStartTimestamp && targetTimestamp <= clusterEndTimestamp + 15 * DateTimeConstants.MILLIS_PER_MINUTE){
                     return copyRange(clusters, clusterStartIndex, clusterEndIndex);
                 }
 
@@ -127,7 +127,7 @@ public class MotionCluster {
 
             // dangling case, when the last item is in cluster
             if(clusterEndTimestamp > 0 && clusterAmplitudeData.isInCluster() && i == this.clusters.size() - 1){
-                if(targetTimestamp >= clusterStartTimestamp && targetTimestamp <= clusterEndTimestamp){
+                if(targetTimestamp >= clusterStartTimestamp && targetTimestamp <= clusterEndTimestamp + 15 * DateTimeConstants.MILLIS_PER_MINUTE){
                     return copyRange(clusters, clusterStartIndex, clusterEndIndex);
                 }
             }
