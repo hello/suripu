@@ -11,7 +11,6 @@ import com.hello.suripu.algorithm.sensordata.LightEventsDetector;
 import com.hello.suripu.algorithm.sensordata.SoundEventsDetector;
 import com.hello.suripu.algorithm.sleep.MotionScoreAlgorithm;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
-import com.hello.suripu.algorithm.sleep.Vote;
 import com.hello.suripu.algorithm.sleep.scores.AmplitudeDataScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.LightOutCumulatedMotionMixScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.LightOutScoringFunction;
@@ -1216,40 +1215,7 @@ public class TimelineUtils {
 
 
 
-    public static SleepEvents<Optional<Event>> getSleepEventsFromVoting(final List<TrackerMotion> rawTrackerMotions,
-                                                              final List<DateTime> lightOutTimes,
-                                                              final Optional<DateTime> firstWaveTimeOptional){
-        final List<AmplitudeData> rawAmplitudeData = TrackerMotionUtils.trackerMotionToAmplitudeData(rawTrackerMotions);
-        final Vote vote = new Vote(rawAmplitudeData, lightOutTimes, firstWaveTimeOptional);
 
-        final SleepEvents<Segment> segments = vote.getResult();
-        final Segment goToBedSegment = segments.goToBed;
-        final Segment fallAsleepSegment = segments.fallAsleep;
-        final Segment wakeUpSegment = segments.wakeUp;
-        final Segment outOfBedSegment = segments.outOfBed;
-
-        //final int smoothWindowSizeInMillis = smoothWindowSizeInMinutes * DateTimeConstants.MILLIS_PER_MINUTE;
-        final Event inBedEvent = new InBedEvent(goToBedSegment.getStartTimestamp(),
-                goToBedSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
-                goToBedSegment.getOffsetMillis());
-
-        final Event fallAsleepEvent = new FallingAsleepEvent(fallAsleepSegment.getStartTimestamp(),
-                fallAsleepSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
-                fallAsleepSegment.getOffsetMillis());
-
-        final Event wakeUpEvent = new WakeupEvent(wakeUpSegment.getStartTimestamp(),
-                wakeUpSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
-                wakeUpSegment.getOffsetMillis());
-
-        final Event outOfBedEvent = new OutOfBedEvent(outOfBedSegment.getStartTimestamp(),
-                outOfBedSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
-                outOfBedSegment.getOffsetMillis());
-
-        final SleepEvents<Event> events = SleepEvents.create(inBedEvent, fallAsleepEvent, wakeUpEvent, outOfBedEvent);
-
-        return SleepEventSafeGuard.sleepEventsHeuristicFix(events, vote.getAggregatedFeatures());
-
-    }
 
 
     /**
