@@ -123,7 +123,7 @@ public class Vote {
             final ClusterAmplitudeData clusterStart = sleepMotionCluster.get(0);
             final ClusterAmplitudeData clusterEnd = sleepMotionCluster.get(sleepMotionCluster.size() - 1);
             inBed = new Segment(clusterStart.timestamp, clusterStart.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterStart.offsetMillis);
-            sleep = new Segment(clusterEnd.timestamp, clusterEnd.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterEnd.offsetMillis);
+            //sleep = new Segment(clusterEnd.timestamp, clusterEnd.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterEnd.offsetMillis);
         }
 
         Segment wakeUp = sleepEvents.wakeUp;
@@ -133,8 +133,8 @@ public class Vote {
             final ClusterAmplitudeData clusterEnd = wakeUpMotionCluster.get(wakeUpMotionCluster.size() - 1);
             outBed = new Segment(clusterEnd.timestamp, clusterEnd.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterEnd.offsetMillis);
 
-            final long wakeUpTimestamp = pickWakeUp(wakeUpMotionCluster, wakeUp.getStartTimestamp());
-            wakeUp = new Segment(wakeUpTimestamp, wakeUpTimestamp + DateTimeConstants.MILLIS_PER_MINUTE, wakeUp.getOffsetMillis());
+            //final long wakeUpTimestamp = pickWakeUp(wakeUpMotionCluster, wakeUp.getStartTimestamp());
+            //wakeUp = new Segment(wakeUpTimestamp, wakeUpTimestamp + DateTimeConstants.MILLIS_PER_MINUTE, wakeUp.getOffsetMillis());
         }
 
         return SleepEvents.create(inBed, sleep, wakeUp, outBed);
