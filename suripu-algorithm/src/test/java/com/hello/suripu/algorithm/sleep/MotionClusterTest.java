@@ -39,7 +39,7 @@ public class MotionClusterTest extends CSVFixtureTest {
     @Test
     public void testTrimBySleepPeriod(){
         final List<AmplitudeData> input = loadFromResource("fixtures/cl_motion_2015_03_12_gap_filled.csv");
-        final List<AmplitudeData> actualFeature = MotionCluster.getInputFeatureFromMotions(input);
+        final List<AmplitudeData> actualFeature = MotionCluster.getInputFeatureFromMotions(input).get(MotionFeatures.FeatureType.MOTION_COUNT_20MIN);
 
         final int timezoneOffset = input.get(0).offsetMillis;
         final MotionCluster cluster = MotionCluster.create(input);
@@ -90,7 +90,7 @@ public class MotionClusterTest extends CSVFixtureTest {
             assertThat(actualFeature.get(i).amplitude, is(expectedFeature.get(i).amplitude));
         }
 
-        final List<AmplitudeData> features = MotionCluster.getInputFeatureFromMotions(input);
+        final List<AmplitudeData> features = MotionCluster.getInputFeatureFromMotions(input).get(MotionFeatures.FeatureType.MOTION_COUNT_20MIN);
 
         assertThat(features.size(), is(81));
         final double threshold = NumericalUtils.mean(features);

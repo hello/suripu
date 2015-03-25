@@ -191,7 +191,7 @@ public class PredictionResource extends BaseResource {
 
         final Vote vote = new Vote(dataWithGapFilled, lightOutTimes, wakeUpWaveTimeOptional);
 
-        final SleepEvents<Segment> sleepEvents = vote.getResult();
+        final SleepEvents<Segment> sleepEvents = vote.getResult(false);
         final Segment goToBedSegment = sleepEvents.goToBed;
         final Segment fallAsleepSegment = sleepEvents.fallAsleep;
         final Segment wakeUpSegment = sleepEvents.wakeUp;
