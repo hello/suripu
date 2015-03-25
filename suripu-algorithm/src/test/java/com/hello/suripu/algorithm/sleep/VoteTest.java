@@ -110,4 +110,22 @@ public class VoteTest extends CSVFixtureTest {
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.outOfBed.getStartTimestamp(), sleepEvents.outOfBed.getOffsetMillis()),
                 is(DateTimeTestUtils.stringToLocalUTC("2015-03-12 07:33:00")));
     }
+
+    @Test
+    public void testGetResultSmoothCluster(){
+        final List<AmplitudeData> input = loadFromResource("fixtures/ksg_motion_2015_03_22_raw.csv");
+        final List<DateTime> lightOuts = new ArrayList<>();
+        lightOuts.add(new DateTime(1427093280000L, DateTimeZone.UTC));
+        final Vote vote = new Vote(input, lightOuts, Optional.<DateTime>absent());
+        final SleepEvents<Segment> sleepEvents = vote.getResult(true);
+
+        assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.goToBed.getStartTimestamp(), sleepEvents.goToBed.getOffsetMillis()),
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-23 00:13:00")));
+        assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.fallAsleep.getStartTimestamp(), sleepEvents.fallAsleep.getOffsetMillis()),
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-23 00:13:00")));
+        assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.wakeUp.getStartTimestamp(), sleepEvents.wakeUp.getOffsetMillis()),
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-23 08:17:00")));
+        assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.outOfBed.getStartTimestamp(), sleepEvents.outOfBed.getOffsetMillis()),
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-23 09:45:00")));
+    }
 }
