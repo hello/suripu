@@ -1,6 +1,7 @@
 package com.hello.suripu.app.resources.v1;
 
 import com.amazonaws.AmazonServiceException;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
@@ -16,6 +17,8 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -115,14 +118,15 @@ public class TimeZoneResource {
 
         final String senseExternalId = senseAccountPairOptional.get().externalDeviceId;
         final Optional<DateTimeZone> dateTimeZoneOptional = this.mergedUserInfoDynamoDB.getTimezone(senseExternalId, accountId);
-        if (!dateTimeZoneOptional.isPresent()) {
-            return Optional.absent();
-        }
-
-        final DateTimeZone dateTimeZone = dateTimeZoneOptional.get();
-        return Optional.of(new TimeZoneHistory(accountId,
-                           dateTimeZone.getOffset(DateTime.now()),
-                           dateTimeZone.getID()));
+        return dateTimeZoneOptional.transform(new Function<DateTimeZone, TimeZoneHistory>() {
+            @Nonnull
+            @Override
+            public TimeZoneHistory apply(@Nullable DateTimeZone dateTimeZone) {
+                return new TimeZoneHistory(accountId,
+                               dateTimeZone.getOffset(DateTime.now()),
+                               dateTimeZone.getID());
+            }
+        });
     }
 
 }
