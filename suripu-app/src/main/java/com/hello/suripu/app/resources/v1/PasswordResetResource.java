@@ -72,7 +72,7 @@ public class PasswordResetResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response create(@Scope(OAuthScope.PASSWORD_RESET) final AccessToken accessToken, @Valid final PasswordResetRequest passwordResetRequest) {
 
-        final Optional<Account> accountOptional = accountDAO.getByEmail(passwordResetRequest.email);
+        final Optional<Account> accountOptional = accountDAO.getByEmail(passwordResetRequest.email.toLowerCase());
         if(!accountOptional.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity(new JsonError(Response.Status.NOT_FOUND.getStatusCode(), "account not found")).build());
         }
