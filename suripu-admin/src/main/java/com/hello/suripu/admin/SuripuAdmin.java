@@ -13,15 +13,21 @@ import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.DeviceDAOAdmin;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.util.JodaArgumentFactory;
+import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.jdbi.DBIFactory;
+import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
+import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
+import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
 import com.yammer.dropwizard.jdbi.bundles.DBIExceptionsBundle;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
@@ -54,13 +60,23 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         final DBI commonDB = factory.build(environment, configuration.getCommonDB(), "postgresql");
         final DBI sensorsDB = factory.build(environment, configuration.getSensorsDB(), "postgresql");
 
+        sensorsDB.registerArgumentFactory(new JodaArgumentFactory());
+        sensorsDB.registerContainerFactory(new OptionalContainerFactory());
+        sensorsDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
+
+
+        commonDB.registerArgumentFactory(new JodaArgumentFactory());
+        commonDB.registerContainerFactory(new OptionalContainerFactory());
+        commonDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
+        commonDB.registerContainerFactory(new ImmutableListContainerFactory());
+        commonDB.registerContainerFactory(new ImmutableSetContainerFactory());
+
         final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
         final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
 
-
-
         final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
         final DeviceDAO deviceDAO = commonDB.onDemand(DeviceDAO.class);
+        final DeviceDAOAdmin deviceDAOAdmin = commonDB.onDemand(DeviceDAOAdmin.class);
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
 
@@ -89,6 +105,6 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
 
         environment.addResource(new PingResource());
         environment.addResource(new AccountResources(accountDAO));
-        environment.addResource(new DeviceResources(deviceDAO, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore));
+        environment.addResource(new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore));
     }
 }
