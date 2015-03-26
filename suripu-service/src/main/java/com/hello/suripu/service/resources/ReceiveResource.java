@@ -491,10 +491,11 @@ public class ReceiveResource extends BaseResource {
         //Provides for an in-office override feature that allows OTA (ignores checks) provided the IP is our office IP.
         if (featureFlipper.deviceFeatureActive(FeatureFlipper.OFFICE_ONLY_OVERRIDE, deviceID, deviceGroups)) {
             final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
-            if (ipAddress.equals(LOCAL_OFFICE_IP_ADDRESS)) {
-                LOGGER.debug("Office OTA Override for DeviceId {}", deviceID, deviceGroups);
-                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceGroups.get(0), currentFirmwareVersion);
-                LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+            if (ipAddress.equals(LOCAL_OFFICE_IP_ADDRESS) && !deviceGroups.isEmpty()) {
+                final String updateGroup = deviceGroups.get(0);
+                LOGGER.info("Office OTA Override for DeviceId {}", deviceID, deviceGroups);
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(updateGroup, currentFirmwareVersion);
+                LOGGER.info("{} files added to syncResponse for OTA of '{}' to DeviceId {}", fileDownloadList.size(), updateGroup, deviceID);
                 return fileDownloadList;
             } else {
                 return Collections.emptyList();
@@ -507,15 +508,16 @@ public class ReceiveResource extends BaseResource {
 
             // groups take precedence over feature
             if (!deviceGroups.isEmpty()) {
+                final String updateGroup = deviceGroups.get(0);
                 LOGGER.debug("DeviceId {} belongs to groups: {}", deviceID, deviceGroups);
-                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceGroups.get(0), currentFirmwareVersion);//TODO: Create a better way of knowing which group the device will belong to
-                LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(updateGroup, currentFirmwareVersion);//TODO: Create a better way of knowing which group the device will belong to
+                LOGGER.info("{} files added to syncResponse for OTA of '{}' to DeviceId {}", fileDownloadList.size(), updateGroup, deviceID);
                 return fileDownloadList;
             } else {
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceID, deviceGroups)) {
-                    LOGGER.debug("Feature release is active!");
+                    LOGGER.debug("Feature 'release' is active for device: {}", deviceID);
                     final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(FeatureFlipper.OTA_RELEASE, currentFirmwareVersion);
-                    LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+                    LOGGER.info("{} files added to syncResponse for OTA of 'release' to DeviceId {}", fileDownloadList.size(), deviceID);
                     return fileDownloadList;
                 }
             }
