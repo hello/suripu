@@ -128,4 +128,22 @@ public class VoteTest extends CSVFixtureTest {
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.outOfBed.getStartTimestamp(), sleepEvents.outOfBed.getOffsetMillis()),
                 is(DateTimeTestUtils.stringToLocalUTC("2015-03-23 09:45:00")));
     }
+
+    @Test
+    public void testGetResultTestKSGScript(){
+        final List<AmplitudeData> input = loadFromResource("fixtures/km_motion_2015_03_23_raw.csv");
+        final List<DateTime> lightOuts = new ArrayList<>();
+        lightOuts.add(new DateTime(1427174340000L, DateTimeZone.UTC));
+        final Vote vote = new Vote(input, lightOuts, Optional.<DateTime>absent());
+        final SleepEvents<Segment> sleepEvents = vote.getResult(true);
+
+        assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.goToBed.getStartTimestamp(), sleepEvents.goToBed.getOffsetMillis()),
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-23 21:47:00")));
+        assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.fallAsleep.getStartTimestamp(), sleepEvents.fallAsleep.getOffsetMillis()),
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-23 23:26:00")));
+        assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.wakeUp.getStartTimestamp(), sleepEvents.wakeUp.getOffsetMillis()),
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-24 07:30:00")));
+        assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.outOfBed.getStartTimestamp(), sleepEvents.outOfBed.getOffsetMillis()),
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-24 07:52:00")));
+    }
 }
