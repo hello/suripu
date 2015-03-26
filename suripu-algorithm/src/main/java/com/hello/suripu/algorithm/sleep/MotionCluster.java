@@ -189,8 +189,9 @@ public class MotionCluster {
 
         for(int i = 0; i < densityFeatures.size(); i++) {
             final AmplitudeData item = densityFeatures.get(i);
+            final AmplitudeData amplitudeData = amplitudeFeatures.get(i);
 
-            if(item.amplitude > threshold || item.amplitude > amplitudeMean) {
+            if(item.amplitude > threshold || amplitudeData.amplitude > amplitudeMean) {
                 final long peakTimestamp = item.timestamp;
                 //LOGGER.debug("++++++++++++++++++++ peak {}, first {}", peakTimestamp, firstTimestamp);
 
