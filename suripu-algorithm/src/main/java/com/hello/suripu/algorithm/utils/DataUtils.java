@@ -2,8 +2,10 @@ package com.hello.suripu.algorithm.utils;
 
 import com.google.common.collect.Ordering;
 import com.hello.suripu.algorithm.core.AmplitudeData;
+import org.joda.time.DateTimeConstants;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -86,5 +88,21 @@ public class DataUtils {
 
         return insertData;
 
+    }
+
+    public static List<AmplitudeData> insertEmptyData(final List<AmplitudeData> data, final int insertCount, final int intervalMinute){
+        if(data.size() == 0){
+            return Collections.EMPTY_LIST;
+        }
+
+        final List<AmplitudeData> result = new ArrayList<>();
+        final long firstTimestamp = data.get(0).timestamp;
+        final int timeZoneOffsetMillis = data.get(0).offsetMillis;
+
+        for(int i = 0; i < insertCount; i++){
+            result.add(0, new AmplitudeData(firstTimestamp - (i + intervalMinute) * DateTimeConstants.MILLIS_PER_MINUTE, 0, timeZoneOffsetMillis));
+        }
+        result.addAll(data);
+        return result;
     }
 }
