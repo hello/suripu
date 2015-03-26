@@ -32,12 +32,18 @@ public class Vote {
     private final MotionScoreAlgorithm motionScoreAlgorithm;
     private final MotionCluster motionCluster;
     private final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures;
+    private final boolean insertEmpty = true;
 
     public Vote(final List<AmplitudeData> raw,
                 final List<DateTime> lightOutTimes,
                 final Optional<DateTime> firstWaveTimeOptional){
         final List<AmplitudeData> noDuplicates = DataUtils.dedupe(raw);
-        final List<AmplitudeData> dataWithGapFilled = DataUtils.fillMissingValuesAndMakePositive(noDuplicates, DateTimeConstants.MILLIS_PER_MINUTE);
+        List<AmplitudeData> dataWithGapFilled = DataUtils.fillMissingValuesAndMakePositive(noDuplicates, DateTimeConstants.MILLIS_PER_MINUTE);
+
+        if(insertEmpty) {
+            dataWithGapFilled = DataUtils.insertEmptyData(dataWithGapFilled, 20, 1);
+        }
+
         this.motionCluster = MotionCluster.create(dataWithGapFilled);
         final Segment sleepPeriod  = this.motionCluster.getSleepTimeSpan();
         LOGGER.debug("data start from {} to {}", new DateTime(sleepPeriod.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepPeriod.getOffsetMillis())),

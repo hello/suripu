@@ -28,13 +28,13 @@ public class VoteTest extends CSVFixtureTest {
         final Vote vote = new Vote(input, lightOuts, Optional.<DateTime>absent());
         final SleepEvents<Segment> sleepEvents = vote.getResult(true);
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.goToBed.getStartTimestamp(), sleepEvents.goToBed.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 03:19:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 03:21:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.fallAsleep.getStartTimestamp(), sleepEvents.fallAsleep.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 04:14:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 04:16:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.wakeUp.getStartTimestamp(), sleepEvents.wakeUp.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 11:12:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 11:13:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.outOfBed.getStartTimestamp(), sleepEvents.outOfBed.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 11:12:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 11:13:00")));
     }
 
     @Test
@@ -45,13 +45,13 @@ public class VoteTest extends CSVFixtureTest {
         final Vote vote = new Vote(input, lightOuts, Optional.<DateTime>absent());
         final SleepEvents<Segment> sleepEvents = vote.getResult(true);
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.goToBed.getStartTimestamp(), sleepEvents.goToBed.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-21 00:12:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-21 00:14:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.fallAsleep.getStartTimestamp(), sleepEvents.fallAsleep.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-21 01:18:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-21 01:20:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.wakeUp.getStartTimestamp(), sleepEvents.wakeUp.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-21 09:00:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-21 09:02:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.outOfBed.getStartTimestamp(), sleepEvents.outOfBed.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-21 10:06:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-21 10:08:00")));
     }
 
     @Test
@@ -62,17 +62,14 @@ public class VoteTest extends CSVFixtureTest {
         final Vote vote = new Vote(input, lightOuts, Optional.<DateTime>absent());
         final SleepEvents<Segment> sleepEvents = vote.getResult(true);
 
-        assertThat((float)vote.getMotionClusterAlgorithm().getDensityMean(), is((float)3.65789473684));
-        assertThat((float)vote.getMotionClusterAlgorithm().getStd(), is((float)1.88008958353));
-
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.goToBed.getStartTimestamp(), sleepEvents.goToBed.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-12 20:59:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-12 20:28:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.fallAsleep.getStartTimestamp(), sleepEvents.fallAsleep.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-12 21:32:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-12 21:34:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.wakeUp.getStartTimestamp(), sleepEvents.wakeUp.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 07:59:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 08:01:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.outOfBed.getStartTimestamp(), sleepEvents.outOfBed.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 09:05:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-13 08:56:00")));
     }
 
     @Test
@@ -84,13 +81,13 @@ public class VoteTest extends CSVFixtureTest {
         final SleepEvents<Segment> sleepEvents = vote.getResult(true);
 
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.goToBed.getStartTimestamp(), sleepEvents.goToBed.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-01 21:26:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-01 21:28:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.fallAsleep.getStartTimestamp(), sleepEvents.fallAsleep.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-01 23:27:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-01 23:29:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.wakeUp.getStartTimestamp(), sleepEvents.wakeUp.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-02 07:53:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-02 07:55:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.outOfBed.getStartTimestamp(), sleepEvents.outOfBed.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-02 08:04:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-02 08:17:00")));
     }
 
 
@@ -102,13 +99,13 @@ public class VoteTest extends CSVFixtureTest {
         final SleepEvents<Segment> sleepEvents = vote.getResult(true);
 
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.goToBed.getStartTimestamp(), sleepEvents.goToBed.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-11 23:51:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-11 23:53:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.fallAsleep.getStartTimestamp(), sleepEvents.fallAsleep.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-12 00:57:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-12 00:59:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.wakeUp.getStartTimestamp(), sleepEvents.wakeUp.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-12 04:48:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-12 04:17:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.outOfBed.getStartTimestamp(), sleepEvents.outOfBed.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-12 07:33:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-12 07:35:00")));
     }
 
     @Test
@@ -120,13 +117,13 @@ public class VoteTest extends CSVFixtureTest {
         final SleepEvents<Segment> sleepEvents = vote.getResult(true);
 
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.goToBed.getStartTimestamp(), sleepEvents.goToBed.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-23 00:13:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-22 23:53:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.fallAsleep.getStartTimestamp(), sleepEvents.fallAsleep.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-23 00:13:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-23 00:15:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.wakeUp.getStartTimestamp(), sleepEvents.wakeUp.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-23 08:17:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-23 08:19:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.outOfBed.getStartTimestamp(), sleepEvents.outOfBed.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-23 09:45:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-23 09:47:00")));
     }
 
     @Test
@@ -138,12 +135,12 @@ public class VoteTest extends CSVFixtureTest {
         final SleepEvents<Segment> sleepEvents = vote.getResult(true);
 
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.goToBed.getStartTimestamp(), sleepEvents.goToBed.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-23 21:47:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-23 21:49:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.fallAsleep.getStartTimestamp(), sleepEvents.fallAsleep.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-23 23:26:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-23 23:28:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.wakeUp.getStartTimestamp(), sleepEvents.wakeUp.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-24 07:30:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-24 07:32:00")));
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.outOfBed.getStartTimestamp(), sleepEvents.outOfBed.getOffsetMillis()),
-                is(DateTimeTestUtils.stringToLocalUTC("2015-03-24 07:52:00")));
+                is(DateTimeTestUtils.stringToLocalUTC("2015-03-24 07:54:00")));
     }
 }
