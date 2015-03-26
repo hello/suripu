@@ -1,6 +1,7 @@
 package com.hello.suripu.app.resources.v1;
 
 import com.amazonaws.AmazonServiceException;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
@@ -16,7 +17,10 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -91,6 +95,38 @@ public class TimeZoneResource {
         return returnValue;
 
 
+    }
+
+    @GET
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    public TimeZoneHistory getTimeZone(@Scope({OAuthScope.TIMEZONE_READ}) final AccessToken token) {
+
+        final Optional<TimeZoneHistory> timeZoneHistoryOptional = getTimeZoneHistory(token.accountId);
+        if (!timeZoneHistoryOptional.isPresent()) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        return timeZoneHistoryOptional.get();
+    }
+
+    private Optional<TimeZoneHistory> getTimeZoneHistory(final Long accountId) {
+        final Optional<DeviceAccountPair> senseAccountPairOptional = this.deviceDAO.getMostRecentSensePairByAccountId(accountId);
+        if (!senseAccountPairOptional.isPresent()) {
+            return Optional.absent();
+        }
+
+        final String senseExternalId = senseAccountPairOptional.get().externalDeviceId;
+        final Optional<DateTimeZone> dateTimeZoneOptional = this.mergedUserInfoDynamoDB.getTimezone(senseExternalId, accountId);
+        return dateTimeZoneOptional.transform(new Function<DateTimeZone, TimeZoneHistory>() {
+            @Nonnull
+            @Override
+            public TimeZoneHistory apply(@Nullable DateTimeZone dateTimeZone) {
+                return new TimeZoneHistory(accountId,
+                               dateTimeZone.getOffset(DateTime.now()),
+                               dateTimeZone.getID());
+            }
+        });
     }
 
 }
