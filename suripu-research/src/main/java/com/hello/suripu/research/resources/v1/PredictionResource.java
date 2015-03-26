@@ -347,10 +347,10 @@ public class PredictionResource extends BaseResource {
 
         switch (algorithm) {
             case ALGORITHM_VOTING:
-                events = getVotingEvents(targetDate, allSensorSampleList, motions);
+                events = getVotingEvents(targetDate, allSensorSampleList, myMotions);
                 break;
             case ALGORITHM_SLEEP_SCORED:
-                events = getSleepScoreEvents(targetDate, allSensorSampleList, motions);
+                events = getSleepScoreEvents(targetDate, allSensorSampleList, myMotions);
                 break;
 
             case ALGORITHM_HIDDEN_MARKOV:
