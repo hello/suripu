@@ -19,4 +19,13 @@ public class TrackerMotionUtils {
 
         return converted;
     }
+
+    public static List<AmplitudeData> trackerMotionToKickOffCounts(final List<TrackerMotion> trackerMotions){
+        final List<AmplitudeData> converted = new ArrayList<>();
+        for(final TrackerMotion trackerMotion:trackerMotions){
+            converted.add(new AmplitudeData(trackerMotion.timestamp, trackerMotion.kickOffCounts, trackerMotion.offsetMillis));
+        }
+
+        return converted;
+    }
 }
