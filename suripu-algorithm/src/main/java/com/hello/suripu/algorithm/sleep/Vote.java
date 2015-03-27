@@ -44,6 +44,7 @@ public class Vote {
     private final boolean tailBias = false;
     private final boolean smoothCluster = false;
     private final boolean removeNoise = true;
+    private final boolean defaultOverride = false;
 
     public Vote(final List<AmplitudeData> rawData,
                 final List<AmplitudeData> kickOffCounts,
@@ -235,14 +236,19 @@ public class Vote {
             /*
             * Not sure this is the right thing to do.
             * TODO: Remove safeguard and test
-            sleep = new Segment(sleepTimestamp,
-                    sleepTimestamp + DateTimeConstants.MILLIS_PER_MINUTE,
-                    defaultEvents.fallAsleep.getOffsetMillis());
-                    */
+            */
+            if(!defaultOverride) {
+                sleep = new Segment(sleepTimestamp,
+                        sleepTimestamp + DateTimeConstants.MILLIS_PER_MINUTE,
+                        defaultEvents.fallAsleep.getOffsetMillis());
+            }
         }
-        sleep = new Segment(defaultEvents.fallAsleep.getStartTimestamp(),
-                defaultEvents.fallAsleep.getEndTimestamp(),
-                defaultEvents.fallAsleep.getOffsetMillis());
+
+        if(defaultOverride) {
+            sleep = new Segment(defaultEvents.fallAsleep.getStartTimestamp(),
+                    defaultEvents.fallAsleep.getEndTimestamp(),
+                    defaultEvents.fallAsleep.getOffsetMillis());
+        }
 
         Segment wakeUp = sleepEvents.wakeUp;
         Segment outBed = sleepEvents.outOfBed;
@@ -263,14 +269,19 @@ public class Vote {
             /*
             * Not sure this is the right thing to do
             * TODO: Remove safeguard and test
-            wakeUp = new Segment(wakeUpTimestamp,
-                    wakeUpTimestamp + DateTimeConstants.MILLIS_PER_MINUTE,
-                    defaultEvents.wakeUp.getOffsetMillis());
-                    */
+            */
+            if(!defaultOverride) {
+                wakeUp = new Segment(wakeUpTimestamp,
+                        wakeUpTimestamp + DateTimeConstants.MILLIS_PER_MINUTE,
+                        defaultEvents.wakeUp.getOffsetMillis());
+            }
         }
-        wakeUp = new Segment(defaultEvents.wakeUp.getStartTimestamp(),
-                defaultEvents.wakeUp.getEndTimestamp(),
-                defaultEvents.wakeUp.getOffsetMillis());
+
+        if(defaultOverride) {
+            wakeUp = new Segment(defaultEvents.wakeUp.getStartTimestamp(),
+                    defaultEvents.wakeUp.getEndTimestamp(),
+                    defaultEvents.wakeUp.getOffsetMillis());
+        }
 
         return SleepEvents.create(inBed, sleep, wakeUp, outBed);
     }
