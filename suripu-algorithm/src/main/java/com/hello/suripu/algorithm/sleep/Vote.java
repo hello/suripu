@@ -231,10 +231,11 @@ public class Vote {
             final long sleepTimestamp = pickSleep(MotionCluster.copyRange(clusterCopy, sleepBounds.fst, sleepBounds.snd),
                     this.aggregatedFeatures,
                     sleep.getStartTimestamp());
-            sleep = new Segment(defaultEvents.fallAsleep.getStartTimestamp(),
-                    defaultEvents.fallAsleep.getEndTimestamp(),
-                    defaultEvents.fallAsleep.getOffsetMillis());
         }
+        sleep = new Segment(defaultEvents.fallAsleep.getStartTimestamp(),
+                defaultEvents.fallAsleep.getEndTimestamp(),
+                defaultEvents.fallAsleep.getOffsetMillis());
+
 
         Segment wakeUp = sleepEvents.wakeUp;
         Segment outBed = sleepEvents.outOfBed;
@@ -251,10 +252,10 @@ public class Vote {
             final long wakeUpTimestamp = pickWakeUp(MotionCluster.copyRange(clusterCopy, wakeUpBounds.fst, wakeUpBounds.snd),
                     this.aggregatedFeatures,
                     wakeUp.getStartTimestamp());
-            wakeUp = new Segment(defaultEvents.wakeUp.getStartTimestamp(),
-                    defaultEvents.wakeUp.getEndTimestamp(),
-                    defaultEvents.wakeUp.getOffsetMillis());
         }
+        wakeUp = new Segment(defaultEvents.wakeUp.getStartTimestamp(),
+                defaultEvents.wakeUp.getEndTimestamp(),
+                defaultEvents.wakeUp.getOffsetMillis());
 
         return SleepEvents.create(inBed, sleep, wakeUp, outBed);
     }
