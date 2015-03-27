@@ -14,8 +14,6 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.util.JsonError;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +85,8 @@ public class DataResources {
                     .entity("This account does not have a sense recently").build());
         }
 
-        if (new DateTime(startTimestamp, DateTimeZone.UTC).plusDays(3).isBefore(new DateTime(endTimestamp, DateTimeZone.UTC))) {
+        final Long timeRangeLimitMillis = 3 * 86400 * 1000L;
+        if ( (endTimestamp - startTimestamp) >  timeRangeLimitMillis) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
                     .entity("Maximum time range (3 days) exceeded").build());
         }
