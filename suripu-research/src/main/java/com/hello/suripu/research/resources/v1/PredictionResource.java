@@ -28,7 +28,6 @@ import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.MultiLightOutUtils;
 import com.hello.suripu.core.util.PartnerDataUtils;
-import com.hello.suripu.core.util.SleepEventSafeGuard;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.hello.suripu.core.util.TrackerMotionUtils;
@@ -184,7 +183,9 @@ public class PredictionResource extends BaseResource {
         final List<Event> lightOuts = MultiLightOutUtils.getValidLightOuts(smoothedLightEvents, trackerMotions, MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
 
         final List<DateTime> lightOutTimes = MultiLightOutUtils.getLightOutTimes(lightOuts);
-        final Vote vote = new Vote(TrackerMotionUtils.trackerMotionToAmplitudeData(trackerMotions), lightOutTimes, wakeUpWaveTimeOptional);
+        final Vote vote = new Vote(TrackerMotionUtils.trackerMotionToAmplitudeData(trackerMotions),
+                TrackerMotionUtils.trackerMotionToKickOffCounts(trackerMotions),
+                lightOutTimes, wakeUpWaveTimeOptional);
 
         final SleepEvents<Segment> sleepEvents = vote.getResult(false);
         final Segment goToBedSegment = sleepEvents.goToBed;
@@ -210,8 +211,12 @@ public class PredictionResource extends BaseResource {
                 outOfBedSegment.getOffsetMillis());
 
         final SleepEvents<Event> events = SleepEvents.create(inBedEvent, fallAsleepEvent, wakeUpEvent, outOfBedEvent);
+        final Optional<Event> goToBed = Optional.of(events.goToBed);
+        final Optional<Event> sleep = Optional.of(events.fallAsleep);
+        final Optional<Event> wakeUp = Optional.of(events.wakeUp);
+        final Optional<Event> outOfBed = Optional.of(events.outOfBed);
 
-        final SleepEvents<Optional<Event>> optionalSleepEvents = SleepEventSafeGuard.sleepEventsHeuristicFix(events, vote.getAggregatedFeatures());
+        final SleepEvents<Optional<Event>> optionalSleepEvents = SleepEvents.create(goToBed, sleep, wakeUp, outOfBed);  //SleepEventSafeGuard.sleepEventsHeuristicFix(events, vote.getAggregatedFeatures());
         final List<Optional<Event>> items = optionalSleepEvents.toList();
 
         List<Event> returnedEvents = new ArrayList<>();
