@@ -25,9 +25,10 @@ public class MotionClusterTest extends CSVFixtureTest {
 
     //@Test
     public void testGetSleepTimeSpan(){
-        final List<AmplitudeData> input = loadFromResource("fixtures/cl_motion_2015_03_12_gap_filled.csv");
+        final List<AmplitudeData> input = loadAmpFromResource("fixtures/cl_motion_2015_03_12_gap_filled.csv");
+        final List<AmplitudeData> kickoffs = loadKickOffFromResource("fixtures/cl_motion_2015_03_12_gap_filled.csv");
         final int timezoneOffset = input.get(0).offsetMillis;
-        final MotionCluster cluster = MotionCluster.create(input, 100000, false, false);
+        final MotionCluster cluster = MotionCluster.create(input, kickoffs, 100000, false, false);
         final Segment sleepPeriod =  cluster.getSleepTimeSpan();
 
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepPeriod.getStartTimestamp(), timezoneOffset),
@@ -38,11 +39,12 @@ public class MotionClusterTest extends CSVFixtureTest {
 
     //@Test
     public void testTrimBySleepPeriod(){
-        final List<AmplitudeData> input = loadFromResource("fixtures/cl_motion_2015_03_12_gap_filled.csv");
+        final List<AmplitudeData> input = loadAmpFromResource("fixtures/cl_motion_2015_03_12_gap_filled.csv");
+        final List<AmplitudeData> kickoffs = loadKickOffFromResource("fixtures/cl_motion_2015_03_12_gap_filled.csv");
         final List<AmplitudeData> actualFeature = MotionCluster.getInputFeatureFromMotions(input).get(MotionFeatures.FeatureType.MOTION_COUNT_20MIN);
 
         final int timezoneOffset = input.get(0).offsetMillis;
-        final MotionCluster cluster = MotionCluster.create(input, 100000, false, false);
+        final MotionCluster cluster = MotionCluster.create(input, kickoffs, 100000, false, false);
         final Segment sleepPeriod =  cluster.getSleepTimeSpan();
         final List<AmplitudeData> trimmed = MotionCluster.trim(actualFeature, sleepPeriod.getStartTimestamp(), sleepPeriod.getEndTimestamp());
         assertThat(DateTimeTestUtils.millisToLocalUTC(trimmed.get(0).timestamp, timezoneOffset),
@@ -78,8 +80,8 @@ public class MotionClusterTest extends CSVFixtureTest {
 
     @Test
     public void testGetThreshold(){
-        final List<AmplitudeData> input = loadFromResource("fixtures/cl_motion_2015_03_12_gap_filled.csv");
-        final List<AmplitudeData> expectedFeature = loadFromResource("fixtures/cl_feature_2015_03_12.csv");
+        final List<AmplitudeData> input = loadAmpFromResource("fixtures/cl_motion_2015_03_12_gap_filled.csv");
+        final List<AmplitudeData> expectedFeature = loadAmpFromResource("fixtures/cl_feature_2015_03_12.csv");
         final List<AmplitudeData> actualFeature = MotionFeatures.generateTimestampAlignedFeatures(input,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES, false)

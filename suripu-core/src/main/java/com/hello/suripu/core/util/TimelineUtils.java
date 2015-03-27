@@ -1220,7 +1220,8 @@ public class TimelineUtils {
                                                               final List<DateTime> lightOutTimes,
                                                               final Optional<DateTime> firstWaveTimeOptional){
         final List<AmplitudeData> rawAmplitudeData = TrackerMotionUtils.trackerMotionToAmplitudeData(rawTrackerMotions);
-        final Vote vote = new Vote(rawAmplitudeData, lightOutTimes, firstWaveTimeOptional);
+        final List<AmplitudeData> rawKickOffCount = TrackerMotionUtils.trackerMotionToKickOffCounts(rawTrackerMotions);
+        final Vote vote = new Vote(rawAmplitudeData, rawKickOffCount, lightOutTimes, firstWaveTimeOptional);
 
         final SleepEvents<Segment> segments = vote.getResult(false);
         final Segment goToBedSegment = segments.goToBed;
