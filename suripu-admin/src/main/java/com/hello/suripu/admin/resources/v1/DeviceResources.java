@@ -6,10 +6,12 @@ import com.hello.suripu.admin.Util;
 import com.hello.suripu.admin.models.DeviceAdmin;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.DeviceDAOAdmin;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -23,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
@@ -39,6 +42,7 @@ public class DeviceResources {
     private static final Integer PILL_STATUS_WAITING_HOURS = 3;
 
     private final DeviceDAO deviceDAO;
+    private final DeviceDAOAdmin deviceDAOAdmin;
     private final DeviceDataDAO deviceDataDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final AccountDAO accountDAO;
@@ -47,6 +51,7 @@ public class DeviceResources {
     private final KeyStore pillKeyStore;
 
     public DeviceResources(final DeviceDAO deviceDAO,
+                           final DeviceDAOAdmin deviceDAOAdmin,
                            final DeviceDataDAO deviceDataDAO,
                            final TrackerMotionDAO trackerMotionDAO,
                            final AccountDAO accountDAO,
@@ -54,6 +59,7 @@ public class DeviceResources {
                            final KeyStore senseKeyStore,
                            final KeyStore pillKeyStore) {
         this.deviceDAO = deviceDAO;
+        this.deviceDAOAdmin = deviceDAOAdmin;
         this.accountDAO = accountDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.senseKeyStore = senseKeyStore;
@@ -118,15 +124,31 @@ public class DeviceResources {
 
         else {
             LOGGER.debug("Querying all pills whose IDs contain = {}", pillIdPartial);
-            pills.addAll(deviceDAO.getPillsByPillIdHint(pillIdPartial));
+            pills.addAll(deviceDAOAdmin.getPillsByPillIdHint(pillIdPartial));
         }
 
         final List<DeviceStatus> pillStatuses = new ArrayList<>();
         for (final DeviceAccountPair pill : pills) {
-            pillStatuses.addAll(deviceDAO.pillStatusBeforeTs(pill.internalDeviceId, new DateTime(endTs, DateTimeZone.UTC)));
+            pillStatuses.addAll(deviceDAOAdmin.pillStatusBeforeTs(pill.internalDeviceId, new DateTime(endTs, DateTimeZone.UTC)));
         }
 
         return pillStatuses;
+    }
+
+    @Timed
+    @GET
+    @Path("/{device_id}/accounts")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ImmutableList<Account> getAccountsByDeviceIDs(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                         @QueryParam("max_devices") final Long maxDevices,
+                                                         @PathParam("device_id") final String deviceId) {
+        final List<Account> accounts = new ArrayList<>();
+        LOGGER.debug("Searching accounts who have used device {}", deviceId);
+        accounts.addAll(deviceDAOAdmin.getAccountsBySenseId(deviceId, maxDevices));
+        if (accounts.isEmpty()) {
+            accounts.addAll(deviceDAOAdmin.getAccountsByPillId(deviceId, maxDevices));
+        }
+        return ImmutableList.copyOf(accounts);
     }
 
     // Helpers

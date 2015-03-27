@@ -34,7 +34,6 @@ import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.HEAD;
 import java.util.TimeZone;
 
 public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
@@ -108,7 +107,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
 
         environment.addResource(new PingResource());
         environment.addResource(new AccountResources(accountDAO));
-        environment.addResource(new DeviceResources(deviceDAO, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore));
+        environment.addResource(new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore));
         environment.addResource(new DataResources(deviceDataDAO, deviceDAO, accountDAO));
     }
 }
