@@ -1,5 +1,6 @@
 package com.hello.suripu.core.processors;
 
+import com.google.common.net.InetAddresses;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -22,9 +23,27 @@ public class OTAProcessor {
                                        final DateTime currentDTZ,
                                        final DateTime startOTAWindow,
                                        final DateTime endOTAWindow,
-                                       final Boolean isAlwaysOTA) {
+                                       final Boolean isAlwaysOTA,
+                                       final String ipAddress) {
 
         boolean canOTA;
+
+        //PCH IP address range exclusion
+        try {
+            final Integer ipAdd = InetAddresses.coerceToInteger(InetAddresses.forString(ipAddress));
+            final Integer startRange1 = InetAddresses.coerceToInteger(InetAddresses.forString("203.166.220.233"));
+            final Integer endRange1 = InetAddresses.coerceToInteger(InetAddresses.forString("203.166.220.246"));
+            final Integer startRange2 = InetAddresses.coerceToInteger(InetAddresses.forString("116.204.105.25"));
+            final Integer endRange2 = InetAddresses.coerceToInteger(InetAddresses.forString("116.204.105.38"));
+
+            if ((startRange1 <= ipAdd && ipAdd <= endRange1) ||
+                    (startRange2 <= ipAdd && ipAdd <= endRange2)) {
+                LOGGER.debug("IP Address Found in PCH Range: {}.", ipAddress);
+                return false;
+            }
+        } catch (IllegalArgumentException e) {
+            LOGGER.error("Invalid IP string used in PCH exclusion check. '{}'", ipAddress);
+        }
 
         if (isAlwaysOTA) {
             LOGGER.debug("Always OTA is on for device: ", deviceID);
