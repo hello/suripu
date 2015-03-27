@@ -7,7 +7,6 @@ import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.Segment;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +18,7 @@ import static org.hamcrest.Matchers.is;
  * Created by pangwu on 3/19/15.
  */
 public class VoteTest extends CSVFixtureTest {
-    @Test
+    //@Test
     public void testGetResultPetFiltered(){
         final List<AmplitudeData> input = loadAmpFromResource("fixtures/cl_motion_2015_03_12_raw.csv");
         final List<AmplitudeData> kickoffs = loadKickOffFromResource("fixtures/cl_motion_2015_03_12_raw.csv");
