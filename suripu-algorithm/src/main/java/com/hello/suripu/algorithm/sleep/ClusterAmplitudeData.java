@@ -1,4 +1,4 @@
-package com.hello.suripu.algorithm.utils;
+package com.hello.suripu.algorithm.sleep;
 
 import com.google.common.base.Objects;
 import com.hello.suripu.algorithm.core.AmplitudeData;

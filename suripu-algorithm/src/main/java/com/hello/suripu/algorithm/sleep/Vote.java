@@ -10,7 +10,6 @@ import com.hello.suripu.algorithm.sleep.scores.LightOutScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.MotionDensityScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.WaveAccumulateMotionScoreFunction;
 import com.hello.suripu.algorithm.sleep.scores.ZeroToMaxMotionCountDurationScoreFunction;
-import com.hello.suripu.algorithm.utils.ClusterAmplitudeData;
 import com.hello.suripu.algorithm.utils.DataUtils;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.algorithm.utils.NumericalUtils;
@@ -36,6 +35,7 @@ public class Vote {
     private final MotionCluster motionCluster;
     private final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures;
     private final double rawAmpMean;
+    private final double rawKickOffMean;
 
     private final boolean insertEmpty = true;
     private final boolean ampFilter = true;
@@ -43,25 +43,30 @@ public class Vote {
     private final boolean smoothCluster = false;
     private final boolean removeNoise = false;
 
-    public Vote(final List<AmplitudeData> raw,
+    public Vote(final List<AmplitudeData> rawData,
+                final List<AmplitudeData> kickOffCounts,
                 final List<DateTime> lightOutTimes,
                 final Optional<DateTime> firstWaveTimeOptional){
-        final List<AmplitudeData> noDuplicates = DataUtils.dedupe(raw);
+        final List<AmplitudeData> noDuplicates = DataUtils.dedupe(rawData);
         this.rawAmpMean = NumericalUtils.mean(noDuplicates);
+        final List<AmplitudeData> noDuplicateKickOffCounts = DataUtils.dedupe(kickOffCounts);
+        this.rawKickOffMean = NumericalUtils.mean(noDuplicateKickOffCounts);
 
         if(ampFilter){
-            final List<AmplitudeData> preprocessed = preprocessNoiseFilter(noDuplicates);
+            final List<AmplitudeData> preprocessed = preprocessNoiseFilter(noDuplicates, noDuplicateKickOffCounts);
             noDuplicates.clear();
             noDuplicates.addAll(preprocessed);
         }
 
         List<AmplitudeData> dataWithGapFilled = DataUtils.fillMissingValuesAndMakePositive(noDuplicates, DateTimeConstants.MILLIS_PER_MINUTE);
-
+        List<AmplitudeData> alignedKickOffs = DataUtils.fillMissingValuesAndMakePositive(noDuplicateKickOffCounts, DateTimeConstants.MILLIS_PER_MINUTE);
         if(insertEmpty) {
-            dataWithGapFilled = DataUtils.insertEmptyData(dataWithGapFilled, 20, 1);
+            final int insertLengthMin = 20;
+            dataWithGapFilled = DataUtils.insertEmptyData(dataWithGapFilled, insertLengthMin, 1);
+            alignedKickOffs = DataUtils.insertEmptyData(alignedKickOffs, insertLengthMin, 1);
         }
 
-        this.motionCluster = MotionCluster.create(dataWithGapFilled, rawAmpMean, smoothCluster, removeNoise);
+        this.motionCluster = MotionCluster.create(dataWithGapFilled, alignedKickOffs, rawAmpMean, smoothCluster, removeNoise);
         final Segment sleepPeriod  = this.motionCluster.getSleepTimeSpan();
         LOGGER.debug("data start from {} to {}", new DateTime(sleepPeriod.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepPeriod.getOffsetMillis())),
                 new DateTime(sleepPeriod.getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepPeriod.getOffsetMillis())));
@@ -149,15 +154,20 @@ public class Vote {
         this.motionScoreAlgorithm = sleepDetectionAlgorithm;
     }
 
-    private List<AmplitudeData> preprocessNoiseFilter(final List<AmplitudeData> rawData){
-        final double mean = NumericalUtils.mean(rawData);
+    private List<AmplitudeData> preprocessNoiseFilter(final List<AmplitudeData> rawData, final List<AmplitudeData> kickOffCounts){
+        final double amplitudeMean = NumericalUtils.mean(rawData);
+        final double kickOffMean = NumericalUtils.mean(kickOffCounts);
+
         final List<AmplitudeData> filtered = new ArrayList<>();
-        for(final AmplitudeData datum:rawData){
-            if(datum.amplitude < mean){
-                filtered.add(new AmplitudeData(datum.timestamp, 0d, datum.offsetMillis));
+        for(int i = 0; i < rawData.size(); i++){
+            final AmplitudeData amplitude = rawData.get(i);
+            final AmplitudeData kickOff = kickOffCounts.get(i);
+
+            if(amplitude.amplitude < amplitudeMean && kickOff.amplitude <= kickOffMean){
+                filtered.add(new AmplitudeData(amplitude.timestamp, 0d, amplitude.offsetMillis));
                 continue;
             }
-            filtered.add(new AmplitudeData(datum.timestamp, datum.amplitude, datum.offsetMillis));
+            filtered.add(new AmplitudeData(amplitude.timestamp, amplitude.amplitude, amplitude.offsetMillis));
         }
 
         return filtered;
@@ -209,7 +219,10 @@ public class Vote {
 
             //final long inBedTimestamp = pickInBed(sleepMotionCluster, inBed.getStartTimestamp());
             inBed = new Segment(clusterStart.timestamp, clusterStart.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterStart.offsetMillis);
-            sleep = new Segment(clusterEnd.timestamp, clusterEnd.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterEnd.offsetMillis);
+            final long sleepTimestamp = pickSleep(MotionCluster.copyRange(clusterCopy, sleepBounds.fst, sleepBounds.snd),
+                    this.aggregatedFeatures,
+                    sleep.getStartTimestamp());
+            sleep = new Segment(sleepTimestamp, sleepTimestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterEnd.offsetMillis);
         }
 
         Segment wakeUp = sleepEvents.wakeUp;
@@ -236,6 +249,9 @@ public class Vote {
     protected long pickWakeUp(final List<ClusterAmplitudeData> wakeUpMotionCluster,
                               final Map<MotionFeatures.FeatureType, List<AmplitudeData>> motionFeatures,
                               final long originalWakeUpMillis){
+        if(wakeUpMotionCluster.size() == 0){
+            return originalWakeUpMillis;
+        }
 
         long newWakeUpMillis = 0;
         final long clusterStartMillis = wakeUpMotionCluster.get(0).timestamp;
@@ -276,15 +292,21 @@ public class Vote {
         double maxSleepScore = 0d;
         long maxSleepMillis = 0;
 
+        final long endTimestamp = wakeFeature.get(wakeFeature.size() - 1).timestamp;
+        long searchEndMillis = endTimestamp;
 
-        for(int i = 0; i < wakeFeature.size() / 3; i++) {
+
+        for(int i = 0; i < wakeFeature.size(); i++) {
             final long timestamp = wakeFeature.get(i).timestamp;
-            if (timestamp > originalSleepMillis + DateTimeConstants.MILLIS_PER_HOUR) {
-                break;
-            }
-
             final double combinedForward = wakeFeature.get(i).amplitude;
             final double combinedBackWard = sleepFeature.get(i).amplitude;
+            if((combinedForward > 0 || combinedBackWard > 0) && searchEndMillis == endTimestamp){
+                searchEndMillis = timestamp + 3 * DateTimeConstants.MILLIS_PER_HOUR;
+            }
+
+            if (timestamp > searchEndMillis) {
+                break;
+            }
 
             if (combinedForward > maxWakeScore) {
                 maxWakeScore = combinedForward;
@@ -355,6 +377,10 @@ public class Vote {
         int gapCount = 0;
         int lastGapStartIndex = 0;
         final Pair<Integer, Integer> originalBounds = MotionCluster.getSignificantClusterIndex(clusters, originalWakeUpMillis);
+        if(isEmptyBounds(originalBounds)){
+            return originalBounds;
+        }
+
         int startIndex = originalBounds.fst;
         int endIndex = 0;
 
@@ -389,15 +415,32 @@ public class Vote {
         return new Pair<>(startIndex, endIndex);
     }
 
-    protected long pickSleep(final List<ClusterAmplitudeData> sleepMotionCluster, final long originalInBedMillis){
-        for(final ClusterAmplitudeData clusterAmplitudeData:sleepMotionCluster) {
-            if(clusterAmplitudeData.amplitude > this.motionCluster.getDensityMean() + this.motionCluster.getStd() &&
-                    clusterAmplitudeData.amplitude < originalInBedMillis) {
-                return clusterAmplitudeData.timestamp;
+    protected long pickSleep(final List<ClusterAmplitudeData> sleepMotionCluster,
+                             final Map<MotionFeatures.FeatureType, List<AmplitudeData>> motionFeatures,
+                             final long originalSleepMillis){
+
+        if(sleepMotionCluster.size() == 0){
+            return originalSleepMillis;
+        }
+
+        final long startMillis = sleepMotionCluster.get(0).timestamp;
+        final long endMillis = sleepMotionCluster.get(sleepMotionCluster.size() - 1).timestamp;
+        double maxValue = 0;
+        long maxTimeMillis = 0;
+
+        final List<AmplitudeData> sleepFeature = motionFeatures.get(MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE);
+        for(final AmplitudeData feature:sleepFeature) {
+            if(feature.timestamp >= startMillis && feature.timestamp <= endMillis && feature.amplitude >= maxValue) {
+                maxValue = feature.amplitude;
+                maxTimeMillis = feature.timestamp;
             }
         }
 
-        return originalInBedMillis;
+        if(maxTimeMillis > 0 && endMillis - maxTimeMillis > 15 * DateTimeConstants.MILLIS_PER_MINUTE){
+            return maxTimeMillis;
+        }
+
+        return endMillis;
     }
 
     public Map<MotionFeatures.FeatureType, List<AmplitudeData>> getAggregatedFeatures(){

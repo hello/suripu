@@ -2,7 +2,6 @@ package com.hello.suripu.algorithm.sleep;
 
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.Segment;
-import com.hello.suripu.algorithm.utils.ClusterAmplitudeData;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.algorithm.utils.NumericalUtils;
 import com.sun.tools.javac.util.Pair;
@@ -29,13 +28,17 @@ public class MotionCluster {
     private double std;
     private Segment sleepPeriod;
 
-    public static List<ClusterAmplitudeData> getClusters(final List<AmplitudeData> amplitudeData, final double threshold){
+    public static List<ClusterAmplitudeData> getClusters(final List<AmplitudeData> densityFeature, final double threshold,
+                                                         final List<AmplitudeData> amplitudes, final double amplitudeThreshold){
         final List<ClusterAmplitudeData> result = new ArrayList<>();
-        for(final AmplitudeData datum:amplitudeData) {
-            if(datum.amplitude >= threshold){
-                result.add(ClusterAmplitudeData.create(datum, true));
+        for(int i = 0; i < densityFeature.size(); i++) {
+            final AmplitudeData density = densityFeature.get(i);
+            final AmplitudeData amplitude = amplitudes.get(i);
+
+            if(density.amplitude >= threshold || amplitude.amplitude >= amplitudeThreshold){
+                result.add(ClusterAmplitudeData.create(density, true));
             }else{
-                result.add(ClusterAmplitudeData.create(datum, false));
+                result.add(ClusterAmplitudeData.create(density, false));
             }
         }
 
@@ -81,7 +84,8 @@ public class MotionCluster {
 
 
         final List<AmplitudeData> amplitudeFeature = features.get(MotionFeatures.FeatureType.MAX_AMPLITUDE);
-        final List<ClusterAmplitudeData> rawClusters = MotionCluster.getClusters(densityFeature, densityThreshold);
+        final List<ClusterAmplitudeData> rawClusters = MotionCluster.getClusters(densityFeature, densityThreshold,
+                amplitudeFeature, originalAmplitudeMean);
 
         this.sleepPeriod = MotionCluster.getSleepPeriod(densityFeature, amplitudeFeature, densityThreshold, originalAmplitudeMean);
 
@@ -130,11 +134,12 @@ public class MotionCluster {
         return this.std;
     }
 
-    public static MotionCluster create(final List<AmplitudeData> dataWithoutMissingValues,
+    public static MotionCluster create(final List<AmplitudeData> alignedAmplitudeData,
+                                       final List<AmplitudeData> alignedKickOffCounts,
                                        final double originalMean,
                                        final boolean smoothCluster,
                                        final boolean removeNoise){
-        final MotionCluster cluster = new MotionCluster(dataWithoutMissingValues, originalMean, smoothCluster, removeNoise);
+        final MotionCluster cluster = new MotionCluster(alignedAmplitudeData, originalMean, smoothCluster, removeNoise);
         return cluster;
     }
 
