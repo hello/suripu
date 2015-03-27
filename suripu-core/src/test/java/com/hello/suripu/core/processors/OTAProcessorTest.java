@@ -29,10 +29,11 @@ public class OTAProcessorTest {
         final DateTime currentDTZ = DateTime.now().withZone(DateTimeZone.forID("UTC"));
         final DateTime startOTAWindow = new DateTime(userTimeZone).withHourOfDay(11).withMinuteOfHour(0);
         final DateTime endOTAWindow = new DateTime(userTimeZone).withHourOfDay(22).withMinuteOfHour(0);
+        final String ipAddress = "127.0.0.1";
 
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true), is(true));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true, ipAddress), is(true));
 
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, false), is(false));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, false, ipAddress), is(false));
     }
 
     @Test
@@ -49,10 +50,10 @@ public class OTAProcessorTest {
         final DateTime startOTAWindow = new DateTime(userTimeZone).withHourOfDay(11).withMinuteOfHour(0);
         final DateTime endOTAWindow = new DateTime(userTimeZone).withHourOfDay(22).withMinuteOfHour(0);
         final Boolean alwaysOTA = false;
+        final String ipAddress = "127.0.0.1";
 
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA), is(true));
-
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, badDTZ, startOTAWindow, endOTAWindow, alwaysOTA), is(false));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(true));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, badDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(false));
     }
 
     @Test
@@ -66,10 +67,11 @@ public class OTAProcessorTest {
         final DateTime startOTAWindow = new DateTime(userTimeZone).withHourOfDay(11).withMinuteOfHour(0);
         final DateTime endOTAWindow = new DateTime(userTimeZone).withHourOfDay(22).withMinuteOfHour(0);
         final Boolean alwaysOTA = false;
+        final String ipAddress = "127.0.0.1";
 
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, 20, 1201, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA), is(true));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, 20, 1201, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(true));
 
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, 20, 1200, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA), is(false));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, 20, 1200, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(false));
     }
 
     @Test
@@ -86,9 +88,35 @@ public class OTAProcessorTest {
         final DateTime startOTAWindow = new DateTime(userTimeZone).withHourOfDay(11).withMinuteOfHour(0);
         final DateTime endOTAWindow = new DateTime(userTimeZone).withHourOfDay(22).withMinuteOfHour(0);
         final Boolean alwaysOTA = false;
+        final String ipAddress = "127.0.0.1";
 
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA), is(true));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(true));
 
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, nonOverrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA), is(false));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, nonOverrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(false));
+    }
+
+    @Test
+    public void testOTAPCHExclusionCheck(){
+
+        String deviceID = "fake-sense";
+        final List<String> deviceGroups = Arrays.asList("group1", "group2", "group3");
+        final Set<String> overrideOTAGroups =  Sets.newHashSet("override");
+        final DateTimeZone userTimeZone = DateTimeZone.UTC;
+        final Integer deviceUptimeDelayMinutes = 20;
+        final Integer uptimeInSeconds = 10 * DateTimeConstants.SECONDS_PER_MINUTE; //This should invalidate all cases that aren't 'alwaysOTA'
+        final DateTime currentDTZ = DateTime.now().withZone(DateTimeZone.forID("UTC"));
+        final DateTime startOTAWindow = new DateTime(userTimeZone).withHourOfDay(11).withMinuteOfHour(0);
+        final DateTime endOTAWindow = new DateTime(userTimeZone).withHourOfDay(22).withMinuteOfHour(0);
+        final String pchAddress1 = "203.166.220.233";
+        final String pchAddress2 = "116.204.105.38";
+        final String nonPchAddress1 = "203.166.220.232";
+        final String nonPchAddress2 = "116.204.105.39";
+        final String badAddress = "bad Address";
+
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true, pchAddress1), is(false));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true, pchAddress2), is(false));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true, nonPchAddress1), is(true));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true, nonPchAddress2), is(true));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true, badAddress), is(true));
     }
 }

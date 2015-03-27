@@ -488,9 +488,11 @@ public class ReceiveResource extends BaseResource {
         final Integer deviceUptimeDelay = otaConfiguration.getDeviceUptimeDelay();
         final Boolean alwaysOTA = (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceID, deviceGroups));
 
+
+        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
+
         //Provides for an in-office override feature that allows OTA (ignores checks) provided the IP is our office IP.
         if (featureFlipper.deviceFeatureActive(FeatureFlipper.OFFICE_ONLY_OVERRIDE, deviceID, deviceGroups)) {
-            final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
             if (ipAddress.equals(LOCAL_OFFICE_IP_ADDRESS) && !deviceGroups.isEmpty()) {
                 final String updateGroup = deviceGroups.get(0);
                 LOGGER.info("Office OTA Override for DeviceId {}", deviceID, deviceGroups);
@@ -502,7 +504,7 @@ public class ReceiveResource extends BaseResource {
             }
         }
 
-        final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, alwaysOTA);
+        final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress);
 
         if(canOTA) {
 
