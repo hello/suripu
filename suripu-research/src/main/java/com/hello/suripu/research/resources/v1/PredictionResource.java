@@ -184,7 +184,9 @@ public class PredictionResource extends BaseResource {
         final List<Event> lightOuts = MultiLightOutUtils.getValidLightOuts(smoothedLightEvents, trackerMotions, MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
 
         final List<DateTime> lightOutTimes = MultiLightOutUtils.getLightOutTimes(lightOuts);
-        final Vote vote = new Vote(TrackerMotionUtils.trackerMotionToAmplitudeData(trackerMotions), lightOutTimes, wakeUpWaveTimeOptional);
+        final Vote vote = new Vote(TrackerMotionUtils.trackerMotionToAmplitudeData(trackerMotions),
+                TrackerMotionUtils.trackerMotionToKickOffCounts(trackerMotions),
+                lightOutTimes, wakeUpWaveTimeOptional);
 
         final SleepEvents<Segment> sleepEvents = vote.getResult(false);
         final Segment goToBedSegment = sleepEvents.goToBed;

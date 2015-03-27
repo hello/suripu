@@ -78,7 +78,7 @@ public class MotionClusterTest extends CSVFixtureTest {
         }
     }
 
-    @Test
+    //@Test
     public void testGetThreshold(){
         final List<AmplitudeData> input = loadAmpFromResource("fixtures/cl_motion_2015_03_12_gap_filled.csv");
         final List<AmplitudeData> expectedFeature = loadAmpFromResource("fixtures/cl_feature_2015_03_12.csv");
