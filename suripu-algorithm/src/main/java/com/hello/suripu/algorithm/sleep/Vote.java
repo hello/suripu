@@ -31,22 +31,28 @@ import java.util.Set;
  */
 public class Vote {
     private final static Logger LOGGER = LoggerFactory.getLogger(Vote.class);
-    private final MotionScoreAlgorithm motionScoreAlgorithm;
+    private final MotionScoreAlgorithm motionScoreAlgorithmInternal;
+    private final MotionScoreAlgorithm motionScoreAlgorithmDefault;
+
     private final MotionCluster motionCluster;
     private final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures;
     private final double rawAmpMean;
     private final double rawKickOffMean;
 
     private final boolean insertEmpty = true;
-    private final boolean ampFilter = true;
-    private final boolean tailBias = true;
+    private final boolean ampFilter = false;
+    private final boolean tailBias = false;
     private final boolean smoothCluster = false;
-    private final boolean removeNoise = false;
+    private final boolean removeNoise = true;
 
     public Vote(final List<AmplitudeData> rawData,
                 final List<AmplitudeData> kickOffCounts,
                 final List<DateTime> lightOutTimes,
                 final Optional<DateTime> firstWaveTimeOptional){
+        this.motionScoreAlgorithmDefault = MotionScoreAlgorithm.createDefault(rawData,
+                lightOutTimes,
+                firstWaveTimeOptional);
+
         final List<AmplitudeData> noDuplicates = DataUtils.dedupe(rawData);
         this.rawAmpMean = NumericalUtils.mean(noDuplicates);
         final List<AmplitudeData> noDuplicateKickOffCounts = DataUtils.dedupe(kickOffCounts);
@@ -151,7 +157,7 @@ public class Vote {
             sleepDetectionAlgorithm.addFeature(waveAndCumulateMotionFeature, new WaveAccumulateMotionScoreFunction(firstWaveTimeOptional.get()));
         }
 
-        this.motionScoreAlgorithm = sleepDetectionAlgorithm;
+        this.motionScoreAlgorithmInternal = sleepDetectionAlgorithm;
     }
 
     private List<AmplitudeData> preprocessNoiseFilter(final List<AmplitudeData> rawData, final List<AmplitudeData> kickOffCounts){
@@ -174,8 +180,10 @@ public class Vote {
     }
 
     public SleepEvents<Segment> getResult(final boolean debug){
-        final SleepEvents<Segment> sleepEvents = motionScoreAlgorithm.getSleepEvents(debug);
-        final SleepEvents<Segment> events = aggregate(sleepEvents);
+        final SleepEvents<Segment> sleepEvents = motionScoreAlgorithmInternal.getSleepEvents(debug);
+        final SleepEvents<Segment> defaultEvents = this.motionScoreAlgorithmDefault.getSleepEvents(debug);
+
+        final SleepEvents<Segment> events = aggregate(sleepEvents, defaultEvents);
         if(debug){
             LOGGER.debug("IN_BED: {}",
                     new DateTime(events.goToBed.getStartTimestamp(),
@@ -201,7 +209,8 @@ public class Vote {
         return true;
     }
 
-    private SleepEvents<Segment> aggregate(final SleepEvents<Segment> sleepEvents){
+    private SleepEvents<Segment> aggregate(final SleepEvents<Segment> sleepEvents,
+                                           final SleepEvents<Segment> defaultEvents){
         final long sleepTime = sleepEvents.fallAsleep.getStartTimestamp();
         final long wakeUpTime = sleepEvents.wakeUp.getStartTimestamp();
         final List<ClusterAmplitudeData> clusterCopy = this.motionCluster.getCopyOfClusters();
@@ -222,7 +231,9 @@ public class Vote {
             final long sleepTimestamp = pickSleep(MotionCluster.copyRange(clusterCopy, sleepBounds.fst, sleepBounds.snd),
                     this.aggregatedFeatures,
                     sleep.getStartTimestamp());
-            sleep = new Segment(sleepTimestamp, sleepTimestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterEnd.offsetMillis);
+            sleep = new Segment(defaultEvents.fallAsleep.getStartTimestamp(),
+                    defaultEvents.fallAsleep.getEndTimestamp(),
+                    defaultEvents.fallAsleep.getOffsetMillis());
         }
 
         Segment wakeUp = sleepEvents.wakeUp;
@@ -240,7 +251,9 @@ public class Vote {
             final long wakeUpTimestamp = pickWakeUp(MotionCluster.copyRange(clusterCopy, wakeUpBounds.fst, wakeUpBounds.snd),
                     this.aggregatedFeatures,
                     wakeUp.getStartTimestamp());
-            wakeUp = new Segment(wakeUpTimestamp, wakeUpTimestamp + DateTimeConstants.MILLIS_PER_MINUTE, wakeUp.getOffsetMillis());
+            wakeUp = new Segment(defaultEvents.wakeUp.getStartTimestamp(),
+                    defaultEvents.wakeUp.getEndTimestamp(),
+                    defaultEvents.wakeUp.getOffsetMillis());
         }
 
         return SleepEvents.create(inBed, sleep, wakeUp, outBed);
@@ -452,6 +465,6 @@ public class Vote {
     }
 
     public MotionScoreAlgorithm getMultiScoreAlgorithm(){
-        return this.motionScoreAlgorithm;
+        return this.motionScoreAlgorithmInternal;
     }
 }
