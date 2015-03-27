@@ -32,9 +32,6 @@ import com.hello.suripu.service.configuration.SenseUploadConfiguration;
 import com.hello.suripu.service.models.UploadSettings;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
-import com.google.common.net.InetAddresses;
-
-import java.net.InetAddress;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
