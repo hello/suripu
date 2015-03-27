@@ -26,6 +26,11 @@ public class TimelineRefactored {
     public static Map<Long, Event> populateTimeline(final List<MotionEvent> motionEventList) {
 
         final Map<Long, Event> map = Maps.newHashMap();
+        if (motionEventList.isEmpty()) {
+            LOGGER.debug("Empty motion event list");
+            return map;
+        }
+
         final Long tsForFirstMotionEvent = motionEventList.get(0).getStartTimestamp();
         final Long tsForLastMotionEvent = motionEventList.get(motionEventList.size() -1).getStartTimestamp();
         final Integer offset = motionEventList.get(0).getTimezoneOffset();

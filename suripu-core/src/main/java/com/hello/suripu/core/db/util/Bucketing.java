@@ -132,11 +132,12 @@ public class Bucketing {
             final float temperatureValue = DataUtils.calibrateTemperature(deviceData.ambientTemperature);
             final float particulatesValue = (float) DataUtils.convertRawDustCountsToAQI(deviceData.ambientAirQualityRaw, deviceData.firmwareVersion);
             final int waveCount = deviceData.waveCount;
+            final int holdCount = deviceData.holdCount;
             final float soundNumDisturbances = (float) deviceData.audioNumDisturbances;
             final float soundPeakDisturbance = DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB);
 
             populatedMap.addSample(newKey, deviceData.offsetMillis,
-                    lightValue, soundValue, humidityValue, temperatureValue, particulatesValue, waveCount,
+                    lightValue, soundValue, humidityValue, temperatureValue, particulatesValue, waveCount, holdCount,
                     soundNumDisturbances, soundPeakDisturbance);
         }
 

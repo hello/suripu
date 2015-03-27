@@ -13,6 +13,7 @@ import com.google.common.collect.ImmutableMap;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.app.cli.CreateDynamoDBTables;
+import com.hello.suripu.app.cli.PopulateSleepScoreTable;
 import com.hello.suripu.app.cli.RecreatePillColorCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.modules.RolloutAppModule;
@@ -25,6 +26,7 @@ import com.hello.suripu.app.resources.v1.DataScienceResource;
 import com.hello.suripu.app.resources.v1.DeviceResources;
 import com.hello.suripu.app.resources.v1.FeaturesResource;
 import com.hello.suripu.app.resources.v1.FeedbackResource;
+import com.hello.suripu.app.resources.v1.FirmwareResource;
 import com.hello.suripu.app.resources.v1.InsightsResource;
 import com.hello.suripu.app.resources.v1.MobilePushRegistrationResource;
 import com.hello.suripu.app.resources.v1.OAuthResource;
@@ -37,7 +39,6 @@ import com.hello.suripu.app.resources.v1.SleepLabelResource;
 import com.hello.suripu.app.resources.v1.TeamsResource;
 import com.hello.suripu.app.resources.v1.TimeZoneResource;
 import com.hello.suripu.app.resources.v1.TimelineResource;
-import com.hello.suripu.app.resources.v1.FirmwareResource;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
@@ -62,6 +63,7 @@ import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.SleepScoreDAO;
+import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
@@ -126,6 +128,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         bootstrap.addBundle(new DBIExceptionsBundle());
         bootstrap.addCommand(new CreateDynamoDBTables());
         bootstrap.addCommand(new RecreatePillColorCommand());
+        bootstrap.addCommand(new PopulateSleepScoreTable());
+//        bootstrap.addCommand(new RecreateTZCommand());
         bootstrap.addBundle(new KinesisLoggerBundle<SuripuAppConfiguration>() {
             @Override
             public KinesisLoggerConfiguration getConfiguration(final SuripuAppConfiguration configuration) {
@@ -225,6 +229,10 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 configuration.getSleepScoreVersion()
         );
 
+        final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = new SleepStatsDAODynamoDB(dynamoDBScoreClient,
+                configuration.getSleepStatsDynamoConfiguration().getTableName(),
+                configuration.getSleepStatsVersion());
+
         final JedisPool jedisPool = new JedisPool(
                 configuration.getRedisConfiguration().getHost(),
                 configuration.getRedisConfiguration().getPort()
@@ -322,15 +330,11 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 trackerMotionDAO,
                 deviceDAO,
                 deviceDataDAO,
-                sleepLabelDAO,
-                sleepScoreDAO,
-                trendsInsightsDAO,
-                aggregateSleepScoreDAODynamoDB,
-                configuration.getScoreThreshold(),
                 ringTimeHistoryDAODynamoDB,
                 feedbackDAO,
                 sleepHmmDAODynamoDB,
-                accountDAO);
+                accountDAO,
+                sleepStatsDAODynamoDB);
 
         environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB, timelineProcessor));
 
@@ -341,7 +345,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new FeaturesResource(featureStore));
 
         environment.addResource(new QuestionsResource(accountDAO, questionResponseDAO, timeZoneHistoryDAODynamoDB, configuration.getQuestionConfigs().getNumSkips()));
-        environment.addResource(new InsightsResource(accountDAO, trendsInsightsDAO, aggregateSleepScoreDAODynamoDB, trackerMotionDAO, insightsDAODynamoDB));
+        environment.addResource(new InsightsResource(accountDAO, trendsInsightsDAO, aggregateSleepScoreDAODynamoDB, trackerMotionDAO, insightsDAODynamoDB, sleepStatsDAODynamoDB));
         environment.addResource(new TeamsResource(teamStore));
         environment.addResource(new FeedbackResource(feedbackDAO, timelineDAODynamoDB));
         environment.addResource(new AppCheckinResource(false, "")); // TODO: replace this with real app version. Maybe move it to admin tool?

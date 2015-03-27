@@ -1,8 +1,9 @@
 package com.hello.suripu.core.util;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateScore;
+import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Insights.AvailableGraph;
 import com.hello.suripu.core.models.Insights.DowSample;
 import com.hello.suripu.core.models.Insights.GraphSample;
@@ -23,7 +24,7 @@ import java.util.Map;
  */
 public class TrendGraphUtils {
 
-    private static int TRENDS_AVAILABLE_AFTER_DAYS = 7; // no trends before collecting 10 days of data
+    private static int TRENDS_AVAILABLE_AFTER_DAYS = 3; // no trends before collecting 10 days of data
 
     public static TrendGraph getDayOfWeekGraph(final TrendGraph.DataType dataType, final TrendGraph.TimePeriodType timePeriodType, final List<DowSample> rawData) {
 
@@ -56,7 +57,7 @@ public class TrendGraphUtils {
     }
 
     public static TrendGraph getScoresOverTimeGraph(final TrendGraph.TimePeriodType timePeriodType,
-                                                    final ImmutableList<AggregateScore> scores,
+                                                    final List<AggregateScore> scores,
                                                     final Map<DateTime, Integer> userOffsetMillis,
                                                     final int numDaysActive) {
         // aggregate
@@ -80,7 +81,7 @@ public class TrendGraphUtils {
     }
 
     public static TrendGraph getDurationOverTimeGraph(final TrendGraph.TimePeriodType timePeriodType,
-                                                      final ImmutableList<SleepStatsSample> statsSamples, final int numDaysActive) {
+                                                      final List<SleepStatsSample> statsSamples, final int numDaysActive) {
 
         final List<GraphSample> dataPoints = new ArrayList<>();
         for (final SleepStatsSample sample : statsSamples) {
@@ -105,6 +106,33 @@ public class TrendGraphUtils {
             }
         }
         return graphlist;
+    }
+
+    public static List<DowSample> aggregateDOWData(final List<AggregateSleepStats> sleepStats, final TrendGraph.DataType dataType) {
+        final List<DowSample> dayOfWeekData = new ArrayList<>();
+
+        final List<Integer> sums = Lists.newArrayList(0, 0, 0, 0, 0, 0, 0);
+        final List<Integer> counts = Lists.newArrayList(0, 0, 0, 0, 0, 0, 0);
+
+        for (final AggregateSleepStats stat: sleepStats) {
+            Integer value = stat.sleepScore;
+            if (dataType == TrendGraph.DataType.SLEEP_DURATION) {
+                value = stat.sleepStats.sleepDurationInMinutes;
+            }
+
+            final int dayOfWeek = stat.dateTime.getDayOfWeek() - 1;
+            value += sums.get(dayOfWeek);
+            sums.set(dayOfWeek, value);
+
+            final int count = counts.get(dayOfWeek) + 1;
+            counts.set(dayOfWeek, count);
+        }
+
+        for (int i = 0; i < 7; i++) {
+            final float avgValue = (counts.get(i) > 0) ? ((float) sums.get(i)) / counts.get(i) : 0.0f;
+            dayOfWeekData.add(new DowSample(i+1, avgValue));
+        }
+        return dayOfWeekData;
     }
 
     public static boolean checkEligibility(final DateTime accountCreated) {

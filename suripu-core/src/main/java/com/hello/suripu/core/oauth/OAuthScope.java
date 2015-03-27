@@ -34,7 +34,8 @@ public enum OAuthScope {
     INSIGHTS_READ(23),
     PREFERENCES(24),
     PASSWORD_RESET(25),
-    RESEARCH(26);
+    RESEARCH(26),
+    TIMEZONE_READ(27);
 
     private int value;
 

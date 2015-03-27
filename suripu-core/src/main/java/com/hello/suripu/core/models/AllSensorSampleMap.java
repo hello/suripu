@@ -12,6 +12,7 @@ public class AllSensorSampleMap {
     private final Map<Long, Sample> temperature = Maps.newHashMap();
     private final Map<Long, Sample> particulates = Maps.newHashMap();
     private final Map<Long, Sample> waveCounts = Maps.newHashMap();
+    private final Map<Long, Sample> holdCounts = Maps.newHashMap();
     private final Map<Long, Sample> soundNumDisturbances = Maps.newHashMap();
     private final Map<Long, Sample> soundPeakDisturbance = Maps.newHashMap();
 
@@ -25,6 +26,7 @@ public class AllSensorSampleMap {
                           final float temperature,
                           final float particulates,
                           final int waveCount,
+                          final int holdCount,
                           final float soundNumDisturbance,
                           final float soundPeakDisturbance) {
 
@@ -34,6 +36,7 @@ public class AllSensorSampleMap {
         this.temperature.put(dateTime, new Sample(dateTime, temperature, offsetMillis));
         this.particulates.put(dateTime, new Sample(dateTime, particulates, offsetMillis));
         this.waveCounts.put(dateTime, new Sample(dateTime, waveCount, offsetMillis));
+        this.holdCounts.put(dateTime, new Sample(dateTime, holdCount, offsetMillis));
         this.soundNumDisturbances.put(dateTime, new Sample(dateTime, soundNumDisturbance, offsetMillis));
         this.soundPeakDisturbance.put(dateTime, new Sample(dateTime, soundPeakDisturbance, offsetMillis));
     }
@@ -57,6 +60,9 @@ public class AllSensorSampleMap {
                 break;
             case WAVE_COUNT:
                 this.waveCounts.putAll(sampleMap);
+                break;
+            case HOLD_COUNT:
+                this.holdCounts.putAll(sampleMap);
                 break;
             case SOUND_NUM_DISTURBANCES:
                 this.soundNumDisturbances.putAll(sampleMap);
@@ -83,6 +89,8 @@ public class AllSensorSampleMap {
                 return particulates;
             case WAVE_COUNT:
                 return waveCounts;
+            case HOLD_COUNT:
+                return holdCounts;
             case SOUND_NUM_DISTURBANCES:
                 return soundNumDisturbances;
             case SOUND_PEAK_DISTURBANCE:
@@ -93,7 +101,7 @@ public class AllSensorSampleMap {
 
     public Boolean isEmpty() {
         return light.isEmpty() && sound.isEmpty() && humidity.isEmpty() && temperature.isEmpty()
-                && particulates.isEmpty() && waveCounts.isEmpty()
+                && particulates.isEmpty() && waveCounts.isEmpty() && holdCounts.isEmpty()
                 && soundNumDisturbances.isEmpty() && soundPeakDisturbance.isEmpty();
     }
 
