@@ -876,7 +876,7 @@ public class TimelineUtilsTest extends FixtureTest {
     }
 
 
-    @Test
+    //@Test
     public void testGetResultVotingAlgorithm(){
         final List<TrackerMotion> trackerMotions = loadTrackerMotionFromCSV("fixtures/algorithm/qf_motion_2015_03_12_raw.csv");
         final List<DateTime> lightOuts = new ArrayList<>();
