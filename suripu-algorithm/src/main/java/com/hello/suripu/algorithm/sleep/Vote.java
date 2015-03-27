@@ -38,10 +38,10 @@ public class Vote {
     private final double rawKickOffMean;
 
     private final boolean insertEmpty = true;
-    private final boolean ampFilter = true;
-    private final boolean tailBias = true;
+    private final boolean ampFilter = false;
+    private final boolean tailBias = false;
     private final boolean smoothCluster = false;
-    private final boolean removeNoise = false;
+    private final boolean removeNoise = true;
 
     public Vote(final List<AmplitudeData> rawData,
                 final List<AmplitudeData> kickOffCounts,
