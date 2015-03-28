@@ -44,6 +44,7 @@ public class SuripuAdminConfiguration extends Configuration {
     @NotNull
     @JsonProperty("kinesis")
     private KinesisConfiguration kinesisConfiguration;
+
     public KinesisConfiguration getKinesisConfiguration() {
         return kinesisConfiguration;
     }
@@ -53,7 +54,8 @@ public class SuripuAdminConfiguration extends Configuration {
     @NotNull
     @JsonProperty("features_db")
     private DynamoDBConfiguration featuresDynamoDBConfiguration;
-    public DynamoDBConfiguration getFeaturesDynamoDBConfiguration(){
+
+    public DynamoDBConfiguration getFeaturesDynamoDBConfiguration() {
         return this.featuresDynamoDBConfiguration;
     }
 
@@ -70,7 +72,8 @@ public class SuripuAdminConfiguration extends Configuration {
     @NotNull
     @JsonProperty("alarm_info_db")
     private DynamoDBConfiguration userInfoDynamoDBConfiguration;
-    public DynamoDBConfiguration getUserInfoDynamoDBConfiguration(){
+
+    public DynamoDBConfiguration getUserInfoDynamoDBConfiguration() {
         return this.userInfoDynamoDBConfiguration;
     }
 
@@ -78,6 +81,7 @@ public class SuripuAdminConfiguration extends Configuration {
     @NotNull
     @JsonProperty("redis")
     private RedisConfiguration redisConfiguration;
+
     public RedisConfiguration getRedisConfiguration() {
         return redisConfiguration;
     }
@@ -86,11 +90,27 @@ public class SuripuAdminConfiguration extends Configuration {
     @NotNull
     @JsonProperty("sense_key_store_dynamo_db")
     private DynamoDBConfiguration senseKeyStoreDynamoConfiguration;
-    public DynamoDBConfiguration getSenseKeyStoreDynamoDBConfiguration() { return senseKeyStoreDynamoConfiguration; }
+
+    public DynamoDBConfiguration getSenseKeyStoreDynamoDBConfiguration() {
+        return senseKeyStoreDynamoConfiguration;
+    }
 
     @Valid
     @NotNull
     @JsonProperty("pill_key_store_dynamo_db")
     private DynamoDBConfiguration pillKeyStoreDynamoDBConfiguration;
-    public DynamoDBConfiguration getPillKeyStoreDynamoDBConfiguration() { return pillKeyStoreDynamoDBConfiguration; }
+
+    public DynamoDBConfiguration getPillKeyStoreDynamoDBConfiguration() {
+        return pillKeyStoreDynamoDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("password_reset_db")
+    private DynamoDBConfiguration passwordResetDBConfiguration;
+
+    public DynamoDBConfiguration getPasswordResetDBConfiguration() {
+        return this.passwordResetDBConfiguration;
+
+    }
 }
