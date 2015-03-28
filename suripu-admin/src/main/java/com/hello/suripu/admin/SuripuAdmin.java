@@ -14,6 +14,7 @@ import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.DeviceDAOAdmin;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
@@ -77,6 +78,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
 
         final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
         final DeviceDAO deviceDAO = commonDB.onDemand(DeviceDAO.class);
+        final DeviceDAOAdmin deviceDAOAdmin = commonDB.onDemand(DeviceDAOAdmin.class);
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
 
@@ -105,7 +107,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
 
         environment.addResource(new PingResource());
         environment.addResource(new AccountResources(accountDAO));
-        environment.addResource(new DeviceResources(deviceDAO, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore));
+        environment.addResource(new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore));
         environment.addResource(new DataResources(deviceDataDAO, deviceDAO, accountDAO));
     }
 }
