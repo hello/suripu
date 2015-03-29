@@ -93,7 +93,7 @@ public class AccountResources {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/update_password")
-    public Response passwordUpdate(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken, final PasswordResetAdmin passwordResetAdmin) {
+    public Response passwordUpdate(@Scope({OAuthScope.ADMINISTRATION_WRITE, OAuthScope.PASSWORD_RESET}) final AccessToken accessToken, final PasswordResetAdmin passwordResetAdmin) {
 
         LOGGER.debug("Admin {} attempts to set passsword for email {}", accessToken.accountId, passwordResetAdmin.email);
         final Optional<Account> accountOptional = accountDAO.getByEmail(passwordResetAdmin.email.toLowerCase());
