@@ -2,6 +2,7 @@ package com.hello.suripu.algorithm.sleep;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.scores.AmplitudeDataScoringFunction;
@@ -21,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +40,8 @@ public class Vote {
     private final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures;
     private final double rawAmpMean;
     private final double rawKickOffMean;
+
+    private final Segment sleepPeriod;
 
     private final boolean insertEmpty = true;
     private final boolean ampFilter = false;
@@ -59,12 +63,6 @@ public class Vote {
         final List<AmplitudeData> noDuplicateKickOffCounts = DataUtils.dedupe(kickOffCounts);
         this.rawKickOffMean = NumericalUtils.mean(noDuplicateKickOffCounts);
 
-        if(ampFilter){
-            final List<AmplitudeData> preprocessed = preprocessNoiseFilter(noDuplicates, noDuplicateKickOffCounts);
-            noDuplicates.clear();
-            noDuplicates.addAll(preprocessed);
-        }
-
         List<AmplitudeData> dataWithGapFilled = DataUtils.fillMissingValuesAndMakePositive(noDuplicates, DateTimeConstants.MILLIS_PER_MINUTE);
         List<AmplitudeData> alignedKickOffs = DataUtils.fillMissingValuesAndMakePositive(noDuplicateKickOffCounts, DateTimeConstants.MILLIS_PER_MINUTE);
         if(insertEmpty) {
@@ -73,10 +71,13 @@ public class Vote {
             alignedKickOffs = DataUtils.insertEmptyData(alignedKickOffs, insertLengthMin, 1);
         }
 
-        this.motionCluster = MotionCluster.create(dataWithGapFilled, alignedKickOffs, rawAmpMean, smoothCluster, removeNoise);
-        final Segment sleepPeriod  = this.motionCluster.getSleepTimeSpan();
-        LOGGER.debug("data start from {} to {}", new DateTime(sleepPeriod.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepPeriod.getOffsetMillis())),
-                new DateTime(sleepPeriod.getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepPeriod.getOffsetMillis())));
+        this.motionCluster = MotionCluster.create(dataWithGapFilled, rawAmpMean, alignedKickOffs, rawKickOffMean);
+        final List<Segment> motionSegments = MotionCluster.toSegments(this.motionCluster.getCopyOfClusters());
+        final Optional<Segment> inBedSegment = SleepPeriod.getSleepPeriod(dataWithGapFilled, motionSegments);
+
+        this.sleepPeriod  = inBedSegment.get();
+        LOGGER.debug("data start from {} to {}", new DateTime(this.sleepPeriod.getStartTimestamp(), DateTimeZone.forOffsetMillis(this.sleepPeriod.getOffsetMillis())),
+                new DateTime(this.sleepPeriod.getEndTimestamp(), DateTimeZone.forOffsetMillis(this.sleepPeriod.getOffsetMillis())));
 
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> motionFeatures = MotionFeatures.generateTimestampAlignedFeatures(dataWithGapFilled,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
@@ -84,45 +85,19 @@ public class Vote {
                 false);
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures = MotionFeatures.aggregateData(motionFeatures, MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES);
         LOGGER.debug("smoothed data size {}", aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE).size());
-        this.aggregatedFeatures = aggregatedFeatures;
 
-
-        final long preserveTimeMillis = 15 * DateTimeConstants.MILLIS_PER_MINUTE;
-        final Set<MotionFeatures.FeatureType> featureTypes = aggregatedFeatures.keySet();
-        for(final MotionFeatures.FeatureType featureType:featureTypes){
-            final List<AmplitudeData> originalFeature = aggregatedFeatures.get(featureType);
-            if(removeNoise) {
-                if(sleepPeriod.getStartTimestamp() - originalFeature.get(0).timestamp > 2 * DateTimeConstants.MILLIS_PER_HOUR) {
-                    final List<AmplitudeData> trimmed = MotionCluster.trim(originalFeature,
-                            sleepPeriod.getStartTimestamp() - preserveTimeMillis,
-                            sleepPeriod.getEndTimestamp());
-                    aggregatedFeatures.put(featureType, trimmed);
-                }
-            }else{
-                for(int i = 0; i < originalFeature.size(); i++){
-                    final AmplitudeData item = originalFeature.get(i);
-                    final long timestamp = item.timestamp;
-                    final int offsetMillis = item.offsetMillis;
-                    if(timestamp > sleepPeriod.getStartTimestamp() - preserveTimeMillis){
-                        continue;
-                    }
-                    if(featureType == MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE ||
-                            featureType == MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE){
-                        originalFeature.set(i, new AmplitudeData(timestamp, 0d, offsetMillis));
-                    }
-                }
-            }
-        }
+        final Map<MotionFeatures.FeatureType, List<AmplitudeData>> capFeatures = capFeaturesBySleepPeriod(aggregatedFeatures, sleepPeriod);
+        this.aggregatedFeatures = capFeatures;
 
         final MotionScoreAlgorithm sleepDetectionAlgorithm = new MotionScoreAlgorithm();
-        sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE), new AmplitudeDataScoringFunction());
-        sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE), new MotionDensityScoringFunction(MotionDensityScoringFunction.ScoreType.SLEEP));
-        sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE), new MotionDensityScoringFunction(MotionDensityScoringFunction.ScoreType.WAKE_UP));
-        sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.ZERO_TO_MAX_MOTION_COUNT_DURATION), new ZeroToMaxMotionCountDurationScoreFunction());
+        sleepDetectionAlgorithm.addFeature(this.aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE), new AmplitudeDataScoringFunction());
+        sleepDetectionAlgorithm.addFeature(this.aggregatedFeatures.get(MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE), new MotionDensityScoringFunction(MotionDensityScoringFunction.ScoreType.SLEEP));
+        sleepDetectionAlgorithm.addFeature(this.aggregatedFeatures.get(MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE), new MotionDensityScoringFunction(MotionDensityScoringFunction.ScoreType.WAKE_UP));
+        sleepDetectionAlgorithm.addFeature(this.aggregatedFeatures.get(MotionFeatures.FeatureType.ZERO_TO_MAX_MOTION_COUNT_DURATION), new ZeroToMaxMotionCountDurationScoreFunction());
 
         if(!lightOutTimes.isEmpty()) {
             final LinkedList<AmplitudeData> lightFeature = new LinkedList<>();
-            for (final AmplitudeData amplitudeData : aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE)) {
+            for (final AmplitudeData amplitudeData : this.aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE)) {
                 // Pad the light data
                 lightFeature.add(new AmplitudeData(amplitudeData.timestamp, 0, amplitudeData.offsetMillis));
 
@@ -136,7 +111,7 @@ public class Vote {
             sleepDetectionAlgorithm.addFeature(lightFeature, new LightOutScoringFunction(lightOutTimes, 3d));
 
             final LinkedList<AmplitudeData> lightAndCumulatedMotionFeature = new LinkedList<>();
-            for (final AmplitudeData amplitudeData : aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_MOTION_PERIOD)) {
+            for (final AmplitudeData amplitudeData : this.aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_MOTION_PERIOD)) {
                 // this is the magical light feature that can keep both magic and fix broken things.
                 lightAndCumulatedMotionFeature.add(new AmplitudeData(amplitudeData.timestamp,
                         1d / (amplitudeData.amplitude + 0.3),  // Max can go 3 times as much as the original score
@@ -149,7 +124,7 @@ public class Vote {
         if(firstWaveTimeOptional.isPresent()) {
 
             final LinkedList<AmplitudeData> waveAndCumulateMotionFeature = new LinkedList<>();
-            for (final AmplitudeData amplitudeData : aggregatedFeatures.get(MotionFeatures.FeatureType.AWAKE_BACKWARD_DENSITY)) {
+            for (final AmplitudeData amplitudeData : this.aggregatedFeatures.get(MotionFeatures.FeatureType.AWAKE_BACKWARD_DENSITY)) {
                 waveAndCumulateMotionFeature.add(new AmplitudeData(amplitudeData.timestamp,
                         amplitudeData.amplitude,
                         amplitudeData.offsetMillis));
@@ -178,6 +153,34 @@ public class Vote {
         }
 
         return filtered;
+    }
+
+    private Map<MotionFeatures.FeatureType, List<AmplitudeData>> capFeaturesBySleepPeriod(final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features,
+                                                                                          final Segment sleepPeriod){
+        final Set<MotionFeatures.FeatureType> featureTypes = aggregatedFeatures.keySet();
+        final Map<MotionFeatures.FeatureType, List<AmplitudeData>> result = new HashMap<>();
+        for(final MotionFeatures.FeatureType featureType:featureTypes){
+            result.put(featureType, new ArrayList<AmplitudeData>());
+
+            if(featureType != MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE &&
+                    featureType != MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE){
+                result.put(featureType, Lists.newArrayList(features.get(featureType)));
+            }
+
+            final List<AmplitudeData> originalFeature = aggregatedFeatures.get(featureType);
+
+            for(int i = 0; i < originalFeature.size(); i++){
+                final AmplitudeData item = originalFeature.get(i);
+                final long timestamp = item.timestamp;
+                if(timestamp >= sleepPeriod.getStartTimestamp() && timestamp <= sleepPeriod.getEndTimestamp()){
+                    result.get(featureType).add(item);
+                    continue;
+                }
+
+                result.get(featureType).add(new AmplitudeData(timestamp, 0d, item.offsetMillis));
+            }
+        }
+        return features;
     }
 
     public SleepEvents<Segment> getResult(final boolean debug){
