@@ -24,8 +24,6 @@ import java.util.Map;
  */
 public class TrendGraphUtils {
 
-    private static int TRENDS_AVAILABLE_AFTER_DAYS = 7; // no trends before collecting 10 days of data
-
     public static TrendGraph getDayOfWeekGraph(final TrendGraph.DataType dataType, final TrendGraph.TimePeriodType timePeriodType, final List<DowSample> rawData) {
 
         if (rawData.size() == 0) {
