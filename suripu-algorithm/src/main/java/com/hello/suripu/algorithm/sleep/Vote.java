@@ -230,18 +230,18 @@ public class Vote {
 
     private SleepEvents<Segment> aggregate(final SleepEvents<Segment> sleepEvents,
                                            final SleepEvents<Segment> defaultEvents){
-        final long sleepTime = defaultSearch ? defaultEvents.fallAsleep.getStartTimestamp() : sleepEvents.fallAsleep.getStartTimestamp();
-        final long wakeUpTime = defaultSearch ? defaultEvents.wakeUp.getStartTimestamp() : sleepEvents.fallAsleep.getStartTimestamp();
+        final long sleepSearchTime = defaultSearch ? defaultEvents.fallAsleep.getStartTimestamp() : sleepEvents.fallAsleep.getStartTimestamp();
+        final long wakeUpSearchTime = defaultSearch ? defaultEvents.wakeUp.getStartTimestamp() : sleepEvents.fallAsleep.getStartTimestamp();
 
         final List<ClusterAmplitudeData> clusterCopy = this.motionCluster.getCopyOfClusters();
         final Pair<Integer, Integer> sleepBounds = pickSleepClusterIndex(clusterCopy,
                 this.getAggregatedFeatures(),
                 this.sleepPeriod,
-                sleepTime);
+                sleepSearchTime);
         final Pair<Integer, Integer> wakeUpBounds = pickWakeUpClusterIndex(clusterCopy,
                 this.getAggregatedFeatures(),
                 this.sleepPeriod,
-                wakeUpTime);
+                wakeUpSearchTime);
 
         Segment inBed = sleepEvents.goToBed;
         Segment sleep = sleepEvents.fallAsleep;
@@ -298,21 +298,27 @@ public class Vote {
             final long wakeUpTimestamp = pickWakeUp(clusterCopy,
                     MotionCluster.copyRange(clusterCopy, wakeUpBounds.fst, wakeUpBounds.snd),
                     this.getAggregatedFeatures(),
-                    wakeUp.getStartTimestamp());
+                    sleepEvents.wakeUp.getStartTimestamp(),
+                    defaultEvents.wakeUp.getStartTimestamp());
 
             if(!defaultOverride) {
                 wakeUp = new Segment(wakeUpTimestamp,
                         wakeUpTimestamp + DateTimeConstants.MILLIS_PER_MINUTE,
                         defaultEvents.wakeUp.getOffsetMillis());
+                if(outBed.getStartTimestamp() < wakeUpTimestamp){
+                    outBed = new Segment(wakeUp.getStartTimestamp() + 10 * DateTimeConstants.MILLIS_PER_MINUTE,
+                            wakeUp.getEndTimestamp() + 10 * DateTimeConstants.MILLIS_PER_MINUTE,
+                            wakeUp.getOffsetMillis());
+                }
             }
         }else{
             wakeUp = new Segment(defaultEvents.wakeUp.getStartTimestamp(),
                     defaultEvents.wakeUp.getEndTimestamp(),
                     defaultEvents.wakeUp.getOffsetMillis());
-            if(defaultEvents.outOfBed.getStartTimestamp() < defaultEvents.wakeUp.getStartTimestamp()){
-                outBed = new Segment(defaultEvents.wakeUp.getStartTimestamp() + 10 * DateTimeConstants.MILLIS_PER_MINUTE,
-                        defaultEvents.wakeUp.getEndTimestamp() + 10 * DateTimeConstants.MILLIS_PER_MINUTE,
-                        defaultEvents.wakeUp.getOffsetMillis());
+            if(outBed.getStartTimestamp() < wakeUp.getStartTimestamp()){
+                outBed = new Segment(wakeUp.getStartTimestamp() + 10 * DateTimeConstants.MILLIS_PER_MINUTE,
+                        wakeUp.getEndTimestamp() + 10 * DateTimeConstants.MILLIS_PER_MINUTE,
+                        wakeUp.getOffsetMillis());
             }
         }
 
@@ -325,20 +331,9 @@ public class Vote {
         return SleepEvents.create(inBed, sleep, wakeUp, outBed);
     }
 
-    protected static long pickWakeUp(final List<ClusterAmplitudeData> clusters,
-                                final List<ClusterAmplitudeData> wakeUpMotionCluster,
-                              final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features,
-                              final long originalWakeUpMillis){
-        if(wakeUpMotionCluster.size() == 0){
-            return originalWakeUpMillis;
-        }
-
-        final Pair<Integer, Integer> originalBounds = MotionCluster.getClusterByTime(clusters, originalWakeUpMillis);
-        if(clusters.get(originalBounds.fst).timestamp == wakeUpMotionCluster.get(0).timestamp &&
-                clusters.get(originalBounds.snd).timestamp == wakeUpMotionCluster.get(wakeUpMotionCluster.size() - 1).timestamp){
-            return originalWakeUpMillis;
-        }
-
+    private static long pickMaxScoreWakeUp(final List<ClusterAmplitudeData> wakeUpMotionCluster,
+                                           final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features,
+                                           final long originalWakeUpMillis){
         final Optional<AmplitudeData> maxScoreItem = getMaxScore(features,
                 MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
                 wakeUpMotionCluster.get(0).timestamp,
@@ -348,6 +343,34 @@ public class Vote {
         }
 
         return maxScoreItem.get().timestamp;
+    }
+
+    protected static long pickWakeUp(final List<ClusterAmplitudeData> clusters,
+                                final List<ClusterAmplitudeData> wakeUpMotionCluster,
+                                final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features,
+                                final long wakeUpMillisSleepPeriod,
+                                final long wakeUpMillisGlobal){
+        if(wakeUpMotionCluster.size() == 0){
+            return wakeUpMillisSleepPeriod;
+        }
+
+        final Pair<Integer, Integer> originalBounds = MotionCluster.getClusterByTime(clusters, wakeUpMillisSleepPeriod);
+        final Pair<Integer, Integer> defaultBounds = MotionCluster.getClusterByTime(clusters, wakeUpMillisGlobal);
+
+        if(isEmptyBounds(defaultBounds) && isEmptyBounds(originalBounds)){
+            return wakeUpMillisGlobal;
+        }
+
+        if(isEmptyBounds(originalBounds)){
+            return pickMaxScoreWakeUp(wakeUpMotionCluster, features, wakeUpMillisGlobal);
+        }
+
+        if(clusters.get(originalBounds.fst).timestamp == wakeUpMotionCluster.get(0).timestamp &&
+                clusters.get(originalBounds.snd).timestamp == wakeUpMotionCluster.get(wakeUpMotionCluster.size() - 1).timestamp){
+            return wakeUpMillisSleepPeriod;
+        }
+
+        return pickMaxScoreWakeUp(wakeUpMotionCluster, features, wakeUpMillisGlobal);
     }
 
     private static ClusterAmplitudeData getItem(final List<ClusterAmplitudeData> clusters, final int i){
