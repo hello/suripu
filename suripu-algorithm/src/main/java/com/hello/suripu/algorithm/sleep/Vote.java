@@ -48,7 +48,8 @@ public class Vote {
     private final boolean tailBias = false;
     private final boolean smoothCluster = false;
     private final boolean removeNoise = true;
-    private final boolean defaultOverride = true;
+    private final boolean defaultSearch = false;
+    private final boolean defaultOverride = false;
 
     public Vote(final List<AmplitudeData> rawData,
                 final List<AmplitudeData> kickOffCounts,
@@ -229,8 +230,9 @@ public class Vote {
 
     private SleepEvents<Segment> aggregate(final SleepEvents<Segment> sleepEvents,
                                            final SleepEvents<Segment> defaultEvents){
-        final long sleepTime = defaultEvents.fallAsleep.getStartTimestamp();
-        final long wakeUpTime = defaultEvents.wakeUp.getStartTimestamp();
+        final long sleepTime = defaultSearch ? defaultEvents.fallAsleep.getStartTimestamp() : sleepEvents.fallAsleep.getStartTimestamp();
+        final long wakeUpTime = defaultSearch ? defaultEvents.wakeUp.getStartTimestamp() : sleepEvents.fallAsleep.getStartTimestamp();
+
         final List<ClusterAmplitudeData> clusterCopy = this.motionCluster.getCopyOfClusters();
         final Pair<Integer, Integer> sleepBounds = pickSleepClusterIndex(clusterCopy,
                 this.getAggregatedFeatures(),
@@ -359,11 +361,11 @@ public class Vote {
         final Pair<Integer, Integer> originalBounds = MotionCluster.getClusterByTime(clusters, originalSleepMillis);
         final Optional<AmplitudeData> maxWakeScoreItem = getMaxScore(aggregatedFeatures,
                 MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                sleepPeriod.getStartTimestamp(),
+                sleepPeriod.getStartTimestamp() - 40 * DateTimeConstants.MILLIS_PER_MINUTE,
                 sleepPeriod.getStartTimestamp() + sleepPeriod.getDuration() / 3);
         final Optional<AmplitudeData> maxSleepScoreItem = getMaxScore(aggregatedFeatures,
                 MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE,
-                sleepPeriod.getStartTimestamp(),
+                sleepPeriod.getStartTimestamp() - 40 * DateTimeConstants.MILLIS_PER_MINUTE,
                 sleepPeriod.getStartTimestamp() + sleepPeriod.getDuration() / 3);
 
         if(!maxSleepScoreItem.isPresent() && !maxWakeScoreItem.isPresent()){
