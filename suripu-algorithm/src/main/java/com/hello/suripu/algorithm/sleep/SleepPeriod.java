@@ -138,7 +138,7 @@ public class SleepPeriod extends Segment {
         return true;
     }
 
-    private static Segment constructSegmentAndEmptyStack(final Stack<Segment> stack){
+    private static Segment constructSegmentAndEmptyStack(final Stack<Segment> stack, final Segment current){
         long segmentStartMillis = 0;
         long segmentEndMillis = 0;
         int offsetMillis = 0;
@@ -151,7 +151,7 @@ public class SleepPeriod extends Segment {
             offsetMillis = stack.peek().getOffsetMillis();
             stack.pop();
         }
-        final Segment sleepSegment = new Segment(segmentStartMillis, segmentEndMillis, offsetMillis);
+        final Segment sleepSegment = new Segment(segmentStartMillis, current.getStartTimestamp(), offsetMillis);
         return sleepSegment;
     }
 
@@ -194,8 +194,8 @@ public class SleepPeriod extends Segment {
                 continue;
             }
 
-            final Segment sleepSegment = constructSegmentAndEmptyStack(stack);
-            stack.push(new Segment(motionClusters.get(i).getStartTimestamp(),
+            final Segment sleepSegment = constructSegmentAndEmptyStack(stack, motionClusters.get(i));
+            stack.push(new Segment(motionClusters.get(i - 1).getEndTimestamp(),
                     motionClusters.get(i).getEndTimestamp(),
                     motionClusters.get(i).getOffsetMillis()));
             LOGGER.debug("In bed period {} - {}",
@@ -212,7 +212,7 @@ public class SleepPeriod extends Segment {
         }
 
         if(stack.peek() != null){
-            final Segment sleepSegment = constructSegmentAndEmptyStack(stack);
+            final Segment sleepSegment = constructSegmentAndEmptyStack(stack, stack.peek());
             LOGGER.debug("In bed period {} - {}",
                     new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis())),
                     new DateTime(sleepSegment.getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis())));
