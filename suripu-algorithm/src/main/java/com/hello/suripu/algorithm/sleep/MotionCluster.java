@@ -118,7 +118,7 @@ public class MotionCluster {
         return cluster;
     }
 
-    public static Pair<Integer, Integer> getSignificantClusterIndex(final List<ClusterAmplitudeData> clusters, final long targetTimestamp){
+    public static Pair<Integer, Integer> getClusterByTime(final List<ClusterAmplitudeData> clusters, final long targetTimestamp){
         long clusterStartTimestamp = 0;
         long clusterEndTimestamp = 0;
         int clusterStartIndex = 0;
@@ -233,6 +233,29 @@ public class MotionCluster {
             clusterCopy.add(datum.copy());
         }
         return clusterCopy;
+    }
+
+    public static Pair<Integer, Integer> getLast(final List<ClusterAmplitudeData> clusters){
+        int startIndex = -1;
+        int endIndex = -1;
+        final List<Segment> segments = toSegments(clusters);
+        final Segment lastSegment = segments.get(segments.size() - 1);
+        int i = 0;
+        for(final ClusterAmplitudeData clusterAmplitudeData:clusters){
+            if(clusterAmplitudeData.timestamp < lastSegment.getStartTimestamp() ||
+                    clusterAmplitudeData.timestamp > lastSegment.getEndTimestamp()){
+                i++;
+                continue;
+            }
+
+            if(startIndex == -1){
+                startIndex = i;
+            }
+            endIndex = i;
+            i++;
+        }
+
+        return new Pair<>(startIndex, endIndex);
     }
 
 }
