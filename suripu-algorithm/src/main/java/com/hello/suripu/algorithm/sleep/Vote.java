@@ -230,14 +230,14 @@ public class Vote {
 
     private SleepEvents<Segment> aggregate(final SleepEvents<Segment> sleepEvents,
                                            final SleepEvents<Segment> defaultEvents){
-        final long sleepSearchTime = Math.max(defaultEvents.fallAsleep.getStartTimestamp(), sleepEvents.fallAsleep.getStartTimestamp());
+        //final long sleepSearchTime = Math.max(defaultEvents.fallAsleep.getStartTimestamp(), sleepEvents.fallAsleep.getStartTimestamp());
         final long wakeUpSearchTime = Math.min(defaultEvents.wakeUp.getStartTimestamp(), sleepEvents.fallAsleep.getStartTimestamp());
 
         final List<ClusterAmplitudeData> clusterCopy = this.motionCluster.getCopyOfClusters();
-        final Pair<Integer, Integer> sleepBounds = pickSleepClusterIndex(clusterCopy,
+        /*final Pair<Integer, Integer> sleepBounds = pickSleepClusterIndex(clusterCopy,
                 this.getAggregatedFeatures(),
                 this.sleepPeriod,
-                sleepSearchTime);
+                sleepSearchTime);*/
         final Pair<Integer, Integer> wakeUpBounds = pickWakeUpClusterIndex(clusterCopy,
                 this.getAggregatedFeatures(),
                 this.sleepPeriod,
@@ -245,29 +245,32 @@ public class Vote {
 
         Segment inBed = sleepEvents.goToBed;
         Segment sleep = sleepEvents.fallAsleep;
-        if(!isEmptyBounds(sleepBounds)){
-            final ClusterAmplitudeData clusterStart = clusterCopy.get(sleepBounds.fst);
-            final ClusterAmplitudeData clusterEnd = clusterCopy.get(sleepBounds.snd);
-            LOGGER.debug("Sleep cluster start at {}, end at {}",
-                    new DateTime(clusterStart.timestamp, DateTimeZone.forOffsetMillis(clusterStart.offsetMillis)),
-                    new DateTime(clusterEnd.timestamp, DateTimeZone.forOffsetMillis(clusterEnd.offsetMillis)));
+        //if(!isEmptyBounds(sleepBounds)){
+        //final ClusterAmplitudeData clusterStart = clusterCopy.get(sleepBounds.fst);
+        //final ClusterAmplitudeData clusterEnd = clusterCopy.get(sleepBounds.snd);
+        /*LOGGER.debug("Sleep cluster start at {}, end at {}",
+                new DateTime(clusterStart.timestamp, DateTimeZone.forOffsetMillis(clusterStart.offsetMillis)),
+                new DateTime(clusterEnd.timestamp, DateTimeZone.forOffsetMillis(clusterEnd.offsetMillis)));*/
 
-            //final long inBedTimestamp = pickInBed(sleepMotionCluster, inBed.getStartTimestamp());
-            inBed = new Segment(clusterStart.timestamp, clusterStart.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterStart.offsetMillis);
-            final long sleepTimestamp = pickSleep(clusterCopy,
-                    MotionCluster.copyRange(clusterCopy, sleepBounds.fst, sleepBounds.snd),
-                    this.sleepPeriod,
-                    this.getAggregatedFeatures(),
-                    sleep.getStartTimestamp());
+        //final long inBedTimestamp = pickInBed(sleepMotionCluster, inBed.getStartTimestamp());
+        // inBed = new Segment(clusterStart.timestamp, clusterStart.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterStart.offsetMillis);
+        final long sleepTimestamp = pickSleep(this.sleepPeriod,
+                this.getAggregatedFeatures(),
+                sleep.getStartTimestamp());
 
-            if(!defaultOverride) {
-                sleep = new Segment(sleepTimestamp,
-                        sleepTimestamp + DateTimeConstants.MILLIS_PER_MINUTE,
-                        defaultEvents.fallAsleep.getOffsetMillis());
-            }
+        final Pair<Integer, Integer> sleepBounds = MotionCluster.getClusterByTime(clusterCopy, sleepTimestamp);
+        if(isEmptyBounds(sleepBounds)){
+            inBed = new Segment(sleepTimestamp - 10 * DateTimeConstants.MILLIS_PER_MINUTE,
+                    sleepTimestamp + DateTimeConstants.MILLIS_PER_MINUTE,
+                    sleepPeriod.getOffsetMillis());
         }else{
-            sleep = new Segment(defaultEvents.fallAsleep.getStartTimestamp(),
-                    defaultEvents.fallAsleep.getEndTimestamp(),
+            final ClusterAmplitudeData clusterStart = clusterCopy.get(sleepBounds.fst);
+            inBed = new Segment(clusterStart.timestamp, clusterStart.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterStart.offsetMillis);
+        }
+
+        if(!defaultOverride) {
+            sleep = new Segment(sleepTimestamp,
+                    sleepTimestamp + DateTimeConstants.MILLIS_PER_MINUTE,
                     defaultEvents.fallAsleep.getOffsetMillis());
         }
 
@@ -504,16 +507,15 @@ public class Vote {
 
     }
 
-    protected static long pickSleep(final List<ClusterAmplitudeData> clusters,
-                             final List<ClusterAmplitudeData> sleepMotionCluster,
-                             final SleepPeriod sleepPeriod,
+    protected static long pickSleep(final SleepPeriod sleepPeriod,
                              final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features,
                              final long originalSleepMillis){
 
-        if(sleepMotionCluster.size() == 0){
+        /*if(sleepMotionCluster.size() == 0){
             return originalSleepMillis;
-        }
+        }*/
 
+        /*
         final Pair<Integer, Integer> origBounds = MotionCluster.getClusterByTime(clusters, originalSleepMillis);
         if(clusters.get(origBounds.fst).timestamp == sleepMotionCluster.get(0).timestamp &&
                 clusters.get(origBounds.snd).timestamp == sleepMotionCluster.get(sleepMotionCluster.size() - 1).timestamp &&
@@ -524,12 +526,38 @@ public class Vote {
         final Optional<AmplitudeData> maxScoreItem = getMaxScore(features,
                 MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE,
                 sleepPeriod.getStartTimestamp(),
-                sleepPeriod.getStartTimestamp() + 2 * DateTimeConstants.MINUTES_PER_HOUR);
+                sleepPeriod.getStartTimestamp() + 2 * DateTimeConstants.MILLIS_PER_HOUR);
 
         if(!maxScoreItem.isPresent()){
             return originalSleepMillis;
         }
         return maxScoreItem.get().timestamp;
+        */
+
+        final Optional<AmplitudeData> firstMaxScoreItemOptional = getMaxScore(features,
+                MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
+                sleepPeriod.getStartTimestamp(),
+                sleepPeriod.getStartTimestamp() + 2 * DateTimeConstants.MILLIS_PER_HOUR);
+
+        final Optional<AmplitudeData> predictedMaxScoreItemOptional = getMaxScore(features,
+                MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
+                originalSleepMillis - 20 * DateTimeConstants.MILLIS_PER_MINUTE,
+                originalSleepMillis + 20 * DateTimeConstants.MILLIS_PER_MINUTE);
+
+        if(firstMaxScoreItemOptional.get().timestamp < originalSleepMillis - 2 * DateTimeConstants.MINUTES_PER_HOUR){
+            if(firstMaxScoreItemOptional.get().amplitude * 5 < predictedMaxScoreItemOptional.get().amplitude){
+                return originalSleepMillis;
+            }
+            final Optional<AmplitudeData> maxDrop = getMaxScore(features,
+                    MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE,
+                    sleepPeriod.getStartTimestamp(),
+                    sleepPeriod.getEndTimestamp() + 2 * DateTimeConstants.MINUTES_PER_HOUR);
+            if(!maxDrop.isPresent()){
+                return firstMaxScoreItemOptional.get().timestamp;
+            }
+            return maxDrop.get().timestamp;
+        }
+        return originalSleepMillis;
     }
 
     public Map<MotionFeatures.FeatureType, List<AmplitudeData>> getAggregatedFeatures(){
