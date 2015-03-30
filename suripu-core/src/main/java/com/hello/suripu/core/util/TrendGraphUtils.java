@@ -40,7 +40,10 @@ public class TrendGraphUtils {
 
         final List<GraphSample> dataPoints = new ArrayList<>();
 
-        for (int dow = 1; dow <= 7; dow++) {
+        // return data in a list for Sunday - Saturday
+        final List<Integer> dayOfWeek = Lists.newArrayList(7, 1, 2, 3, 4, 5, 6);
+
+        for (final Integer dow : dayOfWeek) {
             final String xLabel = TrendGraph.DayOfWeekLabel.fromInt(dow);
             float value = 0.0f;
             TrendGraph.DataLabel label = TrendGraph.DataLabel.OK;
