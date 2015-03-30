@@ -394,11 +394,11 @@ public class Vote {
         final Pair<Integer, Integer> originalBounds = MotionCluster.getClusterByTime(clusters, originalSleepMillis);
         final Optional<AmplitudeData> maxWakeScoreItem = getMaxScore(aggregatedFeatures,
                 MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                sleepPeriod.getStartTimestamp() - 40 * DateTimeConstants.MILLIS_PER_MINUTE,
+                sleepPeriod.getStartTimestamp(),
                 sleepPeriod.getStartTimestamp() + sleepPeriod.getDuration() / 3);
         final Optional<AmplitudeData> maxSleepScoreItem = getMaxScore(aggregatedFeatures,
                 MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE,
-                sleepPeriod.getStartTimestamp() - 40 * DateTimeConstants.MILLIS_PER_MINUTE,
+                sleepPeriod.getStartTimestamp(),
                 sleepPeriod.getStartTimestamp() + sleepPeriod.getDuration() / 3);
 
         if(!maxSleepScoreItem.isPresent() && !maxWakeScoreItem.isPresent()){
