@@ -254,12 +254,21 @@ public class Vote {
                         sleepTimestamp + DateTimeConstants.MILLIS_PER_MINUTE,
                         defaultEvents.fallAsleep.getOffsetMillis());
             }
+        }else{
+            sleep = new Segment(defaultEvents.fallAsleep.getStartTimestamp(),
+                    defaultEvents.fallAsleep.getEndTimestamp(),
+                    defaultEvents.fallAsleep.getOffsetMillis());
         }
 
         if(defaultOverride) {
             sleep = new Segment(defaultEvents.fallAsleep.getStartTimestamp(),
                     defaultEvents.fallAsleep.getEndTimestamp(),
                     defaultEvents.fallAsleep.getOffsetMillis());
+            if(defaultEvents.goToBed.getStartTimestamp() < defaultEvents.fallAsleep.getStartTimestamp()){
+                inBed = new Segment(defaultEvents.fallAsleep.getStartTimestamp() + 10 * DateTimeConstants.MILLIS_PER_MINUTE,
+                        defaultEvents.fallAsleep.getEndTimestamp() + 10 * DateTimeConstants.MILLIS_PER_MINUTE,
+                        defaultEvents.fallAsleep.getOffsetMillis());
+            }
         }
 
         Segment wakeUp = sleepEvents.wakeUp;
@@ -284,6 +293,15 @@ public class Vote {
             if(!defaultOverride) {
                 wakeUp = new Segment(wakeUpTimestamp,
                         wakeUpTimestamp + DateTimeConstants.MILLIS_PER_MINUTE,
+                        defaultEvents.wakeUp.getOffsetMillis());
+            }
+        }else{
+            wakeUp = new Segment(defaultEvents.wakeUp.getStartTimestamp(),
+                    defaultEvents.wakeUp.getEndTimestamp(),
+                    defaultEvents.wakeUp.getOffsetMillis());
+            if(defaultEvents.outOfBed.getStartTimestamp() < defaultEvents.wakeUp.getStartTimestamp()){
+                outBed = new Segment(defaultEvents.wakeUp.getStartTimestamp() + 10 * DateTimeConstants.MILLIS_PER_MINUTE,
+                        defaultEvents.wakeUp.getEndTimestamp() + 10 * DateTimeConstants.MILLIS_PER_MINUTE,
                         defaultEvents.wakeUp.getOffsetMillis());
             }
         }
@@ -397,6 +415,10 @@ public class Vote {
                                                                    final Segment sleepPeriod,
                                                                    final long originalWakeUpMillis){
         final Pair<Integer, Integer> originalBounds = MotionCluster.getClusterByTime(clusters, originalWakeUpMillis);
+        if(isEmptyBounds(originalBounds)){
+            return new Pair<>(-1, -1);
+        }
+
         final List<Segment> clustersInSleepPeriod = new ArrayList<>();
         final List<Segment> allClusters = MotionCluster.toSegments(clusters);
         for(final Segment cluster:allClusters){
