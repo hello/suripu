@@ -883,6 +883,7 @@ public class TimelineUtilsTest extends FixtureTest {
         lightOuts.add(new DateTime(1426218480000L, DateTimeZone.forOffsetMillis(trackerMotions.get(0).offsetMillis)));
 
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEventsFromVoting(trackerMotions,
+                Collections.EMPTY_LIST,
                 lightOuts,
                 Optional.<DateTime>absent()).toList();
 

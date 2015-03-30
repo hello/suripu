@@ -5,7 +5,11 @@ import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.utils.DataUtils;
 import com.hello.suripu.algorithm.utils.NumericalUtils;
 import com.hello.suripu.algorithm.utils.SoundFeatures;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
+import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +18,8 @@ import java.util.List;
  * Created by pangwu on 3/30/15.
  */
 public class SoundCluster {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SoundCluster.class);
+
     public static List<Segment> getClusters(final List<AmplitudeData> rawSound){
         final List<AmplitudeData> alignedSound = DataUtils.fillMissingValues(DataUtils.dedupe(rawSound), DateTimeConstants.MILLIS_PER_MINUTE);
         final List<AmplitudeData> densityFeature = SoundFeatures.getDensityFeature(alignedSound, 20);
@@ -34,6 +40,9 @@ public class SoundCluster {
             }else{
                 if(startMillis > 0){
                     result.add(new Segment(startMillis, endMillis, offsetMillis));
+                    LOGGER.debug("Sound cluster {} - {}",
+                            new DateTime(startMillis, DateTimeZone.forOffsetMillis(offsetMillis)),
+                            new DateTime(endMillis, DateTimeZone.forOffsetMillis(offsetMillis)));
                 }
                 startMillis = 0;
                 endMillis = 0;
