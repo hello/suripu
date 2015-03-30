@@ -123,6 +123,7 @@ http:
   # The port on which the HTTP server listens for administrative
   # requests. Subject to the same limitations as "port".
   adminPort: 9998
+  minThreads: 2
 
 # Logging settings.
 logging:

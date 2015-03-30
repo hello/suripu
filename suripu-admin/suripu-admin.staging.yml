@@ -69,6 +69,8 @@ common_db:
 http:
   port: 3333
   adminPort: 3336
+    minThreads: 2
+    maxThreads: 10
 
 logging:
   level: INFO
