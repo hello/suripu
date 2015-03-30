@@ -59,7 +59,6 @@ public class DataUtils {
     public static List<AmplitudeData> fillMissingValues(final List<AmplitudeData> rawData, final int intervalMillis){
 
         final List<AmplitudeData> result = new ArrayList<>();
-        final double minAmplitude = Ordering.natural().min(rawData).amplitude;
         for(final AmplitudeData motion: rawData) {
             if(result.size() > 0) {
                 final AmplitudeData lastData = result.get(result.size() - 1);
