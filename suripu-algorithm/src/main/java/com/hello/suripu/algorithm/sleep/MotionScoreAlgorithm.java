@@ -168,8 +168,8 @@ public class MotionScoreAlgorithm {
     public static MotionScoreAlgorithm createDefault(final List<AmplitudeData> rawAmplitude,
                                                  final List<DateTime> lightOutTimes,
                                                  final Optional<DateTime> firstWaveTimeOptional){
-        final List<AmplitudeData> noDuplicates = DataUtils.dedupe(rawAmplitude);
-        List<AmplitudeData> dataWithGapFilled = DataUtils.fillMissingValuesAndMakePositive(noDuplicates, DateTimeConstants.MILLIS_PER_MINUTE);
+        final List<AmplitudeData> noDuplicates = DataUtils.makePositive(DataUtils.dedupe(rawAmplitude));
+        List<AmplitudeData> dataWithGapFilled = DataUtils.fillMissingValues(noDuplicates, DateTimeConstants.MILLIS_PER_MINUTE);
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> motionFeatures = MotionFeatures.generateTimestampAlignedFeatures(dataWithGapFilled,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
