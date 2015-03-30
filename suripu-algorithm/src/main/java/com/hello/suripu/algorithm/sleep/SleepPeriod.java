@@ -195,7 +195,7 @@ public class SleepPeriod extends Segment {
             }
 
             final Segment sleepSegment = constructSegmentAndEmptyStack(stack, motionClusters.get(i));
-            stack.push(new Segment(motionClusters.get(i - 1).getEndTimestamp(),
+            stack.push(new Segment(motionClusters.get(i).getStartTimestamp(),
                     motionClusters.get(i).getEndTimestamp(),
                     motionClusters.get(i).getOffsetMillis()));
             LOGGER.debug("In bed period {} - {}",
