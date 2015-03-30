@@ -1,8 +1,10 @@
 package com.hello.suripu.algorithm.sleep;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.Segment;
+import com.sun.tools.javac.util.Pair;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -20,6 +22,70 @@ public class SleepPeriod {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepPeriod.class);
 
     public static int ACCEPTABLE_QUIET_PERIOD_MILLIS = 90 * DateTimeConstants.MILLIS_PER_MINUTE;
+    private final List<List<Segment>> voteSegments = new ArrayList<>();
+    private final List<Pair<Long, Double>> votes = new ArrayList<>();
+    private final Segment segment;
+
+    private SleepPeriod(final Segment sleepPeriod){
+        this.segment = sleepPeriod;
+        long slotMillis = sleepPeriod.getStartTimestamp() - 30 * DateTimeConstants.MILLIS_PER_MINUTE;
+        while(slotMillis < sleepPeriod.getEndTimestamp() + 30 * DateTimeConstants.MILLIS_PER_MINUTE){
+            votes.add(new Pair<>(slotMillis, 0d));
+            slotMillis += DateTimeConstants.MILLIS_PER_MINUTE;
+        }
+    }
+
+    private void voteOnSegment(final Segment votingSegment){
+        for(int i = 0; i < this.votes.size(); i++){
+            final Pair<Long, Double> timeSlotMillis = this.votes.get(i);
+            if(timeSlotMillis.fst >= votingSegment.getStartTimestamp() && timeSlotMillis.fst <= votingSegment.getEndTimestamp()){
+                this.votes.set(i, new Pair<>(timeSlotMillis.fst, timeSlotMillis.snd + 1d));
+            }
+        }
+    }
+
+
+    public static SleepPeriod createFromSegment(final Segment segment){
+        return new SleepPeriod(segment);
+    }
+
+    public void addVotingSegments(final List<Segment> votingSegment){
+        if(votingSegment.size() == 0){
+            return;
+        }
+        this.voteSegments.add(Lists.newArrayList(votingSegment));
+        for(final Segment voteSegment:votingSegment){
+            this.voteOnSegment(voteSegment);
+        }
+    }
+
+    public List<Segment> getAwakePeriods(final boolean debug){
+        long startMillis = 0;
+        long endMillis = 0;
+        final List<Segment> result = new ArrayList<>();
+
+        for(int i = 0; i < this.votes.size(); i++){
+            final Pair<Long, Double> vote = this.votes.get(i);
+            if(vote.snd >= 2d){
+                if(startMillis == 0){
+                    startMillis = vote.fst;
+                }
+                endMillis = vote.fst;
+            }else {
+                if(endMillis - startMillis > DateTimeConstants.MILLIS_PER_MINUTE * 10){
+                    result.add(new Segment(startMillis, endMillis, this.segment.getOffsetMillis()));
+                    if(debug){
+                        LOGGER.debug("User awake at {} - {}",
+                                new DateTime(startMillis, DateTimeZone.forOffsetMillis(this.segment.getOffsetMillis())),
+                                new DateTime(endMillis, DateTimeZone.forOffsetMillis(this.segment.getOffsetMillis())));
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+
     private static boolean isUserInBed(final long startMillis, final long endMillis, final List<AmplitudeData> alignedMotion){
         if(endMillis - startMillis <= ACCEPTABLE_QUIET_PERIOD_MILLIS) {
             return true;
