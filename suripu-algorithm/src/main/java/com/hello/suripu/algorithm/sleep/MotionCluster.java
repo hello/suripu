@@ -12,7 +12,6 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.HEAD;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -39,13 +38,20 @@ public class MotionCluster {
             final AmplitudeData density = densityFeature.get(i);
             final AmplitudeData amplitude = amplitudeFeature.get(i);
             final AmplitudeData kickOff = kickOffCounts.get(i);
-            if(density.amplitude >= densityThreshold ||
+            if(densityThreshold > 0 && (density.amplitude >= densityThreshold ||
                     amplitude.amplitude >= amplitudeThreshold ||
-                    kickOff.amplitude >= kickOffCountThreshold){
+                    kickOff.amplitude >= kickOffCountThreshold)){
                 result.add(ClusterAmplitudeData.create(density, true));
-            }else{
-                result.add(ClusterAmplitudeData.create(density, false));
+                continue;
             }
+
+            if(densityThreshold == 0 && (density.amplitude >= densityThreshold ||
+                    amplitude.amplitude >= amplitudeThreshold)){
+                result.add(ClusterAmplitudeData.create(density, true));
+                continue;
+            }
+
+            result.add(ClusterAmplitudeData.create(density, false));
         }
 
         return result;
