@@ -37,7 +37,7 @@ public class MotionClusterTest extends CSVFixtureTest {
         final List<AmplitudeData> alignedKicks = DataUtils.insertEmptyData(
                 DataUtils.fillMissingValues(kickoffs, DateTimeConstants.MILLIS_PER_MINUTE),
                 20, 1);
-        
+
 
         final MotionCluster cluster = MotionCluster.create(alignedAmp, ampMean, alignedKicks, kickOffMean);
         MotionCluster.printClusters(cluster.getCopyOfClusters());
