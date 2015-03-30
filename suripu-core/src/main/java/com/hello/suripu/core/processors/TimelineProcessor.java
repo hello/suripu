@@ -354,6 +354,7 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
 
 
         SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = fromVotingAlgorithm(trackerMotions,
+                allSensorSampleList.get(Sensor.SOUND),
                 allSensorSampleList.get(Sensor.LIGHT),
                 wakeUpWaveTimeOptional);
 
@@ -613,6 +614,7 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
      * @return
      */
     private SleepEvents<Optional<Event>> fromVotingAlgorithm(final List<TrackerMotion> trackerMotions,
+                                                             final List<Sample> rawSound,
                                                        final List<Sample> rawLight,
                                                        final Optional<DateTime> wakeUpWaveTimeOptional) {
         Optional<Segment> sleepSegmentOptional;
@@ -631,6 +633,7 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
             sleepEventsFromAlgorithm = TimelineUtils.getSleepEventsFromVoting(trackerMotions,
+                    rawSound,
                     lightOutTimes,
                     wakeUpWaveTimeOptional);
 

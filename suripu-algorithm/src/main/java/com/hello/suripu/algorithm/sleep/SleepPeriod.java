@@ -100,6 +100,8 @@ public class SleepPeriod extends Segment {
                                 new DateTime(endMillis, DateTimeZone.forOffsetMillis(this.getOffsetMillis())));
                     }
                 }
+                startMillis = 0;
+                endMillis = 0;
             }
         }
 

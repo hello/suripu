@@ -20,11 +20,13 @@ public class VoteTest extends CSVFixtureTest {
     public void testGetResultNormalFiltered(){
         final List<AmplitudeData> input = loadAmpFromResource("fixtures/jp_motion_2015_03_23_raw.csv");
         final List<AmplitudeData> kickoffs = loadKickOffFromResource("fixtures/jp_motion_2015_03_23_raw.csv");
+        final List<AmplitudeData> sound = loadAmpFromResource("fixtures/jp_sound_2015_03_23_raw.csv");
 
         final List<DateTime> lightOuts = new ArrayList<>();
         //lightOuts.add(new DateTime(1426924080000L, DateTimeZone.forOffsetMillis(input.get(0).offsetMillis)));
-        final Vote vote = new Vote(input, kickoffs, Collections.EMPTY_LIST, lightOuts, Optional.<DateTime>absent());
+        final Vote vote = new Vote(input, kickoffs, sound, lightOuts, Optional.<DateTime>absent());
         final SleepEvents<Segment> sleepEvents = vote.getResult(true);
+        final List<Segment> awakes = vote.getAwakes(true);
 
         /*
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.goToBed.getStartTimestamp(), sleepEvents.goToBed.getOffsetMillis()),

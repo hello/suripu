@@ -79,6 +79,7 @@ public class Vote {
         this.sleepPeriod = SleepPeriod.createFromSegment(inBedSegment.get());
         this.sleepPeriod.addVotingSegments(motionSegments);
         this.sleepPeriod.addVotingSegments(SoundCluster.getClusters(rawSound));
+
         LOGGER.debug("data start from {} to {}", new DateTime(this.sleepPeriod.getStartTimestamp(), DateTimeZone.forOffsetMillis(this.sleepPeriod.getOffsetMillis())),
                 new DateTime(this.sleepPeriod.getEndTimestamp(), DateTimeZone.forOffsetMillis(this.sleepPeriod.getOffsetMillis())));
 
@@ -137,6 +138,10 @@ public class Vote {
         }
 
         this.motionScoreAlgorithmInternal = sleepDetectionAlgorithm;
+    }
+
+    public final List<Segment> getAwakes(final boolean debug){
+        return this.sleepPeriod.getAwakePeriods(debug);
     }
 
     @Deprecated

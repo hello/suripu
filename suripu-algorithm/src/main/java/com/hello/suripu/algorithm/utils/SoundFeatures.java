@@ -25,7 +25,7 @@ public class SoundFeatures {
             }
 
             if(aggregateWindow.size() > aggregateWindowInMinute){
-                if(aggregateWindow.getFirst().amplitude < NOISE_THRESHOLD){
+                if(aggregateWindow.getFirst().amplitude >= NOISE_THRESHOLD){
                     count--;
                 }
                 aggregateWindow.removeFirst();
